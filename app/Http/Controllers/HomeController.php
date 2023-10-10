@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\Suplier;
 use App\Models\Manager;
 use App\Models\Employee;
+use App\Models\Job;
 
 class HomeController extends Controller
 {
@@ -37,7 +38,9 @@ class HomeController extends Controller
 
         $activeEmployeeBudget = Manager::byProjectActive()->sum('total_job') ?? 0;
 
-        $totalActiveWorkers = Employee::byActiveEmployee()->count() ?? 0;
+        // $totalActiveWorkers = Employee::byActiveEmployee()->count() ?? 0;
+        $totalActiveWorkersGet = Job::where('end_date','>=',Carbon::now()->format('Y-m-d'))->distinct('user_id')->get();
+        $totalActiveWorkers = count($totalActiveWorkersGet) ?? 0 ;
 
         return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers'));
     }
