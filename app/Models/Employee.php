@@ -64,10 +64,11 @@ class Employee extends Model
 
     public function scopeByActiveEmployee($query)
     {
-        $today = Carbon::now();
-        $query->whereHas('job', function($query) use ($today) 
+        $today = Carbon::now()->format('Y-m-d');
+
+        return $query->whereHas('job', function($a) use ($today) 
         {
-            $query->where('end_date', '>=', $today);
+            $a->where('start_date', '<=', $today)->where('end_date', '>=', $today);
         })->distinct('id');
     }
 }
