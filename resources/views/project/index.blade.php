@@ -1,0 +1,205 @@
+@extends('adminlte::page')
+
+@section('content_header')
+    <h1>Data Proyek</h1>
+@stop
+@php
+$no = ($project->currentPage() - 1) * $project->perPage() + 1;
+$totalProjects = $totalProject + 1; // Get the total number of projects
+
+@endphp
+@section('content')
+
+<div class="col-md-12">
+    @if(Session::get('store'))
+    <div class="alert alert-success mt-3">Berhasil Menambahkan Proyek</div>
+    @endif
+    @if(Session::get('update'))
+    <div class="alert alert-success mt-3">Proyek Berhasil Diperbarui</div>
+    @endif
+    @if(Session::get('delete'))
+    <div class="alert alert-success mt-3">Berhasil Menghapus Proyek</div>
+    @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+</div>
+<div class="container">
+    <p id="projectNo"></p>
+    @if(@$projectEdit)
+    <form method="post" action="{{ route('project.update',@$projectEdit) }}">
+    @method('put')
+    @else
+    <form method="post" action="{{ route('project.store') }}">
+    @endif
+        @csrf
+        <div class="form-group">
+            <label>Nama Proyek</label>
+            <input type="text" class="form-control" name="title" placeholder="Nama Proyek" value="{{ old('title') ?? @$projectEdit->title }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Anggaran Proyek</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Rp</span>
+                </div>
+                <input type="text" class="form-control" name="budget_show" id="budget_show"  oninput="formatRupiahFormat(this,'budget')" required/>
+                <input type="hidden" class="form-control" name="budget" id="budget" value="{{ old('budget') ?? @$projectEdit->budget }}" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Jangka Waktu Pekerjaan</label>
+            <div class="input-group">
+                <input type="date" name="start_date" class="form-control" value="{{ old('start_date') ?? @$projectEdit->start_date }}" required>
+                <div class="input-group-append">
+                    <span class="input-group-text">hingga</span>
+                </div>
+                <input type="date" name="end_date" class="form-control" value="{{ old('end_date') ?? @$projectEdit->end_date }}" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Keterangan Proyek</label>
+            <textarea class="form-control" rows="3" name="description" placeholder="Type here">{{ old('description') ?? @$projectEdit->description }}</textarea>
+        </div>
+
+        @if(@$projectEdit)
+        <button type="submit" class="btn btn-primary">Ubah</button>
+        @else
+        <button type="submit" class="btn btn-primary">Simpan</button>
+        @endif
+    </form>
+
+    <hr>
+
+    
+    <form action="{{ route('project.index') }}" method="get">
+        <div class="d-flex flex-row-reverse">
+            <div class="p-2">
+                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+            </div>
+            <div class="p-2">
+                <input type="text" name="project" class="form-control" placeholder="Search">
+            </div>
+        </div>
+    </form>
+        
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>No Proyek</th>
+                <th>Nama Proyek</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($project as $a)
+            <tr>
+                <td>{{ $no++ }}</td>
+                <td>{{ $a->title }}</td>
+                <td>
+                    <form method="post" action="{{ route('project.destroy',$a) }}">
+                        @csrf
+                        @method('delete')
+                        <a href="{{ route('project.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                        <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="3">
+                    <center>Data Kosong</center>
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+        {{ $project->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+</div>
+
+@stop
+
+@section('js')
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script>
+    $(document).ready(function () 
+    {
+        let nomor = "{{ $totalProjects }}";
+        document.getElementById('projectNo').innerHTML = "No Proyek :"+nomor;
+
+
+        let getPrice = document.getElementById("budget").value;
+        if (getPrice) 
+        {
+            document.getElementById("budget_show").value = getPrice;
+            formatRupiahFormat(document.getElementById("budget_show"),"budget"); // Format default value
+        }
+
+    });
+    function formatRupiahFormat(input, inputNonFormat) 
+    {
+        let numStr = input.value.toString().replace(/[^,\d]/g, '');
+        let split = numStr.split(',');
+        let sisa = split[0].length % 3;
+        let rupiah = split[0].substr(0, sisa);
+        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+
+        rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+
+        if (numStr === "" || parseInt(numStr) === 0) {
+            input.value = '0';
+            numStr = 0;
+        } else {
+            // Menghapus angka 0 di depan jika input diawali dengan 0
+            rupiah = rupiah.replace(/^0+/, '');
+            input.value = rupiah;
+        }
+
+        // Update 'salary' input with non-formatted number
+        document.getElementById(inputNonFormat).value = parseInt(numStr);
+    }
+</script>
+@stop
+@section('css')
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        /* padding: 20px; */
+        background-color: #f4f4f4;
+    }
+    .container {
+        background-color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    table 
+    {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    table, th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+</style>
+@stop
+
+
