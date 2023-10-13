@@ -36,7 +36,7 @@
         </div>
         <div class="offset-md-6 col-md-4">
             <label>Tanggal:</label>
-            <input type="date" name="date" class="form-control" value="{{ $dateNow }}" required>
+            <input type="date" name="date" class="form-control" value="{{ $dateNow }}" min="{{ $dateCreate }}" required>
         </div>
     </div>
 
@@ -107,10 +107,10 @@
                     </select>
                 </td>
                 <td>
-                    <input type="date" id="start_date_{{ $a->id }}" name="start_date[]" class="form-control countingSalary" value="{{ $a->start_date }}" required>
+                    <input type="date" id="start_date_{{ $a->id }}" name="start_date[]" class="form-control countingSalary" value="{{ $a->start_date }}" min="{{ $dateCreate }}" required>
                 </td>
                 <td>
-                    <input type="date" id="end_date_{{ $a->id }}" data-key="{{ $a->id }}" name="end_date[]" class="form-control countingSalary" value="{{ $a->end_date }}" required>
+                    <input type="date" id="end_date_{{ $a->id }}" data-key="{{ $a->id }}" name="end_date[]" class="form-control countingSalary" value="{{ $a->end_date }}" min="{{ $dateCreate }}" required>
                 </td>
                 <td id="total_show_{{ $a->id }}">
                     {{ number_format($a->total,0,',','.') }}
@@ -291,10 +291,10 @@
                     </select>
                 </td>
                 <td>
-                    <input type="date" id="start_date_${key}" name="start_date[]" class="form-control" required>
+                    <input type="date" id="start_date_${key}" name="start_date[]" class="form-control" min="{{ $dateCreate }}" required>
                 </td>
                 <td>
-                    <input type="date" id="end_date_${key}" data-key="${key}" name="end_date[]" class="form-control countingSalary" required>
+                    <input type="date" id="end_date_${key}" data-key="${key}" name="end_date[]" class="form-control countingSalary" min="{{ $dateCreate }}" required>
                 </td>
                 <td id="total_show_${key}">
                     Rp. 0

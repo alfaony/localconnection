@@ -47,8 +47,9 @@ class ManagerController extends Controller
         $employee = Employee::get();
         $dateNow = Carbon::now();
         $paymentMode = config('custom.paymentMode');
+        $dateCreate = Carbon::now()->format('Y-m-d');
 
-        return view('manager.createOrEdit',compact('project','employee','nomor','paymentMode','dateNow'));
+        return view('manager.createOrEdit',compact('project','employee','nomor','paymentMode','dateNow','dateCreate'));
         
     }
 
@@ -136,8 +137,10 @@ class ManagerController extends Controller
         $paymentMode = config('custom.paymentMode');
         $manager = Manager::where('slug', $slug)->firstOrFail();
         $dateNow = $manager->date ?? Carbon::now();
+        $dateCreate = Carbon::parse($manager->created_at)->format('Y-m-d');
+        
 
-        return view('manager.createOrEdit',compact('project','employee','nomor','paymentMode','manager','dateNow'));
+        return view('manager.createOrEdit',compact('project','employee','nomor','paymentMode','manager','dateNow','dateCreate'));
     }
 
     /**

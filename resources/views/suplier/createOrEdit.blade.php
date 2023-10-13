@@ -36,8 +36,8 @@
             <input type="text" class="form-control" value="{{ $nomor }}" readonly>
             
             <label class="mt-3">Nama Proyek:</label>
-            <select class="form-control" name="project" id="selectProject">
-                <option selected disabled>Silahkan Pilih</option>
+            <select class="form-control" name="project" id="selectProject" required>
+                <option value="" selected disabled>Silahkan Pilih</option>
                 @forelse($project as $a)
                 <option value="{{ $a->id }}" {{ @$suplier->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
                 @empty
@@ -47,14 +47,14 @@
             </select>
             
             <label class="mt-3">Nama Supplier:</label>
-            <input type="text" class="form-control" id="suplier" name="name" placeholder="Suplier" value="{{ old('name') ??  @$suplier->name }}">
+            <input type="text" class="form-control" id="suplier" name="name" placeholder="Suplier" value="{{ old('name') ??  @$suplier->name }}" required>
             
             <label class="mt-3">No. Handphone:</label>
             <input type="text" id="phone" name="phone" class="form-control" placeholder="phone" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" value="{{ old('phone') ?? @$suplier->phone }}">
         </div>
         <div class="col-md-6">
             <label>Tanggal:</label>
-            <input type="date" name="date" class="form-control" value="{{ old('date') ?? @$suplier->date }}" required>
+            <input type="date" name="date" class="form-control" value="{{ old('date') ?? @$suplier->date }}" min="{{ $dateCreate }}" required>
         </div>
     </div>
     

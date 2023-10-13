@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\SuplierRequest;
+use Carbon\Carbon;
 
 use App\Models\Suplier;
 use App\Models\Project;
@@ -38,8 +39,10 @@ class SuplierController extends Controller
     {
         $nomor = $request->get('nomor');
         $project = Project::get();
+        $dateCreate = Carbon::now()->format('Y-m-d');
 
-        return view('suplier.createOrEdit',compact('nomor','project'));
+
+        return view('suplier.createOrEdit',compact('nomor','project','dateCreate'));
     }
 
     /**
@@ -114,8 +117,10 @@ class SuplierController extends Controller
         $nomor = $request->nomor ?? 0 ;
         $suplier = Suplier::where('slug', $slug)->firstOrFail();
         $project = Project::get();
+        $dateCreate = Carbon::parse($suplier->created_at)->format('Y-m-d');
 
-        return view('suplier.createOrEdit',compact('suplier','nomor','project'));   
+
+        return view('suplier.createOrEdit',compact('suplier','nomor','project','dateCreate'));   
     }
 
     /**
