@@ -333,6 +333,16 @@ return [
             'icon' => 'fa fa-users',
         ],
         [
+            'text'        => 'Produk',
+            'route'         => 'product.index',
+            'icon' => 'fa fa-tag',
+        ],
+        [
+            'text'        => 'Customer',
+            'route'         => 'customer.index',
+            'icon' => 'fa fa-user-circle',
+        ],
+        [
             'text'        => 'Laporan',
             'route'         => 'report.index',
             'icon' => 'fa fa-file',

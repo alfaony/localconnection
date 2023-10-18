@@ -8,6 +8,8 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SuplierController;
 use App\Http\Controllers\ManagerController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CustomerController;
 
 
 
@@ -46,5 +48,11 @@ Route::group(['middleware' => ['auth']], function()
   Route::delete('manager/delete/job/{job}',[ManagerController::class,'destroyJob'])->name('manager.destroy.job');
   Route::get('manager/counting',[ManagerController::class,'counting'])->name('manager.counting');
   Route::resource('manager', ManagerController::class);
+
+
+  Route::resource('customer', CustomerController::class)->except(['create','show']);
+  Route::resource('product', ProductController::class)->except(['create','show']);;
+
+  
 });
 
