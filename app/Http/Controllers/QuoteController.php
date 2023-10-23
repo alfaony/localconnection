@@ -44,7 +44,7 @@ class QuoteController extends Controller
         $customer = Customer::all();
         $userCreate = Auth::user()->name;
         $date = Carbon::now()->format('m/Y');
-        $nomor = $request->get('nomor') ?? 0;
+        $nomor = Quote::max('quote_number') + 1;
         $nomorQuote = $nomor.'/'.$date;
         
 
@@ -63,8 +63,11 @@ class QuoteController extends Controller
         {
             DB::beginTransaction();
             $no = $request->post('nomor') ?? 0; 
+            $quoteNumber = Quote::max('quote_number') + 1;
+
 
             $quote = new Quote();
+            $quote->quote_number = $quoteNumber;
             $quote->customer_id = $request->post('customer');
             $quote->date = $request->post('date');
             $quote->tax = $request->post('tax');
@@ -123,8 +126,7 @@ class QuoteController extends Controller
 
         $date = Carbon::parse($quote->created_at)->format('m/Y');
         $nomor = $request->get('nomor') ?? 0;
-        $nomorQuote = $nomor.'/'.$date;
-
+        $nomorQuote = $quote->quote_number_result ?? '';
         $userCreate = $quote->userCreate ? $quote->userCreate->name : '';
 
         return view('quote.createOrEdit',compact('product','customer','nomorQuote','quote','userCreate','nomor'));
@@ -208,10 +210,33 @@ class QuoteController extends Controller
      */
     public function destroy(Quote $quote)
     {
-        $quote->quoteProduct()->delete();
-        $quote->delete();
+        DB::beginTransaction();
 
-        return redirect()->back()->with('delete',true);
+        try 
+        {
+            $deletedQuoteNumber = $quote->quote_number;
+            
+            // NULL quote
+            $quote->quote_number = NULL;
+            $quote->save();
+            
+            // Delete
+            // Menghapus relasi terlebih dahulu
+            $quote->quoteProduct()->delete();
+            
+            $quote->delete();
+
+            // Mengurutkan ulang nomor quote
+            Quote::where('quote_number', '>', $deletedQuoteNumber)->decrement('quote_number');
+
+            DB::commit();
+            return redirect()->back()->with('delete', true);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // dd($e);
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menghapus quote.');
+        }
     }
 
     /**

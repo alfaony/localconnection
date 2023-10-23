@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
+use Carbon\Carbon;
 
 class Quote extends Model
 {
@@ -65,6 +66,13 @@ class Quote extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class)->withTrashed();
+    }
+
+    public function getQuoteNumberResultAttribute()
+    {
+        $date = Carbon::parse($this->created_at)->format('m/Y');
+        $nomor = $this->quote_number;
+        return $nomor.'/'.$date;
     }
 
     public function scopeByUser($query,$user)

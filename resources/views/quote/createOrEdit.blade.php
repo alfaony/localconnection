@@ -72,7 +72,7 @@
                 </div>
                 <div class="col-6">
                     <div class="input-group">
-                        <input type="number" name="tax" id="tax" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('tax') ?? @$quote->tax }}" required>
+                        <input type="number" name="tax" id="tax" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('tax') ?? @$quote->tax }}">
                         <div class="input-group-prepend">
                             <span class="input-group-text">%</span>
                         </div>
@@ -85,7 +85,7 @@
                 </div>
                 <div class="col-6">
                     <div class="input-group">
-                        <input type="number" name="service_fee" id="service_fee" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('service_fee') ?? @$quote->service_fee }}" required>
+                        <input type="number" name="service_fee" id="service_fee" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('service_fee') ?? @$quote->service_fee }}">
                         <div class="input-group-prepend">
                             <span class="input-group-text">%</span>
                         </div>
@@ -102,7 +102,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">Rp</span>
                         </div>
-                        <input type="text" class="form-control calculation" id="discount_show"  oninput="formatRupiahFormat(this,'discount')" required />
+                        <input type="text" class="form-control calculation" id="discount_show"  oninput="formatRupiahFormat(this,'discount')" />
                         <input type="hidden" class="form-control" name="discount" id="discount" value="{{ old('discount') ?? @$quote->discount }}" />
                     </div>
                 </div>
@@ -116,7 +116,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">Rp</span>
                         </div>
-                        <input type="text" class="form-control calculation" id="charges_show"  oninput="formatRupiahFormat(this,'charges')" required />
+                        <input type="text" class="form-control calculation" id="charges_show"  oninput="formatRupiahFormat(this,'charges')"  />
                         <input type="hidden" class="form-control" name="charges" id="charges" value="{{ old('charges') ?? @$quote->charges }}" />
                     </div>
                 </div>
@@ -493,11 +493,12 @@
         } else {
             // Menghapus angka 0 di depan jika input diawali dengan 0
             rupiah = rupiah.replace(/^0+/, '');
-            input.value = 'Rp '+rupiah;
+            input.value = rupiah;
         }
 
         // Update 'salary' input with non-formatted number
-        document.getElementById(inputNonFormat).value = parseInt(numStr);
+        let parsedValue = parseInt(numStr);
+        document.getElementById(inputNonFormat).value = isNaN(parsedValue) ? 0 : parsedValue;
     }
 
     function formatRupiah(angka, prefix)
