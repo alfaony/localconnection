@@ -24,6 +24,7 @@ class UserRequest extends FormRequest
     public function rules()
     {
         return [
+            'name'  =>  'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
             'password' => 'required|min:6',
@@ -34,6 +35,7 @@ class UserRequest extends FormRequest
     public function messages()
     {
         return [
+            'name.required' => 'Nama harus diisi.',
             'email.required' => 'Email harus diisi.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah digunakan.',

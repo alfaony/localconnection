@@ -42,6 +42,11 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         <form action="{{ route('user.store') }}" method="post">
         @endif
             @csrf
+
+
+            <label for="name">Nama:</label>
+            <input type="text" id="name" name="name" placeholder="Anwar" value="{{ old('name') ?? @$userEdit->name }}" required>
+
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
             

@@ -13,4 +13,6 @@ class ParamSchema
     const ONEMONTH = 30;
 
     const ONEDAY = 1;
+
+    const PERCENTAGE = 100;
 }

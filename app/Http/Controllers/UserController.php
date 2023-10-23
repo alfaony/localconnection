@@ -47,6 +47,7 @@ class UserController extends Controller
     public function store(UserRequest $request)
     {
         $user = new User();
+        $user->name = $request->post('name'); 
         $user->email = $request->post('email');
         $user->phone = $request->post('phone');
         $user->password = bcrypt($request->post('password'));
@@ -102,7 +103,8 @@ class UserController extends Controller
             ],
             'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
         ]);
-
+        
+        $user->name = $request->post('name'); 
         $user->email = $request->post('email');
         $user->phone = $request->post('phone');
         $user->save();

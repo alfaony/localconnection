@@ -10,6 +10,7 @@ use App\Http\Controllers\SuplierController;
 use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\QuoteController;
 
 
 
@@ -51,8 +52,12 @@ Route::group(['middleware' => ['auth']], function()
 
 
   Route::resource('customer', CustomerController::class)->except(['create','show']);
-  Route::resource('product', ProductController::class)->except(['create','show']);;
-
+  Route::resource('product', ProductController::class)->except(['create','show']);
   
+  Route::delete('quote/delete/product/{QuoteProduct}',[QuoteController::class,'destroyProduct'])->name('quote.destroy.product');
+  Route::get('quote/download/pdf/{slug}/{nomor}',[QuoteController::class,'downloadPdf'])->name('quote.download.pdf');
+  Route::get('quote/counting',[QuoteController::class,'counting'])->name('quote.counting');
+  Route::get('quote/product/counting',[QuoteController::class,'productCounting'])->name('quote.productCounting');
+  Route::resource('quote', QuoteController::class)->except(['show']);
 });
 

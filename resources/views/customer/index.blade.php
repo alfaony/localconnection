@@ -80,6 +80,16 @@ $no = ($customer->currentPage() - 1) * $customer->perPage() + 1;
 
     <div class="card mt-4">
         <div class="card-body">
+            <form action="{{ route('customer.index') }}" method="get">
+                <div class="d-flex flex-row-reverse">
+                    <div class="p-2">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                    </div>
+                    <div class="p-2">
+                        <input type="text" name="customer" class="form-control" placeholder="Search">
+                    </div>
+                </div>
+            </form>
             <table class="table">
                 <thead>
                     <tr>

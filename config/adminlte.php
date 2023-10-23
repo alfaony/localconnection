@@ -343,6 +343,11 @@ return [
             'icon' => 'fa fa-user-circle',
         ],
         [
+            'text'        => 'Quote',
+            'route'         => 'quote.index',
+            'icon' => 'fa fa-file-pdf',
+        ],
+        [
             'text'        => 'Laporan',
             'route'         => 'report.index',
             'icon' => 'fa fa-file',
