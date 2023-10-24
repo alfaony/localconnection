@@ -62,11 +62,13 @@ class QuoteController extends Controller
         {
             DB::beginTransaction();
             $no = $request->post('nomor') ?? 0; 
+            $date = Carbon::now()->format('m/Y');
             $quoteNumber = Quote::withTrashed()->max('quote_number') + 1;
-
+            $numberResult = $quoteNumber.'/'.$date;
 
             $quote = new Quote();
             $quote->quote_number = $quoteNumber;
+            $quote->number_result = $numberResult;
             $quote->customer_id = $request->post('customer');
             $quote->date = $request->post('date');
             $quote->tax = $request->post('tax');
@@ -101,7 +103,7 @@ class QuoteController extends Controller
             return redirect()->to(route('quote.download.pdf', ['slug' => $quote->slug, 'nomor' => $no]))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
 
             DB::rollback();
             Log::error($th);
