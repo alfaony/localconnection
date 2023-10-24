@@ -52,8 +52,8 @@ $totalQuote = $totalQuote + 1; // Get the total number of projects
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Nomor</th>
-                <th>Tanggal</th>
+                <th>No</th>
+                <th>Nomor Quote</th>
                 <th>Nama Sales</th>
                 <th>Total Quote</th>
                 <th>Aksi</th>
@@ -62,8 +62,8 @@ $totalQuote = $totalQuote + 1; // Get the total number of projects
         <tbody>
             @forelse($quote as $a)
             <tr>
+                <td>{{ $no }}</td>
                 <td>{{ $a->quote_number_result ?? '' }}</td>
-                <td>{{ $a->date }}</td>
                 <td>{{ $a->userCreate ? $a->userCreate->name : '' }}</td>
                 <td>{{ 'Rp. '.number_format($a->total,0,',','.')  ?? 'Rp. 0' }}</td>
                 <td>

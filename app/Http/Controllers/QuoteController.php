@@ -44,10 +44,9 @@ class QuoteController extends Controller
         $customer = Customer::all();
         $userCreate = Auth::user()->name;
         $date = Carbon::now()->format('m/Y');
-        $nomor = Quote::max('quote_number') + 1;
+        $nomor = Quote::withTrashed()->max('quote_number') + 1;
         $nomorQuote = $nomor.'/'.$date;
         
-
         return view('quote.createOrEdit',compact('product','customer','nomorQuote','userCreate','nomor'));
     }
 
@@ -63,7 +62,7 @@ class QuoteController extends Controller
         {
             DB::beginTransaction();
             $no = $request->post('nomor') ?? 0; 
-            $quoteNumber = Quote::max('quote_number') + 1;
+            $quoteNumber = Quote::withTrashed()->max('quote_number') + 1;
 
 
             $quote = new Quote();
@@ -214,11 +213,11 @@ class QuoteController extends Controller
 
         try 
         {
-            $deletedQuoteNumber = $quote->quote_number;
+            // $deletedQuoteNumber = $quote->quote_number;
             
             // NULL quote
-            $quote->quote_number = NULL;
-            $quote->save();
+            // $quote->quote_number = NULL;
+            // $quote->save();
             
             // Delete
             // Menghapus relasi terlebih dahulu
@@ -227,7 +226,7 @@ class QuoteController extends Controller
             $quote->delete();
 
             // Mengurutkan ulang nomor quote
-            Quote::where('quote_number', '>', $deletedQuoteNumber)->decrement('quote_number');
+            // Quote::where('quote_number', '>', $deletedQuoteNumber)->decrement('quote_number');
 
             DB::commit();
             return redirect()->back()->with('delete', true);
