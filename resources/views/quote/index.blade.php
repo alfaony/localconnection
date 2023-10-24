@@ -34,7 +34,7 @@ $totalQuote = $totalQuote + 1; // Get the total number of projects
 </div>
 <div class="container">    
     <!-- Tombol Tambah Pembelian Baru -->
-    <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Pembelian Baru</button>
+    <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Quote Baru</button>
 
     <!-- Search Bar -->
     <form action="{{ route('quote.index') }}" method="get">
@@ -54,7 +54,6 @@ $totalQuote = $totalQuote + 1; // Get the total number of projects
             <tr>
                 <th>No</th>
                 <th>Nomor Quote</th>
-                <th>Nama Sales</th>
                 <th>Total Quote</th>
                 <th>Aksi</th>
             </tr>
@@ -63,8 +62,7 @@ $totalQuote = $totalQuote + 1; // Get the total number of projects
             @forelse($quote as $a)
             <tr>
                 <td>{{ $no }}</td>
-                <td>{{ $a->quote_number_result ?? '' }}</td>
-                <td>{{ $a->userCreate ? $a->userCreate->name : '' }}</td>
+                <td>{{ $a->number_result ?? '' }}</td>
                 <td>{{ 'Rp. '.number_format($a->total,0,',','.')  ?? 'Rp. 0' }}</td>
                 <td>
                     <form method="post" action="{{ route('quote.destroy',$a) }}">
