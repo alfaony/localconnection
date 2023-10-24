@@ -14,22 +14,26 @@
         <div class="container" id="printThis">
             <!-- <div class="card">
                 <div class="card-body"> -->
-                    <div class="row">
-                        <div class="offset-md-8 col-4">
-                            <div class="row">
-                                <label for="date" class="col-sm-4 col-form-label text-right">Tanggal:</label>
-                                <div class="col-sm-8">
-                                    <span class="form-control-plaintext">{{ $quote->date }}</span>
-                                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h1>Quote</h1>
+                    </div>
+                    <div class="col-4 ml-md-auto">
+                        <div class="row">
+                            <label for="date" class="col-sm-8 col-form-label text-right">Tanggal:</label>
+                            <div class="col-sm-4">
+                                <span class="form-control-plaintext">{{ $quote->date }}</span>
                             </div>
-                            <div class="row">
-                                <label for="sales" class="col-sm-4 col-form-label text-right">Sales:</label>
-                                <div class="col-sm-8">
-                                    <span class="form-control-plaintext">{{ $userCreate ?? '' }}</span>
-                                </div>
+                        </div>
+                        <div class="row">
+                            <label for="sales" class="col-sm-8 col-form-label text-right">Sales:</label>
+                            <div class="col-sm-4">
+                                <span class="form-control-plaintext">{{ $userCreate ?? '' }}</span>
                             </div>
                         </div>
                     </div>
+                </div>
+                
                 
                     <div class="mt-3">
                         <div class="form-group row">
