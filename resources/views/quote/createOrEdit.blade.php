@@ -145,7 +145,7 @@
                             <select class="form-control productChange select2" name="product[]" id="product_{{ $a->id }}" required>
                                 <option value="" selected disabled>Pilih</option>
                                 @foreach($product as $b)
-                                <option value="{{ $b->id }}" {{ $a->product_id == $b->id ? 'selected' : '' }} >{{ $b->name }}</option>
+                                <option value="{{ $b->id }}" data-key="{{ $a->id }}"  {{ $a->product_id == $b->id ? 'selected' : '' }} >{{ $b->name }}</option>
                                 @endforeach
                             </select>
                         </td>
