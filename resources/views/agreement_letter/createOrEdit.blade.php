@@ -53,17 +53,17 @@
                 
                 <div class="form-group">
                     <label for="pembayaran">Klausul Termin Pembayaran</label>
-                    <textarea class="form-control" id="pembayaran" name="payment_term" rows="3" placeholder="Bebas diketik disini, yang akan dicetak di perjanjian">{{ old('payment_term') ?? @$agreementLetter->payment_term }}</textarea>
+                    <textarea class="form-control" id="pembayaran" name="payment_term" rows="3" placeholder="yang akan dicetak di perjanjian">{{ old('payment_term') ?? @$agreementLetter->payment_term }}</textarea>
                 </div>
         
                 <div class="form-group">
                     <label for="periode">Klausul Periode Perjanjian</label>
-                    <textarea class="form-control" id="periode" name="period_term" rows="3" placeholder="Bebas diketik disini, yang akan dicetak di perjanjian">{{ old('period_term') ?? @$agreementLetter->period_term }}</textarea>
+                    <textarea class="form-control" id="periode" name="period_term" rows="3" placeholder="yang akan dicetak di perjanjian">{{ old('period_term') ?? @$agreementLetter->period_term }}</textarea>
                 </div>
         
                 <div class="form-group">
                     <label for="tambahan">Klausul Tambahan Lain</label>
-                    <textarea class="form-control" id="tambahan" rows="3" name="other_term" placeholder="Bebas diketik disini, yang akan dicetak di perjanjian">{{ old('other_term') ?? @$agreementLetter->other_term }}</textarea>
+                    <textarea class="form-control" id="tambahan" rows="3" name="other_term" placeholder="yang akan dicetak di perjanjian">{{ old('other_term') ?? @$agreementLetter->other_term }}</textarea>
                 </div>
         
                 <div class="form-group text-right">
