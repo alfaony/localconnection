@@ -348,6 +348,21 @@ return [
             'icon' => 'fa fa-file-pdf',
         ],
         [
+            'text'        => 'SPK',
+            'route'         => 'work-order.index',
+            'icon' => 'fa fa-clipboard-list',
+        ],
+        [
+            'text'        => 'Perjanjian',
+            'route'         => 'agreement-letter.index',
+            'icon' => 'fa fa-file-signature',
+        ],
+        [
+            'text'        => 'Daftar BAST',
+            'route'         => 'bast.index',
+            'icon' => 'fa fa-file-signature',
+        ],
+        [
             'text'        => 'Laporan',
             'route'         => 'report.index',
             'icon' => 'fa fa-file',

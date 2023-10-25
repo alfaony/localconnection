@@ -11,6 +11,9 @@ use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\WorkOrderController;
+use App\Http\Controllers\AgreementLetterController;
+use App\Http\Controllers\BastController;
 
 
 
@@ -50,14 +53,31 @@ Route::group(['middleware' => ['auth']], function()
   Route::get('manager/counting',[ManagerController::class,'counting'])->name('manager.counting');
   Route::resource('manager', ManagerController::class);
 
-
   Route::resource('customer', CustomerController::class)->except(['create','show']);
+  
   Route::resource('product', ProductController::class)->except(['create','show']);
   
   Route::delete('quote/delete/product/{QuoteProduct}',[QuoteController::class,'destroyProduct'])->name('quote.destroy.product');
-  Route::get('quote/download/pdf/{slug}/{nomor}',[QuoteController::class,'downloadPdf'])->name('quote.download.pdf');
+  Route::get('quote/datatable', [QuoteController::class, 'dataTableJson'])->name('quote.datatable');
+  Route::get('quote/download/pdf/{slug}',[QuoteController::class,'downloadPdf'])->name('quote.download.pdf');
   Route::get('quote/counting',[QuoteController::class,'counting'])->name('quote.counting');
   Route::get('quote/product/counting',[QuoteController::class,'productCounting'])->name('quote.productCounting');
+  Route::get('quote/datatable', [QuoteController::class, 'dataTableJson'])->name('quote.datatable');
   Route::resource('quote', QuoteController::class)->except(['show']);
+
+  Route::delete('work-order/delete/product/{WorkOrderProduct}',[WorkOrderController::class,'destroyProduct'])->name('work-order.destroy.product');
+  Route::get('work-order/download/pdf/{slug}/',[WorkOrderController::class,'downloadPdf'])->name('work-order.download.pdf');
+  Route::get('work-order/suggestionQuote/{id}/',[WorkOrderController::class,'suggestionQuote'])->name('work-order.suggestionQuote');
+  Route::get('work-order/datatable', [WorkOrderController::class, 'dataTableJson'])->name('work-order.datatable');
+  Route::get('work-order/product/counting',[WorkOrderController::class,'productCounting'])->name('work-order.productCounting');
+  Route::resource('work-order', WorkOrderController::class)->except(['show']);
+  
+  Route::get('agreement-letter/download/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');
+  Route::get('agreement-letter/datatable', [AgreementLetterController::class, 'dataTableJson'])->name('agreement-letter.datatable');
+  Route::resource('agreement-letter', AgreementLetterController::class)->except(['show']);
+
+  Route::get('bast/download/pdf/{slug}',[BastController::class,'downloadPdf'])->name('bast.download.pdf');
+  Route::get('bast/datatable', [BastController::class, 'dataTableJson'])->name('bast.datatable');
+  Route::resource('bast', BastController::class)->except(['show']);
 });
 

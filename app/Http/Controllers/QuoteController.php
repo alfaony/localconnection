@@ -100,7 +100,7 @@ class QuoteController extends Controller
             $this->grandTotal($quote);
             DB::commit();
             // return redirect()->to(route('quote.index'))->with('store',true);
-            return redirect()->to(route('quote.download.pdf', ['slug' => $quote->slug, 'nomor' => $no]))->with('store',true);
+            return redirect()->to(route('quote.download.pdf', ['slug' => $quote->slug]))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);
@@ -191,7 +191,7 @@ class QuoteController extends Controller
             $this->grandTotal($quote);
             DB::commit();
 
-            return redirect()->to(route('quote.download.pdf', ['slug' => $quote->slug, 'nomor' => $no]))->with('store',true);
+            return redirect()->to(route('quote.download.pdf', ['slug' => $quote->slug]))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);
@@ -313,18 +313,18 @@ class QuoteController extends Controller
     /**
      * Download PDF
      */
-    public function downloadPdf($slug,$nomor)
+    public function downloadPdf($slug)
     {
         $product = Product::all();
         $customer = Customer::all();
         $quote = Quote::where('slug', $slug)->firstOrFail();
         $date = Carbon::parse($quote->created_at)->format('m/Y');
-        $nomorQuote = $nomor.'/'.$date;
+        $nomorQuote = $quote->number_result;
 
         $userCreate = $quote->userCreate ? $quote->userCreate->name : '';
-        $no = $nomor;
+        // $no = $;
 
-        return view('quote.pdf',compact('product','customer','nomorQuote','quote','userCreate','no'));
+        return view('quote.pdf',compact('product','customer','nomorQuote','quote','userCreate'));
     }
     /**
      * Total After PPN dll
@@ -349,6 +349,57 @@ class QuoteController extends Controller
 
         $quote->total = $grandTotal;
         $quote->save();
+    }
+
+    /**
+     * Data Table Quote
+     */
+    public function dataTableJson()
+    {
+        // Fetch data for the DataTable
+        $query = Quote::query();
+
+        // Map column indexes to column names (this may vary based on your table structure)
+        $columnNames = ['number_result', 'total'];
+
+        // Define searchable columns
+        $searchable = 
+        [
+            0 => 'number_result',
+            1 => 'total',
+        ];
+
+        // define your bootstrap version (4 or 5)
+        $bootstrap = 4;
+
+        // Add action buttons to each row
+        $actionButtons = [
+            [
+                'name' => 'Pdf',
+                'route' => 'quote.download.pdf',
+                'id' => true,
+            ],
+            [
+                'name' => 'Edit',
+                'route' => 'quote.edit',
+                'id' => true,
+            ],
+            [
+                'name' => 'Delete',
+                'route' => 'quote.destroy',
+                'id' => true,
+            ],
+        ];
+
+        $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap, true);
+
+        $data = $response->getData();
+        foreach ($data->data as $index => &$item) 
+        {
+            $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
+        }
+
+        return response()->json($data);
     }
 
 }

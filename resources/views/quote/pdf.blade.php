@@ -158,7 +158,7 @@
         </div>
 
         <div class="col-md-12 text-center mt-3"> <!-- Penambahan class text-center dan mt-3 -->
-            <a href="{{ route('quote.edit',$quote->slug).'?nomor='.$no }}" class="btn btn-primary"><i class="fa fa-edit"></i>Edit</a>
+            <a href="{{ route('quote.edit',$quote->slug) }}" class="btn btn-primary"><i class="fa fa-edit"></i>Edit</a>
             <button type="button" id="downloadQuote" class="btn btn-success"><i class="fa fa-file-pdf"></i> {{__('Download')}}</button>
         </div>
     </div>
@@ -368,7 +368,7 @@
 
     function prinsts() 
     {
-        let name = "{{ $nomorQuote }}";
+        let name = "{{ $nomorQuote }}"+"_quote";;
         let printContents = document.getElementById("printThis").innerHTML;
         let originalContents = document.body.innerHTML;
 

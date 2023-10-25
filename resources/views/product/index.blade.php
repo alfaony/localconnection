@@ -52,13 +52,14 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
                 </div>
                 <div class="form-group">
                     <label>Harga Jual:</label>
-                    <input type="text" class="form-control"  id="price_buy_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'price_buy')" required/>
-                    <input type="hidden" id="price_buy" name="price_buy" name="name"  value="{{ old('price_buy') ?? @$productEdit->price_buy }}">
-                </div>
-                <div class="form-group">
-                    <label>Harga Beli:</label>
                     <input type="text" class="form-control" id="price_sell_show"  placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'price_sell')" required/>
                     <input type="hidden" id="price_sell" name="price_sell" name="price_sell"  value="{{ old('price_sell') ?? @$productEdit->price_sell }}">
+                </div>
+
+                <div class="form-group">
+                    <label>Harga Beli:</label>
+                    <input type="text" class="form-control"  id="price_buy_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'price_buy')" required/>
+                    <input type="hidden" id="price_buy" name="price_buy" name="name"  value="{{ old('price_buy') ?? @$productEdit->price_buy }}">
                 </div>
         
                 <div class="form-group">

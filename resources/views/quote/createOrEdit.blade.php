@@ -529,8 +529,9 @@
             {
                 if(response.data)
                 {
-                    console.log(response.data );
+                    console.log(response);
 
+                    // die;
                     $("#sub_total_"+key).val(response.data);
                     $("#sub_total_show_"+key).html(formatRupiah(response.data || 0,'Rp. '));
                 }
