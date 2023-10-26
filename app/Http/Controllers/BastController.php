@@ -59,8 +59,9 @@ class BastController extends Controller
 
         $bast->user_created_id = Auth::user()->id;
         $bast->user_updated_id = Auth::user()->id;
-
+        
         $bast->save();
+        $this->updateBudget($request->input('work_order'), $request->input('project'));
 
         return redirect()->route('bast.download.pdf',$bast->slug)->with('store', true);
     }
@@ -120,6 +121,7 @@ class BastController extends Controller
         $bast->user_updated_id = Auth::user()->id;
 
         $bast->save();
+        $this->updateBudget($request->input('work_order'), $request->input('project'));
         
         return redirect()->route('bast.download.pdf',$bast->slug)->with('update', true);
     }
@@ -189,5 +191,24 @@ class BastController extends Controller
             'number' => $nomor ?? 0,
             'result' => $nomor.'/'.$date ?? '' 
         ];
+    }
+
+    /**
+     * update total value SPK to budget project
+     */
+    private function updateBudget($workOrderId,$projectId)
+    {
+        $workOrder = WorkOrder::findOrFail($workOrderId);
+        $project = Project::findOrFail($projectId);
+
+
+        // Get Total SPK
+        $workOrderTotal = $workOrder->workOrderProduct() ? $workOrder->workOrderProduct()->sum('sub_total') : 0 ;
+
+        // Update Budget
+        $project->budget = $workOrderTotal;
+        $project->save();
+
+        return true;
     }
 }
