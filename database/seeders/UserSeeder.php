@@ -18,6 +18,7 @@ class UserSeeder extends Seeder
     {
         User::create([
             'delete_able'=> 0,
+            'name'=>'root',
             'email' => 'root@emcdev.me',
             'password' => bcrypt('root123!'),
         ]);
