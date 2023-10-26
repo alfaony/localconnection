@@ -354,7 +354,7 @@ class WorkOrderController extends Controller
             ],
         ];
 
-        $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap, true);
+        $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
 
         $data = $response->getData();
         foreach ($data->data as $index => &$item) 

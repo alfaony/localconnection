@@ -180,6 +180,6 @@ class AgreementLetterController extends Controller
             ],
         ];
 
-        return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap, true);
+        return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
     }
 }

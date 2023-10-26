@@ -178,7 +178,7 @@ class BastController extends Controller
             ],
         ];
 
-        return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap, true);
+        return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
     }
 
     private function bastNumber()
