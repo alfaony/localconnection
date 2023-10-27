@@ -251,7 +251,7 @@
     {
         $('.select2').select2({
             width: '100%',
-            placeholder: 'Pilih Pekerja'
+            placeholder: 'Pilih Nomor Quote'
         });
 
         updateCustomerField();

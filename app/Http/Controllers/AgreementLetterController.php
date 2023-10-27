@@ -150,7 +150,7 @@ class AgreementLetterController extends Controller
         $query = AgreementLetter::query();
 
         // Map column indexes to column names (this may vary based on your table structure)
-        $columnNames = ['number_result','date'];
+        $columnNames = ['number_result','date', 'slug'];
 
         // Define searchable columns
         $searchable = [

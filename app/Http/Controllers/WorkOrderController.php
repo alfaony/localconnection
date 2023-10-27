@@ -324,7 +324,7 @@ class WorkOrderController extends Controller
         $query = WorkOrder::query();
 
         // Map column indexes to column names (this may vary based on your table structure)
-        $columnNames = ['number_result', 'total'];
+        $columnNames = ['number_result', 'total', 'slug'];
 
         // Define searchable columns
         $searchable = [

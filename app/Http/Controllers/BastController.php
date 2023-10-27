@@ -147,7 +147,7 @@ class BastController extends Controller
         $query = Bast::query();
 
         // Map column indexes to column names (this may vary based on your table structure)
-        $columnNames = ['date','number_result'];
+        $columnNames = ['date','number_result', 'slug'];
 
         // Define searchable columns
         $searchable = 
