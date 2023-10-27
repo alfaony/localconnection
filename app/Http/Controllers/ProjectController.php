@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\ProjectRequest;
 
 use App\Models\Project;
+use App\Models\WorkOrder;
 
 class ProjectController extends Controller
 {
@@ -22,8 +23,9 @@ class ProjectController extends Controller
         ->OrderBy('created_at','asc')->paginate(10);
 
         $totalProject = count(Project::get());
+        $workOrder = WorkOrder::all();
 
-        return view('project.index',compact('project','totalProject'));
+        return view('project.index',compact('project','totalProject', 'workOrder'));
     }
 
     
@@ -39,6 +41,7 @@ class ProjectController extends Controller
         $project->user_id = Auth::user()->id;
         $project->title = $request->post('title');
         $project->budget = $request->post('budget');
+        $project->work_order_id = $request->post('work_order');
         $project->start_date = $request->post('start_date');
         $project->end_date = $request->post('end_date');
         $project->description = $request->post('description');
@@ -58,10 +61,11 @@ class ProjectController extends Controller
         $totalProject = count(Project::get());
         $projectEdit = Project::where('slug', $slug)->firstOrFail();
         $project = Project::OrderBy('created_at','asc')->paginate(10);
+        $workOrder = WorkOrder::all();
     
         // Rest of your code for editing the project...
 
-        return view('project.index', compact('projectEdit','project','totalProject'));
+        return view('project.index', compact('projectEdit','project','totalProject', 'workOrder'));
     }
 
     /**
@@ -76,6 +80,7 @@ class ProjectController extends Controller
         $project->user_id = Auth::user()->id;
         $project->title = $request->post('title');
         $project->budget = $request->post('budget');
+        $project->work_order_id = $request->post('work_order');
         $project->start_date = $request->post('start_date');
         $project->end_date = $request->post('end_date');
         $project->description = $request->post('description');

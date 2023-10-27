@@ -69,6 +69,16 @@ class Project extends Model
         return $this->budget - $this->purchase;
     }
 
+    public function workOrder()
+    {
+        return $this->belongsTo(WorkOrder::class)->withTrashed();
+    }
+
+    public function reportProject()
+    {
+        return $this->hasOne(ReportProject::class);
+    }
+    
     public function scopeByDateRange($query,$startDate = null,$endDate = null)
     {
         if($startDate && $endDate)

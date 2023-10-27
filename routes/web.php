@@ -14,6 +14,7 @@ use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\WorkOrderController;
 use App\Http\Controllers\AgreementLetterController;
 use App\Http\Controllers\BastController;
+use App\Http\Controllers\ReportProjectController;
 
 
 
@@ -79,5 +80,8 @@ Route::group(['middleware' => ['auth']], function()
   Route::get('bast/download/pdf/{slug}',[BastController::class,'downloadPdf'])->name('bast.download.pdf');
   Route::get('bast/datatable', [BastController::class, 'dataTableJson'])->name('bast.datatable');
   Route::resource('bast', BastController::class)->except(['show']);
+
+  Route::get('report-project/datatable', [ReportProjectController::class, 'dataTableJson'])->name('report-project.datatable');
+  Route::resource('report-project', ReportProjectController::class)->except(['show']);
 });
 

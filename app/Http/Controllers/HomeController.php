@@ -32,7 +32,10 @@ class HomeController extends Controller
     {
         $totalActiveProjects = Project::byDateRange()->count() ?? 0;
 
-        $activeProjectsBudget = Project::byDateRange()->sum('budget') ?? 0;
+        // $activeProjectsBudget = Project::byDateRange()->sum('budget') ?? 0;
+        $activeProjectsBudget = Project::byDateRange()
+                                ->join('work_orders', 'projects.work_order_id', '=', 'work_orders.id')
+                                ->sum('work_orders.total') ?? 0;
 
         $totalPurchaseBudget = Suplier::byProjectActive()->sum('total_price') ?? 0;
 
