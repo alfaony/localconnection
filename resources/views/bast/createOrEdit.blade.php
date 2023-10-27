@@ -42,13 +42,17 @@
                 </div>
                 <div class="form-group">
                     <label for="pilihDataProyek" class="form-label">Pilih Data Proyek</label>
-                    <select class="form-control select2" name="project" id="pilihDataProyek" required>
+                    <select class="form-control select2 projectChange" name="project" id="pilihDataProyek" required>
                         <option value="" disabled selected>Pilih</option>
                         @foreach($project as $a)
-                        <option value="{{ $a->id }}" {{ @$bast->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
+                        <option value="{{ $a->id }}" data-report="{{ $a->reportProject ? $a->reportProject->id : '' }}" {{ @$bast->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
                         @endforeach
                         <!-- Other options can be added here -->
                     </select>
+                </div>
+                <div class="form-group">
+                    <label for="pilihDataProyek" class="form-label">Status Laporan Proyek</label>
+                    <span class="form-control" id="reportProjectMessage"></span>
                 </div>
                 <hr>
                 <div class="form-group">
@@ -61,7 +65,7 @@
                 </div>
                 <hr>
                 <div class="form-group mt-4">
-                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <button type="submit" id="saveButtonId" class="btn btn-primary">Simpan</button>
                 </div>
             </form>
 
@@ -81,6 +85,25 @@
             width: '100%',
             // placeholder: 'Pilih Quote'
         });
+
+        $('.projectChange').on('change', function() {
+        // Ambil data-report dari option yang dipilih
+        var reportId = $(this).find(':selected').data('report');
+        
+        // Jika reportId kosong, tampilkan pesan dan disable tombol simpan
+        if (!reportId) {
+            $('#reportProjectMessage').text('Laporan Proyek Tidak Tersedia').addClass('text-red');
+            $('#saveButtonId').prop('disabled', true);  // diasumsikan bahwa tombol simpan memiliki id 'saveButtonId'
+        } else {
+            // Jika reportId ada, sembunyikan pesan dan aktifkan tombol simpan
+            $('#reportProjectMessage').text('Laporan Proyek Tersedia').addClass('text-green');
+            $('#saveButtonId').prop('disabled', false);
+        }
+    });
+
+    $('.projectChange').trigger('change');
+    // Jika Anda ingin memeriksa kondisi saat pertama kali halaman dimuat (misalnya jika select sudah memiliki option yang dipilih),
+    // Anda bisa memicu event change pada select saat halaman selesai dimuat
     });
 </script>
 @stop

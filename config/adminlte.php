@@ -308,11 +308,6 @@ return [
             'label_color' => 'success',
         ],
         [
-            'text'        => 'Data Proyek',
-            'route'         => 'project.index',
-            'icon' => 'fa fa-tasks',
-        ],
-        [
             'text'      => 'Pembelian',
             'route'     => 'suplier.index',
             'icon'      => 'fa fa-check',
@@ -355,6 +350,16 @@ return [
         [
             'text'        => 'Perjanjian',
             'route'         => 'agreement-letter.index',
+            'icon' => 'fa fa-file-signature',
+        ],
+        [
+            'text'        => 'Data Proyek',
+            'route'         => 'project.index',
+            'icon' => 'fa fa-tasks',
+        ],
+        [
+            'text'        => 'Laporan Proyek',
+            'route'         => 'report-project.index',
             'icon' => 'fa fa-file-signature',
         ],
         [

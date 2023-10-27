@@ -45,14 +45,20 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
         </div>
 
         <div class="form-group">
-            <label>Anggaran Proyek</label>
-            <div class="input-group">
+            <label>Surat Perintah Kerja</label>
+            <select name="work_order" class="form-control select2"  id="">
+                <option value="" selected disabled>Pilih Surat Perintah Kerja</option>
+                @foreach($workOrder as $a)
+                <option value="{{ $a->id }}" {{ @$projectEdit->work_order_id == $a->id ? 'selected' : '' }}> {{ $a->number_result }} </option>
+                @endforeach
+            </select>
+            <!-- <div class="input-group">
                 <div class="input-group-prepend">
                     <span class="input-group-text">Rp</span>
                 </div>
                 <input type="text" class="form-control" name="budget_show" id="budget_show"  oninput="formatRupiahFormat(this,'budget')" required/>
                 <input type="hidden" class="form-control" name="budget" id="budget" value="{{ old('budget') ?? @$projectEdit->budget }}" />
-            </div>
+            </div> -->
         </div>
 
         <div class="form-group">
@@ -131,7 +137,15 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
 @section('js')
 <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
+    $(document).ready(function () 
+    {
+        $('.select2').select2({
+            width: '100%',
+        });
+    });
+
     $(document).ready(function () 
     {
         let nomor = "{{ $totalProjects }}";
@@ -176,6 +190,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
 </script>
 @stop
 @section('css')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -198,6 +213,17 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
     }
     th {
         background-color: #f2f2f2;
+    }
+    .select2-selection__rendered 
+    {
+        line-height: 31px !important;
+    }
+    .select2-container .select2-selection--single 
+    {
+        height: 35px !important;
+    }
+    .select2-selection__arrow {
+        height: 34px !important;
     }
 </style>
 @stop

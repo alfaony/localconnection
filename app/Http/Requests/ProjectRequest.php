@@ -23,9 +23,11 @@ class ProjectRequest extends FormRequest
      */
     public function rules()
     {
-        return [
+        return 
+        [
+            'work_order' => 'required|uuid|exists:work_orders,id',
             'title' => 'required|string|max:255',
-            'budget' => 'required|integer|min:0',
+            'budget' => 'nullable|integer|min:0',
             'start_date' => 'required|date|before_or_equal:end_date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'description' => 'nullable|string',
@@ -35,6 +37,8 @@ class ProjectRequest extends FormRequest
     public function messages()
     {
         return [
+            'work_order.required' => 'Proyek wajib diisi.',
+
             'title.required' => 'Judul proyek wajib diisi.',
             'title.string' => 'Judul proyek harus berupa teks.',
             'title.max' => 'Judul proyek tidak boleh melebihi 255 karakter.',
