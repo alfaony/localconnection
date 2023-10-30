@@ -70,7 +70,7 @@
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label>Masukan link laporan :</label>
-                        <input type="text" class="form-control" placeholder="Placeholder" name="link_report" value="{{ old('date') ?? @$reportProject->date }}" required>
+                        <input type="text" class="form-control" placeholder="Placeholder" name="link_report" value="{{ old('date') ?? @$reportProject->link_report }}" required>
                     </div>
                 </div>
         
