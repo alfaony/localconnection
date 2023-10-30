@@ -67,4 +67,9 @@ class WorkOrder extends Model
     {
         return $this->belongsTo(Quote::class)->withTrashed();
     }
+
+    public function project()
+    {
+        return $this->hasOne(Project::class);
+    }
 }

@@ -1,10 +1,22 @@
 @extends('adminlte::page')
 @section('content')
 <div class="containe mt-3">
+<div class="col-md-12">
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+</div>
     <div class="card">
         <div class="card-body">
             @if(@$reportProject)
             <form method="post" action="{{ route('report-project.update',@$reportProject) }}" enctype="multipart/form-data">
+            @method('patch')
             @else
             <form method="post" action="{{ route('report-project.store') }}" enctype="multipart/form-data">
             @endif

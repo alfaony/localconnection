@@ -394,7 +394,7 @@ class QuoteController extends Controller
         $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
 
         $data = $response->getData();
-        foreach ($data->data as $index => &$item) 
+        foreach ($data->data as $index => $item) 
         {
             $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
         }

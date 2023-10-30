@@ -104,11 +104,11 @@ class ReportProjectController extends Controller
      * @param  \App\Models\ReportProject  $ReportProject
      * @return \Illuminate\Http\Response
      */
-    public function update(ReportProjectRequest $request, ReportProject $ReportProject)
+    public function update(ReportProjectRequest $request, ReportProject $reportProject)
     {
         $reportProject->date = $request->post('date');
-        $reportProject->work_order = $request->post('work_order');
-        $reportProject->project = $request->post('project');
+        $reportProject->work_order_id = $request->post('work_order');
+        $reportProject->project_id = $request->post('project');
         $reportProject->link_report = $request->post('link_report');
     
         if ($request->hasFile('report_file')) 
