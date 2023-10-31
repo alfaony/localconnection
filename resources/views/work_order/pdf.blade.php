@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('content')
-<div class="container mt-3">
+<div class="container mt-5">
     <div class="col-md-12">
         @if(Session::get('store'))
         <div class="alert alert-success mt-3">Surat Perintah Kerja Berhasil Ditambahkan</div>
@@ -12,118 +12,71 @@
     </div>
     <div class="card" id="printThis">
         <div class="card-body">
-            <div class="col-md-12">
-                @if(Session::get('deletePurchase'))
-                <div class="alert alert-success mt-3">Berhasil Menghapus Pembelian</div>
-                @endif
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+            <div class="row">
+                <div class="col-6">
+                    <h2>PT. Gema Teknologi Cahaya Gemilang</h2>
+                    <p>GSA #B8/DH. Jl.S.Parman.</p>
+                    <p>Jakarta Barat</p>
+                </div>
+                <div class="col-6 text-right">
+                    <h2>Surat Perjanjian</h2>
+                    <p>No SPK # {{ $nomorWorkOrder }}</p>
+                    <p>SPK Date: {{ $workOrder->date }}</p>
+                    <!-- <p>P.O#: 23/12/2019</p> -->
+                </div>
             </div>
-            @if(@$workOrder)
-            <form method="post" action="{{ route('work-order.update',@$workOrder) }}" enctype="multipart/form-data">
-            @method('put')
-            @else
-            <form method="post" action="{{ route('work-order.store') }}" enctype="multipart/form-data">
-            @endif
-                @csrf
-                <div class="row">
-                    <div class="col-md-6">
-                        <h2>Surat Perjanjian</h2>
-                        <div class="mt-5">No SPK: {{ $nomorWorkOrder }}</div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="row">
-                            <label for="date" class="col-sm-8 col-form-label text-right">Tanggal:</label>
-                            <div class="col-sm-4">
-                                <span class="form-control-plaintext">{{ $workOrder->date }}</span>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <label class="col-sm-8 col-form-label text-right">Finance:</label>
-                            <div class="col-sm-4">
-                                <span class="form-control-plaintext">{{ $userCreate ?? '' }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row mt-3">
-                    <label class="col-sm-2 col-form-label">Pilih No. Quote</label>
-                    <div class="col-sm-10">
-                        <span class="form-control-plaintext">{{ $workOrder->quote ? $workOrder->quote->number_result : '' }}</span>
-                    </div>
-                </div>
         
-                <div class="row mb-3">
-                    <label class="col-sm-2 col-form-label">Customer</label>
-                    <div class="col-sm-10">
-                        @if($workOrder->quote)
-                        @if($workOrder->quote->customer)
-                        <span class="form-control-plaintext">{{ $workOrder->quote->customer? $workOrder->quote->customer->name : '' }}</span>
-                        @endif
-                        @endif
-                    </div>
+            <div class="row mt-5">
+                <div class="col-2">
+                    <h4>Bill To</h4>
+                    <p>{{ $workOrder->quote ? $workOrder->quote->customer->name : '' }}</p>
+                    <p>{{ $workOrder->quote ? $workOrder->quote->customer->address : '' }}</p>
                 </div>
+            </div>
         
-                <table class="table table-bordered" id="tableWorkOrder">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Produk / Jasa</th>
-                            <th>Description</th>
-                            <th>Quantity</th>
-                            <th>Budget</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if(@$workOrder)
-                        @php $nomorBaris = 1; @endphp
-                        @foreach($workOrder->workOrderProduct as $a)
-                        <tr data-key="{{ $a->id }}">
-                            <td>
-                                {{ $nomorBaris++ }}
-                                </td>
-                            <td>
-                                {{ $a->product ? $a->product->name : '' }}
-                            </td>
-                            <td>
-                                {{ $a->description ?? '' }}
-                                <input type="hidden" name="description[]" id="description_{{ $a->id }}" class="form-control" placeholder="Description" value="{{  @$a->description }}" required>
-                            </td>
-                            <td>
-                                {{ $a->qty ?? '' }}
-                                <input type="hidden" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ @$a->qty }}" required>
-                            </td>
-                            <td id="sub_total_show_{{ $a->id }}">
-                                {{ 'Rp. '.number_format($a->sub_total,0,',','.') }}
-                                <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]" value="{{ $a->id }}">
-                                <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
-                            </td>
-                        </tr>
-                        @endforeach
-                        @endif
-                    </tbody>
-                </table>
-        
-                <div class="row mt-3">
-                    <div class="col-2 offset-10">
-                        <div class="d-flex justify-content-between mb-2">
-                            <div>Total:</div>
-                            <div id="sub_total_result">Rp 0</div>
-                        </div>
-                    </div>
-                </div>
-            </form>
+            <table class="table mt-5" id="tableWorkOrder">
+                <thead>
+                    <tr>
+                        <th>QTY</th>
+                        <th>DESCRIPTION</th>
+                        <th>UNIT PRICE</th>
+                        <th>AMOUNT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if(@$workOrder)
+                    @php $nomorBaris = 1; @endphp
+                    @foreach($workOrder->workOrderProduct as $a)
+                    <tr data-key="{{ $a->id }}">
+                        <td>
+                            {{ $a->qty ?? '' }}
+                            <input type="hidden" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ @$a->qty }}" required>
+                        </td>
+                        <td>
+                            {{ $a->product ? $a->product->name : '' }}
+                        </td>
+                        <td>
+                            {{ $a->description ?? '' }}
+                            <input type="hidden" name="description[]" id="description_{{ $a->id }}" class="form-control" placeholder="Description" value="{{  @$a->description }}" required>
+                        </td>
+                        <td id="sub_total_show_{{ $a->id }}">
+                            {{ 'Rp. '.number_format($a->sub_total,0,',','.') }}
+                            <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]" value="{{ $a->id }}">
+                            <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
+                        </td>
+                    </tr>
+                    @endforeach
+                    @endif
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3" class="text-right">TOTAL</th>
+                        <th id="sub_total_result">Rp. 0</th>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
     </div>
-
     <div class="col-md-12 text-center mt-3"> <!-- Penambahan class text-center dan mt-3 -->
         <a href="{{ route('work-order.edit',$workOrder->slug) }}" class="btn btn-primary"><i class="fa fa-edit"></i>Edit</a>
         <button type="button" id="downloadWorkOrder" class="btn btn-success"><i class="fa fa-file-pdf"></i> {{__('Download')}}</button>
@@ -458,6 +411,10 @@
     }
     .select2-selection__arrow {
         height: 34px !important;
+    }
+    p {
+        margin-top: 1px;
+        margin-bottom: 1px;
     }
 </style>
 @stop

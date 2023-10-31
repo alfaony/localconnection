@@ -64,10 +64,10 @@ return [
     */
  
     'logo' => '&zwnj;',
-    'logo_img' => 'logo/logo-thrive.png',
+    // 'logo_img' => 'logo/logo-thrive.png',
     'logo_img_class' => 'brand-image',
     'logo_img_xl' => 'logo/logo-thrive.png',
-    'logo_img_xl_class' => 'brand-image-xs',
+    'logo_img_xl_class' => 'brand-image-xl',
     'logo_img_alt' => env('APP_NAME'),
 
     /*
@@ -84,13 +84,14 @@ return [
     */
 
     'auth_logo' => [
-        'enabled' => false,
-        'img' => [
+        'enabled' => true,
+        'img' => 
+        [
             'path' => 'logo/logo-thrive.png',
             'alt' => 'Auth Logo',
             'class' => '',
-            'width' => 50,
-            'height' => 50,
+            'width' => 210,
+            'height' => 120,
         ],
     ],
 
@@ -308,11 +309,6 @@ return [
             'label_color' => 'success',
         ],
         [
-            'text'      => 'Pembelian',
-            'route'     => 'suplier.index',
-            'icon'      => 'fa fa-check',
-        ],
-        [
             'text'        => 'Data Pekerja',
             'route'         => 'employee.index',
             'icon' => 'fa fa-briefcase',
@@ -356,6 +352,11 @@ return [
             'text'        => 'Data Proyek',
             'route'         => 'project.index',
             'icon' => 'fa fa-tasks',
+        ],
+        [
+            'text'      => 'Pembelian',
+            'route'     => 'suplier.index',
+            'icon'      => 'fa fa-check',
         ],
         [
             'text'        => 'Laporan Proyek',
