@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'title' => 'Sistem Keloola Managemen Proyek',
+    'title' => 'BOS - Bright Operating System',
     'title_prefix' => '',
     'title_postfix' => '',
 
@@ -91,7 +91,7 @@ return [
             'alt' => 'Auth Logo',
             'class' => '',
             'width' => 210,
-            'height' => 120,
+            'height' => "auto",
         ],
     ],
 
