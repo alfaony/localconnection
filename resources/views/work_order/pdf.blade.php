@@ -19,7 +19,7 @@
                     <p>Jakarta Barat</p>
                 </div>
                 <div class="col-6 text-right">
-                    <h2>Surat Perjanjian</h2>
+                    <h2>Surat Perintah Kerja</h2>
                     <p>No SPK # {{ $nomorWorkOrder }}</p>
                     <p>SPK Date: {{ $workOrder->date }}</p>
                     <!-- <p>P.O#: 23/12/2019</p> -->
@@ -27,8 +27,8 @@
             </div>
         
             <div class="row mt-5">
-                <div class="col-2">
-                    <h4>Bill To</h4>
+                <div class="col-12">
+                    <h4>To</h4>
                     <p>{{ $workOrder->quote ? $workOrder->quote->customer->name : '' }}</p>
                     <p>{{ $workOrder->quote ? $workOrder->quote->customer->address : '' }}</p>
                 </div>
@@ -37,10 +37,11 @@
             <table class="table mt-5" id="tableWorkOrder">
                 <thead>
                     <tr>
-                        <th>QTY</th>
-                        <th>DESCRIPTION</th>
-                        <th>UNIT PRICE</th>
-                        <th>AMOUNT</th>
+                        <th>No</th>
+                        <th>Product / Service</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Budget</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -49,15 +50,18 @@
                     @foreach($workOrder->workOrderProduct as $a)
                     <tr data-key="{{ $a->id }}">
                         <td>
-                            {{ $a->qty ?? '' }}
-                            <input type="hidden" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ @$a->qty }}" required>
-                        </td>
+                            {{ $nomorBaris++ }}
+                            </td>
                         <td>
                             {{ $a->product ? $a->product->name : '' }}
                         </td>
                         <td>
                             {{ $a->description ?? '' }}
                             <input type="hidden" name="description[]" id="description_{{ $a->id }}" class="form-control" placeholder="Description" value="{{  @$a->description }}" required>
+                        </td>
+                        <td>
+                            {{ $a->qty ?? '' }}
+                            <input type="hidden" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ @$a->qty }}" required>
                         </td>
                         <td id="sub_total_show_{{ $a->id }}">
                             {{ 'Rp. '.number_format($a->sub_total,0,',','.') }}
@@ -70,11 +74,17 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="3" class="text-right">TOTAL</th>
+                        <th colspan="4" class="text-right">TOTAL</th>
                         <th id="sub_total_result">Rp. 0</th>
                     </tr>
                 </tfoot>
             </table>
+            <div class="col-md-2 offset-md-10 text-left mt-5">
+                <h7>Pihak Penjual</h7>
+            </div>
+            <div class="col-md-2 offset-md-10 text-left mt-3">
+                <img src="{{ asset('logo/paraf.png') }}" alt="Signature" style="with:auto; height:150px">
+            </div>
         </div>
     </div>
     <div class="col-md-12 text-center mt-3"> <!-- Penambahan class text-center dan mt-3 -->
