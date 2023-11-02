@@ -59,6 +59,7 @@ Route::group(['middleware' => ['auth']], function()
   Route::resource('product', ProductController::class)->except(['create','show']);
   
   Route::delete('quote/delete/product/{QuoteProduct}',[QuoteController::class,'destroyProduct'])->name('quote.destroy.product');
+  Route::get('quote/select2', [QuoteController::class, 'select2'])->name('quote.select2');
   Route::get('quote/datatable', [QuoteController::class, 'dataTableJson'])->name('quote.datatable');
   Route::get('quote/download/pdf/{slug}',[QuoteController::class,'downloadPdf'])->name('quote.download.pdf');
   Route::get('quote/counting',[QuoteController::class,'counting'])->name('quote.counting');
@@ -67,6 +68,7 @@ Route::group(['middleware' => ['auth']], function()
   Route::resource('quote', QuoteController::class)->except(['show']);
 
   Route::delete('work-order/delete/product/{WorkOrderProduct}',[WorkOrderController::class,'destroyProduct'])->name('work-order.destroy.product');
+  Route::get('work-order/select2', [WorkOrderController::class, 'select2'])->name('work-order.select2');
   Route::get('work-order/download/pdf/{slug}/',[WorkOrderController::class,'downloadPdf'])->name('work-order.download.pdf');
   Route::get('work-order/suggestionQuote/{id}/',[WorkOrderController::class,'suggestionQuote'])->name('work-order.suggestionQuote');
   Route::get('work-order/datatable', [WorkOrderController::class, 'dataTableJson'])->name('work-order.datatable');

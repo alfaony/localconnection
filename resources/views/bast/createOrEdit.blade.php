@@ -32,6 +32,7 @@
                 </div>
                 <div class="form-group">
                     <label for="pilihSPK" class="form-label">Pilih SPK</label>
+                    {{--
                     <select class="form-control select2" name="work_order" id="pilihSPK" required>
                         <option value="" selected disabled>Pilih</option>
                         @foreach($workOrder as $a)
@@ -39,6 +40,8 @@
                         @endforeach
                         <!-- Other options can be added here -->
                     </select>
+                    --}}
+                    <select class="form-control" id="work_order" name="work_order" required></select>
                 </div>
                 <div class="form-group">
                     <label for="pilihDataProyek" class="form-label">Pilih Data Proyek</label>
@@ -74,10 +77,12 @@
 </div>
 @stop
 @section('js')
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
     $(document).ready(function () 
     {
@@ -85,6 +90,41 @@
             width: '100%',
             // placeholder: 'Pilih Quote'
         });
+
+        $('#work_order').select2({
+            placeholder: 'Pilih Surat Perintah Kerja',
+            ajax: 
+            {
+                url: "{{ route('work-order.select2') }}",
+                dataType: 'json',
+                data: function(params) {
+                    return {
+                        number_result: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.map(function(workOrder) {
+                            return {
+                                id: workOrder.id,
+                                text: workOrder.number_result,
+                            };
+                        })
+                    };
+                }
+            }
+        });
+
+        var selectedValueQuote = "{{ @$bast->work_order_id }}";
+        if(selectedValueQuote)
+        {
+            title = "{{ @$bast->workOrder->number_result }}";
+            // Create an option element with the selected value
+            var newOption = new Option(title, selectedValueQuote, true, true);
+    
+            // Append the option to the select2 element and trigger change
+            $('#work_order').append(newOption).trigger('change');
+        }
 
         $('.projectChange').on('change', function() {
         // Ambil data-report dari option yang dipilih

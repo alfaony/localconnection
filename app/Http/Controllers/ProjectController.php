@@ -23,7 +23,9 @@ class ProjectController extends Controller
         ->OrderBy('created_at','asc')->paginate(10);
 
         $totalProject = count(Project::get());
-        $workOrder = WorkOrder::whereDoesntHave('project')->get();
+        $workOrder = WorkOrder::whereDoesntHave('project')
+        ->orderBy('created_at','desc')
+        ->get();
 
         return view('project.index',compact('project','totalProject', 'workOrder'));
     }
@@ -64,6 +66,7 @@ class ProjectController extends Controller
         // $workOrder = WorkOrder::all();
         $workOrder = WorkOrder::whereDoesntHave('project')
         ->orWhere('id', $projectEdit->work_order_id)
+        ->orderBy('created_at','desc')
         ->get();
     
         // Rest of your code for editing the project...

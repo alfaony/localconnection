@@ -85,4 +85,12 @@ class Quote extends Model
             });
         }
     }
+
+    public function scopeByNumberResult($query,$number_result)
+    {
+        if($number_result)
+        {
+            return $query->where('number_result','like','%'.$number_result.'%');
+        }
+    }
 }

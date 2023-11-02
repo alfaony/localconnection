@@ -41,7 +41,7 @@ class QuoteController extends Controller
     public function create(Request $request)
     {
         $product = Product::all();
-        $customer = Customer::all();
+        $customer = Customer::orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $date = Carbon::now()->format('m/Y');
         $nomor = Quote::withTrashed()->max('quote_number') + 1;
@@ -122,7 +122,7 @@ class QuoteController extends Controller
     public function edit($slug,Request $request)
     {
         $product = Product::all();
-        $customer = Customer::all();
+        $customer = Customer::orderBy('created_at','desc')->get();
         $quote = Quote::where('slug', $slug)->firstOrFail();
 
         $date = Carbon::parse($quote->created_at)->format('m/Y');
@@ -402,4 +402,18 @@ class QuoteController extends Controller
         return response()->json($data);
     }
 
+    /**
+     * 
+     * Select2 Quote
+     */
+
+     public function select2(Request $request)
+     {
+        $quote = Quote::with('customer')->byNumberResult($request->get('number_result'))
+                ->orderBy('created_at','desc')
+                ->limit(6)
+                ->get();
+                
+        return response()->json($quote);
+     }
 }

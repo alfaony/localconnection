@@ -34,12 +34,10 @@
         
                 <div class="form-group row">
                     <label for="quote" class="col-sm-2 col-form-label">Pilih No. Quote:</label>
-                    <div class="col-sm-2">
+                    <div class="col-sm-5">
+                        <input type="hidden" name="quote_id" value="{{ old('quote') ?? @$agreementLetter->quote_id }}">
                         <select class="form-control select2" name="quote" id="quote">
-                            <option value="" disabled selected>Pilih</option>
-                            @foreach($quote as $a)
-                            <option value="{{ $a->id }}" data-customer="{{ $a->customer ? $a->customer->name : '' }}" {{ @$agreementLetter->quote_id == $a->id ? 'selected' : ''}} >{{ $a->number_result }}</option>
-                            @endforeach
+                           
                         </select>
                     </div>
                 </div>
@@ -80,31 +78,87 @@
 @stop
 
 @section('js')
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
-    $(document).ready(function () {
-        updateCustomerField();
-
-        $('.select2').select2({
-            width: '100%',
-            placeholder: 'Pilih Quote'
+    $(document).ready(function () 
+    {
+        $('#quote').select2({
+            placeholder: 'Pilih Nomor Quote Baru',
+            ajax: 
+            {
+                url: "{{ route('quote.select2') }}",
+                dataType: 'json',
+                data: function(params) {
+                    return {
+                        number_result: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.map(function(quote) {
+                            console.log(quote.customer.name);
+                            return {
+                                id: quote.id,
+                                text: quote.number_result,
+                                data: 
+                                {
+                                    customer: quote.customer ? quote.customer.name : ''
+                                }
+                            };
+                        })
+                    };
+                }
+            }
         });
 
-        $(".select2").on("change", updateCustomerField);
+        
+        $('#quote').on('select2:select', function(e) {
+            // Ambil data-customer dari opsi yang dipilih
+            // console.log(e);
+            var customerName = e.params.data.data.customer;
+            // Menampilkan nilai tersebut di elemen dengan id "customer"
+            $("#customer").val(customerName);
+        });
+
+        var selectedValueQuote = "{{ @$agreementLetter->quote_id }}";
+        if(selectedValueQuote)
+        {
+            title = "{{ @$agreementLetter->quote->number_result }}";
+            customerName = "{{ @$agreementLetter->quote->customer->name }}";
+            // Create an option element with the selected value
+            var newOption = new Option(title, selectedValueQuote, true, true);
+    
+            // Append the option to the select2 element and trigger change
+            $('#quote').append(newOption).trigger('change');
+            $("#customer").val(customerName);
+        }
+        
+        // updateCustomerField();
+
+        // $('.select2').select2({
+        //     width: '100%',
+        //     placeholder: 'Pilih Quote'
+        // });
+
+        // $(".select2").on("change", updateCustomerField);
+
+
     });
 
 
-    function updateCustomerField() 
-    {
-        // Mendapatkan nilai dari atribut data-customer
-        var customerName = $(".select2").find("option:selected").data("customer");
+    // function updateCustomerField() 
+    // {
+    //     // Mendapatkan nilai dari atribut data-customer
+    //     var customerName = $(".select2").find("option:selected").data("customer");
         
-        // Menampilkan nilai tersebut di elemen dengan id "customer"
-        $("#customer").val(customerName);
-    }
+    //     // Menampilkan nilai tersebut di elemen dengan id "customer"
+    //     $("#customer").val(customerName);
+    // }
 </script>
 @stop
 @section('css')

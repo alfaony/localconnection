@@ -49,6 +49,7 @@
                 <div class="row mb-3 mt-3">
                     <label class="col-sm-2 col-form-label">Pilih No. Quote</label>
                     <div class="col-sm-10">
+                        {{-- 
                         @if(@$workOrder)
                         <select name="quote" class="form-control select2" required>
                             <option value="" disabled selected>Quote</option>
@@ -66,36 +67,48 @@
                             <!-- Anda bisa menambahkan option lainnya di sini -->
                         </select>
                         @endif
+                        --}}
+                        @if(@$workOrder)
+                        <input type="hidden" name="quote_id" id="quote_id" value="{{ @$workOrder->quote_id }}">
+                        <select name="quote" id="selectQuote" class="form-control selectQuote" required>
+                            
+                            <!-- Anda bisa menambahkan option lainnya di sini -->
+                        </select>
+                        @else
+                        <select name="quote" id="selectQuote" class="form-control quoteSuggestion" required>
+                            
+                        </select>
+                        @endif
                     </div>
                 </div>
         
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label">Customer</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" value="Pilih " name="customer" id="customer" placeholder="Pilih Nomor Quote" required readonly>
+                        <input type="text" class="form-control" name="customer" id="customer" placeholder="Pilih Nomor Quote" required readonly>
                     </div>
                 </div>
         
                 <table class="table table-bordered" id="tableWorkOrder">
                     <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Produk / Jasa</th>
-                            <th>Description</th>
-                            <th>Quantity</th>
-                            <th>Budget</th>
-                            <th>Action</th>
+                        <tr class="d-flex">
+                            <th class="col-1" >No</th>
+                            <th class="col-4">Produk / Jasa</th>
+                            <th class="col-3">Description</th>
+                            <th class="col-1">Qty</th>
+                            <th class="col-2">Budget</th>
+                            <th class="col-1">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if(@$workOrder)
                         @php $nomorBaris = 1; @endphp
                         @foreach($workOrder->workOrderProduct as $a)
-                        <tr data-key="{{ $a->id }}">
-                            <td>
+                        <tr class="d-flex" data-key="{{ $a->id }}">
+                            <td class="col-1">
                                 {{ $nomorBaris++ }}
                                 </td>
-                            <td>
+                            <td class="col-4">
                                 <select class="form-control productChange select2" name="product[]" id="product_{{ $a->id }}" required>
                                     <option value="" selected disabled>Pilih</option>
                                     @foreach($product as $b)
@@ -103,16 +116,16 @@
                                     @endforeach
                                 </select>
                             </td>
-                            <td>
+                            <td class="col-3">
                                 <input type="text" name="description[]" id="description_{{ $a->id }}" class="form-control" placeholder="Description" value="{{  @$a->description }}" required>
                             </td>
-                            <td>
+                            <td class="col-1">
                                 <input type="number" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ @$a->qty }}" required>
                             </td>
-                            <td id="sub_total_show_{{ $a->id }}">
+                            <td class="col-2" id="sub_total_show_{{ $a->id }}">
                                 {{ 'Rp. '.number_format($a->sub_total,0,',','.') }}
                             </td>
-                            <td>
+                            <td class="col-1">
                                 <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]" value="{{ $a->id }}">
                                 <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
                                 <button class="btn btn-danger btnHapusData" data-id="{{ $a->id }}"><i class="fa fa-trash"></i></button>
@@ -254,7 +267,57 @@
             placeholder: 'Pilih Nomor Quote'
         });
 
-        updateCustomerField();
+        $('#selectQuote').select2({
+            placeholder: 'Pilih Nomor Quote',
+            ajax: 
+            {
+                url: "{{ route('quote.select2') }}",
+                dataType: 'json',
+                data: function(params) {
+                    return {
+                        number_result: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.map(function(quote) {
+                            console.log(quote.customer.name);
+                            return {
+                                id: quote.id,
+                                text: quote.number_result,
+                                data: 
+                                {
+                                    customer: quote.customer ? quote.customer.name : ''
+                                }
+                            };
+                        })
+                    };
+                }
+            }
+        });
+
+        
+        $('#selectQuote').on('select2:select', function(e) {
+            // Ambil data-customer dari opsi yang dipilih
+            // console.log(e);
+            var customerName = e.params.data.data.customer;
+            // Menampilkan nilai tersebut di elemen dengan id "customer"
+            $("#customer").val(customerName);
+        });
+
+        var selectedValueQuote = "{{ @$workOrder->quote_id }}";
+        if(selectedValueQuote)
+        {
+            title = "{{ @$workOrder->quote->number_result }}";
+            customerName = "{{ @$workOrder->quote->customer->name }}";
+            // Create an option element with the selected value
+            var newOption = new Option(title, selectedValueQuote, true, true);
+    
+            // Append the option to the select2 element and trigger change
+            $('#selectQuote').append(newOption).trigger('change');
+            $("#customer").val(customerName);
+        }
+
         calculation();
         // change
         
@@ -272,26 +335,26 @@
             });
 
             const row = `
-                <tr data-key="${key}">
-                    <td>
+                <tr class="d-flex" data-key="${key}">
+                    <td class="col-1">
                         ${noBaris}
                         </td>
-                    <td>
+                    <td class="col-4">
                         <select class="form-control productChange" name="product[]" id="product_${key}" required>
                             <option value="" selected disabled>Pilih</option>
                             ${projectOptions}
                         </select>
                     </td>
-                    <td>
+                    <td class="col-3">
                         <input type="text" name="description[]" id="description_${key}" class="form-control" placeholder="Description" required>
                         </td>
-                    <td>
+                    <td class="col-1">
                         <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="1" required>
                     </td>
-                    <td id="sub_total_show_${key}">
+                    <td class="col-2" id="sub_total_show_${key}">
                         Rp 0
                     </td>
-                    <td>
+                    <td class="col-1">
                         <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]">
                         <input type="hidden" class="form-control" placeholder="Total" id="sub_total_${key}" name="sub_total[]">
                         <button class="btn btn-danger btnHapus"><i class="fa fa-trash"></i></button>
@@ -376,22 +439,22 @@
         });
 
         const row = `
-            <tr data-key="${key}">
-                <td>${noBaris}</td>
-                <td>
+            <tr class="d-flex" data-key="${key}">
+                <td class="col-1">${noBaris}</td>
+                <td class="col-4">
                     <select class="form-control productChange" name="product[]" id="product_${key}" required>
                         <option value="" ${!defaultProductId ? 'selected' : ''} disabled>Pilih</option>
                         ${projectOptions}
                     </select>
                 </td>
-                <td>
+                <td class="col-3">
                     <input type="text" name="description[]" id="description_${key}" value="${defaultDescription}" class="form-control" placeholder="Description" required>
                 </td>
-                <td>
+                <td class="col-1">
                     <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="${defaultQty}" required>
                 </td>
-                <td id="sub_total_show_${key}">Rp 0</td>
-                <td>
+                <td class="col-2" id="sub_total_show_${key}">Rp 0</td>
+                <td class="col-1">
                     <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]">
                     <input type="hidden" class="form-control" placeholder="Total" id="sub_total_${key}" name="sub_total[]">
                     <button class="btn btn-danger btnHapus"><i class="fa fa-trash"></i></button>
@@ -523,7 +586,7 @@
     function updateCustomerField() 
     {
         // Mendapatkan nilai dari atribut data-customer
-        var customerName = $(".select2").find("option:selected").data("customer");
+        var customerName = $("#selectQuote").find("option:selected").data("customer");
         
         // Menampilkan nilai tersebut di elemen dengan id "customer"
         $("#customer").val(customerName);

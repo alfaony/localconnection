@@ -43,12 +43,12 @@ class WorkOrderController extends Controller
     public function create()
     {   
         $product = Product::all();
-        $quote = Quote::all();
+        // $quote = Quote::orderBy('created_at','desc')->get();
 
         $userCreate = Auth::user()->name;
         $nomorWorkOrder = $this->workOrderNumber();
 
-        return view('work_order.createOrEdit',compact('product','quote','userCreate','nomorWorkOrder'));
+        return view('work_order.createOrEdit',compact('product','userCreate','nomorWorkOrder'));
     }
 
     /**
@@ -126,13 +126,13 @@ class WorkOrderController extends Controller
     {
         // dd($slug);
         $product = Product::all();
-        $quote = Quote::all();
+        // $quote = Quote::orderBy('created_at','desc')->get();
         
         $workOrder = WorkOrder::where('slug', $slug)->firstOrFail();
         $userCreate = $workOrder->userCreate ? $workOrder->userCreate->name : '';
         $nomorWorkOrder = $workOrder->number_result ?? '';
 
-        return view('work_order.createOrEdit',compact('product','quote','userCreate','nomorWorkOrder','workOrder'));
+        return view('work_order.createOrEdit',compact('product','userCreate','nomorWorkOrder','workOrder'));
     }
     
     /**
@@ -196,7 +196,6 @@ class WorkOrderController extends Controller
             // Simpan data WorkOrder
             $workOrder->date = $request->post('date');
             $workOrder->quote_id = $request->post('quote');
-            $workOrder->number_result = $this->workOrderNumber();
             $workOrder->user_created_id = Auth::user()->id;
             $workOrder->user_updated_id = Auth::user()->id;
             
@@ -363,5 +362,18 @@ class WorkOrderController extends Controller
         }
 
         return response()->json($data);
+    }
+
+    /**
+     * Select 
+     */
+    public function select2(Request $request)
+    {
+    $workOrder = WorkOrder::byNumberResult($request->get('number_result'))
+            ->orderBy('created_at','desc')
+            ->limit(6)
+            ->get();
+            
+    return response()->json($workOrder);
     }
 }

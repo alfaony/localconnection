@@ -64,9 +64,9 @@
                 <th>No</th>
                 <th>Deskripsi</th>
                 <th>Harga Satuan</th>
-                <th>Jumlah</th>
-                <th>Total</th>
-                <th>Aksi</th>
+                <th width="5%">Jumlah</th>
+                <th width="25%">Total</th>
+                <th width="5%">Aksi</th>
             </tr>
         </thead>
         <tbody>
