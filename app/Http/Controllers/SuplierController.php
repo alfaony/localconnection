@@ -38,7 +38,7 @@ class SuplierController extends Controller
     public function create(Request $request)
     {
         $nomor = $request->get('nomor');
-        $project = Project::get();
+        $project = Project::orderBy('created_at','desc')->get();
         $dateCreate = Carbon::now()->format('Y-m-d');
 
 
@@ -116,7 +116,7 @@ class SuplierController extends Controller
     {
         $nomor = $request->nomor ?? 0 ;
         $suplier = Suplier::where('slug', $slug)->firstOrFail();
-        $project = Project::get();
+        $project = Project::orderBy('created_at','desc')->get();
         $dateCreate = Carbon::parse($suplier->created_at)->format('Y-m-d');
 
 

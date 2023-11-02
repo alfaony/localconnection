@@ -30,8 +30,8 @@ class BastController extends Controller
      */
     public function create()
     {
-        $workOrder = WorkOrder::all();
-        $project = Project::all();
+        $workOrder = WorkOrder::orderBy('created_at','desc')->get();
+        $project = Project::orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $nomorBast = $this->bastNumber()['result'];
         return view('bast.createOrEdit',compact('nomorBast','workOrder','userCreate','project'));
@@ -75,8 +75,8 @@ class BastController extends Controller
      */
     public function edit($slug)
     {
-        $workOrder = WorkOrder::all();
-        $project = Project::all();
+        $workOrder = WorkOrder::orderBy('created_at','desc')->get();
+        $project = Project::orderBy('created_at','desc')->get();
 
         $bast = Bast::where('slug',$slug)->first();
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';

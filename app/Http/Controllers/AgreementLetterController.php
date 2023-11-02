@@ -29,7 +29,7 @@ class AgreementLetterController extends Controller
      */
     public function create()
     {
-        $quote = Quote::all();
+        $quote = Quote::orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $nomorAgreementLetter = $this->agreementLetterNumber()['result'];
         return view('agreement_letter.createOrEdit',compact('quote','userCreate','nomorAgreementLetter'));
@@ -70,7 +70,7 @@ class AgreementLetterController extends Controller
      */
     public function edit($slug)
     {
-        $quote = Quote::all();
+        $quote = Quote::orderBy('created_at','desc')->get();
 
         $agreementLetter = AgreementLetter::where('slug',$slug)->first();
         $userCreate = $agreementLetter->userCreate ? $agreementLetter->userCreate->name : '';

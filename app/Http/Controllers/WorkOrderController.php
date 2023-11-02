@@ -43,7 +43,7 @@ class WorkOrderController extends Controller
     public function create()
     {   
         $product = Product::all();
-        $quote = Quote::all();
+        $quote = Quote::orderBy('created_at','desc')->get();
 
         $userCreate = Auth::user()->name;
         $nomorWorkOrder = $this->workOrderNumber();
@@ -126,7 +126,7 @@ class WorkOrderController extends Controller
     {
         // dd($slug);
         $product = Product::all();
-        $quote = Quote::all();
+        $quote = Quote::orderBy('created_at','desc')->get();
         
         $workOrder = WorkOrder::where('slug', $slug)->firstOrFail();
         $userCreate = $workOrder->userCreate ? $workOrder->userCreate->name : '';

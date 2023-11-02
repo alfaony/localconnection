@@ -34,7 +34,7 @@
         
                 <div class="form-group row">
                     <label for="quote" class="col-sm-2 col-form-label">Pilih No. Quote:</label>
-                    <div class="col-sm-2">
+                    <div class="col-sm-5">
                         <select class="form-control select2" name="quote" id="quote">
                             <option value="" disabled selected>Pilih</option>
                             @foreach($quote as $a)
