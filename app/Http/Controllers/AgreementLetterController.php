@@ -29,10 +29,10 @@ class AgreementLetterController extends Controller
      */
     public function create()
     {
-        $quote = Quote::orderBy('created_at','desc')->get();
+        // $quote = Quote::orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $nomorAgreementLetter = $this->agreementLetterNumber()['result'];
-        return view('agreement_letter.createOrEdit',compact('quote','userCreate','nomorAgreementLetter'));
+        return view('agreement_letter.createOrEdit',compact('userCreate','nomorAgreementLetter'));
     }
 
     /**
@@ -70,13 +70,13 @@ class AgreementLetterController extends Controller
      */
     public function edit($slug)
     {
-        $quote = Quote::orderBy('created_at','desc')->get();
+        // $quote = Quote::orderBy('created_at','desc')->get();
 
         $agreementLetter = AgreementLetter::where('slug',$slug)->first();
         $userCreate = $agreementLetter->userCreate ? $agreementLetter->userCreate->name : '';
         $nomorAgreementLetter = $agreementLetter->number_result ?? '';
 
-        return view('agreement_letter.createOrEdit',compact('quote','userCreate','nomorAgreementLetter','agreementLetter'));
+        return view('agreement_letter.createOrEdit',compact('userCreate','nomorAgreementLetter','agreementLetter'));
     }
 
 

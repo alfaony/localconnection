@@ -49,6 +49,7 @@
                 <div class="row mb-3 mt-3">
                     <label class="col-sm-2 col-form-label">Pilih No. Quote</label>
                     <div class="col-sm-10">
+                        {{-- 
                         @if(@$workOrder)
                         <select name="quote" class="form-control select2" required>
                             <option value="" disabled selected>Quote</option>
@@ -66,13 +67,25 @@
                             <!-- Anda bisa menambahkan option lainnya di sini -->
                         </select>
                         @endif
+                        --}}
+                        @if(@$workOrder)
+                        <input type="hidden" name="quote_id" id="quote_id" value="{{ @$workOrder->quote_id }}">
+                        <select name="quote" id="selectQuote" class="form-control selectQuote" required>
+                            
+                            <!-- Anda bisa menambahkan option lainnya di sini -->
+                        </select>
+                        @else
+                        <select name="quote" id="selectQuote" class="form-control quoteSuggestion" required>
+                            
+                        </select>
+                        @endif
                     </div>
                 </div>
         
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label">Customer</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" value="Pilih " name="customer" id="customer" placeholder="Pilih Nomor Quote" required readonly>
+                        <input type="text" class="form-control" name="customer" id="customer" placeholder="Pilih Nomor Quote" required readonly>
                     </div>
                 </div>
         
@@ -254,7 +267,57 @@
             placeholder: 'Pilih Nomor Quote'
         });
 
-        updateCustomerField();
+        $('#selectQuote').select2({
+            placeholder: 'Pilih Nomor Quote',
+            ajax: 
+            {
+                url: "{{ route('quote.select2') }}",
+                dataType: 'json',
+                data: function(params) {
+                    return {
+                        number_result: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.map(function(quote) {
+                            console.log(quote.customer.name);
+                            return {
+                                id: quote.id,
+                                text: quote.number_result,
+                                data: 
+                                {
+                                    customer: quote.customer ? quote.customer.name : ''
+                                }
+                            };
+                        })
+                    };
+                }
+            }
+        });
+
+        
+        $('#selectQuote').on('select2:select', function(e) {
+            // Ambil data-customer dari opsi yang dipilih
+            // console.log(e);
+            var customerName = e.params.data.data.customer;
+            // Menampilkan nilai tersebut di elemen dengan id "customer"
+            $("#customer").val(customerName);
+        });
+
+        var selectedValueQuote = "{{ @$workOrder->quote_id }}";
+        if(selectedValueQuote)
+        {
+            title = "{{ @$workOrder->quote->number_result }}";
+            customerName = "{{ @$workOrder->quote->customer->name }}";
+            // Create an option element with the selected value
+            var newOption = new Option(title, selectedValueQuote, true, true);
+    
+            // Append the option to the select2 element and trigger change
+            $('#selectQuote').append(newOption).trigger('change');
+            $("#customer").val(customerName);
+        }
+
         calculation();
         // change
         
@@ -523,7 +586,7 @@
     function updateCustomerField() 
     {
         // Mendapatkan nilai dari atribut data-customer
-        var customerName = $(".select2").find("option:selected").data("customer");
+        var customerName = $("#selectQuote").find("option:selected").data("customer");
         
         // Menampilkan nilai tersebut di elemen dengan id "customer"
         $("#customer").val(customerName);
