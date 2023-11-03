@@ -19,22 +19,22 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $product = Product::where('name','like', '%' . $request->get('product') . '%')
-        ->OrderBy('created_at','asc')->paginate(10);
+        ->OrderBy('name','asc')->paginate(10);
 
         $totalProduct = count(Product::get());
 
         return view('product.index',compact('product','totalProduct'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        dd("hore");
-    }
+    // /**
+    //  * Show the form for creating a new resource.
+    //  *
+    //  * @return \Illuminate\Http\Response
+    //  */
+    // public function create()
+    // {
+    //     dd("hore");
+    // }
 
     /**
      * Store a newly created resource in storage.
@@ -79,7 +79,7 @@ class ProductController extends Controller
 
         $totalProduct = count(Product::get());
         $productEdit = Product::where('slug', $slug)->firstOrFail();
-        $product = Product::OrderBy('created_at','asc')->paginate(10);
+        $product = Product::OrderBy('name','asc')->paginate(10);
         
         return view('product.index', compact('productEdit','product','totalProduct','nomor'));
     }

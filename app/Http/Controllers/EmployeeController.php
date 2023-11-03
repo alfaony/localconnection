@@ -18,7 +18,7 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {   
         $employee = Employee::where('name','like', '%' . $request->get('employee') . '%')
-        ->OrderBy('created_at','asc')->paginate(10);
+        ->OrderBy('name','asc')->paginate(10);
 
         $totalEmployee = count(Employee::get());
 
@@ -75,7 +75,7 @@ class EmployeeController extends Controller
     {
         $totalEmployee = count(Employee::get());
         $employeeEdit = Employee::where('slug', $slug)->firstOrFail();
-        $employee = Employee::OrderBy('created_at','asc')->paginate(10);
+        $employee = Employee::OrderBy('name','asc')->paginate(10);
     
         // Rest of your code for editing the project...
 

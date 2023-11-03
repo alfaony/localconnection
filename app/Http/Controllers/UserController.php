@@ -21,21 +21,11 @@ class UserController extends Controller
 
         $user = User::where('delete_able',1)
                 ->where('email','like', '%' . $request->get('email') . '%')
-                ->OrderBy('created_at','asc')->paginate(10);
+                ->OrderBy('name','asc')->paginate(10);
 
         $totalUser = count(User::where('delete_able',1)->get());
 
         return view('user.index',compact('user','totalUser'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -57,17 +47,6 @@ class UserController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
-     */
-    public function show(User $user)
-    {
-        //
-    }
-
-    /**
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\User  $user
@@ -78,7 +57,7 @@ class UserController extends Controller
         $totalUser = count(User::where('delete_able',1)->get());
         $userEdit = User::where('slug', $slug)->firstOrFail();
         $user = User::where('delete_able',1)
-        ->OrderBy('created_at','asc')->paginate(10);
+        ->OrderBy('name','asc')->paginate(10);
     
         // Rest of your code for editing the project...
 

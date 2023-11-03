@@ -83,12 +83,14 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         <table class="table table-bordered">
             <tr>
                 <th>No</th>
+                <th>Nama</th>
                 <th>Email</th>
                 <th>Aksi</th>
             </tr>
             @forelse($user as $a)
             <tr>
                 <td>{{ $no++ }}</td>
+                <td>{{ $a->name }}</td>
                 <td>{{ $a->email }}</td>
                 <td>
                     <form method="post" action="{{ route('user.destroy',$a) }}">
