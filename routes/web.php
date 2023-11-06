@@ -15,6 +15,7 @@ use App\Http\Controllers\WorkOrderController;
 use App\Http\Controllers\AgreementLetterController;
 use App\Http\Controllers\BastController;
 use App\Http\Controllers\ReportProjectController;
+use App\Http\Controllers\SettingCompanyController;
 
 
 
@@ -85,5 +86,7 @@ Route::group(['middleware' => ['auth']], function()
 
   Route::get('report-project/datatable', [ReportProjectController::class, 'dataTableJson'])->name('report-project.datatable');
   Route::resource('report-project', ReportProjectController::class)->except(['show']);
+
+  Route::resource('setting-company', SettingCompanyController::class)->only('index','store');
 });
 

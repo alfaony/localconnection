@@ -373,6 +373,11 @@ return [
             'route'         => 'report.index',
             'icon' => 'fa fa-file',
         ],
+        [
+            'text'        => 'Setting Perusahaan',
+            'route'         => 'setting-company.index',
+            'icon' => 'fa fa-file',
+        ],
         
         // ['header' => 'account_settings'],
         // [

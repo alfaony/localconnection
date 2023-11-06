@@ -14,9 +14,8 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-6">
-                    <h2>PT. Gema Teknologi Cahaya Gemilang</h2>
-                    <p>GSA #B8/DH. Jl.S.Parman.</p>
-                    <p>Jakarta Barat</p>
+                    <h2>{{ $company['name'] ?? ''}}</h2>
+                    <p>{{ $company['address'] }}</p>
                 </div>
                 <div class="col-6 text-right">
                     <h2>Surat Perintah Kerja</h2>
@@ -41,6 +40,7 @@
                         <th>Product / Service</th>
                         <th>Description</th>
                         <th>Quantity</th>
+                        <th>Satuan Penghitung</th>
                         <th>Budget</th>
                     </tr>
                 </thead>
@@ -63,6 +63,9 @@
                             {{ $a->qty ?? '' }}
                             <input type="hidden" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ @$a->qty }}" required>
                         </td>
+                        <td>
+                            {{ $a->product ? $a->product->method_count : '' }}
+                        </td>
                         <td id="sub_total_show_{{ $a->id }}">
                             {{ 'Rp. '.number_format($a->sub_total,0,',','.') }}
                             <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]" value="{{ $a->id }}">
@@ -74,7 +77,7 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="4" class="text-right">TOTAL</th>
+                        <th colspan="5" class="text-right">TOTAL</th>
                         <th id="sub_total_result">Rp. 0</th>
                     </tr>
                 </tfoot>
