@@ -50,7 +50,8 @@
 
                 <div class="form-group">
                     <label for="nilai_tukar_1_usd">Nilai Tukar 1 USD</label>
-                    <input type="number" name="currency_usd" class="form-control" value="{{ old('currency_usd', isset($data['currency_usd']) ? $data['currency_usd'] : '') }}">
+                    <input type="text" class="form-control"  id="currency_usd_show" oninput="formatRupiahFormat(this,'currency_usd')" />
+                    <input type="hidden" name="currency_usd" id="currency_usd" class="form-control" value="{{ old('currency_usd', isset($data['currency_usd']) ? $data['currency_usd'] : '') }}">
                 </div>
 
                 <div class="form-group">
@@ -91,3 +92,55 @@
 </div>
 
 @endsection
+@section('js')
+<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () 
+    {
+        $('.select2').select2({
+            width: '100%',
+        });
+    });
+
+    $(document).ready(function () 
+    {
+
+        let currency_usd = document.getElementById("currency_usd").value;
+        if (currency_usd) 
+        {
+            document.getElementById("currency_usd_show").value = currency_usd;
+            formatRupiahFormat(document.getElementById("currency_usd_show"),"currency_usd"); // Format default value
+        }
+
+    });
+    function formatRupiahFormat(input, inputNonFormat) 
+    {
+        let numStr = input.value.toString().replace(/[^,\d]/g, '');
+        let split = numStr.split(',');
+        let sisa = split[0].length % 3;
+        let rupiah = split[0].substr(0, sisa);
+        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+
+        rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+
+        if (numStr === "" || parseInt(numStr) === 0) {
+            input.value = '0';
+            numStr = 0;
+        } else {
+            // Menghapus angka 0 di depan jika input diawali dengan 0
+            rupiah = rupiah.replace(/^0+/, '');
+            input.value = 'Rp. '+rupiah;
+        }
+
+        // Update 'salary' input with non-formatted number
+        document.getElementById(inputNonFormat).value = parseInt(numStr);
+    }
+</script>
+@stop
