@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\SettingCompany;
+use Illuminate\Support\Facades\DB;
+
 
 class SettingCompanyController extends Controller
 {
@@ -41,7 +43,8 @@ class SettingCompanyController extends Controller
                 'acta_file' => ['nullable', 'file', 'max:2048'],
                 'npwp_file' => ['nullable', 'file', 'max:2048'],
             ]);
-
+        
+        DB::beginTransaction();
         try {
             $settings = SettingCompany::get();
 
@@ -67,9 +70,11 @@ class SettingCompanyController extends Controller
                 }
             }
 
+            DB::commit();
             return redirect()->route('setting-company.index')->with('store',true);
         } catch (\Throwable $th) {
             // dd($th);
+            DB::rollback();
             Log::error($th);
             return redirect()->route('setting-company.index')->with('store',false);
         }

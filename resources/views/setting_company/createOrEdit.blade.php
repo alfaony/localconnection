@@ -4,7 +4,7 @@
 <div class="containe mt-3">
     <div class="col-md-12">
         @if(Session::get('store'))
-        <div class="alert alert-success mt-3">Berhasil Menubah Perusahaan</div>
+        <div class="alert alert-success mt-3">Berhasil Mengubah Pengaturan Perusahaan</div>
         @endif
         
         @if ($errors->any())
@@ -26,32 +26,50 @@
                 <div class="form-group">
                     <label for="name">Nama Perusahaan</label>
                     <input type="text" name="name" class="form-control" value="{{ old('name', isset($data['name']) ? $data['name'] : '') }}">
+                    @error('name')
+                    <span class="text-danger text-sm">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
                     <label for="alamat">Alamat</label>
                     <input type="text" name="address" class="form-control" value="{{ old('address', isset($data['address']) ? $data['address'] : '') }}">
+                    @error('address')
+                    <span class="text-danger text-sm">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
                     <label for="no_npwp">No. NPWP</label>
                     <input type="text" name="npwp_number" class="form-control" value="{{ old('npwp_number', isset($data['npwp_number']) ? $data['npwp_number'] : '') }}">
+                    @error('npwp_number')
+                    <span class="text-danger text-sm">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
                     <label for="direktur">Direktur</label>
                     <input type="text" name="director" class="form-control" value="{{ old('director', isset($data['director']) ? $data['director'] : '') }}">
+                    @error('director')
+                    <span class="text-danger text-sm">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
                     <label for="mata_uang_dasar">Mata Uang Dasar</label>
                     <input type="text" name="currency" class="form-control" value="{{ old('currency', isset($data['currency']) ? $data['currency']  : '') }}">
+                    @error('currency')
+                    <span class="text-danger text-sm">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
                     <label for="nilai_tukar_1_usd">Nilai Tukar 1 USD</label>
                     <input type="text" class="form-control"  id="currency_usd_show" oninput="formatRupiahFormat(this,'currency_usd')" />
                     <input type="hidden" name="currency_usd" id="currency_usd" class="form-control" value="{{ old('currency_usd', isset($data['currency_usd']) ? $data['currency_usd'] : '') }}">
+                    @error('currency_usd')
+                    <span class="text-danger text-sm">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
@@ -62,6 +80,9 @@
                         </div>
                     @endif
                     <input type="file" name="nib_file" class="form-control-file" accept=".pdf" >
+                    @error('nib_file')
+                    <span class="text-danger text-sm">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
@@ -72,6 +93,9 @@
                         </div>
                     @endif
                     <input type="file" name="acta_file" class="form-control-file" accept=".pdf" >
+                    @error('acta_file')
+                    <span class="text-danger text-sm">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
@@ -82,6 +106,9 @@
                         </div>
                     @endif
                     <input type="file" name="npwp_file" class="form-control-file" accept=".pdf" >
+                    @error('npwp_file')
+                    <span class="text-danger text-sm">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <button type="submit" class="btn btn-primary">Simpan</button>
