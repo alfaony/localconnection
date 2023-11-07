@@ -15,6 +15,7 @@ use App\Models\WorkOrder;
 use App\Models\WorkOrderProduct;
 use App\Models\Product;
 use App\Models\Quote;
+use App\Models\SettingCompany;
 
 class WorkOrderController extends Controller
 {
@@ -176,10 +177,11 @@ class WorkOrderController extends Controller
         $quote = Quote::all();
         
         $workOrder = WorkOrder::where('slug', $slug)->firstOrFail();
+        $company = SettingCompany::get()->pluck('field_value','field_title');
         $userCreate = $workOrder->userCreate ? $workOrder->userCreate->name : '';
         $nomorWorkOrder = $workOrder->number_result ?? '';
 
-        return view('work_order.pdf',compact('product','quote','userCreate','nomorWorkOrder','workOrder'));
+        return view('work_order.pdf',compact('product','quote','userCreate','nomorWorkOrder','workOrder' ,'company'));
     }
 
 

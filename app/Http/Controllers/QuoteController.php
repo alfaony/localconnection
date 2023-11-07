@@ -15,6 +15,8 @@ use App\Models\Quote;
 use App\Models\QuoteProduct;
 use App\Models\Product;
 use App\Models\Customer;
+use App\Models\SettingCompany;
+
 
 class QuoteController extends Controller
 {
@@ -316,15 +318,17 @@ class QuoteController extends Controller
     public function downloadPdf($slug)
     {
         $product = Product::all();
+        $company = SettingCompany::get()->pluck('field_value','field_title');
         $customer = Customer::all();
         $quote = Quote::where('slug', $slug)->firstOrFail();
         $date = Carbon::parse($quote->created_at)->format('m/Y');
         $nomorQuote = $quote->number_result;
+        $today = Carbon::now()->format('d / m / Y');
 
         $userCreate = $quote->userCreate ? $quote->userCreate->name : '';
         // $no = $;
 
-        return view('quote.pdf',compact('product','customer','nomorQuote','quote','userCreate'));
+        return view('quote.pdf',compact('product','customer','nomorQuote','quote','userCreate','company','today'));
     }
     /**
      * Total After PPN dll
