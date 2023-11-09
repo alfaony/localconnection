@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\MatchOldPassword;
 
 class UserRequest extends FormRequest
 {
@@ -23,13 +24,34 @@ class UserRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            'name'  =>  'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
-            'password' => 'required|min:6',
-            'confirmPassword' => 'required|same:password',
-        ];
+        $userId = $this->route('user'); // Mendapatkan ID customer dari route parameter
+
+        if(!$userId)
+        {
+            return [
+                'name'  =>  'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
+                'password' => 'required|min:6',
+                'confirmPassword' => 'required|same:password',
+            ];
+        }else
+        {
+            $rules = [
+                'name'  =>  'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $userId->id,
+                'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
+            ];   
+
+            if ($this->filled('oldPassword')) 
+            {
+                $rules['oldPassword'] = ['required',new MatchOldPassword];
+                $rules['newPassword'] = 'required|min:6';
+                $rules['confirmPassword'] = 'required|same:newPassword';
+            }
+
+            return $rules;
+        }
     }
 
     public function messages()
@@ -41,6 +63,8 @@ class UserRequest extends FormRequest
             'email.unique' => 'Email sudah digunakan.',
             'password.required' => 'Password harus diisi.',
             'password.min' => 'Password minimal 6 karakter.',
+            'newPassword.required' => 'Password baru harus diisi.',
+            'newPassword.min' => 'Password baru minimal 6 karakter.',
             'confirmPassword.required' => 'Konfirmasi password harus diisi.',
             'confirmPassword.same' => 'Konfirmasi password harus sama dengan password.',
         ];

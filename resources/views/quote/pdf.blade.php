@@ -2,10 +2,10 @@
 @section('content')
 <div class="col-md-12">
     @if(Session::get('store'))
-    <div class="alert alert-success mt-3">BAST Berhasil Ditambahkan</div>
+    <div class="alert alert-success mt-3">Quote Berhasil Ditambahkan</div>
     @endif
     @if(Session::get('update'))
-    <div class="alert alert-success mt-3">BAST Berhasil Diperbarui</div>
+    <div class="alert alert-success mt-3">Quote Berhasil Diperbarui</div>
     @endif
 </div>
 
@@ -167,23 +167,22 @@
 
       <div class="mt-5">
         <div class="row">
-          <div class="offset-md-1 col-md-4">
+          <div class="offset-1 col-4">
             <span style="margin-bottom: 0;">Jakarta, {{ $today }}</span>
             <p style="margin-top: 0;">Disepakati oleh Pihak Pembeli</p>
           </div>
-          <div class="col-md-6 text-right">
-            <p>&nbsp;</p>
+          <div class="col-6 text-right">
             <p>Pihak Penjual</p>
           </div>
           
-          <div class="col-md-11 text-right">
+          <div class="col-11 text-right">
             <img src="{{ asset('logo/paraf.png') }}" alt="Signature" style="with:auto; height:150px">
           </div>
 
-          <div class="offset-md-1 col-md-2">
+          <div class="offset-1 col-3">
             <hr style="border: none; height: 1px; color: black; background-color: black;"> <!-- Signature line -->
           </div>
-          <div class="col-md-8 text-right">
+          <div class="col-7 text-right">
             <p class="mt-2"><strong>{{ $company['director'] ?? '' }}</strong></p>
           </div>
         </div>
