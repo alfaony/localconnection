@@ -14,13 +14,13 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 
 <div class="col-md-12">
     @if(Session::get('store'))
-    <div class="alert alert-success mt-3">Berhasil Menambahkan Proyek</div>
+    <div class="alert alert-success mt-3">Pengguna Berhasil Ditambahkan</div>
     @endif
     @if(Session::get('update'))
-    <div class="alert alert-success mt-3">Proyek Berhasil Diperbarui</div>
+    <div class="alert alert-success mt-3">Pengguna Berhasil Diperbarui</div>
     @endif
     @if(Session::get('delete'))
-    <div class="alert alert-success mt-3">Berhasil Menghapus Proyek</div>
+    <div class="alert alert-success mt-3">Pengguna Berhasil Dihapus</div>
     @endif
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -42,8 +42,6 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         <form action="{{ route('user.store') }}" method="post">
         @endif
             @csrf
-
-
             <label for="name">Nama:</label>
             <input type="text" id="name" name="name" placeholder="Anwar" value="{{ old('name') ?? @$userEdit->name }}" required>
 
@@ -62,6 +60,16 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             
             <button id="buttonSubmit" type="submit">Simpan</button>
             @else
+            @if(@$userEdit->id == Auth::user()->id)
+            <label for="oldPassword">Password Lama:</label>
+            <input type="password" id="oldPassword" name="oldPassword" placeholder="**********">
+
+            <label for="newPassword">Password Baru:</label>
+            <input type="password" id="newPassword" name="newPassword" placeholder="**********">
+
+            <label for="confirmPassword">Konfirmasi Password:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="**********">
+            @endif
             <button id="buttonSubmit" type="submit">Ubah</button>
             @endif
         </form>

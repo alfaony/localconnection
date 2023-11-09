@@ -71,17 +71,17 @@ class UserController extends Controller
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, User $user)
+    public function update(UserRequest $request, User $user)
     {
-        $request->validate(
-            [
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('users', 'email')->ignore($user->id),
-            ],
-            'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
-        ]);
+        // $request->validate(
+        //     [
+        //     'email' => [
+        //         'required',
+        //         'email',
+        //         Rule::unique('users', 'email')->ignore($user->id),
+        //     ],
+        //     'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
+        // ]);
         
         $user->name = $request->post('name'); 
         $user->email = $request->post('email');
