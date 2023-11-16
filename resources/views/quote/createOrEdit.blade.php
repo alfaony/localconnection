@@ -150,8 +150,8 @@
                             </select>
                         </td>
                         <td class="col-3">
-                            <input type="text" name="description[]" id="description_{{ $a->id }}" class="form-control" placeholder="Description" value="{{ old('description') ?? @$a->description }}" required>
-                            </td>
+                            <textarea name="description[]" id="description_{{ $a->id }}" class="form-control" placeholder="Description" charswidth="25" required>{{ old('description') ?? @$a->description }}</textarea>
+                        </td>
                         <td class="col-1">
                             <input type="number" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ old('qty') ?? @$a->qty }}" required>
                         </td>
@@ -329,8 +329,8 @@
                         </select>
                     </td>
                     <td class="col-3">
-                        <input type="text" name="description[]" id="description_${key}" class="form-control" placeholder="Description" required>
-                        </td>
+                        <textarea name="description[]" id="description_${key}" class="form-control" placeholder="Description" charswidth="25" required></textarea>
+                    </td>
                     <td class="col-1">
                         <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="1" required>
                     </td>
