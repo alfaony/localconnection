@@ -91,9 +91,10 @@
           <thead class="bg-primary text-white">
               <tr>
                   <th class="bg-danger text-white" width="30%">Product/Service</th>
+                  <th class="bg-danger text-white" width="30%">Description</th>
                   <th class="bg-danger text-white" width="10%">Qty</th>
-                  <th class="bg-danger text-white" width="30%">Price</th>
-                  <th class="bg-danger text-white" width="30%">Total</th>
+                  <th class="bg-danger text-white" width="15%">Price</th>
+                  <th class="bg-danger text-white" width="15%">Total</th>
               </tr>
           </thead>
           <tbody>
@@ -105,6 +106,9 @@
                       {{ $a->product ? $a->product->name : '' }}
                       <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]" value="{{ $a->id }}">
                       <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
+                  </td>
+                  <td>
+                    {{ $a->description ?? '' }}
                   </td>
                   <td>
                       {{ $a->qty ?? '' }}
@@ -293,7 +297,7 @@
 
         
         var ppn_title = tax <= 0 ? 'PPN: 0%' : 'PPN: '+tax+'%';
-        var service_fee_title = service_fee <= 0 ? 'PPN: 0%' : 'PPN: '+service_fee+'%';
+        var service_fee_title = service_fee <= 0 ? 'Service Fee: 0%' : 'Service Fee: '+service_fee+'%';
 
         var sub_total = 0;
         $('#tableQuote tbody tr').each(function() 
