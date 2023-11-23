@@ -163,10 +163,11 @@
                 </div>
                 
                 @if(@$workOrder)
-                <button type="submit" class="btn btn-primary">Ubah</button>
+                <button type="button" id="submit" class="btn btn-primary">Ubah</button>
                 @else
-                <button type="submit" class="btn btn-primary">Simpan</button>
+                <button type="button" id="submit" class="btn btn-primary">Simpan</button>
                 @endif
+                <button type="submit" id="btnSubmit" style="display:none;"></button>
             </form>
         </div>
     </div>
@@ -184,7 +185,36 @@
 <script>
     $(document).ready(function () 
     {
+        $("#submit").click(function (e) 
+        { 
+            e.preventDefault();
+            let submited = true;
+            var input = document.querySelectorAll('input.thriveEditor');
+            input.forEach(function (textarea) 
+            {
+                console.log(textarea);
+                val = textarea.value;
+                if(!val)
+                {
+                    Swal.fire({
+                        title: 'Warning!',
+                        text: 'Deskripsi Harus Diisi.',
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
 
+                    submited = false;
+                }
+            });
+
+            if(submited)
+            {
+                $("#btnSubmit").click();
+            }
+            
+        });
+        
         $(".quoteSuggestion").change(function (e) 
         { 
             e.preventDefault();
@@ -348,7 +378,7 @@
                         </select>
                     </td>
                     <td class="col-3">
-                        <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" value="${defaultDescription}"  placeholder="Description" required>
+                        <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" value=""  placeholder="Description" required>
                     </td>
                     <td class="col-1">
                         <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="1" required>
