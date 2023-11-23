@@ -323,6 +323,7 @@ class WorkOrderController extends Controller
     {
         // Fetch data for the DataTable
         $query = WorkOrder::query();
+        $query->orderBy('work_order_number', 'desc');
 
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['number_result', 'total', 'slug'];
