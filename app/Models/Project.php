@@ -64,9 +64,15 @@ class Project extends Model
         return $suplierPurchase + $managerJob;
     }
 
+    public function getBudgetsAttribute()
+    {
+        return $this->workOrder ? $this->workOrder->total : 0;
+
+    }
+
     public function getProfitAttribute()
     {
-        return $this->budget - $this->purchase;
+        return $this->budgets - $this->purchase;
     }
 
     public function workOrder()
