@@ -108,7 +108,7 @@
                       <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
                   </td>
                   <td>
-                    {{ $a->description ?? '' }}
+                    {!! $a->description ?? '' !!}
                   </td>
                   <td>
                       {{ $a->qty ?? '' }}

@@ -150,7 +150,8 @@
                             </select>
                         </td>
                         <td class="col-3">
-                            <textarea name="description[]" id="description_{{ $a->id }}" class="form-control" placeholder="Description" charswidth="25" required>{{ old('description') ?? @$a->description }}</textarea>
+                            <input type="hidden" class="thriveEditor" data-ids="{{ $a->id }}" id="description_{{ $a->id }}"  name="description[]" value="{{ old('description') ?? @$a->description }}" required>
+                            <div id="editor_{{ $a->id }}" style="min-height: 120px;">{!! old('description') ?? @$a->description !!}</div>
                         </td>
                         <td class="col-1">
                             <input type="number" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ old('qty') ?? @$a->qty }}" required>
@@ -206,10 +207,11 @@
             <div class="row mt-3">
                 <div class="offset-md-11">
                 @if(@$quote)
-                <button type="submit" class="btn btn-primary">Ubah</button>
+                <button type="button" id="submit" class="btn btn-primary">Ubah</button>
                 @else
-                <button type="submit" class="btn btn-primary">Simpan</button>
+                <button type="button" id="submit"class="btn btn-primary">Simpan</button>
                 @endif
+                <button type="submit" id="btnSubmit" style="display:none;"></button>
                 </div>
             </div>
         </div>
@@ -225,11 +227,72 @@
 <!-- Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Dapatkan semua elemen textarea
+        var ckeditorInputs = document.querySelectorAll('input.thriveEditor');
 
+        // Loop melalui setiap textarea dan pasangkan CKEditor
+        ckeditorInputs.forEach(function (textarea) 
+        {
+            id = textarea.getAttribute('data-ids');
+            generateCkEditor(id);
+        });
+    });
+
+    function generateCkEditor(id)
+    {
+        // var editors = document.querySelectorAll('.quilljs-editor');
+        var quill = new Quill('#editor_'+id, {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                        [{ header: [1, 2, 3, 4, 5, 6, false] }],
+                        ["bold", "italic"],
+                        [{ list: "ordered" }, { list: "bullet" }],
+                        [{ color: [] }, { background: [] }],
+                ]
+        },
+        });
+        quill.on('text-change', function(delta, oldDelta, source) {
+            document.getElementById("description_"+id).value = quill.root.innerHTML;
+        });
+    }
+</script>
 <script>
     $(document).ready(function () 
     {
         calculation();
+        $("#submit").click(function (e) 
+        { 
+            e.preventDefault();
+            let submited = true;
+            var input = document.querySelectorAll('input.thriveEditor');
+            input.forEach(function (textarea) 
+            {
+                console.log(textarea);
+                val = textarea.value;
+                if(!val)
+                {
+                    Swal.fire({
+                        title: 'Warning!',
+                        text: 'Deskripsi Harus Diisi.',
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
+
+                    submited = false;
+                }
+            });
+
+            if(submited)
+            {
+                $("#btnSubmit").click();
+            }
+            
+        });
         let discount = document.getElementById("discount").value;
         if (discount) 
         {
@@ -329,7 +392,8 @@
                         </select>
                     </td>
                     <td class="col-3">
-                        <textarea name="description[]" id="description_${key}" class="form-control" placeholder="Description" charswidth="25" required></textarea>
+                        <input type="hidden" class="thriveEditor" data-ids="${key}" id="description_${key}"  name="description[]" required>
+                        <div id="editor_${key}" style="min-height: 120px;"></div>
                     </td>
                     <td class="col-1">
                         <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="1" required>
@@ -350,6 +414,8 @@
             $('#product_' + key).select2({
                 width: '100%'
             });
+
+            generateCkEditor(key);
         });
 
         
@@ -544,6 +610,7 @@
 @stop
 @section('css')
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
     .select2-selection__rendered 
     {
@@ -555,6 +622,11 @@
     }
     .select2-selection__arrow {
         height: 34px !important;
+    }
+    .ql-container 
+    {
+        min-height: 150px;
+        height: auto;
     }
 </style>
 @stop
