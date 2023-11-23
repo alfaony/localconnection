@@ -48,6 +48,7 @@ class QuoteController extends Controller
         $date = Carbon::now()->format('m/Y');
         $nomor = Quote::withTrashed()->max('quote_number') + 1;
         $nomorQuote = $nomor.'/'.$date;
+        $date = Carbon::now();
         
         return view('quote.createOrEdit',compact('product','customer','nomorQuote','userCreate','nomor'));
     }
@@ -86,6 +87,7 @@ class QuoteController extends Controller
             $product = $request->post('product');
             $description = $request->post('description');
             $qty = $request->post('qty');
+            $price = $request->post('price');
             $sub_total = $request->post('sub_total');
 
             for ($i = 0; $i < count($product); $i++) 
@@ -93,6 +95,7 @@ class QuoteController extends Controller
                 $quoteProduct = new QuoteProduct;
                 $quoteProduct->product_id = $product[$i];
                 $quoteProduct->qty = $qty[$i];
+                $quoteProduct->price_sell = $price[$i];
                 $quoteProduct->sub_total = $sub_total[$i];
                 $quoteProduct->description = $description[$i];
 
@@ -162,6 +165,7 @@ class QuoteController extends Controller
             $product = $request->post('product');
             $description = $request->post('description');
             $qty = $request->post('qty');
+            $price = $request->post('price');
             $sub_total = $request->post('sub_total');
             $ids = $request->input('ids');
 
@@ -173,6 +177,7 @@ class QuoteController extends Controller
                 {
                     $quoteProduct = new QuoteProduct;
                     $quoteProduct->product_id = $product[$i];
+                    $quoteProduct->price_sell = $price[$i];
                     $quoteProduct->qty = $qty[$i];
                     $quoteProduct->sub_total = $sub_total[$i];
                     $quoteProduct->description = $description[$i];
@@ -182,6 +187,7 @@ class QuoteController extends Controller
                 {
                     $quoteProduct = QuoteProduct::find($id);
                     $quoteProduct->product_id = $product[$i];
+                    $quoteProduct->price_sell = $price[$i];
                     $quoteProduct->qty = $qty[$i];
                     $quoteProduct->sub_total = $sub_total[$i];
                     $quoteProduct->description = $description[$i];
@@ -279,15 +285,48 @@ class QuoteController extends Controller
         ];
     }
     /**
+     * productPrice
+     */
+    public function productPrice(Request $request)
+    {
+        $quoteProductId = $request->get('quoteProductId');
+        $productId = $request->get('product');
+
+        $quoteProduct = QuoteProduct::find($quoteProductId);
+
+        if($quoteProduct)
+        {
+            if($quoteProduct && ($quoteProduct->product_id == $productId))
+            {
+                $price = $quoteProduct->price_sell;
+            }else
+            {
+                $product = Product::find($productId);
+                $price = $product->price_sell;
+            }
+        }else
+        {
+            $product = Product::find($productId);
+            $price = $product->price_sell;
+        }
+
+        return 
+        [
+            'status' => 200,
+            'message' => 'okay',
+            'data' => $price
+        ];
+    }
+    /**
      * Product Countring
      */
     public function productCounting(Request $request)
     {
         $productId = $request->get('product');
         $qty = $request->get('qty');
+        $price = $request->get('price');
 
-        $product = Product::find($productId);
-        $result = $product->price_sell * $qty;
+        $result = $price * $qty;
 
         return [
             'status' => 200,
@@ -363,6 +402,8 @@ class QuoteController extends Controller
         // Fetch data for the DataTable
         $query = Quote::query();
 
+        // orderBy
+        $query->orderBy('quote_number', 'desc');
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['number_result', 'total', 'slug'];
 

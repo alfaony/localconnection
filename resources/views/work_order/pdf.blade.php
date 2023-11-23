@@ -56,7 +56,7 @@
                             {{ $a->product ? $a->product->name : '' }}
                         </td>
                         <td>
-                            {{ $a->description ?? '' }}
+                            {!! $a->description ?? '' !!}
                             <input type="hidden" name="description[]" id="description_{{ $a->id }}" class="form-control" placeholder="Description" value="{{  @$a->description }}" required>
                         </td>
                         <td>

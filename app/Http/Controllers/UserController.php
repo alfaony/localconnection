@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Schemas\RoleSchema;
 
 use App\Models\User;
+use App\Models\Role;
 use App\Http\Requests\UserRequest;
 
 
@@ -19,13 +22,25 @@ class UserController extends Controller
     public function index(Request $request)
     {
 
-        $user = User::where('delete_able',1)
+        if((Auth::user()->role->name != RoleSchema::ADMIN && Auth::user()->role->name != RoleSchema::ROOT))
+        {
+            $user = User::where('delete_able',1)
                 ->where('email','like', '%' . $request->get('email') . '%')
+                ->where('id',Auth::user()->id)
                 ->OrderBy('name','asc')->paginate(10);
+            $totalUser = count(User::where('delete_able',1)->where('id',Auth::user()->id)->get());
 
-        $totalUser = count(User::where('delete_able',1)->get());
+        }else
+        {            
+            $user = User::where('delete_able',1)
+                    ->where('email','like', '%' . $request->get('email') . '%')
+                    ->OrderBy('name','asc')->paginate(10);
+            $totalUser = count(User::where('delete_able',1)->get());
+        }
 
-        return view('user.index',compact('user','totalUser'));
+        $role = Role::get();
+
+        return view('user.index',compact('user','totalUser','role'));
     }
 
     /**
@@ -40,6 +55,7 @@ class UserController extends Controller
         $user->name = $request->post('name'); 
         $user->email = $request->post('email');
         $user->phone = $request->post('phone');
+        $user->role_id = $request->post('role');
         $user->password = bcrypt($request->post('password'));
         $user->save();
 
@@ -54,14 +70,26 @@ class UserController extends Controller
      */
     public function edit($slug)
     {
-        $totalUser = count(User::where('delete_able',1)->get());
         $userEdit = User::where('slug', $slug)->firstOrFail();
-        $user = User::where('delete_able',1)
-        ->OrderBy('name','asc')->paginate(10);
+        
+        if((Auth::user()->role->name != RoleSchema::ADMIN && Auth::user()->role->name != RoleSchema::ROOT))
+        {
+            $user = User::where('delete_able',1)
+                ->where('id',Auth::user()->id)
+                ->OrderBy('name','asc')->paginate(10);
+            $totalUser = count(User::where('delete_able',1)->where('id',Auth::user()->id)->get());
+
+        }else
+        {            
+            $user = User::where('delete_able',1)
+                    ->OrderBy('name','asc')->paginate(10);
+            $totalUser = count(User::where('delete_able',1)->get());
+        }
+        $role = Role::get();
     
         // Rest of your code for editing the project...
 
-        return view('user.index', compact('userEdit','user','totalUser'));
+        return view('user.index', compact('userEdit','user','totalUser','role'));
     }
 
     /**
@@ -86,6 +114,13 @@ class UserController extends Controller
         $user->name = $request->post('name'); 
         $user->email = $request->post('email');
         $user->phone = $request->post('phone');
+        $user->role_id = $request->post('role');
+
+        if($request->post('password'))
+        {
+            $user->password = bcrypt($request->post('password'));
+        }
+        
         $user->save();
 
         return redirect()->to(route('user.index'))->with('update',true);

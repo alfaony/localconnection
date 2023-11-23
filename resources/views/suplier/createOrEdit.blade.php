@@ -23,10 +23,10 @@
 </div>
 
 @if(@$suplier)
-<form action="{{ route('suplier.update',$suplier) }}" method="post">
+<form action="{{ route('suplier.update',$suplier) }}" method="post" enctype="multipart/form-data">
 @method('put')
 @else
-<form action="{{ route('suplier.store') }}" method="post">
+<form action="{{ route('suplier.store') }}" method="post" enctype="multipart/form-data">
 @endif
     @csrf
 <div class="container">
@@ -51,6 +51,13 @@
             
             <label class="mt-3">No. Handphone:</label>
             <input type="text" id="phone" name="phone" class="form-control" placeholder="phone" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" value="{{ old('phone') ?? @$suplier->phone }}">
+
+            <label class="mt-3">Lampiran File</label>
+            @if(@$suplier->file)
+            <a href="{{ Storage::url('suplier/' . $suplier->file) }}" class="btn btn-sm btn-primary" download title="{{ $suplier->file }}"><i class="fa fa-file-pdf"></i></a>
+            @endif
+            <input type="file" name="file" class="form-control" placeholder="File" name="" id="">
+            
         </div>
         <div class="col-md-6">
             <label>Tanggal:</label>
@@ -62,10 +69,11 @@
         <thead>
             <tr>
                 <th>No</th>
+                <th>Product</th>
                 <th>Deskripsi</th>
-                <th>Harga Satuan</th>
-                <th width="5%">Jumlah</th>
-                <th width="25%">Total</th>
+                <th width="15%">Harga Satuan</th>
+                <th width="10%">Jumlah</th>
+                <th width="15%">Total</th>
                 <th width="5%">Aksi</th>
             </tr>
         </thead>
@@ -75,19 +83,29 @@
             @foreach($suplier->purchase as $a)
             <tr data-keyss="{{$a->id}}">
                 <td>{{ $noChild++ }}</td>
-                <td><input type="text" class="form-control" name="description[]" id="description_{{$a->id}}" placeholder="Deskripsi" value="{{  $a->description }}" required></td>
+                <td class="col-3">
+                    <select class="form-control productChange selectConfig" name="product[]" id="product_{{ $a->id }}" required>
+                        <option value="" selected disabled>Pilih</option>
+                        @foreach($product as $b)
+                        <option value="{{ $b->id }}" data-key="{{ $a->id }}"  {{ $a->product_id == $b->id ? 'selected' : '' }} >{{ $b->name }}</option>
+                        @endforeach
+                    </select>
+                </td>
                 <td>
-                    <input type="text" class="form-control price" data-keyss="{{$a->id}}" id="price_{{$a->id}}_show" placeholder="Harga Satuan" oninput="formatRupiahFormat(this,'price_{{$a->id}}')"  required>
-                    <input type="hidden" name="price[]" class="form-control" id="price_{{$a->id}}" placeholder="Harga Satuan" value="{{ $a->price }}">
+                    <input type="text" class="thriveEditor" data-ids="{{ $a->id }}" name="description[]" id="description_{{ $a->id }}" placeholder="Deskripsi" value="{{ $a->description }}" required>
+                </td>
+                <td id="price_show_{{ $a->id }}">
+                    Rp. {{ number_format($a->price,0,',','.') }}
                 </td>
                 <td> 
+                    <input type="hidden" name="price[]" class="form-control" data-keyss="{{ $a->id }}" id="price_{{ $a->id }}" value="{{ $a->price }}" required>
                     <input type="number" name="qty[]" class="form-control qty" data-keyss="{{$a->id}}" id="qty_{{$a->id}}" placeholder="Jumlah" value="{{ $a->qty }}" required>
                 </td>
                 <td id="sub_total_show_{{$a->id}}">{{'Rp. '.number_format($a->sub_total_price,0,',','.') }} </td>
                 <td>
                     <input type="hidden" name="idChild[]" value="{{ $a->id }}">
                     <input type="hidden" name="sub_total[]" class="form-control" id="sub_total_{{$a->id}}" placeholder="Harga Satuan" value="{{ $a->sub_total_price }}">
-                    <button type="button" data-id="{{ $a->id }}" class="btn btn-danger btnHapusData"><i class="fa fa-trash"></i></button>
+                    <button type="button" data-id="{{ $a->id }}" class="btn btn-sm btn-danger btnHapusData"><i class="fa fa-trash"></i></button>
                 </td>
             </tr>
             @endforeach
@@ -103,10 +121,12 @@
             <input type="hidden" name="total" id="total" value="0">
 
             @if(@$suplier)
-            <button class="btn btn-primary mt-2">Ubah</button>
+                <button  id="submit" type="button" class="btn btn-primary">Ubah</button>
             @else
-            <button class="btn btn-primary mt-2">Simpan</button>
+                <button id="submit" type="button" class="btn btn-primary">Simpan</button>
             @endif
+                <button type="submit" id="btnSubmit" style="display:none;"></button>
+
         </div>
     </div>
 
@@ -121,29 +141,86 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
 
 <script>
     $(document).ready(function () 
     {
-        convertToRupiah();
-
-        $("#tabelPembelian").on("change keyup", ".price", function (e) 
-        {
+        $("#submit").click(function (e) 
+        { 
             e.preventDefault();
+            let submited = true;
+
+            var input = document.querySelectorAll('input.thriveEditor');
+            input.forEach(function (textarea) 
+            {
+                console.log(textarea);
+                val = textarea.value;
+                if(!val)
+                {
+                    Swal.fire({
+                        title: 'Warning!',
+                        text: 'Deskripsi Harus Diisi.',
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
+
+                    submited = false;
+                }
+            });
+
+            if(submited)
+            {
+                $("#btnSubmit").click();
+            }
             
-            key = $(this).data('keyss');
+        });
 
-            // die;
-            price = $('#price_'+key).val();
-            qty = $('#qty_'+key).val();
+        $('#tabelPembelian').on('change', '.productChange', function (e) 
+        { 
+            e.preventDefault();
+            console.log("bekerja dengan baikk");
 
-            subTotal = price * qty;
+            var key = $(this).find(':selected').data('key');
+
+            var productSelected = $(this).val();
+            var qty = $("#qty_"+key).val();
+
+            productPrice(productSelected, key, function(price) 
+            {
+                // This code runs after the price is updated
+                $("#price_"+key).val(price).change();
+                $("#price_show_"+key).html(formatRupiah(price,'Rp. '));
+
+                subTotal = price * qty;
             
-            $("#sub_total_show_"+key).html(formatRupiah(subTotal,'Rp. '));
-            $("#sub_total_"+key).val(subTotal);
-            hitungTotalKeseluruhan();
+                $("#sub_total_show_"+key).html(formatRupiah(subTotal,'Rp. '));
+                $("#sub_total_"+key).val(subTotal);
 
-        }); 
+                hitungTotalKeseluruhan();
+            });
+
+        });
+        
+        // $("#tabelPembelian").on("change keyup", ".price", function (e) 
+        // {
+        //     e.preventDefault();
+            
+        //     key = $(this).data('keyss');
+
+        //     // die;
+        //     price = $('#price_'+key).val();
+        //     qty = $('#qty_'+key).val();
+
+            // subTotal = price * qty;
+            
+            // $("#sub_total_show_"+key).html(formatRupiah(subTotal,'Rp. '));
+            // $("#sub_total_"+key).val(subTotal);
+        //     hitungTotalKeseluruhan();
+
+        // }); 
         
         $("#tabelPembelian").on("change keyup", ".qty", function (e) 
         {
@@ -172,24 +249,43 @@
 </script>
 <script>
     $('#selectProject').select2({
-        placeholder: 'Pilih Supplier'
+        placeholder: 'Pilih Proyek'
     });
+
+    $('.selectConfig').select2({
+        width: '100%',
+    });
+
     var noBaris = $('#tabelPembelian tbody tr').length + 1;
     var indexKeys = 
 
     $('#btnTambahBaris').click(function() {
         var noBaris = $('#tabelPembelian tbody tr').length + 1; // Menghitung jumlah baris untuk nomor baris selanjutnya
         var indexKeys = generateRandomString(4);
+        var dataSelect = @json($product);
+            
+        var projectOptions = '';
+
+        $.each(dataSelect, function(index, product) 
+        {
+            projectOptions += `<option value="${product.id}" data-key="${indexKeys}">${product.name} </option>`;
+        });
 
         var row = `
         <tr>
             <td>${noBaris}</td>
-            <td><input type="text" class="form-control" name="description[]" id="description_${indexKeys}" placeholder="Deskripsi" required></td>
-            <td>
-                <input type="text" class="form-control price" data-keyss=${indexKeys} id="price_${indexKeys}_show" placeholder="Harga Satuan" oninput="formatRupiahFormat(this,'price_${indexKeys}')" required>
-                <input type="hidden" name="price[]" class="form-control" id="price_${indexKeys}" placeholder="Harga Satuan">
+            <td class="col-3">
+                <select class="form-control productChange" name="product[]" id="product_${indexKeys}" required>
+                    <option value="" selected disabled>Pilih</option>
+                    ${projectOptions}
+                </select>
+            </td>
+            <td><input type="text" class="form-control thriveEditor" name="description[]" id="description_${indexKeys}" placeholder="Deskripsi" required></td>
+            <td id="price_show_${indexKeys}">
+                Rp. 0
             </td>
             <td> 
+                <input type="hidden" name="price[]" class="form-control" data-keyss=${indexKeys} id="price_${indexKeys}" value="" required>
                 <input type="number" name="qty[]" class="form-control qty" data-keyss=${indexKeys} id="qty_${indexKeys}" placeholder="Jumlah" value="1" required>
             </td>
             <td id="sub_total_show_${indexKeys}">Rp 0</td>
@@ -200,8 +296,14 @@
             </td>
         </tr>
     `;
-
+    
         $('#tabelPembelian tbody').append(row);
+
+        $('#product_' + indexKeys).select2({
+            width: '100%'
+        });
+
+        generateThriveEditor(indexKeys);
     });
 
     $('#tabelPembelian').on('click', '.btnHapus', function() {
@@ -254,6 +356,21 @@
             hitungTotalKeseluruhan();
         }
     });
+
+    function productPrice(product,suplierProductId,callback)
+    {
+        $.ajax({
+            type: "GET",
+            url: "{{ route('suplier.productPrice') }}",
+            data: {product:product,suplierProductId:suplierProductId},
+            success: function (response) 
+            {
+                var price = response.data;
+                callback(price); // Pass the price to the callback function
+            },
+        });
+    }
+
     function updateNomorBaris() {
         $('#tabelPembelian tbody tr').each(function(index) {
             $(this).find('td:first').text(index + 1);
@@ -336,34 +453,13 @@
         $("#total").val(total);
     }
 
-    function convertToRupiah()
-    {
-
-        $('#tabelPembelian tbody tr').each(function() 
-        {
-            var keys = $(this).attr('data-keyss');
-
-            price = "price_"+keys;
-            priceShow = "price_"+keys+"_show";
-
-            let priceInput = document.getElementById(price).value;
-            if (priceInput) 
-            {
-                document.getElementById(priceShow).value = priceInput;
-                formatRupiahFormat(document.getElementById(priceShow),price); // Format default value
-            }
-        
-            // Update sub total untuk baris ini
-        });
-    }
-
-// Panggil fungsi hitungTotalKeseluru
 
 </script>
 
 @stop
 @section('css')
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
 <style>
    body 

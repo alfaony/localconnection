@@ -114,11 +114,11 @@ $totalQuote = $totalQuote + 1; // Get the total number of projects
                 dataSrc: 'data'
             },
             columns: [
-                {data: 'number_result', name: 'number_result', orderable: true},
-                {data: 'total', name: 'total', orderable: true},
+                {data: 'number_result', name: 'number_result', orderable: false},
+                {data: 'total', name: 'total', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
-            order: [[0, 'desc']],
+            // order: [[0, 'desc']],
         });
     });
 </script>
@@ -175,3 +175,4 @@ $totalQuote = $totalQuote + 1; // Get the total number of projects
         }
 
 </style>
+@stop

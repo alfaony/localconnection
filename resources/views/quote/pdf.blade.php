@@ -108,14 +108,14 @@
                       <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
                   </td>
                   <td>
-                    {{ $a->description ?? '' }}
+                    {!! $a->description ?? '' !!}
                   </td>
                   <td>
                       {{ $a->qty ?? '' }}
                       <input type="hidden" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ old('qty') ?? @$a->qty }}" required>
                   </td>
                   <td>
-                    {{ $a->product ? 'Rp. '.number_format($a->product->price_sell,0,',','.') : 'Rp. 0' }}
+                    {{ $a->product ? 'Rp. '.number_format($a->price_sell,0,',','.') : 'Rp. 0' }}
                   </td>
                   <td id="sub_total_show_{{ $a->id }}">
                       {{ 'Rp. '.number_format($a->sub_total,0,',','.') }}

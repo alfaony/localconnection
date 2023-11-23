@@ -117,9 +117,10 @@
                                 </select>
                             </td>
                             <td class="col-3">
-                                <input type="text" name="description[]" id="description_{{ $a->id }}" class="form-control" placeholder="Description" value="{{  @$a->description }}" required>
+                                <input type="text" class="thriveEditor" data-ids="{{ $a->id }}" id="description_{{ $a->id }}" name="description[]" id="description_{{ $a->id }}" placeholder="Description" value="{{  @$a->description }}" required>
                             </td>
                             <td class="col-1">
+                                <input type="hidden" id="price_{{ $a->id }}" name="price[]" data-key="{{ $a->id }}" min="1" class="form-control" placeholder="Quantity" value="{{ @$a->price_buy }}" required>
                                 <input type="number" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ @$a->qty }}" required>
                             </td>
                             <td class="col-2" id="sub_total_show_{{ $a->id }}">
@@ -163,10 +164,11 @@
                 </div>
                 
                 @if(@$workOrder)
-                <button type="submit" class="btn btn-primary">Ubah</button>
+                <button type="button" id="submit" class="btn btn-primary">Ubah</button>
                 @else
-                <button type="submit" class="btn btn-primary">Simpan</button>
+                <button type="button" id="submit" class="btn btn-primary">Simpan</button>
                 @endif
+                <button type="submit" id="btnSubmit" style="display:none;"></button>
             </form>
         </div>
     </div>
@@ -179,9 +181,41 @@
 <!-- Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
+
 <script>
     $(document).ready(function () 
     {
+        $("#submit").click(function (e) 
+        { 
+            e.preventDefault();
+            let submited = true;
+            var input = document.querySelectorAll('input.thriveEditor');
+            input.forEach(function (textarea) 
+            {
+                console.log(textarea);
+                val = textarea.value;
+                if(!val)
+                {
+                    Swal.fire({
+                        title: 'Warning!',
+                        text: 'Deskripsi Harus Diisi.',
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        timer: 1000
+                    });
+
+                    submited = false;
+                }
+            });
+
+            if(submited)
+            {
+                $("#btnSubmit").click();
+            }
+            
+        });
 
         $(".quoteSuggestion").change(function (e) 
         { 
@@ -203,7 +237,7 @@
                             
                             $.each(response.product, function (index, value) 
                             { 
-                                addForm(value.product_id,value.qty,value.description)    
+                                addForm(value.product_id,value.price_buy,value.qty,value.description)    
                             });
                         }  
                     }
@@ -231,10 +265,16 @@
             var productSelected = $(this).val();
             var qty = $("#qty_"+key).val();
 
-            if(productSelected && key && qty)
+            productPrice(productSelected, key, function(price) 
             {
-                countProduct(productSelected, key, qty);
-            }
+                // This code runs after the price is updated
+                $("#price_"+key).val(price).change();
+
+                if(productSelected && key && qty && price) 
+                {
+                    countProduct(productSelected, key, qty, price);
+                }
+            });
 
         });
 
@@ -245,15 +285,16 @@
 
             var productSelected = $("#product_"+key).find(':selected').val();
             var qty = $("#qty_"+key).val();
-
+            var price = $("#price_"+key).val();
+            
             if(qty <= 0)
             {
                 $("#qty_"+key).val(1);
             }
 
-            if(productSelected && key && qty)
+            if(productSelected && key && qty && price)
             {
-                countProduct(productSelected, key, qty);
+                countProduct(productSelected, key, qty, price);
             }
         });
     });
@@ -346,9 +387,10 @@
                         </select>
                     </td>
                     <td class="col-3">
-                        <input type="text" name="description[]" id="description_${key}" class="form-control" placeholder="Description" required>
+                        <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" placeholder="Description" required>
                         </td>
                     <td class="col-1">
+                        <input type="hidden" id="price_${key}" name="price[]" data-key="${key}" min="1" class="form-control" value="" required>
                         <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="1" required>
                     </td>
                     <td class="col-2" id="sub_total_show_${key}">
@@ -367,6 +409,8 @@
             $('#product_' + key).select2({
                 width: '100%'
             });
+
+            generateThriveEditor(key);
         });
 
         
@@ -425,7 +469,21 @@
         });
     });
 
-    function addForm(defaultProductId = null, defaultQty = 1,defaultDescription = null) 
+    function productPrice(product,workOrderProductId,callback)
+    {
+        $.ajax({
+            type: "GET",
+            url: "{{ route('work-order.productPrice') }}",
+            data: {product:product,workOrderProductId:workOrderProductId},
+            success: function (response) 
+            {
+                var price = response.data;
+                callback(price); // Pass the price to the callback function
+            },
+        });
+    }
+
+    function addForm(defaultProductId = null, price = null, defaultQty = 1,defaultDescription = null) 
     {
         var key = generateRandomString(4);
         var noBaris = $('#tableWorkOrder tbody tr').length + 1;
@@ -448,9 +506,10 @@
                     </select>
                 </td>
                 <td class="col-3">
-                    <input type="text" name="description[]" id="description_${key}" value="${defaultDescription}" class="form-control" placeholder="Description" required>
+                    <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" value="${defaultDescription}"  placeholder="Description" required>
                 </td>
                 <td class="col-1">
+                    <input type="hidden" id="price_${key}" name="price[]" data-key="${key}" min="1" class="form-control" value="" required>
                     <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="${defaultQty}" required>
                 </td>
                 <td class="col-2" id="sub_total_show_${key}">Rp 0</td>
@@ -467,6 +526,8 @@
         $('#product_' + key).select2({
             width: '100%'
         });
+
+        generateThriveEditor(key,defaultDescription);
 
         $('#product_' + key).trigger('change');
         // Anda bisa menambahkan event listener untuk `productChange` dan `qtyChange` di sini jika Anda ingin memicu perubahan lain setelah row ditambahkan
@@ -562,12 +623,12 @@
         return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
     }
 
-    function countProduct(productId,key,qty)
+    function countProduct(productId,key,qty,price)
     {        
         $.ajax({
             type: "GET",
             url: "{{ route('work-order.productCounting') }}",
-            data: {product:productId,qty:qty},
+            data: {product:productId,qty:qty,price:price},
             success: function (response) 
             {
                 if(response.data)
@@ -596,6 +657,7 @@
 @section('css')
 <!-- Select2 CSS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
 <style>
    body 
@@ -614,6 +676,11 @@
     }
     .select2-selection__arrow {
         height: 34px !important;
+    }
+    .ql-container 
+    {
+        min-height: 150px;
+        height: auto;
     }
 </style>
 @stop

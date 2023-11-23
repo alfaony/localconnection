@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use App\Models\Suplier;
 use App\Models\Project;
 use App\Models\Purchase;
+use App\Models\Product;
 
 class SuplierController extends Controller
 {
@@ -40,9 +41,10 @@ class SuplierController extends Controller
         $nomor = $request->get('nomor');
         $project = Project::orderBy('created_at','desc')->get();
         $dateCreate = Carbon::now()->format('Y-m-d');
+        $product = Product::all();
 
 
-        return view('suplier.createOrEdit',compact('nomor','project','dateCreate'));
+        return view('suplier.createOrEdit',compact('nomor','project','dateCreate','product'));
     }
 
     /**
@@ -62,8 +64,18 @@ class SuplierController extends Controller
             $suplier->date = $request->post('date');
             $suplier->name = $request->post('name');
             $suplier->phone = $request->post('phone');
+
+            if ($request->hasFile('file')) 
+            {
+                // Hapus file lama jika ada        
+                $file = $request->file('file');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('suplier', $filename, 'public');
+                $suplier->file = $filename;
+            }
             $suplier->save();
 
+            $product = $request->input('product');
             $descriptions = $request->input('description');
             $prices = $request->input('price');
             $qtys = $request->input('qty');
@@ -73,6 +85,7 @@ class SuplierController extends Controller
             for ($i = 0; $i < count($descriptions); $i++) 
             {
                 $purchase = new Purchase();
+                $purchase->product_id = $product[$i];
                 $purchase->description = $descriptions[$i];
                 $purchase->price = $prices[$i];
                 $purchase->qty = $qtys[$i];
@@ -88,13 +101,13 @@ class SuplierController extends Controller
             return redirect()->to(route('suplier.index'))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
             Log::error($th);
             DB::rollback();
             return redirect()->to(route('suplier.index'))->with('store',false);
         }
     }
-
+    
     /**
      * Display the specified resource.
      *
@@ -118,9 +131,10 @@ class SuplierController extends Controller
         $suplier = Suplier::where('slug', $slug)->firstOrFail();
         $project = Project::orderBy('created_at','desc')->get();
         $dateCreate = Carbon::parse($suplier->created_at)->format('Y-m-d');
+        $product = Product::all();
 
 
-        return view('suplier.createOrEdit',compact('suplier','nomor','project','dateCreate'));   
+        return view('suplier.createOrEdit',compact('suplier','nomor','project','dateCreate','product'));   
     }
 
     /**
@@ -141,8 +155,17 @@ class SuplierController extends Controller
             $suplier->date = $request->post('date');
             $suplier->name = $request->post('name');
             $suplier->phone = $request->post('phone');
+            if ($request->hasFile('file')) 
+            {
+                // Hapus file lama jika ada        
+                $file = $request->file('file');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('suplier', $filename, 'public');
+                $suplier->file = $filename;
+            }
             $suplier->save();
 
+            $product = $request->input('product');
             $descriptions = $request->input('description');
             $prices = $request->input('price');
             $qtys = $request->input('qty');
@@ -150,7 +173,7 @@ class SuplierController extends Controller
             $idChild = $request->input('idChild');
             
             // Loop melalui salah satu array (karena semua memiliki panjang yang sama)
-            for ($i = 0; $i < count($descriptions); $i++) 
+            for ($i = 0; $i < count($product); $i++) 
             {
 
                 $id = $idChild[$i];
@@ -158,7 +181,7 @@ class SuplierController extends Controller
                 if(!$id)
                 {
                     $purchase = new Purchase();
-                    
+                    $purchase->product_id = $product[$i];
                     $purchase->description = $descriptions[$i];
                     $purchase->price = $prices[$i];
                     $purchase->qty = $qtys[$i];
@@ -168,6 +191,7 @@ class SuplierController extends Controller
                 }else
                 {
                     $purchases = Purchase::find($id);
+                    $purchases->product_id = $product[$i];
                     $purchases->description = $descriptions[$i];
                     $purchases->price = $prices[$i];
                     $purchases->qty = $qtys[$i];
@@ -221,5 +245,40 @@ class SuplierController extends Controller
         $suplier->save();
 
         return redirect()->back()->with('deletePurchase',true);
+    }
+
+    /**
+     * Get Product with Ajax
+     */
+
+     public function productPrice(Request $request)
+    {
+        $suplierProductId = $request->get('suplierProductId');
+        $productId = $request->get('product');
+
+        $suplierProduct = Purchase::find($suplierProductId);
+
+        if($suplierProduct)
+        {
+            if($suplierProduct && ($suplierProduct->product_id == $productId))
+            {
+                $price = $suplierProduct->price;
+            }else
+            {
+                $product = Product::find($productId);
+                $price = $product->price_buy;
+            }
+        }else
+        {
+            $product = Product::find($productId);
+            $price = $product->price_buy;
+        }
+
+        return 
+        [
+            'status' => 200,
+            'message' => 'okay',
+            'data' => $price
+        ];
     }
 }

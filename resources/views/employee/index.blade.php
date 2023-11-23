@@ -44,7 +44,7 @@ $totalEmployee = $totalEmployee + 1; // Get the total number of projects
         <input type="text" id="name" name="name" placeholder="Budiman" value="{{ old('name') ?? @$employeeEdit->name }}" required>
         
         <label for="handphone">No. Handphone:</label>
-        <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$employeeEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
+        <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$employeeEdit->phone }}"  >
         
         <label for="gajiBulanan">Gaji Bulanan:</label>
         <input type="text" class="form-control" name="salary_montly_show" id="salary_montly_show"  oninput="formatRupiahFormat(this,'salary_monthly')" required/>

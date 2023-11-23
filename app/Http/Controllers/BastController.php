@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use App\Models\Bast;
 use App\Models\Project;
 use App\Models\WorkOrder;
+use App\Models\SettingCompany;
 
 class BastController extends Controller
 {
@@ -95,12 +96,14 @@ class BastController extends Controller
     {
         $workOrder = WorkOrder::all();
         $project = Project::all();
+        $company = SettingCompany::get()->pluck('field_value','field_title');
 
         $bast = Bast::where('slug',$slug)->first();
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
         $nomorBast = $bast->number_result ?? '';
+        $today = Carbon::now()->format('d M Y');
 
-        return view('bast.pdf',compact('nomorBast','workOrder','userCreate','project','bast'));
+        return view('bast.pdf',compact('nomorBast','workOrder','userCreate','project','bast', 'today', 'company'));
     }
 
     /**

@@ -8,6 +8,7 @@
 
 @section('content')
 <div class="container">
+    @canAccess('showReport','homes')
     <div class="row mt-4">
         <div class="col-md-4">
             <div class="card text-white bg-warning mb-3">
@@ -51,6 +52,7 @@
             </div>
         </div>
     </div>
+    @endcanAccess
 </div>
 @endsection
 @section('js')

@@ -59,7 +59,7 @@ $no = ($project->currentPage() - 1) * $project->perPage() + 1;
             </td>
             --}}
             <td>
-                {{ 'Rp. '.number_format($a->budget,0,',','.') }}
+                {{ 'Rp. '.number_format($a->budgets,0,',','.') }}
             </td>
             <td>
                 {{ 'Rp. '.number_format($a->purchase,0,',','.') }}

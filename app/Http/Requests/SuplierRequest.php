@@ -18,6 +18,8 @@ class SuplierRequest extends FormRequest
             'name' => 'required|string|max:255',
             'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
             'date' => 'required|date',
+            'product' => 'required|array',
+            'product.*' => 'required|string|exists:products,id', // Contoh validasi jika product adalah ID dari tabel products
             'description' => 'required|array',
             'description.*' => 'required|string|max:255',
             'price.*' => 'required|numeric|min:0',

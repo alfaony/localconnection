@@ -31,6 +31,7 @@ class UserRequest extends FormRequest
             return [
                 'name'  =>  'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
+                'role' => 'required|uuid|exists:roles,id',
                 'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
                 'password' => 'required|min:6',
                 'confirmPassword' => 'required|same:password',

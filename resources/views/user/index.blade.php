@@ -51,6 +51,13 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
             
+            <label for="phone">Role:</label>
+            <select name="role" class="form-control md-2" required>
+                <option value="" selected disabled>Pilih</option>
+                @foreach($role as $a)
+                <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                @endforeach
+            </select>
             @if(!@$userEdit)
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" placeholder="**********" value="{{ old('password') }}" required>

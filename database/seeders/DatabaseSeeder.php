@@ -16,5 +16,10 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(UserSeeder::class);
         $this->call(FieldSettingCompaniesSeeder::class);
+        $this->call(PermissionForProductTillSettingCompanySeeder::class);
+        $this->call(AllUserIsAdminSeeder::class);
+        $this->call(PermissionForProductPriceQuoteAndWorkOrderSeeder::class);
+        $this->call(PermissionForDeleteDetailReportSeeder::class);
+        $this->call(PermissionForProductPriceSuplierSeeder::class);
     }
 }

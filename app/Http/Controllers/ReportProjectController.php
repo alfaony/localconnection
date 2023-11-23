@@ -4,12 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 use App\Http\Requests\ReportProjectRequest;
+
 use Carbon\Carbon;
 
 use App\Models\ReportProject;
+use App\Models\ReportProjectDetail;
 use App\Models\WorkOrder;
 use App\Models\Project;
+
 
 class ReportProjectController extends Controller
 {
@@ -47,6 +53,7 @@ class ReportProjectController extends Controller
     public function store(ReportProjectRequest $request)
     {
 
+        DB::beginTransaction();
         try {
             $nomorReportProject = $this->reportProjectNumber();
             $reportProject = new ReportProject();
@@ -56,26 +63,43 @@ class ReportProjectController extends Controller
             $reportProject->number_result = $nomorReportProject['result'];
             $reportProject->work_order_id = $request->post('work_order');
             $reportProject->project_id = $request->post('project');
-            $reportProject->link_report = $request->post('link_report');
+            // $reportProject->link_report = $request->post('link_report');
             $reportProject->user_created_id = Auth::user()->id;
             $reportProject->user_updated_id = Auth::user()->id;
-    
-            if ($request->hasFile('report_file')) 
+            
+            $reportProject->save();
+
+            $name = $request->post('name');
+            $link = $request->post('link');
+            $file = $request->file('file');
+            
+
+            for ($i = 0; $i < count($name); $i++) 
             {
-                $file = $request->file('report_file');
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('reports', $filename, 'public');
-                $reportProject->report_file = $filename;
+                $reportProjectDetail = new ReportProjectDetail;
+                $reportProjectDetail->name = $name[$i];
+                $reportProjectDetail->link = $link[$i];
+                
+                if ($file[$i]) 
+                {
+                    $filename = time() . '_' . $file[$i]->getClientOriginalName();
+                    $filePath = $file[$i]->storeAs('reports', $filename, 'public');
+                    $reportProjectDetail->file = $filename;
+                }
+
+                $reportProject->reportProjectDetail()->save($reportProjectDetail);
             }
     
-            $reportProject->save();
             
-    
+            
+            DB::commit();
             return redirect()->to(route('report-project.index'))->with('store', true);
         } catch (\Throwable $th) 
         {
             //throw $th;
             // dd($th);
+            Log::error($th);
+            DB::rollback();
             return redirect()->to(route('report-project.index'))->with('store', false);
         }
     }
@@ -106,28 +130,63 @@ class ReportProjectController extends Controller
      */
     public function update(ReportProjectRequest $request, ReportProject $reportProject)
     {
-        $reportProject->date = $request->post('date');
-        $reportProject->work_order_id = $request->post('work_order');
-        $reportProject->project_id = $request->post('project');
-        $reportProject->link_report = $request->post('link_report');
+        DB::beginTransaction();
+        try {
+            $reportProject->date = $request->post('date');
+            $reportProject->work_order_id = $request->post('work_order');
+            $reportProject->project_id = $request->post('project');
+            // $reportProject->link_report = $request->post('link_report');        
+            $reportProject->user_updated_id = Auth::user()->id;
+            $reportProject->save();
     
-        if ($request->hasFile('report_file')) 
-        {
-            // Hapus file lama jika ada
-            if ($reportProject->report_file) {
-                Storage::disk('public')->delete('reports/' . $reportProject->report_file);
+            $ids = $request->post('ids');
+            $name = $request->post('name');
+            $link = $request->post('link');
+            $file = $request->file('file');
+            
+    
+            for ($i = 0; $i < count($name); $i++) 
+            {
+                $id = $ids[$i];
+                if(!$id)
+                {
+                    $reportProjectDetail = new ReportProjectDetail;
+                    $reportProjectDetail->name = $name[$i];
+                    $reportProjectDetail->link = $link[$i];
+                    
+                    if ($file && $file[$i]) 
+                    {
+                        $filename = time() . '_' . $file[$i]->getClientOriginalName();
+                        $filePath = $file[$i]->storeAs('reports', $filename, 'public');
+                        $reportProjectDetail->file = $filename;
+                    }
+    
+                    $reportProject->reportProjectDetail()->save($reportProjectDetail);
+                }else
+                {
+                    $reportProjectDetail = ReportProjectDetail::find($id);
+                    $reportProjectDetail->name = $name[$i];
+                    $reportProjectDetail->link = $link[$i];
+                    
+                    if ($file && $file[$i]) 
+                    {
+                        $filename = time() . '_' . $file[$i]->getClientOriginalName();
+                        $filePath = $file[$i]->storeAs('reports', $filename, 'public');
+                        $reportProjectDetail->file = $filename;
+                    }
+                    $reportProjectDetail->save();
+                }
+    
             }
-    
-            $file = $request->file('report_file');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('reports', $filename, 'public');
-            $reportProject->report_file = $filename;
+            
+            DB::commit();
+            return redirect()->to(route('report-project.index'))->with('update', true);
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollback();
+            dd($th);
+            return redirect()->to(route('report-project.index'))->with('update', false);
         }
-        
-        $reportProject->user_updated_id = Auth::user()->id;
-        $reportProject->save();
-
-        return redirect()->to(route('report-project.index'))->with('update', true);
     }
 
     /**
@@ -142,6 +201,14 @@ class ReportProjectController extends Controller
         return redirect()->back()->with('delete',true);
     }
 
+    /**
+     * Remove Project Details
+     */
+    public function destroyDetail($id)
+    {
+        ReportProjectDetail::find($id)->delete();
+        return true;
+    }
     /**
      * Data table for load AgreementLetter
      */

@@ -70,6 +70,7 @@
                     </div>
                 </div>
         
+                {{-- 
                 <hr>
                 <div class="row mb-3">
                     <div class="col-md-12">
@@ -92,12 +93,56 @@
                 </div>
 
                 <hr>
+                --}}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-success" id="addRowFileUpload"><i class="fa fa-plus"></i> Laporan</button>
+                    </div>
+                </div>
+                
+                <table class="table table-bordered mt-3" id="tableReport">
+                    <thead>
+                        <tr>
+                            <th >No</th>
+                            <th >Nama</th>
+                            <th >Link</th>
+                            <th >File</th>
+                            <th >Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if(@$reportProject)
+                        @php $no = 1; @endphp
+                        @foreach(@$reportProject->reportProjectDetail as $a)
+                        <tr>
+                            <td>
+                                {{ $no++ }}
+                            </td>
+                            <td width="30%">
+                                <input type="hidden" class="form-control" name="ids[]" value="{{ $a->id }}" required>
+                                <input type="text" class="form-control" id="name_" name="name[]" value="{{ $a->name }}" required>
+                            </td>
+                            <td width="30%">
+                                <input type="text" class="form-control" id="link_" name="link[]" value="{{ $a->link }}" required>
+                            </td>
+                            <td width="20%">
+                                <input type="file" class="form-control" id="file_" name="file[]" >
+                            </td>
+                            <td>
+                                <a href="{{ Storage::url('reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-file-pdf"></i></a>
+                                <button class="btn btn-sm btn-danger btnHapusData" data-id="{{ $a->id }}" title="delete"><i class="fa fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        @endforeach
+                        @endif
+                    </tbody>
+                </table>
+
                 <div class="row mb-3">
                     <div class="col-md-12 text-right">
                         <button type="submit" class="btn btn-primary">Simpan</button>
                     </div>
                 </div>
-                
             </form>
         </div>
     </div>
@@ -110,6 +155,90 @@
 <!-- Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script>
+    $(document).ready(function () {
+        $("#addRowFileUpload").click(function (e) 
+        { 
+            e.preventDefault();
+            var noBaris = $('#tableReport tbody tr').length + 1; // Menghitung jumlah baris untuk nomor baris selanjutnya
+
+            let row = `
+                <tr>
+                    <td>
+                        ${noBaris}
+                    </td>
+                    <td>
+                        <input type="hidden" class="form-control" name="ids[]" required>
+                        <input type="text" class="form-control" id="name_" name="name[]" required>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control" id="link_" name="link[]" required>
+                    </td>
+                    <td>
+                        <input type="file" class="form-control" id="file_" name="file[]" >
+                    </td>
+                    <td>
+                        <button class="btn btn-danger btnHapus"><i class="fa fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+
+            $('#tableReport tbody').append(row);
+        });
+
+        $('#tableReport').on('click','.btnHapus', function() 
+        {
+            $(this).closest('tr').remove();
+            updateNomorBaris();
+        });
+
+        $('.btnHapusData').click(function() {
+            var dataId = $(this).data('id');
+            // Tampilkan konfirmasi penghapusan
+            var userConfirmation = confirm("Apakah anda yakin untuk menghapus data ini?");
+            
+            if(userConfirmation) 
+            {
+                let url = "{{ route('report-project.destroy.detail',':id') }}";
+                url = url.replace(':id',dataId);
+                // $(this).closest('tr').remove(); // Hapus baris yang berisi tombol yang diklik
+                // updateNomorBaris(); // Perbarui nomor baris
+                // Jika user mengonfirmasi, lakukan request AJAX untuk menghapus data
+                $.ajax({
+                    type: "POST", // atau "DELETE" sesuai dengan metode yang Anda gunakan
+                    url: url, // Gantikan dengan endpoint Anda
+                    data: 
+                    {
+                        id: dataId,
+                        _token: "{{ csrf_token() }}", // Untuk Laravel, tambahkan CSRF token
+                        _method: "DELETE" // Untuk Laravel, tambahkan CSRF token
+                    },
+                    success: function(response) 
+                    {
+                        // console.log(response);
+                        Swal.fire(
+                            {
+                            title: 'Berhasil!',
+                            text: 'Berhasil Menghapus Data',
+                            icon: 'success',
+                            timer: 1500, // 3 detik
+                            timerProgressBar: true,
+                            showConfirmButton: false,
+                            showConfirmButton: false, // Menghilangkan tombol OK/Confirm
+                        });
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) 
+                    {
+                        alert("Terjadi kesalahan saat menghapus data");
+                    }
+                });
+
+                $(this).closest('tr').remove(); // Hapus baris yang berisi tombol yang diklik
+                updateNomorBaris(); // Perbarui nomor baris
+            }
+        });
+    });
+</script>
 <script>
     $(document).ready(function () 
     {
@@ -153,6 +282,13 @@
             $('#work_order').append(newOption).trigger('change');
         }
     });
+
+    function updateNomorBaris() 
+    {
+        $('#tableReport tbody tr').each(function(index) {
+            $(this).find('td:first').text(index + 1);
+        });
+    }
 </script>
 @stop
 @section('css')
