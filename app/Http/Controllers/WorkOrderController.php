@@ -361,6 +361,7 @@ class WorkOrderController extends Controller
     {
         // Fetch data for the DataTable
         $query = WorkOrder::query();
+        $query->orderBy('work_order_number', 'desc');
 
         // OrderBy
         $query->orderBy('work_order_number', 'desc');

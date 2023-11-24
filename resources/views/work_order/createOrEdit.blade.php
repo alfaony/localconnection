@@ -183,7 +183,10 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
+<<<<<<< HEAD
 
+=======
+>>>>>>> manager-bos/develop
 <script>
     $(document).ready(function () 
     {
@@ -216,7 +219,7 @@
             }
             
         });
-
+        
         $(".quoteSuggestion").change(function (e) 
         { 
             e.preventDefault();
@@ -387,8 +390,8 @@
                         </select>
                     </td>
                     <td class="col-3">
-                        <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" placeholder="Description" required>
-                        </td>
+                        <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" value=""  placeholder="Description" required>
+                    </td>
                     <td class="col-1">
                         <input type="hidden" id="price_${key}" name="price[]" data-key="${key}" min="1" class="form-control" value="" required>
                         <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="1" required>
@@ -405,7 +408,7 @@
             `;
             
             $('#tableWorkOrder tbody').append(row);
-
+            
             $('#product_' + key).select2({
                 width: '100%'
             });
@@ -528,7 +531,7 @@
         });
 
         generateThriveEditor(key,defaultDescription);
-
+        
         $('#product_' + key).trigger('change');
         // Anda bisa menambahkan event listener untuk `productChange` dan `qtyChange` di sini jika Anda ingin memicu perubahan lain setelah row ditambahkan
     }
@@ -658,7 +661,10 @@
 <!-- Select2 CSS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<<<<<<< HEAD
 
+=======
+>>>>>>> manager-bos/develop
 <style>
    body 
    {

@@ -72,7 +72,6 @@
                 {data: 'total', name: 'total', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
-            // order: [[0, 'desc']],
         });
     });
 </script>

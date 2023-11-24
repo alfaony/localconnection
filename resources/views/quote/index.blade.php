@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('content_header')
-    <h1>Pembelian</h1>
+    <h1>Quote</h1>
 @stop
 
 @php

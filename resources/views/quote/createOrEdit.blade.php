@@ -150,10 +150,8 @@
                             </select>
                         </td>
                         <td class="col-3">
-                            <div>
-                                <input type="hidden" class="thriveEditor" data-ids="{{ $a->id }}" id="description_{{ $a->id }}"  name="description[]" value="{{ old('description') ?? @$a->description }}" required>
-                                <div id="editor_{{ $a->id }}" style="min-height: 120px;">{!! old('description') ?? @$a->description !!}</div>
-                            </div>
+                            <input type="hidden" class="thriveEditor" data-ids="{{ $a->id }}" id="description_{{ $a->id }}"  name="description[]" value="{{ old('description') ?? @$a->description }}" required>
+                            <div id="editor_{{ $a->id }}" style="min-height: 120px;">{!! old('description') ?? @$a->description !!}</div>
                         </td>
                         <td class="col-1">
                             <input type="hidden" id="price_{{ $a->id }}" name="price[]" data-key="{{ $a->id }}" min="1" class="form-control" value="{{ $a->price_sell }}" required>
@@ -401,7 +399,7 @@
                             ${projectOptions}
                         </select>
                     </td>
-                    <td class="col-3" >
+                    <td class="col-3">
                         <input type="hidden" class="thriveEditor" data-ids="${key}" id="description_${key}"  name="description[]" required>
                         <div id="editor_${key}" style="min-height: 120px;"></div>
                     </td>
