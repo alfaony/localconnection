@@ -661,10 +661,6 @@
 <!-- Select2 CSS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<<<<<<< HEAD
-
-=======
->>>>>>> manager-bos/develop
 <style>
    body 
    {
