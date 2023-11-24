@@ -68,11 +68,10 @@
                 dataSrc: 'data'
             },
             columns: [
-                {data: 'number_result', name: 'number_result', orderable: true},
-                {data: 'total', name: 'total', orderable: true},
+                {data: 'number_result', name: 'number_result', orderable: false},
+                {data: 'total', name: 'total', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
-            order: [[0, 'desc']],
         });
     });
 </script>
