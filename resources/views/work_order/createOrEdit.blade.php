@@ -183,10 +183,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
-<<<<<<< HEAD
-
-=======
->>>>>>> manager-bos/develop
 <script>
     $(document).ready(function () 
     {
