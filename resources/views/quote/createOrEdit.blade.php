@@ -126,9 +126,9 @@
                 <thead>
                     <tr class="d-flex">
                         <th class="col-1">No</th>
-                        <th class="col-4">Produk/Jasa</th>
+                        <th class="col-3">Produk/Jasa</th>
                         <th class="col-3">Description</th>
-                        <th class="col-1">Qty</th>
+                        <th class="col-2">Qty</th>
                         <th class="col-2">Total</th>
                         <th class="col-1">Action</th>
                     </tr>
@@ -141,7 +141,7 @@
                         <td class="col-1">
                             {{ $nomorBaris++ }}
                         </td>
-                        <td class="col-4">
+                        <td class="col-3">
                             <select class="form-control productChange select2" name="product[]" id="product_{{ $a->id }}" required>
                                 <option value="" selected disabled>Pilih</option>
                                 @foreach($product as $b)
@@ -153,7 +153,7 @@
                             <input type="hidden" class="thriveEditor" data-ids="{{ $a->id }}" id="description_{{ $a->id }}"  name="description[]" value="{{ old('description') ?? @$a->description }}" required>
                             <div id="editor_{{ $a->id }}" style="min-height: 120px;">{!! old('description') ?? @$a->description !!}</div>
                         </td>
-                        <td class="col-1">
+                        <td class="col-2">
                             <input type="number" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ old('qty') ?? @$a->qty }}" required>
                         </td>
                         <td class="col-2" id="sub_total_show_{{ $a->id }}">
@@ -385,7 +385,7 @@
                     <td class="col-1">
                         ${noBaris}
                     </td>
-                    <td class="col-4">
+                    <td class="col-3">
                         <select class="form-control productChange" name="product[]" id="product_${key}" required>
                             <option value="" selected disabled>Pilih</option>
                             ${projectOptions}
@@ -395,7 +395,7 @@
                         <input type="hidden" class="thriveEditor" data-ids="${key}" id="description_${key}"  name="description[]" required>
                         <div id="editor_${key}" style="min-height: 120px;"></div>
                     </td>
-                    <td class="col-1">
+                    <td class="col-2">
                         <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="1" required>
                     </td>
                     <td class="col-2" id="sub_total_show_${key}">
@@ -425,7 +425,9 @@
             updateNomorBaris();
         });
 
-        $('.btnHapusData').click(function() {
+        $('.btnHapusData').click(function(event) {
+            event.preventDefault(); // Menghentikan default behavior dari tombol submit jika ada
+
             var dataId = $(this).data('id');
             
             // Tampilkan konfirmasi penghapusan
