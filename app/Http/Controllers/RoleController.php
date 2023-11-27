@@ -86,7 +86,7 @@ class RoleController extends Controller
                 $permissionRole->save();
             }
             DB::commit();
-            return redirect()->route('role.index')
+            return redirect()->to(route('role.index'))
                             ->with('success','Role created successfully');
         } catch (\Throwable $th) {
             //throw $th;

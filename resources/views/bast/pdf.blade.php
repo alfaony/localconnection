@@ -35,7 +35,9 @@
                     </tr>
                     <tr>
                     <th>Penanggung Jawab</th>
-                    <td>{{ $bast->workOrder ? $bast->workOrder->quote->customer->pic : '' }}</td>
+                    <td>
+                        {{ $bast->pic ?? '' }}
+                    </td>
                     </tr>
                     <tr>
                     <th>Perusahaan</th>

@@ -64,7 +64,7 @@ class BastController extends Controller
         $bast->save();
         $this->updateBudget($request->input('work_order'), $request->input('project'));
 
-        return redirect()->route('bast.download.pdf',$bast->slug)->with('store', true);
+        return redirect()->to(route('bast.download.pdf',$bast->slug))->with('store', true);
     }
 
 
@@ -126,7 +126,7 @@ class BastController extends Controller
         $bast->save();
         $this->updateBudget($request->input('work_order'), $request->input('project'));
         
-        return redirect()->route('bast.download.pdf',$bast->slug)->with('update', true);
+        return redirect()->to(route('bast.download.pdf',$bast->slug))->with('update', true);
     }
 
     /**

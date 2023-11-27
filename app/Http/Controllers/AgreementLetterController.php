@@ -10,6 +10,8 @@ use Carbon\Carbon;
 
 use App\Models\AgreementLetter;
 use App\Models\Quote;
+use App\Models\SettingCompany;
+
 class AgreementLetterController extends Controller
 {
     /**
@@ -53,13 +55,17 @@ class AgreementLetterController extends Controller
         $agreementLetter->payment_term = $request->input('payment_term');
         $agreementLetter->period_term = $request->input('period_term');
         $agreementLetter->other_term = $request->input('other_term');
+        
+        $agreementLetter->payment_term_english = $request->input('payment_term_english');
+        $agreementLetter->period_term_english = $request->input('period_term_english');
+        $agreementLetter->other_term_english = $request->input('other_term_english');
 
         $agreementLetter->user_created_id = Auth::user()->id;
         $agreementLetter->user_updated_id = Auth::user()->id;
 
         $agreementLetter->save();
 
-        return redirect()->route('agreement-letter.download.pdf',$agreementLetter->slug)->with('store', true);
+        return redirect()->to(route('agreement-letter.download.pdf',$agreementLetter->slug))->with('store', true);
     }
 
     /**
@@ -87,12 +93,33 @@ class AgreementLetterController extends Controller
     function downloadPdf($slug)
     {
         $quote = Quote::all();
+        $company = SettingCompany::get()->pluck('field_value','field_title');
 
         $agreementLetter = AgreementLetter::where('slug',$slug)->first();
+        
         $userCreate = $agreementLetter->userCreate ? $agreementLetter->userCreate->name : '';
         $nomorAgreementLetter = $agreementLetter->number_result ?? '';
+        $bulan_indonesia = [
+            '1' => 'Januari',
+            '2' => 'Februari',
+            '3' => 'Maret',
+            '4' => 'April',
+            '5' => 'Mei',
+            '6' => 'Juni',
+            '7' => 'Juli',
+            '8' => 'Agustus',
+            '9' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember',
+        ];
+        $month = Carbon::now()->format('m');
+        $year = Carbon::now()->format('Y');
+        $date = Carbon::now()->format('d');
+        $month = $bulan_indonesia[$month];
 
-        return view('agreement_letter.pdf',compact('quote','userCreate','nomorAgreementLetter','agreementLetter'));
+
+        return view('agreement_letter.pdf',compact('quote','userCreate','nomorAgreementLetter','agreementLetter', 'month', 'year', 'date' ,'company'));
     }
 
     /**
@@ -109,12 +136,15 @@ class AgreementLetterController extends Controller
         $agreementLetter->payment_term = $request->input('payment_term');
         $agreementLetter->period_term = $request->input('period_term');
         $agreementLetter->other_term = $request->input('other_term');
+        $agreementLetter->payment_term_english = $request->input('payment_term_english');
+        $agreementLetter->period_term_english = $request->input('period_term_english');
+        $agreementLetter->other_term_english = $request->input('other_term_english');
 
         $agreementLetter->user_updated_id = Auth::user()->id;
 
         $agreementLetter->save();
 
-        return redirect()->route('agreement-letter.download.pdf',$agreementLetter->slug)->with('store', true);
+        return redirect()->to(route('agreement-letter.download.pdf',$agreementLetter->slug))->with('store', true);
     }
 
     /**

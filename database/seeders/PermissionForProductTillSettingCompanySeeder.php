@@ -29,9 +29,9 @@ class PermissionForProductTillSettingCompanySeeder extends Seeder
         // const SALES = 'Sales';
 
         // Create Roles
-        try {
-            $root = Role::where('name',RoleSchema::ROOT)->first();
-        } catch (\Exception $e) {
+        $root = Role::where('name',RoleSchema::ROOT)->first();
+        if(!$root)
+        {
             $root = Role::create([
                 'name' => RoleSchema::ROOT,
                 'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
@@ -39,9 +39,9 @@ class PermissionForProductTillSettingCompanySeeder extends Seeder
             ]);
         }
 
-        try {
-            $admin = Role::where('name',RoleSchema::ADMIN)->first();
-        } catch (\Exception $e) {
+        $admin = Role::where('name',RoleSchema::ADMIN)->first();
+        if(!$admin)
+        {
             $admin = Role::create([
                 'name' => RoleSchema::ADMIN,
                 'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
@@ -49,9 +49,11 @@ class PermissionForProductTillSettingCompanySeeder extends Seeder
             ]);
         }
 
-        try {
-            $finance = Role::where('name',RoleSchema::FINANCE)->first();
-        } catch (\Exception $e) {
+        
+        $finance = Role::where('name',RoleSchema::FINANCE)->first();
+        if(!$finance)
+        {
+
             $finance = Role::create([
                 'name' => RoleSchema::FINANCE,
                 'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
@@ -59,9 +61,9 @@ class PermissionForProductTillSettingCompanySeeder extends Seeder
             ]);
         }
 
-        try {
-            $procurement = Role::where('name',RoleSchema::PROCUREMENT)->first();
-        } catch (\Exception $e) {
+        $procurement = Role::where('name',RoleSchema::PROCUREMENT)->first();
+        if(!$procurement)
+        {
             $procurement = Role::create([
                 'name' => RoleSchema::PROCUREMENT,
                 'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
@@ -69,19 +71,20 @@ class PermissionForProductTillSettingCompanySeeder extends Seeder
             ]);
         }
 
-        try {
-            $pm = Role::where('name',RoleSchema::PM)->first();
-        } catch (\Exception $e) {
+        $pm = Role::where('name',RoleSchema::PM)->first();
+        if(!$pm)
+        {
             $pm = Role::create([
                 'name' => RoleSchema::PM,
                 'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
                 'guard_name' => 'web'
             ]);
         }
-
-        try {
-            $hr = Role::where('name',RoleSchema::HR)->first();
-        } catch (\Exception $e) {
+        
+        
+        $hr = Role::where('name',RoleSchema::HR)->first();
+        if(!$hr)
+        {
             $hr = Role::create([
                 'name' => RoleSchema::HR,
                 'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',
@@ -89,9 +92,10 @@ class PermissionForProductTillSettingCompanySeeder extends Seeder
             ]);
         }
 
-        try {
-            $sales = Role::where('name',RoleSchema::SALES)->first();
-        } catch (\Exception $e) {
+
+        $sales = Role::where('name',RoleSchema::SALES)->first();
+        if(!$sales)
+        {
             $sales = Role::create([
                 'name' => RoleSchema::SALES,
                 'desc' => 'Akun utama developer yang berfungsi untuk mengkontrol seluruh akses',

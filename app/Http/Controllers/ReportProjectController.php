@@ -37,7 +37,8 @@ class ReportProjectController extends Controller
     public function create()
     {
         $nomorReportProject = $this->reportProjectNumber()['result'];
-        $project = Project::orderBy('created_at','desc')->get();
+        $project = Project::whereDoesntHave('reportProject')->orderBy('created_at', 'desc')->get();
+
         // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
 
@@ -114,7 +115,9 @@ class ReportProjectController extends Controller
     {
         $reportProject = ReportProject::where('slug',$slug)->first();
         $nomorReportProject = $this->reportProjectNumber()['result'];
-        $project = Project::orderBy('created_at','desc')->get();
+        $project = Project::whereDoesntHave('reportProject')
+        ->orWhere('id', $reportProject->project_id)
+        ->orderBy('created_at', 'desc')->get();
         // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
         $userCreate = $reportProject->userCreate ? $reportProject->userCreate->name : '';
 
