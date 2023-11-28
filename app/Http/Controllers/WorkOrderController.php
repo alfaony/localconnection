@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
+use App\Helpers\Access;
+
 use Carbon\Carbon;
 use App\Http\Requests\WorkOrderRequest;
 
@@ -381,22 +383,43 @@ class WorkOrderController extends Controller
 
         // Add action buttons to each row
         $actionButtons = [
+        ];
+
+        if(Access::can('downloadPdf','work_orders'))
+        {
+            $pdf = 
             [
                 'name' => 'Pdf',
                 'route' => 'work-order.download.pdf',
                 'id' => true,
-            ],
+            ];
+
+            array_push($actionButtons,$pdf);
+        }
+
+        if(Access::can('edit','work_orders'))
+        {
+            $edit = 
             [
                 'name' => 'Edit',
                 'route' => 'work-order.edit',
                 'id' => true,
-            ],
+            ];
+
+            array_push($actionButtons,$edit);
+        }
+
+        if(Access::can('destroy','work_orders'))
+        {
+            $destroy = 
             [
                 'name' => 'Delete',
                 'route' => 'work-order.destroy',
                 'id' => true,
-            ],
-        ];
+            ];
+
+            array_push($actionButtons,$destroy);
+        }
 
         $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
 

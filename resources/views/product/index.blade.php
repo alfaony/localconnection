@@ -33,6 +33,7 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
 
 <div class="container">
     <div class="card">
+        @canAccess('store','products')
         <div class="card-body">            
             @if(@$productEdit)
             <form method="post" action="{{ route('product.update',$productEdit) }}">
@@ -71,6 +72,7 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
             </form>
             </div>
         </div>
+        @endcanAccess
 
         <div class="card mt-4">
             <div class="card-body">
@@ -102,8 +104,12 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
                             <form method="post" action="{{ route('product.destroy',$a) }}">
                                 @csrf
                                 @method('delete')
+                                @canAccess('edit','products')
                                 <a href="{{ route('product.edit',$a->slug).'?nomor='.$no }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                                @endcanAccess
+                                @canAccess('destroy','products')
                                 <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                @endcanAccess
                             </form>
                         </td>
                     </tr>

@@ -28,7 +28,9 @@
 <div class="container">    
     
     <!-- Tombol Tambah Pembelian Baru -->
+    @canAccess('create','agreement_letters')
     <button class="btn btn-primary mb-3" id="btnCreateManager">Tambah Surat</button>
+    @endcanAccess
 
     <!-- Tabel Pembelian -->
     <table class="table table-bordered" id="datatablAgreementLetter">

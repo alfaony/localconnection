@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
+use App\Helpers\Access;
 use Illuminate\Http\Request;
+
+use App\Models\Product;
 
 class PricelistController extends Controller
 {
@@ -52,13 +54,21 @@ class PricelistController extends Controller
 
         // Add action buttons to each row
         $actionButtons = [
+            
+        ];
+
+        if(Access::can('show','pricelists'))
+        {
+            $show = 
             [
                 'name' => 'Show',
                 'route' => 'pricelist.show',
                 'id' => true,
-            ],
-        ];
+            ];
 
+            array_push($actionButtons,$show);
+        }
+        
         $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
 
         $data = $response->getData();

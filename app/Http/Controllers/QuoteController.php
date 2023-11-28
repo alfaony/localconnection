@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\QuoteRequest;
 use Carbon\Carbon;
 
+use App\Helpers\Access;
+
 use App\Schemas\ParamSchema;
 use App\Models\Quote;
 use App\Models\QuoteProduct;
@@ -416,23 +418,41 @@ class QuoteController extends Controller
         $bootstrap = 4;
 
         // Add action buttons to each row
-        $actionButtons = [
-            [
+        $actionButtons = [];
+
+        if(Access::can('downloadPdf','quotes'))
+        {
+            $pdf = [
                 'name' => 'Pdf',
                 'route' => 'quote.download.pdf',
                 'id' => true,
-            ],
-            [
+            ];
+
+            array_push($actionButtons,$pdf);
+        }
+
+        if(Access::can('edit','quotes'))
+        {
+            $edit = [
                 'name' => 'Edit',
                 'route' => 'quote.edit',
                 'id' => true,
-            ],
-            [
+            ];
+
+            array_push($actionButtons,$edit);
+        }
+
+        if(Access::can('destroy','quotes'))
+        {
+            $destroy = [
                 'name' => 'Delete',
                 'route' => 'quote.destroy',
                 'id' => true,
-            ],
-        ];
+            ];
+
+            array_push($actionButtons,$destroy);
+        }
+
 
         $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
 

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Requests\ReportProjectRequest;
 
 use Carbon\Carbon;
-
+use App\Helpers\Access;
 use App\Models\ReportProject;
 use App\Models\ReportProjectDetail;
 use App\Models\WorkOrder;
@@ -235,22 +235,32 @@ class ReportProjectController extends Controller
 
         // Add action buttons to each row
         $actionButtons = [
-            // [
-            //     'name' => 'Pdf',
-            //     'route' => 'bast.download.pdf',
-            //     'id' => true,
-            // ],
+            
+        ];
+
+        if(Access::can('edit','report_projects'))
+        {
+            $edit = 
             [
                 'name' => 'Edit',
                 'route' => 'report-project.edit',
                 'id' => true,
-            ],
+            ];
+
+            array_push($actionButtons,$edit);
+        }
+
+        if(Access::can('destroy','report_projects'))
+        {
+            $destroy = 
             [
                 'name' => 'Delete',
                 'route' => 'report-project.destroy',
                 'id' => true,
-            ],
-        ];
+            ];
+
+            array_push($actionButtons,$destroy);
+        }
 
         return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
     }

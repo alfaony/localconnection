@@ -28,7 +28,9 @@
 <div class="container">    
     
     <!-- Tombol Tambah Pembelian Baru -->
+    @canAccess('create','work_orders')
     <button class="btn btn-primary mb-3" id="btnCreateManager">Tambah Surat Perintah Kerja</button>
+    @endcan
 
     <!-- Tabel Pembelian -->
     <table class="table table-bordered" id="datatableSpk">

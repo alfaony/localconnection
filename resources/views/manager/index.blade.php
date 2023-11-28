@@ -37,6 +37,7 @@ $totalManager = $totalManager + 1; // Get the total number of projects
     <button class="btn btn-primary mb-3" id="btnCreateManager">Tambah Hari Kerja Baru</button>
 
     <!-- Search Bar -->
+    @canAccess('store','managers')
     <form action="{{ route('manager.index') }}" method="get">
         <div class="d-flex flex-row-reverse">
             <div class="p-2">
@@ -47,6 +48,7 @@ $totalManager = $totalManager + 1; // Get the total number of projects
             </div>
         </div>
     </form>
+    @endcanAccess
 
     <!-- Tabel Pembelian -->
     <table class="table table-bordered">
@@ -68,8 +70,12 @@ $totalManager = $totalManager + 1; // Get the total number of projects
                 <form method="post" action="{{ route('manager.destroy',$a) }}">
                         @csrf
                         @method('delete')
+                        @canAccess('edit','managers')
                         <a href="{{ route('manager.edit',$a->slug).'?nomor='.$no }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                        @endcanAccess
+                        @canAccess('destroy','managers')
                         <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                        @endcanAccess
                     </form>
                 </td>
             </tr>

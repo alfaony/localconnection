@@ -34,8 +34,10 @@ $totalQuote = $totalQuote + 1; // Get the total number of projects
 </div>
 <div class="container">    
     <!-- Tombol Tambah Pembelian Baru -->
+    @canAccess('create','quotes')
     <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Quote Baru</button>
-
+    @endcanAccess
+    
     <!-- Search Bar -->
     <!-- <form action="{{ route('quote.index') }}" method="get">
         <div class="d-flex flex-row-reverse">

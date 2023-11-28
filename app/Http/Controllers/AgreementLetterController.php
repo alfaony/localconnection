@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\AgreementLetterRequest;
 
 use Carbon\Carbon;
-
+use App\Helpers\Access;
 use App\Models\AgreementLetter;
 use App\Models\Quote;
 use App\Models\SettingCompany;
@@ -193,22 +193,46 @@ class AgreementLetterController extends Controller
 
         // Add action buttons to each row
         $actionButtons = [
+            
+            
+            
+        ];
+
+        if(Access::can('downloadPdf','agreement_letters'))
+        {
+            $pdf = 
             [
                 'name' => 'Pdf',
                 'route' => 'agreement-letter.download.pdf',
                 'id' => true,
-            ],
+            ];
+
+            array_push($actionButtons,$pdf);
+        }
+
+        if(Access::can('edit','agreement_letters'))
+        {
+            $edit = 
             [
                 'name' => 'Edit',
                 'route' => 'agreement-letter.edit',
                 'id' => true,
-            ],
+            ];
+
+            array_push($actionButtons,$edit);
+        }
+
+        if(Access::can('destroy','agreement_letters'))
+        {
+            $destroy = 
             [
                 'name' => 'Delete',
                 'route' => 'agreement-letter.destroy',
                 'id' => true,
-            ],
-        ];
+            ];
+
+            array_push($actionButtons,$destroy);
+        }
 
         return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
     }

@@ -27,8 +27,10 @@
 </div>
 <div class="container">    
     
+    @canAccess('create','basts')
     <!-- Tombol Tambah Pembelian Baru -->
     <button class="btn btn-primary mb-3" id="btnCreateManager">Tambah BAST</button>
+    @endcanAccess
 
     <!-- Tabel Pembelian -->
     <table class="table table-bordered" id="datatableBast">

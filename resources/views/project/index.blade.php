@@ -31,6 +31,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
     @endif
 </div>
 <div class="container">
+    @canAccess('store','projects')
     <p id="projectNo"></p>
     @if(@$projectEdit)
     <form method="post" action="{{ route('project.update',@$projectEdit) }}">
@@ -85,7 +86,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
     </form>
 
     <hr>
-
+    @endcanAccess
     
     <form action="{{ route('project.index') }}" method="get">
         <div class="d-flex flex-row-reverse">
@@ -115,8 +116,12 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                     <form method="post" action="{{ route('project.destroy',$a) }}">
                         @csrf
                         @method('delete')
+                        @canAccess('edit','projects')
                         <a href="{{ route('project.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                        @endcanAccess
+                        @canAccess('destroy','projects')
                         <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                        @endcanAccess
                     </form>
                 </td>
             </tr>

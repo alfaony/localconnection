@@ -33,6 +33,7 @@ $totalEmployee = $totalEmployee + 1; // Get the total number of projects
 <div class="container">
     <p id="employeeNo"></p>
     
+    @canAccess('store','employees')
     @if(@$employeeEdit)
     <form action="{{ route('employee.update',$employeeEdit) }}" method="post">
     @method('put')
@@ -72,6 +73,7 @@ $totalEmployee = $totalEmployee + 1; // Get the total number of projects
             </div>
         </div>
     </form>
+    @endcanAccess
 
     <table class="table table-bordered">
         <tr>
@@ -91,8 +93,12 @@ $totalEmployee = $totalEmployee + 1; // Get the total number of projects
                 <form method="post" action="{{ route('employee.destroy',$a) }}">
                     @csrf
                     @method('delete')
+                    @canAccess('edit','employees')
                     <a href="{{ route('employee.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                    @endcanAccess
+                    @canAccess('destroy','employees')
                     <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                    @endcanAccess
                 </form>
             </td>
         </tr>

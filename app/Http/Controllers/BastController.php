@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\BastRequest;
 use Carbon\Carbon;
-
+use App\Helpers\Access;
 use App\Models\Bast;
 use App\Models\Project;
 use App\Models\WorkOrder;
@@ -164,22 +164,43 @@ class BastController extends Controller
 
         // Add action buttons to each row
         $actionButtons = [
+        ];
+
+        if(Access::can('downloadPdf','basts'))
+        {
+            $pdf = 
             [
                 'name' => 'Pdf',
                 'route' => 'bast.download.pdf',
                 'id' => true,
-            ],
+            ];
+
+            array_push($actionButtons,$pdf);
+        }
+
+        if(Access::can('edit','basts'))
+        {
+            $edit = 
             [
                 'name' => 'Edit',
                 'route' => 'bast.edit',
                 'id' => true,
-            ],
+            ];
+
+            array_push($actionButtons,$edit);
+        }
+
+        if(Access::can('destroy','basts'))
+        {
+            $destroy = 
             [
                 'name' => 'Delete',
                 'route' => 'bast.destroy',
                 'id' => true,
-            ],
-        ];
+            ];
+
+            array_push($actionButtons,$destroy);
+        }
 
         return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
     }

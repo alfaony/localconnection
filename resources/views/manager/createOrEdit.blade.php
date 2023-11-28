@@ -130,7 +130,9 @@
                     <input type="hidden" name="idChild[]" class="form-control" value="{{ $a->id }}" required>
                     <input type="hidden" id="work_time_{{ $a->id }}" name="work_time[]" class="form-control">
                     <input type="hidden" id="total_{{ $a->id }}" name="total[]" value="{{ $a->total }}" class="form-control">
+                    @canAccess('destroyJob','managers')
                     <button type="button" data-id="{{ $a->id }}" class="btn btn-danger btnHapusData"><i class="fa fa-trash"></i></button>
+                    @endcanAccess
                 </td>
             </tr>
             @endforeach
