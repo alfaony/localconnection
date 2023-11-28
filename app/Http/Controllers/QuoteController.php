@@ -95,6 +95,7 @@ class QuoteController extends Controller
             for ($i = 0; $i < count($product); $i++) 
             {
                 $quoteProduct = new QuoteProduct;
+                $quoteProduct->sort = $i + 1;
                 $quoteProduct->product_id = $product[$i];
                 $quoteProduct->qty = $qty[$i];
                 $quoteProduct->price_sell = $price[$i];
@@ -178,6 +179,7 @@ class QuoteController extends Controller
                 if(!$id)
                 {
                     $quoteProduct = new QuoteProduct;
+                    $quoteProduct->sort = $i + 1;
                     $quoteProduct->product_id = $product[$i];
                     $quoteProduct->price_sell = $price[$i];
                     $quoteProduct->qty = $qty[$i];
@@ -188,6 +190,7 @@ class QuoteController extends Controller
                 }else
                 {
                     $quoteProduct = QuoteProduct::find($id);
+                    $quoteProduct->sort = $i + 1;
                     $quoteProduct->product_id = $product[$i];
                     $quoteProduct->price_sell = $price[$i];
                     $quoteProduct->qty = $qty[$i];

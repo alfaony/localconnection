@@ -47,7 +47,7 @@
                 <tbody>
                     @if(@$workOrder)
                     @php $nomorBaris = 1; @endphp
-                    @foreach($workOrder->workOrderProduct as $a)
+                    @foreach($workOrder->workOrderProduct->sortBy('sort') as $a)
                     <tr data-key="{{ $a->id }}">
                         <td>
                             {{ $nomorBaris++ }}

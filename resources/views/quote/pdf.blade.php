@@ -100,7 +100,7 @@
           <tbody>
               @if(@$quote)
               @php $nomorBaris = 1; @endphp
-              @foreach($quote->quoteProduct as $a)
+              @foreach($quote->quoteProduct->sortBy('sort') as $a)
               <tr data-key="{{ $a->id }}">
                   <td>
                       {{ $a->product ? $a->product->name : '' }}
