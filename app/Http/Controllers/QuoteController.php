@@ -262,10 +262,10 @@ class QuoteController extends Controller
 
         // return $tax;
         $totalAll = ($total + $charges) - $discount;
-        $serviceFee = $service_fee != 0 ? ($totalAll * $service_fee) / ParamSchema::PERCENTAGE : 0 ;
+        $serviceFee = $service_fee != 0 ? round(($totalAll * $service_fee) / ParamSchema::PERCENTAGE) : 0 ;
         
         $totalAfterServiceFee = $totalAll + $serviceFee;
-        $ppn = $tax != 0 ? ($totalAfterServiceFee * $tax) / ParamSchema::PERCENTAGE : 0 ;
+        $ppn = $tax != 0 ? round(($totalAfterServiceFee * $tax) / ParamSchema::PERCENTAGE) : 0 ;
         
         $grandTotal = $totalAfterServiceFee + $ppn;
 
@@ -383,10 +383,10 @@ class QuoteController extends Controller
 
         // return $tax;
         $totalAll = ($total + $charges) - $discount;
-        $serviceFee = $service_fee != 0 ? ($totalAll * $service_fee) / ParamSchema::PERCENTAGE : 0 ;
+        $serviceFee = $service_fee != 0 ? round(($totalAll * $service_fee) / ParamSchema::PERCENTAGE) : 0 ;
         
         $totalAfterServiceFee = $totalAll + $serviceFee;
-        $ppn = $tax != 0 ? ($totalAfterServiceFee * $tax) / ParamSchema::PERCENTAGE : 0 ;
+        $ppn = $tax != 0 ? round(($totalAfterServiceFee * $tax) / ParamSchema::PERCENTAGE) : 0 ;
         
         $grandTotal = $totalAfterServiceFee + $ppn;
 
