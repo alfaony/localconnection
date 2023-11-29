@@ -75,25 +75,28 @@
                     @endforeach
                     @endif
                 </tbody>
-                <tfoot>
-                    <tr>
-                        <th colspan="5" class="text-right">TOTAL</th>
-                        <th id="sub_total_result">Rp. 0</th>
-                    </tr>
-                </tfoot>
             </table>
-            <div class="col-md-2 offset-md-10 text-left mt-5">
+            <div class="row">
+            <div class="col-md-3 offset-md-9 mt-4">
+                <div class="d-flex justify-content-between">
+                    <div class="text-right">TOTAL:</div>
+                    <div class="strongText" id="sub_total_result">
+                        Rp. 0
+                    </div>
+                </div>
+            </div>
+            <div class="col-2 offset-10 text-left mt-5">
                 <h7>Pihak Penjual</h7>
             </div>
-            <div class="col-md-2 offset-md-10 text-left mt-3">
+            <div class="col-2 offset-10 text-left mt-3">
                 <img src="{{ asset('logo/paraf.png') }}" alt="Signature" style="with:auto; height:150px">
             </div>
         </div>
     </div>
-    <div class="col-md-12 text-center mt-3"> <!-- Penambahan class text-center dan mt-3 -->
-        <a href="{{ route('work-order.edit',$workOrder->slug) }}" class="btn btn-primary"><i class="fa fa-edit"></i>Edit</a>
-        <button type="button" id="downloadWorkOrder" class="btn btn-success"><i class="fa fa-file-pdf"></i> {{__('Download')}}</button>
-    </div>
+</div>
+<div class="col-md-12 text-center mt-3"> <!-- Penambahan class text-center dan mt-3 -->
+    <a href="{{ route('work-order.edit',$workOrder->slug) }}" class="btn btn-primary"><i class="fa fa-edit"></i>Edit</a>
+    <button type="button" id="downloadWorkOrder" class="btn btn-success"><i class="fa fa-file-pdf"></i> {{__('Download')}}</button>
 </div>
 @stop
 @section('js')
@@ -427,6 +430,11 @@
     p {
         margin-top: 1px;
         margin-bottom: 1px;
+    }
+    .strongText 
+    {
+      font-weight: bold;  /* Membuat teks menjadi tebal */
+      color: #000000;    /* Warna teks, ganti dengan warna yang diinginkan */
     }
 </style>
 @stop
