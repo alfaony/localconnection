@@ -147,13 +147,14 @@ class WorkOrderController extends Controller
         $quote = Quote::find($id);
         $quoteProduct = $quote->quoteProduct 
         ? $quote->quoteProduct()
-                ->select('product_id', 'qty', 'description')
+                ->select('product_id', 'qty', 'description', 'sort')
+                ->orderBy('sort')
                 ->get()
                 ->map(function($item) {
                     return [
                         'product_id' => $item->product_id,
                         'qty' => $item->qty,
-                        'description' => $item->description
+                        'description' => $item->description,
                     ];
                 })
         : collect();
@@ -216,6 +217,7 @@ class WorkOrderController extends Controller
                     if(!$ids)
                     {
                         $workOrderProduct = new WorkOrderProduct();
+                        $workOrderProduct->sort = $i + 1;
                         $workOrderProduct->work_order_id = $workOrder->id;
                         $workOrderProduct->product_id = $request->post('product')[$i];
                         $workOrderProduct->description = $request->post('description')[$i];
@@ -227,6 +229,7 @@ class WorkOrderController extends Controller
                     }else
                     {
                         $workOrderProduct = WorkOrderProduct::find($ids);
+                        $workOrderProduct->sort = $i + 1;
                         $workOrderProduct->work_order_id = $workOrder->id;
                         $workOrderProduct->product_id = $request->post('product')[$i];
                         $workOrderProduct->description = $request->post('description')[$i];

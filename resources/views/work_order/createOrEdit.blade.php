@@ -93,9 +93,9 @@
                     <thead>
                         <tr class="d-flex">
                             <th class="col-1" >No</th>
-                            <th class="col-4">Produk / Jasa</th>
+                            <th class="col-3">Produk / Jasa</th>
                             <th class="col-3">Description</th>
-                            <th class="col-1">Qty</th>
+                            <th class="col-2">Qty</th>
                             <th class="col-2">Budget</th>
                             <th class="col-1">Action</th>
                         </tr>
@@ -108,7 +108,7 @@
                             <td class="col-1">
                                 {{ $nomorBaris++ }}
                                 </td>
-                            <td class="col-4">
+                            <td class="col-3">
                                 <select class="form-control productChange select2" name="product[]" id="product_{{ $a->id }}" required>
                                     <option value="" selected disabled>Pilih</option>
                                     @foreach($product as $b)
@@ -119,7 +119,7 @@
                             <td class="col-3">
                                 <input type="text" class="thriveEditor" data-ids="{{ $a->id }}" id="description_{{ $a->id }}" name="description[]" id="description_{{ $a->id }}" placeholder="Description" value="{{  @$a->description }}" required>
                             </td>
-                            <td class="col-1">
+                            <td class="col-2">
                                 <input type="hidden" id="price_{{ $a->id }}" name="price[]" data-key="{{ $a->id }}" min="1" class="form-control" placeholder="Quantity" value="{{ @$a->price_buy }}" required>
                                 <input type="number" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ @$a->qty }}" required>
                             </td>
@@ -177,7 +177,6 @@
 @section('js')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <!-- Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
@@ -379,7 +378,7 @@
                     <td class="col-1">
                         ${noBaris}
                         </td>
-                    <td class="col-4">
+                    <td class="col-3">
                         <select class="form-control productChange" name="product[]" id="product_${key}" required>
                             <option value="" selected disabled>Pilih</option>
                             ${projectOptions}
@@ -388,7 +387,7 @@
                     <td class="col-3">
                         <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" value=""  placeholder="Description" required>
                     </td>
-                    <td class="col-1">
+                    <td class="col-2">
                         <input type="hidden" id="price_${key}" name="price[]" data-key="${key}" min="1" class="form-control" value="" required>
                         <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="1" required>
                     </td>
@@ -498,7 +497,7 @@
         const row = `
             <tr class="d-flex" data-key="${key}">
                 <td class="col-1">${noBaris}</td>
-                <td class="col-4">
+                <td class="col-3">
                     <select class="form-control productChange" name="product[]" id="product_${key}" required>
                         <option value="" ${!defaultProductId ? 'selected' : ''} disabled>Pilih</option>
                         ${projectOptions}
@@ -507,7 +506,7 @@
                 <td class="col-3">
                     <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" value="${defaultDescription}"  placeholder="Description" required>
                 </td>
-                <td class="col-1">
+                <td class="col-2">
                     <input type="hidden" id="price_${key}" name="price[]" data-key="${key}" min="1" class="form-control" value="" required>
                     <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="${defaultQty}" required>
                 </td>
