@@ -25,7 +25,7 @@ class EmployeeRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
+            // 'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
             'salary_monthly' => 'required|integer|min:0',
             'salary_daily' => 'required|integer|min:0',
         ];
@@ -37,8 +37,8 @@ class EmployeeRequest extends FormRequest
             'name.required' => 'Nama harus diisi.',
             'name.string' => 'Nama harus berupa teks.',
             'name.max' => 'Nama tidak boleh lebih dari :max karakter.',
-            'phone.required' => 'Nomor telepon harus diisi.',
-            'phone.regex' => 'Nomor telepon harus berupa nomor Indonesia yang valid.',
+            // 'phone.required' => 'Nomor telepon harus diisi.',
+            // 'phone.regex' => 'Nomor telepon harus berupa nomor Indonesia yang valid.',
             'salary_monthly.required' => 'Gaji bulanan harus diisi.',
             'salary_monthly.integer' => 'Gaji bulanan harus berupa angka.',
             'salary_monthly.min' => 'Gaji bulanan tidak boleh kurang dari :min.',

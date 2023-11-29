@@ -28,7 +28,9 @@
 <div class="container">    
     
     <!-- Tombol Tambah Pembelian Baru -->
+    @canAccess('create','report_projects')
     <button class="btn btn-primary mb-3" id="btnCreateReportProject">Tambah Laporan Proyek</button>
+    @endcanAccess
 
     <!-- Tabel Pembelian -->
     <table class="table table-bordered" id="datatableLaporanProject">

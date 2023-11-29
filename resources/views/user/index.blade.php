@@ -33,6 +33,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
     @endif
 </div>
 <div class="container">
+    @canAccess('store','users')
     <div class="col-md-12 mt-2">
         <p id="penggunaNo"></p>
         @if(@$userEdit)
@@ -51,6 +52,13 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
             
+            <label for="phone">Role:</label>
+            <select name="role" class="form-control md-2" required>
+                <option value="" selected disabled>Pilih</option>
+                @foreach($role as $a)
+                <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                @endforeach
+            </select>
             @if(!@$userEdit)
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" placeholder="**********" value="{{ old('password') }}" required>
@@ -75,6 +83,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         </form>
 
     </div>
+    @endcanAccess
     <div class="col-md-12 mt-2">
         <h3>Daftar Pengguna</h3>
         <form action="{{ route('user.index') }}" method="get">
@@ -104,8 +113,12 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <form method="post" action="{{ route('user.destroy',$a) }}">
                         @csrf
                         @method('delete')
+                        @canAccess('edit','users')
                         <a href="{{ route('user.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                        @endcanAccess
+                        @canAccess('destroy','users')
                         <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                        @endcanAccess
                     </form>
                 </td>
             </tr>

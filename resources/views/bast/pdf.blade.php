@@ -1,3 +1,4 @@
+
 @extends('adminlte::page')
 @section('content')
 <div class="col-md-12">
@@ -8,47 +9,82 @@
     <div class="alert alert-success mt-3">BAST Berhasil Diperbarui</div>
     @endif
 </div>
-<div class="containe mt-5">
+<div class="container mt-5">
     <div class="card" id="printThis">
-        <div class="card-body">
-            <div class="form-group row">
-                <div class="col-md-6">
-                    <h2>BAST</h2>
-                    <div class="mt-5">No BAST: {{ $nomorBast ?? '' }}</div>
-                </div>
-                <div class="col-md-6">
-                    <div class="row">
-                        <label for="date" class="col-sm-8 col-form-label text-right">Tanggal:</label>
-                        <div class="col-sm-4">
-                            <span class="form-control-plaintext">{{ @$bast->date ?? '' }}</span>
-                        </div>
-                    </div>
-                    <div class="row mt-2">
-                        <label class="col-sm-8 col-form-label text-right">Sales:</label>
-                        <div class="col-sm-4">
-                            <span class="form-control-plaintext">{{ $userCreate ?? '' }}</span>
-                        </div>
-                    </div>
+        <div class="card-body" id="printItem">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                <h1>Berita Acara Serah Terima</h1>
+                <p>No. {{ $bast->number ?? '' }}</p>
                 </div>
             </div>
-            <div class="form-group">
-                <label for="pilihSPK" class="form-label">Pilih SPK</label>
-                <span class="form-control-plaintext">{{ $bast->workOrder ? $bast->workOrder->number_result : '' }}</span>
+            <div class="row">
+                <div class="col-12">
+                <table class="table table-bordered">
+                    <tr>
+                    <th>Nomor</th>
+                    <td>{{ $bast->number }}</td>
+                    </tr>
+                    <tr>
+                    <th>Tanggal</th>
+                    <td>{{ $today  ?? ''}}</td>
+                    </tr>
+                    <tr>
+                    <th>No. Purchase Order</th>
+                    <td>{{ $bast->number_purchase ?? '' }}</td>
+                    </tr>
+                    <tr>
+                    <th>Penanggung Jawab</th>
+                    <td>
+                        {{ $bast->pic ?? '' }}
+                    </td>
+                    </tr>
+                    <tr>
+                    <th>Perusahaan</th>
+                    <td>{{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</td>
+                    </tr>
+                </table>
+                </div>
+                <div class="col-md-12">
+                <p>Bersamaan dengan surat pernyataan ini, pekerjaan dengan nomor purchase order diatas dengan rincian pekerjaan:</p>
+                <p><strong>{{ $bast->project ? $bast->project->title : '' }}</strong></p>
+                <p>Telah diselesaikan dengan baik. Laporan bisa di unduh di link berikut ini</p>
+                <ul>
+                    @if($bast->project)
+                    @if($bast->project->reportProject->reportProjectDetail)
+                    @php $detail = $bast->project->reportProject->reportProjectDetail; @endphp
+                    @foreach($detail as $a)
+                    <li>{{ $a->name .' - ' }} <a href="{{ $a->link }}">{{ $a->link }}</a></li>
+                    @endforeach
+                    @endif
+                    @endif
+                </ul>
+                <ul>
+                </ul>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="pilihDataProyek" class="form-label">Pilih Data Proyek</label>
-                <span class="form-control-plaintext">{{ $bast->project ? $bast->project->title : '' }}</span>
+            <div class="mt-5">
+                <div class="row">
+                    <div class="offset-1 col-3">
+                        <span style="margin-bottom: 0;">TTD</span>
+                    </div>
+                    <div class="offset-6 col- text-left">
+                        <p>Diterima,</p>
+                    </div>
+                    
+                    <div class="col-11 text-right mt-5 mb-5" id="space">
+
+                    </div>
+
+                    <div class="offset-1 col-3">
+                        {{ $company['director'] ?? '' }}
+                    </div>
+                    <div class="offset-6 col- text-left">
+                        <p class="noMargin"><strong>{{ $bast->workOrder ? $bast->workOrder->quote->customer->pic : '' }}</strong></p>
+                        <p class="noMargin">{{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</p>
+                    </div>
+                </div>
             </div>
-            <hr>
-            <div class="form-group">
-                <label for="purchaseOrder" class="form-label">No. Purchase Order</label>
-                <span class="form-control-plaintext">{{ @$bast->number_purchase ?? '' }}</span>
-            </div>
-            <div class="form-group">
-                <label for="penanggungJawab" class="form-label">Penanggung Jawab</label>
-                <span class="form-control-plaintext">{{ @$bast->pic ?? '' }}</span>
-            </div>
-            <hr>
         </div>
     </div>
     <div class="col-md-12 text-center mt-3"> <!-- Penambahan class text-center dan mt-3 -->
@@ -100,14 +136,22 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 
 <style>
+    @media print 
+    {
+        #printItem
+        {
+            margin-left : 50px;
+            margin-right : 50px;
+        }
+    }
    body 
    {
         font-family: Arial, sans-serif;
         /* padding: 20px; */
-        background-color: #f4f4f4;
+        /* background-color: #f4f4f4; */
     }
     .container {
-        background-color: #fff;
+        /* background-color: #fff; */
         padding: 10px;
         border-radius: 5px;
     }
@@ -139,4 +183,3 @@
     }
 </style>
 @stop
-

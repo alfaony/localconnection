@@ -33,7 +33,9 @@ $totalSuplier = $totalSuplier + 1; // Get the total number of projects
 </div>
 <div class="container">    
     <!-- Tombol Tambah Pembelian Baru -->
+    @canAccess('create','supliers')
     <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Pembelian Baru</button>
+    @endcanAccess
 
     <!-- Search Bar -->
     <form action="{{ route('suplier.index') }}" method="get">
@@ -67,8 +69,12 @@ $totalSuplier = $totalSuplier + 1; // Get the total number of projects
                     <form method="post" action="{{ route('suplier.destroy',$a) }}">
                         @csrf
                         @method('delete')
+                        @canAccess('edit','supliers')
                         <a href="{{ route('suplier.edit',$a->slug).'?nomor='.$no }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                        @endcanAccess
+                        @canAccess('destroy','supliers')
                         <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                        @endcanAccess
                     </form>
                 </td>
             </tr>

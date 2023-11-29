@@ -71,11 +71,11 @@ class ManagerController extends Controller
             $manager->date = $request->input('date');
             $manager->name = $request->input('name');
             $manager->phone = $request->input('phone');
-            $manager->payment_method = $request->input('payment_method');
             
             $manager->save();
     
             $employee = $request->input('employee');
+            $payment_method = $request->input('payment_method');
             $start_date = $request->input('start_date');
             $end_date = $request->input('end_date');
             $total = $request->input('total');
@@ -86,6 +86,7 @@ class ManagerController extends Controller
             {
                 $job = new Job();
                 $job->employee_id = $employee[$i];
+                $job->payment_method = $payment_method[$i];
                 $job->start_date = $start_date[$i];
                 $job->end_date = $end_date[$i];
                 $job->total = $total[$i];
@@ -161,11 +162,11 @@ class ManagerController extends Controller
             $manager->date = $request->input('date');
             $manager->name = $request->input('name');
             $manager->phone = $request->input('phone');
-            $manager->payment_method = $request->input('payment_method');
             
             $manager->save();
     
             $employee = $request->input('employee');
+            $payment_method = $request->input('payment_method');
             $start_date = $request->input('start_date');
             $end_date = $request->input('end_date');
             $total = $request->input('total');
@@ -180,6 +181,7 @@ class ManagerController extends Controller
                 {
                     $job = new Job();
                     $job->employee_id = $employee[$i];
+                    $job->payment_method = $payment_method[$i];
                     $job->start_date = $start_date[$i];
                     $job->end_date = $end_date[$i];
                     $job->total = $total[$i];
@@ -188,13 +190,13 @@ class ManagerController extends Controller
                 {
                     $job = Job::find($id);
                     $job->employee_id = $employee[$i];
+                    $job->payment_method = $payment_method[$i];
                     $job->start_date = $start_date[$i];
                     $job->end_date = $end_date[$i];
                     $job->total = $total[$i];
                     $job->save();
                 }
             }
-
 
             $manager->total_job = $manager->job()->sum('total');
             $manager->save();

@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
+use App\Helpers\Access;
+
 use Carbon\Carbon;
 use App\Http\Requests\WorkOrderRequest;
 
@@ -84,6 +86,7 @@ class WorkOrderController extends Controller
                     $workOrderProduct->product_id = $request->post('product')[$i];
                     $workOrderProduct->description = $request->post('description')[$i];
                     $workOrderProduct->qty = $request->post('qty')[$i];
+                    $workOrderProduct->price_buy = $request->post('price')[$i];
                     $workOrderProduct->sub_total = $request->post('sub_total')[$i];
                    
                     $workOrder->workOrderProduct()->save($workOrderProduct);
@@ -217,6 +220,7 @@ class WorkOrderController extends Controller
                         $workOrderProduct->product_id = $request->post('product')[$i];
                         $workOrderProduct->description = $request->post('description')[$i];
                         $workOrderProduct->qty = $request->post('qty')[$i];
+                        $workOrderProduct->price_buy = $request->post('price')[$i];
                         $workOrderProduct->sub_total = $request->post('sub_total')[$i];
                        
                         $workOrder->workOrderProduct()->save($workOrderProduct);
@@ -226,6 +230,7 @@ class WorkOrderController extends Controller
                         $workOrderProduct->work_order_id = $workOrder->id;
                         $workOrderProduct->product_id = $request->post('product')[$i];
                         $workOrderProduct->description = $request->post('description')[$i];
+                        $workOrderProduct->price_buy = $request->post('price')[$i];
                         $workOrderProduct->qty = $request->post('qty')[$i];
                         $workOrderProduct->sub_total = $request->post('sub_total')[$i];
                         
@@ -292,16 +297,51 @@ class WorkOrderController extends Controller
 
         return true;
     }
+
+    /**
+     * Get Product Price
+     */
+    public function productPrice(Request $request)
+    {
+        $workOrderProductId = $request->get('workOrderProductId');
+        $productId = $request->get('product');
+
+        $workOrderProduct = WorkOrderProduct::find($workOrderProductId);
+
+        if($workOrderProduct)
+        {
+            if($workOrderProduct && ($workOrderProduct->product_id == $productId))
+            {
+                $price = $workOrderProduct->price_buy;
+            }else
+            {
+                $product = Product::find($productId);
+                $price = $product->price_buy;
+            }
+        }else
+        {
+            $product = Product::find($productId);
+            $price = $product->price_buy;
+        }
+
+        return 
+        [
+            'status' => 200,
+            'message' => 'okay',
+            'data' => $price
+        ];
+    }
     /**
      * Product Counting QTY
      */
     public function productCounting(Request $request)
     {
-        $productId = $request->get('product');
+        // $productId = $request->get('product');
         $qty = $request->get('qty');
+        $price = $request->get('price');
 
-        $product = Product::find($productId);
-        $result = $product->price_buy * $qty;
+        // $product = Product::find($productId);
+        $result = $price * $qty;
 
         return [
             'status' => 200,
@@ -325,6 +365,10 @@ class WorkOrderController extends Controller
         $query = WorkOrder::query();
         $query->orderBy('work_order_number', 'desc');
 
+        // OrderBy
+        $query->orderBy('work_order_number', 'desc');
+        
+        
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['number_result', 'total', 'slug'];
 
@@ -339,22 +383,43 @@ class WorkOrderController extends Controller
 
         // Add action buttons to each row
         $actionButtons = [
+        ];
+
+        if(Access::can('downloadPdf','work_orders'))
+        {
+            $pdf = 
             [
                 'name' => 'Pdf',
                 'route' => 'work-order.download.pdf',
                 'id' => true,
-            ],
+            ];
+
+            array_push($actionButtons,$pdf);
+        }
+
+        if(Access::can('edit','work_orders'))
+        {
+            $edit = 
             [
                 'name' => 'Edit',
                 'route' => 'work-order.edit',
                 'id' => true,
-            ],
+            ];
+
+            array_push($actionButtons,$edit);
+        }
+
+        if(Access::can('destroy','work_orders'))
+        {
+            $destroy = 
             [
                 'name' => 'Delete',
                 'route' => 'work-order.destroy',
                 'id' => true,
-            ],
-        ];
+            ];
+
+            array_push($actionButtons,$destroy);
+        }
 
         $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
 

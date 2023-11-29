@@ -49,19 +49,44 @@
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="pembayaran">Klausul Termin Pembayaran</label>
-                    <textarea class="form-control" id="pembayaran" name="payment_term" rows="3" placeholder="yang akan dicetak di perjanjian">{{ old('payment_term') ?? @$agreementLetter->payment_term }}</textarea>
-                </div>
-        
-                <div class="form-group">
-                    <label for="periode">Klausul Periode Perjanjian</label>
-                    <textarea class="form-control" id="periode" name="period_term" rows="3" placeholder="yang akan dicetak di perjanjian">{{ old('period_term') ?? @$agreementLetter->period_term }}</textarea>
-                </div>
-        
-                <div class="form-group">
-                    <label for="tambahan">Klausul Tambahan Lain</label>
-                    <textarea class="form-control" id="tambahan" rows="3" name="other_term" placeholder="yang akan dicetak di perjanjian">{{ old('other_term') ?? @$agreementLetter->other_term }}</textarea>
+                <div class="row">
+
+                    <!-- English -->
+                    <div class="col-md-5 mt-3">
+                        <div class="form-group">
+                            <label for="pembayaran">Payment Term Clause </label>            
+                            <input class="thriveEditor form-control" id="description_payment_term_english" data-ids="payment_term_english" name="payment_term_english" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('payment_term_english') ?? @$agreementLetter->payment_term_english }}"/>
+                        </div>
+                
+                        <div class="form-group">
+                            <label for="periode">Agreement Period Clause</label>
+                            <input class="thriveEditor form-control" id="description_period_term_english" data-ids="period_term_english" name="period_term_english" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('period_term_english') ?? @$agreementLetter->period_term_english }}"/>
+                        </div>
+                
+                        <div class="form-group">
+                            <label for="tambahan">Other Additional Clause</label>
+                            <input class="thriveEditor form-control" id="description_other_term_english" data-ids="other_term_english" rows="3" name="other_term_english" placeholder="yang akan dicetak di perjanjian" value="{{ old('other_term_english') ?? @$agreementLetter->other_term_english }}" />
+                        </div>
+                    </div>
+
+                    <!-- Indonesia -->
+                    <div class="offset-1 col-md-5 mt-3">
+                        <div class="form-group">
+                            <label for="pembayaran">Klausul Termin Pembayaran</label>
+                            <input class="thriveEditor form-control" id="description_payment_term" data-ids="payment_term"  id="payment_term" name="payment_term" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('payment_term') ?? @$agreementLetter->payment_term }}"/>
+                        </div>
+                
+                        <div class="form-group">
+                            <label for="periode">Klausul Periode Perjanjian</label>
+                            <input class="thriveEditor form-control" id="description_period_term" data-ids="period_term" id="period_term" name="period_term" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('period_term') ?? @$agreementLetter->period_term }}"/>
+                        </div>
+                
+                        <div class="form-group">
+                            <label for="tambahan">Klausul Tambahan Lain</label>
+                            <input class="thriveEditor form-control" id="description_other_term" data-ids="other_term"  id="other_term" rows="3" name="other_term" placeholder="yang akan dicetak di perjanjian" value="{{ old('other_term') ?? @$agreementLetter->other_term }}" />
+                        </div>
+                    </div>
+    
                 </div>
         
                 <div class="form-group text-right">
@@ -84,6 +109,8 @@
 <!-- Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
     $(document).ready(function () 
     {
@@ -164,6 +191,7 @@
 @section('css')
 <!-- Select2 CSS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
 <style>
    body 
@@ -182,6 +210,11 @@
     }
     .select2-selection__arrow {
         height: 34px !important;
+    }
+    .ql-container 
+    {
+        min-height: 150px;
+        height: auto;
     }
 </style>
 @stop

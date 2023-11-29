@@ -6,10 +6,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\BastRequest;
 use Carbon\Carbon;
-
+use App\Helpers\Access;
 use App\Models\Bast;
 use App\Models\Project;
 use App\Models\WorkOrder;
+use App\Models\SettingCompany;
 
 class BastController extends Controller
 {
@@ -63,7 +64,7 @@ class BastController extends Controller
         $bast->save();
         $this->updateBudget($request->input('work_order'), $request->input('project'));
 
-        return redirect()->route('bast.download.pdf',$bast->slug)->with('store', true);
+        return redirect()->to(route('bast.download.pdf',$bast->slug))->with('store', true);
     }
 
 
@@ -95,12 +96,14 @@ class BastController extends Controller
     {
         $workOrder = WorkOrder::all();
         $project = Project::all();
+        $company = SettingCompany::get()->pluck('field_value','field_title');
 
         $bast = Bast::where('slug',$slug)->first();
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
         $nomorBast = $bast->number_result ?? '';
+        $today = Carbon::now()->format('d M Y');
 
-        return view('bast.pdf',compact('nomorBast','workOrder','userCreate','project','bast'));
+        return view('bast.pdf',compact('nomorBast','workOrder','userCreate','project','bast', 'today', 'company'));
     }
 
     /**
@@ -123,7 +126,7 @@ class BastController extends Controller
         $bast->save();
         $this->updateBudget($request->input('work_order'), $request->input('project'));
         
-        return redirect()->route('bast.download.pdf',$bast->slug)->with('update', true);
+        return redirect()->to(route('bast.download.pdf',$bast->slug))->with('update', true);
     }
 
     /**
@@ -161,22 +164,43 @@ class BastController extends Controller
 
         // Add action buttons to each row
         $actionButtons = [
+        ];
+
+        if(Access::can('downloadPdf','basts'))
+        {
+            $pdf = 
             [
                 'name' => 'Pdf',
                 'route' => 'bast.download.pdf',
                 'id' => true,
-            ],
+            ];
+
+            array_push($actionButtons,$pdf);
+        }
+
+        if(Access::can('edit','basts'))
+        {
+            $edit = 
             [
                 'name' => 'Edit',
                 'route' => 'bast.edit',
                 'id' => true,
-            ],
+            ];
+
+            array_push($actionButtons,$edit);
+        }
+
+        if(Access::can('destroy','basts'))
+        {
+            $destroy = 
             [
                 'name' => 'Delete',
                 'route' => 'bast.destroy',
                 'id' => true,
-            ],
-        ];
+            ];
+
+            array_push($actionButtons,$destroy);
+        }
 
         return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
     }

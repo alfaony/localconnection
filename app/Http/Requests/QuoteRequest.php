@@ -33,10 +33,12 @@ class QuoteRequest extends FormRequest
             'product' => 'required|array',
             'description' => 'required|array',
             'qty' => 'required|array',
+            'price' => 'required|array',
             'sub_total' => 'required|array',
             'product.*' => 'required|string|exists:products,id', // Contoh validasi jika product adalah ID dari tabel products
             'description.*' => 'required|string',
             'qty.*' => 'required|integer|min:1',
+            'price.*' => 'nullable|integer|min:1',
             'sub_total.*' => 'required|numeric|min:0',
         ];
     }

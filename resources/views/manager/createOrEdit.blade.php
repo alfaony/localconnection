@@ -66,6 +66,7 @@
     </div>
     
 
+    {{--
     <div class="row mt-3">
         <div class="col-md-6">
             <label>Mode Pembayaran:</label>
@@ -78,12 +79,14 @@
             </select>
         </div>
     </div>
+    --}}
 
     <table class="table table-bordered mt-4" id="tabelKerja">
         <thead>
             <tr>
                 <th>No</th>
                 <th>Pekerja</th>
+                <th>Pembayaran</th>
                 <th>Tanggal Mulai</th>
                 <th>Tanggal Selesai</th>
                 <th>Total</th>
@@ -98,11 +101,19 @@
             <tr data-key="{{ $a->id }}">
                 <td>
                     {{ $noJob++ }}
-                    </td>
+                </td>
                 <td>
                     <select class="form-control select2 employeeChange" name="employee[]" id="employee_{{ $a->id }}" required>
                         @foreach($employee as $b)
                             <option value="{{ $b->id }}" data-job="{{ $a->id }}" {{ $b->id == $a->employee_id ? 'selected' : '' }}  > {{ $b->name }}</option>
+                        @endforeach
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control select2 paymentMethod" name="payment_method[]" id="payment_method_{{ $a->id }}" required>
+                        <option selected disabled>Pilih</option>
+                        @foreach($paymentMode as $index => $value)
+                        <option value="{{ $index }}" {{ @$a->payment_method == $index ? 'selected' : '' }}>{{ $value }}</option>
                         @endforeach
                     </select>
                 </td>
@@ -119,7 +130,9 @@
                     <input type="hidden" name="idChild[]" class="form-control" value="{{ $a->id }}" required>
                     <input type="hidden" id="work_time_{{ $a->id }}" name="work_time[]" class="form-control">
                     <input type="hidden" id="total_{{ $a->id }}" name="total[]" value="{{ $a->total }}" class="form-control">
+                    @canAccess('destroyJob','managers')
                     <button type="button" data-id="{{ $a->id }}" class="btn btn-danger btnHapusData"><i class="fa fa-trash"></i></button>
+                    @endcanAccess
                 </td>
             </tr>
             @endforeach
@@ -183,7 +196,7 @@
             var key = $(this).find(':selected').data('job');
             var start_date = $("#start_date_"+key).val();
             var end_date = $("#end_date_"+key).val();
-            var paymentMethodValue = $('#payment_method').val();
+            var paymentMethodValue = $('#payment_method_'+key).val();
 
             if(employeeSelected && key && start_date && end_date && paymentMethodValue)
             {
@@ -210,9 +223,7 @@
 
             var key = row.find('input[name="end_date[]"]').data('key');
 
-
-            var paymentMethodValue = $('#payment_method').val();
-
+            var paymentMethodValue = $('#payment_method_'+key).val();
 
             if(employeeSelected && key && startDate && endDate && paymentMethodValue)
             {
@@ -221,37 +232,29 @@
 
         });
 
-        $("#payment_method").change(function (e) 
+        $('#tabelKerja').on('change keyup', '.paymentMethod', function()
         { 
-            e.preventDefault();
-            $('#tabelKerja tbody tr').each(function() 
+            var row = $(this).closest('tr');
+
+            // Ambil nilai dari select employee
+            var employeeSelected = row.find('select').val();
+
+            // Ambil data-daily dan data-montly dari option yang dipilih di dalam select
+            var dailySalary = row.find('select option:selected').data('daily');
+            var monthlySalary = row.find('select option:selected').data('montly');
+
+            // Ambil nilai dari input start_date dan end_date
+            var startDate = row.find('input[name="start_date[]"]').val();
+            var endDate = row.find('input[name="end_date[]"]').val();
+
+            var key = row.find('input[name="end_date[]"]').data('key');
+
+            var paymentMethodValue = $('#payment_method_'+key).val();
+
+            if(employeeSelected && key && startDate && endDate && paymentMethodValue)
             {
-                var keys = $(this).attr('data-key');
-
-                 // Untuk mendapatkan baris tr tempat .countingSalary berada
-                var row = $(this);
-
-                // Ambil nilai dari select employee
-                var employeeSelected = row.find('select').val();
-
-                // Ambil data-daily dan data-montly dari option yang dipilih di dalam select
-                var dailySalary = row.find('select option:selected').data('daily');
-                var monthlySalary = row.find('select option:selected').data('montly');
-
-                // Ambil nilai dari input start_date dan end_date
-                var startDate = row.find('input[name="start_date[]"]').val();
-                var endDate = row.find('input[name="end_date[]"]').val();
-
-                var key = row.find('input[name="end_date[]"]').data('key');
-
-
-                var paymentMethodValue = $('#payment_method').val();
-
-
                 countSalary(paymentMethodValue, key, employeeSelected, dailySalary, monthlySalary, startDate, endDate);
-            });
-
-
+            }
         });
     });
 </script>
@@ -270,12 +273,20 @@
         var noBaris = $('#tabelKerja tbody tr').length + 1; // Menghitung jumlah baris untuk nomor baris selanjutnya
         var indexKeys = generateRandomString(4);
         var dataSelect = @json($employee);
+        var payment = @json($paymentMode);
         
         var projectOptions = '';
 
         $.each(dataSelect, function(index, employee) 
         {
             projectOptions += `<option value="${employee.id}" data-daily="${employee.salary_daily}" data-montly="${employee.salary_monthly}" data-job="${key}" >${employee.name} </option>`;
+        });
+
+        var paymentOptions = '';
+
+        $.each(payment, function(index, method) 
+        {
+            paymentOptions += `<option value="${index}">${method} </option>`;
         });
 
         var row = 
@@ -288,6 +299,12 @@
                     <select class="form-control select2 employeeChange" name="employee[]" id="employee_${key}" required>
                         <option selected disabled>Pilih</option>
                         ${projectOptions}
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control select2 paymentMethod" name="payment_method[]" id="payment_method_${key}" required>
+                        <option selected disabled>Pilih</option>
+                        ${paymentOptions}
                     </select>
                 </td>
                 <td>

@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\QuoteRequest;
 use Carbon\Carbon;
 
+use App\Helpers\Access;
+
 use App\Schemas\ParamSchema;
 use App\Models\Quote;
 use App\Models\QuoteProduct;
@@ -48,6 +50,7 @@ class QuoteController extends Controller
         $date = Carbon::now()->format('m/Y');
         $nomor = Quote::withTrashed()->max('quote_number') + 1;
         $nomorQuote = $nomor.'/'.$date;
+        $date = Carbon::now();
         
         return view('quote.createOrEdit',compact('product','customer','nomorQuote','userCreate','nomor'));
     }
@@ -86,13 +89,16 @@ class QuoteController extends Controller
             $product = $request->post('product');
             $description = $request->post('description');
             $qty = $request->post('qty');
+            $price = $request->post('price');
             $sub_total = $request->post('sub_total');
 
             for ($i = 0; $i < count($product); $i++) 
             {
                 $quoteProduct = new QuoteProduct;
+                $quoteProduct->sort = $i + 1;
                 $quoteProduct->product_id = $product[$i];
                 $quoteProduct->qty = $qty[$i];
+                $quoteProduct->price_sell = $price[$i];
                 $quoteProduct->sub_total = $sub_total[$i];
                 $quoteProduct->description = $description[$i];
 
@@ -162,6 +168,7 @@ class QuoteController extends Controller
             $product = $request->post('product');
             $description = $request->post('description');
             $qty = $request->post('qty');
+            $price = $request->post('price');
             $sub_total = $request->post('sub_total');
             $ids = $request->input('ids');
 
@@ -172,7 +179,9 @@ class QuoteController extends Controller
                 if(!$id)
                 {
                     $quoteProduct = new QuoteProduct;
+                    $quoteProduct->sort = $i + 1;
                     $quoteProduct->product_id = $product[$i];
+                    $quoteProduct->price_sell = $price[$i];
                     $quoteProduct->qty = $qty[$i];
                     $quoteProduct->sub_total = $sub_total[$i];
                     $quoteProduct->description = $description[$i];
@@ -181,7 +190,9 @@ class QuoteController extends Controller
                 }else
                 {
                     $quoteProduct = QuoteProduct::find($id);
+                    $quoteProduct->sort = $i + 1;
                     $quoteProduct->product_id = $product[$i];
+                    $quoteProduct->price_sell = $price[$i];
                     $quoteProduct->qty = $qty[$i];
                     $quoteProduct->sub_total = $sub_total[$i];
                     $quoteProduct->description = $description[$i];
@@ -279,15 +290,48 @@ class QuoteController extends Controller
         ];
     }
     /**
+     * productPrice
+     */
+    public function productPrice(Request $request)
+    {
+        $quoteProductId = $request->get('quoteProductId');
+        $productId = $request->get('product');
+
+        $quoteProduct = QuoteProduct::find($quoteProductId);
+
+        if($quoteProduct)
+        {
+            if($quoteProduct && ($quoteProduct->product_id == $productId))
+            {
+                $price = $quoteProduct->price_sell;
+            }else
+            {
+                $product = Product::find($productId);
+                $price = $product->price_sell;
+            }
+        }else
+        {
+            $product = Product::find($productId);
+            $price = $product->price_sell;
+        }
+
+        return 
+        [
+            'status' => 200,
+            'message' => 'okay',
+            'data' => $price
+        ];
+    }
+    /**
      * Product Countring
      */
     public function productCounting(Request $request)
     {
         $productId = $request->get('product');
         $qty = $request->get('qty');
+        $price = $request->get('price');
 
-        $product = Product::find($productId);
-        $result = $product->price_sell * $qty;
+        $result = $price * $qty;
 
         return [
             'status' => 200,
@@ -377,23 +421,41 @@ class QuoteController extends Controller
         $bootstrap = 4;
 
         // Add action buttons to each row
-        $actionButtons = [
-            [
+        $actionButtons = [];
+
+        if(Access::can('downloadPdf','quotes'))
+        {
+            $pdf = [
                 'name' => 'Pdf',
                 'route' => 'quote.download.pdf',
                 'id' => true,
-            ],
-            [
+            ];
+
+            array_push($actionButtons,$pdf);
+        }
+
+        if(Access::can('edit','quotes'))
+        {
+            $edit = [
                 'name' => 'Edit',
                 'route' => 'quote.edit',
                 'id' => true,
-            ],
-            [
+            ];
+
+            array_push($actionButtons,$edit);
+        }
+
+        if(Access::can('destroy','quotes'))
+        {
+            $destroy = [
                 'name' => 'Delete',
                 'route' => 'quote.destroy',
                 'id' => true,
-            ],
-        ];
+            ];
+
+            array_push($actionButtons,$destroy);
+        }
+
 
         $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
 

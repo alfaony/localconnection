@@ -103,7 +103,7 @@
                     <tbody>
                         @if(@$workOrder)
                         @php $nomorBaris = 1; @endphp
-                        @foreach($workOrder->workOrderProduct as $a)
+                        @foreach($workOrder->workOrderProduct->sortBy('sort') as $a)
                         <tr class="d-flex" data-key="{{ $a->id }}">
                             <td class="col-1">
                                 {{ $nomorBaris++ }}
@@ -120,6 +120,7 @@
                                 <input type="text" class="thriveEditor" data-ids="{{ $a->id }}" id="description_{{ $a->id }}" name="description[]" id="description_{{ $a->id }}" placeholder="Description" value="{{  @$a->description }}" required>
                             </td>
                             <td class="col-1">
+                                <input type="hidden" id="price_{{ $a->id }}" name="price[]" data-key="{{ $a->id }}" min="1" class="form-control" placeholder="Quantity" value="{{ @$a->price_buy }}" required>
                                 <input type="number" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ @$a->qty }}" required>
                             </td>
                             <td class="col-2" id="sub_total_show_{{ $a->id }}">
@@ -235,7 +236,7 @@
                             
                             $.each(response.product, function (index, value) 
                             { 
-                                addForm(value.product_id,value.qty,value.description)    
+                                addForm(value.product_id,value.price_buy,value.qty,value.description)    
                             });
                         }  
                     }
@@ -263,10 +264,16 @@
             var productSelected = $(this).val();
             var qty = $("#qty_"+key).val();
 
-            if(productSelected && key && qty)
+            productPrice(productSelected, key, function(price) 
             {
-                countProduct(productSelected, key, qty);
-            }
+                // This code runs after the price is updated
+                $("#price_"+key).val(price).change();
+
+                if(productSelected && key && qty && price) 
+                {
+                    countProduct(productSelected, key, qty, price);
+                }
+            });
 
         });
 
@@ -277,15 +284,16 @@
 
             var productSelected = $("#product_"+key).find(':selected').val();
             var qty = $("#qty_"+key).val();
-
+            var price = $("#price_"+key).val();
+            
             if(qty <= 0)
             {
                 $("#qty_"+key).val(1);
             }
 
-            if(productSelected && key && qty)
+            if(productSelected && key && qty && price)
             {
-                countProduct(productSelected, key, qty);
+                countProduct(productSelected, key, qty, price);
             }
         });
     });
@@ -381,6 +389,7 @@
                         <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" value=""  placeholder="Description" required>
                     </td>
                     <td class="col-1">
+                        <input type="hidden" id="price_${key}" name="price[]" data-key="${key}" min="1" class="form-control" value="" required>
                         <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="1" required>
                     </td>
                     <td class="col-2" id="sub_total_show_${key}">
@@ -459,7 +468,21 @@
         });
     });
 
-    function addForm(defaultProductId = null, defaultQty = 1,defaultDescription = null) 
+    function productPrice(product,workOrderProductId,callback)
+    {
+        $.ajax({
+            type: "GET",
+            url: "{{ route('work-order.productPrice') }}",
+            data: {product:product,workOrderProductId:workOrderProductId},
+            success: function (response) 
+            {
+                var price = response.data;
+                callback(price); // Pass the price to the callback function
+            },
+        });
+    }
+
+    function addForm(defaultProductId = null, price = null, defaultQty = 1,defaultDescription = null) 
     {
         var key = generateRandomString(4);
         var noBaris = $('#tableWorkOrder tbody tr').length + 1;
@@ -485,6 +508,7 @@
                     <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" value="${defaultDescription}"  placeholder="Description" required>
                 </td>
                 <td class="col-1">
+                    <input type="hidden" id="price_${key}" name="price[]" data-key="${key}" min="1" class="form-control" value="" required>
                     <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="${defaultQty}" required>
                 </td>
                 <td class="col-2" id="sub_total_show_${key}">Rp 0</td>
@@ -598,12 +622,12 @@
         return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
     }
 
-    function countProduct(productId,key,qty)
+    function countProduct(productId,key,qty,price)
     {        
         $.ajax({
             type: "GET",
             url: "{{ route('work-order.productCounting') }}",
-            data: {product:productId,qty:qty},
+            data: {product:productId,qty:qty,price:price},
             success: function (response) 
             {
                 if(response.data)

@@ -297,152 +297,81 @@ return [
         ],
 
         // Sidebar items:
-        [
-            'text' => 'blog',
-            'url'  => 'admin/blog',
-            'can'  => 'manage-blog',
-        ],
-        [
-            'text'        => 'Dashboard',
-            'url'         => '/',
-            'icon'        => '',
-            'label_color' => 'success',
-        ],
-        [
-            'text'        => 'Data Pekerja',
-            'route'         => 'employee.index',
-            'icon' => 'fa fa-briefcase',
-        ],
-        [
-            'text'      => 'Jumlah Hari Kerja',
-            'route'     => 'manager.index',
-            'icon'      => 'fa fa-tasks',
-        ],
-        [
-            'text'        => 'Data Pengguna',
-            'route'         => 'user.index',
-            'icon' => 'fa fa-users',
-        ],
-        [
-            'text'        => 'Produk',
-            'route'         => 'product.index',
-            'icon' => 'fa fa-tag',
-        ],
-        [
-            'text'        => 'Customer',
-            'route'         => 'customer.index',
-            'icon' => 'fa fa-user-circle',
-        ],
-        [
-            'text'        => 'Quote',
-            'route'         => 'quote.index',
-            'icon' => 'fa fa-file-pdf',
-        ],
-        [
-            'text'        => 'SPK',
-            'route'         => 'work-order.index',
-            'icon' => 'fa fa-clipboard-list',
-        ],
-        [
-            'text'        => 'Perjanjian',
-            'route'         => 'agreement-letter.index',
-            'icon' => 'fa fa-file-signature',
-        ],
-        [
-            'text'        => 'Data Proyek',
-            'route'         => 'project.index',
-            'icon' => 'fa fa-tasks',
-        ],
-        [
-            'text'      => 'Pembelian',
-            'route'     => 'suplier.index',
-            'icon'      => 'fa fa-check',
-        ],
-        [
-            'text'        => 'Laporan Proyek',
-            'route'         => 'report-project.index',
-            'icon' => 'fa fa-file-signature',
-        ],
-        [
-            'text'        => 'Daftar BAST',
-            'route'         => 'bast.index',
-            'icon' => 'fa fa-file-signature',
-        ],
-        [
-            'text'        => 'Laporan',
-            'route'         => 'report.index',
-            'icon' => 'fa fa-file',
-        ],
-        [
-            'text'        => 'Setting Perusahaan',
-            'route'         => 'setting-company.index',
-            'icon' => 'fa fa-file',
-        ],
-        
-        // ['header' => 'account_settings'],
         // [
-        //     'text' => 'profile',
-        //     'url'  => 'admin/settings',
-        //     'icon' => 'fas fa-fw fa-user',
+        //     'text'        => 'Dashboard',
+        //     'url'         => '/',
+        //     'icon'        => '',
+        //     'label_color' => 'success',
         // ],
         // [
-        //     'text' => 'change_password',
-        //     'url'  => 'admin/settings',
-        //     'icon' => 'fas fa-fw fa-lock',
+        //     'text'        => 'Data Pekerja',
+        //     'route'         => 'employee.index',
+        //     'icon' => 'fa fa-briefcase',
         // ],
         // [
-        //     'text'    => 'multilevel',
-        //     'icon'    => 'fas fa-fw fa-share',
-        //     'submenu' => [
-        //         [
-        //             'text' => 'level_one',
-        //             'url'  => '#',
-        //         ],
-        //         [
-        //             'text'    => 'level_one',
-        //             'url'     => '#',
-        //             'submenu' => [
-        //                 [
-        //                     'text' => 'level_two',
-        //                     'url'  => '#',
-        //                 ],
-        //                 [
-        //                     'text'    => 'level_two',
-        //                     'url'     => '#',
-        //                     'submenu' => [
-        //                         [
-        //                             'text' => 'level_three',
-        //                             'url'  => '#',
-        //                         ],
-        //                         [
-        //                             'text' => 'level_three',
-        //                             'url'  => '#',
-        //                         ],
-        //                     ],
-        //                 ],
-        //             ],
-        //         ],
-        //         [
-        //             'text' => 'level_one',
-        //             'url'  => '#',
-        //         ],
-        //     ],
-        // ],
-        // ['header' => 'labels'],
-        // [
-        //     'text'       => 'important',
-        //     'icon_color' => 'red',
-        //     'url'        => '#',
+        //     'text'      => 'Jumlah Hari Kerja',
+        //     'route'     => 'manager.index',
+        //     'icon'      => 'fa fa-tasks',
         // ],
         // [
-        //     'text'       => 'warning',
-        //     'icon_color' => 'yellow',
-        //     'url'        => '#',
+        //     'text'        => 'Data Pengguna',
+        //     'route'         => 'user.index',
+        //     'icon' => 'fa fa-users',
         // ],
         // [
-        //     'text'       => 'information',
-        //     'icon_color' => 'cyan',
-        //     'url'        => '#',
+        //     'text'        => 'Produk',
+        //     'route'         => 'product.index',
+        //     'icon' => 'fa fa-tag',
+        // ],
+        // [
+        //     'text'        => 'Customer',
+        //     'route'         => 'customer.index',
+        //     'icon' => 'fa fa-user-circle',
+        // ],
+        // [
+        //     'text'        => 'Quote',
+        //     'route'         => 'quote.index',
+        //     'icon' => 'fa fa-file-pdf',
+        // ],
+        // [
+        //     'text'        => 'SPK',
+        //     'route'         => 'work-order.index',
+        //     'icon' => 'fa fa-clipboard-list',
+        // ],
+        // [
+        //     'text'        => 'Perjanjian',
+        //     'route'         => 'agreement-letter.index',
+        //     'icon' => 'fa fa-file-signature',
+        // ],
+        // [
+        //     'text'        => 'Data Proyek',
+        //     'route'         => 'project.index',
+        //     'icon' => 'fa fa-tasks',
+        // ],
+        // [
+        //     'text'      => 'Pembelian',
+        //     'route'     => 'suplier.index',
+        //     'icon'      => 'fa fa-check',
+        // ],
+        // [
+        //     'text'        => 'Laporan Proyek',
+        //     'route'         => 'report-project.index',
+        //     'icon' => 'fa fa-file-signature',
+        // ],
+        // [
+        //     'text'        => 'Daftar BAST',
+        //     'route'         => 'bast.index',
+        //     'icon' => 'fa fa-file-signature',
+        // ],
+        // [
+        //     'text'        => 'Laporan',
+        //     'route'         => 'report.index',
+        //     'icon' => 'fa fa-file',
+        // ],
+        // [
+        //     'text'        => 'Setting Perusahaan',
+        //     'route'         => 'setting-company.index',
+        //     'icon' => 'fa fa-file',
         // ],
     ],
 

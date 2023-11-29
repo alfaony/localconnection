@@ -47,7 +47,11 @@ class Bast extends Model
 
         return $slug;
     }
-
+    public function getNumberAttribute()
+    {
+        $year = Carbon::parse($this->created_at)->format('Y');
+        return $this->basts_number.'/'.$year ?? ''; 
+    }
     public function getRouteKeyName()
     {
         return 'slug';

@@ -136,7 +136,7 @@
                 <tbody>
                     @if(@$quote)
                     @php $nomorBaris = 1; @endphp
-                    @foreach($quote->quoteProduct as $a)
+                    @foreach($quote->quoteProduct->sortBy('sort') as $a)
                     <tr class="d-flex" data-key="{{ $a->id }}">
                         <td class="col-1">
                             {{ $nomorBaris++ }}
@@ -154,6 +154,7 @@
                             <div id="editor_{{ $a->id }}" style="min-height: 120px;">{!! old('description') ?? @$a->description !!}</div>
                         </td>
                         <td class="col-2">
+                            <input type="hidden" id="price_{{ $a->id }}" name="price[]" data-key="{{ $a->id }}" min="1" class="form-control" value="{{ $a->price_sell }}" required>
                             <input type="number" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ old('qty') ?? @$a->qty }}" required>
                         </td>
                         <td class="col-2" id="sub_total_show_{{ $a->id }}">
@@ -330,29 +331,35 @@
             var productSelected = $(this).val();
             var qty = $("#qty_"+key).val();
 
-            if(productSelected && key && qty)
+            productPrice(productSelected, key, function(price) 
             {
-                countProduct(productSelected, key, qty);
-            }
+                // This code runs after the price is updated
+                $("#price_"+key).val(price).change();
 
+                if(productSelected && key && qty && price) {
+                    countProduct(productSelected, key, qty, price);
+                }
+            });
         });
 
         $('#tableQuote').on('change', '.qtyChange', function (e) { 
             e.preventDefault();
+            console.log("QTY CHANGE=====");
 
             var key = $(this).data('key');
 
             var productSelected = $("#product_"+key).find(':selected').val();
             var qty = $("#qty_"+key).val();
+            var price = $("#price_"+key).val();
 
             if(qty <= 0)
             {
                 $("#qty_"+key).val(1);
             }
 
-            if(productSelected && key && qty)
+            if(productSelected && key && qty && price)
             {
-                countProduct(productSelected, key, qty);
+                countProduct(productSelected, key, qty, price);
             }
         });
     });
@@ -360,6 +367,7 @@
 <script>
     $(document).ready(function() 
     {
+        
         $('.select2').select2({
             width: '100%',
             placeholder: 'Pilih Customer'
@@ -396,6 +404,7 @@
                         <div id="editor_${key}" style="min-height: 120px;"></div>
                     </td>
                     <td class="col-2">
+                        <input type="hidden" id="price_${key}" name="price[]" data-key="${key}" min="1" class="form-control" value="" required>
                         <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="1" required>
                     </td>
                     <td class="col-2" id="sub_total_show_${key}">
@@ -475,6 +484,21 @@
         });
     });
 
+    // Funciton
+    function productPrice(product,quoteProductId,callback)
+    {
+        $.ajax({
+            type: "GET",
+            url: "{{ route('quote.productPrice') }}",
+            data: {product:product,quoteProductId:quoteProductId},
+            success: function (response) 
+            {
+                var price = response.data;
+                callback(price); // Pass the price to the callback function
+            },
+        });
+    }
+    
     function calculation()
     {
         console.log("----CALCULATION WORKING-----");
@@ -572,10 +596,10 @@
     function formatRupiah(angka, prefix)
     {
         var number_string = angka.toString().replace('/[^,\d]/g', '').toString(),
-        split   		= number_string.split(','),
-        sisa     		= split[0].length % 3,
-        rupiah     		= split[0].substr(0, sisa),
-        ribuan     		= split[0].substr(sisa).match(/\d{3}/gi);
+        split           = number_string.split(','),
+        sisa            = split[0].length % 3,
+        rupiah          = split[0].substr(0, sisa),
+        ribuan          = split[0].substr(sisa).match(/\d{3}/gi);
 
         // tambahkan titik jika yang di input sudah menjadi angka ribuan
         if(ribuan){
@@ -587,12 +611,12 @@
         return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
     }
 
-    function countProduct(productId,key,qty)
+    function countProduct(productId,key,qty,price)
     {        
         $.ajax({
             type: "GET",
             url: "{{ route('quote.productCounting') }}",
-            data: {product:productId,qty:qty},
+            data: {product:productId,qty:qty,price:price},
             success: function (response) 
             {
                 if(response.data)
@@ -632,3 +656,4 @@
     }
 </style>
 @stop
+
