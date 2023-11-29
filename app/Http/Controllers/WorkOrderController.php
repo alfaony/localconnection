@@ -82,6 +82,7 @@ class WorkOrderController extends Controller
             {
                 for ($i = 0; $i < count($request->post('product')); $i++) {
                     $workOrderProduct = new WorkOrderProduct();
+                    $workOrderProduct->sort = $i + 1;
                     $workOrderProduct->work_order_id = $workOrder->id;
                     $workOrderProduct->product_id = $request->post('product')[$i];
                     $workOrderProduct->description = $request->post('description')[$i];
