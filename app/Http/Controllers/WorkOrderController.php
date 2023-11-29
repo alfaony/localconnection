@@ -216,6 +216,7 @@ class WorkOrderController extends Controller
                     if(!$ids)
                     {
                         $workOrderProduct = new WorkOrderProduct();
+                        $workOrderProduct->sort = $i + 1;
                         $workOrderProduct->work_order_id = $workOrder->id;
                         $workOrderProduct->product_id = $request->post('product')[$i];
                         $workOrderProduct->description = $request->post('description')[$i];
@@ -227,6 +228,7 @@ class WorkOrderController extends Controller
                     }else
                     {
                         $workOrderProduct = WorkOrderProduct::find($ids);
+                        $workOrderProduct->sort = $i + 1;
                         $workOrderProduct->work_order_id = $workOrder->id;
                         $workOrderProduct->product_id = $request->post('product')[$i];
                         $workOrderProduct->description = $request->post('description')[$i];
