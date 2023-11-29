@@ -147,13 +147,14 @@ class WorkOrderController extends Controller
         $quote = Quote::find($id);
         $quoteProduct = $quote->quoteProduct 
         ? $quote->quoteProduct()
-                ->select('product_id', 'qty', 'description')
+                ->select('product_id', 'qty', 'description', 'sort')
+                ->orderBy('sort')
                 ->get()
                 ->map(function($item) {
                     return [
                         'product_id' => $item->product_id,
                         'qty' => $item->qty,
-                        'description' => $item->description
+                        'description' => $item->description,
                     ];
                 })
         : collect();
