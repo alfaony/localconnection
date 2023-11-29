@@ -79,7 +79,7 @@
             <div class="row">
             <div class="col-md-3 offset-md-9 mt-4">
                 <div class="d-flex justify-content-between">
-                    <div class="text-right">TOTAL:</div>
+                    <div class="strongText">TOTAL:</div>
                     <div class="strongText" id="sub_total_result">
                         Rp. 0
                     </div>
