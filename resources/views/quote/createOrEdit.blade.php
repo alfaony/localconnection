@@ -189,7 +189,7 @@
                         <div id="charges_result">Rp 0</div>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <div>Service Fee:</div>
+                        <div id="service_fee_title">Service Fee:</div>
                         <div id="service_fee_result">Rp 0</div>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
@@ -509,6 +509,8 @@
 
         
         var ppn_title = tax <= 0 ? 'PPN: 0%' : 'PPN: '+tax+'%';
+        var service_fee_title = service_fee <= 0 ? 'Service Fee: 0%' : 'Service Fee: '+service_fee+'%';
+
         var sub_total = 0;
         $('#tableQuote tbody tr').each(function() 
         {
@@ -538,6 +540,7 @@
             }
         });
 
+        $("#service_fee_title").html(service_fee_title);
         $("#ppn_title").html(ppn_title);
         $("#discount_result").html(formatRupiah(discount,'Rp. '));
         $("#charges_result").html(formatRupiah(charges,'Rp. '));

@@ -77,7 +77,7 @@
                 </tbody>
             </table>
             <div class="row">
-            <div class="col-md-3 offset-md-9 mt-4">
+            <div class="col-3 offset-9 mt-4">
                 <div class="d-flex justify-content-between">
                     <div class="strongText">TOTAL:</div>
                     <div class="strongText" id="sub_total_result">
@@ -410,6 +410,11 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 
 <style>
+    @media print
+    {
+        table { page-break-inside:auto }
+        tr    { page-break-inside:auto; page-break-after:auto }
+    }
    body 
    {
         font-family: Arial, sans-serif;

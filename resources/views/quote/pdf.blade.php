@@ -404,7 +404,7 @@
 
     function prinsts() 
     {
-        let name = "{{ $nomorQuote }}"+"_quote";;
+        let name = "{{ $nomorQuote }}"+"_quote"+" {{ $quote->customer ? $quote->customer->name : '' }}";
         let printContents = document.getElementById("printThis").innerHTML;
         let originalContents = document.body.innerHTML;
 
@@ -422,6 +422,9 @@
 <style>
   @media print 
   {
+    table { page-break-inside:auto }
+    tr    { page-break-inside:auto; page-break-after:auto }
+
     thead.bg-danger 
     {
         background-color: red !important;
