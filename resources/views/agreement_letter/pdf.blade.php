@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('content')
-<div class="container mt-5">
+<div class="container">
     <div class="col-md-12">
         @if(Session::get('store'))
         <div class="alert alert-success mt-3">Surat Perjanjian Berhasil Ditambahkan</div>
@@ -10,7 +10,7 @@
         <div class="alert alert-success mt-3">Surat Perjanjian Berhasil Diperbarui</div>
         @endif
     </div>
-    <div class="card" id="printThis">
+    <div class="card scrollable" id="printThis">
         <div class="card-body" id="printItem">
             <div class="row">
                 <div class="col-5 text-center">
@@ -1353,6 +1353,13 @@
     .noMargin 
     {
         margin-bottom: 0px;
+    }
+    .scrollable 
+    {
+      width: 100%;
+      height: 650px;
+      overflow: auto;
+      border: 1px solid #ccc;
     }
 </style>
 @stop
