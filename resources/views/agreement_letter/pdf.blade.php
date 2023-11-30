@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('content')
-<div class="container mt-5">
+<div class="container">
     <div class="col-md-12">
         @if(Session::get('store'))
         <div class="alert alert-success mt-3">Surat Perjanjian Berhasil Ditambahkan</div>
@@ -10,7 +10,7 @@
         <div class="alert alert-success mt-3">Surat Perjanjian Berhasil Diperbarui</div>
         @endif
     </div>
-    <div class="card" id="printThis">
+    <div class="card scrollable" id="printThis">
         <div class="card-body" id="printItem">
             <div class="row">
                 <div class="col-5 text-center">
@@ -54,7 +54,7 @@
                 <div class="offset-2 col-5 text-justify">
                     <ol type="I">
                         <li style="margin-bottom: 15px;">
-                            <strong>{{ $company['name'] ?? '' }}</strong>, suatu perseroan terbatas yang didirikan dan dibentuk berdasarkan hukum di Republik Indonesia, berkedudukan di Indonesia, dengan kantor terdaftarnya di {{ $company['address'] ?? '' }}, dalam hal ini diwakili oleh {{ $company['director'] ?? '' }}, dalam kapasitasnya sebagai Direktur (untuk selanjutnya disebut sebagai <strong>Pihak Pertama</strong>); dan
+                            <strong>{{ $company['name'] ?? '' }}</strong>, suatu perseroan terbatas yang didirikan dan dibentuk berdasarkan hukum di Republik Indonesia, berkedudukan di Indonesia, dengan kantor terdaftarnya di {{ $company['address'] ?? '' }}, dalam hal ini diwakili oleh <strong>{{ $company['director'] ?? '' }}</strong>, dalam kapasitasnya sebagai Direktur (untuk selanjutnya disebut sebagai <strong>Pihak Pertama</strong>); dan
                         </li>
                         <li style="margin-bottom: 15px;">
                             <strong>{{ $agreementLetter->quote ? $agreementLetter->quote->customer->name : '' }}</strong> , suatu perseroan yang didirikan dan dibentuk berdasarkan hukum di Indonesia, berkedudukan di {{ $agreementLetter->quote ? $agreementLetter->quote->customer->address : '' }},dalam hal ini diwakili oleh <strong>{{ $agreementLetter->quote ? $agreementLetter->quote->customer->director : '' }}</strong> dalam kapasitasnya sebagai <strong>Direktur</strong> (untuk selanjutnya disebut <strong>Pihak Kedua</strong>).
@@ -1247,7 +1247,6 @@
 @section('js')
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
     $(document).ready(function () {
@@ -1354,6 +1353,13 @@
     .noMargin 
     {
         margin-bottom: 0px;
+    }
+    .scrollable 
+    {
+      width: 100%;
+      height: 650px;
+      overflow: auto;
+      border: 1px solid #ccc;
     }
 </style>
 @stop
