@@ -129,7 +129,7 @@
                                 <input type="file" class="form-control" id="file_" name="file[]" >
                             </td>
                             <td>
-                                <a href="{{ Storage::url('reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-file-pdf"></i></a>
+                                <a href="{{ Storage::url('reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-download"></i></a>
                                 <button class="btn btn-sm btn-danger btnHapusData" data-id="{{ $a->id }}" title="delete"><i class="fa fa-trash"></i></button>
                             </td>
                         </tr>

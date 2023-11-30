@@ -1310,7 +1310,7 @@
    body 
    {
         font-family: Arial;
-        font-size : 12px;
+        /* font-size : 12px; */
         /* padding: 20px; */
         /* background-color: #f4f4f4; */
     }
