@@ -81,9 +81,11 @@
                     <div class="offset-1 col-3">
                         {{ $company['director'] ?? '' }}
                     </div>
+                    <div class="offset-5 text-left">
+                        <p class="noMargin">{{ $bast->workOrder ? $bast->workOrder->quote->customer->pic : '' }}</p>
+                    </div>
                     <div class="offset-9 text-left">
-                        <p class="noMargin"><strong>{{ $bast->workOrder ? $bast->workOrder->quote->customer->pic : '' }}</strong></p>
-                        <p class="noMargin">{{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</p>
+                        <p>{{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</p>
                     </div>
                 </div>
             </div>
@@ -98,7 +100,6 @@
 @section('js')
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
     $(document).ready(function () 
@@ -182,6 +183,10 @@
     }
     .select2-selection__arrow {
         height: 34px !important;
+    }
+    .noMargin
+    {
+        margin-bottom:0px;
     }
 </style>
 @stop
