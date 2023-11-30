@@ -54,7 +54,7 @@
                 <div class="offset-2 col-5 text-justify">
                     <ol type="I">
                         <li style="margin-bottom: 15px;">
-                            <strong>{{ $company['name'] ?? '' }}</strong>, suatu perseroan terbatas yang didirikan dan dibentuk berdasarkan hukum di Republik Indonesia, berkedudukan di Indonesia, dengan kantor terdaftarnya di {{ $company['address'] ?? '' }}, dalam hal ini diwakili oleh {{ $company['director'] ?? '' }}, dalam kapasitasnya sebagai Direktur (untuk selanjutnya disebut sebagai <strong>Pihak Pertama</strong>); dan
+                            <strong>{{ $company['name'] ?? '' }}</strong>, suatu perseroan terbatas yang didirikan dan dibentuk berdasarkan hukum di Republik Indonesia, berkedudukan di Indonesia, dengan kantor terdaftarnya di {{ $company['address'] ?? '' }}, dalam hal ini diwakili oleh <strong>{{ $company['director'] ?? '' }}</strong>, dalam kapasitasnya sebagai Direktur (untuk selanjutnya disebut sebagai <strong>Pihak Pertama</strong>); dan
                         </li>
                         <li style="margin-bottom: 15px;">
                             <strong>{{ $agreementLetter->quote ? $agreementLetter->quote->customer->name : '' }}</strong> , suatu perseroan yang didirikan dan dibentuk berdasarkan hukum di Indonesia, berkedudukan di {{ $agreementLetter->quote ? $agreementLetter->quote->customer->address : '' }},dalam hal ini diwakili oleh <strong>{{ $agreementLetter->quote ? $agreementLetter->quote->customer->director : '' }}</strong> dalam kapasitasnya sebagai <strong>Direktur</strong> (untuk selanjutnya disebut <strong>Pihak Kedua</strong>).
