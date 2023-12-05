@@ -18,10 +18,10 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
-        $customer = Customer::where('name','like', '%' . $request->get('customer') . '%')
+        $customer = Customer::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('customer') . '%')
         ->OrderBy('name','asc')->paginate(10);
 
-        $totalCustomer = count(Customer::get());
+        $totalCustomer = count(Customer::byCompany(Auth::user()->company_id)->get());
 
         return view('customer.index',compact('customer','totalCustomer'));
     }
@@ -81,9 +81,9 @@ class CustomerController extends Controller
     {
         $nomor = $request->get('nomor') ?? 0;
 
-        $totalCustomer = count(Customer::get());
+        $totalCustomer = count(Customer::byCompany(Auth::user()->company_id)->get());
         $customerEdit = Customer::where('slug', $slug)->firstOrFail();
-        $customer = Customer::OrderBy('name','asc')->paginate(10);
+        $customer = Customer::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->paginate(10);
         
         return view('customer.index', compact('customerEdit','customer','totalCustomer','nomor'));
     }

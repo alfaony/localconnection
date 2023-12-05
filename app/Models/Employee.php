@@ -71,4 +71,20 @@ class Employee extends Model
             $a->where('start_date', '<=', $today)->where('end_date', '>=', $today);
         })->distinct('id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }
+    }
 }

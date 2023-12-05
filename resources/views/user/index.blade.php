@@ -52,6 +52,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
             
+            @if($roleAccess)
             <label for="phone">Role:</label>
             <select name="role" class="form-control md-2" required>
                 <option value="" selected disabled>Pilih</option>
@@ -59,6 +60,18 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
                 @endforeach
             </select>
+            @endif
+
+            @if($companyAccess && !@$userEdit)
+            <label for="phone">Company:</label>
+            <select name="company" class="form-control md-2" required>
+                <option value="" selected disabled>Pilih</option>
+                @foreach($company as $a)
+                <option value="{{ $a->id }}" {{ @$userEdit->company_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                @endforeach
+            </select>
+            @endif
+
             @if(!@$userEdit)
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" placeholder="**********" value="{{ old('password') }}" required>
@@ -102,6 +115,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <th>No</th>
                 <th>Nama</th>
                 <th>Email</th>
+                <th>Perusahaan</th>
                 <th>Aksi</th>
             </tr>
             @forelse($user as $a)
@@ -109,6 +123,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <td>{{ $no++ }}</td>
                 <td>{{ $a->name }}</td>
                 <td>{{ $a->email }}</td>
+                <td> {{ $a->company ? $a->company->name : '' }} </td>
                 <td>
                     <form method="post" action="{{ route('user.destroy',$a) }}">
                         @csrf

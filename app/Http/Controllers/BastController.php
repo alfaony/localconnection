@@ -32,7 +32,7 @@ class BastController extends Controller
     public function create()
     {
         // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
-        $project = Project::orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $nomorBast = $this->bastNumber()['result'];
         return view('bast.createOrEdit',compact('nomorBast','userCreate','project'));
@@ -77,7 +77,7 @@ class BastController extends Controller
     public function edit($slug)
     {
         // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
-        $project = Project::orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
 
         $bast = Bast::where('slug',$slug)->first();
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
@@ -94,9 +94,9 @@ class BastController extends Controller
      */
     public function downloadPdf($slug)
     {
-        $workOrder = WorkOrder::all();
-        $project = Project::all();
-        $company = SettingCompany::get()->pluck('field_value','field_title');
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->get();
+        $project = Project::byCompany(Auth::user()->company_id)->get();
+        $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
 
         $bast = Bast::where('slug',$slug)->first();
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
@@ -148,6 +148,7 @@ class BastController extends Controller
     {
         // Fetch data for the DataTable
         $query = Bast::query();
+        $query->byCompany(Auth::user()->company_id);
 
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['date','number_result', 'slug'];
@@ -208,7 +209,7 @@ class BastController extends Controller
     private function bastNumber()
     {
         $date = Carbon::now()->format('m/Y');
-        $nomor = Bast::withTrashed()->max('basts_number') + 1;
+        $nomor = Bast::byCompany(Auth::user()->company_id)->withTrashed()->max('basts_number') + 1;
 
         return 
         [

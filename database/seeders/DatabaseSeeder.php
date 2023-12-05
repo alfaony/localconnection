@@ -22,5 +22,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForDeleteDetailReportSeeder::class);
         $this->call(PermissionForProductPriceSuplierSeeder::class);
         $this->call(PermissionPricelistSeeder::class);
+        $this->call(PermissionForCompanySeeder::class);
     }
 }

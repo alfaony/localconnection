@@ -27,10 +27,10 @@ class ManagerController extends Controller
      */
     public function index(Request $request)
     {
-        $manager = Manager::where('name','like', '%' . $request->get('manager') . '%')
+        $manager = Manager::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('manager') . '%')
         ->OrderBy('created_at','asc')->paginate(10);
 
-        $totalManager = count(Manager::get());
+        $totalManager = count(Manager::byCompany(Auth::user()->company_id)->get());
         return view('manager.index',compact('manager','totalManager'));
     }
 
@@ -43,8 +43,8 @@ class ManagerController extends Controller
     {
         $nomor = $request->get('nomor') ?? 0;
 
-        $project = Project::get();
-        $employee = Employee::get();
+        $project = Project::byCompany(Auth::user()->company_id)->get();
+        $employee = Employee::byCompany(Auth::user()->company_id)->get();
         $dateNow = Carbon::now();
         $paymentMode = config('custom.paymentMode');
         $dateCreate = Carbon::now()->format('Y-m-d');
@@ -133,8 +133,8 @@ class ManagerController extends Controller
     {
         $nomor = $request->get('nomor') ?? 0;
 
-        $project = Project::get();
-        $employee = Employee::get();
+        $project = Project::byCompany(Auth::user()->company_id)->get();
+        $employee = Employee::byCompany(Auth::user()->company_id)->get();
         $paymentMode = config('custom.paymentMode');
         $manager = Manager::where('slug', $slug)->firstOrFail();
         $dateNow = $manager->date ?? Carbon::now();

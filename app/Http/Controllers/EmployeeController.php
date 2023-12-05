@@ -17,10 +17,10 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {   
-        $employee = Employee::where('name','like', '%' . $request->get('employee') . '%')
+        $employee = Employee::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('employee') . '%')
         ->OrderBy('name','asc')->paginate(10);
 
-        $totalEmployee = count(Employee::get());
+        $totalEmployee = count(Employee::byCompany(Auth::user()->company_id)->get());
 
         return view('employee.index',compact('employee','totalEmployee'));
     }
@@ -73,9 +73,9 @@ class EmployeeController extends Controller
      */
     public function edit($slug)
     {
-        $totalEmployee = count(Employee::get());
+        $totalEmployee = count(Employee::byCompany(Auth::user()->company_id)->get());
         $employeeEdit = Employee::where('slug', $slug)->firstOrFail();
-        $employee = Employee::OrderBy('name','asc')->paginate(10);
+        $employee = Employee::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->paginate(10);
     
         // Rest of your code for editing the project...
 

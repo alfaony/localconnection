@@ -69,4 +69,20 @@ class Suplier extends Model
             $a->where('start_date', '<=', $today)->where('end_date', '>=', $today);
         });
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class)->withTrashed();
+    }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }
+    }
 }

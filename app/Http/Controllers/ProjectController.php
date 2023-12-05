@@ -19,11 +19,12 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {   
-        $project = Project::where('title','like', '%' . $request->get('project') . '%')
+        $project = Project::byCompany(Auth::user()->company_id)->where('title','like', '%' . $request->get('project') . '%')
         ->OrderBy('created_at','asc')->paginate(10);
 
-        $totalProject = count(Project::get());
+        $totalProject = count(Project::byCompany(Auth::user()->company_id)->get());
         $workOrder = WorkOrder::whereDoesntHave('project')
+        ->byCompany(Auth::user()->company_id)
         ->orderBy('created_at','desc')
         ->get();
 
@@ -60,11 +61,12 @@ class ProjectController extends Controller
      */
     public function edit($slug)
     {
-        $totalProject = count(Project::get());
+        $totalProject = count(Project::byCompany(Auth::user()->company_id)->get());
         $projectEdit = Project::where('slug', $slug)->firstOrFail();
-        $project = Project::OrderBy('created_at','asc')->paginate(10);
+        $project = Project::byCompany(Auth::user()->company_id)->OrderBy('created_at','asc')->paginate(10);
         // $workOrder = WorkOrder::all();
         $workOrder = WorkOrder::whereDoesntHave('project')
+        ->byCompany(Auth::user()->company_id)
         ->orWhere('id', $projectEdit->work_order_id)
         ->orderBy('created_at','desc')
         ->get();

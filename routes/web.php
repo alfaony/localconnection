@@ -19,6 +19,7 @@ use App\Http\Controllers\SettingCompanyController;
 use App\Http\Controllers\RoleController;
 
 use App\Http\Controllers\PricelistController;
+use App\Http\Controllers\CompanyController;
 
 
 
@@ -102,5 +103,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('pricelist', [PricelistController::class, 'index'])->name('pricelist.index');
   Route::get('pricelist/show/{product}', [PricelistController::class, 'show'])->name('pricelist.show');
 });
+
+Route::resource('company', CompanyController::class);
 
 

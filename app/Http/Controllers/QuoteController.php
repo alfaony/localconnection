@@ -29,12 +29,7 @@ class QuoteController extends Controller
      */
     public function index(Request $request)
     {
-        $quote = Quote::byUser($request->user)
-        ->OrderBy('created_at','asc')->paginate(10);
-        // where('name','like', '%' . $request->get('manager') . '%')
-
-        $totalQuote = count(Quote::get());
-        return view('quote.index',compact('quote','totalQuote'));
+        return view('quote.index');
     }
 
     /**
@@ -44,11 +39,11 @@ class QuoteController extends Controller
      */
     public function create(Request $request)
     {
-        $product = Product::all();
-        $customer = Customer::orderBy('created_at','desc')->get();
+        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $customer = Customer::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $date = Carbon::now()->format('m/Y');
-        $nomor = Quote::withTrashed()->max('quote_number') + 1;
+        $nomor = Quote::byCompany(Auth::user()->company_id)->withTrashed()->max('quote_number') + 1;
         $nomorQuote = $nomor.'/'.$date;
         $date = Carbon::now();
         
@@ -68,7 +63,7 @@ class QuoteController extends Controller
             DB::beginTransaction();
             $no = $request->post('nomor') ?? 0; 
             $date = Carbon::now()->format('m/Y');
-            $quoteNumber = Quote::withTrashed()->max('quote_number') + 1;
+            $quoteNumber = Quote::byCompany(Auth::user()->company_id)->withTrashed()->max('quote_number') + 1;
             $numberResult = $quoteNumber.'/'.$date;
 
             $quote = new Quote();
@@ -129,8 +124,8 @@ class QuoteController extends Controller
      */
     public function edit($slug,Request $request)
     {
-        $product = Product::all();
-        $customer = Customer::orderBy('created_at','desc')->get();
+        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $customer = Customer::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $quote = Quote::where('slug', $slug)->firstOrFail();
 
         $date = Carbon::parse($quote->created_at)->format('m/Y');
@@ -361,9 +356,9 @@ class QuoteController extends Controller
      */
     public function downloadPdf($slug)
     {
-        $product = Product::all();
-        $company = SettingCompany::get()->pluck('field_value','field_title');
-        $customer = Customer::all();
+        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $customer = Customer::byCompany(Auth::user()->company_id)->get();
         $quote = Quote::where('slug', $slug)->firstOrFail();
         $date = Carbon::parse($quote->created_at)->format('m/Y');
         $nomorQuote = $quote->number_result;
@@ -406,7 +401,7 @@ class QuoteController extends Controller
     {
         // Fetch data for the DataTable
         $query = Quote::query();
-        $query->orderBy('quote_number', 'desc');
+        $query->byCompany(Auth::user()->company_id)->orderBy('quote_number', 'desc');
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['number_result', 'total', 'slug'];
 
@@ -475,7 +470,7 @@ class QuoteController extends Controller
 
      public function select2(Request $request)
      {
-        $quote = Quote::with('customer')->byNumberResult($request->get('number_result'))
+        $quote = Quote::byCompany(Auth::user()->company_id)->with('customer')->byNumberResult($request->get('number_result'))
                 ->orderBy('created_at','desc')
                 ->limit(6)
                 ->get();

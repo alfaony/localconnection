@@ -28,14 +28,7 @@ class WorkOrderController extends Controller
      */
     public function index(Request $request)
     {
-        $workOrder = WorkOrder::
-        // byUser($request->user)
-        // where('name','like', '%' . $request->get('quote') . '%')
-        OrderBy('created_at','asc')->paginate(10);
-
-        $totalWorkOrder = count(WorkOrder::get());
-
-        return view('work_order.index',compact('workOrder','totalWorkOrder'));
+        return view('work_order.index');
     }
 
     /**
@@ -45,7 +38,7 @@ class WorkOrderController extends Controller
      */
     public function create()
     {   
-        $product = Product::all();
+        $product = Product::byCompany(Auth::user()->company_id)->get();
         // $quote = Quote::orderBy('created_at','desc')->get();
 
         $userCreate = Auth::user()->name;
@@ -64,7 +57,7 @@ class WorkOrderController extends Controller
     {
         DB::beginTransaction();
         try {
-            $workOrderNumber = WorkOrder::withTrashed()->max('work_order_number') + 1;
+            $workOrderNumber = WorkOrder::byCompany(Auth::user()->company_id)->withTrashed()->max('work_order_number') + 1;
 
             // Simpan data WorkOrder
             $workOrder = new WorkOrder();
@@ -130,7 +123,7 @@ class WorkOrderController extends Controller
     public function edit($slug)
     {
         // dd($slug);
-        $product = Product::all();
+        $product = Product::byCompany(Auth::user()->company_id)->get();
         // $quote = Quote::orderBy('created_at','desc')->get();
         
         $workOrder = WorkOrder::where('slug', $slug)->firstOrFail();
@@ -178,11 +171,11 @@ class WorkOrderController extends Controller
     public function downloadPdf($slug)
     {
         // dd($slug);
-        $product = Product::all();
-        $quote = Quote::all();
+        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $quote = Quote::byCompany(Auth::user()->company_id)->get();
         
         $workOrder = WorkOrder::where('slug', $slug)->firstOrFail();
-        $company = SettingCompany::get()->pluck('field_value','field_title');
+        $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
         $userCreate = $workOrder->userCreate ? $workOrder->userCreate->name : '';
         $nomorWorkOrder = $workOrder->number_result ?? '';
 
@@ -357,7 +350,7 @@ class WorkOrderController extends Controller
     private function workOrderNumber()
     {
         $date = Carbon::now()->format('m/Y');
-        $nomor = WorkOrder::withTrashed()->max('work_order_number') + 1;
+        $nomor = WorkOrder::byCompany(Auth::user()->company_id)->withTrashed()->max('work_order_number') + 1;
 
         return $nomor.'/'.$date;
 
@@ -367,7 +360,7 @@ class WorkOrderController extends Controller
     {
         // Fetch data for the DataTable
         $query = WorkOrder::query();
-        $query->orderBy('work_order_number', 'desc');
+        $query->byCompany(Auth::user()->company_id)->orderBy('work_order_number', 'desc');
 
         // OrderBy
         $query->orderBy('work_order_number', 'desc');
@@ -441,7 +434,7 @@ class WorkOrderController extends Controller
      */
     public function select2(Request $request)
     {
-    $workOrder = WorkOrder::byNumberResult($request->get('number_result'))
+    $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->byNumberResult($request->get('number_result'))
             ->orderBy('created_at','desc')
             ->limit(6)
             ->get();

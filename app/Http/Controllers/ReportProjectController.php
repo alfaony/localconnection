@@ -37,7 +37,7 @@ class ReportProjectController extends Controller
     public function create()
     {
         $nomorReportProject = $this->reportProjectNumber()['result'];
-        $project = Project::whereDoesntHave('reportProject')->orderBy('created_at', 'desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('reportProject')->orderBy('created_at', 'desc')->get();
 
         // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
@@ -116,6 +116,7 @@ class ReportProjectController extends Controller
         $reportProject = ReportProject::where('slug',$slug)->first();
         $nomorReportProject = $this->reportProjectNumber()['result'];
         $project = Project::whereDoesntHave('reportProject')
+        ->byCompany(Auth::user()->company_id)
         ->orWhere('id', $reportProject->project_id)
         ->orderBy('created_at', 'desc')->get();
         // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
@@ -219,6 +220,7 @@ class ReportProjectController extends Controller
     {
         // Fetch data for the DataTable
         $query = ReportProject::query();
+        $query->byCompany(Auth::user()->company_id);
 
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['date','number_result', 'slug'];
@@ -268,7 +270,7 @@ class ReportProjectController extends Controller
     private function reportProjectNumber()
     {
         $date = Carbon::now()->format('m/Y');
-        $nomor = ReportProject::withTrashed()->max('report_project_number') + 1;
+        $nomor = ReportProject::byCompany(Auth::user()->company_id)->withTrashed()->max('report_project_number') + 1;
 
         return 
         [

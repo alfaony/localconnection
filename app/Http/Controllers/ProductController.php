@@ -18,10 +18,10 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $product = Product::where('name','like', '%' . $request->get('product') . '%')
+        $product = Product::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('product') . '%')
         ->OrderBy('name','asc')->paginate(10);
 
-        $totalProduct = count(Product::get());
+        $totalProduct = count(Product::byCompany(Auth::user()->company_id)->get());
 
         return view('product.index',compact('product','totalProduct'));
     }
@@ -77,9 +77,9 @@ class ProductController extends Controller
     {
         $nomor = $request->get('nomor') ?? 0;
 
-        $totalProduct = count(Product::get());
+        $totalProduct = count(Product::byCompany(Auth::user()->company_id)->get());
         $productEdit = Product::where('slug', $slug)->firstOrFail();
-        $product = Product::OrderBy('name','asc')->paginate(10);
+        $product = Product::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->paginate(10);
         
         return view('product.index', compact('productEdit','product','totalProduct','nomor'));
     }

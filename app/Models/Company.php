@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
 
-class AgreementLetter extends Model
+class Company extends Model
 {
     use HasFactory,SoftDeletes;
 
@@ -27,9 +27,9 @@ class AgreementLetter extends Model
         });
     }
 
-    public function setDateAttribute($value)
+    public function setNameAttribute($value)
     {
-        $this->attributes['date'] = $value;
+        $this->attributes['name'] = $value;
         $this->attributes['slug'] = $this->createUniqueSlug($value);
     }
 
@@ -39,8 +39,7 @@ class AgreementLetter extends Model
         $baseSlug = $slug;
 
         $count = 1;
-        while (static::where('slug', $slug)->withTrashed()->exists()) 
-        {
+        while (static::where('slug', $slug)->withTrashed()->exists()) {
             $slug = "{$baseSlug}-{$count}";
             $count++;
         }
@@ -51,26 +50,5 @@ class AgreementLetter extends Model
     public function getRouteKeyName()
     {
         return 'slug';
-    }
-    
-    public function userCreate()
-    {
-        return $this->belongsTo(User::class,'user_created_id','id')->withTrashed();
-    }
-
-    public function quote()
-    {
-        return $this->belongsTo(Quote::class)->withTrashed();
-    }
-
-    public function scopeByCompany($query,$companyId)
-    {
-        if($companyId)
-        {
-            return $query->whereHas('userCreate', function ($query) use ($companyId) 
-            {
-                $query->where('company_id', $companyId);
-            });
-        }
     }
 }

@@ -23,10 +23,10 @@ class SuplierController extends Controller
      */
     public function index(Request $request)
     {
-        $suplier = Suplier::where('name','like', '%' . $request->get('suplier') . '%')
+        $suplier = Suplier::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('suplier') . '%')
         ->OrderBy('created_at','asc')->paginate(10);
 
-        $totalSuplier = count(Suplier::get());
+        $totalSuplier = count(Suplier::byCompany(Auth::user()->company_id)->get());
 
         return view('suplier.index',compact('suplier','totalSuplier'));
     }
@@ -39,9 +39,9 @@ class SuplierController extends Controller
     public function create(Request $request)
     {
         $nomor = $request->get('nomor');
-        $project = Project::orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $dateCreate = Carbon::now()->format('Y-m-d');
-        $product = Product::all();
+        $product = Product::byCompany(Auth::user()->company_id)->get();
 
 
         return view('suplier.createOrEdit',compact('nomor','project','dateCreate','product'));
@@ -129,9 +129,9 @@ class SuplierController extends Controller
     {
         $nomor = $request->nomor ?? 0 ;
         $suplier = Suplier::where('slug', $slug)->firstOrFail();
-        $project = Project::orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $dateCreate = Carbon::parse($suplier->created_at)->format('Y-m-d');
-        $product = Product::all();
+        $product = Product::byCompany(Auth::user()->company_id)->get();
 
 
         return view('suplier.createOrEdit',compact('suplier','nomor','project','dateCreate','product'));   

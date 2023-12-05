@@ -81,4 +81,17 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class)->withTrashed();
     }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class)->withTrashed();
+    }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->where("company_id",$companyId);
+        }
+    }
 }

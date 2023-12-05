@@ -9,6 +9,7 @@ use App\Schemas\RoleSchema;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Company;
 use App\Http\Requests\UserRequest;
 
 
@@ -21,26 +22,44 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        $company = Company::get();
+        $companyAccess = false;
+        $roleAccess = false;
 
         if((Auth::user()->role->name != RoleSchema::ADMIN && Auth::user()->role->name != RoleSchema::ROOT))
         {
-            $user = User::where('delete_able',1)
+            $role = Role::where('name','!=',RoleSchema::ROOT)->get();
+            $user = User::byCompany(Auth::user()->company_id)->where('delete_able',1)
                 ->where('email','like', '%' . $request->get('email') . '%')
                 ->where('id',Auth::user()->id)
                 ->OrderBy('name','asc')->paginate(10);
-            $totalUser = count(User::where('delete_able',1)->where('id',Auth::user()->id)->get());
+            $totalUser = count(User::byCompany(Auth::user()->company_id)->where('delete_able',1)->where('id',Auth::user()->id)->get());
 
-        }else
-        {            
+        }
+        elseif(Auth::user()->role->name == RoleSchema::ADMIN )
+        {
+            $roleAccess = true;
+
+            $role = Role::where('name','!=',RoleSchema::ROOT)->get();
             $user = User::where('delete_able',1)
-                    ->where('email','like', '%' . $request->get('email') . '%')
+            ->byCompany(Auth::user()->company_id)
+            ->where('email','like', '%' . $request->get('email') . '%')
+            ->OrderBy('name','asc')->paginate(10);
+            $totalUser = count(User::byCompany(Auth::user()->company_id)->where('delete_able',1)->get());
+        }
+        else
+        {       
+            $companyAccess = true;
+            $roleAccess = true;
+
+            $role = Role::get();
+            $user = User::where('email','like', '%' . $request->get('email') . '%')
                     ->OrderBy('name','asc')->paginate(10);
             $totalUser = count(User::where('delete_able',1)->get());
         }
 
-        $role = Role::get();
 
-        return view('user.index',compact('user','totalUser','role'));
+        return view('user.index',compact('user','totalUser','role','company', 'companyAccess', 'roleAccess'));
     }
 
     /**
@@ -55,7 +74,8 @@ class UserController extends Controller
         $user->name = $request->post('name'); 
         $user->email = $request->post('email');
         $user->phone = $request->post('phone');
-        $user->role_id = $request->post('role');
+        $user->role_id = $request->post('role') ?? Auth::user()->role_id;
+        $user->company_id = $request->post('company') ?? Auth::user()->company_id;
         $user->password = bcrypt($request->post('password'));
         $user->save();
 
@@ -71,25 +91,44 @@ class UserController extends Controller
     public function edit($slug)
     {
         $userEdit = User::where('slug', $slug)->firstOrFail();
+        $company = Company::get();
+
+        $companyAccess = false;
+        $roleAccess = false;
+
         
         if((Auth::user()->role->name != RoleSchema::ADMIN && Auth::user()->role->name != RoleSchema::ROOT))
         {
+            $role = Role::where('name','!=',RoleSchema::ROOT)->get();
             $user = User::where('delete_able',1)
+                ->byCompany(Auth::user()->company_id)
                 ->where('id',Auth::user()->id)
                 ->OrderBy('name','asc')->paginate(10);
-            $totalUser = count(User::where('delete_able',1)->where('id',Auth::user()->id)->get());
+            $totalUser = count(User::where('delete_able',1)->byCompany(Auth::user()->company_id)->where('id',Auth::user()->id)->get());
 
-        }else
-        {            
+        }
+        elseif(Auth::user()->role->name == RoleSchema::ADMIN )
+        {
+            $roleAccess = true;
+
+            $role = Role::where('name','!=',RoleSchema::ROOT)->get();
             $user = User::where('delete_able',1)
-                    ->OrderBy('name','asc')->paginate(10);
+            ->byCompany(Auth::user()->company_id)
+            ->OrderBy('name','asc')->paginate(10);
+             $totalUser = count(User::byCompany(Auth::user()->company_id)->where('delete_able',1)->get());
+        }
+        else
+        {         
+            $companyAccess = true;
+            $roleAccess = true;
+
+            $role = Role::get();   
+            $user = User::OrderBy('name','asc')->paginate(10);
             $totalUser = count(User::where('delete_able',1)->get());
         }
-        $role = Role::get();
     
-        // Rest of your code for editing the project...
 
-        return view('user.index', compact('userEdit','user','totalUser','role'));
+        return view('user.index', compact('userEdit','user','totalUser','role', 'company', 'companyAccess', 'roleAccess'));
     }
 
     /**
@@ -115,6 +154,7 @@ class UserController extends Controller
         $user->email = $request->post('email');
         $user->phone = $request->post('phone');
         $user->role_id = $request->post('role');
+        // $user->company_id = $request->post('company');
 
         if($request->post('password'))
         {

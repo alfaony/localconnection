@@ -71,4 +71,15 @@ class Bast extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->whereHas('userCreate', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }
+    }
 }

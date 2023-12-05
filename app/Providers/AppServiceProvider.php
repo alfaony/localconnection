@@ -47,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
                 'report_projects',
                 'basts',
                 'reports',
+                'companies',
                 'setting_companies',
                 'roles'
             ];
@@ -132,6 +133,11 @@ class AppServiceProvider extends ServiceProvider
                     'text'        => 'Setting Perusahaan',
                     'route'         => 'setting-company.index',
                     'icon' => 'fa fa-home',
+                ],
+                'companies' => [
+                    'text'        => 'Company',
+                    'route'         => 'company.index',
+                    'icon' => 'fa fa-building',
                 ],
                 'roles' => [
                     'text'        => 'Role Akses',
