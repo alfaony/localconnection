@@ -68,12 +68,12 @@
     <table class="table table-bordered mt-4" id="tabelPembelian">
         <thead>
             <tr>
-                <th>No</th>
-                <th>Product</th>
-                <th>Deskripsi</th>
-                <th width="15%">Harga Satuan</th>
+                <th width="5%">No</th>
+                <th width="15%">Product</th>
+                <th width="20%">Deskripsi</th>
+                <th width="10%">Harga Satuan</th>
                 <th width="10%">Jumlah</th>
-                <th width="15%">Total</th>
+                <th width="10%">Total</th>
                 <th width="5%">Aksi</th>
             </tr>
         </thead>
@@ -82,8 +82,8 @@
             @php $noChild = 1; @endphp
             @foreach($suplier->purchase as $a)
             <tr data-keyss="{{$a->id}}">
-                <td>{{ $noChild++ }}</td>
-                <td class="col-3">
+                <td width="5%">{{ $noChild++ }}</td>
+                <td width="15%">
                     <select class="form-control productChange selectConfig" name="product[]" id="product_{{ $a->id }}" required>
                         <option value="" selected disabled>Pilih</option>
                         @foreach($product as $b)
@@ -91,18 +91,18 @@
                         @endforeach
                     </select>
                 </td>
-                <td>
+                <td width="20%">
                     <input type="text" class="thriveEditor" data-ids="{{ $a->id }}" name="description[]" id="description_{{ $a->id }}" placeholder="Deskripsi" value="{{ $a->description }}" required>
                 </td>
-                <td id="price_show_{{ $a->id }}">
+                <td width="10%" id="price_show_{{ $a->id }}">
                     Rp. {{ number_format($a->price,0,',','.') }}
                 </td>
-                <td> 
+                <td width="10%"> 
                     <input type="hidden" name="price[]" class="form-control" data-keyss="{{ $a->id }}" id="price_{{ $a->id }}" value="{{ $a->price }}" required>
                     <input type="number" name="qty[]" class="form-control qty" data-keyss="{{$a->id}}" id="qty_{{$a->id}}" placeholder="Jumlah" value="{{ $a->qty }}" required>
                 </td>
-                <td id="sub_total_show_{{$a->id}}">{{'Rp. '.number_format($a->sub_total_price,0,',','.') }} </td>
-                <td>
+                <td width="10%" id="sub_total_show_{{$a->id}}">{{'Rp. '.number_format($a->sub_total_price,0,',','.') }} </td>
+                <td width="5%">
                     <input type="hidden" name="idChild[]" value="{{ $a->id }}">
                     <input type="hidden" name="sub_total[]" class="form-control" id="sub_total_{{$a->id}}" placeholder="Harga Satuan" value="{{ $a->sub_total_price }}">
                     <button type="button" data-id="{{ $a->id }}" class="btn btn-sm btn-danger btnHapusData"><i class="fa fa-trash"></i></button>
@@ -146,6 +146,7 @@
 <script>
     $(document).ready(function () 
     {
+        
         $("#submit").click(function (e) 
         { 
             e.preventDefault();
@@ -273,17 +274,17 @@
         var row = `
         <tr>
             <td>${noBaris}</td>
-            <td class="col-3">
+            <td width="15%">
                 <select class="form-control productChange" name="product[]" id="product_${indexKeys}" required>
                     <option value="" selected disabled>Pilih</option>
                     ${projectOptions}
                 </select>
             </td>
-            <td><input type="text" class="form-control thriveEditor" name="description[]" id="description_${indexKeys}" placeholder="Deskripsi" required></td>
+            <td width="10%"><input type="text" class="form-control thriveEditor" name="description[]" id="description_${indexKeys}" placeholder="Deskripsi" required></td>
             <td id="price_show_${indexKeys}">
                 Rp. 0
             </td>
-            <td> 
+            <td width="10%"> 
                 <input type="hidden" name="price[]" class="form-control" data-keyss=${indexKeys} id="price_${indexKeys}" value="" required>
                 <input type="number" name="qty[]" class="form-control qty" data-keyss=${indexKeys} id="qty_${indexKeys}" placeholder="Jumlah" value="1" required>
             </td>

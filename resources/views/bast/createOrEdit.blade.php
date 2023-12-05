@@ -131,11 +131,11 @@
         
         // Jika reportId kosong, tampilkan pesan dan disable tombol simpan
         if (!reportId) {
-            $('#reportProjectMessage').text('Laporan Proyek Tidak Tersedia').addClass('text-red');
+            $('#reportProjectMessage').text('Laporan Proyek Tidak Tersedia').addClass('text-red').removeClass('text-green');
             $('#saveButtonId').prop('disabled', true);  // diasumsikan bahwa tombol simpan memiliki id 'saveButtonId'
         } else {
             // Jika reportId ada, sembunyikan pesan dan aktifkan tombol simpan
-            $('#reportProjectMessage').text('Laporan Proyek Tersedia').addClass('text-green');
+            $('#reportProjectMessage').text('Laporan Proyek Tersedia').addClass('text-green').removeClass('text-red');;
             $('#saveButtonId').prop('disabled', false);
         }
     });
