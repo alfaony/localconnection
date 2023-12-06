@@ -117,6 +117,18 @@
         });
     });
 </script>
+<script>
+    $(document).ready(function () {
+        
+        $("#btnCreateSuplier").click(function (e) 
+        { 
+            e.preventDefault();
+            let url = "{{ route('quote.create') }}";
+
+            window.location.href = url;
+        });
+    });
+</script>
 
 @stop
 @section('css')
