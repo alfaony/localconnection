@@ -64,7 +64,7 @@ return [
     */
  
     'logo' => '&zwnj;',
-    // 'logo_img' => 'logo/logo-thrive.png',
+    'logo_img' => 'logo/logo-thrive.png',
     'logo_img_class' => 'brand-image',
     'logo_img_xl' => 'logo/logo-thrive.png',
     'logo_img_xl_class' => 'brand-image-xl',

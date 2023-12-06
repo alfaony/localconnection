@@ -62,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
                 'pricelists' => [
                     'text'        => 'Price List',
                     'route'         => 'pricelist.index',
-                    'icon' => 'fa fa-briefcase',
+                    'icon' => 'fa fa-list-alt',
                 ],
                 'employees' => [
                     'text'        => 'Data Pekerja',

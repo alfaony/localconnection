@@ -64,7 +64,6 @@ class CompanyController extends Controller
             $user->save();
     
             $field = ['name' => $request->post('company_name'),'director'=> $request->post('director'),'address' => $request->post('address'),'npwp_number' => $request->post('npwp_number'),'currency'=>'','currency_usd'=>"",'nib_file'=>'','acta_file'=> '','npwp_file' => '','signature_file' => ''];
-            
     
             foreach ($field as $key => $value) 
             {

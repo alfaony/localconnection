@@ -102,8 +102,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('pricelist/dataTableJson', [PricelistController::class, 'dataTableJson'])->name('pricelist.datatable');
   Route::get('pricelist', [PricelistController::class, 'index'])->name('pricelist.index');
   Route::get('pricelist/show/{product}', [PricelistController::class, 'show'])->name('pricelist.show');
+  
+  Route::resource('company', CompanyController::class);
 });
 
-Route::resource('company', CompanyController::class);
 
 

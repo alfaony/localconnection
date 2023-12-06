@@ -22,7 +22,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $company = Company::get();
+        $company = Company::orderBy('name','asc')->get();
         $companyAccess = false;
         $roleAccess = false;
 
@@ -53,7 +53,8 @@ class UserController extends Controller
             $roleAccess = true;
 
             $role = Role::get();
-            $user = User::where('email','like', '%' . $request->get('email') . '%')
+            $user = User::where('delete_able',1)
+                    ->where('email','like', '%' . $request->get('email') . '%')
                     ->OrderBy('name','asc')->paginate(10);
             $totalUser = count(User::where('delete_able',1)->get());
         }
@@ -91,7 +92,7 @@ class UserController extends Controller
     public function edit($slug)
     {
         $userEdit = User::where('slug', $slug)->firstOrFail();
-        $company = Company::get();
+        $company = Company::orderBy('name','asc')->get();
 
         $companyAccess = false;
         $roleAccess = false;
@@ -122,8 +123,10 @@ class UserController extends Controller
             $companyAccess = true;
             $roleAccess = true;
 
-            $role = Role::get();   
-            $user = User::OrderBy('name','asc')->paginate(10);
+            $role = Role::get();
+
+            $user = User::where('delete_able',1)
+            ->OrderBy('name','asc')->paginate(10);
             $totalUser = count(User::where('delete_able',1)->get());
         }
     

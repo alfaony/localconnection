@@ -71,7 +71,7 @@ class generateAllBos extends Command
             $userBos2->name = "ADMIN BOS 2";
             $userBos2->email = "bos2@emcdev.me";
             $userBos2->role_id = $role->id;
-            $userBos2->password = bcrypt("abcde12345");
+            $userBos2->password = bcrypt("root123!");
             $userBos2->company_id = $companyBos2->id;
             
             $userBos2->save();
@@ -113,8 +113,8 @@ class generateAllBos extends Command
             $userBos3->name = "ADMIN BOS 3";
             $userBos3->email = "bos3@emcdev.me";
             $userBos3->role_id = $role->id;
-            $userBos3->password = bcrypt("abcde12345");
-            $userBos3->company_id = $companyBos2->id;
+            $userBos3->password = bcrypt("root123!");
+            $userBos3->company_id = $companyBos3->id;
             
             $userBos3->save();
 
@@ -141,8 +141,8 @@ class generateAllBos extends Command
             $userBos4->name = "ADMIN BOS 4";
             $userBos4->email = "bos4@emcdev.me";
             $userBos4->role_id = $role->id;
-            $userBos4->password = bcrypt("abcde12345");
-            $userBos4->company_id = $companyBos2->id;
+            $userBos4->password = bcrypt("root123!");
+            $userBos4->company_id = $companyBos4->id;
             
             $userBos4->save();
 
@@ -163,8 +163,9 @@ class generateAllBos extends Command
         {
             //throw $th;
             DB::rollback();
-            dd($th);
+            // dd($th);
             Log::error($th);
+            return $th;
         }
     }
 }

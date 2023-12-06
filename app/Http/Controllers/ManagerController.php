@@ -75,6 +75,8 @@ class ManagerController extends Controller
             $manager->save();
     
             $employee = $request->input('employee');
+            $salaryMonthly = $request->input('salary_monthly');
+            $salaryDaily = $request->input('salary_daily');
             $payment_method = $request->input('payment_method');
             $start_date = $request->input('start_date');
             $end_date = $request->input('end_date');
@@ -86,6 +88,8 @@ class ManagerController extends Controller
             {
                 $job = new Job();
                 $job->employee_id = $employee[$i];
+                $job->salary_monthly = $salaryMonthly[$i];
+                $job->salary_daily = $salaryDaily[$i];
                 $job->payment_method = $payment_method[$i];
                 $job->start_date = $start_date[$i];
                 $job->end_date = $end_date[$i];
@@ -165,6 +169,8 @@ class ManagerController extends Controller
             
             $manager->save();
     
+            $salaryMonthly = $request->input('salary_monthly');
+            $salaryDaily = $request->input('salary_daily');
             $employee = $request->input('employee');
             $payment_method = $request->input('payment_method');
             $start_date = $request->input('start_date');
@@ -181,19 +187,25 @@ class ManagerController extends Controller
                 {
                     $job = new Job();
                     $job->employee_id = $employee[$i];
+                    $job->salary_monthly = $salaryMonthly[$i];
+                    $job->salary_daily = $salaryDaily[$i];
                     $job->payment_method = $payment_method[$i];
                     $job->start_date = $start_date[$i];
                     $job->end_date = $end_date[$i];
                     $job->total = $total[$i];
+
                     $manager->job()->save($job);
                 }else
                 {
                     $job = Job::find($id);
                     $job->employee_id = $employee[$i];
+                    $job->salary_monthly = $salaryMonthly[$i];
+                    $job->salary_daily = $salaryDaily[$i];
                     $job->payment_method = $payment_method[$i];
                     $job->start_date = $start_date[$i];
                     $job->end_date = $end_date[$i];
                     $job->total = $total[$i];
+                    
                     $job->save();
                 }
             }
@@ -276,7 +288,20 @@ class ManagerController extends Controller
 
         $duration = $start->diffInDays($end) + ParamSchema::ONEDAY ;
 
-        $employee = Employee::find($request->get('employeeId'));
+        $job = Job::find($request->get('jobId'));
+        if($job)
+        {
+            if($job->salary_monthly && $job->salary_daily)
+            {
+                $employee = $job;
+            }else
+            {
+                $employee = Employee::find($request->get('employeeId'));
+            }
+        }else
+        {
+            $employee = Employee::find($request->get('employeeId'));
+        }
 
 
 
@@ -295,7 +320,9 @@ class ManagerController extends Controller
         $data = 
         [
             'total'=> $salary,
-            'duration' => $duration
+            'duration' => $duration,
+            'salary_daily' => $employee->salary_daily,
+            'salary_monthly' => $employee->salary_monthly
         ];
 
         return [
