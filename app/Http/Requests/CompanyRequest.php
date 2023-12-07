@@ -16,11 +16,11 @@ class CompanyRequest extends FormRequest
         $rules = [
             'company_name' => 'required|string|max:255',
             'name' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-            'npwp_number' => 'required|string|max:255',
+            'address' => 'nullable|string|max:255',
+            'npwp_number' => 'nullable|string|max:255',
             'director' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|max:15',
+            'phone' => 'nullable|string|max:15',
             'password' => 'required|string|min:6|confirmed',
         ];
 

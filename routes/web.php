@@ -104,7 +104,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('pricelist', [PricelistController::class, 'index'])->name('pricelist.index');
   Route::get('pricelist/show/{product}', [PricelistController::class, 'show'])->name('pricelist.show');
   
-  Route::resource('company', CompanyController::class);
+  Route::resource('company', CompanyController::class)->except(['create','show']);;
 });
 
 Route::get('download/{slug}',[SortUrlController::class,'index'])->name('download.index');

@@ -32,7 +32,7 @@ $no = ($company->currentPage() - 1) * $company->perPage() + 1;
 <div class="container">
     <p id="employeeNo"></p>
     
-    @canAccess('store','employees')
+    @canAccess('store','companies')
     @if(@$companyEdit)
     <form action="{{ route('company.update',$companyEdit) }}" method="post">
     @method('put')
@@ -48,7 +48,7 @@ $no = ($company->currentPage() - 1) * $company->perPage() + 1;
             <div class="card-body">
                 <div class="form-group">
                     <label for="name">Nama Perusahaan</label>
-                    <input type="text" name="company_name" class="form-control" value="{{ old('company_name') ?? @$companyEdit->name }}">
+                    <input type="text" name="company_name" class="form-control" value="{{ old('company_name') ?? @$companyEdit->name }}" required>
                     @error('company_name')
                     <span class="text-danger text-sm">{{ $message }}</span>
                     @enderror
@@ -63,7 +63,7 @@ $no = ($company->currentPage() - 1) * $company->perPage() + 1;
             <div class="card-body">
                 <div class="form-group">
                     <label for="name">Nama Perusahaan</label>
-                    <input type="text" name="company_name" class="form-control" value="{{ old('name', isset($data['name']) ? $data['name'] : '') }}">
+                    <input type="text" name="company_name" class="form-control" value="{{ old('name', isset($data['name']) ? $data['name'] : '') }}" required>
                     @error('company_name')
                     <span class="text-danger text-sm">{{ $message }}</span>
                     @enderror
@@ -87,7 +87,7 @@ $no = ($company->currentPage() - 1) * $company->perPage() + 1;
         
                 <div class="form-group">
                     <label for="direktur">Direktur</label>
-                    <input type="text" name="director" class="form-control" value="{{ old('director', isset($data['director']) ? $data['director'] : '') }}">
+                    <input type="text" name="director" class="form-control" value="{{ old('director', isset($data['director']) ? $data['director'] : '') }}" required>
                     @error('director')
                     <span class="text-danger text-sm">{{ $message }}</span>
                     @enderror
@@ -123,14 +123,14 @@ $no = ($company->currentPage() - 1) * $company->perPage() + 1;
                 </div>
                 <div class="form-group">
                     <label for="direktur">Password</label>
-                    <input type="password" name="password" class="form-control" autocomplete="off">
+                    <input type="password" name="password" class="form-control" autocomplete="off" required>
                     @error('password')
                     <span class="text-danger text-sm">{{ $message }}</span>
                     @enderror
                 </div>
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password:</label>
-                    <input type="password" id="password_confirmation" class="form-control" name="password_confirmation" placeholder="**********" autocomplete="off">
+                    <input type="password" id="password_confirmation" class="form-control" name="password_confirmation" placeholder="**********" autocomplete="off" required>
                     @error('password_confirmation')
                     <span class="text-danger text-sm">{{ $message }}</span>
                     @enderror
@@ -145,17 +145,19 @@ $no = ($company->currentPage() - 1) * $company->perPage() + 1;
     <hr>
     
     <h3>Daftar Company</h3>
-    
+
+    {{-- 
     <form action="{{ route('company.index') }}" method="get">
         <div class="d-flex flex-row-reverse">
             <div class="p-2">
                 <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
             </div>
             <div class="p-2">
-                <input type="text" name="employee" class="form-control" placeholder="Search">
+                <input type="text" name="company" class="form-control" placeholder="Search">
             </div>
         </div>
     </form>
+    --}}
     @endcanAccess
 
     <table class="table table-bordered">
@@ -176,10 +178,10 @@ $no = ($company->currentPage() - 1) * $company->perPage() + 1;
                 <form method="post" action="{{ route('company.destroy',$a) }}">
                     @csrf
                     @method('delete')
-                    @canAccess('edit','employees')
+                    @canAccess('edit','companies')
                     <a href="{{ route('company.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
                     @endcanAccess
-                    @canAccess('destroy','employees')
+                    @canAccess('destroy','companies')
                     <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                     @endcanAccess
                 </form>

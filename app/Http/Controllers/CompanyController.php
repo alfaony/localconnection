@@ -28,16 +28,6 @@ class CompanyController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -75,28 +65,17 @@ class CompanyController extends Controller
             }
 
             DB::commit();
-            return redirect()->back()->with('success',true);
+            return redirect()->back()->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);
             DB::rollback();
             Log::error($th);
-            return redirect()->back()->with('success',false);
+            return redirect()->back()->with('store',false);
         }
 
     }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Company  $company
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Company $company)
-    {
-        //
-    }
-
+    
     /**
      * Show the form for editing the specified resource.
      *
@@ -133,6 +112,7 @@ class CompanyController extends Controller
      */
     public function destroy(Company $company)
     {
-        //
+        $company->delete();
+        return redirect()->back()->with('delete',true);
     }
 }
