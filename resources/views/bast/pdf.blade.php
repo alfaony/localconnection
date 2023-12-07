@@ -55,7 +55,7 @@
                     @php $detail = $bast->project->reportProject->reportProjectDetail; @endphp
                     @foreach($detail as $a)
                     <li>
-                        {{ $a->name .' - ' }} <a href="{{ Storage::url('reports/' . $a->file) }}" class="text-primary" download title="{{ $a->file }}"> {{ $a->file }} </a>
+                        {{ $a->name .' - ' }}  <a href="{{ $a->url }}" class="text-primary">{{ $a->url }}</a>
                     </li>
                     @endforeach
                     @endif
@@ -74,7 +74,10 @@
                         <p>Diterima,</p>
                     </div>
                     
-                    <div class="col-11 text-right mt-5 mb-5" id="space">
+                    <div class="offset-1 col-2 mb-3 mt-3" id="space">
+                        <img src="{{ asset('logo/paraf.png') }}" alt="Signature" style="with:auto; height:150px">
+                    </div>
+                    <div class="col-8">
 
                     </div>
 

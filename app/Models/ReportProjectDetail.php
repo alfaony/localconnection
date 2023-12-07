@@ -29,4 +29,14 @@ class ReportProjectDetail extends Model
     {
         return $this->belongsTo(ReportProject::class)->withTrashed();
     }
+
+    public function sortUrl()
+    {
+        return $this->hasOne(SortUrl::class,'source_id');
+    }
+
+    public function getUrlAttribute()
+    {
+        return $this->sortUrl ? url('/')."/download/".$this->sortUrl->slug : '';
+    }
 }

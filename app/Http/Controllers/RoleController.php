@@ -223,7 +223,9 @@ class RoleController extends Controller
             //throw $th;
             DB::rollback();
             Log::error($th);
-            dd($th);
+            // dd($th);
+            return redirect()->route('role.index')
+            ->with('success',false);
         }
     }
 

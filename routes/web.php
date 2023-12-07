@@ -20,6 +20,7 @@ use App\Http\Controllers\RoleController;
 
 use App\Http\Controllers\PricelistController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\SortUrlController;
 
 
 
@@ -105,6 +106,8 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   
   Route::resource('company', CompanyController::class);
 });
+
+Route::get('download/{slug}',[SortUrlController::class,'index'])->name('download.index');
 
 
 

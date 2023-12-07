@@ -73,7 +73,7 @@
                 {data: 'date', name: 'date', orderable: true},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
-            order: [[0, 'desc']],
+            order: [[1, 'desc']],
         });
     });
 </script>

@@ -33,18 +33,19 @@ class ReportProjectRequest extends FormRequest
             'file' => 'required|array',
             'name.*' => 'required|string',
             'link.*' => 'required|url',
-            'file.*' => 'required|file|mimes:pdf|max:5000', // Contoh validasi untuk file PDF dengan maksimum 5MB.
+            'file.*' => 'required|file|max:5000', // Contoh validasi untuk file PDF dengan maksimum 5MB.
         ];
 
         if ($this->isMethod('patch')) 
         {
             $rules = 
             [
+                'file' => 'nullable|array',
                 'date' => 'required|date',
                 'work_order' => 'required|string',
                 'project' => 'required|string',
                 'link.*' => 'required|url',
-                'file.*' => 'nullable|file|mimes:pdf|max:5000', // Contoh validasi untuk file PDF dengan maksimum 5MB.
+                'file.*' => 'nullable|file|max:5000', // Contoh validasi untuk file PDF dengan maksimum 5MB.
             ];
         }
 
@@ -63,13 +64,12 @@ class ReportProjectRequest extends FormRequest
             'project.required' => 'Proyek diperlukan.',
             'project.string' => 'Proyek harus dalam format teks.',
             
-            'link_report.required' => 'Link laporan diperlukan.',
-            'link_report.url' => 'Format link laporan tidak valid.',
+            'link.required' => 'Link laporan diperlukan.',
+            'link.url' => 'Format link laporan tidak valid.',
             
-            'report_file.required' => 'File laporan diperlukan.',
-            'report_file.file' => 'Mohon unggah file yang valid.',
-            'report_file.mimes' => 'Hanya file PDF yang diperbolehkan.',
-            'report_file.max' => 'Ukuran file maksimal adalah 5MB.',
+            'file.required' => 'File laporan diperlukan.',
+            'file.file' => 'Mohon unggah file yang valid.',
+            'file.max' => 'Ukuran file maksimal adalah 5MB.',
         ];
     }
 

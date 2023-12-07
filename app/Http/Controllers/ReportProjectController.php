@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 use App\Http\Requests\ReportProjectRequest;
 
@@ -15,7 +16,7 @@ use App\Models\ReportProject;
 use App\Models\ReportProjectDetail;
 use App\Models\WorkOrder;
 use App\Models\Project;
-
+use App\Models\SortUrl;
 
 class ReportProjectController extends Controller
 {
@@ -89,6 +90,19 @@ class ReportProjectController extends Controller
                 }
 
                 $reportProject->reportProjectDetail()->save($reportProjectDetail);
+
+                if($file[$i])
+                {
+                    $urlTarget = "/reports/". $filename;
+                    $originalName = $file[$i]->getClientOriginalName();
+
+                    $sortUrl = new SortUrl();
+                    $sortUrl->name = $name[$i];
+                    $sortUrl->link_target = $urlTarget;
+                    $sortUrl->source = "App\Models\ReportProjectDetail";
+                    $sortUrl->source_id = $reportProjectDetail->id;
+                    $sortUrl->save();
+                }
             }
     
             
@@ -138,8 +152,7 @@ class ReportProjectController extends Controller
         try {
             $reportProject->date = $request->post('date');
             $reportProject->work_order_id = $request->post('work_order');
-            $reportProject->project_id = $request->post('project');
-            // $reportProject->link_report = $request->post('link_report');        
+            $reportProject->project_id = $request->post('project');  
             $reportProject->user_updated_id = Auth::user()->id;
             $reportProject->save();
     
@@ -152,13 +165,15 @@ class ReportProjectController extends Controller
             for ($i = 0; $i < count($name); $i++) 
             {
                 $id = $ids[$i];
+                $checkFile = $file[$i] ?? false;
+
                 if(!$id)
                 {
                     $reportProjectDetail = new ReportProjectDetail;
                     $reportProjectDetail->name = $name[$i];
                     $reportProjectDetail->link = $link[$i];
                     
-                    if ($file && $file[$i]) 
+                    if ($checkFile) 
                     {
                         $filename = time() . '_' . $file[$i]->getClientOriginalName();
                         $filePath = $file[$i]->storeAs('reports', $filename, 'public');
@@ -166,19 +181,47 @@ class ReportProjectController extends Controller
                     }
     
                     $reportProject->reportProjectDetail()->save($reportProjectDetail);
+
+                    if($checkFile)
+                    {
+                        $urlTarget = "/reports/". $filename;
+                        $originalName = $file[$i]->getClientOriginalName();
+                        
+                        $sortUrl = new SortUrl();
+                        $sortUrl->name = $name[$i];
+                        $sortUrl->link_target = $urlTarget;
+                        $sortUrl->source = "App\Models\ReportProjectDetail";
+                        $sortUrl->source_id = $reportProjectDetail->id;
+                        $sortUrl->save();
+                    }
+
                 }else
                 {
                     $reportProjectDetail = ReportProjectDetail::find($id);
                     $reportProjectDetail->name = $name[$i];
                     $reportProjectDetail->link = $link[$i];
                     
-                    if ($file && $file[$i]) 
+                    if ($checkFile) 
                     {
                         $filename = time() . '_' . $file[$i]->getClientOriginalName();
                         $filePath = $file[$i]->storeAs('reports', $filename, 'public');
                         $reportProjectDetail->file = $filename;
                     }
+
                     $reportProjectDetail->save();
+
+                    if($checkFile)
+                    {
+                        $urlTarget = "/reports/". $filename;
+                        $originalName = $file[$i]->getClientOriginalName();
+                        
+                        $sortUrl = new SortUrl();
+                        $sortUrl->name = $name[$i];
+                        $sortUrl->link_target = $urlTarget;
+                        $sortUrl->source = "App\Models\ReportProjectDetail";
+                        $sortUrl->source_id = $reportProjectDetail->id;
+                        $sortUrl->save();
+                    }
                 }
     
             }
@@ -188,7 +231,7 @@ class ReportProjectController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
             DB::rollback();
-            dd($th);
+            // dd($th);
             return redirect()->to(route('report-project.index'))->with('update', false);
         }
     }
