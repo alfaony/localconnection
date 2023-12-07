@@ -146,10 +146,11 @@ class ReportProjectController extends Controller
      * @param  \App\Models\ReportProject  $ReportProject
      * @return \Illuminate\Http\Response
      */
-    public function update(ReportProjectRequest $request, ReportProject $reportProject)
+    public function update(ReportProjectRequest $request, $slug)
     {
         DB::beginTransaction();
         try {
+            $reportProject = ReportProject::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             $reportProject->date = $request->post('date');
             $reportProject->work_order_id = $request->post('work_order');
             $reportProject->project_id = $request->post('project');  
@@ -242,8 +243,9 @@ class ReportProjectController extends Controller
      * @param  \App\Models\ReportProject  $ReportProject
      * @return \Illuminate\Http\Response
      */
-    public function destroy(ReportProject $ReportProject)
+    public function destroy($slug)
     {
+        $ReportProject = ReportProject::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $ReportProject->delete();
         return redirect()->back()->with('delete',true);
     }

@@ -189,11 +189,12 @@ class WorkOrderController extends Controller
      * @param  \App\Models\WorkOrder  $workOrder
      * @return \Illuminate\Http\Response
      */
-    public function update(WorkOrderRequest $request, WorkOrder $workOrder)
+    public function update(WorkOrderRequest $request, $slug)
     {
         DB::beginTransaction();
         try {
             // Simpan data WorkOrder
+            $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             $workOrder->date = $request->post('date');
             $workOrder->quote_id = $request->post('quote');
             $workOrder->user_created_id = Auth::user()->id;
@@ -271,8 +272,9 @@ class WorkOrderController extends Controller
      * @param  \App\Models\WorkOrder  $workOrder
      * @return \Illuminate\Http\Response
      */
-    public function destroy(WorkOrder $workOrder)
+    public function destroy($slug)
     {
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $workOrder->workOrderProduct()->delete();
         $workOrder->delete();
 

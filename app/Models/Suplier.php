@@ -56,6 +56,11 @@ class Suplier extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function workOrder()
+    {
+        return $this->belongsTo(WorkOrder::class);
+    }
+
     public function purchase()
     {
         return $this->hasMany(Purchase::class);

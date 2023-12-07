@@ -144,12 +144,13 @@ class SuplierController extends Controller
      * @param  \App\Models\Supplier  $supplier
      * @return \Illuminate\Http\Response
      */
-    public function update(SuplierRequest $request, Suplier $suplier)
+    public function update(SuplierRequest $request, $slug)
     {
         // dd($request->all());
         try {
             DB::beginTransaction();
-            //code...
+
+            $suplier = Suplier::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             $suplier->user_id = Auth::user()->id;
             $suplier->project_id = $request->post('project');
             $suplier->date = $request->post('date');
@@ -221,8 +222,9 @@ class SuplierController extends Controller
      * @param  \App\Models\Supplier  $supplier
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Suplier $suplier)
+    public function destroy($slug)
     {
+        $suplier = Suplier::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $suplier->purchase()->delete();
         $suplier->delete();
 
@@ -280,5 +282,34 @@ class SuplierController extends Controller
             'message' => 'okay',
             'data' => $price
         ];
+    }
+
+    /**
+     * Suggetion When Choose Supplier
+     */
+    public function suggestionQuote($id)
+    {
+        $quote = Quote::find($id);
+        $quoteProduct = $quote->quoteProduct 
+        ? $quote->quoteProduct()
+                ->select('product_id', 'qty', 'description', 'sort')
+                ->orderBy('sort')
+                ->get()
+                ->map(function($item) {
+                    return [
+                        'product_id' => $item->product_id,
+                        'qty' => $item->qty,
+                        'description' => $item->description,
+                    ];
+                })
+        : collect();
+        $quoteCustomer = $quote->customer ? $quote->customer->name : '' ;
+        
+        $data = 
+        [
+            'customer' => $quoteCustomer,
+            'product' => $quoteProduct
+        ];
+        return $data;
     }
 }

@@ -143,12 +143,13 @@ class QuoteController extends Controller
      * @param  \App\Models\Quote  $quote
      * @return \Illuminate\Http\Response
      */
-    public function update(QuoteRequest $request, Quote $quote)
+    public function update(QuoteRequest $request, $slug)
     {
         try 
         {
             DB::beginTransaction();
             $no = $request->post('nomor') ?? 0; 
+            $quote = Quote::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             $quote->customer_id = $request->post('customer');
             $quote->date = $request->post('date');
             $quote->tax = $request->post('tax');
@@ -217,7 +218,7 @@ class QuoteController extends Controller
      * @param  \App\Models\Quote  $quote
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Quote $quote)
+    public function destroy($slug)
     {
         DB::beginTransaction();
 
@@ -231,6 +232,7 @@ class QuoteController extends Controller
             
             // Delete
             // Menghapus relasi terlebih dahulu
+            $quote = Quote::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             $quote->quoteProduct()->delete();
             
             $quote->delete();

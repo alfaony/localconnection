@@ -155,12 +155,12 @@ class ManagerController extends Controller
      * @param  \App\Models\Managers  $managers
      * @return \Illuminate\Http\Response
      */
-    public function update(ManagerRequest $request, Manager $manager)
+    public function update(ManagerRequest $request, $slug)
     {
         // dd($request->all());
         try {
             DB::beginTransaction();
-
+            $manager = Manager::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             $manager->project_id = $request->input('project');
             $manager->user_id = Auth::user()->id;
             $manager->date = $request->input('date');
@@ -232,8 +232,9 @@ class ManagerController extends Controller
      * @param  \App\Models\Managers  $managers
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Manager $manager)
+    public function destroy($slug)
     {
+        $manager = Manager::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $manager->job()->delete();
         $manager->delete();
 

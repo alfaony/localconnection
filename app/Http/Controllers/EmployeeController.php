@@ -89,8 +89,9 @@ class EmployeeController extends Controller
      * @param  \App\Models\Employee  $employee
      * @return \Illuminate\Http\Response
      */
-    public function update(EmployeeRequest $request, Employee $employee)
+    public function update(EmployeeRequest $request,$slug)
     {
+        $employee = Employee::byCompany(Auth::user()->company_id)->where('slug', $slug)->first();
         $employee->user_id = Auth::user()->id;
         $employee->name = $request->post('name');
         $employee->phone = $request->post('phone');
@@ -107,8 +108,9 @@ class EmployeeController extends Controller
      * @param  \App\Models\Employee  $employee
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Employee $employee)
+    public function destroy($slug)
     {
+        $employee = Employee::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $employee->delete();
         return redirect()->back()->with('delete',true);
     }

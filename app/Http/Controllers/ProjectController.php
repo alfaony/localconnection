@@ -83,8 +83,9 @@ class ProjectController extends Controller
      * @param  \App\Models\Project  $project
      * @return \Illuminate\Http\Response
      */
-    public function update(ProjectRequest $request, Project $project)
+    public function update(ProjectRequest $request, $slug)
     {
+        $project = Project::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $project->user_id = Auth::user()->id;
         $project->title = $request->post('title');
         $project->budget = $request->post('budget');
@@ -103,8 +104,9 @@ class ProjectController extends Controller
      * @param  \App\Models\Project  $project
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Project $project)
+    public function destroy($slug)
     {
+        $project = Project::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $project->delete();
         return redirect()->back()->with('delete',true);
     }

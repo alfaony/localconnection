@@ -129,8 +129,9 @@ class AgreementLetterController extends Controller
      * @param  \App\Models\AgreementLetter  $agreementLetter
      * @return \Illuminate\Http\Response
      */
-    public function update(AgreementLetterRequest $request, AgreementLetter $agreementLetter)
+    public function update(AgreementLetterRequest $request, $slug)
     {
+        $agreementLetter = AgreementLetter::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $agreementLetter->date = $request->input('date');
         $agreementLetter->quote_id = $request->input('quote');
         $agreementLetter->payment_term = $request->input('payment_term');
@@ -153,8 +154,9 @@ class AgreementLetterController extends Controller
      * @param  \App\Models\AgreementLetter  $agreementLetter
      * @return \Illuminate\Http\Response
      */
-    public function destroy(AgreementLetter $agreementLetter)
+    public function destroy($slug)
     {
+        $agreementLetter = AgreementLetter::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $agreementLetter->delete();
         return redirect()->back()->with('delete',true);
     }

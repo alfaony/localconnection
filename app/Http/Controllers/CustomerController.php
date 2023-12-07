@@ -95,8 +95,9 @@ class CustomerController extends Controller
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\Response
      */
-    public function update(CustomerRequest $request, Customer $customer)
+    public function update(CustomerRequest $request, $slug)
     {
+        $customer = Customer::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $customer->name = $request->post('name');
         $customer->director = $request->post('director');
         $customer->pic = $request->post('pic');
@@ -117,8 +118,9 @@ class CustomerController extends Controller
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Customer $customer)
+    public function destroy($slug)
     {
+        $customer = Customer::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $customer->delete();
         return redirect()->back()->with('delete',true);
     }

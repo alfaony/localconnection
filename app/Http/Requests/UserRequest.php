@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Rules\MatchOldPassword;
+use App\Models\User;
 
 class UserRequest extends FormRequest
 {
@@ -31,16 +32,17 @@ class UserRequest extends FormRequest
             return [
                 'name'  =>  'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
-                'role' => 'nullable|uuid|exists:roles,id',
+                'role' => 'required|uuid|exists:roles,id',
                 'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
                 'password' => 'required|min:6',
                 'confirmPassword' => 'required|same:password',
             ];
         }else
         {
+            $user = User::where('slug',$userId)->first();
             $rules = [
                 'name'  =>  'required|string|max:255',
-                'email' => 'required|email|unique:users,email,' . $userId->id,
+                'email' => 'required|email|unique:users,email,' . $user->id,
                 'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
             ];   
 

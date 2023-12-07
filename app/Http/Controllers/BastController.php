@@ -113,8 +113,9 @@ class BastController extends Controller
      * @param  \App\Models\Basts  $basts
      * @return \Illuminate\Http\Response
      */
-    public function update(BastRequest $request, Bast $bast)
+    public function update(BastRequest $request, $slug)
     {
+        $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $bast->date = $request->input('date');
         $bast->work_order_id = $request->input('work_order');
         $bast->project_id = $request->input('project');
@@ -135,8 +136,9 @@ class BastController extends Controller
      * @param  \App\Models\Basts  $basts
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Bast $bast)
+    public function destroy($slug)
     {
+        $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $bast->delete();
         return redirect()->back()->with('delete',true);
     }
