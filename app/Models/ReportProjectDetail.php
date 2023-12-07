@@ -37,6 +37,6 @@ class ReportProjectDetail extends Model
 
     public function getUrlAttribute()
     {
-        return $this->sortUrl ? url('/')."/download/".$this->sortUrl->slug : '';
+        return $this->sortUrl ? url('/')."/".$this->sortUrl->slug : '';
     }
 }

@@ -21,7 +21,7 @@ class SuplierRequest extends FormRequest
             'product' => 'required|array',
             'product.*' => 'required|string|exists:products,id', // Contoh validasi jika product adalah ID dari tabel products
             'description' => 'required|array',
-            'description.*' => 'required|string|max:255',
+            'description.*' => 'required|string',
             'price.*' => 'required|numeric|min:0',
             'qty.*' => 'required|integer|min:0',
             'sub_total.*' => 'required|numeric|min:0',

@@ -13,6 +13,7 @@ use App\Models\Suplier;
 use App\Models\Project;
 use App\Models\Purchase;
 use App\Models\Product;
+use App\Models\WorkOrder;
 
 class SuplierController extends Controller
 {
@@ -39,7 +40,7 @@ class SuplierController extends Controller
     public function create(Request $request)
     {
         $nomor = $request->get('nomor');
-        $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('suplier')->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::now()->format('Y-m-d');
         $product = Product::byCompany(Auth::user()->company_id)->get();
 
@@ -129,7 +130,7 @@ class SuplierController extends Controller
     {
         $nomor = $request->nomor ?? 0 ;
         $suplier = Suplier::where('slug', $slug)->firstOrFail();
-        $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('suplier')->orWhere('id', $suplier->project_id)->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::parse($suplier->created_at)->format('Y-m-d');
         $product = Product::byCompany(Auth::user()->company_id)->get();
 
@@ -287,11 +288,11 @@ class SuplierController extends Controller
     /**
      * Suggetion When Choose Supplier
      */
-    public function suggestionQuote($id)
+    public function suggestionWorkOrder($id)
     {
-        $quote = Quote::find($id);
-        $quoteProduct = $quote->quoteProduct 
-        ? $quote->quoteProduct()
+        $workOrder = WorkOrder::find($id);
+        $workOrderProduct = $workOrder->workOrderProduct 
+        ? $workOrder->workOrderProduct()
                 ->select('product_id', 'qty', 'description', 'sort')
                 ->orderBy('sort')
                 ->get()
@@ -303,12 +304,10 @@ class SuplierController extends Controller
                     ];
                 })
         : collect();
-        $quoteCustomer = $quote->customer ? $quote->customer->name : '' ;
         
         $data = 
         [
-            'customer' => $quoteCustomer,
-            'product' => $quoteProduct
+            'product' => $workOrderProduct
         ];
         return $data;
     }

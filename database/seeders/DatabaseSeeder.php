@@ -23,5 +23,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForProductPriceSuplierSeeder::class);
         $this->call(PermissionPricelistSeeder::class);
         $this->call(PermissionForCompanySeeder::class);
+        $this->call(PermissionSuggestionWorkOrderSeeder::class);
     }
 }

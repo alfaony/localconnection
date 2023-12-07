@@ -36,6 +36,7 @@
             <input type="text" class="form-control" value="{{ $nomor }}" readonly>
             
             <label class="mt-3">Nama Proyek:</label>
+            @if(@$suplier)
             <select class="form-control" name="project" id="selectProject" required>
                 <option value="" selected disabled>Silahkan Pilih</option>
                 @forelse($project as $a)
@@ -45,6 +46,17 @@
                 @endforelse
                 <!-- Tambahkan opsi lain sesuai kebutuhan -->
             </select>
+            @else
+            <select class="form-control suplierSuggetion" name="project" id="selectProject" required>
+                <option value="" selected disabled>Silahkan Pilih</option>
+                @forelse($project as $a)
+                <option value="{{ $a->id }}" data-work_order_id="{{ $a->work_order_id }}" {{ @$suplier->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
+                @empty
+                <option disabled>Kosong</option>
+                @endforelse
+                <!-- Tambahkan opsi lain sesuai kebutuhan -->
+            </select>
+            @endif
             
             <label class="mt-3">Nama Supplier:</label>
             <input type="text" class="form-control" id="suplier" name="name" placeholder="Suplier" value="{{ old('name') ??  @$suplier->name }}" required>
@@ -204,23 +216,35 @@
 
         });
         
-        // $("#tabelPembelian").on("change keyup", ".price", function (e) 
-        // {
-        //     e.preventDefault();
+        $(".suplierSuggetion").change(function (e) 
+        { 
+            e.preventDefault();
+            var id = $(this).find(':selected').data('work_order_id');
+
+            if(id)
+            {
+                let url = "{{ route('suplier.suggestionWorkOrder',':id') }}";
+                url = url.replace(":id",id);
+
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    success: function (response) 
+                    {
+                        if(response.product)
+                        {
+                            $('#tabelPembelian tbody').empty();
+                            
+                            $.each(response.product, function (index, value) 
+                            { 
+                                addForm(value.product_id,value.price_buy,value.qty,value.description)    
+                            });
+                        }  
+                    }
+                });
+            }
             
-        //     key = $(this).data('keyss');
-
-        //     // die;
-        //     price = $('#price_'+key).val();
-        //     qty = $('#qty_'+key).val();
-
-            // subTotal = price * qty;
-            
-            // $("#sub_total_show_"+key).html(formatRupiah(subTotal,'Rp. '));
-            // $("#sub_total_"+key).val(subTotal);
-        //     hitungTotalKeseluruhan();
-
-        // }); 
+        }); 
         
         $("#tabelPembelian").on("change keyup", ".qty", function (e) 
         {
@@ -357,6 +381,55 @@
         }
     });
 
+    function addForm(defaultProductId = null, price = null, defaultQty = 1,defaultDescription = null) 
+    {
+        var noBaris = $('#tabelPembelian tbody tr').length + 1; // Menghitung jumlah baris untuk nomor baris selanjutnya
+        var indexKeys = generateRandomString(4);
+        var dataSelect = @json($product);
+        
+        var projectOptions = '';
+
+        $.each(dataSelect, function(index, product) {
+            var isSelected = product.id == defaultProductId ? 'selected' : '';
+            projectOptions += `<option value="${product.id}" data-key="${indexKeys}" ${isSelected}>${product.name} </option>`;
+        });
+
+        var row = `
+            <tr>
+                <td>${noBaris}</td>
+                <td width="15%">
+                    <select class="form-control productChange" name="product[]" id="product_${indexKeys}" required>
+                        <option value="" selected disabled>Pilih</option>
+                        ${projectOptions}
+                    </select>
+                </td>
+                <td width="10%"><input type="text" class="form-control thriveEditor" name="description[]" id="description_${indexKeys}" value="${defaultDescription}"  placeholder="Deskripsi" required></td>
+                <td id="price_show_${indexKeys}">
+                </td>
+                <td width="10%"> 
+                    <input type="hidden" name="price[]" class="form-control" data-keyss=${indexKeys} id="price_${indexKeys}" value="${price}" required>
+                    <input type="number" name="qty[]" class="form-control qty" data-keyss=${indexKeys} id="qty_${indexKeys}" placeholder="Jumlah" value="${defaultQty}" required>
+                </td>
+                <td id="sub_total_show_${indexKeys}">Rp 0</td>
+                <td>
+                    <input type="hidden" name="idChild[]" value="">
+                    <input type="hidden" name="sub_total[]" class="form-control" id="sub_total_${indexKeys}" placeholder="Harga Satuan">
+                    <button class="btn btn-danger btn-sm btnHapus"><i class="fa fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    
+        $('#tabelPembelian tbody').append(row);
+
+        $('#product_' + indexKeys).select2({
+            width: '100%'
+        });
+
+        generateThriveEditor(indexKeys,defaultDescription);
+
+        $('#product_' + indexKeys).trigger('change');
+    }
+    
     function productPrice(product,suplierProductId,callback)
     {
         $.ajax({

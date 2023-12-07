@@ -53,6 +53,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('user', UserController::class);
 
   Route::delete('suplier/deletePurchase/purchase/{purchase}',[SuplierController::class,'deletePurchase'])->name('suplier.destroy.purchase');
+  Route::get('suplier/suggestionWorkOrder/{id}/',[SuplierController::class,'suggestionWorkOrder'])->name('suplier.suggestionWorkOrder');
   Route::get('suplier/productPrice/counting',[SuplierController::class,'productPrice'])->name('suplier.productPrice');
   Route::resource('suplier', SuplierController::class);
 
@@ -107,7 +108,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('company', CompanyController::class)->except(['create','show']);;
 });
 
-Route::get('download/{slug}',[SortUrlController::class,'index'])->name('download.index');
+Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');
 
 
 

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Customer;
 
 class CustomerRequest extends FormRequest
 {
@@ -27,6 +28,8 @@ class CustomerRequest extends FormRequest
 
         if($customerId)
         {
+            $customer = Customer::where('slug',$customerId)->first();
+
             return [
                 'name' => 'required|string|max:255',
                 'director' => 'required|string|max:255',
@@ -34,7 +37,7 @@ class CustomerRequest extends FormRequest
                 'assignor' => 'required|string|max:255',
                 'address' => 'required|string',
                 'phone' => 'required|regex:/^[0-9]{10,15}$/',
-                'email' => 'required|email|unique:customers,email,' . $customerId->id,
+                'email' => 'required|email|unique:customers,email,' . $customer->id,
             ];
         }else
         {
