@@ -17,10 +17,10 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {   
-        $employee = Employee::where('name','like', '%' . $request->get('employee') . '%')
+        $employee = Employee::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('employee') . '%')
         ->OrderBy('name','asc')->paginate(10);
 
-        $totalEmployee = count(Employee::get());
+        $totalEmployee = Employee::byCompany(Auth::user()->company_id)->count();
 
         return view('employee.index',compact('employee','totalEmployee'));
     }
@@ -73,9 +73,9 @@ class EmployeeController extends Controller
      */
     public function edit($slug)
     {
-        $totalEmployee = count(Employee::get());
+        $totalEmployee = Employee::byCompany(Auth::user()->company_id)->count();
         $employeeEdit = Employee::where('slug', $slug)->firstOrFail();
-        $employee = Employee::OrderBy('name','asc')->paginate(10);
+        $employee = Employee::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->paginate(10);
     
         // Rest of your code for editing the project...
 
@@ -89,8 +89,9 @@ class EmployeeController extends Controller
      * @param  \App\Models\Employee  $employee
      * @return \Illuminate\Http\Response
      */
-    public function update(EmployeeRequest $request, Employee $employee)
+    public function update(EmployeeRequest $request,$slug)
     {
+        $employee = Employee::byCompany(Auth::user()->company_id)->where('slug', $slug)->first();
         $employee->user_id = Auth::user()->id;
         $employee->name = $request->post('name');
         $employee->phone = $request->post('phone');
@@ -107,8 +108,9 @@ class EmployeeController extends Controller
      * @param  \App\Models\Employee  $employee
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Employee $employee)
+    public function destroy($slug)
     {
+        $employee = Employee::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $employee->delete();
         return redirect()->back()->with('delete',true);
     }

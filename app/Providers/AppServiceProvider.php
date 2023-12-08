@@ -47,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
                 'report_projects',
                 'basts',
                 'reports',
+                'companies',
                 'setting_companies',
                 'roles'
             ];
@@ -61,7 +62,7 @@ class AppServiceProvider extends ServiceProvider
                 'pricelists' => [
                     'text'        => 'Price List',
                     'route'         => 'pricelist.index',
-                    'icon' => 'fa fa-briefcase',
+                    'icon' => 'fa fa-list-alt',
                 ],
                 'employees' => [
                     'text'        => 'Data Pekerja',
@@ -132,6 +133,11 @@ class AppServiceProvider extends ServiceProvider
                     'text'        => 'Setting Perusahaan',
                     'route'         => 'setting-company.index',
                     'icon' => 'fa fa-home',
+                ],
+                'companies' => [
+                    'text'        => 'Company',
+                    'route'         => 'company.index',
+                    'icon' => 'fa fa-building',
                 ],
                 'roles' => [
                     'text'        => 'Role Akses',

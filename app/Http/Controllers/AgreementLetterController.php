@@ -92,8 +92,8 @@ class AgreementLetterController extends Controller
      */
     function downloadPdf($slug)
     {
-        $quote = Quote::all();
-        $company = SettingCompany::get()->pluck('field_value','field_title');
+        $quote = Quote::byCompany(Auth::user()->company_id)->get();
+        $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
 
         $agreementLetter = AgreementLetter::where('slug',$slug)->first();
         
@@ -129,8 +129,9 @@ class AgreementLetterController extends Controller
      * @param  \App\Models\AgreementLetter  $agreementLetter
      * @return \Illuminate\Http\Response
      */
-    public function update(AgreementLetterRequest $request, AgreementLetter $agreementLetter)
+    public function update(AgreementLetterRequest $request, $slug)
     {
+        $agreementLetter = AgreementLetter::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $agreementLetter->date = $request->input('date');
         $agreementLetter->quote_id = $request->input('quote');
         $agreementLetter->payment_term = $request->input('payment_term');
@@ -153,8 +154,9 @@ class AgreementLetterController extends Controller
      * @param  \App\Models\AgreementLetter  $agreementLetter
      * @return \Illuminate\Http\Response
      */
-    public function destroy(AgreementLetter $agreementLetter)
+    public function destroy($slug)
     {
+        $agreementLetter = AgreementLetter::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $agreementLetter->delete();
         return redirect()->back()->with('delete',true);
     }
@@ -162,7 +164,7 @@ class AgreementLetterController extends Controller
     private function agreementLetterNumber()
     {
         $date = Carbon::now()->format('m/Y');
-        $nomor = AgreementLetter::withTrashed()->max('agreement_letter_number') + 1;
+        $nomor = AgreementLetter::byCompany(Auth::user()->company_id)->withTrashed()->max('agreement_letter_number') + 1;
 
         return 
         [
@@ -178,6 +180,7 @@ class AgreementLetterController extends Controller
     {
         // Fetch data for the DataTable
         $query = AgreementLetter::query();
+        $query->byCompany(Auth::user()->company_id);
 
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['number_result','date', 'slug'];

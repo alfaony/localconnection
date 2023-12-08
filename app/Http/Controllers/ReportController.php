@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Project;
 
 class ReportController extends Controller
@@ -14,7 +15,7 @@ class ReportController extends Controller
      */
     public function index(Request $request)
     {
-        $project = Project::bySearchReport($request->get('project'),$request->get('start_date'),$request->get('end_date'))->paginate(10);
+        $project = Project::byCompany(Auth::user()->company_id)->bySearchReport($request->get('project'),$request->get('start_date'),$request->get('end_date'))->paginate(10);
         return view('report.index',compact('project'));
     }
 }

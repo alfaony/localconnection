@@ -56,6 +56,11 @@ class Suplier extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function workOrder()
+    {
+        return $this->belongsTo(WorkOrder::class);
+    }
+
     public function purchase()
     {
         return $this->hasMany(Purchase::class);
@@ -68,5 +73,21 @@ class Suplier extends Model
         {
             $a->where('start_date', '<=', $today)->where('end_date', '>=', $today);
         });
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class)->withTrashed();
+    }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }
     }
 }

@@ -19,6 +19,8 @@ use App\Http\Controllers\SettingCompanyController;
 use App\Http\Controllers\RoleController;
 
 use App\Http\Controllers\PricelistController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\SortUrlController;
 
 
 
@@ -51,6 +53,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('user', UserController::class);
 
   Route::delete('suplier/deletePurchase/purchase/{purchase}',[SuplierController::class,'deletePurchase'])->name('suplier.destroy.purchase');
+  Route::get('suplier/suggestionWorkOrder/{id}/',[SuplierController::class,'suggestionWorkOrder'])->name('suplier.suggestionWorkOrder');
   Route::get('suplier/productPrice/counting',[SuplierController::class,'productPrice'])->name('suplier.productPrice');
   Route::resource('suplier', SuplierController::class);
 
@@ -101,6 +104,11 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('pricelist/dataTableJson', [PricelistController::class, 'dataTableJson'])->name('pricelist.datatable');
   Route::get('pricelist', [PricelistController::class, 'index'])->name('pricelist.index');
   Route::get('pricelist/show/{product}', [PricelistController::class, 'show'])->name('pricelist.show');
+  
+  Route::resource('company', CompanyController::class)->except(['create','show']);;
 });
+
+Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');
+
 
 

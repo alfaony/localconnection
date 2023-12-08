@@ -55,11 +55,22 @@ class AgreementLetter extends Model
     
     public function userCreate()
     {
-        return $this->belongsTo(User::class,'user_created_id','id');
+        return $this->belongsTo(User::class,'user_created_id','id')->withTrashed();
     }
 
     public function quote()
     {
         return $this->belongsTo(Quote::class)->withTrashed();
+    }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->whereHas('userCreate', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }
     }
 }

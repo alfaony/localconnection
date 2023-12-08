@@ -15,7 +15,6 @@ class PurchaseController extends Controller
      */
     public function destroy(Purchase $purchase)
     {
-        dd("here");
         $purchase->delete();
 
         return redirect()->back()->with('deletePurchase',true);

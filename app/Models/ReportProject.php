@@ -72,4 +72,15 @@ class ReportProject extends Model
     {
         return $this->hasMany(ReportProjectDetail::class);
     }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->whereHas('userCreate', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }
+    }
 }

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 use App\Http\Requests\ReportProjectRequest;
 
@@ -15,7 +16,7 @@ use App\Models\ReportProject;
 use App\Models\ReportProjectDetail;
 use App\Models\WorkOrder;
 use App\Models\Project;
-
+use App\Models\SortUrl;
 
 class ReportProjectController extends Controller
 {
@@ -37,7 +38,7 @@ class ReportProjectController extends Controller
     public function create()
     {
         $nomorReportProject = $this->reportProjectNumber()['result'];
-        $project = Project::whereDoesntHave('reportProject')->orderBy('created_at', 'desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('reportProject')->orderBy('created_at', 'desc')->get();
 
         // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
@@ -89,6 +90,19 @@ class ReportProjectController extends Controller
                 }
 
                 $reportProject->reportProjectDetail()->save($reportProjectDetail);
+
+                if($file[$i])
+                {
+                    $urlTarget = "/reports/". $filename;
+                    $originalName = $file[$i]->getClientOriginalName();
+
+                    $sortUrl = new SortUrl();
+                    $sortUrl->name = $name[$i];
+                    $sortUrl->link_target = $urlTarget;
+                    $sortUrl->source = "App\Models\ReportProjectDetail";
+                    $sortUrl->source_id = $reportProjectDetail->id;
+                    $sortUrl->save();
+                }
             }
     
             
@@ -116,6 +130,7 @@ class ReportProjectController extends Controller
         $reportProject = ReportProject::where('slug',$slug)->first();
         $nomorReportProject = $this->reportProjectNumber()['result'];
         $project = Project::whereDoesntHave('reportProject')
+        ->byCompany(Auth::user()->company_id)
         ->orWhere('id', $reportProject->project_id)
         ->orderBy('created_at', 'desc')->get();
         // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
@@ -131,14 +146,14 @@ class ReportProjectController extends Controller
      * @param  \App\Models\ReportProject  $ReportProject
      * @return \Illuminate\Http\Response
      */
-    public function update(ReportProjectRequest $request, ReportProject $reportProject)
+    public function update(ReportProjectRequest $request, $slug)
     {
         DB::beginTransaction();
         try {
+            $reportProject = ReportProject::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             $reportProject->date = $request->post('date');
             $reportProject->work_order_id = $request->post('work_order');
-            $reportProject->project_id = $request->post('project');
-            // $reportProject->link_report = $request->post('link_report');        
+            $reportProject->project_id = $request->post('project');  
             $reportProject->user_updated_id = Auth::user()->id;
             $reportProject->save();
     
@@ -151,13 +166,15 @@ class ReportProjectController extends Controller
             for ($i = 0; $i < count($name); $i++) 
             {
                 $id = $ids[$i];
+                $checkFile = $file[$i] ?? false;
+
                 if(!$id)
                 {
                     $reportProjectDetail = new ReportProjectDetail;
                     $reportProjectDetail->name = $name[$i];
                     $reportProjectDetail->link = $link[$i];
                     
-                    if ($file && $file[$i]) 
+                    if ($checkFile) 
                     {
                         $filename = time() . '_' . $file[$i]->getClientOriginalName();
                         $filePath = $file[$i]->storeAs('reports', $filename, 'public');
@@ -165,19 +182,47 @@ class ReportProjectController extends Controller
                     }
     
                     $reportProject->reportProjectDetail()->save($reportProjectDetail);
+
+                    if($checkFile)
+                    {
+                        $urlTarget = "/reports/". $filename;
+                        $originalName = $file[$i]->getClientOriginalName();
+                        
+                        $sortUrl = new SortUrl();
+                        $sortUrl->name = $name[$i];
+                        $sortUrl->link_target = $urlTarget;
+                        $sortUrl->source = "App\Models\ReportProjectDetail";
+                        $sortUrl->source_id = $reportProjectDetail->id;
+                        $sortUrl->save();
+                    }
+
                 }else
                 {
                     $reportProjectDetail = ReportProjectDetail::find($id);
                     $reportProjectDetail->name = $name[$i];
                     $reportProjectDetail->link = $link[$i];
                     
-                    if ($file && $file[$i]) 
+                    if ($checkFile) 
                     {
                         $filename = time() . '_' . $file[$i]->getClientOriginalName();
                         $filePath = $file[$i]->storeAs('reports', $filename, 'public');
                         $reportProjectDetail->file = $filename;
                     }
+
                     $reportProjectDetail->save();
+
+                    if($checkFile)
+                    {
+                        $urlTarget = "/reports/". $filename;
+                        $originalName = $file[$i]->getClientOriginalName();
+                        
+                        $sortUrl = new SortUrl();
+                        $sortUrl->name = $name[$i];
+                        $sortUrl->link_target = $urlTarget;
+                        $sortUrl->source = "App\Models\ReportProjectDetail";
+                        $sortUrl->source_id = $reportProjectDetail->id;
+                        $sortUrl->save();
+                    }
                 }
     
             }
@@ -187,7 +232,7 @@ class ReportProjectController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
             DB::rollback();
-            dd($th);
+            // dd($th);
             return redirect()->to(route('report-project.index'))->with('update', false);
         }
     }
@@ -198,8 +243,9 @@ class ReportProjectController extends Controller
      * @param  \App\Models\ReportProject  $ReportProject
      * @return \Illuminate\Http\Response
      */
-    public function destroy(ReportProject $ReportProject)
+    public function destroy($slug)
     {
+        $ReportProject = ReportProject::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $ReportProject->delete();
         return redirect()->back()->with('delete',true);
     }
@@ -219,6 +265,7 @@ class ReportProjectController extends Controller
     {
         // Fetch data for the DataTable
         $query = ReportProject::query();
+        $query->byCompany(Auth::user()->company_id);
 
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['date','number_result', 'slug'];
@@ -268,7 +315,7 @@ class ReportProjectController extends Controller
     private function reportProjectNumber()
     {
         $date = Carbon::now()->format('m/Y');
-        $nomor = ReportProject::withTrashed()->max('report_project_number') + 1;
+        $nomor = ReportProject::byCompany(Auth::user()->company_id)->withTrashed()->max('report_project_number') + 1;
 
         return 
         [

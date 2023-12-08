@@ -13,6 +13,13 @@
         {{-- Custom left links --}}
         @yield('content_top_nav_left')
     </ul>
+    
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="/">{{ Auth::user()->company ? Auth::user()->company->name : '' }} <span class="sr-only"></span></a>
+      </li>
+    </ul>
+
 
     {{-- Navbar right links --}}
     <ul class="navbar-nav ml-auto">

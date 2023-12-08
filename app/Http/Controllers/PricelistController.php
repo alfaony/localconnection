@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Access;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\Product;
 
@@ -38,6 +39,7 @@ class PricelistController extends Controller
     {
         // Fetch data for the DataTable
         $query = Product::query();
+        $query->byCompany(Auth::user()->company_id);
 
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['name', 'price_sell'];

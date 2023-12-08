@@ -17,7 +17,7 @@ class SettingCompanyController extends Controller
      */
     public function index()
     {
-        $data = SettingCompany::get()->pluck('field_value','field_title');
+        $data = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
         return view('setting_company.createOrEdit',compact('data'));
     }
 
@@ -46,7 +46,7 @@ class SettingCompanyController extends Controller
         
         DB::beginTransaction();
         try {
-            $settings = SettingCompany::get();
+            $settings = SettingCompany::byCompany(Auth::user()->company_id)->get();
 
             foreach ($settings as $setting) 
             {

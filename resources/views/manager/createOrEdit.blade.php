@@ -128,6 +128,8 @@
                 </td>
                 <td>
                     <input type="hidden" name="idChild[]" class="form-control" value="{{ $a->id }}" required>
+                    <input type="hidden" id="salary_monthly_{{ $a->id }}" name="salary_monthly[]" value="{{ $a->salary_monthly }}"class="form-control">
+                    <input type="hidden" id="salary_daily_{{ $a->id }}" name="salary_daily[]" value="{{ $a->salary_daily }}"class="form-control">
                     <input type="hidden" id="work_time_{{ $a->id }}" name="work_time[]" class="form-control">
                     <input type="hidden" id="total_{{ $a->id }}" name="total[]" value="{{ $a->total }}" class="form-control">
                     @canAccess('destroyJob','managers')
@@ -317,6 +319,8 @@
                 <td>
                     <input type="hidden" name="idChild[]" class="form-control" value="" required>
                     <input type="hidden" id="work_time_${key}" name="work_time[]" class="form-control">
+                    <input type="hidden" id="salary_monthly_${key}" name="salary_monthly[]" value=""class="form-control">
+                    <input type="hidden" id="salary_daily_${key}" name="salary_daily[]" value=""class="form-control">
                     <input type="hidden" id="total_${key}" name="total[]" class="form-control">
                     <button type="button" class="btn btn-danger btnHapus"><i class="fa fa-trash"></i></button>
                 </td>
@@ -388,12 +392,15 @@
         $.ajax({
             type: "GET",
             url: "{{ route('manager.counting') }}",
-            data: {paymentMethod:paymentMethod,employeeId:employeeId,salaryDaily:salaryDaily,salaryMontly:salaryMontly,startDate:startDate,endDate:endDate},
+            data: {paymentMethod:paymentMethod,employeeId:employeeId,salaryDaily:salaryDaily,salaryMontly:salaryMontly,startDate:startDate,endDate:endDate,jobId:key},
             success: function (response) 
             {
 
+                console.log(response);
                 if(response.data)
                 {
+                    $("#salary_monthly_"+key).val(response.data.salary_monthly);
+                    $("#salary_daily_"+key).val(response.data.salary_daily);
                     $("#work_time_"+key).val(response.data.duration);
                     $("#total_"+key).val(response.data.total);
 

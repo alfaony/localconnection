@@ -27,10 +27,10 @@ class ManagerController extends Controller
      */
     public function index(Request $request)
     {
-        $manager = Manager::where('name','like', '%' . $request->get('manager') . '%')
+        $manager = Manager::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('manager') . '%')
         ->OrderBy('created_at','asc')->paginate(10);
 
-        $totalManager = count(Manager::get());
+        $totalManager = Manager::byCompany(Auth::user()->company_id)->count();
         return view('manager.index',compact('manager','totalManager'));
     }
 
@@ -43,8 +43,8 @@ class ManagerController extends Controller
     {
         $nomor = $request->get('nomor') ?? 0;
 
-        $project = Project::get();
-        $employee = Employee::get();
+        $project = Project::byCompany(Auth::user()->company_id)->get();
+        $employee = Employee::byCompany(Auth::user()->company_id)->get();
         $dateNow = Carbon::now();
         $paymentMode = config('custom.paymentMode');
         $dateCreate = Carbon::now()->format('Y-m-d');
@@ -75,6 +75,8 @@ class ManagerController extends Controller
             $manager->save();
     
             $employee = $request->input('employee');
+            $salaryMonthly = $request->input('salary_monthly');
+            $salaryDaily = $request->input('salary_daily');
             $payment_method = $request->input('payment_method');
             $start_date = $request->input('start_date');
             $end_date = $request->input('end_date');
@@ -86,6 +88,8 @@ class ManagerController extends Controller
             {
                 $job = new Job();
                 $job->employee_id = $employee[$i];
+                $job->salary_monthly = $salaryMonthly[$i];
+                $job->salary_daily = $salaryDaily[$i];
                 $job->payment_method = $payment_method[$i];
                 $job->start_date = $start_date[$i];
                 $job->end_date = $end_date[$i];
@@ -133,8 +137,8 @@ class ManagerController extends Controller
     {
         $nomor = $request->get('nomor') ?? 0;
 
-        $project = Project::get();
-        $employee = Employee::get();
+        $project = Project::byCompany(Auth::user()->company_id)->get();
+        $employee = Employee::byCompany(Auth::user()->company_id)->get();
         $paymentMode = config('custom.paymentMode');
         $manager = Manager::where('slug', $slug)->firstOrFail();
         $dateNow = $manager->date ?? Carbon::now();
@@ -151,12 +155,12 @@ class ManagerController extends Controller
      * @param  \App\Models\Managers  $managers
      * @return \Illuminate\Http\Response
      */
-    public function update(ManagerRequest $request, Manager $manager)
+    public function update(ManagerRequest $request, $slug)
     {
         // dd($request->all());
         try {
             DB::beginTransaction();
-
+            $manager = Manager::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             $manager->project_id = $request->input('project');
             $manager->user_id = Auth::user()->id;
             $manager->date = $request->input('date');
@@ -165,6 +169,8 @@ class ManagerController extends Controller
             
             $manager->save();
     
+            $salaryMonthly = $request->input('salary_monthly');
+            $salaryDaily = $request->input('salary_daily');
             $employee = $request->input('employee');
             $payment_method = $request->input('payment_method');
             $start_date = $request->input('start_date');
@@ -181,19 +187,25 @@ class ManagerController extends Controller
                 {
                     $job = new Job();
                     $job->employee_id = $employee[$i];
+                    $job->salary_monthly = $salaryMonthly[$i];
+                    $job->salary_daily = $salaryDaily[$i];
                     $job->payment_method = $payment_method[$i];
                     $job->start_date = $start_date[$i];
                     $job->end_date = $end_date[$i];
                     $job->total = $total[$i];
+
                     $manager->job()->save($job);
                 }else
                 {
                     $job = Job::find($id);
                     $job->employee_id = $employee[$i];
+                    $job->salary_monthly = $salaryMonthly[$i];
+                    $job->salary_daily = $salaryDaily[$i];
                     $job->payment_method = $payment_method[$i];
                     $job->start_date = $start_date[$i];
                     $job->end_date = $end_date[$i];
                     $job->total = $total[$i];
+                    
                     $job->save();
                 }
             }
@@ -220,8 +232,9 @@ class ManagerController extends Controller
      * @param  \App\Models\Managers  $managers
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Manager $manager)
+    public function destroy($slug)
     {
+        $manager = Manager::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $manager->job()->delete();
         $manager->delete();
 
@@ -276,7 +289,20 @@ class ManagerController extends Controller
 
         $duration = $start->diffInDays($end) + ParamSchema::ONEDAY ;
 
-        $employee = Employee::find($request->get('employeeId'));
+        $job = Job::find($request->get('jobId'));
+        if($job)
+        {
+            if($job->salary_monthly && $job->salary_daily)
+            {
+                $employee = $job;
+            }else
+            {
+                $employee = Employee::find($request->get('employeeId'));
+            }
+        }else
+        {
+            $employee = Employee::find($request->get('employeeId'));
+        }
 
 
 
@@ -295,7 +321,9 @@ class ManagerController extends Controller
         $data = 
         [
             'total'=> $salary,
-            'duration' => $duration
+            'duration' => $duration,
+            'salary_daily' => $employee->salary_daily,
+            'salary_monthly' => $employee->salary_monthly
         ];
 
         return [

@@ -60,7 +60,7 @@ class WorkOrder extends Model
 
     public function userCreate()
     {
-        return $this->belongsTo(User::class,'user_created_id','id');
+        return $this->belongsTo(User::class,'user_created_id','id')->withTrashed();
     }
 
     public function quote()
@@ -78,6 +78,17 @@ class WorkOrder extends Model
         if($number_result)
         {
             return $query->where('number_result','like','%'.$number_result.'%');
+        }
+    }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->whereHas('userCreate', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
         }
     }
 }

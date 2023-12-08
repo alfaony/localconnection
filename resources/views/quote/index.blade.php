@@ -4,12 +4,7 @@
     <h1>Quote</h1>
 @stop
 
-@php
 
-$no = ($quote->currentPage() - 1) * $quote->perPage() + 1;
-$totalQuote = $totalQuote + 1; // Get the total number of projects
-
-@endphp
 
 @section('content')
 <div class="col-md-12">
@@ -128,13 +123,13 @@ $totalQuote = $totalQuote + 1; // Get the total number of projects
         $("#btnCreateSuplier").click(function (e) 
         { 
             e.preventDefault();
-            let no = "{{ $no }}";
             let url = "{{ route('quote.create') }}";
 
             window.location.href = url;
         });
     });
 </script>
+
 @stop
 @section('css')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">

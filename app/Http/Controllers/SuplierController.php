@@ -13,6 +13,7 @@ use App\Models\Suplier;
 use App\Models\Project;
 use App\Models\Purchase;
 use App\Models\Product;
+use App\Models\WorkOrder;
 
 class SuplierController extends Controller
 {
@@ -23,10 +24,10 @@ class SuplierController extends Controller
      */
     public function index(Request $request)
     {
-        $suplier = Suplier::where('name','like', '%' . $request->get('suplier') . '%')
+        $suplier = Suplier::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('suplier') . '%')
         ->OrderBy('created_at','asc')->paginate(10);
 
-        $totalSuplier = count(Suplier::get());
+        $totalSuplier = Suplier::byCompany(Auth::user()->company_id)->count();
 
         return view('suplier.index',compact('suplier','totalSuplier'));
     }
@@ -39,9 +40,9 @@ class SuplierController extends Controller
     public function create(Request $request)
     {
         $nomor = $request->get('nomor');
-        $project = Project::orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('suplier')->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::now()->format('Y-m-d');
-        $product = Product::all();
+        $product = Product::byCompany(Auth::user()->company_id)->get();
 
 
         return view('suplier.createOrEdit',compact('nomor','project','dateCreate','product'));
@@ -101,7 +102,7 @@ class SuplierController extends Controller
             return redirect()->to(route('suplier.index'))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             Log::error($th);
             DB::rollback();
             return redirect()->to(route('suplier.index'))->with('store',false);
@@ -129,9 +130,9 @@ class SuplierController extends Controller
     {
         $nomor = $request->nomor ?? 0 ;
         $suplier = Suplier::where('slug', $slug)->firstOrFail();
-        $project = Project::orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('suplier')->orWhere('id', $suplier->project_id)->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::parse($suplier->created_at)->format('Y-m-d');
-        $product = Product::all();
+        $product = Product::byCompany(Auth::user()->company_id)->get();
 
 
         return view('suplier.createOrEdit',compact('suplier','nomor','project','dateCreate','product'));   
@@ -144,12 +145,13 @@ class SuplierController extends Controller
      * @param  \App\Models\Supplier  $supplier
      * @return \Illuminate\Http\Response
      */
-    public function update(SuplierRequest $request, Suplier $suplier)
+    public function update(SuplierRequest $request, $slug)
     {
         // dd($request->all());
         try {
             DB::beginTransaction();
-            //code...
+
+            $suplier = Suplier::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             $suplier->user_id = Auth::user()->id;
             $suplier->project_id = $request->post('project');
             $suplier->date = $request->post('date');
@@ -221,8 +223,9 @@ class SuplierController extends Controller
      * @param  \App\Models\Supplier  $supplier
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Suplier $suplier)
+    public function destroy($slug)
     {
+        $suplier = Suplier::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $suplier->purchase()->delete();
         $suplier->delete();
 
@@ -280,5 +283,32 @@ class SuplierController extends Controller
             'message' => 'okay',
             'data' => $price
         ];
+    }
+
+    /**
+     * Suggetion When Choose Supplier
+     */
+    public function suggestionWorkOrder($id)
+    {
+        $workOrder = WorkOrder::find($id);
+        $workOrderProduct = $workOrder->workOrderProduct 
+        ? $workOrder->workOrderProduct()
+                ->select('product_id', 'qty', 'description', 'sort')
+                ->orderBy('sort')
+                ->get()
+                ->map(function($item) {
+                    return [
+                        'product_id' => $item->product_id,
+                        'qty' => $item->qty,
+                        'description' => $item->description,
+                    ];
+                })
+        : collect();
+        
+        $data = 
+        [
+            'product' => $workOrderProduct
+        ];
+        return $data;
     }
 }

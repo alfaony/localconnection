@@ -19,11 +19,12 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {   
-        $project = Project::where('title','like', '%' . $request->get('project') . '%')
+        $project = Project::byCompany(Auth::user()->company_id)->where('title','like', '%' . $request->get('project') . '%')
         ->OrderBy('created_at','asc')->paginate(10);
 
-        $totalProject = count(Project::get());
+        $totalProject = Project::byCompany(Auth::user()->company_id)->count();
         $workOrder = WorkOrder::whereDoesntHave('project')
+        ->byCompany(Auth::user()->company_id)
         ->orderBy('created_at','desc')
         ->get();
 
@@ -60,11 +61,12 @@ class ProjectController extends Controller
      */
     public function edit($slug)
     {
-        $totalProject = count(Project::get());
+        $totalProject = Project::byCompany(Auth::user()->company_id)->count();
         $projectEdit = Project::where('slug', $slug)->firstOrFail();
-        $project = Project::OrderBy('created_at','asc')->paginate(10);
+        $project = Project::byCompany(Auth::user()->company_id)->OrderBy('created_at','asc')->paginate(10);
         // $workOrder = WorkOrder::all();
         $workOrder = WorkOrder::whereDoesntHave('project')
+        ->byCompany(Auth::user()->company_id)
         ->orWhere('id', $projectEdit->work_order_id)
         ->orderBy('created_at','desc')
         ->get();
@@ -81,8 +83,9 @@ class ProjectController extends Controller
      * @param  \App\Models\Project  $project
      * @return \Illuminate\Http\Response
      */
-    public function update(ProjectRequest $request, Project $project)
+    public function update(ProjectRequest $request, $slug)
     {
+        $project = Project::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $project->user_id = Auth::user()->id;
         $project->title = $request->post('title');
         $project->budget = $request->post('budget');
@@ -101,8 +104,9 @@ class ProjectController extends Controller
      * @param  \App\Models\Project  $project
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Project $project)
+    public function destroy($slug)
     {
+        $project = Project::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $project->delete();
         return redirect()->back()->with('delete',true);
     }

@@ -18,10 +18,10 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $product = Product::where('name','like', '%' . $request->get('product') . '%')
+        $product = Product::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('product') . '%')
         ->OrderBy('name','asc')->paginate(10);
 
-        $totalProduct = count(Product::get());
+        $totalProduct = Product::byCompany(Auth::user()->company_id)->count();
 
         return view('product.index',compact('product','totalProduct'));
     }
@@ -77,9 +77,9 @@ class ProductController extends Controller
     {
         $nomor = $request->get('nomor') ?? 0;
 
-        $totalProduct = count(Product::get());
+        $totalProduct = Product::byCompany(Auth::user()->company_id)->count();
         $productEdit = Product::where('slug', $slug)->firstOrFail();
-        $product = Product::OrderBy('name','asc')->paginate(10);
+        $product = Product::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->paginate(10);
         
         return view('product.index', compact('productEdit','product','totalProduct','nomor'));
     }
@@ -91,8 +91,9 @@ class ProductController extends Controller
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function update(ProductRequest $request, Product $product)
+    public function update(ProductRequest $request, $slug)
     {
+        $product = Product::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $product->name = $request->post('name');
         $product->price_buy = $request->post('price_buy');
         $product->price_sell = $request->post('price_sell');
@@ -110,8 +111,9 @@ class ProductController extends Controller
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Product $product)
+    public function destroy($slug)
     {
+        $product = Product::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $product->delete();
         return redirect()->back()->with('delete',true);
     }

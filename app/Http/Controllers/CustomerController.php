@@ -18,10 +18,10 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
-        $customer = Customer::where('name','like', '%' . $request->get('customer') . '%')
+        $customer = Customer::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('customer') . '%')
         ->OrderBy('name','asc')->paginate(10);
 
-        $totalCustomer = count(Customer::get());
+        $totalCustomer = Customer::byCompany(Auth::user()->company_id)->count();
 
         return view('customer.index',compact('customer','totalCustomer'));
     }
@@ -81,9 +81,9 @@ class CustomerController extends Controller
     {
         $nomor = $request->get('nomor') ?? 0;
 
-        $totalCustomer = count(Customer::get());
+        $totalCustomer = Customer::byCompany(Auth::user()->company_id)->count();
         $customerEdit = Customer::where('slug', $slug)->firstOrFail();
-        $customer = Customer::OrderBy('name','asc')->paginate(10);
+        $customer = Customer::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->paginate(10);
         
         return view('customer.index', compact('customerEdit','customer','totalCustomer','nomor'));
     }
@@ -95,8 +95,9 @@ class CustomerController extends Controller
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\Response
      */
-    public function update(CustomerRequest $request, Customer $customer)
+    public function update(CustomerRequest $request, $slug)
     {
+        $customer = Customer::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $customer->name = $request->post('name');
         $customer->director = $request->post('director');
         $customer->pic = $request->post('pic');
@@ -117,8 +118,9 @@ class CustomerController extends Controller
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Customer $customer)
+    public function destroy($slug)
     {
+        $customer = Customer::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $customer->delete();
         return redirect()->back()->with('delete',true);
     }

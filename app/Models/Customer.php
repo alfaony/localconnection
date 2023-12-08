@@ -51,4 +51,20 @@ class Customer extends Model
     {
         return 'slug';
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class,'user_created_id')->withTrashed();
+    }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }
+    }
 }
