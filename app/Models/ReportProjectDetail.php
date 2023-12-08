@@ -32,7 +32,7 @@ class ReportProjectDetail extends Model
 
     public function sortUrl()
     {
-        return $this->hasOne(SortUrl::class,'source_id');
+        return $this->hasOne(SortUrl::class,'source_id')->latest();
     }
 
     public function getUrlAttribute()

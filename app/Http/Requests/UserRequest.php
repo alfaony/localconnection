@@ -39,10 +39,10 @@ class UserRequest extends FormRequest
             ];
         }else
         {
-            $user = User::where('slug',$userId)->first();
+            // $user = User::where('slug',$userId)->first();
             $rules = [
                 'name'  =>  'required|string|max:255',
-                'email' => 'required|email|unique:users,email,' . $user->id,
+                'email' => 'required|email|unique:users,email,' . $userId->id,
                 'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
             ];   
 

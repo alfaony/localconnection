@@ -174,7 +174,7 @@
                         <input type="text" class="form-control" id="link_" name="link[]" required>
                     </td>
                     <td>
-                        <input type="file" class="form-control" id="file_" name="file[]" >
+                        <input type="file" class="form-control" id="file_" name="file[]" required>
                     </td>
                     <td>
                         <button class="btn btn-danger btnHapus"><i class="fa fa-trash"></i></button>

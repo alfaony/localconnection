@@ -68,7 +68,7 @@ $no = ($customer->currentPage() - 1) * $customer->perPage() + 1;
                 </div>
                 <div class="form-group">
                     <label>No. Handphone:</label>
-                    <input type="text" name="phone" class="form-control" placeholder="Handphone" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" value="{{ old('phone') ?? @$customerEdit->phone }}">
+                    <input type="text" name="phone" class="form-control" placeholder="Handphone" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" value="{{ old('phone') ?? @$customerEdit->phone }}" required>
                 </div>
                 <div class="form-group">
                     <label>Email:</label>
