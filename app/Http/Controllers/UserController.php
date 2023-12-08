@@ -33,7 +33,7 @@ class UserController extends Controller
                 ->where('email','like', '%' . $request->get('email') . '%')
                 ->where('id',Auth::user()->id)
                 ->OrderBy('name','asc')->paginate(10);
-            $totalUser = count(User::byCompany(Auth::user()->company_id)->where('delete_able',1)->where('id',Auth::user()->id)->get());
+            $totalUser = User::byCompany(Auth::user()->company_id)->where('delete_able',1)->where('id',Auth::user()->id)->count();
 
         }
         elseif(Auth::user()->role->name == RoleSchema::ADMIN )
@@ -45,7 +45,7 @@ class UserController extends Controller
             ->byCompany(Auth::user()->company_id)
             ->where('email','like', '%' . $request->get('email') . '%')
             ->OrderBy('name','asc')->paginate(10);
-            $totalUser = count(User::byCompany(Auth::user()->company_id)->where('delete_able',1)->get());
+            $totalUser = User::byCompany(Auth::user()->company_id)->where('delete_able',1)->count();
         }
         else
         {       
@@ -56,7 +56,7 @@ class UserController extends Controller
             $user = User::where('delete_able',1)
                     ->where('email','like', '%' . $request->get('email') . '%')
                     ->OrderBy('name','asc')->paginate(10);
-            $totalUser = count(User::where('delete_able',1)->get());
+            $totalUser = User::where('delete_able',1)->count();
         }
 
 
@@ -105,7 +105,7 @@ class UserController extends Controller
                 ->byCompany(Auth::user()->company_id)
                 ->where('id',Auth::user()->id)
                 ->OrderBy('name','asc')->paginate(10);
-            $totalUser = count(User::where('delete_able',1)->byCompany(Auth::user()->company_id)->where('id',Auth::user()->id)->get());
+            $totalUser = User::where('delete_able',1)->byCompany(Auth::user()->company_id)->where('id',Auth::user()->id)->count();
 
         }
         elseif(Auth::user()->role->name == RoleSchema::ADMIN )
@@ -116,7 +116,7 @@ class UserController extends Controller
             $user = User::where('delete_able',1)
             ->byCompany(Auth::user()->company_id)
             ->OrderBy('name','asc')->paginate(10);
-             $totalUser = count(User::byCompany(Auth::user()->company_id)->where('delete_able',1)->get());
+             $totalUser = User::byCompany(Auth::user()->company_id)->where('delete_able',1)->count();
         }
         else
         {         
@@ -127,7 +127,7 @@ class UserController extends Controller
 
             $user = User::where('delete_able',1)
             ->OrderBy('name','asc')->paginate(10);
-            $totalUser = count(User::where('delete_able',1)->get());
+            $totalUser = User::where('delete_able',1)->count();
         }
     
 

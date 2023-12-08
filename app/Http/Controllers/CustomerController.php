@@ -21,7 +21,7 @@ class CustomerController extends Controller
         $customer = Customer::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('customer') . '%')
         ->OrderBy('name','asc')->paginate(10);
 
-        $totalCustomer = count(Customer::byCompany(Auth::user()->company_id)->get());
+        $totalCustomer = Customer::byCompany(Auth::user()->company_id)->count();
 
         return view('customer.index',compact('customer','totalCustomer'));
     }
@@ -81,7 +81,7 @@ class CustomerController extends Controller
     {
         $nomor = $request->get('nomor') ?? 0;
 
-        $totalCustomer = count(Customer::byCompany(Auth::user()->company_id)->get());
+        $totalCustomer = Customer::byCompany(Auth::user()->company_id)->count();
         $customerEdit = Customer::where('slug', $slug)->firstOrFail();
         $customer = Customer::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->paginate(10);
         

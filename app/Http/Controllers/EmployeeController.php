@@ -20,7 +20,7 @@ class EmployeeController extends Controller
         $employee = Employee::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('employee') . '%')
         ->OrderBy('name','asc')->paginate(10);
 
-        $totalEmployee = count(Employee::byCompany(Auth::user()->company_id)->get());
+        $totalEmployee = Employee::byCompany(Auth::user()->company_id)->count();
 
         return view('employee.index',compact('employee','totalEmployee'));
     }
@@ -73,7 +73,7 @@ class EmployeeController extends Controller
      */
     public function edit($slug)
     {
-        $totalEmployee = count(Employee::byCompany(Auth::user()->company_id)->get());
+        $totalEmployee = Employee::byCompany(Auth::user()->company_id)->count();
         $employeeEdit = Employee::where('slug', $slug)->firstOrFail();
         $employee = Employee::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->paginate(10);
     

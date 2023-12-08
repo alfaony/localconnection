@@ -30,7 +30,7 @@ class ManagerController extends Controller
         $manager = Manager::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('manager') . '%')
         ->OrderBy('created_at','asc')->paginate(10);
 
-        $totalManager = count(Manager::byCompany(Auth::user()->company_id)->get());
+        $totalManager = Manager::byCompany(Auth::user()->company_id)->count();
         return view('manager.index',compact('manager','totalManager'));
     }
 

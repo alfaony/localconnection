@@ -22,7 +22,7 @@ class ProjectController extends Controller
         $project = Project::byCompany(Auth::user()->company_id)->where('title','like', '%' . $request->get('project') . '%')
         ->OrderBy('created_at','asc')->paginate(10);
 
-        $totalProject = count(Project::byCompany(Auth::user()->company_id)->get());
+        $totalProject = Project::byCompany(Auth::user()->company_id)->count();
         $workOrder = WorkOrder::whereDoesntHave('project')
         ->byCompany(Auth::user()->company_id)
         ->orderBy('created_at','desc')
@@ -61,7 +61,7 @@ class ProjectController extends Controller
      */
     public function edit($slug)
     {
-        $totalProject = count(Project::byCompany(Auth::user()->company_id)->get());
+        $totalProject = Project::byCompany(Auth::user()->company_id)->count();
         $projectEdit = Project::where('slug', $slug)->firstOrFail();
         $project = Project::byCompany(Auth::user()->company_id)->OrderBy('created_at','asc')->paginate(10);
         // $workOrder = WorkOrder::all();

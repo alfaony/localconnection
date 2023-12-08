@@ -27,7 +27,7 @@ class SuplierController extends Controller
         $suplier = Suplier::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('suplier') . '%')
         ->OrderBy('created_at','asc')->paginate(10);
 
-        $totalSuplier = count(Suplier::byCompany(Auth::user()->company_id)->get());
+        $totalSuplier = Suplier::byCompany(Auth::user()->company_id)->count();
 
         return view('suplier.index',compact('suplier','totalSuplier'));
     }
