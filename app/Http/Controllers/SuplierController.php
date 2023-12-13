@@ -86,6 +86,7 @@ class SuplierController extends Controller
             for ($i = 0; $i < count($descriptions); $i++) 
             {
                 $purchase = new Purchase();
+                $purchase->sort = $i + 1;
                 $purchase->product_id = $product[$i];
                 $purchase->description = $descriptions[$i];
                 $purchase->price = $prices[$i];
@@ -183,6 +184,7 @@ class SuplierController extends Controller
                 if(!$id)
                 {
                     $purchase = new Purchase();
+                    $purchase->sort = $i + 1;
                     $purchase->product_id = $product[$i];
                     $purchase->description = $descriptions[$i];
                     $purchase->price = $prices[$i];
@@ -193,6 +195,7 @@ class SuplierController extends Controller
                 }else
                 {
                     $purchases = Purchase::find($id);
+                    $purchases->sort = $i + 1;
                     $purchases->product_id = $product[$i];
                     $purchases->description = $descriptions[$i];
                     $purchases->price = $prices[$i];

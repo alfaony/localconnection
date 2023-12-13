@@ -40,7 +40,7 @@
             <select class="form-control" name="project" id="selectProject" required>
                 <option value="" selected disabled>Silahkan Pilih</option>
                 @forelse($project as $a)
-                <option value="{{ $a->id }}" {{ @$suplier->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
+                <option value="{{ $a->id }}" data-work_order_total="{{ $a->workOrder->total }}" {{ @$suplier->project_id == $a->id ? 'selected' : '' }} >{{ $a->title }}</option>
                 @empty
                 <option disabled>Kosong</option>
                 @endforelse
@@ -50,7 +50,7 @@
             <select class="form-control suplierSuggetion" name="project" id="selectProject" required>
                 <option value="" selected disabled>Silahkan Pilih</option>
                 @forelse($project as $a)
-                <option value="{{ $a->id }}" data-work_order_id="{{ $a->work_order_id }}" {{ @$suplier->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
+                <option value="{{ $a->id }}" data-work_order_id="{{ $a->work_order_id }}" data-work_order_total="{{ $a->workOrder->total }}" {{ @$suplier->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
                 @empty
                 <option disabled>Kosong</option>
                 @endforelse
@@ -74,6 +74,7 @@
         <div class="col-md-6">
             <label>Tanggal:</label>
             <input type="date" name="date" class="form-control" value="{{ old('date') ?? @$suplier->date }}" min="{{ $dateCreate }}" required>
+            <input type="hidden" id="work_order_total" value="{{ @$suplier->workOrder ? @$suplier->workOrder->total : '' }}">
         </div>
     </div>
     
@@ -92,7 +93,7 @@
         <tbody>
             @if(@$suplier)
             @php $noChild = 1; @endphp
-            @foreach($suplier->purchase as $a)
+            @foreach($suplier->purchase->sortBy('sort') as $a)
             <tr data-keyss="{{$a->id}}">
                 <td width="5%">{{ $noChild++ }}</td>
                 <td width="15%">
@@ -204,13 +205,13 @@
             {
                 // This code runs after the price is updated
                 $("#price_"+key).val(price).change();
-                $("#price_show_"+key).html(formatRupiah(price,'Rp. '));
-
+                
                 subTotal = price * qty;
-            
+                
                 $("#sub_total_show_"+key).html(formatRupiah(subTotal,'Rp. '));
                 $("#sub_total_"+key).val(subTotal);
-
+                
+                formatRupiahLoad(key);
                 hitungTotalKeseluruhan();
             });
 
@@ -246,7 +247,31 @@
             
         }); 
         
-        $("#tabelPembelian").on("change keyup", ".qty", function (e) 
+        $("#tabelPembelian").on("change keyup", ".price", function (e) 
+        {
+            console.log("heree");
+            e.preventDefault();
+            key = $(this).data('keyss');
+            
+            // die;
+            qty = $('#qty_'+key).val();
+            price = $('#price_'+key).val();
+
+            if(qty <= 0)
+            {
+                qty = 0;
+                $("#qty_"+key).val(0);
+            }
+
+            subTotal = price * qty;
+            console.log(subTotal);
+
+            $("#sub_total_show_"+key).html(formatRupiah(subTotal,'Rp. '));
+            $("#sub_total_"+key).val(subTotal);
+            hitungTotalKeseluruhan();
+        });
+
+        $("#tabelPembelian").on("change", ".qty", function (e) 
         {
             console.log("heree");
             e.preventDefault();
@@ -274,6 +299,15 @@
 <script>
     $('#selectProject').select2({
         placeholder: 'Pilih Proyek'
+    }).on('change', function () 
+    {
+        // Ambil nilai data-work_order_total dari opsi yang dipilih
+        var selectedOption = $(this).find(':selected');
+        var workOrderTotal = selectedOption.data('work_order_total');
+
+        // Setel nilai ke elemen dengan ID total_work_order
+        $('#work_order_total').val(workOrderTotal);
+        hitungTotalKeseluruhan();
     });
 
     $('.selectConfig').select2({
@@ -284,50 +318,7 @@
     var indexKeys = 
 
     $('#btnTambahBaris').click(function() {
-        var noBaris = $('#tabelPembelian tbody tr').length + 1; // Menghitung jumlah baris untuk nomor baris selanjutnya
-        var indexKeys = generateRandomString(4);
-        var dataSelect = @json($product);
-            
-        var projectOptions = '';
-
-        $.each(dataSelect, function(index, product) 
-        {
-            projectOptions += `<option value="${product.id}" data-key="${indexKeys}">${product.name} </option>`;
-        });
-
-        var row = `
-        <tr>
-            <td>${noBaris}</td>
-            <td width="15%">
-                <select class="form-control productChange" name="product[]" id="product_${indexKeys}" required>
-                    <option value="" selected disabled>Pilih</option>
-                    ${projectOptions}
-                </select>
-            </td>
-            <td width="10%"><input type="text" class="form-control thriveEditor" name="description[]" id="description_${indexKeys}" placeholder="Deskripsi" required></td>
-            <td id="price_show_${indexKeys}">
-                Rp. 0
-            </td>
-            <td width="10%"> 
-                <input type="hidden" name="price[]" class="form-control" data-keyss=${indexKeys} id="price_${indexKeys}" value="" required>
-                <input type="number" name="qty[]" class="form-control qty" data-keyss=${indexKeys} id="qty_${indexKeys}" placeholder="Jumlah" value="1" required>
-            </td>
-            <td id="sub_total_show_${indexKeys}">Rp 0</td>
-            <td>
-                <input type="hidden" name="idChild[]" value="">
-                <input type="hidden" name="sub_total[]" class="form-control" id="sub_total_${indexKeys}" placeholder="Harga Satuan">
-                <button class="btn btn-danger btn-sm btnHapus"><i class="fa fa-trash"></i></button>
-            </td>
-        </tr>
-    `;
-    
-        $('#tabelPembelian tbody').append(row);
-
-        $('#product_' + indexKeys).select2({
-            width: '100%'
-        });
-
-        generateThriveEditor(indexKeys);
+        addForm();
     });
 
     $('#tabelPembelian').on('click', '.btnHapus', function() {
@@ -404,7 +395,8 @@
                     </select>
                 </td>
                 <td width="10%"><input type="text" class="form-control thriveEditor" name="description[]" id="description_${indexKeys}" value="${defaultDescription}"  placeholder="Deskripsi" required></td>
-                <td id="price_show_${indexKeys}">
+                <td>
+                    <input type="text" class="form-control price" id="price_show_${indexKeys}" oninput="formatRupiahUpdate(this,'${indexKeys}')" name="price_show[]" data-keyss=${indexKeys} value="${price}" required>
                 </td>
                 <td width="10%"> 
                     <input type="hidden" name="price[]" class="form-control" data-keyss=${indexKeys} id="price_${indexKeys}" value="${price}" required>
@@ -426,7 +418,6 @@
         });
 
         generateThriveEditor(indexKeys,defaultDescription);
-
         $('#product_' + indexKeys).trigger('change');
     }
     
@@ -460,8 +451,18 @@
         }
         return result;
     }
-
-    function formatRupiahFormat(input, inputNonFormat) 
+    
+    function formatRupiahLoad(id)
+    {
+        let getPrice = document.getElementById("price_"+id).value;
+        if (getPrice) 
+        {
+            document.getElementById("price_show_"+id).value = getPrice;
+            formatRupiahUpdate(document.getElementById("price_show_"+id),id); // Format default value
+        }
+    }
+    
+    function formatRupiahUpdate(input, inputNonFormat) 
     {
 
         let numStr = input.value.toString().replace(/[^,\d]/g, '');
@@ -478,8 +479,8 @@
         rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
 
         if (numStr === "" || parseInt(numStr) === 0) {
-            input.value = '';
-            numStr = '';
+            input.value = '0';
+            numStr = '0';
         } else {
             // Menghapus angka 0 di depan jika input diawali dengan 0
             rupiah = rupiah.replace(/^0+/, '');
@@ -487,7 +488,8 @@
         }
 
         // Update 'salary' input with non-formatted number
-        document.getElementById(inputNonFormat).value = parseInt(numStr);
+        document.getElementById("price_"+inputNonFormat).value = numStr;
+        $("#price_show_"+inputNonFormat).trigger('change');
     }
 
     function formatRupiah(angka, prefix)
@@ -510,8 +512,9 @@
 
     function hitungTotalKeseluruhan() 
     {
-        console.log("work");
         var total = 0;
+        var submit = true;
+        var workOrderTotal = $("#work_order_total").val();
         
         $('#tabelPembelian tbody tr').each(function() 
         {
@@ -520,13 +523,29 @@
             // Update sub total untuk baris ini
         });
         
-        console.log();
         // Update total keseluruhan
+        if(total <= workOrderTotal)
+        {
+            $('#submit').prop('disabled', false);
+        }else
+        {
+            // console.log(total);
+            // console.log(workOrderTotal);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Total Pembelian Melebihi Budget!'+formatRupiah(workOrderTotal,'Rp. '),
+                text: 'Silakan kurangi total pembelian agar sesuai dengan budget.',
+                timerProgressBar: true,
+                showConfirmButton: false,
+                timer: 3500  
+            });
+
+            $('#submit').prop('disabled', true);
+        }
+
         $('#totalKeseluruhan').text(formatRupiah(total,'Rp. '));
         $("#total").val(total);
     }
-
-
 </script>
 
 @stop

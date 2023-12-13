@@ -31,10 +31,12 @@ class AgreementLetterController extends Controller
      */
     public function create()
     {
-        // $quote = Quote::orderBy('created_at','desc')->get();
+        $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $agreementTemplate = $company['template_perjanjian'];
+
         $userCreate = Auth::user()->name;
         $nomorAgreementLetter = $this->agreementLetterNumber()['result'];
-        return view('agreement_letter.createOrEdit',compact('userCreate','nomorAgreementLetter'));
+        return view('agreement_letter.createOrEdit'.$agreementTemplate,compact('userCreate','nomorAgreementLetter'));
     }
 
     /**
@@ -77,12 +79,14 @@ class AgreementLetterController extends Controller
     public function edit($slug)
     {
         // $quote = Quote::orderBy('created_at','desc')->get();
+        $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $agreementTemplate = $company['template_perjanjian'];
 
         $agreementLetter = AgreementLetter::where('slug',$slug)->first();
         $userCreate = $agreementLetter->userCreate ? $agreementLetter->userCreate->name : '';
         $nomorAgreementLetter = $agreementLetter->number_result ?? '';
 
-        return view('agreement_letter.createOrEdit',compact('userCreate','nomorAgreementLetter','agreementLetter'));
+        return view('agreement_letter.createOrEdit'.$agreementTemplate,compact('userCreate','nomorAgreementLetter','agreementLetter'));
     }
 
 
@@ -94,6 +98,7 @@ class AgreementLetterController extends Controller
     {
         $quote = Quote::byCompany(Auth::user()->company_id)->get();
         $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $agreementTemplate = $company['template_perjanjian'];
 
         $agreementLetter = AgreementLetter::where('slug',$slug)->first();
         
@@ -113,13 +118,18 @@ class AgreementLetterController extends Controller
             '11' => 'November',
             '12' => 'Desember',
         ];
-        $month = Carbon::now()->format('m');
+
+        $now = Carbon::now()->locale('id');
+        $now->settings(['formatFunction' => 'translatedFormat']);
+        $dateNow = $now->format('l, j F Y');
+
+        $monthNumber = Carbon::now()->format('m');
         $year = Carbon::now()->format('Y');
         $date = Carbon::now()->format('d');
-        $month = $bulan_indonesia[$month];
+        $month = $bulan_indonesia[$monthNumber];
+        
 
-
-        return view('agreement_letter.pdf',compact('quote','userCreate','nomorAgreementLetter','agreementLetter', 'month', 'year', 'date' ,'company'));
+        return view('agreement_letter.pdf'.$agreementTemplate,compact('quote','userCreate','nomorAgreementLetter','agreementLetter', 'month', 'year', 'date' ,'company' ,'monthNumber','dateNow'));
     }
 
     /**

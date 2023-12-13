@@ -24,7 +24,8 @@ class CompanyController extends Controller
     public function index()
     {
         $company = Company::paginate(10);
-        return view('company.index',compact('company'));
+        $agreementTemplate = config('custom.agreementTemplate');
+        return view('company.index',compact('company', 'agreementTemplate'));
     }
 
     /**
@@ -53,7 +54,7 @@ class CompanyController extends Controller
             $user->company_id = $company->id;
             $user->save();
     
-            $field = ['name' => $request->post('company_name'),'director'=> $request->post('director'),'address' => $request->post('address'),'npwp_number' => $request->post('npwp_number'),'currency'=>'','currency_usd'=>"",'nib_file'=>'','acta_file'=> '','npwp_file' => '','signature_file' => ''];
+            $field = ['name' => $request->post('company_name'),'director'=> $request->post('director'),'address' => $request->post('address'),'npwp_number' => $request->post('npwp_number'),'currency'=>'','currency_usd'=>"",'nib_file'=>'','acta_file'=> '','npwp_file' => '','signature_file' => '','template_perjanjian' => $request->post('template_perjanjian')];
     
             foreach ($field as $key => $value) 
             {
