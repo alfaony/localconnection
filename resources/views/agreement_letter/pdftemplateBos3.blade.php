@@ -26,10 +26,10 @@
                         KANTOR MAYA
                     </strong></p>
                     <p class="text-center mb-3"><strong>
-                        NO. {{ $agreementLetter->agreement_letter_number }}/office plus/{{ $monthNumber }}/XXIII
+                        NO. {{ $agreementLetter->agreement_letter_number ?? '' }}/office plus/{{ $monthNumber ?? ''}}/{{ $yearToRomawi ?? '' }}
                     </strong></p>
                     <p class="mt-5 text-justify">
-                        Pada hari ini {{ $dateNow }}, bertempat di Jakarta, ditandatangani perjanjian sewa - menyewa antara CV. OFFICE PLUS, yang berkedudukan di {{ $company['address'] }} selanjutnya disebut PIHAK PERTAMA, surat perjanjian ini berakhir Rabu, 04 September 2024, dengan :
+                        Pada hari ini {{ $dateNow }}, bertempat di Jakarta, ditandatangani perjanjian sewa - menyewa antara CV. OFFICE PLUS, yang berkedudukan di {!! $agreementLetter->rent_address ?? '' !!} selanjutnya disebut PIHAK PERTAMA, surat perjanjian ini berakhir {{ $agreementLetter->rent_end_duration_id ?? '' }}, dengan :
                     </p>
                     <table class="table table-bordered">
                         <tr>
@@ -37,7 +37,7 @@
                                 Perusahaan
                             </td>
                             <td>
-                                
+                                {{ $agreementLetter->quote ? $agreementLetter->quote->customer->name : '' }}
                             </td>
                         </tr>
                         <tr>
@@ -45,7 +45,7 @@
                                 Nama
                             </td>
                             <td>
-                                
+                                {{ $agreementLetter->quote ? $agreementLetter->quote->customer->director : '' }}
                             </td>
                         </tr>
                         <tr>
@@ -53,7 +53,7 @@
                                 Alamat sesuai kartu identitas
                             </td>
                             <td>
-                                
+                                {{ $agreementLetter->quote ? $agreementLetter->quote->customer->address : '' }}
                             </td>
                         </tr>
                         <tr>
@@ -61,7 +61,7 @@
                                 Telepon
                             </td>
                             <td>
-                                
+                                {{ $agreementLetter->quote ? $agreementLetter->quote->customer->phone : '' }}
                             </td>
                         </tr>
                         <tr>
@@ -69,7 +69,7 @@
                                 Kota
                             </td>
                             <td>
-                                
+                                {{ $agreementLetter->quote ? $agreementLetter->quote->customer->city : '' }}
                             </td>
                         </tr>
                         <tr>
@@ -77,14 +77,44 @@
                                 Jenis Industri
                             </td>
                             <td>
-                                
+                                {{ $agreementLetter->quote ? $agreementLetter->quote->customer->industry : '' }}
                             </td>
                         </tr>
                     </table>
 
+                    @if($agreementLetter->commission_name)
                     <p class="mt-5 mb-0">
                         Selanjutnya akan disebut sebagai <strong>PIHAK KEDUA.</strong>
                     </p>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>
+                                Nama
+                            </td>
+                            <td>
+                                Alamat
+                            </td>
+                            <td>
+                                Telepon
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                {{ $agreementLetter->commission_name ?? '' }}
+                            </td>
+                            <td>
+                                {{ $agreementLetter->commission_address ?? '' }}
+                            </td>
+                            <td>
+                                {{ $agreementLetter->commission_phone ?? '' }}
+                            </td>
+                        </tr>
+                    </table>
+                    @endif
+                    <p class="text-justify mt-5 mb-5">
+                        Untuk selanjutnya <strong>PIHAK PERTAMA</strong> dan <strong>PIHAK KEDUA</strong> secara bersama - sama akan disebut <strong>“PARA PIHAK”</strong>
+                    </p>
+
                     <p>
                         Para pihak terlebih dahulu menerangkan sebagai berikut: 
                     </p>
@@ -101,38 +131,31 @@
                         </li>
                     </ul>
 
-                    <table class="table table-bordered">
-                        <tr>
-                            <td>
-                                Nama
-                            </td>
-                            <td>
-                                Alamat
-                            </td>
-                            <td>
-                                Telepon
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-
-                            </td>
-                            <td>
-                                
-                            </td>
-                            <td>
-                                
-                            </td>
-                        </tr>
-                    </table>
-                    <p class="text-justify mt-5 mb-5">
-                        Untuk selanjutnya <strong>PIHAK PERTAMA</strong> dan <strong>PIHAK KEDUA</strong> secara bersama - sama akan disebut <strong>“PARA PIHAK”</strong>
-                    </p>
-
                     <p class="text-justify mt-5 mb-5">
                         Berdasarkan hal - hal tersebut diatas, para pihak sepakat untuk melaksanakan perjanjian sewa - menyewa ini ( Selanjutnya disebut “Perjanjian”), dengan ketentuan - ketentuan dan syarat - syarat sebagai berikut 
                     </p>
+                    @if(!$agreementLetter->commission_name)
+                    <div id="pasal1A">
+                        <p class="text-center mb-3"><strong>
+                            PASAL 1
+                        </strong></p>
+                        <p class="text-center mb-3"><strong>
+                            RUANG LINGKUP PERJANJIAN
+                        </strong></p>
+                        <ol>
+                            <li>
+                                PIHAK PERTAMA menyewakan sebuah layanan kantor maya / virtual, beserta fasilitas - fasilitas yang termasuk di dalamnya sesuai yang ditentukan oleh PIHAK PERTAMA pada saat perjanjian ini dibuat kepada PIHAK KEDUA. Dimana kantor maya / virtual, tidak memeliki bentuk secara fisik, namun berupa fasilitas - fasilitas siap	pakai yang dapat digunakan secara bersama oleh beberapa entitas sesuai dengan hak terbatas yang dimiliki masing - masing.
+                            </li>
+                        </ol>
+                    </div>
+                    @else
+                    <div id="pasal1B">&nbsp;</div>
+                    @endif
 
+                </div>
+                <!-- Row kanan -->
+                <div class="offset-1 col-6">
+                    @if($agreementLetter->commission_name)
                     <p class="text-center mb-3"><strong>
                         PASAL 1
                     </strong></p>
@@ -144,11 +167,7 @@
                             PIHAK PERTAMA menyewakan sebuah layanan kantor maya / virtual, beserta fasilitas - fasilitas yang termasuk di dalamnya sesuai yang ditentukan oleh PIHAK PERTAMA pada saat perjanjian ini dibuat kepada PIHAK KEDUA. Dimana kantor maya / virtual, tidak memeliki bentuk secara fisik, namun berupa fasilitas - fasilitas siap	pakai yang dapat digunakan secara bersama oleh beberapa entitas sesuai dengan hak terbatas yang dimiliki masing - masing.
                         </li>
                     </ol>
-                    <p>&nbsp;</p>
-
-                </div>
-                <!-- Row kanan -->
-                <div class="offset-1 col-6">
+                    @endif
                     <p class="text-center mb-3"><strong>
                         PASAL 2
                     </strong></p>
@@ -157,7 +176,7 @@
                     </strong></p>
                     <ol>
                         <li>
-                            PIHAK PERTAMA memiliki secara utuh dan sah sesuai hukum yang berlaku atas sebidang tanah dan bangunan diatasnya, berbentuk rukan (Rumah Kantor) di Ruko Garden Shopping Arcade Blok B No. 8DH Jl. Letjen S.parman RT.015/RT.005 Tanjung Duren Selatan, Kec. Grogol Petamburan Jakarta Barat. DKI Jakarta 11470, beserta selutuh fasilitas yang berada di dalamnya.
+                            PIHAK PERTAMA memiliki secara utuh dan sah sesuai hukum yang berlaku atas sebidang tanah dan bangunan diatasnya, berbentuk rukan (Rumah Kantor) di {{ $agreementLetter->rent_address ?? '' }}, beserta selutuh fasilitas yang berada di dalamnya.
                         </li>
                         <li>
                             PIHAK PERTAMA berhak menggunakan, menyewakan dan merubah fasilitas di dalam bangunan tanpa pemberitahuan dahulu kepada PIHAK KEDUA.
@@ -187,10 +206,7 @@
                             PIHAK KEDUA wajib melaporkan kepada PIHAK PERTAMA atas transaksi jual beli / serah terima barang dalam jumlah besar yaitu melebihi 30 item barnag, artau melebihi nilai Rp. 1.000.000.000,- ( Satu Miliar Rupiah ) di dalam gedung OFFICEPLUS untuk diperbantukan pengawas dan penjagaan. 
                         </li>
                     </ol>
-                </div>
-            </div>
-            <div class="row"> 
-                <div class="col-5">
+
                     <p class="text-center mb-3"><strong>
                         PASAL 3
                     </strong></p>
@@ -199,7 +215,7 @@
                     </strong></p>
                     <ol>
                         <li>
-                            PIHAK KEDUA berhak untuk menggunakan alamat “ Ruko Garden Shopping Arcade Blok B No.8DH Jl. Letjen S. parman RT.015/RT.005 Tanjung Duren Selatan, Kec. Grogol Petamburan Jakarta Barat. DKI Jakarta 11470 dalam materi promosi, legalitas perusahaan, dan kegiatan surat menyurat kantor.
+                            PIHAK KEDUA berhak untuk menggunakan alamat “ {{ $agreementLetter->rent_address ?? '' }} dalam materi promosi, legalitas perusahaan, dan kegiatan surat menyurat kantor.
                         </li>
                         <li>
                             PIHAK KEDUA berhak mendapatkan fasilitas - fasilitas pendukung dan layanan kantor maya/virtual sesuai dengan paket yang disewa dari PIHAK PERTAMA. 
@@ -211,7 +227,10 @@
                             PIHAK KEDUA wajib melaporkan terlebih dahulu kepada PIHAK PERTAMA apabila ingin melakukan transaksi dalam ruang meeting / gedung.
                         </li>
                     </ol>
-
+                </div>
+            </div>
+            <div class="row"> 
+                <div class="col-5">
                     <p class="text-center mb-3"><strong>
                         PASAL 4
                     </strong></p>
@@ -253,7 +272,7 @@
                             PARA PIHAK sepakat dan setuju bahwa pembayaran yang telah dilakukan tidak dapat dikembalikan dan seluruh pembayaran dilakukan di awal sebelum penggunaan layanan dimulai. Seluruh biaya administrasi perjanjian ini ditanggung oleh PIHAK KEDUA.
                         </li>
                         <li>
-                            PARA PIHAK sepakat biaya yang dikenakan untuk layanan virtua office 1 tahun terhitung sejak 18 September 2023 hingga 18 September 2024 adalah sebesar Rp. 3.000.000. Pemotongan pajak penghasilan pasal 4 ayat 2, dapat dilakukan dengan memberikan bukti potong dari PIHAK KEDUA kepada PIHAK PERTAMA . Apabila dalam kurun waktu 3 bukaln sejak terjadi pemotongan dan tidak diberikan bukti potong, maka PIHAK PERTAMA berhak menagihkan kembali kekurangan pembayaran tersebut kepada PIHAK KEDUA. 
+                            PARA PIHAK sepakat biaya yang dikenakan untuk layanan virtua office {{ $agreementLetter->rent_count }} terhitung sejak {{ $agreementLetter->rent_start_duration_id_no_day }} hingga {{ $agreementLetter->rent_end_duration_id_no_day }} adalah sebesar {{ 'Rp. '.number_format($agreementLetter->rent_price,0,',','.') }}. Pemotongan pajak penghasilan pasal 4 ayat 2, dapat dilakukan dengan memberikan bukti potong dari PIHAK KEDUA kepada PIHAK PERTAMA . Apabila dalam kurun waktu 3 bukaln sejak terjadi pemotongan dan tidak diberikan bukti potong, maka PIHAK PERTAMA berhak menagihkan kembali kekurangan pembayaran tersebut kepada PIHAK KEDUA. 
                         </li>
                     </ol>
                 </div>
@@ -348,6 +367,18 @@
                             </p>
                         </div> -->
                     </div>
+                    @if($agreementLetter->commission_name)
+                    <div class="row mt-5 mb-5 text-center">
+                        <div class="offset-4 col-5">
+                            <p class="mb-0">
+                                {{ $agreementLetter->commission_name ?? '' }}
+                            </p>
+                            <p>
+                                Penjamin  
+                            </p> 
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
 
@@ -1634,6 +1665,14 @@
         {
             border: 1px solid black;
             border-collapse: collapse;
+        }
+        #pasal1A
+        {
+            min-height: 385px;
+        }
+        #pasal1B
+        {
+            min-height: 230px;
         }
     }
     

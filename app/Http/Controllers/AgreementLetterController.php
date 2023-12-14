@@ -62,6 +62,14 @@ class AgreementLetterController extends Controller
         $agreementLetter->period_term_english = $request->input('period_term_english');
         $agreementLetter->other_term_english = $request->input('other_term_english');
 
+        $agreementLetter->rent_address = $request->input('rent_address');
+        $agreementLetter->rent_start_duration = $request->input('rent_start_duration');
+        $agreementLetter->rent_end_duration = $request->input('rent_end_duration');
+        $agreementLetter->rent_price = $request->input('rent_price');
+        $agreementLetter->commission_name = $request->input('commission_name');
+        $agreementLetter->commission_phone = $request->input('commission_phone');
+        $agreementLetter->commission_address = $request->input('commission_address');
+
         $agreementLetter->user_created_id = Auth::user()->id;
         $agreementLetter->user_updated_id = Auth::user()->id;
 
@@ -125,11 +133,13 @@ class AgreementLetterController extends Controller
 
         $monthNumber = Carbon::now()->format('m');
         $year = Carbon::now()->format('Y');
+        $yearGenerate = Carbon::now()->format('y');
         $date = Carbon::now()->format('d');
         $month = $bulan_indonesia[$monthNumber];
+        $yearToRomawi = $this->toRomawi($yearGenerate);
         
 
-        return view('agreement_letter.pdf'.$agreementTemplate,compact('quote','userCreate','nomorAgreementLetter','agreementLetter', 'month', 'year', 'date' ,'company' ,'monthNumber','dateNow'));
+        return view('agreement_letter.pdf'.$agreementTemplate,compact('quote','userCreate','nomorAgreementLetter','agreementLetter', 'month', 'year', 'date' ,'company' ,'monthNumber','dateNow', 'yearToRomawi'));
     }
 
     /**
@@ -151,6 +161,14 @@ class AgreementLetterController extends Controller
         $agreementLetter->period_term_english = $request->input('period_term_english');
         $agreementLetter->other_term_english = $request->input('other_term_english');
 
+        $agreementLetter->rent_address = $request->input('rent_address');
+        $agreementLetter->rent_start_duration = $request->input('rent_start_duration');
+        $agreementLetter->rent_end_duration = $request->input('rent_end_duration');
+        $agreementLetter->rent_price = $request->input('rent_price');
+        $agreementLetter->commission_name = $request->input('commission_name');
+        $agreementLetter->commission_phone = $request->input('commission_phone');
+        $agreementLetter->commission_address = $request->input('commission_address');
+        
         $agreementLetter->user_updated_id = Auth::user()->id;
 
         $agreementLetter->save();
@@ -248,5 +266,34 @@ class AgreementLetterController extends Controller
         }
 
         return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+    }
+
+    private function toRomawi($number)
+    {
+        $map = [
+            'M'  => 1000,
+            'CM' => 900,
+            'D'  => 500,
+            'CD' => 400,
+            'C'  => 100,
+            'XC' => 90,
+            'L'  => 50,
+            'XL' => 40,
+            'X'  => 10,
+            'IX' => 9,
+            'V'  => 5,
+            'IV' => 4,
+            'I'  => 1,
+        ];
+
+        $result = '';
+
+        foreach ($map as $roman => $value) {
+            $matches = intval($number / $value);
+            $result .= str_repeat($roman, $matches);
+            $number %= $value;
+        }
+
+        return $result;
     }
 }

@@ -36,6 +36,8 @@ class CustomerRequest extends FormRequest
                 'pic' => 'required|string|max:255',
                 'assignor' => 'required|string|max:255',
                 'address' => 'required|string',
+                'city' => 'nullable|string',
+                'industry' => 'nullable|string',
                 'phone' => 'required|regex:/^[0-9]{10,15}$/',
                 'email' => 'required|email|unique:customers,email,' . $customer->id,
             ];
@@ -49,6 +51,8 @@ class CustomerRequest extends FormRequest
                 'address' => 'required|string',
                 'phone' => 'required|regex:/^[0-9]{10,15}$/',
                 'email' => 'required|email|unique:customers,email,',
+                'city' => 'nullable|string',
+                'industry' => 'nullable|string',
             ];
         }
     }

@@ -52,12 +52,14 @@ class CustomerController extends Controller
         $customer->address = $request->post('address');
         $customer->phone = $request->post('phone');
         $customer->email = $request->post('email');
+        $customer->city = $request->post('city');
+        $customer->industry = $request->post('industry');
         $customer->user_created_id = Auth::user()->id;
         $customer->user_updated_id = Auth::user()->id;
 
         $customer->save();
 
-        return redirect()->back()->with('success',true);
+        return redirect()->back()->with('store',true);
     }
 
     /**
@@ -105,6 +107,8 @@ class CustomerController extends Controller
         $customer->address = $request->post('address');
         $customer->phone = $request->post('phone');
         $customer->email = $request->post('email');
+        $customer->city = $request->post('city');
+        $customer->industry = $request->post('industry');
         $customer->user_updated_id = Auth::user()->id;
 
         $customer->save();
