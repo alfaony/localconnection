@@ -59,7 +59,7 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
 
                 <div class="form-group">
                     <label>Harga Beli:</label>
-                    <input type="text" class="form-control"  id="price_buy_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'price_buy')" required/>
+                    <input type="text" class="form-control"  id="price_buy_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'price_buy')"/>
                     <input type="hidden" id="price_buy" name="price_buy" name="name"  value="{{ old('price_buy') ?? @$productEdit->price_buy }}">
                 </div>
         
@@ -168,7 +168,7 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
 
         if (numStr === "" || parseInt(numStr) === 0) {
             input.value = '';
-            numStr = '';
+            numStr = 0;
         } else {
             // Menghapus angka 0 di depan jika input diawali dengan 0
             rupiah = rupiah.replace(/^0+/, '');
