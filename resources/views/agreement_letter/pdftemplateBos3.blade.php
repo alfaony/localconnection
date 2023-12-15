@@ -284,8 +284,8 @@
                     <p class="text-justify">
                         Demikian perjanjian ini dibuat dan disepakati sesuai dengan Undang - undang Nomor 11 Tahun 2008 tentang Informasi dan Teknologi Elektronik, yang mengesahkan tanda tangan elektronik yang digunakan bersama di perjanjian ini tanpa mengurangi kekuatan hukum yang mengikat kedua belah pihak. Untuk perjanjian ini dan segala akibat hukumnya, kedua pihak menunjuk tetap dan umum di kantor Panitera Pengadilan Negeri Jakarta Barat.
                     </p>
-                    <div class="row mt-2 mb-2 text-center">
-                        <div class="col-6">
+                    <div class="row mt-2 mb-1 text-center">
+                        <div class="col-5">
                             <p class="mb-0">
                                 <strong>PIHAK PERTAMA</strong>
                             </p>
@@ -293,7 +293,7 @@
                                 {{ $company['name'] }}
                             </p> 
                         </div>
-                        <div class="offset-1 col-5">
+                        <div class="offset-1 col-5 mb-1">
                             <p class="mb-0">
                                 <strong>PIHAK KEDUA</strong>
                             </p>
@@ -302,9 +302,11 @@
                             </p> 
                         </div>
                         <!-- Margin TTD -->
-                        <div class="col-12 mb-5 mt-5"></div>
+                        <div class="offset-2 col-11 mb-1 mt-1">
+                            <img src="{{ asset('logo/paraf.png') }}" alt="Signature" style="with:auto; height:150px" class="left-aligned-image">
+                        </div>
 
-                        <div class="col-6">
+                        <div class="col-5">
                             <p class="mb-0">
                                 {{ $company['director'] }}
                             </p>
@@ -312,7 +314,7 @@
                                 Direktur  
                             </p> 
                         </div>
-                        <div class="offset-1 col-5">
+                        <div class="offset-1 col-5 mb-5">
                             <p class="mb-0">
                                 {{ $agreementLetter->quote ? $agreementLetter->quote->customer->director : '' }}
                             </p>
@@ -1780,6 +1782,9 @@
     {
         border: 1px solid black;
         border-collapse: collapse;
+    }
+    .left-aligned-image {
+       float: left;
     }
 </style>
 @stop
