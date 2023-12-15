@@ -20,7 +20,6 @@ return new class extends Migration
             $table->text('rent_address')->nullable(true)->after('commission_address');
             $table->date('rent_start_duration')->nullable(true)->after('rent_address');
             $table->date('rent_end_duration')->nullable(true)->after('rent_start_duration');
-            $table->integer('rent_price')->nullable(true)->after('rent_end_duration');
         });
     }
 
@@ -39,7 +38,6 @@ return new class extends Migration
             $table->dropColumn('rent_address');
             $table->dropColumn('rent_start_duration');
             $table->dropColumn('rent_end_duration');
-            $table->dropColumn('rent_price');
         });
     }
 };

@@ -65,7 +65,7 @@ class AgreementLetterController extends Controller
         $agreementLetter->rent_address = $request->input('rent_address');
         $agreementLetter->rent_start_duration = $request->input('rent_start_duration');
         $agreementLetter->rent_end_duration = $request->input('rent_end_duration');
-        $agreementLetter->rent_price = $request->input('rent_price');
+
         $agreementLetter->commission_name = $request->input('commission_name');
         $agreementLetter->commission_phone = $request->input('commission_phone');
         $agreementLetter->commission_address = $request->input('commission_address');
@@ -130,6 +130,7 @@ class AgreementLetterController extends Controller
         $now = Carbon::now()->locale('id');
         $now->settings(['formatFunction' => 'translatedFormat']);
         $dateNow = $now->format('l, j F Y');
+        $dateNowWithoutDay = $now->format('j F Y');
 
         $monthNumber = Carbon::now()->format('m');
         $year = Carbon::now()->format('Y');
@@ -139,7 +140,7 @@ class AgreementLetterController extends Controller
         $yearToRomawi = $this->toRomawi($yearGenerate);
         
 
-        return view('agreement_letter.pdf'.$agreementTemplate,compact('quote','userCreate','nomorAgreementLetter','agreementLetter', 'month', 'year', 'date' ,'company' ,'monthNumber','dateNow', 'yearToRomawi'));
+        return view('agreement_letter.pdf'.$agreementTemplate,compact('quote','userCreate','nomorAgreementLetter','agreementLetter', 'month', 'year', 'date' ,'company' ,'monthNumber','dateNow', 'yearToRomawi', 'dateNowWithoutDay'));
     }
 
     /**
@@ -164,7 +165,7 @@ class AgreementLetterController extends Controller
         $agreementLetter->rent_address = $request->input('rent_address');
         $agreementLetter->rent_start_duration = $request->input('rent_start_duration');
         $agreementLetter->rent_end_duration = $request->input('rent_end_duration');
-        $agreementLetter->rent_price = $request->input('rent_price');
+
         $agreementLetter->commission_name = $request->input('commission_name');
         $agreementLetter->commission_phone = $request->input('commission_phone');
         $agreementLetter->commission_address = $request->input('commission_address');

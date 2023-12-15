@@ -14,10 +14,9 @@
         <div class="card-body" id="printItem">
             <div class="row">
                 <!-- row kiri -->
-                <div class="col-5">
-                    <div class="col-3">
-                        <img src="{{ asset('logo/officepllus.jpg') }}" alt="Signature" style="width:250px; height:auto">
-                    </div>
+                <div class="col-12">
+                    
+                <img src="{{ asset('logo/officepllus.jpg') }}" alt="Signature" style="width:250px; height:auto" class="centered-image">
 
                     <p class="text-center mb-3"><strong>
                         SURAT PERJANJIAN PENGGUNAAN 
@@ -28,7 +27,7 @@
                     <p class="text-center mb-3"><strong>
                         NO. {{ $agreementLetter->agreement_letter_number ?? '' }}/officeplus/{{ $monthNumber ?? ''}}/{{ $yearToRomawi ?? '' }}
                     </strong></p>
-                    <p class="mt-5 text-justify">
+                    <p class="mt-2 text-justify">
                         Pada hari ini {{ $dateNow }}, bertempat di Jakarta, ditandatangani perjanjian sewa - menyewa antara CV. OFFICE PLUS, yang berkedudukan di {!! $agreementLetter->rent_address ?? '' !!} selanjutnya disebut PIHAK PERTAMA, surat perjanjian ini berakhir {{ $agreementLetter->rent_end_duration_id ?? '' }}, dengan :
                     </p>
                     <table class="table table-bordered">
@@ -83,7 +82,7 @@
                     </table>
 
                     @if($agreementLetter->commission_name)
-                    <p class="mt-5 mb-0">
+                    <p class="mt-2 mb-0">
                         Selanjutnya akan disebut sebagai <strong>PIHAK KEDUA.</strong>
                     </p>
                     <table class="table table-bordered">
@@ -111,7 +110,7 @@
                         </tr>
                     </table>
                     @endif
-                    <p class="text-justify mt-5 mb-5">
+                    <p class="text-justify mt-2 mb-2">
                         Untuk selanjutnya <strong>PIHAK PERTAMA</strong> dan <strong>PIHAK KEDUA</strong> secara bersama - sama akan disebut <strong>“PARA PIHAK”</strong>
                     </p>
 
@@ -131,31 +130,13 @@
                         </li>
                     </ul>
 
-                    <p class="text-justify mt-5 mb-5">
+                    <p class="text-justify mt-2 mb-2">
                         Berdasarkan hal - hal tersebut diatas, para pihak sepakat untuk melaksanakan perjanjian sewa - menyewa ini ( Selanjutnya disebut “Perjanjian”), dengan ketentuan - ketentuan dan syarat - syarat sebagai berikut 
                     </p>
-                    @if(!$agreementLetter->commission_name)
-                    <div id="pasal1A">
-                        <p class="text-center mb-3"><strong>
-                            PASAL 1
-                        </strong></p>
-                        <p class="text-center mb-3"><strong>
-                            RUANG LINGKUP PERJANJIAN
-                        </strong></p>
-                        <ol>
-                            <li>
-                                PIHAK PERTAMA menyewakan sebuah layanan kantor maya / virtual, beserta fasilitas - fasilitas yang termasuk di dalamnya sesuai yang ditentukan oleh PIHAK PERTAMA pada saat perjanjian ini dibuat kepada PIHAK KEDUA. Dimana kantor maya / virtual, tidak memeliki bentuk secara fisik, namun berupa fasilitas - fasilitas siap	pakai yang dapat digunakan secara bersama oleh beberapa entitas sesuai dengan hak terbatas yang dimiliki masing - masing.
-                            </li>
-                        </ol>
-                    </div>
-                    @else
-                    <div id="pasal1B">&nbsp;</div>
-                    @endif
 
                 </div>
                 <!-- Row kanan -->
-                <div class="offset-1 col-6">
-                    @if($agreementLetter->commission_name)
+                <div class="col-12">
                     <p class="text-center mb-3"><strong>
                         PASAL 1
                     </strong></p>
@@ -167,7 +148,6 @@
                             PIHAK PERTAMA menyewakan sebuah layanan kantor maya / virtual, beserta fasilitas - fasilitas yang termasuk di dalamnya sesuai yang ditentukan oleh PIHAK PERTAMA pada saat perjanjian ini dibuat kepada PIHAK KEDUA. Dimana kantor maya / virtual, tidak memeliki bentuk secara fisik, namun berupa fasilitas - fasilitas siap	pakai yang dapat digunakan secara bersama oleh beberapa entitas sesuai dengan hak terbatas yang dimiliki masing - masing.
                         </li>
                     </ol>
-                    @endif
                     <p class="text-center mb-3"><strong>
                         PASAL 2
                     </strong></p>
@@ -230,7 +210,7 @@
                 </div>
             </div>
             <div class="row"> 
-                <div class="col-5">
+                <div class="col-12">
                     <p class="text-center mb-3"><strong>
                         PASAL 4
                     </strong></p>
@@ -272,14 +252,14 @@
                             PARA PIHAK sepakat dan setuju bahwa pembayaran yang telah dilakukan tidak dapat dikembalikan dan seluruh pembayaran dilakukan di awal sebelum penggunaan layanan dimulai. Seluruh biaya administrasi perjanjian ini ditanggung oleh PIHAK KEDUA.
                         </li>
                         <li>
-                            PARA PIHAK sepakat biaya yang dikenakan untuk layanan virtua office {{ $agreementLetter->rent_count }} terhitung sejak {{ $agreementLetter->rent_start_duration_id_no_day }} hingga {{ $agreementLetter->rent_end_duration_id_no_day }} adalah sebesar {{ 'Rp. '.number_format($agreementLetter->rent_price,0,',','.') }}. Pemotongan pajak penghasilan pasal 4 ayat 2, dapat dilakukan dengan memberikan bukti potong dari PIHAK KEDUA kepada PIHAK PERTAMA . Apabila dalam kurun waktu 3 bukaln sejak terjadi pemotongan dan tidak diberikan bukti potong, maka PIHAK PERTAMA berhak menagihkan kembali kekurangan pembayaran tersebut kepada PIHAK KEDUA. 
+                            PARA PIHAK sepakat biaya yang dikenakan untuk layanan virtua office {{ $agreementLetter->rent_count }} terhitung sejak {{ $agreementLetter->rent_start_duration_id_no_day }} hingga {{ $agreementLetter->rent_end_duration_id_no_day }} adalah sebesar {{ 'Rp. '.number_format($agreementLetter->quote->total,0,',','.') }}. Pemotongan pajak penghasilan pasal 4 ayat 2, dapat dilakukan dengan memberikan bukti potong dari PIHAK KEDUA kepada PIHAK PERTAMA . Apabila dalam kurun waktu 3 bukaln sejak terjadi pemotongan dan tidak diberikan bukti potong, maka PIHAK PERTAMA berhak menagihkan kembali kekurangan pembayaran tersebut kepada PIHAK KEDUA. 
                         </li>
                     </ol>
                 </div>
 
 
                 <!-- Kanan -->
-                <div class="offset-1 col-5">
+                <div class="col-12">
                     <p class="text-center mb-3"><strong>
                         PASAL 6
                     </strong></p>
@@ -304,7 +284,7 @@
                     <p class="text-justify">
                         Demikian perjanjian ini dibuat dan disepakati sesuai dengan Undang - undang Nomor 11 Tahun 2008 tentang Informasi dan Teknologi Elektronik, yang mengesahkan tanda tangan elektronik yang digunakan bersama di perjanjian ini tanpa mengurangi kekuatan hukum yang mengikat kedua belah pihak. Untuk perjanjian ini dan segala akibat hukumnya, kedua pihak menunjuk tetap dan umum di kantor Panitera Pengadilan Negeri Jakarta Barat.
                     </p>
-                    <div class="row mt-5 mb-5 text-center">
+                    <div class="row mt-2 mb-2 text-center">
                         <div class="col-6">
                             <p class="mb-0">
                                 <strong>PIHAK PERTAMA</strong>
@@ -368,7 +348,7 @@
                         </div> -->
                     </div>
                     @if($agreementLetter->commission_name)
-                    <div class="row mt-5 mb-5 text-center">
+                    <div class="row mt-5 mb-2 text-center">
                         <div class="offset-4 col-5">
                             <p class="mb-0">
                                 {{ $agreementLetter->commission_name ?? '' }}
@@ -381,8 +361,58 @@
                     @endif
                 </div>
             </div>
+            <div class="page-break"></div>
+            <div class="row">
+                <div class="col-12">
+                    <img src="{{ asset('logo/officepllus.jpg') }}" alt="Signature" style="width:250px; height:auto" class="centered-image">
+                    <p class="text-center mb-3"><strong>
+                        SURAT KETERANGAN DOMISILI GEDUNG
+                    </strong></p>
+                    <p class="text-center mb-3">
+                        ( N0. {{ $agreementLetter->number_result }})
+                    </p>
+                    <p>
+                        Yang bertanda - tangan dibawah ini Direksi, CV. Officeplus menerangkan bahwa :
+                    </p>
+                    <ol>
+                        <li>
+                            Nama Perusahaan : {{ $agreementLetter->quote ? $agreementLetter->quote->customer->name : '' }}
+                        </li>
+                        <li>
+                            Penanggung Jawab : {{ $agreementLetter->quote ? $agreementLetter->quote->customer->pic : '' }}
+                        </li>
+                    </ol>
+                    <p class="text-justify">
+                        Adalah benar memiliki usaha yang berdomisili di {{ $agreementLetter->rent_address }}, dengan perjanjian sewa-menyewa yang terpisah dari surat keterangan ini yang berlaku hingga (habis sewa )
+                    </p>
+                    <p class="text-justify mt-2 mb-5">
+                        Demikiran surat keterangan domisili gedung ini dapat digunakan sesuai dalam fungsi dan pelengkap administrasi yang dibutuhkan.
+                    </p>
+                    <div class="row mt-2 mb-2">
+                        <div class="col-6">
+                            <p class="mb-0">
+                                <strong>Jakarta , {{ $dateNowWithoutDay }}</strong>
+                            </p>
+                        </div>
+                        <!-- Margin TTD -->
+                        <div class="col-12 mb-1 mt-1">
+                            <img src="{{ asset('logo/paraf.png') }}" alt="Signature" style="with:auto; height:150px">
+                        </div>
 
-
+                        <div class="col-6">
+                            <p class="mb-0">
+                                {{ $company['director'] }}
+                            </p>
+                            <p>
+                                Direktur  
+                            </p> 
+                        </div>
+                    </div>
+                    <p class="text-justify mt-2">
+                        Keaslian Dokumen Pemalsuan dokumen asli akan dijerat dengan Pasal 266 KUHP tentang pemalsuan dokumen. Pastikan keaslian dokumen CV. Office Plus, dengan memeriksa barcode / QR code yang turut disertakan bersama dokumen ini dalam bentuk PDF dibawah ini.
+                    </p>
+                </div>
+            </div>
             {{-- 
             <div class="row">
                 <div class="col-5 text-justify">
@@ -1524,7 +1554,7 @@
              
 
 
-            <div class="row mt-5 mb-5">
+            <div class="row mt-2 mb-2">
                 <div class="col-5 text-justify">
                     <p class="noMargin">
                         <strong>
@@ -1554,7 +1584,7 @@
 
             </div>
 
-            <div class="row mt-5 mb-5">
+            <div class="row mt-2 mb-2">
                 <div class="col-5 text-justify">
 
                     <p class="noMargin">
@@ -1651,37 +1681,53 @@
         {
             margin-left : 50px;
             margin-right : 50px;
+            font-size : 10px;
         }
         @font-face 
         {
             font-family: "Times";
             src: url("/fonts/times.ttf") format("truetype");
         }
-        body 
-        {
-            font-size : 12px;
-        }
+        
         table, th, td 
         {
             border: 1px solid black;
             border-collapse: collapse;
         }
-        #pasal1A
-        {
-            min-height: 385px;
+
+        .centered-image {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 100%;
+            height: auto;
         }
-        #pasal1B
-        {
-            min-height: 230px;
+        .page-break {
+           page-break-before: always; /* atau page-break-after: always; */
         }
     }
     
+    .centered-image {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 100%;
+        height: auto;
+    }
+
     @font-face 
     {
         font-family: "Times";
         src: url("/fonts/times.ttf") format("truetype");
     }
+    #printItem
+    {
+        margin-left : 50px;
+        margin-right : 50px;
+        font-size : 10px;
+    }
 
+    
     .container {
         /* background-color: #fff; */
         padding: 10px;

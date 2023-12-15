@@ -52,7 +52,7 @@
                 <div class="form-group row mt-5">
                     <label for="customer" class="col-sm-2 col-form-label">Alamat Kantor Disewa:</label>
                     <div class="col-sm-5">
-                        <textarea type="text" class="form-control" id="description_rent_address" data-ids="rent_address" name="rent_address" id="rent_address" placeholder="Pilih Quote">{{ old('rent_address') ?? @$agreementLetter->rent_address }}</textarea>
+                        <textarea type="text" class="form-control" id="description_rent_address" data-ids="rent_address" name="rent_address" id="rent_address" placeholder="Alamat Kantor Disewa">{{ old('rent_address') ?? @$agreementLetter->rent_address }}</textarea>
                     </div>
                 </div>
 
@@ -62,14 +62,6 @@
                         <input type="date" class="form-control" name="rent_start_duration" value="{{ old('rent_start_duration') ?? @$agreementLetter->rent_start_duration }}" placeholder="Pilih Quote">
                         <label for=""> - </label>
                         <input type="date" class="form-control" name="rent_end_duration" value="{{ old('rent_end_duration') ?? @$agreementLetter->rent_end_duration }}" placeholder="Pilih Quote">
-                    </div>
-                </div>
-
-                <div class="form-group row">
-                    <label for="customer" class="col-sm-2 col-form-label">Biaya Sewa:</label>
-                    <div class="col-sm-5">
-                        <input type="text" class="form-control" oninput="formatRupiahUpdate(this,'price')"  id="price_show" placeholder="Rp. 0">
-                        <input type="hidden" class="form-control" name="rent_price" id="price" value="{{ old('rent_price') ?? @$agreementLetter->rent_price }}" placeholder="Pilih Quote">
                     </div>
                 </div>
 
@@ -90,7 +82,7 @@
                 <div class="form-group row">
                     <label for="customer" class="col-sm-2 col-form-label">Alamat Penjamin:</label>
                     <div class="col-sm-5">
-                        <textarea type="text" class="form-control" id="description_rent_address" data-ids="rent_address" name="commission_address" id="rent_address" placeholder="Pilih Quote">{{ old('commission_address') ?? @$agreementLetter->commission_address }}</textarea>
+                        <textarea type="text" class="form-control" id="description_rent_address" data-ids="rent_address" name="commission_address" id="rent_address" placeholder="Alamat Penjamin">{{ old('commission_address') ?? @$agreementLetter->commission_address }}</textarea>
                     </div>
                 </div>
 
@@ -161,12 +153,6 @@
 <script>
     $(document).ready(function () 
     {
-        let getPrice = document.getElementById("price").value;
-        if (getPrice) 
-        {
-            document.getElementById("price_show").value = getPrice;
-            formatRupiahUpdate(document.getElementById("price_show"),"price"); // Format default value
-        }
         
         $('#quote').select2({
             placeholder: 'Pilih Nomor Quote Baru',
@@ -230,35 +216,6 @@
 
 
     });
-
-
-    function formatRupiahUpdate(input,inputNonFormat)
-    {
-        // if (!/^\d+$/.test(input.value)) 
-        // {
-        //     input.value = 0;
-        //     document.getElementById("salary_show").value = 0;
-        //     return;
-        // }
-
-        let numStr = input.value.toString().replace(/[^,\d]/g, '');
-        let split = numStr.split(',');
-        let sisa = split[0].length % 3;
-        let rupiah = split[0].substr(0, sisa);
-        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-    
-        if (ribuan) {
-            let separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-    
-        rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-        input.value = 'Rp' + rupiah;
-
-        // Update 'salary' input with non-formatted number
-        document.getElementById(inputNonFormat).value = numStr;
-        $("#"+inputNonFormat).trigger('change');
-    }
 </script>
 @stop
 @section('css')
