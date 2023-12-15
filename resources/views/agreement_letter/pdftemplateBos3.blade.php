@@ -26,7 +26,7 @@
                         KANTOR MAYA
                     </strong></p>
                     <p class="text-center mb-3"><strong>
-                        NO. {{ $agreementLetter->agreement_letter_number ?? '' }}/office plus/{{ $monthNumber ?? ''}}/{{ $yearToRomawi ?? '' }}
+                        NO. {{ $agreementLetter->agreement_letter_number ?? '' }}/officeplus/{{ $monthNumber ?? ''}}/{{ $yearToRomawi ?? '' }}
                     </strong></p>
                     <p class="mt-5 text-justify">
                         Pada hari ini {{ $dateNow }}, bertempat di Jakarta, ditandatangani perjanjian sewa - menyewa antara CV. OFFICE PLUS, yang berkedudukan di {!! $agreementLetter->rent_address ?? '' !!} selanjutnya disebut PIHAK PERTAMA, surat perjanjian ini berakhir {{ $agreementLetter->rent_end_duration_id ?? '' }}, dengan :
