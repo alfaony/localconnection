@@ -67,6 +67,14 @@ $no = ($customer->currentPage() - 1) * $customer->perPage() + 1;
                     <input type="text" class="form-control" placeholder="Jl. Sunter Raya II Jakarta Utara" name="address" value="{{ old('address') ?? @$customerEdit->address }}" required>
                 </div>
                 <div class="form-group">
+                    <label>Kota:</label>
+                    <input type="text" class="form-control" placeholder="Jakarta" name="city" value="{{ old('city') ?? @$customerEdit->city }}">
+                </div>
+                <div class="form-group">
+                    <label>Jenis Industry:</label>
+                    <input type="text" class="form-control" placeholder="Otomotif" name="industry" value="{{ old('industry') ?? @$customerEdit->industry }}">
+                </div>
+                <div class="form-group">
                     <label>No. Handphone:</label>
                     <input type="text" name="phone" class="form-control" placeholder="Handphone" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" value="{{ old('phone') ?? @$customerEdit->phone }}" required>
                 </div>

@@ -51,4 +51,9 @@ class Company extends Model
     {
         return 'slug';
     }
+
+    public function user()
+    {
+        return $this->hasMany(User::class);
+    }
 }

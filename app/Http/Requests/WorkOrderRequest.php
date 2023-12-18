@@ -33,7 +33,7 @@ class WorkOrderRequest extends FormRequest
                 'description.*' => 'required|string',
                 'qty.*' => 'required|numeric|min:1',
                 'ids.*' => 'nullable|uuid|exists:work_order_products,id',
-                'sub_total.*' => 'required|numeric|min:0',
+                // 'sub_total.*' => 'required|numeric|min:0',
                 'quote_file' => 'required|file|mimes:pdf', // Ini adalah contoh validasi untuk file PDF dengan maksimum 2MB.
             ];
         }
@@ -45,7 +45,7 @@ class WorkOrderRequest extends FormRequest
             'description.*' => 'required|string',
             'qty.*' => 'required|numeric|min:1',
             'ids.*' => 'nullable|uuid|exists:work_order_products,id',
-            'sub_total.*' => 'required|numeric|min:0',
+            // 'sub_total.*' => 'required|numeric|min:0',
             'quote_file' => 'nullable|file|mimes:pdf', // Ini adalah contoh validasi untuk file PDF dengan maksimum 2MB.
         ];
     }

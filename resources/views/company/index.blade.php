@@ -92,6 +92,18 @@ $no = ($company->currentPage() - 1) * $company->perPage() + 1;
                     <span class="text-danger text-sm">{{ $message }}</span>
                     @enderror
                 </div>
+
+                <div class="form-group">
+                    <label for="mata_uang_dasar">Template Perjanjian</label>
+                    <select name="template_perjanjian" class="form-control">
+                        @foreach($agreementTemplate as $index => $value)
+                        <option value="{{ $index }}" >{{ $index }}</option>
+                        @endforeach
+                    </select>
+                    @error('template_perjanjian')
+                    <span class="text-danger text-sm">{{ $message }}</span>
+                    @enderror
+                </div>
             </div>
         </div>
 

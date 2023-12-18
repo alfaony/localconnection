@@ -18,7 +18,8 @@ class SettingCompanyController extends Controller
     public function index()
     {
         $data = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
-        return view('setting_company.createOrEdit',compact('data'));
+        $agreementTemplate = config('custom.agreementTemplate');
+        return view('setting_company.createOrEdit',compact('data','agreementTemplate'));
     }
 
    

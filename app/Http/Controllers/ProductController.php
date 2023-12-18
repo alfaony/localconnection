@@ -46,7 +46,7 @@ class ProductController extends Controller
     {
         $product = new Product();
         $product->name = $request->post('name');
-        $product->price_buy = $request->post('price_buy');
+        $product->price_buy = $request->post('price_buy') ?? 0;
         $product->price_sell = $request->post('price_sell');
         $product->method_count = $request->post('method_count');
         $product->user_created_id = Auth::user()->id;
@@ -95,7 +95,7 @@ class ProductController extends Controller
     {
         $product = Product::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $product->name = $request->post('name');
-        $product->price_buy = $request->post('price_buy');
+        $product->price_buy = $request->post('price_buy') ?? 0;
         $product->price_sell = $request->post('price_sell');
         $product->method_count = $request->post('method_count');
         $product->user_updated_id = Auth::user()->id;

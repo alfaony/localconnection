@@ -63,6 +63,55 @@ class AgreementLetter extends Model
         return $this->belongsTo(Quote::class)->withTrashed();
     }
 
+    public function getRentStartDurationIdAttribute()
+    {
+        $date = Carbon::parse($this->rent_start_duration)->locale('id');
+        $date->settings(['formatFunction' => 'translatedFormat']);
+        return $date->format('l, j F Y');
+    }
+
+    public function getRentEndDurationIdAttribute()
+    {
+        $date = Carbon::parse($this->rent_end_duration)->locale('id');
+        $date->settings(['formatFunction' => 'translatedFormat']);
+        return $date->format('l, j F Y');
+    }
+
+    public function getRentStartDurationIdNoDayAttribute()
+    {
+        $date = Carbon::parse($this->rent_start_duration)->locale('id');
+        $date->settings(['formatFunction' => 'translatedFormat']);
+        return $date->format('j F Y');
+    }
+
+    public function getRentEndDurationIdNoDayAttribute()
+    {
+        $date = Carbon::parse($this->rent_end_duration)->locale('id');
+        $date->settings(['formatFunction' => 'translatedFormat']);
+        return $date->format('j F Y');
+    }
+
+    public function getRentCountAttribute()
+    {
+        $rentStart = Carbon::parse($this->rent_start_duration);
+        $rentEnd = Carbon::parse($this->rent_end_duration);
+
+        $diffInYears = $rentStart->diffInYears($rentEnd);
+        $diffInMonths = $rentStart->diffInMonths($rentEnd) % 12;
+
+        $result = '';
+
+        if ($diffInYears > 0) {
+            $result .= $diffInYears . ' tahun ';
+        }
+
+        if ($diffInMonths > 0) {
+            $result .= $diffInMonths . ' bulan';
+        }
+
+        return $result;
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)
@@ -73,4 +122,5 @@ class AgreementLetter extends Model
             });
         }
     }
+    
 }

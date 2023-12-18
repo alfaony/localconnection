@@ -29,6 +29,13 @@ class AgreementLetterRequest extends FormRequest
             'payment_term' => 'nullable|string',
             'period_term' => 'nullable|string',
             'other_term' => 'nullable|string',
+            'rent_address'       => 'nullable|string',
+            'rent_start_duration' => 'nullable|date',
+            'rent_end_duration'   => 'nullable|date|after_or_equal:rent_start_duration',
+            'rent_price'         => 'nullable|numeric',
+            'commission_name'    => 'nullable|string',
+            'commission_phone'   => 'nullable|string',
+            'commission_address' => 'nullable|string',
         ];
     }
 
@@ -38,6 +45,11 @@ class AgreementLetterRequest extends FormRequest
             'date.required' => 'Tanggal diperlukan.',
             'quote.required' => 'Kutipan diperlukan.',
             'quote.exists' => 'Kutipan tidak valid.',
+            'rent_start_duration.date'     => 'Tanggal awal harus berupa tanggal yang valid.',
+            'rent_end_duration.date'       => 'Tanggal akhir harus berupa tanggal yang valid.',
+            'rent_end_duration.after_or_equal' => 'Tanggal akhir harus sama atau setelah tanggal awal.',
+            'rent_price.numeric'           => 'Harga sewa harus berupa angka.',
+
         ];
     }
 }
