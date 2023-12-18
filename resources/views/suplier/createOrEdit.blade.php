@@ -396,7 +396,7 @@
                 </td>
                 <td width="10%"><input type="text" class="form-control thriveEditor" name="description[]" id="description_${indexKeys}" value="${defaultDescription}"  placeholder="Deskripsi" required></td>
                 <td>
-                    <input type="text" class="form-control price" id="price_show_${indexKeys}" oninput="formatRupiahUpdate(this,'${indexKeys}')" name="price_show[]" data-keyss=${indexKeys} value="${price}" required>
+                    <input type="text" class="form-control price" id="price_show_${indexKeys}" oninput="formatRupiahUpdate(this,'${indexKeys}')" name="price_show[]" data-keyss=${indexKeys} value="${price ?? 0}" required>
                 </td>
                 <td width="10%"> 
                     <input type="hidden" name="price[]" class="form-control" data-keyss=${indexKeys} id="price_${indexKeys}" value="${price}" required>
