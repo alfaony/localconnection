@@ -324,6 +324,7 @@
     $('#tabelPembelian').on('click', '.btnHapus', function() {
         $(this).closest('tr').remove(); // Hapus baris yang berisi tombol yang diklik
         updateNomorBaris(); // Perbarui nomor baris
+        hitungTotalKeseluruhan();
     });
     
     $('.btnHapusData').click(function() 
@@ -399,7 +400,7 @@
                     <input type="text" class="form-control price" id="price_show_${indexKeys}" oninput="formatRupiahUpdate(this,'${indexKeys}')" name="price_show[]" data-keyss=${indexKeys} value="${price ?? 0}" required>
                 </td>
                 <td width="10%"> 
-                    <input type="hidden" name="price[]" class="form-control" data-keyss=${indexKeys} id="price_${indexKeys}" value="${price}" required>
+                    <input type="hidden" name="price[]" class="form-control" data-keyss=${indexKeys} id="price_${indexKeys}" value="${price ?? 0}" required>
                     <input type="number" name="qty[]" class="form-control qty" data-keyss=${indexKeys} id="qty_${indexKeys}" placeholder="Jumlah" value="${defaultQty}" required>
                 </td>
                 <td id="sub_total_show_${indexKeys}">Rp 0</td>
@@ -542,7 +543,7 @@
 
             $('#submit').prop('disabled', true);
         }
-
+        console.log(total);
         $('#totalKeseluruhan').text(formatRupiah(total,'Rp. '));
         $("#total").val(total);
     }

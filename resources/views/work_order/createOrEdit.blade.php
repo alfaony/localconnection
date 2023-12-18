@@ -273,6 +273,7 @@
                     countProduct(productSelected, key, qty, price);
                 }
             });
+            calculation();
 
         });
 
