@@ -351,7 +351,7 @@
                     </div>
                     @if($agreementLetter->commission_name)
                     <div class="row mt-5 mb-2 text-center">
-                        <div class="offset-4 col-5">
+                        <div class="offset-3 col-5">
                             <p class="mb-0">
                                 {{ $agreementLetter->commission_name ?? '' }}
                             </p>
