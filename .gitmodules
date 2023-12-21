@@ -1,9 +1,6 @@
 [submodule "app/Helpers/datatables"]
 	path = app/Helpers/datatables
-	url = git@gitlab.com:thrive_dev/datatables.git
-[submodule "public/Helpers/quill.js-text-editor"]
-	path = public/Helpers/quill.js-text-editor
-	url = https://gitlab.com/thrive_dev/quill.js-text-editor.git
+	url = https://gitlab.com/thrive_dev/datatables.git
 [submodule "public/helpers/quill.js-text-editor"]
 	path = public/helpers/quill.js-text-editor
-	url = git@gitlab.com:thrive_dev/quill.js-text-editor.git
+	url = https://gitlab.com/thrive_dev/quill.js-text-editor.git
