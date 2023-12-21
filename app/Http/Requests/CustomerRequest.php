@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\UniqueCustomer;
 use App\Models\Customer;
 
 class CustomerRequest extends FormRequest
@@ -29,7 +30,7 @@ class CustomerRequest extends FormRequest
         if($customerId)
         {
             $customer = Customer::where('slug',$customerId)->first();
-
+            // dd($customer);
             return [
                 'name' => 'required|string|max:255',
                 'director' => 'required|string|max:255',
@@ -39,7 +40,7 @@ class CustomerRequest extends FormRequest
                 'city' => 'nullable|string',
                 'industry' => 'nullable|string',
                 'phone' => 'required|regex:/^[0-9]{10,15}$/',
-                'email' => 'required|email',
+                'email' => ['required','email',new UniqueCustomer('update',$customer->email)],
             ];
         }else
         {
@@ -50,7 +51,7 @@ class CustomerRequest extends FormRequest
                 'assignor' => 'required|string|max:255',
                 'address' => 'required|string',
                 'phone' => 'required|regex:/^[0-9]{10,15}$/',
-                'email' => 'required|email',
+                'email' => ['required','email',new UniqueCustomer('store')],
                 'city' => 'nullable|string',
                 'industry' => 'nullable|string',
             ];
