@@ -39,7 +39,7 @@ class CustomerRequest extends FormRequest
                 'city' => 'nullable|string',
                 'industry' => 'nullable|string',
                 'phone' => 'required|regex:/^[0-9]{10,15}$/',
-                'email' => 'required|email|unique:customers,email,' . $customer->id,
+                'email' => 'required|email',
             ];
         }else
         {
@@ -50,7 +50,7 @@ class CustomerRequest extends FormRequest
                 'assignor' => 'required|string|max:255',
                 'address' => 'required|string',
                 'phone' => 'required|regex:/^[0-9]{10,15}$/',
-                'email' => 'required|email|unique:customers,email,',
+                'email' => 'required|email',
                 'city' => 'nullable|string',
                 'industry' => 'nullable|string',
             ];
