@@ -28,7 +28,7 @@
                         NO. {{ $agreementLetter->agreement_letter_number ?? '' }}/officeplus/{{ $monthNumber ?? ''}}/{{ $yearToRomawi ?? '' }}
                     </strong></p>
                     <p class="mt-2 text-justify">
-                        Pada hari ini {{ $dateNow }}, bertempat di Jakarta, ditandatangani perjanjian sewa - menyewa antara CV. OFFICE PLUS, yang berkedudukan di {!! $agreementLetter->rent_address ?? '' !!} selanjutnya disebut PIHAK PERTAMA, surat perjanjian ini berakhir {{ $agreementLetter->rent_end_duration_id ?? '' }}, dengan :
+                        Pada hari ini {{ $agreementLetter->rent_start_duration_id ?? '' }}, bertempat di Jakarta, ditandatangani perjanjian sewa - menyewa antara CV. OFFICE PLUS, yang berkedudukan di {!! $agreementLetter->rent_address ?? '' !!} selanjutnya disebut PIHAK PERTAMA, surat perjanjian ini berakhir {{ $agreementLetter->rent_end_duration_id ?? '' }}, dengan :
                     </p>
                     <table class="table table-bordered">
                         <tr>
@@ -145,7 +145,7 @@
                     </strong></p>
                     <ol>
                         <li>
-                            PIHAK PERTAMA menyewakan sebuah layanan kantor maya / virtual, beserta fasilitas - fasilitas yang termasuk di dalamnya sesuai yang ditentukan oleh PIHAK PERTAMA pada saat perjanjian ini dibuat kepada PIHAK KEDUA. Dimana kantor maya / virtual, tidak memeliki bentuk secara fisik, namun berupa fasilitas - fasilitas siap	pakai yang dapat digunakan secara bersama oleh beberapa entitas sesuai dengan hak terbatas yang dimiliki masing - masing.
+                            PIHAK PERTAMA menyewakan sebuah layanan kantor maya / virtual, beserta fasilitas - fasilitas yang termasuk di dalamnya sesuai yang ditentukan oleh PIHAK PERTAMA pada saat perjanjian ini dibuat kepada PIHAK KEDUA. Dimana kantor maya / virtual, tidak memiliki bentuk secara fisik, namun berupa fasilitas - fasilitas siap	pakai yang dapat digunakan secara bersama oleh beberapa entitas sesuai dengan hak terbatas yang dimiliki masing - masing.
                         </li>
                     </ol>
                     <p class="text-center mb-3"><strong>
@@ -156,7 +156,7 @@
                     </strong></p>
                     <ol>
                         <li>
-                            PIHAK PERTAMA memiliki secara utuh dan sah sesuai hukum yang berlaku atas sebidang tanah dan bangunan diatasnya, berbentuk rukan (Rumah Kantor) di {{ $agreementLetter->rent_address ?? '' }}, beserta selutuh fasilitas yang berada di dalamnya.
+                            PIHAK PERTAMA memiliki secara utuh dan sah sesuai hukum yang berlaku atas sebidang tanah dan bangunan diatasnya, berbentuk rukan (Rumah Kantor) di {{ $agreementLetter->rent_address ?? '' }}, beserta seluruh fasilitas yang berada di dalamnya.
                         </li>
                         <li>
                             PIHAK PERTAMA berhak menggunakan, menyewakan dan merubah fasilitas di dalam bangunan tanpa pemberitahuan dahulu kepada PIHAK KEDUA.
@@ -165,25 +165,25 @@
                             PIHAK PERTAMA berhak memutus perjanjian ini secara sepihak, apabila PIHAK KEDUA tidak melakukan pembayaran atau mengalami keterlambatan pembayaran maksimal 1 bulan.
                         </li>
                         <li>
-                            PIHAK PERTMA berhak memutus perjanjian ini secara Sepihak, apabila PIHAK KEDUA diduga terlibat dalam aktifitas yang menlanggar hukum pidana pasal 264, 362, 372, 378 KUHP, dan termasuk tindak pidana khusus korupsi, tindak pidana terkait obat dan zat terlarang serta pencucian uang di Indonesia, sesuai dengan pernyataan / peringatan dari pihak pengadilan negri maupun kepolisian di Indonesia maupun Internasional. 
+                            PIHAK PERTMA berhak memutus perjanjian ini secara Sepihak, apabila PIHAK KEDUA diduga terlibat dalam aktifitas yang menlanggar hukum pidana pasal 264, 362, 372, 378 KUHP, dan termasuk tindak pidana khusus korupsi, tindak pidana terkait obat dan zat terlarang serta pencucian uang di Indonesia, sesuai dengan pernyataan / peringatan dari pihak pengadilan negeri maupun kepolisian di Indonesia maupun Internasional. 
                         </li>
                         <li>
-                            PIHAK PERTAMA berhak mengetahui isi paket barang yang akan dititipkan oleh PIHAK KEDUA/KLIEN PIAHK KEDUA. 
+                            PIHAK PERTAMA berhak mengetahui isi paket barang yang akan dititipkan oleh PIHAK KEDUA/KLIEN PIHAK KEDUA. 
                         </li>
                         <li>
-                            PIHAK OERTAMA berhak menolak menerima seluruh barang yang dianggap melanggar hukum yang berlaku di Indonesia, ataupun untuk barang yang secara penyimpanan melebihi ukuran 2m x 3m, ataupun volume 4 meter kubik.
+                            PIHAK PERTAMA berhak menolak menerima seluruh barang yang dianggap melanggar hukum yang berlaku di Indonesia, ataupun untuk barang yang secara penyimpanan melebihi ukuran 2m x 3m, ataupun volume 4 meter kubik.
                         </li>
                         <li>
                             PIHAK PERTAMA tidak bertanggung jawab atas isi paket barang yang diterima dan PIHAK KEDUA membebaskan PIHAK PERTAMA dari seluruh tanggung jawab tuntutan hukum dan seluruh biaya yang terjadi dari paket barang yang diterima. 
                         </li>
                         <li>
-                            PIHAK PERTAMA wajib menjamin tersedianya fasilitas ruang meeting, ruang training, meja kaerja pribadi, jaringan internet, jaringan telepon, listrik, air, dan bantuan asisten administrasi dan sekretarial kantor, apabila dibutuhkan PIHAK KEDUA sesuai dengan waktu dan biaya yang ditentukan oleh PIHAK PERTAMA dan disetujui oleh PIHAK KEDUA. 
+                            PIHAK PERTAMA wajib menjamin tersedianya fasilitas ruang meeting, ruang training, meja kerja pribadi, jaringan internet, jaringan telepon, listrik, air, dan bantuan asisten administrasi dan sekretarial kantor, apabila dibutuhkan PIHAK KEDUA sesuai dengan waktu dan biaya yang ditentukan oleh PIHAK PERTAMA dan disetujui oleh PIHAK KEDUA. 
                         </li>
                         <li>
                             Barang, surat atau dokumen yang telah diterima PIHAK PERTAMA dalam kurun waktu 6 bulan, apabila tidak di ambil oleh PIHAK KEDUA setelah 2x pemberitahuan melalui email, maka PIHAK PERTAMA berhak untuk tidak menyimpan barang, surat atau dokumen tersebut lagi. Apabila PIHAK KEDUA memiliki kesulitan dalam pengambilan, maka PIHAK PERTAMA akan menawarkan untuk mengirimkan surat / barang tersebut. Kepada PIHAK KEDUA dengan biaya tambahan yang dibayarkan kepada PIHAK PERTAMA. 
                         </li>
                         <li>
-                            PIHAK KEDUA wajib melaporkan kepada PIHAK PERTAMA atas transaksi jual beli / serah terima barang dalam jumlah besar yaitu melebihi 30 item barnag, artau melebihi nilai Rp. 1.000.000.000,- ( Satu Miliar Rupiah ) di dalam gedung OFFICEPLUS untuk diperbantukan pengawas dan penjagaan. 
+                            PIHAK KEDUA wajib melaporkan kepada PIHAK PERTAMA atas transaksi jual beli / serah terima barang dalam jumlah besar yaitu melebihi 30 item barang, atau melebihi nilai Rp. 1.000.000.000,- ( Satu Miliar Rupiah ) di dalam gedung OFFICEPLUS untuk diperbantukan pengawas dan penjagaan. 
                         </li>
                     </ol>
 
@@ -219,10 +219,10 @@
                     </strong></p>
                     <ol>
                         <li>
-                            PARA PIHAK sepakat dan setuju bahwa tanah dan bangunan adalah milik PIHAK PERTAMA secara sah dan utuh sesuai hukum, PIHAK KEDUA hanya memiliki hak terbatas dalm menyewa sebuah kantor maya/virtual, beserta fasilitasnya, sesuai ketentuan yang disepakati bersama. 
+                            PARA PIHAK sepakat dan setuju bahwa tanah dan bangunan adalah milik PIHAK PERTAMA secara sah dan utuh sesuai hukum, PIHAK KEDUA hanya memiliki hak terbatas dalam menyewa sebuah kantor maya/virtual, beserta fasilitasnya, sesuai ketentuan yang disepakati bersama. 
                         </li>
                         <li>
-                            PIHAK PERTAMA menyediakan layanan kantor maya/virtual dan telah menjelaskan hak dan kewajiban perjanjian ini dengan baik jelas kepada PIHAK KEDUA, dimana PIHAK KEDUA adalah bebas dalam memilih dan membuat keputusan, dan bersedia menanggung segala resiko dan tanggung jawab yang terjadi sehubungan penggunaan layanan kantor maya/virtual, termasuk penggunaan alamat kantor PIHAK PERTAMA, dan PIHAK KEDUA telah menyetujui untuk membebaskan PIHAK PERTAMA dan individu dalam PIHAK PERTAMA dari segala tuntutan hukum, dan kerugian material maupun tanggung jawab lainnya yang terjadi akibat penggunaan layanan kantor maya/virtual oleh PIHAK KEDUA . 
+                            PIHAK PERTAMA menyediakan layanan kantor maya/virtual dan telah menjelaskan hak dan kewajiban perjanjian ini dengan baik jelas kepada PIHAK KEDUA, dimana PIHAK KEDUA adalah bebas dalam memilih dan membuat keputusan, dan bersedia menanggung segala risiko dan tanggung jawab yang terjadi sehubungan penggunaan layanan kantor maya/virtual, termasuk penggunaan alamat kantor PIHAK PERTAMA, dan PIHAK KEDUA telah menyetujui untuk membebaskan PIHAK PERTAMA dan individu dalam PIHAK PERTAMA dari segala tuntutan hukum, dan kerugian material maupun tanggung jawab lainnya yang terjadi akibat penggunaan layanan kantor maya/virtual oleh PIHAK KEDUA . 
                         </li>
                         <li>
                             PIHAK KEDUA dilarang mendaftarkan alamat kantor dengan tujuan pembelian / pengadaan barang / jasa yang dikirimkan ke alamat PIHAK PERTAMA. 
@@ -385,7 +385,7 @@
                         </li>
                     </ol>
                     <p class="text-justify">
-                        Adalah benar memiliki usaha yang berdomisili di {{ $agreementLetter->rent_address }}, dengan perjanjian sewa-menyewa yang terpisah dari surat keterangan ini yang berlaku hingga (habis sewa )
+                        Adalah benar memiliki usaha yang berdomisili di {{ $agreementLetter->rent_address }}, dengan perjanjian sewa-menyewa yang terpisah dari surat keterangan ini yang berlaku hingga {{ $agreementLetter->rent_end_duration_id_no_day }}
                     </p>
                     <p class="text-justify mt-2 mb-5">
                         Demikiran surat keterangan domisili gedung ini dapat digunakan sesuai dalam fungsi dan pelengkap administrasi yang dibutuhkan.
