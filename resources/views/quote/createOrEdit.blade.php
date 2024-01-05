@@ -60,7 +60,7 @@
                     <select name="customer" class="form-control select2" required>
                         <option value="" selected disabled>Customer</option>
                         @foreach($customer as $a)
-                        <option value="{{ $a->id }}" {{ @$quote->customer_id == $a->id ? 'selected' : '' }}>{{ $a->name }}</option>
+                        <option value="{{ $a->id }}" {{ @$quote->customer_id == $a->id ? 'selected' : '' }}>{{ $a->name .' - '. $a->pic}}</option>
                         @endforeach
                     </select>
                 </div>
