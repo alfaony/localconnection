@@ -2,6 +2,13 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\LoginController;
+use App\Http\Controllers\API\ProductController;
+use App\Http\Controllers\API\PricelistController;
+use App\Http\Controllers\API\CustomerController;
+use App\Http\Controllers\API\QuoteController;
+use App\Http\Controllers\API\WorkOrderController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -14,6 +21,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('login', [LoginController::class, 'login']);
+
+Route::group(['middleware' => ['auth:api','role.permission.api']], function() 
+{
+    Route::resource('customer', CustomerController::class)->except(['create','show']);
+    
+    Route::resource('product', ProductController::class)->except(['create','show']);
+    
+    Route::resource('pricelist', PricelistController::class)->only('index','show');
+    
+    Route::get('quote/downloadPdf/pdf/{slug}',[QuoteController::class,'downloadPdf']);
+    Route::resource('quote', QuoteController::class);
+    
+    Route::get('work-order/downloadPdf/pdf/{slug}',[WorkOrderController::class,'downloadPdf']);
+    Route::resource('work-order', WorkOrderController::class);
 });
