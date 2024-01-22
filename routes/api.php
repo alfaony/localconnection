@@ -8,7 +8,7 @@ use App\Http\Controllers\API\PricelistController;
 use App\Http\Controllers\API\CustomerController;
 use App\Http\Controllers\API\QuoteController;
 use App\Http\Controllers\API\WorkOrderController;
-
+use App\Http\Controllers\API\AgreementLetterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,4 +36,7 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     
     Route::get('work-order/downloadPdf/pdf/{slug}',[WorkOrderController::class,'downloadPdf']);
     Route::resource('work-order', WorkOrderController::class);
+
+    Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');;
+    Route::resource('agreement-letter', AgreementLetterController::class);
 });
