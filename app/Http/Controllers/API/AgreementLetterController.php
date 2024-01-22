@@ -55,6 +55,22 @@ class AgreementLetterController extends BaseController
     }
 
     /**
+     * Show
+     */
+    public function show($slug)
+    {
+        $agreementLetter = AgreementLetter::where('slug',$slug)->first();
+        if(empty($agreementLetter))
+        {
+            return $this->sendError("Agreement Letter Not Found");
+        }
+        $data['agreement'] = $agreementLetter;
+        $data['link'] = url("/api/agreement-letter/downloadPdf/pdf/".$agreementLetter->slug);
+
+        return $this->sendResponse('Success',$data);
+
+    }
+    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -122,7 +138,10 @@ class AgreementLetterController extends BaseController
 
         $agreementLetter->save();
 
-        return $this->downloadPdf($agreementLetter->slug);
+        $data['agreement'] = $agreementLetter;
+        $data['link'] = url("/api/agreement-letter/downloadPdf/pdf/".$agreementLetter->slug);
+
+        return $this->sendResponse('Success',$data);
     }
 
     /**
@@ -269,10 +288,12 @@ class AgreementLetterController extends BaseController
         
         $agreementLetter->user_updated_id = auth()->user()->id;
 
-        $agreementLetter->save();
+        $agreementLetter->save(); 
 
-        // return $this->sendMessage("Success");
-        return $this->downloadPdf($agreementLetter->slug);
+        $data['agreement'] = $agreementLetter;
+        $data['link'] = url("/api/agreement-letter/downloadPdf/pdf/".$agreementLetter->slug);
+
+        return $this->sendResponse('Success',$data);
     }
 
     /**
