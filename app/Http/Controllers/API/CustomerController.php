@@ -124,7 +124,11 @@ class CustomerController extends BaseController
      */
     public function edit($slug)
     {
-        $customer = Customer::where('slug', $slug)->firstOrFail();   
+        $customer = Customer::where('slug', $slug)->first();
+        if(empty($customer))
+        {
+            return $this->sendError('Customer Not Found');
+        }   
         return $this->sendResponse($customer,'Success');
     }
 
@@ -138,6 +142,10 @@ class CustomerController extends BaseController
     public function update(Request $request, $slug)
     {
         $customer = Customer::byCompany(auth()->user()->company_id)->where('slug', $slug)->first();
+        if(empty($customer))
+        {
+            return $this->sendError('Customer Not Found');
+        }
         $validator = Validator::make($request->all(),
         [
             'name' => 'required|string|max:255',
@@ -192,7 +200,11 @@ class CustomerController extends BaseController
      */
     public function destroy($slug)
     {
-        $customer = Customer::byCompany(auth()->user()->company_id)->where('slug', $slug)->firstOrFail();
+        $customer = Customer::byCompany(auth()->user()->company_id)->where('slug', $slug)->first();
+        if(empty($customer))
+        {
+            return $this->sendError('Customer Not Found');
+        }
         $customer->delete();
 
         return $this->sendMessage('Success');

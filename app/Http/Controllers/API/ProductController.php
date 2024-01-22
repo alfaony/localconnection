@@ -107,7 +107,11 @@ class ProductController extends BaseController
      */
     public function edit($slug)
     {
-        $product = Product::byCompany(auth()->user()->company_id)->where('slug', $slug)->firstOrFail();
+        $product = Product::byCompany(auth()->user()->company_id)->where('slug', $slug)->first();
+        if(empty($product))
+        {
+            return $this->sendError('Product Not Found');
+        }
         return $this->sendResponse($product,'Success');
     }
 
@@ -120,6 +124,12 @@ class ProductController extends BaseController
      */
     public function update(Request $request, $slug)
     {
+        $product = Product::byCompany(auth()->user()->company_id)->where('slug', $slug)->first();
+        if(empty($product))
+        {
+            return $this->sendError('Product Not Found');
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'price_buy' => 'nullable|numeric',
@@ -139,7 +149,6 @@ class ProductController extends BaseController
             return $this->sendError('Validation Error.', $validator->errors());       
         }
 
-        $product = Product::byCompany(auth()->user()->company_id)->where('slug', $slug)->firstOrFail();
         $product->name = $request->post('name');
         $product->price_buy = $request->post('price_buy') ?? 0;
         $product->price_sell = $request->post('price_sell');
@@ -159,6 +168,10 @@ class ProductController extends BaseController
     public function destroy($slug)
     {
         $product = Product::byCompany(auth()->user()->company_id)->where('slug', $slug)->first();
+        if(empty($product))
+        {
+            return $this->sendError('Product Not Found');
+        }
         $product->delete();
 
         return $this->sendMessage('Success');
