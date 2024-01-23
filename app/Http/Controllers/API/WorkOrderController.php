@@ -81,7 +81,7 @@ class WorkOrderController extends BaseController
             'products.*.price' => 'required|numeric|min:0',
             'products.*.qty' => 'required|integer|min:1',
             'products.*.description' => 'required|string',
-            // 'quote_file' => 'required|file|mimes:pdf', // Ini adalah contoh validasi untuk file PDF dengan maksimum 2MB.
+            'quote_file' => 'required|file|mimes:pdf', // Ini adalah contoh validasi untuk file PDF dengan maksimum 2MB.
         ], 
         [
             'date.required' => 'Tanggal harus diisi.',
@@ -256,7 +256,7 @@ class WorkOrderController extends BaseController
             'products.*.price' => 'required|numeric|min:0',
             'products.*.qty' => 'required|integer|min:1',
             'products.*.description' => 'required|string',
-            // 'quote_file' => 'required|file|mimes:pdf', // Ini adalah contoh validasi untuk file PDF dengan maksimum 2MB.
+            'quote_file' => 'nullable|file|mimes:pdf', // Ini adalah contoh validasi untuk file PDF dengan maksimum 2MB.
         ], 
         [
             'date.required' => 'Tanggal harus diisi.',
