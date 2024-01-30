@@ -53,13 +53,6 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                 <option value="{{ $a->id }}" {{ @$projectEdit->work_order_id == $a->id ? 'selected' : '' }}> {{ $a->number_result }} </option>
                 @endforeach
             </select>
-            <!-- <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Rp</span>
-                </div>
-                <input type="text" class="form-control" name="budget_show" id="budget_show"  oninput="formatRupiahFormat(this,'budget')" required/>
-                <input type="hidden" class="form-control" name="budget" id="budget" value="{{ old('budget') ?? @$projectEdit->budget }}" />
-            </div> -->
         </div>
 
         <div class="form-group">
@@ -76,6 +69,35 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
         <div class="form-group">
             <label>Keterangan Proyek</label>
             <textarea class="form-control" rows="3" name="description" placeholder="Type here">{{ old('description') ?? @$projectEdit->description }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <input type="checkbox" id="recurringCheckbox" name="recurring" {{ @$projectEdit->recurring ? 'checked' : '' }}>
+            <label for="recurringCheckbox">Recurring Proyek</label>
+        </div>
+
+        <div class="form-group">
+            <input type="checkbox" id="alertCheckbox" name="" {{ @$projectEdit->alert_expired ? 'checked' : '' }}>
+            <label for="alertCheckbox">Aktifkan Peringatan</label>
+        </div>
+        
+        <div id="alertOptions" style="{{ @$projectEdit->alert_expired ? 'display: block;' : 'display: none;' }}">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="expired" id="expired" disabled {{ @$projectEdit->alert_expired ? 'checked' : '' }}>
+                <label class="form-check-label" for="expired">Expired</label>
+            </div>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="one_week" id="oneWeek" {{ @$projectEdit->alert_one_week ? 'checked' : '' }}>
+                <label class="form-check-label" for="oneWeek">1 Minggu</label>
+            </div>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="two_week" id="twoWeeks" {{ @$projectEdit->alert_two_week ? 'checked' : '' }}>
+                <label class="form-check-label" for="twoWeeks">2 Minggu</label>
+            </div>
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="one_month" id="oneMonth" {{ @$projectEdit->alert_one_month ? 'checked' : '' }}>
+                <label class="form-check-label" for="oneMonth">1 Bulan</label>
+            </div>
         </div>
 
         @if(@$projectEdit)
@@ -143,6 +165,29 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
 <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+    // Checkbox alert
+    const alertCheckbox = document.getElementById('alertCheckbox');
+    const expiredCheckbox = document.getElementById('expired');
+    const alertOptions = document.getElementById('alertOptions');
+    
+    const oneWeekCheckbox = document.getElementById('oneWeek');
+    const twoWeeksCheckbox = document.getElementById('twoWeeks');
+    const oneMonthCheckbox = document.getElementById('oneMonth');
+
+    alertCheckbox.addEventListener('change', function() {
+        alertOptions.style.display = this.checked ? 'block' : 'none';
+        expiredCheckbox.checked = this.checked; // Check Expired automatically when Alert is checked
+        expiredCheckbox.disabled = this.checked; // Disable Expired checkbox when Alert is checked
+        if(!this.checked)
+        {
+            expiredCheckbox.checked = false;
+            oneWeekCheckbox.checked = false;
+            twoWeeksCheckbox.checked = false;
+            oneMonthCheckbox.checked = false;
+        }
+    });
+</script>
 <script>
     $(document).ready(function () 
     {
