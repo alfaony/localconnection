@@ -77,7 +77,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
         </div>
 
         <div class="form-group">
-            <input type="checkbox" id="alertCheckbox" name="" {{ @$projectEdit->alert_expired ? 'checked' : '' }}>
+            <input type="checkbox" id="alertCheckbox" name="alertCheckbox" {{ @$projectEdit->alert_expired ? 'checked' : '' }}>
             <label for="alertCheckbox">Aktifkan Peringatan</label>
         </div>
         
