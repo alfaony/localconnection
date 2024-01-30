@@ -426,10 +426,19 @@
         });
 
         
-        $('#tableQuote').on('click','.btnHapus', function() 
+        $('#tableQuote').on('click','.btnHapus', function(event) 
         {
-            $(this).closest('tr').remove();
-            updateNomorBaris();
+            event.preventDefault(); // Menghentikan default behavior dari tombol submit jika ada
+            // Tampilkan konfirmasi penghapusan
+            var userConfirmation = confirm("Apakah anda yakin untuk menghapus data ini?");
+            
+            if(userConfirmation) 
+            {
+                $(this).closest('tr').remove();
+                updateNomorBaris();
+                calculation();
+            }
+            
         });
 
         $('.btnHapusData').click(function(event) {
@@ -442,38 +451,38 @@
             
             if(userConfirmation) 
             {
-                let url = "{{ route('quote.destroy.product',':id') }}";
-                url = url.replace(':id',dataId);
-                // $(this).closest('tr').remove(); // Hapus baris yang berisi tombol yang diklik
-                // updateNomorBaris(); // Perbarui nomor baris
-                // Jika user mengonfirmasi, lakukan request AJAX untuk menghapus data
-                $.ajax({
-                    type: "POST", // atau "DELETE" sesuai dengan metode yang Anda gunakan
-                    url: url, // Gantikan dengan endpoint Anda
-                    data: 
-                    {
-                        id: dataId,
-                        _token: "{{ csrf_token() }}", // Untuk Laravel, tambahkan CSRF token
-                        _method: "DELETE" // Untuk Laravel, tambahkan CSRF token
-                    },
-                    success: function(response) 
-                    {
-                        Swal.fire(
-                            {
-                            title: 'Berhasil!',
-                            text: 'Berhasil Menghapus Data',
-                            icon: 'success',
-                            timer: 1500, // 3 detik
-                            timerProgressBar: true,
-                            showConfirmButton: false,
-                            showConfirmButton: false, // Menghilangkan tombol OK/Confirm
-                        });
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) 
-                    {
-                        alert("Terjadi kesalahan saat menghapus data");
-                    }
-                });
+                // let url = "{{ route('quote.destroy.product',':id') }}";
+                // url = url.replace(':id',dataId);
+                // // $(this).closest('tr').remove(); // Hapus baris yang berisi tombol yang diklik
+                // // updateNomorBaris(); // Perbarui nomor baris
+                // // Jika user mengonfirmasi, lakukan request AJAX untuk menghapus data
+                // $.ajax({
+                //     type: "POST", // atau "DELETE" sesuai dengan metode yang Anda gunakan
+                //     url: url, // Gantikan dengan endpoint Anda
+                //     data: 
+                //     {
+                //         id: dataId,
+                //         _token: "{{ csrf_token() }}", // Untuk Laravel, tambahkan CSRF token
+                //         _method: "DELETE" // Untuk Laravel, tambahkan CSRF token
+                //     },
+                //     success: function(response) 
+                //     {
+                //         Swal.fire(
+                //             {
+                //             title: 'Berhasil!',
+                //             text: 'Berhasil Menghapus Data',
+                //             icon: 'success',
+                //             timer: 1500, // 3 detik
+                //             timerProgressBar: true,
+                //             showConfirmButton: false,
+                //             showConfirmButton: false, // Menghilangkan tombol OK/Confirm
+                //         });
+                //     },
+                //     error: function(jqXHR, textStatus, errorThrown) 
+                //     {
+                //         alert("Terjadi kesalahan saat menghapus data");
+                //     }
+                // });
 
                 $(this).closest('tr').remove(); // Hapus baris yang berisi tombol yang diklik
                 updateNomorBaris(); // Perbarui nomor baris

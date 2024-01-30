@@ -534,14 +534,14 @@
             // console.log(workOrderTotal);
             Swal.fire({
                 icon: 'warning',
-                title: 'Total Pembelian Melebihi Budget!'+formatRupiah(workOrderTotal,'Rp. '),
+                title: 'Total Pembelian Melebihi Budget!'+' '+formatRupiah(workOrderTotal,'Rp. '),
                 text: 'Silakan kurangi total pembelian agar sesuai dengan budget.',
                 timerProgressBar: true,
                 showConfirmButton: false,
                 timer: 3500  
             });
 
-            $('#submit').prop('disabled', true);
+            // $('#submit').prop('disabled', true);
         }
         console.log(total);
         $('#totalKeseluruhan').text(formatRupiah(total,'Rp. '));

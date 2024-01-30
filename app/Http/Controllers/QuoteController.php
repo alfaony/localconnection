@@ -168,32 +168,45 @@ class QuoteController extends Controller
             $sub_total = $request->post('sub_total');
             $ids = $request->input('ids');
 
+            // destroy transaction
+            $quote->quoteProduct()->delete();
+            
             for ($i = 0; $i < count($product); $i++) 
             {
 
-                $id = $ids[$i];
-                if(!$id)
-                {
-                    $quoteProduct = new QuoteProduct;
-                    $quoteProduct->sort = $i + 1;
-                    $quoteProduct->product_id = $product[$i];
-                    $quoteProduct->price_sell = $price[$i];
-                    $quoteProduct->qty = $qty[$i];
-                    $quoteProduct->sub_total = $sub_total[$i];
-                    $quoteProduct->description = $description[$i];
+                $quoteProduct = new QuoteProduct;
+                $quoteProduct->sort = $i + 1;
+                $quoteProduct->product_id = $product[$i];
+                $quoteProduct->price_sell = $price[$i];
+                $quoteProduct->qty = $qty[$i];
+                $quoteProduct->sub_total = $sub_total[$i];
+                $quoteProduct->description = $description[$i];
+
+                $quote->quoteProduct()->save($quoteProduct);
+
+                // $id = $ids[$i];
+                // if(!$id)
+                // {
+                //     $quoteProduct = new QuoteProduct;
+                //     $quoteProduct->sort = $i + 1;
+                //     $quoteProduct->product_id = $product[$i];
+                //     $quoteProduct->price_sell = $price[$i];
+                //     $quoteProduct->qty = $qty[$i];
+                //     $quoteProduct->sub_total = $sub_total[$i];
+                //     $quoteProduct->description = $description[$i];
     
-                    $quote->quoteProduct()->save($quoteProduct);
-                }else
-                {
-                    $quoteProduct = QuoteProduct::find($id);
-                    $quoteProduct->sort = $i + 1;
-                    $quoteProduct->product_id = $product[$i];
-                    $quoteProduct->price_sell = $price[$i];
-                    $quoteProduct->qty = $qty[$i];
-                    $quoteProduct->sub_total = $sub_total[$i];
-                    $quoteProduct->description = $description[$i];
-                    $quoteProduct->save();
-                }
+                //     $quote->quoteProduct()->save($quoteProduct);
+                // }else
+                // {
+                //     $quoteProduct = QuoteProduct::find($id);
+                //     $quoteProduct->sort = $i + 1;
+                //     $quoteProduct->product_id = $product[$i];
+                //     $quoteProduct->price_sell = $price[$i];
+                //     $quoteProduct->qty = $qty[$i];
+                //     $quoteProduct->sub_total = $sub_total[$i];
+                //     $quoteProduct->description = $description[$i];
+                //     $quoteProduct->save();
+                // }
 
             }
 
