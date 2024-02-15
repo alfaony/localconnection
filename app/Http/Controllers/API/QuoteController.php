@@ -141,7 +141,7 @@ class QuoteController extends BaseController
             DB::commit();
             
             $data= $quote;
-            $data['url'] =  url("/quote/downloadPdf/pdf/".$quote->slug);
+            $data['url'] =  url("/quote/downloadPdf/pdf/".$quote->id);
     
             return $this->sendResponse($data,'success');
 
@@ -179,9 +179,9 @@ class QuoteController extends BaseController
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function show($slug)
+    public function show($id)
     {
-        $quote = Quote::byCompany(auth()->user()->company_id)->with('quoteProduct')->where('slug',$slug)->first();
+        $quote = Quote::byCompany(auth()->user()->company_id)->with('quoteProduct')->where('id',$id)->first();
         if(empty($quote))
         {
             return $this->sendError('Quote Not Found');
@@ -197,9 +197,9 @@ class QuoteController extends BaseController
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function edit($slug)
+    public function edit($id)
     {
-        $quote = Quote::byCompany(auth()->user()->company_id)->where('slug',$slug)->first();
+        $quote = Quote::byCompany(auth()->user()->company_id)->where('id',$id)->first();
         if(empty($quote))
         {
             return $this->sendError('Quote Not Found');
@@ -224,10 +224,10 @@ class QuoteController extends BaseController
      * @param  \App\Models\Quote  $quote
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
         $quote = Quote::byCompany(auth()->user()->company_id)
-                ->where('slug',$slug)->first();
+                ->where('id',$id)->first();
         if(empty($quote))
         {
             return $this->sendError('Product Not Found');
@@ -364,9 +364,9 @@ class QuoteController extends BaseController
     /**
      * Download PDF
      */
-    public function downloadPdf($slug)
+    public function downloadPdf($id)
     {
-        $quote = Quote::where('slug', $slug)->first();
+        $quote = Quote::where('id', $id)->first();
         if(empty($quote))
         {
             return $this->sendError('Quote Not Found');
@@ -380,9 +380,9 @@ class QuoteController extends BaseController
         $today = Carbon::now()->format('d / m / Y');
 
         $userCreate = $quote->userCreate ? $quote->userCreate->name : '';
-        // $no = $;
+        $counting = $this->counting($quote);
 
-        return view('quote.pdfApi',compact('product','customer','nomorQuote','quote','userCreate','company','today'));
+        return view('quote.pdfApi',compact('product','customer','nomorQuote','quote','userCreate','company','today','counting'));
     }
     /**
      * Total After PPN dll
@@ -407,5 +407,36 @@ class QuoteController extends BaseController
 
         $quote->total = $grandTotal;
         $quote->save();
+    }
+
+    public function counting($quote)
+    {
+        $service_fee = $quote->service_fee ?? 0;
+        $tax = $quote->tax ?? 0;
+
+        $total =  $quote->quoteProduct() ? $quote->quoteProduct()->sum('sub_total') : 0;
+        $charges = $quote->charges ?? 0;
+        $discount = $quote->discount ?? 0;
+
+        // return $tax;
+        $totalAll = ($total + $charges) - $discount;
+        $serviceFee = $service_fee != 0 ? round(($totalAll * $service_fee) / ParamSchema::PERCENTAGE) : 0 ;
+        
+        $totalAfterServiceFee = $totalAll + $serviceFee;
+        $ppn = $tax != 0 ? round(($totalAfterServiceFee * $tax) / ParamSchema::PERCENTAGE) : 0 ;
+        
+        $grandTotal = $totalAfterServiceFee + $ppn;
+
+        return 
+        [
+            'tax_percentage' => $tax ? $tax.'%' : '0%',
+            'service_fee_percentage' => $service_fee ? $service_fee.'%' : '0%',
+            'discount' => $discount ? 'Rp. '.number_format($discount,0,',','.') : 'Rp. 0',
+            'charges' => $charges ? 'Rp. '.number_format($charges,0,',','.') : 'Rp. 0',
+            'total' => $total ? 'Rp. '.number_format($total,0,',','.') : 'Rp. 0',
+            'service_fee' => $serviceFee ?  'Rp. '.number_format($serviceFee,0,',','.') : 'Rp. 0',
+            'ppn' => $ppn ? 'Rp. '.number_format($ppn,0,',','.') : 'Rp. 0',
+            'grand_total' => $grandTotal ? 'Rp. '.number_format($grandTotal,0,',','.') : 'Rp 0',
+        ];
     }
 }

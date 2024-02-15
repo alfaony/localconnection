@@ -209,7 +209,7 @@ class AgreementLetterController extends Controller
     {
         // Fetch data for the DataTable
         $query = AgreementLetter::query();
-        $query->byCompany(Auth::user()->company_id);
+        $query->byCompany(Auth::user()->company_id)->orderBy('agreement_letter_number', 'desc');;
 
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['number_result','date', 'slug'];
