@@ -22,105 +22,181 @@
             <h1>Setting Perusahaan</h1>
             <form method="post" action="{{ route('setting-company.store') }}" enctype="multipart/form-data">
                 @csrf
-
-                <div class="form-group">
-                    <label for="name">Nama Perusahaan</label>
-                    <input type="text" name="name" class="form-control" value="{{ old('name', isset($data['name']) ? $data['name'] : '') }}">
-                    @error('name')
-                    <span class="text-danger text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="alamat">Alamat</label>
-                    <input type="text" name="address" class="form-control" value="{{ old('address', isset($data['address']) ? $data['address'] : '') }}">
-                    @error('address')
-                    <span class="text-danger text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="no_npwp">No. NPWP</label>
-                    <input type="text" name="npwp_number" class="form-control" value="{{ old('npwp_number', isset($data['npwp_number']) ? $data['npwp_number'] : '') }}">
-                    @error('npwp_number')
-                    <span class="text-danger text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="direktur">Direktur</label>
-                    <input type="text" name="director" class="form-control" value="{{ old('director', isset($data['director']) ? $data['director'] : '') }}">
-                    @error('director')
-                    <span class="text-danger text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="mata_uang_dasar">Mata Uang Dasar</label>
-                    <input type="text" name="currency" class="form-control" value="{{ old('currency', isset($data['currency']) ? $data['currency']  : '') }}">
-                    @error('currency')
-                    <span class="text-danger text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="nilai_tukar_1_usd">Nilai Tukar 1 USD</label>
-                    <input type="text" class="form-control"  id="currency_usd_show" oninput="formatRupiahFormat(this,'currency_usd')" />
-                    <input type="hidden" name="currency_usd" id="currency_usd" class="form-control" value="{{ old('currency_usd', isset($data['currency_usd']) ? $data['currency_usd'] : '') }}">
-                    @error('currency_usd')
-                    <span class="text-danger text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="mata_uang_dasar">Template Perjanjian</label>
-                    <select name="template_perjanjian" class="form-control">
-                        @foreach($agreementTemplate as $index => $value)
-                        <option value="{{ $index }}" {{ $index == @$data['template_perjanjian'] ? 'selected' : '' }} >{{ $index }}</option>
-                        @endforeach
-                    </select>
-                    @error('template_perjanjian')
-                    <span class="text-danger text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="file_nib">Upload File NIB</label>
-                    @if($data['nib_file']) 
-                        <div class="mb-2">
-                            <a href="{{ Storage::url($data['nib_file']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
+                <div id="accordion">
+                    <div class="card">
+                        <div class="card-header" id="headingOne">
+                        <h5 class="mb-0">
+                            <button type="button" class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                Profile
+                            </button>
+                        </h5>
                         </div>
-                    @endif
-                    <input type="file" name="nib_file" class="form-control-file" accept=".pdf" >
-                    @error('nib_file')
-                    <span class="text-danger text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
 
-                <div class="form-group">
-                    <label for="file_akta">Upload File Akta</label>
-                    @if($data['acta_file']) 
-                        <div class="mb-2">
-                            <a href="{{ Storage::url($data['acta_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
-                        </div>
-                    @endif
-                    <input type="file" name="acta_file" class="form-control-file" accept=".pdf" >
-                    @error('acta_file')
-                    <span class="text-danger text-sm">{{ $message }}</span>
-                    @enderror
-                </div>
+                        <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                            <div class="card-body">
 
-                <div class="form-group">
-                    <label for="file_npwp">Upload File NPWP</label>
-                    @if($data['npwp_file']) 
-                        <div class="mb-2">
-                            <a href="{{ Storage::url($data['npwp_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                                <div class="form-group">
+                                    <label for="name">Nama Perusahaan</label>
+                                    <input type="text" name="name" class="form-control" value="{{ old('name', isset($data['name']) ? $data['name'] : '') }}">
+                                    @error('name')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="alamat">Alamat</label>
+                                    <input type="text" name="address" class="form-control" value="{{ old('address', isset($data['address']) ? $data['address'] : '') }}">
+                                    @error('address')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="no_npwp">No. NPWP</label>
+                                    <input type="text" name="npwp_number" class="form-control" value="{{ old('npwp_number', isset($data['npwp_number']) ? $data['npwp_number'] : '') }}">
+                                    @error('npwp_number')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="direktur">Direktur</label>
+                                    <input type="text" name="director" class="form-control" value="{{ old('director', isset($data['director']) ? $data['director'] : '') }}">
+                                    @error('director')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="mata_uang_dasar">Mata Uang Dasar</label>
+                                    <input type="text" name="currency" class="form-control" value="{{ old('currency', isset($data['currency']) ? $data['currency']  : '') }}">
+                                    @error('currency')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="nilai_tukar_1_usd">Nilai Tukar 1 USD</label>
+                                    <input type="text" class="form-control"  id="currency_usd_show" oninput="formatRupiahFormat(this,'currency_usd')" />
+                                    <input type="hidden" name="currency_usd" id="currency_usd" class="form-control" value="{{ old('currency_usd', isset($data['currency_usd']) ? $data['currency_usd'] : '') }}">
+                                    @error('currency_usd')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="mata_uang_dasar">Template Perjanjian</label>
+                                    <select name="template_perjanjian" class="form-control">
+                                        @foreach($agreementTemplate as $index => $value)
+                                        <option value="{{ $index }}" {{ $index == @$data['template_perjanjian'] ? 'selected' : '' }} >{{ $index }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('template_perjanjian')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="file_nib">Upload File NIB</label>
+                                    @if($data['nib_file']) 
+                                        <div class="mb-2">
+                                            <a href="{{ Storage::url($data['nib_file']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
+                                        </div>
+                                    @endif
+                                    <input type="file" name="nib_file" class="form-control-file" accept=".pdf" >
+                                    @error('nib_file')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="file_akta">Upload File Akta</label>
+                                    @if($data['acta_file']) 
+                                        <div class="mb-2">
+                                            <a href="{{ Storage::url($data['acta_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                                        </div>
+                                    @endif
+                                    <input type="file" name="acta_file" class="form-control-file" accept=".pdf" >
+                                    @error('acta_file')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="file_npwp">Upload File NPWP</label>
+                                    @if($data['npwp_file']) 
+                                        <div class="mb-2">
+                                            <a href="{{ Storage::url($data['npwp_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                                        </div>
+                                    @endif
+                                    <input type="file" name="npwp_file" class="form-control-file" accept=".pdf" >
+                                    @error('npwp_file')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
                         </div>
-                    @endif
-                    <input type="file" name="npwp_file" class="form-control-file" accept=".pdf" >
-                    @error('npwp_file')
-                    <span class="text-danger text-sm">{{ $message }}</span>
-                    @enderror
+                    </div>
+                    <div class="card">
+                        <div class="card-header" id="headingTwo">
+                        <h5 class="mb-0">
+                            <button type="button" class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                SMTP Email
+                            </button>
+                        </h5>
+                        </div>
+                        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="name">Host</label>
+                                    <input type="text" name="host" class="form-control" value="{{ old('host', isset($data['host']) ? $data['host'] : '') }}">
+                                    @error('host')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+    
+                                <div class="form-group">
+                                    <label for="name">Port</label>
+                                    <input type="text" name="port" class="form-control" value="{{ old('port', isset($data['port']) ? $data['port'] : '') }}">
+                                    @error('port')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+    
+                                <div class="form-group">
+                                    <label for="name">Username</label>
+                                    <input type="text" name="username" class="form-control" value="{{ old('username', isset($data['username']) ? $data['username'] : '') }}">
+                                    @error('username')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+    
+                                <div class="form-group">
+                                    <label for="name">Password</label>
+                                    <input type="text" name="password" class="form-control" value="{{ old('password', isset($data['password']) ? $data['password'] : '') }}">
+                                    @error('password')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+    
+                                <div class="form-group">
+                                    <label for="name">Encryption</label>
+                                    <input type="text" name="encryption" class="form-control" value="{{ old('encryption', isset($data['encryption']) ? $data['encryption'] : '') }}">
+                                    @error('encryption')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="name">Sent Time</label>
+                                    <input type="text" name="sent_time" class="form-control timepicker" value="{{ old('sent_time', isset($data['sent_time']) ? $data['sent_time'] : '') }}">
+                                    @error('sent_time')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Simpan</button>
@@ -135,12 +211,19 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://unpkg.com/gijgo@1.9.14/js/gijgo.min.js" type="text/javascript"></script>
 <script>
     $(document).ready(function () 
     {
         $('.select2').select2({
             width: '100%',
         });
+
+        $('.timepicker').timepicker({
+            showInputs: false,
+            showMeridian: false
+        })
+
     });
 
     $(document).ready(function () 
@@ -182,4 +265,7 @@
         document.getElementById(inputNonFormat).value = parseInt(numStr);
     }
 </script>
+@stop
+@section('css')
+<link href="https://unpkg.com/gijgo@1.9.14/css/gijgo.min.css" rel="stylesheet" type="text/css" />
 @stop
