@@ -122,9 +122,9 @@ class ProductController extends BaseController
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
-        $product = Product::byCompany(auth()->user()->company_id)->where('slug', $slug)->first();
+        $product = Product::byCompany(auth()->user()->company_id)->where('id', $id)->first();
         if(empty($product))
         {
             return $this->sendError('Product Not Found');

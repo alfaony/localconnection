@@ -140,7 +140,10 @@ class QuoteController extends BaseController
             $this->grandTotal($quote);
             DB::commit();
             
-            return $this->sendMessage("berhasil");
+            $data= $quote;
+            $data['url'] =  url("/quote/downloadPdf/pdf/".$quote->slug);
+    
+            return $this->sendResponse($data,'success');
 
         } catch (\Throwable $th) {
             //throw $th;
@@ -331,14 +334,14 @@ class QuoteController extends BaseController
      * @param  \App\Models\Quote  $quote
      * @return \Illuminate\Http\Response
      */
-    public function destroy($slug)
+    public function destroy($id)
     {
         DB::beginTransaction();
         
         try 
         {
             // Delete
-            $quote = Quote::byCompany(auth()->user()->company_id)->where('slug', $slug)->first();
+            $quote = Quote::byCompany(auth()->user()->company_id)->where('id', $id)->first();
             if(empty($quote))
             {
                 return $this->sendError('Quote Not Found');
