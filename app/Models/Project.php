@@ -35,9 +35,15 @@ class Project extends Model
     protected function createUniqueSlug($title)
     {
         $slug = Str::slug($title);
-        $count = static::where('slug', 'LIKE', "$slug%")->withTrashed()->count();
+        $baseSlug = $slug;
 
-        return $count ? "{$slug}-{$count}" : $slug;
+        $count = 1;
+        while (static::where('slug', $slug)->withTrashed()->exists()) {
+            $slug = "{$baseSlug}-{$count}";
+            $count++;
+        }
+
+        return $slug;
     }
 
     public function getRouteKeyName()
