@@ -53,8 +53,7 @@ class UserController extends Controller
             $roleAccess = true;
 
             $role = Role::get();
-            $user = User::where('delete_able',1)
-                    ->where('email','like', '%' . $request->get('email') . '%')
+            $user = User::where('email','like', '%' . $request->get('email') . '%')
                     ->OrderBy('name','asc')->paginate(10);
             $totalUser = User::where('delete_able',1)->count();
         }
@@ -119,10 +118,13 @@ class UserController extends Controller
              $totalUser = User::byCompany(Auth::user()->company_id)->where('delete_able',1)->count();
         }
         else
-        {         
-            $companyAccess = true;
-            $roleAccess = true;
-
+        {   
+            if($userEdit->role->name != RoleSchema::ROOT)
+            {
+                $companyAccess = true;
+                $roleAccess = true;
+            }
+            
             $role = Role::get();
 
             $user = User::where('delete_able',1)
@@ -156,12 +158,11 @@ class UserController extends Controller
         $user->name = $request->post('name'); 
         $user->email = $request->post('email');
         $user->phone = $request->post('phone');
-        $user->role_id = $request->post('role');
-        // $user->company_id = $request->post('company');
+        $user->role_id = $request->post('role') ?? $user->role_id;
 
-        if($request->post('password'))
+        if($request->post('newPassword'))
         {
-            $user->password = bcrypt($request->post('password'));
+            $user->password = bcrypt($request->post('newPassword'));
         }
         
         $user->save();
