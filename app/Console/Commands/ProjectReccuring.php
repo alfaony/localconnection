@@ -40,7 +40,8 @@ class ProjectReccuring extends Command
      */
     public function handle()
     {
-        $projects = Project::where('recurring',NoticeSchema::ACTIVED)->get();
+
+        $projects = Project::where('recurring',NoticeSchema::ACTIVED)->whereDate('end_date', Carbon::today())->get();
         foreach ($projects as $project) 
         {
             $quote = $project->workOrder->quote;
