@@ -14,7 +14,7 @@
     <div class="card-body">
       <div class="row mt-4">
           <div class="col-12 d-flex justify-content-center align-items-center">
-              <h1 >QUOTATION {{ $quote->budget_transition ? ' Peralihan ' : ' ' }} {{ $quote->number_result }}</h1>
+              <h1 >QUOTATION {{ $quote->budget_transition ? ' PERALIHAN ' : ' ' }} {{ $quote->number_result }}</h1>
           </div>
       </div>
       <div class="row">
