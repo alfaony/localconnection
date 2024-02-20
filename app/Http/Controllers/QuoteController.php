@@ -110,7 +110,7 @@ class QuoteController extends Controller
             return redirect()->to(route('quote.download.pdf', ['slug' => $quote->slug]))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
 
             DB::rollback();
             Log::error($th);
