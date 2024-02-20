@@ -426,7 +426,7 @@ class QuoteController extends Controller
         $query = Quote::query();
         $query->byCompany(Auth::user()->company_id)->orderBy('quote_number', 'desc');
         // Map column indexes to column names (this may vary based on your table structure)
-        $columnNames = ['number_result', 'total', 'slug'];
+        $columnNames = ['number_result', 'total', 'budget_transition', 'slug'];
 
         // Define searchable columns
         $searchable = 
@@ -481,6 +481,8 @@ class QuoteController extends Controller
         foreach ($data->data as $index => $item) 
         {
             $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
+            $color = $item->budget_transition ? 'badge badge-success' : 'badge badge-primary';
+            $item->budget_transition = $item->budget_transition ? "<span class='badge $color'>Peralihan</span>" : "<span class='badge $color'>Baru</span>";
         }
 
         return response()->json($data);
