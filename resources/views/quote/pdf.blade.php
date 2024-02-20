@@ -14,7 +14,7 @@
     <div class="card-body">
       <div class="row mt-4">
           <div class="col-12 d-flex justify-content-center align-items-center">
-              <h1 >QUOTATION {{ $quote->number_result }}</h1>
+              <h1 >QUOTATION {{ $quote->budget_transition ? ' Peralihan ' : ' ' }} {{ $quote->number_result }}</h1>
           </div>
       </div>
       <div class="row">
@@ -76,13 +76,19 @@
               </tr>
           </thead>
           <tbody>
+            @if($quote->budget_transition)
+                <tr>
+                  <td>Quotation / PO</td>
+                  <td colspan="3">{{ $quote->quote_transition ?? '' }}</td>
+              </tr>
+            @endif
               <tr>
                   <td>Payment Terms</td>
-                  <td colspan="3">30D After Invoice</td>
+                  <td colspan="3">{{ $quote->payment_term ?? '30D After Invoice' }}</td>
               </tr>
               <tr>
                   <td>Reference Third Party Docs</td>
-                  <td colspan="3">-</td>
+                  <td colspan="3">{{ $quote->third_party_docs ?? '-' }}</td>
               </tr>
           </tbody>
       </table>
@@ -404,7 +410,7 @@
 
     function prinsts() 
     {
-        let name = "{{ $nomorQuote }}"+"_quote"+" {{ $quote->customer ? $quote->customer->name : '' }}";
+        let name = "{{ $nomorQuote }}"+"_quote"+"{{ $quote->budget_transition ? ' Peralihan ' : '' }}"+" {{ $quote->customer ? $quote->customer->name : '' }}";
         let printContents = document.getElementById("printThis").innerHTML;
         let originalContents = document.body.innerHTML;
 

@@ -76,6 +76,10 @@ class QuoteController extends Controller
             $quote->discount = $request->post('discount');
             $quote->charges = $request->post('charges');
             $quote->total = $request->post('total');
+            $quote->budget_transition = $request->post('budget_transition') ? true : false;
+            $quote->quote_transition = $request->post('quote_transition');
+            $quote->payment_term = $request->post('payment_term');
+            $quote->third_party_docs = $request->post('third_party_docs');
             
             $quote->user_created_id = Auth::user()->id;
             $quote->user_updated_id = Auth::user()->id;
@@ -106,7 +110,7 @@ class QuoteController extends Controller
             return redirect()->to(route('quote.download.pdf', ['slug' => $quote->slug]))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
 
             DB::rollback();
             Log::error($th);
@@ -157,6 +161,10 @@ class QuoteController extends Controller
             $quote->discount = $request->post('discount');
             $quote->charges = $request->post('charges');
             $quote->total = $request->post('total');
+            $quote->budget_transition = $request->post('budget_transition') ? true : false;
+            $quote->quote_transition = $request->post('quote_transition');
+            $quote->payment_term = $request->post('payment_term');
+            $quote->third_party_docs = $request->post('third_party_docs');
             
             $quote->user_updated_id = Auth::user()->id;
             $quote->save();

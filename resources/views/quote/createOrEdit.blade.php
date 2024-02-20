@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('content_header')
-    <h1>Quote</h1>
+    <h1 id="quote_title">Quote Baru</h1>
 @stop
 
 @section('content')
@@ -52,6 +52,15 @@
                     <input type="hidden" name="nomor" value="{{ $nomor ?? '' }}">
                 </div>
             </div>
+            <div class="row mt-3">
+                <div class="col-2">
+                    <label>Quote Peralihan:</label>
+                </div>
+                <div class="col-6">
+                    <input type="checkbox" name="budget_transition" id="budget_transition" {{ @$quote->budget_transition ? 'checked' : ''}} >
+                </div>
+            </div>
+
             <div class="row mt-3">
                 <div class="col-2">
                     <label>Nama Customer:</label>
@@ -119,6 +128,41 @@
                         <input type="text" class="form-control calculation" id="charges_show"  oninput="formatRupiahFormat(this,'charges')"  />
                         <input type="hidden" class="form-control" name="charges" id="charges" value="{{ old('charges') ?? @$quote->charges }}" />
                     </div>
+                </div>
+            </div>
+
+            <div class="row mt-5">
+                <div class="col-2">
+                    <p>Important Information</p>
+                </div>
+            </div>
+
+            <div id="quote_transition" style="display:none;">
+                <div class="row mt-3">
+                    <div class="col-2">
+                        <label for="transition_text">Quotation / PO:</label>
+                    </div>
+                    <div class="col-6">
+                        <input type="text" class="form-control" name="quote_transition" value="{{ @$quote->quote_transition ??  old('quote_transition') }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-2">
+                    <label for="transition_text">Payment Terms:</label>
+                </div>
+                <div class="col-6">
+                    <input type="text" class="form-control" name="payment_term" value="{{ @$quote->payment_term ? @$quote->payment_term : '30D After Invoice' }}">
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-2">
+                    <label for="transition_text">Reference Third Party Docs:</label>
+                </div>
+                <div class="col-6">
+                    <input type="text" class="form-control" name="third_party_docs" value="{{ @$quote->third_party_docs ? @$quote->third_party_docs : '-' }}">
                 </div>
             </div>
 
@@ -229,6 +273,7 @@
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        quoteTransition();
         // Dapatkan semua elemen textarea
         var ckeditorInputs = document.querySelectorAll('input.thriveEditor');
 
@@ -263,6 +308,7 @@
     $(document).ready(function () 
     {
         calculation();
+        quoteTransition();
         $("#submit").click(function (e) 
         { 
             e.preventDefault();
@@ -305,6 +351,7 @@
             document.getElementById("charges_show").value = charges;
             formatRupiahFormat(document.getElementById("charges_show"),"charges"); // Format default value
         }
+
 
         $(".minNol").on("change", function () 
         {
@@ -492,6 +539,35 @@
     });
 
     // Funciton
+    function quoteTransition()
+    {
+        var checkbox = document.getElementById('budget_transition');
+        // Memilih elemen teks bebas
+        var freeText = document.getElementById('quote_transition');
+
+        if (checkbox.checked) {
+            freeText.style.display = 'block';
+            $("#quote_title").text("Quote Peralihan");
+        } else {
+            freeText.style.display = 'none';
+            $("#quote_title").text("Quote Baru");
+        }
+
+        
+        // Menambahkan event listener ke checkbox
+        checkbox.addEventListener('change', function() {
+            // Jika kotak centang tercentang, tampilkan teks bebas
+            if (checkbox.checked) {
+                freeText.style.display = 'block';
+                $("#quote_title").text("Quote Peralihan");
+            } else {
+                // Jika tidak, sembunyikan teks bebas
+                $("#quote_title").text("Quote Baru");
+                freeText.style.display = 'none';
+            }
+        });
+    }
+
     function productPrice(product,quoteProductId,callback)
     {
         $.ajax({
