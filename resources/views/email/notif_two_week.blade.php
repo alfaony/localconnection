@@ -50,7 +50,7 @@
         </tbody>
       </table>
       <p style="font-size: 16px; line-height: 28px; color: #555; margin-top: 20px;">
-        If you wish to renew or make adjustments to your project, reach out to our sales team.
+        If you wish to renew or make adjustments to your project, <a href="https://api.whatsapp.com/send?phone=6282299988870&text=Hallo,%20saya%20tertarik%20dengan%20%20portfolio%20Thrive%20dari%20Website,%20Ada%20yang%20ingin%20saya%20tanyakan%20terkait" style="color: #E8511E; text-decoration: none;">reach out to our sales team</a>.
       </p>
     </div>
     <div style="background-color: #ffffff; text-align: center; padding: 20px; font-size: 12px; color: #949494;">
