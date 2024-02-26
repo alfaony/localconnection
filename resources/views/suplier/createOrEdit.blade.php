@@ -180,6 +180,25 @@
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 
 <script>
+$(document).ready(function() {
+    // Ketika budgetTitipan dicentang
+    $('#budgetTitipan').change(function() {
+        if($(this).is(':checked')) {
+            // Jika budgetTitipan dicentang, hapus centang pada budgetPeralihan
+            $('#budgetPeralihan').prop('checked', false);
+        }
+    });
+
+    // Ketika budgetPeralihan dicentang
+    $('#budgetPeralihan').change(function() {
+        if($(this).is(':checked')) {
+            // Jika budgetPeralihan dicentang, hapus centang pada budgetTitipan
+            $('#budgetTitipan').prop('checked', false);
+        }
+    });
+});
+</script>
+<script>
     $(document).ready(function () 
     {
         
