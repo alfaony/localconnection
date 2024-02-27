@@ -46,7 +46,7 @@
             <select name="project" id="project" class="form-control select2" required>
                 <option disabled selected></option>
                 @foreach($project as $a)
-                    <option value="{{ $a->id }}" data-startdate="{{ $a->start_date }}" {{ @$manager->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
+                    <option value="{{ $a->id }}" data-startdate="{{ $a->start_date }}" data-enddate="{{ $a->end_date }}" {{ @$manager->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
                 @endforeach
                 <!-- Anda dapat menambahkan opsi lain di sini -->
             </select>
@@ -267,15 +267,19 @@
         });
     });
 
-    $('#btnTambahBarisManager').click(function() 
+    $('#btnTambahBarisManager').click(function(e) 
     {
+        e.preventDefault();
+        
         var key = generateRandomString(4);
         var noBaris = $('#tabelKerja tbody tr').length + 1; // Menghitung jumlah baris untuk nomor baris selanjutnya
         var indexKeys = generateRandomString(4);
         var dataSelect = @json($employee);
         var payment = @json($paymentMode);
         var startDate = $('#project option:selected').data('startdate') ?? null;
-        
+        var endDate = $('#project option:selected').data('enddate') ?? null;
+
+
         var projectOptions = '';
 
         $.each(dataSelect, function(index, employee) 
@@ -309,10 +313,10 @@
                     </select>
                 </td>
                 <td>
-                    <input type="date" id="start_date_${key}" name="start_date[]" class="form-control" min="${startDate}" required>
+                    <input type="date" id="start_date_${key}" name="start_date[]" class="form-control" value="${startDate}" min="${startDate}" required>
                 </td>
                 <td>
-                    <input type="date" id="end_date_${key}" data-key="${key}" name="end_date[]" class="form-control countingSalary" min="${startDate}" required>
+                    <input type="date" id="end_date_${key}" data-key="${key}" name="end_date[]" class="form-control countingSalary" value="${endDate}" min="${startDate}" required>
                 </td>
                 <td id="total_show_${key}">
                     Rp. 0
