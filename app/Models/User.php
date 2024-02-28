@@ -87,6 +87,11 @@ class User extends Authenticatable
         return $this->belongsTo(Company::class)->withTrashed();
     }
 
+    public function settingCompany()
+    {
+        return $this->hasMany(SettingCompany::class);
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

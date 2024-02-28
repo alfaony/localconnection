@@ -70,6 +70,29 @@
             @endif
             <input type="file" name="file" class="form-control" placeholder="File" name="" id="">
             
+            <label class="mt-4 mb-0">Informasi Tambahan</label>
+
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="budget_saving" id="budgetTitipan" {{ @$suplier->budget_saving ? 'checked' : '' }} >
+                        <label class="form-check-label" for="budgetTitipan">
+                            Budget Titipan
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="budget_movement" id="budgetPeralihan" {{ @$suplier->budget_movement ? 'checked' : '' }} >
+                        <label class="form-check-label" for="budgetPeralihan">
+                            Budget Peralihan
+                        </label>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label for="additionalInfo">Catatan Tambahan:</label>
+                        <textarea class="form-control" id="additionalInfo" rows="3" name="note">{{ @$suplier->note ??  '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
         </div>
         <div class="col-md-6">
             <label>Tanggal:</label>
@@ -156,6 +179,25 @@
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 
+<script>
+$(document).ready(function() {
+    // Ketika budgetTitipan dicentang
+    $('#budgetTitipan').change(function() {
+        if($(this).is(':checked')) {
+            // Jika budgetTitipan dicentang, hapus centang pada budgetPeralihan
+            $('#budgetPeralihan').prop('checked', false);
+        }
+    });
+
+    // Ketika budgetPeralihan dicentang
+    $('#budgetPeralihan').change(function() {
+        if($(this).is(':checked')) {
+            // Jika budgetPeralihan dicentang, hapus centang pada budgetTitipan
+            $('#budgetTitipan').prop('checked', false);
+        }
+    });
+});
+</script>
 <script>
     $(document).ready(function () 
     {
@@ -515,7 +557,8 @@
     {
         var total = 0;
         var submit = true;
-        var workOrderTotal = $("#work_order_total").val();
+        var selectedOption = $("#selectProject").find(':selected');
+        var workOrderTotal = selectedOption.data('work_order_total');
         
         $('#tabelPembelian tbody tr').each(function() 
         {
