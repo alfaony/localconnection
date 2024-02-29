@@ -26,6 +26,9 @@ class EmailHelper
         Config::set('mail.mailers.smtp.encryption', $smtpConfig['encryption']);
 
         // sent email
+        $data = $data;
+        $data['company_name'] = $smtpConfig['name'];
+
         try {
             if($smtpConfig['host'] && $smtpConfig['port'] && $smtpConfig['username'])
             {

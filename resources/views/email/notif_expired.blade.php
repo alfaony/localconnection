@@ -12,7 +12,7 @@
   <div style="max-width: 600px; margin: 2rem auto; border: none; margin-bottom:0px">
     <div style="background-color: #ffffff; padding: 16px; text-align: center; border-top: 8px solid #f0544f;">
       <h1 style="font-family: 'Averia Serif Libre'; font-size: 28px; line-height: 28px; color: #333; margin: 0;">
-        {{ $data->user->settingCompany->pluck('field_value','field_title')['name'] ??  '' }}
+        {{ $data->company_name ??  '' }}
       </h1>
     </div>
     <div style="background-color: #ffffff; color: #151313; padding: 20px;">
@@ -58,7 +58,7 @@
     </div>
     <div style="background-color: #ffffff; text-align: center; padding: 20px; font-size: 12px; color: #949494;">
       <h1 style="font-family: 'Averia Serif Libre'; font-size: 28px; color: rgba(148, 148, 148, 1); margin: 0;">
-        {{ $data->user->settingCompany->pluck('field_value','field_title')['name'] ??  '' }}
+        {{ $data->company_name ??  '' }}
       </h1>
     </div>
     <div  style="border-top: 8px solid #f0544f; background-color: #ffffff !important;"></div>

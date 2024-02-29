@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 use App\Helpers\EmailHelper;
 use App\Helpers\ErrorLogHelper;
@@ -40,8 +41,8 @@ class SendProjectExpirationNotifications extends Command
             $sentTime = $profile['sent_time'];
             $sentTimeStatus = $profile['sent_time_status'];
 
-            // if(($sentTime == $time) && ($sentTimeStatus != "sent"))
-            if ($user)  
+            if(($sentTime == $time) && ($sentTimeStatus != "sent"))
+            // if ($user)  
             {
                 try {
                     //code...
