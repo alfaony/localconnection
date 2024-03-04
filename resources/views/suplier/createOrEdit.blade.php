@@ -70,6 +70,15 @@
             @endif
             <input type="file" name="file" class="form-control" placeholder="File" name="" id="">
             
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="form-group mt-3">
+                        <label for="additionalInfo">Catatan Tambahan:</label>
+                        <textarea class="form-control" id="additionalInfo" rows="3" name="note">{{ @$suplier->note ??  '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
         </div>
         <div class="col-md-6">
             <label>Tanggal:</label>
