@@ -54,11 +54,7 @@
         If you wish to renew or make adjustments to your project, <a href="https://api.whatsapp.com/send?phone=6282299988870&text=Hallo,%20saya%20tertarik%20dengan%20%20portfolio%20Thrive%20dari%20Website,%20Ada%20yang%20ingin%20saya%20tanyakan%20terkait" style="color: #E8511E; text-decoration: none;">reach out to our sales team</a>.
       </p>
     </div>
-    <div style="background-color: #ffffff; text-align: center; padding: 20px; font-size: 12px; color: #949494;">
-      <h1 style="font-family: 'Averia Serif Libre'; font-size: 28px; color: rgba(148, 148, 148, 1); margin: 0;">
-        {{ $data->company_name ??  '' }}
-      </h1>
-    </div>
+
     <div  style="border-top: 8px solid #f0544f; background-color: #ffffff !important;"></div>
   </div>
 </body>
