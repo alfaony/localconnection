@@ -75,6 +75,11 @@ class Suplier extends Model
         });
     }
 
+    public function getCreatedByAttribute()
+    {
+        return $this->user->name ??  '';
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class)->withTrashed();
