@@ -124,6 +124,11 @@ class Project extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    public function getEndDateEmailShowAttribute()
+    {
+        return Carbon::parse($this->end_date);
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

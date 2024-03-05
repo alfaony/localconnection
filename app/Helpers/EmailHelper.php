@@ -26,11 +26,15 @@ class EmailHelper
         Config::set('mail.mailers.smtp.encryption', $smtpConfig['encryption']);
 
         // sent email
+        $data = $data;
+        $data['company_name'] = $smtpConfig['name'];
+
         try {
             if($smtpConfig['host'] && $smtpConfig['port'] && $smtpConfig['username'])
             {
-                Mail::send($view, ['data' => $data], function ($message) use ($fromEmail, $fromName, $toEmail, $toName, $subject) {
+                Mail::send($view, ['data' => $data], function ($message) use ($fromEmail, $fromName, $toEmail, $toName, $subject, $data) {
                     $message->to($toEmail, $toName)
+                            ->cc($data->user->email, $data->user->name) // Tambahkan alamat CC
                             ->subject($subject)
                             ->from($fromEmail, $fromName);
     

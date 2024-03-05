@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 use App\Helpers\EmailHelper;
 use App\Helpers\ErrorLogHelper;
@@ -139,22 +140,22 @@ class SendProjectExpirationNotifications extends Command
         switch ($timeNotify) 
         {
             case NoticeSchema::EXPIRED:
-                $subject = 'Project Telah Berakhir';
+                $subject = 'Your project '.$project->title.' Has Expired';
                 $tamplate = 'email.notif_'.NoticeSchema::EXPIRED;
                 break;
             case NoticeSchema::ONEWEEK:
-                $subject = 'Project Akan Berakhir 1 Minggu Kemudiah';
+                $subject = 'Your project '.$project->title.' Expires in 1 week - Exclusive Renewal Offer Inside!';
                 $tamplate = 'email.notif_'.NoticeSchema::ONEWEEK;
 
                 break;
 
             case NoticeSchema::TWOWEEK:
-                $subject = 'Project Akan Berakhir 2 Minggu Kemudiah';
+                $subject = 'Your project '.$project->title.' is About to Expire - Renew Now!';
                 $tamplate = 'email.notif_'.NoticeSchema::TWOWEEK;
                 break;
 
             case NoticeSchema::ONEMONTH:
-                $subject = 'Project Akan Berakhir 1 Bulan Kemudiah';
+                $subject = 'Your project '.$project->title.' Is Expires Soon - Renew Now!';
                 $tamplate = 'email.notif_'.NoticeSchema::ONEMONTH;
                 break;
         }
