@@ -65,8 +65,6 @@ class SuplierController extends Controller
             $suplier->date = $request->post('date');
             $suplier->name = $request->post('name');
             $suplier->phone = $request->post('phone');
-            $suplier->budget_saving = $request->post('budget_saving') ? TRUE : FALSE;
-            $suplier->budget_movement = $request->post('budget_movement') ? TRUE : FALSE;
             $suplier->note = $request->post('note');
 
             if ($request->hasFile('file')) 
@@ -161,8 +159,6 @@ class SuplierController extends Controller
             $suplier->date = $request->post('date');
             $suplier->name = $request->post('name');
             $suplier->phone = $request->post('phone');
-            $suplier->budget_saving = $request->post('budget_saving') ? TRUE : FALSE;
-            $suplier->budget_movement = $request->post('budget_movement') ? TRUE : FALSE;
             $suplier->note = $request->post('note');
 
             if ($request->hasFile('file')) 

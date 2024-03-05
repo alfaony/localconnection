@@ -56,6 +56,7 @@ $totalSuplier = $totalSuplier + 1; // Get the total number of projects
                 <th>No. Pembelian</th>
                 <th>Nama Supplier</th>
                 <th>Total Pembelian</th>
+                <th>Dibuat</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -65,6 +66,9 @@ $totalSuplier = $totalSuplier + 1; // Get the total number of projects
                 <td>{{ $no }}</td>
                 <td>{{ $a->name }}</td>
                 <td>{{ 'Rp. '.number_format($a->total_price,0,',','.')  ?? 'Rp. 0' }}</td>
+                <td>
+                    {{ $a->created_by }}
+                </td>
                 <td>
                     <form method="post" action="{{ route('suplier.destroy',$a) }}">
                         @csrf
