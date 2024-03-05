@@ -65,7 +65,7 @@ class AgreementLetterController extends BaseController
             return $this->sendError("Agreement Letter Not Found");
         }
         $data['agreement'] = $agreementLetter;
-        $data['link'] = url("/api/agreement-letter/downloadPdf/pdf/".$agreementLetter->id);
+        $data['link'] = url("/api/agreement-letter/downloadPdf/pdf/".$agreementLetter->slug);
 
         return $this->sendResponse('Success',$data);
 
@@ -139,7 +139,7 @@ class AgreementLetterController extends BaseController
         $agreementLetter->save();
 
         $data = $agreementLetter;
-        $data['link'] = url("/api/agreement-letter/downloadPdf/pdf/".$agreementLetter->id);
+        $data['link'] = url("/api/agreement-letter/downloadPdf/pdf/".$agreementLetter->slug);
 
         return $this->sendResponse($data, 'Success');
     }
@@ -176,9 +176,9 @@ class AgreementLetterController extends BaseController
      * Find Id 
      * Dwonload PDF
      */
-    function downloadPdf($id)
+    function downloadPdf($slug)
     {
-        $agreementLetter = AgreementLetter::where('id',$id)->first();
+        $agreementLetter = AgreementLetter::where('slug',$slug)->first();
 
         if(empty($agreementLetter))
         {
@@ -291,7 +291,7 @@ class AgreementLetterController extends BaseController
         $agreementLetter->save(); 
 
         $data['agreement'] = $agreementLetter;
-        $data['link'] = url("/api/agreement-letter/downloadPdf/pdf/".$agreementLetter->id);
+        $data['link'] = url("/api/agreement-letter/downloadPdf/pdf/".$agreementLetter->slug);
 
         return $this->sendResponse('Success',$data);
     }

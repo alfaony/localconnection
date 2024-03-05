@@ -141,7 +141,7 @@ class QuoteController extends BaseController
             DB::commit();
             
             $data= $quote;
-            $data['url'] =  url("/quote/downloadPdf/pdf/".$quote->id);
+            $data['url'] =  url("/quote/downloadPdf/pdf/".$quote->slug);
     
             return $this->sendResponse($data,'success');
 
@@ -364,9 +364,9 @@ class QuoteController extends BaseController
     /**
      * Download PDF
      */
-    public function downloadPdf($id)
+    public function downloadPdf($slug)
     {
-        $quote = Quote::where('id', $id)->first();
+        $quote = Quote::where('slug', $slug)->first();
         if(empty($quote))
         {
             return $this->sendError('Quote Not Found');
