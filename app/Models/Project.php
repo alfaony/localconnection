@@ -35,9 +35,15 @@ class Project extends Model
     protected function createUniqueSlug($title)
     {
         $slug = Str::slug($title);
-        $count = static::where('slug', 'LIKE', "$slug%")->withTrashed()->count();
+        $baseSlug = $slug;
 
-        return $count ? "{$slug}-{$count}" : $slug;
+        $count = 1;
+        while (static::where('slug', $slug)->withTrashed()->exists()) {
+            $slug = "{$baseSlug}-{$count}";
+            $count++;
+        }
+
+        return $slug;
     }
 
     public function getRouteKeyName()
@@ -116,6 +122,11 @@ class Project extends Model
     public function user()
     {
         return $this->belongsTo(User::class)->withTrashed();
+    }
+
+    public function getEndDateEmailShowAttribute()
+    {
+        return Carbon::parse($this->end_date);
     }
 
     public function scopeByCompany($query,$companyId)

@@ -6,7 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Passport\HasApiTokens;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Ramsey\Uuid\Uuid;
@@ -85,6 +85,11 @@ class User extends Authenticatable
     public function company()
     {
         return $this->belongsTo(Company::class)->withTrashed();
+    }
+
+    public function settingCompany()
+    {
+        return $this->hasMany(SettingCompany::class);
     }
 
     public function scopeByCompany($query,$companyId)

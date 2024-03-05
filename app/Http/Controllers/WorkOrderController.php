@@ -202,38 +202,52 @@ class WorkOrderController extends Controller
             
             $workOrder->save();
 
+            // Destroy workOrder
+            $workOrder->workOrderProduct()->delete();
+            
             // Jika WorkOrder berhasil disimpan, simpan produk terkait
             if ($workOrder) 
             {
                 for ($i = 0; $i < count($request->post('product')); $i++) 
                 {
-                    $ids = $request->post('ids')[$i];
+                    $workOrderProduct = new WorkOrderProduct();
+                    $workOrderProduct->sort = $i + 1;
+                    $workOrderProduct->work_order_id = $workOrder->id;
+                    $workOrderProduct->product_id = $request->post('product')[$i];
+                    $workOrderProduct->description = $request->post('description')[$i];
+                    $workOrderProduct->qty = $request->post('qty')[$i];
+                    $workOrderProduct->price_buy = $request->post('price')[$i];
+                    $workOrderProduct->sub_total = $request->post('sub_total')[$i];
+                   
+                    $workOrder->workOrderProduct()->save($workOrderProduct);
 
-                    if(!$ids)
-                    {
-                        $workOrderProduct = new WorkOrderProduct();
-                        $workOrderProduct->sort = $i + 1;
-                        $workOrderProduct->work_order_id = $workOrder->id;
-                        $workOrderProduct->product_id = $request->post('product')[$i];
-                        $workOrderProduct->description = $request->post('description')[$i];
-                        $workOrderProduct->qty = $request->post('qty')[$i];
-                        $workOrderProduct->price_buy = $request->post('price')[$i];
-                        $workOrderProduct->sub_total = $request->post('sub_total')[$i];
+                    // $ids = $request->post('ids')[$i];
+
+                    // if(!$ids)
+                    // {
+                    //     $workOrderProduct = new WorkOrderProduct();
+                    //     $workOrderProduct->sort = $i + 1;
+                    //     $workOrderProduct->work_order_id = $workOrder->id;
+                    //     $workOrderProduct->product_id = $request->post('product')[$i];
+                    //     $workOrderProduct->description = $request->post('description')[$i];
+                    //     $workOrderProduct->qty = $request->post('qty')[$i];
+                    //     $workOrderProduct->price_buy = $request->post('price')[$i];
+                    //     $workOrderProduct->sub_total = $request->post('sub_total')[$i];
                        
-                        $workOrder->workOrderProduct()->save($workOrderProduct);
-                    }else
-                    {
-                        $workOrderProduct = WorkOrderProduct::find($ids);
-                        $workOrderProduct->sort = $i + 1;
-                        $workOrderProduct->work_order_id = $workOrder->id;
-                        $workOrderProduct->product_id = $request->post('product')[$i];
-                        $workOrderProduct->description = $request->post('description')[$i];
-                        $workOrderProduct->price_buy = $request->post('price')[$i];
-                        $workOrderProduct->qty = $request->post('qty')[$i];
-                        $workOrderProduct->sub_total = $request->post('sub_total')[$i];
+                    //     $workOrder->workOrderProduct()->save($workOrderProduct);
+                    // }else
+                    // {
+                    //     $workOrderProduct = WorkOrderProduct::find($ids);
+                    //     $workOrderProduct->sort = $i + 1;
+                    //     $workOrderProduct->work_order_id = $workOrder->id;
+                    //     $workOrderProduct->product_id = $request->post('product')[$i];
+                    //     $workOrderProduct->description = $request->post('description')[$i];
+                    //     $workOrderProduct->price_buy = $request->post('price')[$i];
+                    //     $workOrderProduct->qty = $request->post('qty')[$i];
+                    //     $workOrderProduct->sub_total = $request->post('sub_total')[$i];
                         
-                        $workOrderProduct->save();
-                    }
+                    //     $workOrderProduct->save();
+                    // }
                 }
             }
 

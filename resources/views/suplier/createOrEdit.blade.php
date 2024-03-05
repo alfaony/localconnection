@@ -70,6 +70,15 @@
             @endif
             <input type="file" name="file" class="form-control" placeholder="File" name="" id="">
             
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="form-group mt-3">
+                        <label for="additionalInfo">Catatan Tambahan:</label>
+                        <textarea class="form-control" id="additionalInfo" rows="3" name="note">{{ @$suplier->note ??  '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
         </div>
         <div class="col-md-6">
             <label>Tanggal:</label>
@@ -156,6 +165,25 @@
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 
+<script>
+$(document).ready(function() {
+    // Ketika budgetTitipan dicentang
+    $('#budgetTitipan').change(function() {
+        if($(this).is(':checked')) {
+            // Jika budgetTitipan dicentang, hapus centang pada budgetPeralihan
+            $('#budgetPeralihan').prop('checked', false);
+        }
+    });
+
+    // Ketika budgetPeralihan dicentang
+    $('#budgetPeralihan').change(function() {
+        if($(this).is(':checked')) {
+            // Jika budgetPeralihan dicentang, hapus centang pada budgetTitipan
+            $('#budgetTitipan').prop('checked', false);
+        }
+    });
+});
+</script>
 <script>
     $(document).ready(function () 
     {
@@ -515,7 +543,8 @@
     {
         var total = 0;
         var submit = true;
-        var workOrderTotal = $("#work_order_total").val();
+        var selectedOption = $("#selectProject").find(':selected');
+        var workOrderTotal = selectedOption.data('work_order_total');
         
         $('#tabelPembelian tbody tr').each(function() 
         {
@@ -534,14 +563,14 @@
             // console.log(workOrderTotal);
             Swal.fire({
                 icon: 'warning',
-                title: 'Total Pembelian Melebihi Budget!'+formatRupiah(workOrderTotal,'Rp. '),
+                title: 'Total Pembelian Melebihi Budget!'+' '+formatRupiah(workOrderTotal,'Rp. '),
                 text: 'Silakan kurangi total pembelian agar sesuai dengan budget.',
                 timerProgressBar: true,
                 showConfirmButton: false,
                 timer: 3500  
             });
 
-            $('#submit').prop('disabled', true);
+            // $('#submit').prop('disabled', true);
         }
         console.log(total);
         $('#totalKeseluruhan').text(formatRupiah(total,'Rp. '));

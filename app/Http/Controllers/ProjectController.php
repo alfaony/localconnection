@@ -40,6 +40,7 @@ class ProjectController extends Controller
      */
     public function store(ProjectRequest $request)
     {
+
         $project = new Project();
         $project->user_id = Auth::user()->id;
         $project->title = $request->post('title');
@@ -48,6 +49,16 @@ class ProjectController extends Controller
         $project->start_date = $request->post('start_date');
         $project->end_date = $request->post('end_date');
         $project->description = $request->post('description');
+
+        // recurring
+        $project->recurring = $request->post('recurring') ? 1 : 0;
+
+        // Alert
+        $project->alert_expired = $request->post('alertCheckbox') ? 1 : 0;
+        $project->alert_one_week = $request->post('one_week') ? 1 : 0;
+        $project->alert_two_week = $request->post('two_week') ? 1 : 0;
+        $project->alert_one_month = $request->post('one_month') ? 1 : 0;
+
         $project->save();
 
         return redirect()->back()->with('store',true);
@@ -93,6 +104,16 @@ class ProjectController extends Controller
         $project->start_date = $request->post('start_date');
         $project->end_date = $request->post('end_date');
         $project->description = $request->post('description');
+
+        // recurring
+        $project->recurring = $request->post('recurring') ? 1 : 0;
+
+        // Alert
+        $project->alert_expired = $request->post('alertCheckbox') ? 1 : 0;
+        $project->alert_one_week = $request->post('one_week') ? 1 : 0;
+        $project->alert_two_week = $request->post('two_week') ? 1 : 0;
+        $project->alert_one_month = $request->post('one_month') ? 1 : 0;
+        
         $project->save();
 
         return redirect()->to(route('project.index'))->with('update',true);

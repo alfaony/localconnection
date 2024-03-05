@@ -5,6 +5,10 @@ namespace App\Console;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
+use App\Models\SettingCompany;
+use App\Models\Company;
+use Carbon\Carbon;
+
 class Kernel extends ConsoleKernel
 {
     /**
@@ -15,7 +19,24 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+
+        // Tetapkan zona waktu Asia/Jakarta
+
+        // Jadwalkan pekerjaan 'project:reccuring' setiap hari pada pukul 00:00
+        $schedule->command('project:reccuring')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
+
+        $company = Company::all();
+        foreach ($company as $a) 
+        {
+            $settingCompany = SettingCompany::byCompany($a->id)->get()->pluck('field_value','field_title');
+            $sentTime = $settingCompany['sent_time'];
+
+            if($sentTime != "")
+            {
+                $schedule->command('project:send-expiration-notifications')->timezone('Asia/Jakarta')->dailyAt($sentTime);
+            }
+        }
     }
 
     /**

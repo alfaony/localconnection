@@ -43,10 +43,10 @@
     <div class="row mt-3">
         <div class="col-md-6">
             <label>Nama Proyek:</label>
-            <select name="project" class="form-control select2" required>
+            <select name="project" id="project" class="form-control select2" required>
                 <option disabled selected></option>
                 @foreach($project as $a)
-                    <option value="{{ $a->id }}" {{ @$manager->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
+                    <option value="{{ $a->id }}" data-startdate="{{ $a->start_date }}" data-enddate="{{ $a->end_date }}" {{ @$manager->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
                 @endforeach
                 <!-- Anda dapat menambahkan opsi lain di sini -->
             </select>
@@ -118,10 +118,10 @@
                     </select>
                 </td>
                 <td>
-                    <input type="date" id="start_date_{{ $a->id }}" name="start_date[]" class="form-control countingSalary" value="{{ $a->start_date }}" min="{{ $dateCreate }}" required>
+                    <input type="date" id="start_date_{{ $a->id }}" name="start_date[]" class="form-control countingSalary" value="{{ $a->start_date }}" min="{{ $manager->start_date }}" required>
                 </td>
                 <td>
-                    <input type="date" id="end_date_{{ $a->id }}" data-key="{{ $a->id }}" name="end_date[]" class="form-control countingSalary" value="{{ $a->end_date }}" min="{{ $dateCreate }}" required>
+                    <input type="date" id="end_date_{{ $a->id }}" data-key="{{ $a->id }}" name="end_date[]" class="form-control countingSalary" value="{{ $a->end_date }}" min="{{ $manager->start_date }}" required>
                 </td>
                 <td id="total_show_{{ $a->id }}">
                     {{ number_format($a->total,0,',','.') }}
@@ -267,14 +267,19 @@
         });
     });
 
-    $('#btnTambahBarisManager').click(function() 
+    $('#btnTambahBarisManager').click(function(e) 
     {
+        e.preventDefault();
+        
         var key = generateRandomString(4);
         var noBaris = $('#tabelKerja tbody tr').length + 1; // Menghitung jumlah baris untuk nomor baris selanjutnya
         var indexKeys = generateRandomString(4);
         var dataSelect = @json($employee);
         var payment = @json($paymentMode);
-        
+        var startDate = $('#project option:selected').data('startdate') ?? null;
+        var endDate = $('#project option:selected').data('enddate') ?? null;
+
+
         var projectOptions = '';
 
         $.each(dataSelect, function(index, employee) 
@@ -308,10 +313,10 @@
                     </select>
                 </td>
                 <td>
-                    <input type="date" id="start_date_${key}" name="start_date[]" class="form-control" min="{{ $dateCreate }}" required>
+                    <input type="date" id="start_date_${key}" name="start_date[]" class="form-control" value="${startDate}" min="${startDate}" required>
                 </td>
                 <td>
-                    <input type="date" id="end_date_${key}" data-key="${key}" name="end_date[]" class="form-control countingSalary" min="{{ $dateCreate }}" required>
+                    <input type="date" id="end_date_${key}" data-key="${key}" name="end_date[]" class="form-control countingSalary" value="${endDate}" min="${startDate}" required>
                 </td>
                 <td id="total_show_${key}">
                     Rp. 0

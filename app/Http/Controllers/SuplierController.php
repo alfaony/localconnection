@@ -65,6 +65,7 @@ class SuplierController extends Controller
             $suplier->date = $request->post('date');
             $suplier->name = $request->post('name');
             $suplier->phone = $request->post('phone');
+            $suplier->note = $request->post('note');
 
             if ($request->hasFile('file')) 
             {
@@ -158,6 +159,8 @@ class SuplierController extends Controller
             $suplier->date = $request->post('date');
             $suplier->name = $request->post('name');
             $suplier->phone = $request->post('phone');
+            $suplier->note = $request->post('note');
+
             if ($request->hasFile('file')) 
             {
                 // Hapus file lama jika ada        
@@ -272,12 +275,12 @@ class SuplierController extends Controller
             }else
             {
                 $product = Product::find($productId);
-                $price = $product->price_buy;
+                $price = $product->price_buy ?? 0;
             }
         }else
         {
             $product = Product::find($productId);
-            $price = $product->price_buy;
+            $price = $product->price_buy ?? 0;
         }
 
         return 
