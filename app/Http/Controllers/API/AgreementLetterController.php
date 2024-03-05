@@ -57,9 +57,9 @@ class AgreementLetterController extends BaseController
     /**
      * Show
      */
-    public function show($slug)
+    public function show($id)
     {
-        $agreementLetter = AgreementLetter::where('slug',$slug)->first();
+        $agreementLetter = AgreementLetter::where('id',$id)->first();
         if(empty($agreementLetter))
         {
             return $this->sendError("Agreement Letter Not Found");
@@ -138,10 +138,10 @@ class AgreementLetterController extends BaseController
 
         $agreementLetter->save();
 
-        $data['agreement'] = $agreementLetter;
+        $data = $agreementLetter;
         $data['link'] = url("/api/agreement-letter/downloadPdf/pdf/".$agreementLetter->slug);
 
-        return $this->sendResponse('Success',$data);
+        return $this->sendResponse($data, 'Success');
     }
 
     /**
@@ -150,9 +150,9 @@ class AgreementLetterController extends BaseController
      * @param  \App\Models\AgreementLetter  $agreementLetter
      * @return \Illuminate\Http\Response
      */
-    public function edit($slug)
+    public function edit($id)
     {
-        $agreementLetter = AgreementLetter::where('slug',$slug)->first();
+        $agreementLetter = AgreementLetter::where('id',$id)->first();
         if(empty($agreementLetter))
         {
             return $this->sendError("Agreement Letter Not Found");
@@ -230,9 +230,9 @@ class AgreementLetterController extends BaseController
      * @param  \App\Models\AgreementLetter  $agreementLetter
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
-        $agreementLetter = AgreementLetter::byCompany(auth()->user()->company_id)->where('slug', $slug)->first();
+        $agreementLetter = AgreementLetter::byCompany(auth()->user()->company_id)->where('id', $id)->first();
         if(empty($agreementLetter))
         {
             return $this->sendError("Agreement Not Found");
@@ -302,9 +302,9 @@ class AgreementLetterController extends BaseController
      * @param  \App\Models\AgreementLetter  $agreementLetter
      * @return \Illuminate\Http\Response
      */
-    public function destroy($slug)
+    public function destroy($id)
     {
-        $agreementLetter = AgreementLetter::byCompany(auth()->user()->company_id)->where('slug', $slug)->first();
+        $agreementLetter = AgreementLetter::byCompany(auth()->user()->company_id)->where('id', $id)->first();
         if(empty($agreementLetter))
         {
             return $this->sendError("Agreement Not Found");

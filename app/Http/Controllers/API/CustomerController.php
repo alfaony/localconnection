@@ -60,11 +60,11 @@ class CustomerController extends BaseController
         $validator = Validator::make($request->all(),
         [
             'name' => 'required|string|max:255',
-            'director' => 'required|string|max:255',
-            'pic' => 'required|string|max:255',
-            'assignor' => 'required|string|max:255',
-            'address' => 'required|string',
-            'phone' => 'required|regex:/^[0-9]{10,15}$/',
+            'director' => 'nullable|string|max:255',
+            'pic' => 'nullable|string|max:255',
+            'assignor' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+            'phone' => ['required', 'regex:/^\d{5,13}$/'],
             'email' => ['required','email',new UniqueCustomer('store')],
             'city' => 'nullable|string',
             'industry' => 'nullable|string',
@@ -139,9 +139,9 @@ class CustomerController extends BaseController
      * @param  \App\Models\Customer  $customer
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
-        $customer = Customer::byCompany(auth()->user()->company_id)->where('slug', $slug)->first();
+        $customer = Customer::byCompany(auth()->user()->company_id)->where('id', $id)->first();
         if(empty($customer))
         {
             return $this->sendError('Customer Not Found');
@@ -149,13 +149,13 @@ class CustomerController extends BaseController
         $validator = Validator::make($request->all(),
         [
             'name' => 'required|string|max:255',
-            'director' => 'required|string|max:255',
-            'pic' => 'required|string|max:255',
-            'assignor' => 'required|string|max:255',
-            'address' => 'required|string',
+            'director' => 'nullable|string|max:255',
+            'pic' => 'nullable|string|max:255',
+            'assignor' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
             'city' => 'nullable|string',
             'industry' => 'nullable|string',
-            'phone' => 'required|regex:/^[0-9]{10,15}$/',
+            'phone' => ['required', 'regex:/^\d{5,13}$/'],
             'email' => ['required','email',new UniqueCustomer('update',$customer->email)],
         ],
         [

@@ -81,7 +81,7 @@ class WorkOrderController extends BaseController
             'products.*.price' => 'required|numeric|min:0',
             'products.*.qty' => 'required|integer|min:1',
             'products.*.description' => 'required|string',
-            'quote_file' => 'required|file|mimes:pdf', // Ini adalah contoh validasi untuk file PDF dengan maksimum 2MB.
+            // 'quote_file' => 'required|file|mimes:pdf', // Ini adalah contoh validasi untuk file PDF dengan maksimum 2MB.
         ], 
         [
             'date.required' => 'Tanggal harus diisi.',
@@ -160,9 +160,11 @@ class WorkOrderController extends BaseController
 
             DB::commit();
 
-            return $this->sendMessage("berhasil");
-            // return redirect()->to(route('work-order.index'))->with('store',true);
-            // return redirect()->to(route('work-order.download.pdf', ['slug' => $workOrder->slug]))->with('store',true);
+            $data= $workOrder;
+            $data['url'] =  url("/work-order/downloadPdf/pdf/".$workOrder->slug);
+    
+            return $this->sendResponse($data,'success');
+
         } catch (\Throwable $th) {
             //throw $th;
             DB::rollback();
@@ -358,9 +360,9 @@ class WorkOrderController extends BaseController
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($slug)
+    public function destroy($id)
     {
-        $workOrder = WorkOrder::byCompany(auth()->user()->company_id)->where('slug', $slug)->first();
+        $workOrder = WorkOrder::byCompany(auth()->user()->company_id)->where('id', $id)->first();
         if(empty($workOrder))
         {
             return $this->sendError('SPK Not Found');

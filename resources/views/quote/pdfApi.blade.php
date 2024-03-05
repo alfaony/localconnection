@@ -180,28 +180,28 @@
                   <div class="col-4 offset-8 mt-4">
                       <div class="d-flex justify-content-between mb-2">
                           <div>Total:</div>
-                          <div class="strongText" id="sub_total_result">Rp 0</div>
+                          <div class="strongText" id="sub_total_result"> {{ $counting['total'] }} </div>
                       </div>
                       <div class="d-flex justify-content-between mb-2">
                           <div>Discount: -</div>
-                          <div class="strongText" id="discount_result">Rp 0</div>
+                          <div class="strongText" id="discount_result">{{ $counting['discount'] }}</div>
                       </div>
                       <div class="d-flex justify-content-between mb-2">
                           <div>Other Tax/Charges:</div>
-                          <div class="strongText" id="charges_result">Rp 0</div>
+                          <div class="strongText" id="charges_result">{{ $counting['charges'] }}</div>
                       </div>
                       <div class="d-flex justify-content-between mb-2">
-                          <div id="service_fee_title">Service Fee: 0%</div>
-                          <div class="strongText" id="service_fee_result">Rp 0</div>
+                          <div id="service_fee_title">Service Fee: {{ $counting['service_fee_percentage'] }}</div>
+                          <div class="strongText" id="service_fee_result">{{ $counting['service_fee'] }}</div>
                       </div>
                       <div class="d-flex justify-content-between mb-2">
-                          <div id="ppn_title">PPN: 0%</div>
-                          <div class="strongText" id="ppn_result">Rp 0</div>
+                          <div id="ppn_title">PPN: {{ $counting['tax_percentage'] }}</div>
+                          <div class="strongText" id="ppn_result">{{ $counting['ppn'] }}</div>
                       </div>
                       <hr>
                       <div class="d-flex justify-content-between mb-2">
                           <strong>Grand Total:</strong>
-                          <strong id="grand_total_result">Rp 0</strong>
+                          <strong id="grand_total_result">{{ $counting['grand_total'] }}</strong>
                       </div>
                   </div>
               </div>
@@ -246,225 +246,3 @@
         </div>
     </body>
 </html>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-<!-- Select2 JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-
-<script>
-    $(document).ready(function () 
-    {
-        prinsts();
-        
-        $("#downloadQuote").click(function (e) 
-        { 
-            e.preventDefault();
-            prinsts();
-            
-        });
-
-        calculation();
-        let discount = document.getElementById("discount").value;
-        if (discount) 
-        {
-            document.getElementById("discount_show").value = discount;
-            formatRupiahFormat(document.getElementById("discount_show"),"discount"); // Format default value
-        }
-
-        let charges = document.getElementById("charges").value;
-        if (charges) 
-        {
-            document.getElementById("charges_show").value = charges;
-            formatRupiahFormat(document.getElementById("charges_show"),"charges"); // Format default value
-        }
-
-        $(".minNol").on("change", function () 
-        {
-            let nol = $(this).val();
-            if(nol <= 0)
-            {
-                $(this).val(0);
-            }
-        });
-
-        $(".calculation").change(function (e) 
-        { 
-            e.preventDefault();
-            calculation();
-        });
-
-        $('#tableQuote').on('change', '.productChange', function (e) { 
-            e.preventDefault();
-
-            var key = $(this).find(':selected').data('key');
-
-            var productSelected = $(this).val();
-            var qty = $("#qty_"+key).val();
-
-            if(productSelected && key && qty)
-            {
-                countProduct(productSelected, key, qty);
-            }
-
-        });
-
-        $('#tableQuote').on('change', '.qtyChange', function (e) { 
-            e.preventDefault();
-
-            var key = $(this).data('key');
-
-            var productSelected = $("#product_"+key).find(':selected').val();
-            var qty = $("#qty_"+key).val();
-
-            if(qty <= 0)
-            {
-                $("#qty_"+key).val(1);
-            }
-
-            if(productSelected && key && qty)
-            {
-                countProduct(productSelected, key, qty);
-            }
-        });
-    });
-</script>
-<script>
-    function calculation()
-    {
-        console.log("----CALCULATION WORKING-----");
-
-        var tax = parseInt($("#tax").val()) || 0;
-        var service_fee = parseInt($("#service_fee").val()) || 0;
-
-        var discount = parseInt($("#discount").val()) || 0;
-        var charges = parseInt($("#charges").val()) || 0;
-
-        
-        var ppn_title = tax <= 0 ? 'PPN: 0%' : 'PPN: '+tax+'%';
-        var service_fee_title = service_fee <= 0 ? 'Service Fee: 0%' : 'Service Fee: '+service_fee+'%';
-
-        var sub_total = 0;
-        $('#tableQuote tbody tr').each(function() 
-        {
-            // console.log($(this).find('input[name="sub_total[]"]'));
-            var subTotal = parseFloat($(this).find('input[name="sub_total[]"]').val() || 0);
-            console.log(subTotal);
-            sub_total += subTotal;
-        });
-
-
-        $.ajax({
-            type: "GET",
-            url: "{{ route('quote.counting') }}",
-            data: {total:sub_total,tax:tax,service_fee:service_fee,discount:discount,charges:charges},
-            success: function (response) 
-            {
-                if(response.data)
-                {
-                    console.log(response.data.total);
-                    values = response.data;
-                    console.log(values);
-
-                    $("#service_fee_result").html(values.service_fee);
-                    $("#ppn_result").html(values.ppn);
-                    $("#grand_total_result").html(values.grand_total);
-                }  
-            }
-        });
-
-        $("#service_fee_title").html(service_fee_title);
-        $("#ppn_title").html(ppn_title);
-        $("#discount_result").html(formatRupiah(discount,'Rp. '));
-        $("#charges_result").html(formatRupiah(charges,'Rp. '));
-        $("#sub_total_result").html(formatRupiah(sub_total,'Rp. '));
-    }
-
-
-    function formatRupiahFormat(input, inputNonFormat) 
-    {
-
-        let numStr = input.value.toString().replace(/[^,\d]/g, '');
-        let split = numStr.split(',');
-        let sisa = split[0].length % 3;
-        let rupiah = split[0].substr(0, sisa);
-        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-        if (ribuan) {
-            let separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-
-        rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
-
-        if (numStr === "" || parseInt(numStr) === 0) {
-            input.value = '';
-            numStr = '';
-        } else {
-            // Menghapus angka 0 di depan jika input diawali dengan 0
-            rupiah = rupiah.replace(/^0+/, '');
-            input.value = 'Rp '+rupiah;
-        }
-
-        // Update 'salary' input with non-formatted number
-        document.getElementById(inputNonFormat).value = parseInt(numStr);
-    }
-
-    function formatRupiah(angka, prefix)
-    {
-        var number_string = angka.toString().replace('/[^,\d]/g', '').toString(),
-        split   		= number_string.split(','),
-        sisa     		= split[0].length % 3,
-        rupiah     		= split[0].substr(0, sisa),
-        ribuan     		= split[0].substr(sisa).match(/\d{3}/gi);
-
-        // tambahkan titik jika yang di input sudah menjadi angka ribuan
-        if(ribuan){
-            separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-
-        rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-        return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
-    }
-
-    function countProduct(productId,key,qty)
-    {        
-        $.ajax({
-            type: "GET",
-            url: "{{ route('quote.productCounting') }}",
-            data: {product:productId,qty:qty},
-            success: function (response) 
-            {
-                if(response.data)
-                {
-                    console.log(response.data );
-
-                    $("#sub_total_"+key).val(response.data);
-                    $("#sub_total_show_"+key).html(formatRupiah(response.data || 0,'Rp. '));
-                }
-
-                calculation();
-            },
-        });
-    }
-
-    function prinsts() 
-    {
-        let name = "{{ $nomorQuote }}"+"_quote"+" {{ $quote->customer ? $quote->customer->name : '' }}";
-        let printContents = document.getElementById("printThis").innerHTML;
-        let originalContents = document.body.innerHTML;
-
-        document.body.innerHTML = printContents;
-
-        window.addEventListener("beforeprint", (event) => {
-            document.title = name;
-        });
-
-        window.print();
-        document.body.innerHTML = originalContents;
-    }
-</script>
-  

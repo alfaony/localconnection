@@ -1734,10 +1734,6 @@
             --}}
         </div>
     </div>
-    <div class="col-md-12 text-center mt-3"> <!-- Penambahan class text-center dan mt-3 -->
-        <a href="{{ route('agreement-letter.edit',$agreementLetter->slug) }}" class="btn btn-primary"><i class="fa fa-edit"></i>Edit</a>
-        <button type="button" id="downloadWorkOrder" class="btn btn-success"><i class="fa fa-file-pdf"></i> {{__('Download')}}</button>
-    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
