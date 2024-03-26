@@ -91,4 +91,9 @@ class WorkOrder extends Model
             });
         }
     }
+
+    public function scopeByActive($query)
+    {
+        return $query->whereDate('date', '>=', Carbon::now());
+    }
 }

@@ -12,6 +12,8 @@ use App\Models\Suplier;
 use App\Models\Manager;
 use App\Models\Employee;
 use App\Models\Job;
+use App\Models\Quote;
+use App\Models\WorkOrder;
 
 class HomeController extends Controller
 {
@@ -47,6 +49,9 @@ class HomeController extends Controller
         $totalActiveWorkersGet = Job::byCompany(Auth::user()->company_id)->where('end_date','>=',Carbon::now()->format('Y-m-d'))->distinct('user_id')->get();
         $totalActiveWorkers = count($totalActiveWorkersGet) ?? 0 ;
 
-        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers'));
+        $totalQuote = Quote::byCompany(Auth::user()->company_id)->byActive()->count() ?? 0;
+        $totalWorkOrder = WorkOrder::byCompany(Auth::user()->company_id)->byActive()->count() ?? 0;
+
+        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder'));
     }
 }
