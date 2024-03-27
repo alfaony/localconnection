@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Contracts\Events\Dispatcher;
 use JeroenNoten\LaravelAdminLte\Events\BuildingMenu;
 use App\Helpers\Access;
+use Illuminate\Support\Facades\Schema;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -28,6 +29,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(Dispatcher $events)
     {
+
+        Schema::defaultStringLength(191);
+        if ($this->app->environment('production') || $this->app->environment('development')) 
+        {
+            URL::forceScheme('https');
+        }
+
         $events->listen(BuildingMenu::class, function (BuildingMenu $event) 
         {
 
