@@ -99,9 +99,12 @@ $no = ($customer->currentPage() - 1) * $customer->perPage() + 1;
                         <input type="text" name="customer" class="form-control" placeholder="Search">
                     </div>
                     <div class="p-2">
+                    @php
+                        $order = request('order', 'desc');
+                    @endphp
                         <select name="order" class="form-control">
-                            <option value="desc">Z - A Created By</option>
-                            <option value="asc">A - Z Created By</option>
+                            <option value="asc" {{ $order == 'asc' ? 'selected' : '' }} >A - Z Created By</option>
+                            <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
                         </select>
                     </div>
                 </div>
