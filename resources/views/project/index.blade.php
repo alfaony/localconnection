@@ -104,7 +104,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
         @if(@$projectEdit)
         <button type="submit" class="btn btn-primary">Ubah</button>
         @if($directManager)
-        <a href="{{ route('manager.edit',$directManager)}}" class="btn btn-info" target=”_blank”>Jumlah Hari Kerja</a>
+        <a href="{{ route('manager.edit',$directManager)}}" class="btn btn-info">Jumlah Hari Kerja</a>
         @endif
         @else
         <button type="submit" class="btn btn-primary">Simpan</button>
@@ -121,6 +121,12 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             </div>
             <div class="p-2">
                 <input type="text" name="search" class="form-control" placeholder="Search">
+            </div>
+            <div class="p-2">
+                <select name="order" class="form-control">
+                    <option value="desc">Z - A Created By</option>
+                    <option value="asc">A - Z Created By</option>
+                </select>
             </div>
         </div>
     </form>

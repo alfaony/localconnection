@@ -20,6 +20,20 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {   
+        switch ($request->order) 
+        {
+            case 'asc':
+                $order = 'asc';
+                break;
+            case 'desc':
+                $order = 'desc';
+                break;
+            
+            default:
+                $order = 'desc';
+                break;
+        }
+
         $project = Project::byCompany(Auth::user()->company_id)
         ->where(function ($query) use ($request) {
             $searchTerm = '%' . $request->get('search') . '%';
@@ -30,7 +44,7 @@ class ProjectController extends Controller
                     $query->where('number_result', 'like', $searchTerm);
                 });
         })
-        ->OrderBy('created_at','asc')->paginate(10);
+        ->OrderBy('created_at',$order)->paginate(10);
 
         $totalProject = Project::byCompany(Auth::user()->company_id)->count();
         $workOrder = WorkOrder::whereDoesntHave('project')
