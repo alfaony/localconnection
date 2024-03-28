@@ -100,8 +100,12 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             </div>
         </div>
 
+
         @if(@$projectEdit)
         <button type="submit" class="btn btn-primary">Ubah</button>
+        @if($directManager)
+        <a href="{{ route('manager.edit',$directManager)}}" class="btn btn-info">Jumlah Hari Kerja</a>
+        @endif
         @else
         <button type="submit" class="btn btn-primary">Simpan</button>
         @endif
@@ -116,7 +120,16 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                 <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
             </div>
             <div class="p-2">
-                <input type="text" name="project" class="form-control" placeholder="Search">
+                <input type="text" name="search" class="form-control" placeholder="Search">
+            </div>
+            <div class="p-2">
+            @php
+                $order = request('order', 'desc');
+            @endphp
+                <select name="order" class="form-control">
+                    <option value="asc" {{ $order == 'asc' ? 'selected' : '' }} >A - Z Created By</option>
+                    <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
+                </select>
             </div>
         </div>
     </form>
@@ -126,6 +139,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             <tr>
                 <th>No Proyek</th>
                 <th>Nama Proyek</th>
+                <th>Nomor SPK</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -134,6 +148,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             <tr>
                 <td>{{ $no++ }}</td>
                 <td>{{ $a->title }}</td>
+                <td>{{ $a->workOrder ? $a->workOrder->number_result : '' }}</td>
                 <td>
                     <form method="post" action="{{ route('project.destroy',$a) }}">
                         @csrf

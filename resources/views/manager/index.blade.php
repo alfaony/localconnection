@@ -44,7 +44,16 @@ $totalManager = $totalManager + 1; // Get the total number of projects
                 <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
             </div>
             <div class="p-2">
-                <input type="text" name="manager" class="form-control" placeholder="Search">
+                <input type="text" name="search" class="form-control" placeholder="Search">
+            </div>
+            <div class="p-2">
+                @php
+                    $order = request('order', 'desc');
+                @endphp
+                <select name="order" class="form-control">
+                    <option value="asc" {{ $order == 'asc' ? 'selected' : '' }} >A - Z Created By</option>
+                    <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
+                </select>
             </div>
         </div>
     </form>
@@ -56,6 +65,7 @@ $totalManager = $totalManager + 1; // Get the total number of projects
             <tr>
                 <th>No. Pembelian</th>
                 <th>Nama Manager</th>
+                <th>Nama Proyek</th>
                 <th>Total Anggaran</th>
                 <th>Aksi</th>
             </tr>
@@ -65,6 +75,7 @@ $totalManager = $totalManager + 1; // Get the total number of projects
             <tr>
                 <td>{{ $no }}</td>
                 <td>{{ $a->name }}</td>
+                <td> {{ $a->project  ? $a->project->title : '' }} </td>
                 <td>{{ $a->total_job ? 'Rp. '.number_format($a->total_job,0,',','.') : 'Rp. 0' }}</td>
                 <td>
                 <form method="post" action="{{ route('manager.destroy',$a) }}">

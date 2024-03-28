@@ -9,6 +9,7 @@ use App\Http\Requests\ProjectRequest;
 
 use App\Models\Project;
 use App\Models\WorkOrder;
+use App\Models\Manager;
 
 class ProjectController extends Controller
 {
@@ -19,8 +20,19 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {   
-        $project = Project::byCompany(Auth::user()->company_id)->where('title','like', '%' . $request->get('project') . '%')
-        ->OrderBy('created_at','asc')->paginate(10);
+        $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
+
+        $project = Project::byCompany(Auth::user()->company_id)
+        ->where(function ($query) use ($request) {
+            $searchTerm = '%' . $request->get('search') . '%';
+            // Search in the manager's name
+            $query->where('title', 'like', $searchTerm)
+                // Or search in related project's title
+                ->orWhereHas('workOrder', function ($query) use ($searchTerm) {
+                    $query->where('number_result', 'like', $searchTerm);
+                });
+        })
+        ->OrderBy('created_at',$order)->paginate(10);
 
         $totalProject = Project::byCompany(Auth::user()->company_id)->count();
         $workOrder = WorkOrder::whereDoesntHave('project')
@@ -82,9 +94,10 @@ class ProjectController extends Controller
         ->orderBy('created_at','desc')
         ->get();
     
-        // Rest of your code for editing the project...
 
-        return view('project.index', compact('projectEdit','project','totalProject', 'workOrder'));
+        $directManager = Manager::select('slug')->where('project_id',$projectEdit->id)->first();
+
+        return view('project.index', compact('projectEdit','project','totalProject', 'workOrder' ,'directManager'));
     }
 
     /**

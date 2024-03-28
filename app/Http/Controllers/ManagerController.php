@@ -27,8 +27,20 @@ class ManagerController extends Controller
      */
     public function index(Request $request)
     {
-        $manager = Manager::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('manager') . '%')
-        ->OrderBy('created_at','asc')->paginate(10);
+        $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
+
+        $manager = Manager::byCompany(Auth::user()->company_id)
+        ->where(function ($query) use ($request) {
+            $searchTerm = '%' . $request->get('search') . '%';
+            // Search in the manager's name
+            $query->where('name', 'like', $searchTerm)
+                // Or search in related project's title
+                ->orWhereHas('project', function ($query) use ($searchTerm) {
+                    $query->where('title', 'like', $searchTerm);
+                });
+        })
+        ->orderBy('created_at', $order)
+        ->paginate(10);
 
         $totalManager = Manager::byCompany(Auth::user()->company_id)->count();
         return view('manager.index',compact('manager','totalManager'));

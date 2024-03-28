@@ -18,8 +18,10 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
+        $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
+
         $customer = Customer::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('customer') . '%')
-        ->OrderBy('name','asc')->paginate(10);
+        ->OrderBy('created_at',$order)->paginate(10);
 
         $totalCustomer = Customer::byCompany(Auth::user()->company_id)->count();
 
