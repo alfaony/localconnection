@@ -20,19 +20,7 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {   
-        switch ($request->order) 
-        {
-            case 'asc':
-                $order = 'asc';
-                break;
-            case 'desc':
-                $order = 'desc';
-                break;
-            
-            default:
-                $order = 'desc';
-                break;
-        }
+        $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
 
         $project = Project::byCompany(Auth::user()->company_id)
         ->where(function ($query) use ($request) {
