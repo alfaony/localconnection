@@ -19,6 +19,7 @@
                 </div>
                 <div class="col-6 text-right">
                     <h2>Surat Perintah Kerja</h2>
+                    <p>No Quote # {{  $workOrder->quote->number_result ?? '' }}</p>
                     <p>No SPK # {{ $nomorWorkOrder }}</p>
                     <p>SPK Date: {{ $workOrder->date }}</p>
                     <!-- <p>P.O#: 23/12/2019</p> -->
