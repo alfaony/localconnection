@@ -10,6 +10,8 @@ use App\Helpers\Access;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 
+use App\Models\EquipmentReduction;
+use App\Observers\EquipmentReductionObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(Dispatcher $events)
     {
+        EquipmentReduction::observe(EquipmentReductionObserver::class);
 
         Schema::defaultStringLength(191);
         if ($this->app->environment('production') || $this->app->environment('development')) 
@@ -58,8 +61,11 @@ class AppServiceProvider extends ServiceProvider
                 'reports',
                 'companies',
                 'setting_companies',
-                'roles'
+                'roles',
             ];
+
+            $equipmentMenuArray = array();
+            $equipmentMenu = ['equipment','equipment_reductions'];
 
             $menus = [
                 'homes' => [
@@ -153,15 +159,46 @@ class AppServiceProvider extends ServiceProvider
                     'route'         => 'role.index',
                     'icon' => 'fa fa-cog',
                 ],
+
+                'equipment' => [
+                    'text'        => 'Daftar Perlengkapan',
+                    'route'         => 'equipment.index',
+                    'icon' => 'fa fa-check',
+                ],
+
+                'equipment_reductions' => [
+                    'text'        => 'Pengeluaran',
+                    'route'         => 'equipment-reduction.index',
+                    'icon' => 'fa fa-check',
+                ],
             ];
 
-            // dd(Access::can("index", "rol"));
             foreach ($listMenu as $role) 
             {
                 if(Access::can("index", $role))
                 {
                     $event->menu->add($menus[$role]);
                 }
+            }
+
+            foreach ($equipmentMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($equipmentMenuArray,$menus[$role]);
+                }
+            }
+
+            $equipmentMenu = 
+            [
+                'text'    => 'Perlengkapan',
+                'icon'    => 'fa fa-building',
+                'submenu' => $equipmentMenuArray
+            ];
+
+            if($equipmentMenu['submenu'] )
+            {
+                $event->menu->add($equipmentMenu);
             }
         });
 

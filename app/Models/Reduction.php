@@ -7,15 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
-use Carbon\Carbon;
 
-class Bast extends Model
+class Reduction extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
-
+    
     protected static function boot()
     {
         parent::boot();
@@ -27,9 +26,9 @@ class Bast extends Model
         });
     }
 
-    public function setDateAttribute($value)
+    public function setNameAttribute($value)
     {
-        $this->attributes['date'] = $value;
+        $this->attributes['name'] = $value;
         $this->attributes['slug'] = $this->createUniqueSlug($value);
     }
 
@@ -47,36 +46,17 @@ class Bast extends Model
 
         return $slug;
     }
-    public function getNumberAttribute()
-    {
-        $year = Carbon::parse($this->created_at)->format('Y');
-        return $this->basts_number.'/'.$year ?? ''; 
-    }
-    public function getRouteKeyName()
-    {
-        return 'slug';
-    }
-    
-    public function userCreate()
-    {
-        return $this->belongsTo(User::class,'user_created_id','id')->withTrashed();
-    }
 
-    public function workOrder()
+    public function user()
     {
-        return $this->belongsTo(WorkOrder::class);
-    }
-
-    public function project()
-    {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)
         {
-            return $query->whereHas('userCreate', function ($query) use ($companyId) 
+            return $query->whereHas('user', function ($query) use ($companyId) 
             {
                 $query->where('company_id', $companyId);
             });

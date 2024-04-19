@@ -13,4 +13,6 @@ class RoleSchema
     const PM = 'Project Manager';
     const HR = 'Human Resource';
     const SALES = 'Sales';
+    const OB = 'Office Boy';
+    const BM = 'Building Manager';
 }

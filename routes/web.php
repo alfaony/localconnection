@@ -21,6 +21,8 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PricelistController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\SortUrlController;
+use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\EquipmentReductionController;
 
 
 
@@ -105,8 +107,14 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('pricelist', [PricelistController::class, 'index'])->name('pricelist.index');
   Route::get('pricelist/show/{product}', [PricelistController::class, 'show'])->name('pricelist.show');
   
-  Route::resource('company', CompanyController::class)->except(['create','show']);;
+  Route::resource('company', CompanyController::class)->except(['create','show']);
+
+  Route::get('equipment/history/{slug}', [EquipmentController::class, 'history'])->name('equipment.history');
+  Route::resource('equipment', EquipmentController::class);
+  
+  Route::resource('equipment-reduction', EquipmentReductionController::class)->except('show');
 });
+
 
 Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');
 
