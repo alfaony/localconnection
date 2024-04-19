@@ -17,7 +17,7 @@
         </div>
 
         <div class="form-group">
-            <label for="reduction_id">Jenis Pengurangan Perlengkapan</label>
+            <label for="reduction_id">Status</label>
             <select class="form-control" id="reduction_id" name="reduction_id">
                 @foreach ($reductions as $type)
                     <option value="{{ $type->id }}" {{ (isset($reduction) && $reduction->reduction_id == $type->id) ? 'selected' : '' }}>{{ $type->name }}</option>
