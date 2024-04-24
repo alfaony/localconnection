@@ -114,7 +114,7 @@ function compressAndPreviewImage() {
         imgElement.src = event.target.result;
         imgElement.onload = function (e) {
             const canvas = document.createElement("canvas");
-            const MAX_WIDTH = 800;
+            const MAX_WIDTH = 800; // Define the maximum width of the image
 
             const scaleSize = MAX_WIDTH / e.target.width;
             canvas.width = MAX_WIDTH;
@@ -123,20 +123,27 @@ function compressAndPreviewImage() {
             const ctx = canvas.getContext("2d");
             ctx.drawImage(e.target, 0, 0, canvas.width, canvas.height);
             ctx.canvas.toBlob((blob) => {
-                const file = new File([blob], "filename.jpg", {
+                const file = new File([blob], "compressed_image.jpg", {
                     type: 'image/jpeg',
-                    quality: 0.8
+                    quality: 0.8 // Lowering the quality to reduce file size
                 });
 
+                // Update the file input with the compressed image file
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+
+                // Update the preview image
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onloadend = function () {
                     preview.src = reader.result;
                     preview.style.display = 'block';
                 }
-            }, 'image/jpeg', 0.8);
+            }, 'image/jpeg', 0.6); // Lowering quality setting here
         }
     }
 }
 </script>
+
 @endsection
