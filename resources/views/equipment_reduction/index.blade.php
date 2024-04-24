@@ -83,7 +83,7 @@
                 <th>Laporan</th>
                 <th>Temuan</th>
                 <th>Tindakan</th>
-                <th></th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
