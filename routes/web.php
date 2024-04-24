@@ -24,6 +24,12 @@ use App\Http\Controllers\SortUrlController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\EquipmentReductionController;
 
+use App\Http\Controllers\TaskController;
+
+use App\Http\Controllers\TaskAssignController;
+use App\Http\Controllers\TasStatusController;
+use App\Http\Controllers\TaskTypeController;
+
 
 
 /*
@@ -113,7 +119,14 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('equipment', EquipmentController::class);
   
   Route::resource('equipment-reduction', EquipmentReductionController::class)->except('show');
+
+  Route::resource('task', TaskController::class)->except(['create','show']);
+  
+  Route::put('task-assign/approvement/{slug}', [TaskAssignController::class, 'approvement'])->name('task-assign.approvement');
+  Route::put('task-assign/report/{slug}', [TaskAssignController::class, 'report'])->name('task-assign.report');
+  Route::resource('task-assign', TaskAssignController::class);
 });
+
 
 
 Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');

@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 
 use App\Models\EquipmentReduction;
+use App\Models\TaskAssign;
 use App\Observers\EquipmentReductionObserver;
+use App\Observers\TaskAssignObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(Dispatcher $events)
     {
         EquipmentReduction::observe(EquipmentReductionObserver::class);
+        TaskAssign::observe(TaskAssignObserver::class);
 
         Schema::defaultStringLength(191);
         if ($this->app->environment('production') || $this->app->environment('development')) 
@@ -65,7 +68,10 @@ class AppServiceProvider extends ServiceProvider
             ];
 
             $equipmentMenuArray = array();
+            $taskMenuArray = array();
+
             $equipmentMenu = ['equipment','equipment_reductions'];
+            $taskMenu = ['tasks','task_assigns'];
 
             $menus = [
                 'homes' => [
@@ -163,13 +169,25 @@ class AppServiceProvider extends ServiceProvider
                 'equipment' => [
                     'text'        => 'Daftar Perlengkapan',
                     'route'         => 'equipment.index',
-                    'icon' => 'fa fa-check',
+                    'icon' => 'fa fa-list-ul',
                 ],
 
                 'equipment_reductions' => [
                     'text'        => 'Pengeluaran',
                     'route'         => 'equipment-reduction.index',
                     'icon' => 'fa fa-check',
+                ],
+
+                'tasks' => [
+                    'text'        => 'Tugas',
+                    'route'         => 'task.index',
+                    'icon' => 'fa fa-tasks',
+                ],
+
+                'task_assigns' => [
+                    'text'        => 'Penugasan',
+                    'route'         => 'task-assign.index',
+                    'icon' => 'fa fa-list-alt',
                 ],
             ];
 
@@ -189,6 +207,14 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($taskMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($taskMenuArray,$menus[$role]);
+                }
+            }
+
             $equipmentMenu = 
             [
                 'text'    => 'Perlengkapan',
@@ -196,10 +222,23 @@ class AppServiceProvider extends ServiceProvider
                 'submenu' => $equipmentMenuArray
             ];
 
+            $taskMenu = 
+            [
+                'text'    => 'Manajemen Tugas',
+                'icon'    => 'fa fa-check',
+                'submenu' => $taskMenuArray
+            ];
+
             if($equipmentMenu['submenu'] )
             {
                 $event->menu->add($equipmentMenu);
             }
+
+            if($taskMenu['submenu'] )
+            {
+                $event->menu->add($taskMenu);
+            }
+            
         });
 
         // die;

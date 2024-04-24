@@ -102,7 +102,7 @@
                         @canAccess('store','equipment_reductions')
                         <a href="{{ route('equipment-reduction.edit', $reduction->slug) }}" class="btn btn-sm btn-primary"><i class="fa fa-edit"></i></a>
                         @endcanAccess
-                    @canAccess('store','equipment_reductions')
+                    @canAccess('destroy','equipment_reductions')
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>

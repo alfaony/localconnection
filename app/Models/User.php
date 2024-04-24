@@ -99,4 +99,15 @@ class User extends Authenticatable
             return $query->where("company_id",$companyId);
         }
     }
+
+    public function scopeByRole($query,$role)
+    {
+        if($role)
+        {
+            return $query->whereHas('role', function ($query) use ($role) 
+            {
+                $query->where('name', $role);
+            });
+        }
+    }
 }

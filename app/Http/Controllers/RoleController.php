@@ -51,7 +51,10 @@ class RoleController extends Controller
             'basts',
             'reports',
             'setting_companies',
-            'roles'
+            'equipment',
+            'equipment_reductions',
+            'tasks',
+            'task_assigns'
         ];
 
         $checked = array_merge($mainMenus);
@@ -132,7 +135,10 @@ class RoleController extends Controller
             'basts',
             'reports',
             'setting_companies',
-            'roles'
+            'equipment',
+            'equipment_reductions',
+            'tasks',
+            'task_assigns'
         ];
         
         $checked = array_merge($mainMenus);
@@ -175,7 +181,10 @@ class RoleController extends Controller
             'basts',
             'reports',
             'setting_companies',
-            'roles'
+            'equipment',
+            'equipment_reductions',
+            'tasks',
+            'task_assigns'
         ];
         
         $checked = array_merge($mainMenus);

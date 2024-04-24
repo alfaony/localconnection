@@ -11,7 +11,7 @@ use App\Schemas\RoleSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PermissionForEquipmentSeeder extends Seeder
+class PermissionForTaskAssignSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -20,7 +20,7 @@ class PermissionForEquipmentSeeder extends Seeder
      */
     public function run()
     {
-        $equipment = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2','history'];
+        $equipment = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2','approvement','report'];
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $bm = Role::where('name',RoleSchema::BM)->first();
         $ob = Role::where('name',RoleSchema::OB)->first();
@@ -29,26 +29,23 @@ class PermissionForEquipmentSeeder extends Seeder
         {
             // create permision
             $permission = Permission::firstOrCreate([
-                'name' => ucwords($method).' Equipment',
+                'name' => ucwords($method).' Task Assign',
             ],[
                 'method' => $method,
-                'table' => 'equipment',
-                'model' => 'Equipment',
+                'table' => 'task_assigns',
+                'model' => 'TaskAssign',
                 'guard_name' => 'web'
             ]);
 
             //assign role & permission
-            if($method == "create" || $method == "history" || $method == "destroy")
-            {
-                PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
-                PermissionRole::create(['role_id' => $bm->id, 'permission_id' => $permission->id]);
-            }else
-            {
-                PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
-                PermissionRole::create(['role_id' => $bm->id, 'permission_id' => $permission->id]);
-                PermissionRole::create(['role_id' => $ob->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $bm->id, 'permission_id' => $permission->id]);
 
+            if (in_array($method, ["index", "show", "report"])) 
+            {
+                PermissionRole::create(['role_id' => $ob->id, 'permission_id' => $permission->id]);
             }
         }
     }
 }
+

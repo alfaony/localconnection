@@ -15,4 +15,14 @@ class ParamSchema
     const ONEDAY = 1;
 
     const PERCENTAGE = 100;
+
+    const DOING = "doing";
+
+    const INREVIEW = "in review";
+    
+    const NOTCOMPLATE = "not complete";
+    
+    const COMPLATE = "complete";
+
+    const REGULAR = 'regular';
 }

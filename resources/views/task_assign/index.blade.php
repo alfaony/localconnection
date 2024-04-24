@@ -1,0 +1,162 @@
+@extends('adminlte::page')
+
+@section('content_header')
+    <h1>Daftar Penugasan</h1>
+@stop
+@section('content')
+<div class="col-md-12">
+    @if(Session::get('store'))
+    <div class="alert alert-success mt-3">Penugasan Berhasil Ditambahkan</div>
+    @endif
+    @if(Session::get('update'))
+    <div class="alert alert-success mt-3">Penugasan Berhasil Diperbarui</div>
+    @endif
+    @if(Session::get('report'))
+    <div class="alert alert-success mt-3">Report Berhasil Ditambahkan</div>
+    @endif
+    @if(Session::get('delete'))
+    <div class="alert alert-success mt-3">Penugasan Berhasil Terhapus</div>
+    @endif
+
+
+</div>
+<div class="container p-3">
+    @canAccess('store','task_assigns')
+    <a href="{{ route('task-assign.create') }}" class="btn btn-primary mb-3"><i class="fa fa-plus"></i><span> Penugasan</span></a>
+    @endcanAccess
+    @canAccess('index','task_assigns')
+    <form method="GET" action="{{ route('task-assign.index') }}" class="mb-3">
+        <div class="d-flex flex-row-reverse">
+            <div class="col-auto">
+                <button type="submit" class="btn btn-info">Search</button>
+            </div>
+            <div class="col-auto">
+                <select class="form-control" id="task" name="task">
+                        <option value="all" {{ request('task') == "all" ? 'selected' : '' }}  >Semua Tugas</option>
+                        <option value="today" 
+                            @if(request('task'))
+                                {{ request('task') == "today" ? 'selected' : '' }}
+                            @else
+                                selected 
+                            @endif
+                        >Tugas Hari Ini</option>
+                </select>
+            </div>
+            @if(Auth::user()->role->name != \App\Schemas\RoleSchema::OB)
+            <div class="col-auto">
+                <select class="form-control" id="user" name="user">
+                    <option value="">Select User</option>
+                    @foreach ($users as $user)
+                        <option value="{{ $user->name }}" {{ request('user') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
+            <div class="col-auto">
+                <select class="form-control" id="status" name="status">
+                    <option value="">Select Status</option>
+                    @foreach ($taskStatuss as $status)
+                        <option value="{{ $status->name }}" {{ request('status') == $status->name ? 'selected' : '' }}>{{ $status->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-auto">
+                <input type="date" class="form-control" id="date" name="date" value="">
+            </div>
+        </div>
+    </form>
+    @endcanAccess
+    <div class="table-responsive-md">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Tugas</th>
+                    <th>Penugasan</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($assigns as $taskAssign)
+                <tr>
+                    <td>{{ $taskAssign->date }}</td>
+                    <td>
+                        @switch($taskAssign->taskStatus->name)
+                            @case('doing')
+                                <i class="fa fa-hourglass-start"></i> Doing
+                                @break
+                            @case('in review')
+                                <i class="fa fa-eye" style="color: green;"></i> In Review
+                                @break
+                            @case('not complete')
+                                <i class="fa fa-times-circle" style="color: red;"></i> Not Complete
+                                @break
+                            @case('complete')
+                                <i class="fa fa-check" style="color: green;"></i> Complete
+                                @break
+                            @default
+                                {{ $taskAssign->taskStatus->name }}
+                        @endswitch
+                    </td>
+                    <td> {{ $taskAssign->task->name }} </td>
+                    <td>{{ $taskAssign->assign ? $taskAssign->assign->name : "" }}</td>
+                    <td>
+                        <form action="{{ route('task-assign.destroy', $taskAssign->slug) }}" method="POST" style="display: inline-block;">
+                            @canAccess('show','task_assigns')
+                            <a href="{{ route('task-assign.show', $taskAssign->slug) }}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
+                            @endcanAccess
+                            @canAccess('edit','task_assigns')
+                            <a href="{{ route('task-assign.edit', $taskAssign->slug) }}" class="btn btn-sm btn-info"><i class="fa fa-edit"></i></a>
+                            @endcanAccess
+                            @csrf
+                            @method('DELETE')
+                            @canAccess('destroy','task_assigns')
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
+                            @endcanAccess
+                        </form>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    <div class="d-flex justify-content-center">
+        {{ $assigns->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+    </div>
+</div>
+@endsection
+@section('css')
+    <style>
+        body 
+        {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 5px;
+        }
+
+        .btn-custom {
+            background-color: #007bff;
+            color: #ffffff;
+            border-radius: 4px;
+        }
+
+        .btn-custom:hover {
+            background-color: #0056b3;
+        }
+
+        .pagination > li > a {
+            color: #007bff;
+            background-color: transparent;
+            border: none;
+        }
+
+        .pagination > .active > a {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+    </style>
+@stop

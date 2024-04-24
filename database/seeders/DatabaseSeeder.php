@@ -28,5 +28,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionWorkOrderShowSeeder::class);
         $this->call(SmtpSettingSeeder::class);
         $this->call(CallMenuEqipmentSeeder::class);
+        $this->call(CallMenuTaskSeeder::class);
     }
 }
