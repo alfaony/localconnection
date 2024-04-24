@@ -44,13 +44,14 @@
                         </div>
                     @else
                     @canAccess('report','task_assigns')
-                    <form action="{{ route('task-assign.report', $taskAssign->slug) }}" method="POST" enctype="multipart/form-data">
-                        @method('put')
+                    <form action="{{ route('task-assign.report', $taskAssign->slug) }}" method="POST" enctype="multipart/form-data" id="captureForm">
                         @csrf
+                        @method('put')
                         <div class="mb-3">
                             <label for="photo" class="form-label">Ambil Foto</label>
-                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" capture="environment">
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" capture="environment" onchange="compressAndPreviewImage();">
                             <small class="text-muted">Klik untuk mengambil foto menggunakan kamera.</small>
+                            <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-fluid mt-3"/>
                         </div>
                         <div class="mb-3">
                             <label for="note" class="form-label">Catatan</label>
@@ -89,4 +90,53 @@
     </div>
 </div>
 
+@endsection
+@section('js')
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<!-- Select2 JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script>
+function compressAndPreviewImage() {
+    const fileInput = document.getElementById('photo');
+    const preview = document.getElementById('photo-preview');
+
+    if (!fileInput.files[0]) {
+        preview.src = "";
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(fileInput.files[0]);
+    reader.onload = function (event) {
+        const imgElement = document.createElement("img");
+        imgElement.src = event.target.result;
+        imgElement.onload = function (e) {
+            const canvas = document.createElement("canvas");
+            const MAX_WIDTH = 800;
+
+            const scaleSize = MAX_WIDTH / e.target.width;
+            canvas.width = MAX_WIDTH;
+            canvas.height = e.target.height * scaleSize;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(e.target, 0, 0, canvas.width, canvas.height);
+            ctx.canvas.toBlob((blob) => {
+                const file = new File([blob], "filename.jpg", {
+                    type: 'image/jpeg',
+                    quality: 0.8
+                });
+
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onloadend = function () {
+                    preview.src = reader.result;
+                    preview.style.display = 'block';
+                }
+            }, 'image/jpeg', 0.8);
+        }
+    }
+}
+</script>
 @endsection
