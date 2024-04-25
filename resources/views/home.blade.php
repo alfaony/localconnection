@@ -73,6 +73,34 @@
     </div>
     @endcanAccess
 </div>
+
+@if(Auth::user()->role->name == \App\Schemas\RoleSchema::BM)
+<div class="container">
+    <div class="py-4">
+        <h2>Low Stock Equipment</h2>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Code</th>
+                        <th>Stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($equipments as $equipment)
+                        <tr>
+                            <td>{{ $equipment->name }}</td>
+                            <td>{{ $equipment->code }}</td>
+                            <td>{{ $equipment->total_stock }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
 @section('js')
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

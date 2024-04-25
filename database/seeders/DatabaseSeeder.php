@@ -29,5 +29,7 @@ class DatabaseSeeder extends Seeder
         $this->call(SmtpSettingSeeder::class);
         $this->call(CallMenuEqipmentSeeder::class);
         $this->call(CallMenuTaskSeeder::class);
+        $this->call(CallMenuAssetSeeder::class);
+        $this->call(CallMenuAttendanceSeeder::class);
     }
 }

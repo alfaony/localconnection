@@ -29,11 +29,19 @@ class RoleScope implements Scope
                 {
                     $builder->byCompany(Auth::user()->company_id);
                 }
+                if($table == 'attendances')
+                {
+                    $builder->byCompany(Auth::user()->company_id);
+                }
                 break;
             case RoleSchema::OB:
                 if($table == 'task_assigns')
                 {
                     $builder->where('user_assign_id',Auth::user()->id);
+                }
+                if($table == 'attendances')
+                {
+                    $builder->where('user_id',Auth::user()->id);
                 }
                 break;
 

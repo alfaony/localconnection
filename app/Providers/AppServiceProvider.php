@@ -65,6 +65,9 @@ class AppServiceProvider extends ServiceProvider
                 'companies',
                 'setting_companies',
                 'roles',
+                'assets',
+                'attendances',
+                'report_points',
             ];
 
             $equipmentMenuArray = array();
@@ -188,6 +191,24 @@ class AppServiceProvider extends ServiceProvider
                     'text'        => 'Penugasan',
                     'route'         => 'task-assign.index',
                     'icon' => 'fa fa-list-alt',
+                ],
+
+                'assets' => [
+                    'text'        => 'Peralatan',
+                    'route'         => 'asset.index',
+                    'icon' => 'fa fa-briefcase',
+                ],
+
+                'attendances' => [
+                    'text'        => 'Kehadiran',
+                    'route'         => 'attendance.index',
+                    'icon' => 'fa fa-calendar',
+                ],
+
+                'report_points' => [
+                    'text'        => 'Laporan Poin',
+                    'route'         => 'report-point.index',
+                    'icon' => 'fa fa-book',
                 ],
             ];
 

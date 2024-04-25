@@ -11,7 +11,7 @@
             @method('PUT')
         @endif
         <div class="form-group">
-            <label for="name">Name</label>
+            <label for="name">Nama</label>
             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $equipment->name ?? '') }}" required>
             @error('name')
                 <span class="invalid-feedback" role="alert">
@@ -20,7 +20,7 @@
             @enderror
         </div>
         <div class="form-group">
-            <label for="total_stock">Total Stock</label>
+            <label for="total_stock">Total Stok</label>
             <input type="number" class="form-control @error('total_stock') is-invalid @enderror" id="total_stock" name="total_stock" value="{{ old('total_stock', $equipment->total_stock ?? '') }}" required min="0">
             @error('total_stock')
                 <span class="invalid-feedback" role="alert">

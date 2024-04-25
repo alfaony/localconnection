@@ -97,8 +97,8 @@ $no = 1;
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Points</th>
+                            <th>Nama</th>
+                            <th>Poin</th>
                             <th></th>
                         </tr>
                     </thead>

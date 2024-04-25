@@ -87,6 +87,16 @@ class User extends Authenticatable
         return $this->belongsTo(Company::class)->withTrashed();
     }
 
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function taskAssigns()
+    {
+        return $this->hasMany(TaskAssign::class,'user_assign_id');
+    }
+    
     public function settingCompany()
     {
         return $this->hasMany(SettingCompany::class);
@@ -99,7 +109,7 @@ class User extends Authenticatable
             return $query->where("company_id",$companyId);
         }
     }
-
+    
     public function scopeByRole($query,$role)
     {
         if($role)

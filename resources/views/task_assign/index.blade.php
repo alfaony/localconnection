@@ -70,11 +70,11 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Date</th>
+                    <th>Tanggal</th>
                     <th>Status</th>
                     <th>Tugas</th>
                     <th>Penugasan</th>
-                    <th>Actions</th>
+                    <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>

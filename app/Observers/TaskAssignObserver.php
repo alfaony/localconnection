@@ -3,7 +3,9 @@
 namespace App\Observers;
 
 use App\Models\TaskAssign;
+use App\Models\TaskStatus;
 use App\Schemas\ParamSchema;
+use Carbon\Carbon;
 
 class TaskAssignObserver
 {
@@ -20,14 +22,23 @@ class TaskAssignObserver
             if ($taskAssign->task->taskType->name == ParamSchema::REGULAR) 
             {
                 $taskAssign->point = -abs($taskAssign->task->point); // Make point negative
-            } else {
-                $taskAssign->point = 0; // Set point to zero for non-regular tasks
+            } else 
+            {
+                $taskAssign->point = ParamSchema::ZERO; // Set point to zero for non-regular tasks
             }
             $taskAssign->save();
         } elseif (!$taskAssign->point && $taskAssign->taskStatus->name == ParamSchema::COMPLATE) {
             // Assign point directly from the task
             $taskAssign->point = $taskAssign->task->point;
             $taskAssign->save();
+
+            if ($taskAssign->task->taskType->name == ParamSchema::REGULAR) 
+            {
+                $newTaskAssign = $taskAssign->replicate(); // Membuat salinan dari TaskAssign
+                $newTaskAssign->date = Carbon::parse($taskAssign->date)->addWeek(); // Mengatur tanggal satu minggu ke depan
+                $newTaskAssign->task_status_id = TaskStatus::where('name', ParamSchema::DOING)->first()->id; // Mengatur status ke DOING
+                $newTaskAssign->save(); // Menyimpan TaskAssign baru
+            }
         }
     }
 
@@ -45,13 +56,21 @@ class TaskAssignObserver
             {
                 $taskAssign->point = -abs($taskAssign->task->point); // Make point negative
             } else {
-                $taskAssign->point = 0; // Set point to zero for non-regular tasks
+                $taskAssign->point = ParamSchema::ZERO; // Set point to zero for non-regular tasks
             }
             $taskAssign->save();
         } elseif (!$taskAssign->point && $taskAssign->taskStatus->name == ParamSchema::COMPLATE) {
             // Assign point directly from the task
             $taskAssign->point = $taskAssign->task->point;
             $taskAssign->save();
+
+            if ($taskAssign->task->taskType->name == ParamSchema::REGULAR) 
+            {
+                $newTaskAssign = $taskAssign->replicate(); // Membuat salinan dari TaskAssign
+                $newTaskAssign->date = Carbon::parse($taskAssign->date)->addWeek(); // Mengatur tanggal satu minggu ke depan
+                $newTaskAssign->task_status_id = TaskStatus::where('name', ParamSchema::DOING)->first()->id; // Mengatur status ke DOING
+                $newTaskAssign->save(); // Menyimpan TaskAssign baru
+            }
         }
         
     }

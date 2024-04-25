@@ -29,8 +29,9 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskAssignController;
 use App\Http\Controllers\TasStatusController;
 use App\Http\Controllers\TaskTypeController;
-
-
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ReportPointController;
+use App\Http\Controllers\AssetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -114,19 +115,22 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('pricelist/show/{product}', [PricelistController::class, 'show'])->name('pricelist.show');
   
   Route::resource('company', CompanyController::class)->except(['create','show']);
-
+  
   Route::get('equipment/history/{slug}', [EquipmentController::class, 'history'])->name('equipment.history');
   Route::resource('equipment', EquipmentController::class);
   
   Route::resource('equipment-reduction', EquipmentReductionController::class)->except('show');
-
+  
   Route::resource('task', TaskController::class)->except(['create','show']);
   
   Route::put('task-assign/approvement/{slug}', [TaskAssignController::class, 'approvement'])->name('task-assign.approvement');
   Route::put('task-assign/report/{slug}', [TaskAssignController::class, 'report'])->name('task-assign.report');
   Route::resource('task-assign', TaskAssignController::class);
-});
 
+  Route::get('report-point',[ReportPointController::class,'index'])->name('report-point.index');
+  Route::resource('attendance', AttendanceController::class)->only('index');
+  Route::resource('asset', AssetController::class)->except(['create','show']);
+});
 
 
 Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');

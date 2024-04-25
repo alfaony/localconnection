@@ -34,10 +34,10 @@
     <table class="table table-bordered mt-5">
         <thead>
             <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Total Stock</th>
-                <th>Actions</th>
+                <th>Kode</th>
+                <th>Nama</th>
+                <th>Jumlah Stock</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
