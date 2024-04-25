@@ -85,6 +85,39 @@
                                 </div>
 
                                 <div class="form-group">
+                                    <label for="clock_in">Waktu Masuk Standar</label>
+                                    <input type="time" name="clock_in" id="clock_in" class="form-control" value="{{ old('clock_in', $data['clock_in'] ?? '08:00') }}">
+                                    @error('clock_in')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="reward_point_conversion">Konversi Poin Hadiah (per 1 POIN)</label>
+                                    <input type="text" class="form-control" id="reward_point_conversion_show" oninput="formatRupiahFormat(this,'reward_point_conversion')" value="{{ old('reward_point_conversion', $data['reward_point_conversion'] ?? '500') }}">
+                                    <input type="hidden" name="reward_point_conversion" id="reward_point_conversion" class="form-control" value="{{ old('reward_point_conversion', $data['reward_point_conversion'] ?? '500') }}">
+                                    @error('reward_point_conversion')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="late_point">Poin Terlambat</label>
+                                    <input type="number" name="late_point" id="late_point" class="form-control" value="{{ old('late_point', $data['late_point'] ?? '-10') }}">
+                                    @error('late_point')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="form-group">
+                                    <label for="on_time_point">Poin Tepat Waktu</label>
+                                    <input type="number" name="on_time_poin" id="on_time_poin" class="form-control" value="{{ old('on_time_poin', $data['on_time_poin'] ?? '0') }}">
+                                    @error('on_time_point')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+
+                                <div class="form-group">
                                     <label for="mata_uang_dasar">Template Perjanjian</label>
                                     <select name="template_perjanjian" class="form-control">
                                         @foreach($agreementTemplate as $index => $value)
@@ -264,7 +297,19 @@
         // Update 'salary' input with non-formatted number
         document.getElementById(inputNonFormat).value = parseInt(numStr);
     }
+    
 </script>
+<script>
+function formatRupiahFormat(field, fieldHidden) {
+    let number = parseInt(field.value.replace(/[^,\d]/g, '').toString());
+    let cleanNumber = isNaN(number) ? 0 : number;
+    let formatted = cleanNumber.toLocaleString('id-ID');
+
+    document.getElementById(fieldHidden).value = cleanNumber;
+    field.value = formatted;
+}
+</script>
+
 @stop
 @section('css')
 <link href="https://unpkg.com/gijgo@1.9.14/css/gijgo.min.css" rel="stylesheet" type="text/css" />
