@@ -32,6 +32,7 @@ use App\Http\Controllers\TaskTypeController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ReportPointController;
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\AssetAssignController;
 
 /*
 |--------------------------------------------------------------------------
@@ -128,8 +129,11 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('task-assign', TaskAssignController::class);
 
   Route::get('report-point',[ReportPointController::class,'index'])->name('report-point.index');
+  
   Route::resource('attendance', AttendanceController::class)->only('index');
-  Route::resource('asset', AssetController::class)->except(['create','show']);
+
+  Route::resource('asset', AssetController::class)->except(['create']);
+  Route::resource('asset-assign', AssetAssignController::class)->only(['store','update','destroy']);
 });
 
 

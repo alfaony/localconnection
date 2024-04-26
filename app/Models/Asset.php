@@ -11,6 +11,16 @@ class Asset extends Model
 {
     use HasFactory, SoftDeletes, Uuid;
 
+    public function assetAssign()
+    {
+        return $this->hasMany(AssetAssign::class);
+    }
+
+    public function latestAssetAssign()
+    {
+        return $this->hasOne(AssetAssign::class)->latest('created_at');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class)->withTrashed();

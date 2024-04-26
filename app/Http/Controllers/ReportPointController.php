@@ -48,8 +48,9 @@ class ReportPointController extends Controller
         {
             $onTimeAttendance = $user->attendances->where('point',ParamSchema::ZERO)->count();
 
+            $totalTask = $user->taskAssigns->count();
             $completedTasks = $user->taskAssigns->where('task_status_id', '==', $complate)->count();
-            $notCompletedTasks = $user->taskAssigns->where('task_status_id', '==', $notComplate)->count();
+            $notCompletedTasks = $user->taskAssigns->where('task_status_id', '==', $notComplate)->sum('point');
             $attendancePoints = $user->attendances->sum('point');
             $attendBonusPoints = $onTimeAttendance >= ParamSchema::ONEMONTH ? 100 : 0;
             $totalPoints = $completedTasks + $notCompletedTasks + $attendancePoints + $attendBonusPoints;
@@ -59,6 +60,7 @@ class ReportPointController extends Controller
 
             return [
                 'Name' => $user->name,
+                'total_task' => $totalTask,
                 'Complete' => $completedTasks,
                 'Not Complete' => $notCompletedTasks,
                 'Attend Point' => $attendancePoints,

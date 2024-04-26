@@ -26,8 +26,9 @@
         <thead>
             <tr>
                 <th>Nama</th>
-                <th>Tugas Selesai</th>
-                <th>Tugas Tidak Selesai</th>
+                <th>Total Tugas</th>
+                <th>Poin Tugas Selesai</th>
+                <th>Poin Tugas Tidak Selesai</th>
                 <th>Poin Keterlambatan</th>
                 <th>Poin Bonus Kehadiran</th>
                 <th>Total Poin</th>
@@ -38,6 +39,7 @@
             @foreach ($reports as $report)
                 <tr>
                     <td>{{ $report['Name'] }}</td>
+                    <td>{{ $report['total_task'] }}</td>
                     <td>{{ $report['Complete'] }}</td>
                     <td>{{ $report['Not Complete'] }}</td>
                     <td>{{ $report['Attend Point'] }}</td>

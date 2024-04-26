@@ -63,7 +63,7 @@
                         <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
                     </div>
                     <div class="p-2">
-                        <input type="text" name="product" class="form-control" placeholder="Search">
+                        <input type="text" name="asset" class="form-control" placeholder="Search">
                     </div>
                     <div class="p-2">
                     @php
@@ -92,6 +92,9 @@
                             <td>{{ $asset->status }}</td>
                             <td>
                                 <form action="{{ route('asset.destroy', $asset->slug) }}" method="POST" style="display: inline-block;">
+                                    @canAccess('update','assets')
+                                    <a href="{{ route('asset.show', $asset->slug) }}" class="btn btn-primary"><i class="fa fa-eye"></i></a>
+                                    @endcanAccess
                                     @canAccess('update','assets')
                                     <a href="{{ route('asset.edit', $asset->slug) }}" class="btn btn-info"><i class="fa fa-edit"></i></a>
                                     @endcanAccess

@@ -16,5 +16,6 @@ class CallMenuAssetSeeder extends Seeder
     {
         $this->call(AssetTypeForAllCompanySeeder::class);
         $this->call(PermissionForMenuAssetSeeder::class);
+        $this->call(PermissionForMenuAssetAssign::class);
     }
 }

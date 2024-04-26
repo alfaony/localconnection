@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
 
 use App\Models\Asset;
+use App\Models\User;
 use App\Models\AssetType;
 
 class AssetController extends Controller
@@ -20,7 +22,7 @@ class AssetController extends Controller
     {
         $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
         $assets = Asset::byCompany(Auth::user()->company_id)
-        ->where('name','like', '%' . $request->get('task') . '%')
+        ->where('name','like', '%' . $request->get('asset') . '%')
         ->OrderBy('created_at',$order)->paginate(10);
 
         $assetTypes = AssetType::byCompany(Auth::user()->company_id)->get();
@@ -56,9 +58,13 @@ class AssetController extends Controller
      * @param  \App\Models\Asset  $asset
      * @return \Illuminate\Http\Response
      */
-    public function show(Asset $asset)
+    public function show($slug)
     {
-        //
+        $asset = Asset::where('slug',$slug)->firstOrFail();
+        $users = User::byRole(RoleSchema::OB)->get();
+        $assetAssigns = $asset->assetAssign()->orderBy('created_at', 'desc')->paginate(10);  // Paginate the asset assigns
+
+        return view('asset.show',compact('asset' ,'users', 'assetAssigns'));
     }
 
     /**
