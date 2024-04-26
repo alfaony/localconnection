@@ -36,7 +36,7 @@
             <tr>
                 <th>Kode</th>
                 <th>Nama</th>
-                <th>Jumlah Stock</th>
+                <th>Jumlah Stok</th>
                 <th>Aksi</th>
             </tr>
         </thead>

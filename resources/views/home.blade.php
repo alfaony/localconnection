@@ -77,14 +77,14 @@
 @if(Auth::user()->role->name == \App\Schemas\RoleSchema::BM)
 <div class="container">
     <div class="py-4">
-        <h2>Low Stock Equipment</h2>
+        <h2>Perlengkapan Stok Habis</h2>
         <div class="table-responsive">
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Code</th>
-                        <th>Stock</th>
+                        <th>Nama</th>
+                        <th>Kode</th>
+                        <th>Stok</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -13,7 +13,7 @@
         <div class="card-body bg-light">
             <h6 class="card-title"><strong>Kode:</strong> {{ $equipment->code }}</h6>
             <p class="card-text"><strong>Nama:</strong> {{ $equipment->name }}</p>
-            <p class="card-text"><strong>Stock Tersedia:</strong> {{ $equipment->total_stock }}</p>
+            <p class="card-text"><strong>Stok Tersedia:</strong> {{ $equipment->total_stock }}</p>
         </div>
 
         @if($equipment->equipmentReduction->isNotEmpty())
@@ -23,7 +23,7 @@
                 <thead class="thead-light">
                     <tr>
                         <th>Jenis Pengurangan</th>
-                        <th>Stock Digunakan</th>
+                        <th>Stok Digunakan</th>
                     </tr>
                 </thead>
                 <tbody>

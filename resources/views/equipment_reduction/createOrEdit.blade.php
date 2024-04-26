@@ -38,16 +38,16 @@
 
         <!-- Stock fields updated with proper IDs -->
         <div class="form-group">
-            <label for="current_stock">Stock Saat Ini</label>
+            <label for="current_stock">Stok Saat Ini</label>
             <input type="number" class="form-control" id="current_stock" value="{{ $reduction->stock ?? '' }}" readonly>
         </div>
         <div class="form-group">
-            <label for="used_stock">Stock Digunakan</label>
+            <label for="used_stock">Stok Digunakan</label>
             <input type="number" class="form-control" id="used_stock" name="stock" value="{{ $reduction->stock ?? '' }}" required>
             <input type="hidden" class="form-control" id="used_stock_saved" value="{{ $reduction->stock ?? 0 }}" required>
         </div>
         <div class="form-group">
-            <label for="remaining_stock">Jumlah Stock</label>
+            <label for="remaining_stock">Jumlah Stok</label>
             <input type="number" class="form-control" id="remaining_stock" value="{{ $reduction->remaining_stock ?? '' }}" readonly>
         </div>
 
