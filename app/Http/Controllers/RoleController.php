@@ -36,7 +36,7 @@ class RoleController extends Controller
 
         $mainMenus = [
             'assets',
-            'asset_assign',
+            'asset_assigns',
             'attendances',
             'homes',
             'pricelists',
@@ -124,7 +124,7 @@ class RoleController extends Controller
         
             $mainMenus = [
                 'assets',
-                'asset_assign',
+                'asset_assigns',
                 'attendances',
                 'homes',
                 'pricelists',
@@ -173,7 +173,7 @@ class RoleController extends Controller
         // dd($dataPermission);
         $mainMenus = [
             'assets',
-            'asset_assign',
+            'asset_assigns',
             'attendances',
             'homes',
             'pricelists',
