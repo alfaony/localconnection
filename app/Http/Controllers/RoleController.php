@@ -35,7 +35,7 @@ class RoleController extends Controller
         $dataPermission = $permission->groupBy('table')->toArray();
 
         $mainMenus = [
-            'aasset',
+            'assets',
             'asset_assign',
             'attendances',
             'homes',
@@ -123,7 +123,7 @@ class RoleController extends Controller
             ->all();
         
             $mainMenus = [
-                'aasset',
+                'assets',
                 'asset_assign',
                 'attendances',
                 'homes',
@@ -172,7 +172,7 @@ class RoleController extends Controller
         
         // dd($dataPermission);
         $mainMenus = [
-            'aasset',
+            'assets',
             'asset_assign',
             'attendances',
             'homes',
