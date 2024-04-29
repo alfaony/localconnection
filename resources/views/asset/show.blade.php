@@ -22,6 +22,15 @@
         <div class="card-body">
             <h5 class="card-title">{{ $asset->name }}</h5>
             <p class="card-text"><strong>Status: </strong>{{ $asset->status }}</p>
+            <p class="card-text"><strong>Pic: </strong>@if($asset->latestAssetAssign)
+                                                            @if(isset($asset->latestAssetAssign->returned_date))
+                                                                {{ $asset->latestAssetAssign->userReceived->name }}
+                                                            @else
+                                                                {{ $asset->latestAssetAssign->user->name }}
+                                                            @endif
+                                                        @else
+                                                            {{ $asset->user->name }}
+                                                        @endif</p>
 
             @if($asset->latestAssetAssign && (!isset($asset->latestAssetAssign->returned_date)))
             @php

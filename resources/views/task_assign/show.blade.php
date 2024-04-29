@@ -4,15 +4,15 @@
 <div class="container p-3 mt-3">
     <div class="card">
         <div class="card-header">
-            <h4>Detail Tugas: {{ $taskAssign->task->name }}</h4>
+            <h4>Detail Pekerjaan: {{ $taskAssign->task->name }}</h4>
         </div>
         <div class="card-body">
-            <!-- Informasi Tugas -->
+            <!-- Informasi Pekerjaan -->
             <div class="row mb-3">
-                <div class="col-12 col-md-6">
-                    <h5>Informasi Tugas</h5>
+                <div class="col-md-6">
+                    <h5>Informasi Pekerjaan</h5>
                     <p><strong>Tanggal Penugasan:</strong> {{ $taskAssign->date }}</p>
-                    <p><strong>Status Tugas:</strong> @switch($taskAssign->taskStatus->name)
+                    <p><strong>Status Pekerjaan:</strong> @switch($taskAssign->taskStatus->name)
                             @case('doing')
                                 <i class="fa fa-hourglass-start"></i> Doing
                                 @break
@@ -30,17 +30,18 @@
                         @endswitch
                     </p>
                     <p><strong>Penugasan Kepada:</strong> {{ $taskAssign->assign->name }}</p>
-                    <p><strong>Tugas Dibuat:</strong> {{ \Carbon\Carbon::parse($taskAssign->created_at)->format('H:i:s') }}</p>
-                    <p><strong>Tugas Diperbarui:</strong> {{ \Carbon\Carbon::parse($taskAssign->updated_at)->format('H:i:s')  }}</p>
+                    <p><strong>Pekerjaan Dibuat:</strong> {{ \Carbon\Carbon::parse($taskAssign->created_at)->format('H:i:s') }}</p>
+                    <p><strong>Pekerjaan Diperbarui:</strong> {{ \Carbon\Carbon::parse($taskAssign->updated_at)->format('H:i:s')  }}</p>
+
                 </div>
                 <!-- Formulir untuk Foto dan Catatan -->
-                <div class="col-12 col-md-6">
-                    <h5>Laporan Tugas</h5>
+                <div class="col-md-6">
+                    <h5>Laporan Pekerjaan</h5>
                     @if($taskAssign->taskReport)
                         <!-- Menampilkan laporan yang sudah ada -->
                         <div>
+                            <p><strong>Catatan:</strong> {!! $taskAssign->taskReport->note !!}</p>
                             <img src="{{ Storage::url('task/' .$taskAssign->taskReport->picture) }}" class="img-fluid mb-2" alt="Foto Laporan">
-                            <p><strong>Catatan:</strong> {{ $taskAssign->taskReport->note }}</p>
                         </div>
                     @else
                     @canAccess('report','task_assigns')
@@ -49,13 +50,13 @@
                         @method('put')
                         <div class="mb-3">
                             <label for="photo" class="form-label">Ambil Foto</label>
-                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" capture="environment" onchange="compressAndPreviewImage();">
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" capture="environment" onchange="compressAndPreviewImage();" required>
                             <small class="text-muted">Klik untuk mengambil foto menggunakan kamera.</small>
                             <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-fluid mt-3"/>
                         </div>
                         <div class="mb-3">
                             <label for="note" class="form-label">Catatan</label>
-                            <textarea class="form-control" id="note" name="note" rows="3" required></textarea>
+                            <input type="text" class="thriveEditor form-control" id="description_note" data-ids="note"  name="note">
                         </div>
                         <button type="submit" class="btn btn-primary">Simpan</button>
                     </form>
@@ -68,7 +69,7 @@
                 @canAccess('edit','task_assigns')
                 <a href="{{ route('task-assign.edit', $taskAssign->slug) }}" class="btn btn-info"><i class="fa fa-edit"></i> Edit</a>
                 @endcanAccess
-                <a href="{{ route('task-assign.index') }}" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Kembali ke Daftar Tugas</a>
+                <a href="{{ route('task-assign.index') }}" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Kembali ke Daftar Pekerjaan</a>
                 @if($taskAssign->taskReport && $taskAssign->taskStatus->name == "in review")
                 @canAccess('approvement','task_assigns')
                 <form action="{{ route('task-assign.approvement', $taskAssign->slug) }}" method="POST" style="display: inline-block;">
@@ -97,6 +98,8 @@
 <!-- Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
 function compressAndPreviewImage() {
     const fileInput = document.getElementById('photo');
@@ -146,4 +149,9 @@ function compressAndPreviewImage() {
 }
 </script>
 
+@endsection
+@section('css')
+<!-- Select2 CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 @endsection

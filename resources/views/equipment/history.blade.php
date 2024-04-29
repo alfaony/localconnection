@@ -12,7 +12,7 @@
         </div>
         <div class="card-body bg-light">
             <h6 class="card-title"><strong>Kode:</strong> {{ $equipment->code }}</h6>
-            <p class="card-text"><strong>Nama:</strong> {{ $equipment->name }}</p>
+            <p class="card-text"><strong>Perlengkapan:</strong> {{ $equipment->name }}</p>
             <p class="card-text"><strong>Stok Tersedia:</strong> {{ $equipment->total_stock }}</p>
         </div>
 

@@ -36,7 +36,7 @@
                         @foreach ($attendances as $attendance)
                         <tr>
                             <td> {{ $attendance->user->name }} </td>
-                            <td>{{ $attendance->date }}</td>
+                            <td>{{ \Carbon\Carbon::parse($attendance->date)->format('d-m-Y') }}</td>
                             <td>{{ $attendance->clock_in }}</td>
                         </tr>
                         @endforeach

@@ -11,7 +11,7 @@
             @method('PUT')
         @endif
         <div class="form-group">
-            <label for="name">Nama</label>
+            <label for="name">Perlengkapan</label>
             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $equipment->name ?? '') }}" required>
             @error('name')
                 <span class="invalid-feedback" role="alert">

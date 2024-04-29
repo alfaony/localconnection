@@ -26,24 +26,15 @@
     @endcanAccess
     @canAccess('index','task_assigns')
     <form method="GET" action="{{ route('task-assign.index') }}" class="mb-3">
-        <div class="d-flex flex-row-reverse">
-            <div class="col-auto">
-                <button type="submit" class="btn btn-info">Search</button>
-            </div>
-            <div class="col-auto">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-2">
                 <select class="form-control" id="task" name="task">
-                        <option value="all" {{ request('task') == "all" ? 'selected' : '' }}  >Semua Tugas</option>
-                        <option value="today" 
-                            @if(request('task'))
-                                {{ request('task') == "today" ? 'selected' : '' }}
-                            @else
-                                selected 
-                            @endif
-                        >Tugas Hari Ini</option>
+                    <option value="all" {{ request('task') == "all" ? 'selected' : '' }}>Semua Pekerjaan</option>
+                    <option value="today" {{ request('task') == "today" ? 'selected' : '' }}>Pekerjaan Hari Ini</option>
                 </select>
             </div>
             @if(Auth::user()->role->name != \App\Schemas\RoleSchema::OB)
-            <div class="col-auto">
+            <div class="col-12 col-md-3">
                 <select class="form-control" id="user" name="user">
                     <option value="">Select User</option>
                     @foreach ($users as $user)
@@ -52,16 +43,20 @@
                 </select>
             </div>
             @endif
-            <div class="col-auto">
+            <div class="col-12 col-md-3">
                 <select class="form-control" id="status" name="status">
                     <option value="">Select Status</option>
                     @foreach ($taskStatuss as $status)
-                        <option value="{{ $status->name }}" {{ request('status') == $status->name ? 'selected' : '' }}>{{ $status->name }}</option>
+                        <option value="{{ $status->name }}" {{ request('status') == $status->name ? 'selected' : '' }}>{{ ucfirst($status->name) }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-auto">
-                <input type="date" class="form-control" id="date" name="date" value="">
+            <div class="col-12 col-md-2">
+                <input type="date" class="form-control" id="date" name="date" value="{{ request('date') }}">
+            </div>
+            <div class="col-12 col-md-auto mt-2">
+                <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Search</button>
+                <button type="button" onclick="window.location.href='{{ route('task-assign.index') }}?task=all'" class="btn btn-secondary"><i class="fa fa-times"></i> Show All</button>
             </div>
         </div>
     </form>
@@ -70,17 +65,23 @@
         <table class="table table-striped">
             <thead>
                 <tr>
+                    @if(request('task') == "all" )
                     <th>Tanggal</th>
+                    @endif
                     <th>Status</th>
-                    <th>Tugas</th>
+                    <th>Pekerjaan</th>
+                    @if((Auth::user()->role->name != \App\Schemas\RoleSchema::OB))
                     <th>Penugasan</th>
+                    @endif
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($assigns as $taskAssign)
                 <tr>
-                    <td>{{ $taskAssign->date }}</td>
+                    @if(request('task') == "all" )
+                    <td>{{ \Carbon\Carbon::parse($taskAssign->date)->format('d-m-Y') }}</td>
+                    @endif
                     <td>
                         @switch($taskAssign->taskStatus->name)
                             @case('doing')
@@ -100,7 +101,9 @@
                         @endswitch
                     </td>
                     <td> {{ $taskAssign->task->name }} </td>
+                    @if((Auth::user()->role->name != \App\Schemas\RoleSchema::OB))
                     <td>{{ $taskAssign->assign ? $taskAssign->assign->name : "" }}</td>
+                    @endif
                     <td>
                         <form action="{{ route('task-assign.destroy', $taskAssign->slug) }}" method="POST" style="display: inline-block;">
                             @canAccess('show','task_assigns')

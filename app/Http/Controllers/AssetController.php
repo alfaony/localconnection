@@ -99,7 +99,6 @@ class AssetController extends Controller
         $asset = Asset::where('slug',$slug)->firstOrFail();
         $asset->name = $validatedData['name'];
         $asset->asset_type_id = $validatedData['asset_type_id'];
-        $asset->status = ParamSchema::STORAGE;  // Default status, adjust as needed
         $asset->user_id = auth()->user()->id; // Assuming the user is logged in
         $asset->save();
 

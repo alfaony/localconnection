@@ -26,9 +26,9 @@
         <thead>
             <tr>
                 <th>Nama</th>
-                <th>Total Tugas</th>
-                <th>Poin Tugas Selesai</th>
-                <th>Poin Tugas Tidak Selesai</th>
+                <th>Total Pekerjaan</th>
+                <th>Poin Pekerjaan Selesai</th>
+                <th>Poin Pekerjaan Tidak Selesai</th>
                 <th>Poin Keterlambatan</th>
                 <th>Poin Bonus Kehadiran</th>
                 <th>Total Poin</th>

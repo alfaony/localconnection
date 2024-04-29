@@ -2,19 +2,19 @@
 @extends('adminlte::page')
 
 @section('content_header')
-    <h1>List Peralatan</h1>
+    <h1>List Akses</h1>
 @stop
 
 @section('content')
 <div class="col-md-12">
     @if(Session::get('store'))
-    <div class="alert alert-success mt-3">Peralatan Berhasil Ditambahkan</div>
+    <div class="alert alert-success mt-3">Akses Berhasil Ditambahkan</div>
     @endif
     @if(Session::get('update'))
-    <div class="alert alert-success mt-3">Peralatan Berhasil Diperbarui</div>
+    <div class="alert alert-success mt-3">Akses Berhasil Diperbarui</div>
     @endif
     @if(Session::get('delete'))
-    <div class="alert alert-success mt-3">Peralatan Berhasil Terhapus</div>
+    <div class="alert alert-success mt-3">Akses Berhasil Terhapus</div>
     @endif
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -37,11 +37,11 @@
                     @method('PUT')
                 @endif
                 <div class="form-group">
-                    <label for="name">Name</label>
+                    <label for="name">Akses</label>
                     <input type="text" class="form-control" id="name" name="name" value="{{ $asset->name ?? '' }}" required>
                 </div>
                 <div class="form-group">
-                    <label for="equipment_id">Jenis Peralatan</label>
+                    <label for="equipment_id">Jenis Akses</label>
                     <select class="form-control" id="asset_type_id" name="asset_type_id">
                         @foreach ($assetTypes as $assetType)
                             <option value="{{ $assetType->id }}" {{ (isset($asset) && $asset->asset_type_id == $assetType->id) ? 'selected' : '' }}>
@@ -50,7 +50,7 @@
                         @endforeach
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary">{{ isset($asset) ? 'Update' : 'Create' }}</button>
+                <button type="submit" class="btn btn-primary">{{ isset($asset) ? 'Ubah' : 'Simpan' }}</button>
                 </form>
             </div>
         </div>
@@ -80,8 +80,8 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Nama</th>
-                            <th>Posisi</th>
+                            <th>Akses</th>
+                            <th>Pic</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -89,7 +89,17 @@
                         @foreach ($assets as $asset)
                         <tr>
                             <td>{{ $asset->name }}</td>
-                            <td>{{ $asset->status }}</td>
+                            <td>
+                                @if($asset->latestAssetAssign)
+                                    @if(isset($asset->latestAssetAssign->returned_date))
+                                        {{ $asset->latestAssetAssign->userReceived->name }}
+                                    @else
+                                        {{ $asset->latestAssetAssign->user->name }}
+                                    @endif
+                                @else
+                                    {{ $asset->user->name }}
+                                @endif
+                            </td>
                             <td>
                                 <form action="{{ route('asset.destroy', $asset->slug) }}" method="POST" style="display: inline-block;">
                                     @canAccess('update','assets')

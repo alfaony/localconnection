@@ -120,7 +120,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('equipment/history/{slug}', [EquipmentController::class, 'history'])->name('equipment.history');
   Route::resource('equipment', EquipmentController::class);
   
-  Route::resource('equipment-reduction', EquipmentReductionController::class)->except('show');
+  Route::resource('equipment-reduction', EquipmentReductionController::class);
   
   Route::resource('task', TaskController::class)->except(['create','show']);
   

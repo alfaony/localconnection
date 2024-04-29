@@ -37,7 +37,7 @@
                 <div id="task-user-fields" class="mb-3">
                     <div class="task-user-field row align-items-center">
                         <div class="col-md-5">
-                            <label for="task_id[]" class="form-label">Tugas</label>
+                            <label for="task_id[]" class="form-label">Pekerjaan</label>
                             <select class="form-control" name="task_id[]" required>
                                 @foreach ($tasks as $task)
                                     <option value="{{ $task->id }}">{{ $task->name }}</option>
@@ -59,7 +59,7 @@
                 </div>
 
                 @canAccess('create','task_assigns')
-                <button type="button" id="add-task-user" class="btn btn-info mb-2"><i class="fa fa-plus"></i> Tugas</button>
+                <button type="button" id="add-task-user" class="btn btn-info mb-2"><i class="fa fa-plus"></i> Pekerjaan</button>
                 <button type="submit" class="btn btn-success mb-2"><i class="fa fa-save"></i> {{ isset($taskAssign) ? 'Update' : 'Simpan' }}</button>
                 @endcanAccess
             </form>
@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function() {
         newField.classList.add('task-user-field', 'row', 'align-items-center', 'mb-3');
         newField.innerHTML = `
             <div class="col-md-5">
-                <label for="task_id[]" class="form-label">Tugas</label>
+                <label for="task_id[]" class="form-label">Pekerjaan</label>
                 <select class="form-control" name="task_id[]" required>
                     ${tasksOptions}
                 </select>

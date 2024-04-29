@@ -66,9 +66,9 @@ class EquipmentReductionController extends Controller
             'reduction_id'  => 'required|exists:reductions,id', // pastikan reduction_id ada di tabel reductions
             'equipment_id'  => 'required|exists:equipment,id', // pastikan equipment_id ada di tabel equipments
             'stock'         => 'required|integer|min:1', // stock harus integer dan minimal 0
-            'report'        => 'nullable|string|max:255',
-            'found'         => 'nullable|string|max:255',
-            'doing'         => 'nullable|string|max:255'
+            'report'        => 'nullable|string',
+            'found'         => 'nullable|string',
+            'doing'         => 'nullable|string'
         ]);
 
         // Membuat instance baru dari EquipmentReduction
@@ -96,9 +96,13 @@ class EquipmentReductionController extends Controller
      * @param  \App\Models\EquipmentReduction  $equipmentReduction
      * @return \Illuminate\Http\Response
      */
-    public function show(EquipmentReduction $equipmentReduction)
+    public function show($slug)
     {
-        //
+        $reduction = EquipmentReduction::byCompany(Auth::user()->company_id)->where('slug',$slug)->first();
+        $equipments = Equipment::select('id','name','total_stock')->byCompany(Auth::user()->company_id)->get();
+        $reductions = Reduction::select('id','name')->byCompany(Auth::user()->company_id)->get();
+
+        return view('equipment_reduction.show',compact('equipments','reductions', 'reduction'));
     }
 
     /**
@@ -130,9 +134,9 @@ class EquipmentReductionController extends Controller
             'reduction_id'  => 'required|exists:reductions,id', // pastikan reduction_id ada di tabel reductions
             'equipment_id'  => 'required|exists:equipment,id', // pastikan equipment_id ada di tabel equipments
             'stock'         => 'required|integer|min:1', // stock harus integer dan minimal 0
-            'report'        => 'nullable|string|max:255',
-            'found'         => 'nullable|string|max:255',
-            'doing'         => 'nullable|string|max:255'
+            'report'        => 'nullable|string',
+            'found'         => 'nullable|string',
+            'doing'         => 'nullable|string'
         ]);
 
         // Membuat instance baru dari EquipmentReduction

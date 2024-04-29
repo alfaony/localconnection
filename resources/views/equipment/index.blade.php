@@ -1,19 +1,19 @@
 @extends('adminlte::page')
 
 @section('content_header')
-    <h1>Daftar Peralatan</h1>
+    <h1>Daftar Perlengkapan</h1>
 @stop
 
 @section('content')
 <div class="col-md-12">
     @if(Session::get('store'))
-    <div class="alert alert-success mt-3">Peralatan Berhasil Ditambahkan</div>
+    <div class="alert alert-success mt-3">Perlengkapan Berhasil Ditambahkan</div>
     @endif
     @if(Session::get('update'))
-    <div class="alert alert-success mt-3">Peralatan Berhasil Diperbarui</div>
+    <div class="alert alert-success mt-3">Perlengkapan Berhasil Diperbarui</div>
     @endif
     @if(Session::get('delete'))
-    <div class="alert alert-success mt-3">Peralatan Berhasil Terhapus</div>
+    <div class="alert alert-success mt-3">Perlengkapan Berhasil Terhapus</div>
     @endif
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -35,7 +35,7 @@
         <thead>
             <tr>
                 <th>Kode</th>
-                <th>Nama</th>
+                <th>Perlengkapan</th>
                 <th>Jumlah Stok</th>
                 <th>Aksi</th>
             </tr>

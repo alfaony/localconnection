@@ -23,7 +23,7 @@
                     <label for="task_status_id" class="form-label">Status</label>
                     <select class="form-control" id="task_status_id" name="task_status_id" required>
                         @foreach ($taskStatuss as $taskStatus)
-                            <option value="{{ $taskStatus->id }}" {{ (isset($taskAssign) && $taskAssign->task_status_id == $taskStatus->id) ? 'selected' : '' }}>{{ $taskStatus->name }}</option>
+                            <option value="{{ $taskStatus->id }}" {{ (isset($taskAssign) && $taskAssign->task_status_id == $taskStatus->id) ? 'selected' : '' }} >{{ $taskStatus->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -31,10 +31,10 @@
                 <div id="task-user-fields" class="mb-3">
                     <div class="task-user-field row align-items-center">
                         <div class="col-md-5">
-                            <label for="task_id[]" class="form-label">Tugas</label>
+                            <label for="task_id[]" class="form-label">Pekerjaan</label>
                             <select class="form-control" name="task_id" required>
                                 @foreach ($tasks as $task)
-                                    <option value="{{ $task->id }}">{{ $task->name }}</option>
+                                    <option value="{{ $task->id }}" {{ (isset($taskAssign) && $taskAssign->task_id == $task->id) ? 'selected' : '' }} >{{ $task->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -42,7 +42,7 @@
                             <label for="user_assign_task[]" class="form-label">Penugasan</label>
                             <select class="form-control" name="user_assign_task" required>
                                 @foreach ($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    <option value="{{ $user->id }}" {{ (isset($taskAssign) && $taskAssign->user_assign_id == $user->id) ? 'selected' : '' }}>{{ $user->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function() {
         newField.classList.add('task-user-field', 'row', 'align-items-center', 'mb-3');
         newField.innerHTML = `
             <div class="col-md-5">
-                <label for="task_id[]" class="form-label">Tugas</label>
+                <label for="task_id[]" class="form-label">Pekerjaan</label>
                 <select class="form-control" name="task_id[]" required>
                     ${tasksOptions}
                 </select>

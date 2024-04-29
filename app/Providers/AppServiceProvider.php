@@ -67,14 +67,13 @@ class AppServiceProvider extends ServiceProvider
                 'roles',
                 'assets',
                 'attendances',
-                'report_points',
             ];
 
             $equipmentMenuArray = array();
             $taskMenuArray = array();
 
             $equipmentMenu = ['equipment','equipment_reductions'];
-            $taskMenu = ['tasks','task_assigns'];
+            $taskMenu = ['report_points','tasks','task_assigns'];
 
             $menus = [
                 'homes' => [
@@ -182,7 +181,7 @@ class AppServiceProvider extends ServiceProvider
                 ],
 
                 'tasks' => [
-                    'text'        => 'Tugas',
+                    'text'        => 'Pekerjaan',
                     'route'         => 'task.index',
                     'icon' => 'fa fa-tasks',
                 ],
@@ -194,7 +193,7 @@ class AppServiceProvider extends ServiceProvider
                 ],
 
                 'assets' => [
-                    'text'        => 'Peralatan',
+                    'text'        => 'Akses',
                     'route'         => 'asset.index',
                     'icon' => 'fa fa-briefcase',
                 ],
@@ -245,7 +244,7 @@ class AppServiceProvider extends ServiceProvider
 
             $taskMenu = 
             [
-                'text'    => 'Manajemen Tugas',
+                'text'    => 'Manajemen Pekerjaan',
                 'icon'    => 'fa fa-check',
                 'submenu' => $taskMenuArray
             ];

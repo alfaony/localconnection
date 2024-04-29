@@ -4,6 +4,17 @@
     <h1>{{ isset($reduction) ? 'Ubah Perlengkapan Keluar' : 'Tambah Perlengkapan Keluar' }}</h1>
 @stop
 @section('content')
+<div class="col-md-12">
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+</div>
 <div class="container">
     <form action="{{ isset($reduction) ? route('equipment-reduction.update', $reduction->slug) : route('equipment-reduction.store') }}" method="POST">
         @csrf
@@ -53,17 +64,17 @@
 
         <div class="form-group">
             <label for="report">Laporan</label>
-            <input type="text" class="form-control" name="report" value="{{ $reduction->report ?? '' }}">
+            <input type="text" class="thriveEditor form-control" id="description_report" data-ids="report"  name="report" value="{{ $reduction->report ?? '' }}">
         </div>
 
         <div class="form-group">
             <label for="found">Temuan</label>
-            <input type="text" class="form-control" name="found" value="{{ $reduction->found ?? '' }}">
+            <input type="text" class="thriveEditor form-control" id="description_found" data-ids="found"  name="found" value="{{ $reduction->found ?? '' }}">
         </div>
 
         <div class="form-group">
             <label for="doing">Tindakan</label>
-            <input type="text" class="form-control" name="doing" value="{{ $reduction->doing ?? '' }}">
+            <input type="text" class="thriveEditor form-control" id="description_doing" data-ids="doing"  name="doing" value="{{ $reduction->doing ?? '' }}">
         </div>
 
         <button type="submit" id="create_button" class="btn btn-primary">{{ isset($reduction) ? 'Update' : 'Create' }}</button>
@@ -73,6 +84,8 @@
 @section('js')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
 $(document).ready(function() {
     // Fungsi untuk mengupdate field stock saat mengganti pilihan perlengkapan
@@ -118,6 +131,10 @@ $(document).ready(function() {
 </script>
 @stop
 @section('css')
+<!-- Select2 CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
 <style>
    body {
             font-family: Arial, sans-serif;

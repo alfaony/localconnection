@@ -2,7 +2,7 @@
 @extends('adminlte::page')
 
 @section('content_header')
-    <h1>{{ isset($task) ? 'Tugas' : 'Tugas' }}</h1>
+    <h1>{{ isset($task) ? 'Pekerjaan' : 'Pekerjaan' }}</h1>
 @stop
 @php
 $no = 1;
@@ -12,13 +12,13 @@ $no = 1;
 @section('content')
 <div class="col-md-12">
     @if(Session::get('store'))
-    <div class="alert alert-success mt-3">Tugas Berhasil Ditambahkan</div>
+    <div class="alert alert-success mt-3">Pekerjaan Berhasil Ditambahkan</div>
     @endif
     @if(Session::get('update'))
-    <div class="alert alert-success mt-3">Tugas Berhasil Diperbarui</div>
+    <div class="alert alert-success mt-3">Pekerjaan Berhasil Diperbarui</div>
     @endif
     @if(Session::get('delete'))
-    <div class="alert alert-success mt-3">Tugas Berhasil Terhapus</div>
+    <div class="alert alert-success mt-3">Pekerjaan Berhasil Terhapus</div>
     @endif
 
 </div>
@@ -34,7 +34,7 @@ $no = 1;
                 @endif
 
                 <div class="mb-3">
-                    <label for="name" class="form-label">Nama</label>
+                    <label for="name" class="form-label">Pekerjaan</label>
                     <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $task->name ?? '') }}" required>
                     @error('name')
                         <div class="invalid-feedback">
@@ -47,7 +47,7 @@ $no = 1;
                     <label for="task_type_id" class="form-label">Jenis</label>
                     <select class="form-control @error('task_type_id') is-invalid @enderror" id="task_type_id" name="task_type_id" required>
                         @foreach ($taskTypes as $type)
-                            <option value="{{ $type->id }}" @if(old('task_type_id', $task->task_type_id ?? '') == $type->id) selected @endif>{{ $type->name }}</option>
+                            <option value="{{ $type->id }}" @if(old('task_type_id', $task->task_type_id ?? '') == $type->id) selected @endif>{{ ucfirst($type->name) }}</option>
                         @endforeach
                     </select>
                     @error('task_type_id')
@@ -97,7 +97,7 @@ $no = 1;
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Nama</th>
+                            <th>Pekerjaan</th>
                             <th>Poin</th>
                             <th></th>
                         </tr>

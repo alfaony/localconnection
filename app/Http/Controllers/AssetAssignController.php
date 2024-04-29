@@ -59,6 +59,7 @@ class AssetAssignController extends Controller
         // Membuat instance baru dari AssetAssign
         $assetAssign = AssetAssign::where('slug',$slug)->first();
         $assetAssign->returned_date = $validatedData['returned_date'];
+        $assetAssign->received_to_user_id = Auth::user()->id;
     
         // Simpan ke database
         $assetAssign->save();
