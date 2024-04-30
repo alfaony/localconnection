@@ -45,7 +45,7 @@
                     <select class="form-control" id="asset_type_id" name="asset_type_id">
                         @foreach ($assetTypes as $assetType)
                             <option value="{{ $assetType->id }}" {{ (isset($asset) && $asset->asset_type_id == $assetType->id) ? 'selected' : '' }}>
-                                {{ $assetType->name }}
+                                {{ ucfirst($assetType->name) }}
                             </option>
                         @endforeach
                     </select>
