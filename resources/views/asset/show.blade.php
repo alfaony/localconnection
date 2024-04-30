@@ -24,9 +24,9 @@
             <p class="card-text"><strong>Status: </strong>{{ $asset->status }}</p>
             <p class="card-text"><strong>Pic: </strong>@if($asset->latestAssetAssign)
                                                             @if(isset($asset->latestAssetAssign->returned_date))
-                                                                {{ $asset->latestAssetAssign->userReceived->name }}
+                                                                {{ $asset->latestAssetAssign->userReceived ? $asset->latestAssetAssign->userReceived->name : ''}}
                                                             @else
-                                                                {{ $asset->latestAssetAssign->user->name }}
+                                                                {{ $asset->latestAssetAssign->user ? $asset->latestAssetAssign->user->name : ''}}
                                                             @endif
                                                         @else
                                                             {{ $asset->user->name }}
