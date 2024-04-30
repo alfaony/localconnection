@@ -4,10 +4,21 @@
     <h1>{{ isset($taskAssign) ? 'Edit Penugasan' : 'Membuat Penugasan' }}</h1>
 @stop
 @section('content')
+<div class="col-md-12">
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+</div>
 <div class="container py-3">
     <div class="card shadow-sm">
         <div class="card-body">
-            <form action="{{ isset($taskAssign) ? route('task-assign.update', $taskAssign->slug) : route('task-assign.store') }}" method="POST" class="needs-validation" novalidate>
+            <form action="{{ isset($taskAssign) ? route('task-assign.update', $taskAssign->slug) : route('task-assign.store') }}" method="POST">
                 @csrf
                 @if(isset($taskAssign))
                     @method('PUT')
@@ -15,8 +26,12 @@
 
                 <div class="mb-3">
                     <label for="date" class="form-label">Tanggal</label>
-                    <input type="date" class="form-control" id="date" name="date" value="{{ $taskAssign->date ?? '' }}" required>
-                    <div class="invalid-feedback">Please select a date.</div>
+                    <input type="date" class="form-control" data-date-format="DD/MMM/YYYY" id="date" name="date" required>
+                    @error('date')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
                 </div>
 
                 <div class="mb-3">
@@ -32,6 +47,11 @@
                             >{{ $taskStatus->name }}</option>
                         @endforeach
                     </select>
+                    @error('task_status_id')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
                 </div>
 
                 <div id="task-user-fields" class="mb-3">
