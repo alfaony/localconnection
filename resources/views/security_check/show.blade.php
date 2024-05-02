@@ -16,6 +16,11 @@
             @if($photos->isEmpty())
                 <p class="text-center">Belum ada foto yang diunggah untuk sesi ini.</p>
             @else
+                <div class="mb-4">
+                    <p><strong>Petugas:</strong> {{ $securityCheck->user ? $securityCheck->user->name : '' }}</p> <!-- Ganti $operatorName dengan variabel yang sesuai dari Controller Anda -->
+                    <p><strong>Tanggal:</strong> {{ \Carbon\Carbon::parse($securityCheck->date)->format('d-m-Y') }}</p> <!-- Format tanggal sesuai kebutuhan -->
+                    <p><strong>Waktu:</strong> {{ $securityCheck->time }}</p> <!-- Waktu sesuai dengan data yang Anda miliki -->
+                </div>
                 <div class="row">
                     @foreach($photos as $photo)
                         <div class="col-md-4 col-sm-6 mb-4">
