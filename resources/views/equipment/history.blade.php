@@ -47,7 +47,7 @@
                                             <p>{{ $status }}: {{ $different }} </p>
                                             <p>Stok Saat ini: {{ $activity->properties['attributes']['total_stock'] }}</p>
                                         @else
-                                            <p>Stok Saat ini: {{ $activity->properties ? $activity->properties['attributes']['total_stock'] : ""}}</p>
+                                            <p>Stok Saat ini: {{ $activity->properties['attributes']['total_stock']  ?? ""}}</p>
                                         @endif
                                     </td>
                                 </tr>
