@@ -23,11 +23,14 @@
             @else
                 <div class="row">
                     @foreach($photos as $photo)
-                        <div class="col-md-4 col-sm-6 mb-4">
-                            <a href="{{ Storage::url($photo->path) }}" target="_blank">
-                                <img src="{{ Storage::url($photo->path) }}" class="img-thumbnail" alt="Foto Cctv">
-                            </a>
+                    <div class="col-md-4 col-sm-6 mb-4">
+                        <div class="card">
+                            <img src="{{ Storage::url($photo->path) }}" class="card-img-top" alt="Foto Cctv">
+                            <div class="card-body">
+                                <p class="card-text">{{ $photo->description ?? 'No description available' }}</p>
+                            </div>
                         </div>
+                    </div>
                     @endforeach
                 </div>
             @endif

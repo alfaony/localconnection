@@ -32,6 +32,7 @@ class SecurityCheckController extends Controller
     {
         $request->validate([
             'photos.*' => 'required|image|max:10240', // 10MB Max
+            'descriptions.*' => 'required|string|max:225', 
         ]);
 
         $today = Carbon::now();
@@ -43,15 +44,18 @@ class SecurityCheckController extends Controller
             $check->date = $today;
             $check->clock_in = $today->format('H:i:s');
             $check->save();
-    
+            
+            $description = $request->post('descriptions');
+
             if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $photo) {
+                foreach ($request->file('photos') as $key => $photo) {
                     $file = $photo;
                     $filename = time() . '_' . $file->getClientOriginalName();
                     $path = $file->storeAs('security', $filename, 'public');
                     
                     $photoCheck = new SecurityCheckPhoto();
                     $photoCheck->security_check_id = $check->id;
+                    $photoCheck->description = $description[$key];
                     $photoCheck->path = $path;
                     $photoCheck->status_of_day = ParamSchema::CHECKIN;
                     $photoCheck->save();
@@ -92,6 +96,7 @@ class SecurityCheckController extends Controller
     {
         $request->validate([
             'photos.*' => 'required|image|max:10240', // 10MB Max
+            'descriptions.*' => 'required|string|max:225', 
         ]);
 
         $today = Carbon::now();
@@ -104,15 +109,17 @@ class SecurityCheckController extends Controller
             $check->clock_out = $today->format('H:i:s');
             $check->save();
 
+            $description = $request->post('descriptions');
     
             if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $photo) {
+                foreach ($request->file('photos') as $key => $photo) {
                     $file = $photo;
                     $filename = time() . '_' . $file->getClientOriginalName();
                     $path = $file->storeAs('security', $filename, 'public');
                     
                     $photoCheck = new SecurityCheckPhoto();
                     $photoCheck->security_check_id = $check->id;
+                    $photoCheck->description = $description[$key];
                     $photoCheck->path = $path;
                     $photoCheck->status_of_day = ParamSchema::CHECKOUT;
                     $photoCheck->save();

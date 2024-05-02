@@ -19,15 +19,17 @@
                 <div class="mb-4">
                     <p><strong>Petugas:</strong> {{ $securityCheck->user ? $securityCheck->user->name : '' }}</p> <!-- Ganti $operatorName dengan variabel yang sesuai dari Controller Anda -->
                     <p><strong>Tanggal:</strong> {{ \Carbon\Carbon::parse($securityCheck->date)->format('d-m-Y') }}</p> <!-- Format tanggal sesuai kebutuhan -->
-                    <p><strong>Waktu:</strong> {{ $securityCheck->time }}</p> <!-- Waktu sesuai dengan data yang Anda miliki -->
                 </div>
                 <div class="row">
                     @foreach($photos as $photo)
-                        <div class="col-md-4 col-sm-6 mb-4">
-                            <a href="{{ Storage::url($photo->path) }}" target="_blank">
-                                <img src="{{ Storage::url($photo->path) }}" class="img-thumbnail" alt="Foto {{ $type == 'check_in' ? 'Pagi' : 'Sore' }}">
-                            </a>
+                    <div class="col-md-4 col-sm-6 mb-4">
+                        <div class="card">
+                            <img src="{{ Storage::url($photo->path) }}" class="card-img-top" alt="Foto Cctv">
+                            <div class="card-body">
+                                <p class="card-text">{{ $photo->description ?? 'No description available' }}</p>
+                            </div>
                         </div>
+                    </div>
                     @endforeach
                 </div>
             @endif

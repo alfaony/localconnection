@@ -32,11 +32,11 @@
                 @method('PUT')
                 @endif
 
-
-                <label for="photos" class="form-label">{{ isset($check) ? 'Foto' : 'Foto' }}</label>
                 <div id="photo-inputs" class="mb-3">
+                    <label for="photos" class="form-label">Foto</label>
                     <div class="input-group mb-3">
-                        <input type="file" class="form-control" id="photo" name="photos[]" accept="image/*" capture="environment" onchange="compressImage(event)">
+                        <input type="text" class="form-control" name="descriptions[]" placeholder="Deskripsi Foto" required>
+                        <input type="file" class="form-control" id="photo" name="photos[]" accept="image/*" capture="environment" onchange="compressAndAddImage(event)" required>
                         <button class="btn btn-danger remove-photo" type="button"><i class="fa fa-minus"></i></button>
                     </div>
                 </div>
@@ -57,28 +57,29 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
-$(document).ready(function() {
-    let photoIndex = 1; // Start with one already present
+    $(document).ready(function() {
+        let photoIndex = 1; // Start with one already present
 
-    $('.add-photo').click(function() {
-        if (photoIndex < 10) {
-            $('#photo-inputs').append(`
-                <div class="input-group mb-3">
-                    <input type="file" class="form-control" name="photos[]" accept="image/*" capture="environment" required>
-                    <button class="btn btn-danger remove-photo" type="button"><i class="fa fa-minus"></i></button>
-                </div>
-            `);
-            photoIndex++;
-        } else {
-            alert('Maksimal 10 Foto');
-        }
-    });
+        $('.add-photo').click(function() {
+            if (photoIndex < 10) {
+                $('#photo-inputs').append(`
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" name="descriptions[]" placeholder="Deskripsi Foto" required>
+                        <input type="file" class="form-control" name="photos[]" accept="image/*" capture="environment" onchange="compressAndAddImage(event)" required>
+                        <button class="btn btn-danger remove-photo" type="button"><i class="fa fa-minus"></i></button>
+                    </div>
+                `);
+                photoIndex++;
+            } else {
+                alert('Maksimal 10 Foto');
+            }
+        });
 
-    $(document).on('click', '.remove-photo', function() {
-        $(this).closest('.input-group').remove();
-        photoIndex--;
+        $(document).on('click', '.remove-photo', function() {
+            $(this).closest('.input-group').remove();
+            photoIndex--;
+        });
     });
-});
 </script>
 <script>
 function compressImage(event) {
