@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('content')
-<div class="col-md-12">
+<div class="col-md-12 mt-2">
     @if(Session::get('store'))
     <div class="alert alert-success mt-3">Pemimjaman Berhasil</div>
     @endif
@@ -11,9 +11,17 @@
     @if(Session::get('delete'))
     <div class="alert alert-success mt-3">Peminjaman Berhasil Terhapus</div>
     @endif
-
-
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 </div>
+
 <div class="container pt-4">
     <div class="card">
         <div class="card-header">
@@ -46,6 +54,11 @@
                         <label for="picked_up_date">Tanggal Pengembalian:</label>
                         <input type="date" class="form-control" id="returned_date" name="returned_date" required>
                     </div>
+                    @error('returned_date')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
                     <button type="submit" class="btn btn-primary">Pengembalian</button>
                 </form>
             </div>
@@ -64,10 +77,20 @@
                                 <option value="{{ $user->id }}">{{ $user->name }}</option>
                             @endforeach
                         </select>
+                        @error('assigned_to_user_id')
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                        @enderror
                     </div>
                     <div class="form-group mb-3">
                         <label for="picked_up_date">Tanggal Pinjam:</label>
                         <input type="date" class="form-control" id="picked_up_date" name="picked_up_date" required>
+                        @error('picked_up_date')
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                        @enderror
                     </div>
                     <button type="submit" class="btn btn-primary">Pinjam</button>
                 </form>
@@ -90,8 +113,8 @@
                     @foreach($assetAssigns as $assign)
                     <tr>
                         <td>{{ $assign->user->name }}</td>
-                        <td>{{ $assign->picked_up_date }}</td>
-                        <td>{{ $assign->returned_date ?? 'Belum dikembalikan' }}</td>
+                        <td>{{ \Carbon\Carbon::parse($assign->picked_up_date)->format('d-m-Y') }}</td>
+                        <td>{{ $assign->returned_date ? \Carbon\Carbon::parse($assign->returned_date)->format('d-m-Y') : "Belum Dikembalikan" }}</td>
                         <td>
                         @canAccess('destroy','asset_assigns')
                         <form action="{{ route('asset-assign.destroy', $assign->slug) }}" method="POST" style="display: inline-block;">

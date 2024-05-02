@@ -29,8 +29,13 @@
         <div class="row g-3 align-items-end">
             <div class="col-12 col-md-2">
                 <select class="form-control" id="task" name="task">
+                    @if(!request('task'))
+                    <option value="today" selected>Pekerjaan Hari Ini</option>
+                    <option value="all" {{ request('task') == "all" ? 'selected' : '' }}>Semua Pekerjaan</option>
+                    @else
                     <option value="all" {{ request('task') == "all" ? 'selected' : '' }}>Semua Pekerjaan</option>
                     <option value="today" {{ request('task') == "today" ? 'selected' : '' }}>Pekerjaan Hari Ini</option>
+                    @endif
                 </select>
             </div>
             @if(Auth::user()->role->name != \App\Schemas\RoleSchema::OB)
@@ -71,6 +76,9 @@
                     <th>Status</th>
                     <th>Pekerjaan</th>
                     @if((Auth::user()->role->name != \App\Schemas\RoleSchema::OB))
+                    <th>Poin</th>
+                    @endif
+                    @if((Auth::user()->role->name != \App\Schemas\RoleSchema::OB))
                     <th>Penugasan</th>
                     @endif
                     <th>Aksi</th>
@@ -101,6 +109,9 @@
                         @endswitch
                     </td>
                     <td> {{ $taskAssign->task->name }} </td>
+                    @if((Auth::user()->role->name != \App\Schemas\RoleSchema::OB))
+                    <td>{{ $taskAssign->point  }}</td>
+                    @endif
                     @if((Auth::user()->role->name != \App\Schemas\RoleSchema::OB))
                     <td>{{ $taskAssign->assign ? $taskAssign->assign->name : "" }}</td>
                     @endif

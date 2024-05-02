@@ -71,9 +71,11 @@ class AppServiceProvider extends ServiceProvider
 
             $equipmentMenuArray = array();
             $taskMenuArray = array();
+            $securityMenuArray = array();
 
             $equipmentMenu = ['equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
+            $securityMenu = ['security_checks','cctv_checks'];
 
             $menus = [
                 'homes' => [
@@ -209,6 +211,16 @@ class AppServiceProvider extends ServiceProvider
                     'route'         => 'report-point.index',
                     'icon' => 'fa fa-book',
                 ],
+                'security_checks' => [
+                    'text'        => 'Kontrol Keamanan',
+                    'route'         => 'security-check.index',
+                    'icon' => 'fa fa-check',
+                ],
+                'cctv_checks' => [
+                    'text'        => 'Kontrol Cctv',
+                    'route'         => 'cctv-check.index',
+                    'icon' => 'fa fa-check',
+                ],
             ];
 
             foreach ($listMenu as $role) 
@@ -235,18 +247,30 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($securityMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($securityMenuArray,$menus[$role]);
+                }
+            }
+
             $equipmentMenu = 
             [
                 'text'    => 'Perlengkapan',
-                'icon'    => 'fa fa-building',
                 'submenu' => $equipmentMenuArray
             ];
 
             $taskMenu = 
             [
                 'text'    => 'Manajemen Pekerjaan',
-                'icon'    => 'fa fa-check',
                 'submenu' => $taskMenuArray
+            ];
+
+            $securityMenu = 
+            [
+                'text'    => 'Manajemen Keamanan',
+                'submenu' => $securityMenuArray
             ];
 
             if($equipmentMenu['submenu'] )
@@ -257,6 +281,11 @@ class AppServiceProvider extends ServiceProvider
             if($taskMenu['submenu'] )
             {
                 $event->menu->add($taskMenu);
+            }
+            
+            if($securityMenu['submenu'] )
+            {
+                $event->menu->add($securityMenu);
             }
             
         });

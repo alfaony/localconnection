@@ -53,7 +53,7 @@ class TaskAssignController extends Controller
                 $q->where('name', 'like', '%' . $request->user . '%');
             });
         }
-        $users = User::byRole(RoleSchema::OB)->get();
+        $users = User::byCompany(Auth::user()->company_id)->byRole(RoleSchema::OB)->get();        
         $assigns = $query->byCompany(Auth::user()->company_id)->orderBy('date','desc')->paginate(10);
         return view('task_assign.index',compact('assigns','taskStatuss','users'));
     }
@@ -67,7 +67,7 @@ class TaskAssignController extends Controller
     {
         $taskStatuss = TaskStatus::get();
         $tasks = Task::byCompany(Auth::user()->company_id)->get();
-        $users = User::byRole(RoleSchema::OB)->get();
+        $users = User::byCompany(Auth::user()->company_id)->byRole(RoleSchema::OB)->get();        
         return view('task_assign.create',compact('taskStatuss','users','tasks'));
     }
 
@@ -140,7 +140,7 @@ class TaskAssignController extends Controller
     {
         $taskStatuss = TaskStatus::get();
         $tasks = Task::byCompany(Auth::user()->company_id)->get();
-        $users = User::byRole(RoleSchema::OB)->get();
+        $users = User::byCompany(Auth::user()->company_id)->byRole(RoleSchema::OB)->get();        
         $taskAssign= TaskAssign::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
 
         return view('task_assign.edit',compact('taskStatuss','users','tasks','taskAssign'));
@@ -205,7 +205,7 @@ class TaskAssignController extends Controller
      public function report(Request $request, $slug)
      {
         $validatedData = $request->validate([
-            'note' => 'required|string|max:1000', // Validasi untuk catatan
+            'note' => 'required|string', // Validasi untuk catatan
             'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048' // Validasi untuk foto, max 2MB
         ]);
     

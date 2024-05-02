@@ -34,12 +34,20 @@
                                     <td>{{ $activity->causer ? $activity->causer->name : 'System' }}</td>
                                     <td>{{ $activity->created_at }}</td>
                                     <td>
-                                        @if ($activity->properties)
-                                            @foreach ($activity->properties['attributes'] as $key => $value)
-                                                @if ($key == 'total_stock')
-                                                    Total Stok : {{ $value }}
-                                                    @endif
-                                            @endforeach
+                                        @if ($activity->properties && isset($activity->properties['old']['total_stock'] ))
+                                            @php
+                                                $now = $activity->properties['attributes']['total_stock'];
+                                                $before = $activity->properties['old']['total_stock'];
+                                                
+                                                $status = $now <= $before ? "Dikurang" : "Ditambah";
+                                                $different = $now <= $before ? $before - $now : $before + $now;
+                                            @endphp
+
+                                            <p>Stok Sebelumnya: {{ $activity->properties['old']['total_stock'] }} </p>
+                                            <p>{{ $status }}: {{ $different }} </p>
+                                            <p>Stok Saat ini: {{ $activity->properties['attributes']['total_stock'] }}</p>
+                                        @else
+                                            <p>Stok Saat ini: {{ $activity->properties['attributes']['total_stock'] }}</p>
                                         @endif
                                     </td>
                                 </tr>

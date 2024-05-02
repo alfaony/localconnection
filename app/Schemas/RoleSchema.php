@@ -15,4 +15,5 @@ class RoleSchema
     const SALES = 'Sales';
     const OB = 'Office Boy';
     const BM = 'Building Manager';
+    const SECURITY = 'Security';
 }

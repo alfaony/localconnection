@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 
-class AssetAssign extends Model
+class CctvCheckPhoto extends Model
 {
     use HasFactory, SoftDeletes;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
-
+    
     protected static function boot()
     {
         parent::boot();
@@ -25,10 +25,10 @@ class AssetAssign extends Model
             $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
         });
     }
-    
-    public function setPickedUpDateAttribute($value)
+
+    public function setDateAttribute($value)
     {
-        $this->attributes['picked_up_date'] = $value;
+        $this->attributes['date'] = $value;
         $this->attributes['slug'] = $this->createUniqueSlug($value);
     }
 
@@ -46,30 +46,4 @@ class AssetAssign extends Model
 
         return $slug;
     }
-    public function asset()
-    {
-        return $this->belongsTo(Asset::class);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'assigned_to_user_id');
-    }
-
-    public function userReceived()
-    {
-        return $this->belongsTo(User::class, 'received_to_user_id');
-    }
-
-    public function scopeByCompany($query,$companyId)
-    {
-        if($companyId)
-        {
-            return $query->whereHas('user', function ($query) use ($companyId) 
-            {
-                $query->where('company_id', $companyId);
-            });
-        }
-    }
 }
-

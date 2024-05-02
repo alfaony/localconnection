@@ -61,7 +61,7 @@ class AssetController extends Controller
     public function show($slug)
     {
         $asset = Asset::where('slug',$slug)->firstOrFail();
-        $users = User::byRole(RoleSchema::OB)->get();
+        $users = User::byCompany(Auth::user()->company_id)->byRole(RoleSchema::OB)->get();        
         $assetAssigns = $asset->assetAssign()->orderBy('created_at', 'desc')->paginate(10);  // Paginate the asset assigns
 
         return view('asset.show',compact('asset' ,'users', 'assetAssigns'));

@@ -33,6 +33,8 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ReportPointController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AssetAssignController;
+use App\Http\Controllers\SecurityCheckController;
+use App\Http\Controllers\CctvCheckController;
 
 /*
 |--------------------------------------------------------------------------
@@ -134,7 +136,12 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::resource('asset', AssetController::class)->except(['create']);
   Route::resource('asset-assign', AssetAssignController::class)->only(['store','update','destroy']);
+
+  Route::resource('security-check', SecurityCheckController::class);
+  
+  Route::resource('cctv-check', CctvCheckController::class);
 });
+
 
 
 Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');

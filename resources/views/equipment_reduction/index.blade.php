@@ -92,23 +92,33 @@
                     <td>{{ $reduction->stock }}</td>
                     <td>{!! $reduction->report !!}</td>
                     <td>
-                        <form action="{{ route('equipment-reduction.destroy', $reduction->slug) }}" method="POST" onsubmit="return confirm('Are you sure?');">
-                            @canAccess('show','equipment_reductions')
-                            <a href="{{ route('equipment-reduction.show', $reduction->slug) }}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
-                            @endcanAccess
-                            @canAccess('edit','equipment_reductions')
-                            <a href="{{ route('equipment-reduction.edit', $reduction->slug) }}" class="btn btn-sm btn-primary"><i class="fa fa-edit"></i></a>
-                            @endcanAccess
-                            @canAccess('destroy','equipment_reductions')
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
-                            </form>
-                            @endcanAccess
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu">
+                                @canAccess('show','equipment_reductions')
+                                <li><a class="dropdown-item btn btn-sm btn-primary" href="{{ route('equipment-reduction.show', $reduction->slug) }}"><i class="fa fa-eye"></i> View</a></li>
+                                @endcanAccess
+                                @canAccess('edit','equipment_reductions')
+                                <li><a class="dropdown-item btn btn-sm btn-primary" href="{{ route('equipment-reduction.edit', $reduction->slug) }}"><i class="fa fa-edit"></i> Edit</a></li>
+                                @endcanAccess
+                                @canAccess('destroy','equipment_reductions')
+                                <li>
+                                    <form action="{{ route('equipment-reduction.destroy', $reduction->slug) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="dropdown-item btn btn-sm btn-danger" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i> Delete</button>
+                                    </form>
+                                </li>
+                                @endcanAccess
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+
         </table>
     </div>
 

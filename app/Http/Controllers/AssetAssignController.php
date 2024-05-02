@@ -9,6 +9,8 @@ use App\Schemas\ParamSchema;
 use App\Models\AssetAssign;
 use App\Models\Asset;
 
+use Carbon\Carbon;
+
 class AssetAssignController extends Controller
 {
 
@@ -20,11 +22,38 @@ class AssetAssignController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        $minDate = AssetAssign::byCompany(Auth::user()->company_id)
+                          ->where('asset_id', $request->asset_id)
+                          ->whereNotNull('returned_date')
+                          ->orderBy('created_at', 'desc')
+                          ->first();
+
+        $rules = [
             'asset_id' => 'required|exists:assets,id',
             'assigned_to_user_id' => 'required|exists:users,id',
-            'picked_up_date' => 'required|date'
-        ]);
+            'picked_up_date' => 'required|date',
+        ];
+
+        // Menambahkan validasi untuk 'picked_up_date' jika 'minDate' ada
+        if ($minDate) 
+        {
+            $rules['picked_up_date'] .= '|after_or_equal:' . $minDate->returned_date;
+        }
+
+        // Pesan kesalahan kustom dalam bahasa Indonesia
+        $messages = 
+        [
+            'asset_id.required' => 'ID aset diperlukan.',
+            'asset_id.exists' => 'Aset yang dipilih tidak valid.',
+            'assigned_to_user_id.required' => 'ID pengguna yang ditugaskan diperlukan.',
+            'assigned_to_user_id.exists' => 'Pengguna yang dipilih tidak valid.',
+            'picked_up_date.required' => 'Tanggal pengambilan diperlukan.',
+            'picked_up_date.date' => 'Tanggal pengambilan harus dalam format yang benar.',
+            'picked_up_date.after_or_equal' => 'Tanggal pengambilan harus pada atau setelah tanggal ' . ($minDate ? Carbon::parse($minDate->returned_date)->format('d-m-Y') : 'pengembalian terakhir.'),
+        ];
+
+        // Melakukan validasi dengan pesan kustom
+        $validatedData = $request->validate($rules, $messages);
     
         // Membuat instance baru dari AssetAssign
         $assetAssign = new AssetAssign();
@@ -52,12 +81,20 @@ class AssetAssignController extends Controller
      */
     public function update(Request $request, $slug)
     {
+        $assetAssign = AssetAssign::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+
+        $messages = [
+            'returned_date.required' => 'Tanggal pengembalian diperlukan.',
+            'returned_date.date' => 'Tanggal pengembalian harus dalam format tanggal yang valid.',
+            'returned_date.after_or_equal' => 'Tanggal pengembalian harus sama dengan atau setelah tanggal pinjam '.Carbon::parse($assetAssign->picked_up_date)->format('d-m-Y').'.',
+        ];
+    
+        // Melakukan validasi dengan pesan kustom
         $validatedData = $request->validate([
-            'returned_date' => 'required|date'
-        ]);
+            'returned_date' => 'required|date|after_or_equal:'.$assetAssign->picked_up_date,
+        ], $messages);
         
         // Membuat instance baru dari AssetAssign
-        $assetAssign = AssetAssign::where('slug',$slug)->first();
         $assetAssign->returned_date = $validatedData['returned_date'];
         $assetAssign->received_to_user_id = Auth::user()->id;
     
@@ -79,7 +116,7 @@ class AssetAssignController extends Controller
      */
     public function destroy($slug)
     {
-        $assetAssign = AssetAssign::where('slug', $slug)->firstOrFail();
+        $assetAssign = AssetAssign::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
 
         if ($assetAssign) 
         {

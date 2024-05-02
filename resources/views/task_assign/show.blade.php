@@ -53,10 +53,20 @@
                             <input type="file" class="form-control" id="photo" name="photo" accept="image/*" capture="environment" onchange="compressAndPreviewImage();" required>
                             <small class="text-muted">Klik untuk mengambil foto menggunakan kamera.</small>
                             <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-fluid mt-3"/>
+                            @error('photo')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
                         </div>
                         <div class="mb-3">
                             <label for="note" class="form-label">Catatan</label>
                             <input type="text" class="thriveEditor form-control" id="description_note" data-ids="note"  name="note">
+                            @error('note')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
                         </div>
                         <button type="submit" class="btn btn-primary">Simpan</button>
                     </form>

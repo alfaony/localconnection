@@ -16,11 +16,20 @@
                             <input type="date" class="form-control" name="start_date" placeholder="Mulai Tanggal" value="{{ request('start_date') }}">
                             <span class="input-group-text">hingga</span>
                             <input type="date" class="form-control" name="end_date" placeholder="Sampai Tanggal" value="{{ request('end_date') }}">
+                            @if(Auth::user()->role->name != \App\Schemas\RoleSchema::OB)
+                                <select class="form-control ml-2" id="user" name="user">
+                                    <option value="">Select User</option>
+                                    @foreach ($users as $user)
+                                        <option value="{{ $user->name }}" {{ request('user') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
                             <button class="btn btn-primary ml-2" type="submit">
                                 <i class="fa fa-search"></i> Cari
                             </button>
                         </div>
                     </div>
+                    
                 </div>
             </form>
             <div class="table-responsive-md">

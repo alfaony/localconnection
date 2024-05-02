@@ -25,6 +25,7 @@ class Asset extends Model
     {
         return $this->belongsTo(User::class)->withTrashed();
     }
+    
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

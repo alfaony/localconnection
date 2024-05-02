@@ -98,6 +98,7 @@ $no = 1;
                     <thead>
                         <tr>
                             <th>Pekerjaan</th>
+                            <th>Tipe Pekerjaan</th>
                             <th>Poin</th>
                             <th></th>
                         </tr>
@@ -106,6 +107,7 @@ $no = 1;
                         @foreach ($tasks as $task)
                         <tr>
                             <td>{{ $task->name }}</td>
+                            <td>{{ $task->taskType->name }}</td>
                             <td>{{ $task->point }}</td>
                             <td>
                                 @canAccess('edit','tasks')
@@ -123,6 +125,9 @@ $no = 1;
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+            <div class="d-flex justify-content-center">
+                {{ $tasks->withQueryString()->links('vendor.pagination.bootstrap-4') }}
             </div>
         </div>
     </div>

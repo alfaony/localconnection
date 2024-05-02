@@ -44,7 +44,7 @@
                                 @else
                                     {{ $taskStatus->name == 'doing' ? 'selected' : '' }}
                                 @endif
-                            >{{ $taskStatus->name }}</option>
+                            >{{ ucfirst($taskStatus->name) }}</option>
                         @endforeach
                     </select>
                     @error('task_status_id')
@@ -91,10 +91,10 @@
 @endsection
 @section('js')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <!-- Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const taskUserContainer = document.getElementById('task-user-fields');
@@ -140,6 +140,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 @stop
 @section('css')
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <style>
         body 
         {

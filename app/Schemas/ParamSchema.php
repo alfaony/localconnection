@@ -34,5 +34,9 @@ class ParamSchema
 
     const PIC = "pic";
 
+    const CHECKIN = "check_in";
+
+    const CHECKOUT = "check_out";
+
 
 }
