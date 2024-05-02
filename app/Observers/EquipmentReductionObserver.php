@@ -22,11 +22,6 @@ class EquipmentReductionObserver
         $equipment = Equipment::find($equipmentReduction->equipment_id);
         $equipment->total_stock += $difference;
         $equipment->save();
-
-        activity('equipment')
-        ->performedOn($equipment)
-        ->withProperties(['total_stock' => $equipment->total_stock])
-        ->log("Stok awal: {$originalStock}, Diubah: {$difference}, Stok saat ini: {$equipment->total_stock}");
     }
 
     public function deleted(EquipmentReduction $equipmentReduction)
