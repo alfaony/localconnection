@@ -124,7 +124,7 @@
 
     <!-- Pagination -->
     <div class="d-flex justify-content-center">
-        {!! $equipmentReductions->links() !!}
+        {{ $equipmentReductions->withQueryString()->links('vendor.pagination.bootstrap-4') }}
     </div>
 </div>
 @endsection

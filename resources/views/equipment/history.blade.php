@@ -32,7 +32,7 @@
                                 <tr>
                                     <td>{{ $activity->description }}</td>
                                     <td>{{ $activity->causer ? $activity->causer->name : 'System' }}</td>
-                                    <td>{{ $activity->created_at }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($activity->created_at)->format('d-m-Y') }}</td>
                                     <td>
                                         @if ($activity->properties && isset($activity->properties['old']['total_stock'] ))
                                             @php
@@ -47,7 +47,7 @@
                                             <p>{{ $status }}: {{ $different }} </p>
                                             <p>Stok Saat ini: {{ $activity->properties['attributes']['total_stock'] }}</p>
                                         @else
-                                            <p>Stok Saat ini: {{ $activity->properties['attributes']['total_stock'] }}</p>
+                                            <p>Stok Saat ini: {{ $activity->properties['attributes'] ? $activity->properties['attributes']['total_stock'] : ""}}</p>
                                         @endif
                                     </td>
                                 </tr>

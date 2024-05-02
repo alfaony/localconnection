@@ -65,7 +65,6 @@ class AppServiceProvider extends ServiceProvider
                 'companies',
                 'setting_companies',
                 'roles',
-                'assets',
                 'attendances',
             ];
 
@@ -75,7 +74,7 @@ class AppServiceProvider extends ServiceProvider
 
             $equipmentMenu = ['equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
-            $securityMenu = ['security_checks','cctv_checks'];
+            $securityMenu = ['assets','security_checks','cctv_checks'];
 
             $menus = [
                 'homes' => [
