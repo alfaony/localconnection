@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
+use App\Scopes\RoleScope;
 
 class SecurityCheck extends Model
 {
@@ -14,6 +15,11 @@ class SecurityCheck extends Model
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
     
+    protected static function booted()
+    {
+        static::addGlobalScope(new RoleScope());
+    }
+
     protected static function boot()
     {
         parent::boot();
@@ -37,7 +43,7 @@ class SecurityCheck extends Model
         $baseSlug = $slug;
 
         $count = 1;
-        while (static::where('slug', $slug)->withTrashed()->exists()) 
+        while (static::withoutGlobalScopes()->where('slug', $slug)->withTrashed()->exists()) 
         {
             $slug = "{$baseSlug}-{$count}";
             $count++;

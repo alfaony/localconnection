@@ -36,7 +36,7 @@
                             @endif
                         </select>
                     </div>
-                    @if(Auth::user()->role->name != \App\Schemas\RoleSchema::OB)
+                    @if(Auth::user()->role->name != \App\Schemas\RoleSchema::SECURITY)
                     <div class="col-12 col-md-3">
                         <select class="form-control" id="user" name="user">
                             <option value="">Select User</option>

@@ -33,6 +33,14 @@ class RoleScope implements Scope
                 {
                     $builder->byCompany(Auth::user()->company_id);
                 }
+                if($table == 'security_checks')
+                {
+                    $builder->byCompany(Auth::user()->company_id);
+                }
+                if($table == 'cctv_checks')
+                {
+                    $builder->byCompany(Auth::user()->company_id);
+                }
                 break;
             case RoleSchema::OB:
                 if($table == 'task_assigns')
@@ -40,6 +48,24 @@ class RoleScope implements Scope
                     $builder->where('user_assign_id',Auth::user()->id);
                 }
                 if($table == 'attendances')
+                {
+                    $builder->where('user_id',Auth::user()->id);
+                }
+                break;
+            case RoleSchema::SECURITY:
+                if($table == 'task_assigns')
+                {
+                    $builder->where('user_assign_id',Auth::user()->id);
+                }
+                if($table == 'attendances')
+                {
+                    $builder->where('user_id',Auth::user()->id);
+                }
+                if($table == 'security_checks')
+                {
+                    $builder->where('user_id',Auth::user()->id);
+                }
+                if($table == 'cctv_checks')
                 {
                     $builder->where('user_id',Auth::user()->id);
                 }
