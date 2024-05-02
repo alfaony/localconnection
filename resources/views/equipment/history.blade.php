@@ -40,7 +40,7 @@
                                                 $before = $activity->properties['old']['total_stock'];
                                                 
                                                 $status = $now <= $before ? "Dikurang" : "Ditambah";
-                                                $different = $now <= $before ? $before - $now : $before + $now;
+                                                $different = $now <= $before ? $before - $now :  $now - $before;
                                             @endphp
 
                                             <p>Stok Sebelumnya: {{ $activity->properties['old']['total_stock'] }} </p>
