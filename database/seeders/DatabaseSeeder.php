@@ -31,5 +31,6 @@ class DatabaseSeeder extends Seeder
         $this->call(CallMenuTaskSeeder::class);
         $this->call(CallMenuAssetSeeder::class);
         $this->call(CallMenuAttendanceSeeder::class);
+        $this->call(PermissionForMenuSecurity::class);
     }
 }

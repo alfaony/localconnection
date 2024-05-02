@@ -51,6 +51,14 @@ class RoleScope implements Scope
                 {
                     $builder->where('user_id',Auth::user()->id);
                 }
+                if($table == 'security_checks')
+                {
+                    $builder->where('user_id',Auth::user()->id);
+                }
+                if($table == 'cctv_checks')
+                {
+                    $builder->where('user_id',Auth::user()->id);
+                }
                 break;
             case RoleSchema::SECURITY:
                 if($table == 'task_assigns')

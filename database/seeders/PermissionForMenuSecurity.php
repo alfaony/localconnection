@@ -20,20 +20,11 @@ class PermissionForMenuSecurity extends Seeder
      */
     public function run()
     {   
-        $security = Role::where('name',RoleSchema::SECURITY)->first();
-        if(!$security)
-        {
-            $security = Role::create([
-                'name' => RoleSchema::SECURITY,
-                'desc' => 'Akun Security',
-                'guard_name' => 'web'
-            ]);
-        }
 
         $securityChecks = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2'];
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $bm = Role::where('name',RoleSchema::BM)->first();
-        $security = Role::where('name',RoleSchema::SECURITY)->first();
+        $security = Role::where('name',RoleSchema::OB)->first();
 
         foreach ($securityChecks as $method) 
         {
@@ -64,7 +55,7 @@ class PermissionForMenuSecurity extends Seeder
         $cctvChecks = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2'];
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $bm = Role::where('name',RoleSchema::BM)->first();
-        $security = Role::where('name',RoleSchema::SECURITY)->first();
+        $security = Role::where('name',RoleSchema::OB)->first();
 
         foreach ($securityChecks as $method) 
         {
