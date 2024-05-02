@@ -33,7 +33,7 @@
     <div class="row align-items-end">
         <div class="col-sm-12 col-md-3 mb-3 mb-md-0">
             <select class="form-control" id="equipment_id" name="equipment_id">
-                <option selected disabled>Akses</option>
+                <option selected disabled>Perlengkapan</option>
                 @foreach ($equipments as $equipment)
                     <option value="{{ $equipment->id }}" data-totalstock="{{ $equipment->total_stock }}" {{ (isset($reduction) && $reduction->equipment_id == $equipment->id) ? 'selected' : '' }}>
                         {{ $equipment->name }}

@@ -35,30 +35,33 @@
                             <th>Tanggal</th>
                             <th>Kontrol Pagi</th>
                             <th>Kontrol Sore</th>
+                            @if(Auth::user()->role->name == \App\Schemas\RoleSchema::BM)
                             <th>Petugas</th>
                             <th>Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($checks as $check)
                         <tr>
                             <td>{{ \Carbon\Carbon::parse($check->date)->format('d-m-Y') }}</td> 
-                            @canAccess('show','security_checks')
                             <td>
+                                @canAccess('show','security_checks')
                                 @if($check->clock_in)
                                 <a href="{{ route('security-check.show', $check->slug) }}?type=check_in" >{{ $check->clock_in }}</a>
                                 @endif
+                                @endcanAccess
                             </td>
-                            @endcanAccess
-                            @canAccess('show','security_checks')
                             <td>
+                                @canAccess('show','security_checks')
                                 @if($check->clock_out)
                                 <a href="{{ route('security-check.show', $check->slug) }}?type=check_out" >{{ $check->clock_out }}</a>
                                 @else
                                     Belum Tersedia
                                 @endif
+                                @endcanAccess
                             </td>
-                            @endcanAccess
+                            @if(Auth::user()->role->name == \App\Schemas\RoleSchema::BM)
                             <td>
                                 {{ $check->user ? $check->user->name : '' }}
                             </td> 
@@ -71,6 +74,7 @@
                                 </form>
                                 @endcanAccess
                             </td>
+                            @endif
                         </tr>
                         @endforeach
                     </tbody>

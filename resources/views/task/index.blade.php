@@ -98,7 +98,7 @@ $no = 1;
                     <thead>
                         <tr>
                             <th>Pekerjaan</th>
-                            <th>Tipe Pekerjaan</th>
+                            <th>Jenis Pekerjaan</th>
                             <th>Poin</th>
                             <th></th>
                         </tr>

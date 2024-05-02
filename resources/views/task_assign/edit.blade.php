@@ -32,7 +32,7 @@
                     <div class="task-user-field row align-items-center">
                         <div class="col-md-5">
                             <label for="task_id[]" class="form-label">Pekerjaan</label>
-                            <select class="form-control" name="task_id" required>
+                            <select class="form-control select2" name="task_id" required>
                                 @foreach ($tasks as $task)
                                     <option value="{{ $task->id }}" {{ (isset($taskAssign) && $taskAssign->task_id == $task->id) ? 'selected' : '' }} >{{ $task->name }}</option>
                                 @endforeach
@@ -40,7 +40,7 @@
                         </div>
                         <div class="col-md-5">
                             <label for="user_assign_task[]" class="form-label">Penugasan</label>
-                            <select class="form-control" name="user_assign_task" required>
+                            <select class="form-control user-select2" name="user_assign_task" required>
                                 @foreach ($users as $user)
                                     <option value="{{ $user->id }}" {{ (isset($taskAssign) && $taskAssign->user_assign_id == $user->id) ? 'selected' : '' }}>{{ $user->name }}</option>
                                 @endforeach
@@ -60,7 +60,6 @@
 @endsection
 @section('js')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <!-- Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
@@ -107,8 +106,23 @@ document.addEventListener("DOMContentLoaded", function() {
     const usersOptions = `@foreach ($users as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach`;
 });
 </script>
+<script>
+    $(document).ready(function() 
+    {
+        $('.select2').select2({
+            width: '100%',
+            placeholder: 'Pilih Tugas'
+        });
+
+        $('.user-select2').select2({
+            width: '100%',
+            placeholder: 'Pilih Petugas'
+        });
+    });
+</script>
 @stop
 @section('css')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <style>
         body 
         {
@@ -146,6 +160,21 @@ document.addEventListener("DOMContentLoaded", function() {
             .btn { width: 100%; margin-bottom: 10px; }
             .form-control { width: 100%; }
         }
-
+        .select2-selection__rendered 
+        {
+            line-height: 31px !important;
+        }
+        .select2-container .select2-selection--single 
+        {
+            height: 35px !important;
+        }
+        .select2-selection__arrow {
+            height: 34px !important;
+        }
+        .ql-container 
+        {
+            min-height: 150px;
+            height: auto;
+        }
     </style>
 @stop
