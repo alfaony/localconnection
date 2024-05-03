@@ -29,6 +29,7 @@ class TicketController extends Controller
             'contact' => 'nullable|email',
             'subject' => 'required|string|max:255',
             'content' => 'required|string',
+            'path' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi untuk foto, max 2MB
             'g-recaptcha-response' => 'required|captcha'
         ]);
 
@@ -37,6 +38,14 @@ class TicketController extends Controller
         $ticket->subject = $request->post('subject');
         $ticket->content = $request->post('content');
         $ticket->status = ParamSchema::NEW;
+        if ($request->hasFile('path')) 
+        {
+            // Hapus file lama jika ada        
+            $file = $request->file('path');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('ticket', $filename, 'public');
+            $ticket->path = $filename;
+        }
         $ticket->save();
 
         return redirect()->back()->with('store', true);
@@ -57,20 +66,11 @@ class TicketController extends Controller
     {
         $validatedData = $request->validate([
             'note' => 'required|string', // Validasi untuk catatan
-            'path' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048' // Validasi untuk foto, max 2MB
         ]);
 
         $tiket = Ticket::where('slug',$slug)->firstOrFail();
         $tiket->note = $request->note;
-        if ($request->hasFile('path')) 
-        {
-            // Hapus file lama jika ada        
-            $file = $request->file('path');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('ticket', $filename, 'public');
-            $tiket->path = $filename;
-            $tiket->status = ParamSchema::DONE;
-        }
+        $tiket->status = ParamSchema::DONE;
         $tiket->save();
 
         return redirect()->route('ticket.index')->with('update',true);

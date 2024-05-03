@@ -30,20 +30,23 @@
                     </div>
                     <div class="mb-3">
                         <label><strong>Status:</strong></label>
-                        <p>{{ $ticket->status }}</p>
+                        <p>{{ ucfirst($ticket->status) }}</p>
                     </div>
                     <div class="mb-3">
                         <label><strong>Konten:</strong></label>
                         <p>{!! $ticket->content !!}</p>
                     </div>
+                    <div class="mb-3">
+                        <label><strong>Gambar Laporan:</strong></label>
+                        <img src="{{ Storage::url('ticket/' .$ticket->path) }}" class="img-fluid mb-2" alt="Foto Laporan">
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <h5>Laporan Tiket</h5>
-                    @if($ticket->path)
+                    @if($ticket->note)
                         <!-- Menampilkan laporan yang sudah ada -->
                         <div>
-                            <p><strong>Catatan:</strong> {!! $ticket->note !!}</p>
-                            <img src="{{ Storage::url('ticket/' .$ticket->path) }}" class="img-fluid mb-2" alt="Foto Laporan">
+                            <p><strong>Catatan Hasil:</strong> {!! $ticket->note !!}</p>
                         </div>
                     @else
                     @canAccess('update','tickets')
@@ -51,18 +54,7 @@
                         @csrf
                         @method('put')
                         <div class="mb-3">
-                            <label for="photo" class="form-label">Ambil Foto</label>
-                            <input type="file" class="form-control" id="photo" name="path" accept="image/*" capture="environment" onchange="compressAndPreviewImage();" required>
-                            <small class="text-muted">Klik untuk mengambil foto menggunakan kamera.</small>
-                            <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-fluid mt-3"/>
-                            @error('photo')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="note" class="form-label">Catatan</label>
+                            <label for="note" class="form-label">Catatan Hasil Tiket</label>
                             <input type="text" class="thriveEditor form-control" id="description_note" data-ids="note"  name="note">
                             @error('note')
                                 <span class="invalid-feedback" role="alert">
