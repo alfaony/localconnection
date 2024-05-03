@@ -38,5 +38,9 @@ class ParamSchema
 
     const CHECKOUT = "check_out";
 
+    const NEW = "new";
+
+    const DONE = "done";
+
 
 }

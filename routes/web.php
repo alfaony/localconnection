@@ -35,6 +35,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AssetAssignController;
 use App\Http\Controllers\SecurityCheckController;
 use App\Http\Controllers\CctvCheckController;
+use App\Http\Controllers\TicketController;
 
 /*
 |--------------------------------------------------------------------------
@@ -140,7 +141,13 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('security-check', SecurityCheckController::class);
   
   Route::resource('cctv-check', CctvCheckController::class);
+
+  Route::resource('ticket', TicketController::class)->except(['create','store']);
 });
+
+
+Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
+Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
 
 
 

@@ -74,7 +74,7 @@ class AppServiceProvider extends ServiceProvider
 
             $equipmentMenu = ['equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
-            $securityMenu = ['assets','security_checks','cctv_checks'];
+            $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
 
             $menus = [
                 'homes' => [
@@ -219,6 +219,11 @@ class AppServiceProvider extends ServiceProvider
                     'text'        => 'Kontrol Cctv',
                     'route'         => 'cctv-check.index',
                     'icon' => 'fa fa-check',
+                ],
+                'tickets' => [
+                    'text'        => 'Tiket',
+                    'route'         => 'ticket.index',
+                    'icon' => 'fa fa-envelope',
                 ],
             ];
 
