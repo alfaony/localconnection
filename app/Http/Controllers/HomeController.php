@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 use Carbon\Carbon;
+use App\Schemas\ParamSchema;
 
 use App\Models\Project;
 use App\Models\Suplier;
@@ -14,6 +15,7 @@ use App\Models\Employee;
 use App\Models\Job;
 use App\Models\Quote;
 use App\Models\WorkOrder;
+use App\Models\Equipment;
 
 class HomeController extends Controller
 {
@@ -52,6 +54,8 @@ class HomeController extends Controller
         $totalQuote = Quote::byCompany(Auth::user()->company_id)->byActive()->count() ?? 0;
         $totalWorkOrder = WorkOrder::byCompany(Auth::user()->company_id)->byActive()->count() ?? 0;
 
-        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder'));
+        $equipments = Equipment::byCompany(Auth::user()->company_id)->where('total_stock', ParamSchema::LIMIT)->get();
+
+        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments'));
     }
 }

@@ -59,7 +59,7 @@ class Bast extends Model
     
     public function userCreate()
     {
-        return $this->belongsTo(User::class,'user_created_id','id');
+        return $this->belongsTo(User::class,'user_created_id','id')->withTrashed();
     }
 
     public function workOrder()

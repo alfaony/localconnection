@@ -21,8 +21,21 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PricelistController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\SortUrlController;
+use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\EquipmentReductionController;
 
+use App\Http\Controllers\TaskController;
 
+use App\Http\Controllers\TaskAssignController;
+use App\Http\Controllers\TasStatusController;
+use App\Http\Controllers\TaskTypeController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ReportPointController;
+use App\Http\Controllers\AssetController;
+use App\Http\Controllers\AssetAssignController;
+use App\Http\Controllers\SecurityCheckController;
+use App\Http\Controllers\CctvCheckController;
+use App\Http\Controllers\TicketController;
 
 /*
 |--------------------------------------------------------------------------
@@ -105,8 +118,38 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('pricelist', [PricelistController::class, 'index'])->name('pricelist.index');
   Route::get('pricelist/show/{product}', [PricelistController::class, 'show'])->name('pricelist.show');
   
-  Route::resource('company', CompanyController::class)->except(['create','show']);;
+  Route::resource('company', CompanyController::class)->except(['create','show']);
+  
+  Route::get('equipment/history/{slug}', [EquipmentController::class, 'history'])->name('equipment.history');
+  Route::resource('equipment', EquipmentController::class);
+  
+  Route::resource('equipment-reduction', EquipmentReductionController::class);
+  
+  Route::resource('task', TaskController::class)->except(['create','show']);
+  
+  Route::put('task-assign/approvement/{slug}', [TaskAssignController::class, 'approvement'])->name('task-assign.approvement');
+  Route::put('task-assign/report/{slug}', [TaskAssignController::class, 'report'])->name('task-assign.report');
+  Route::resource('task-assign', TaskAssignController::class);
+
+  Route::get('report-point',[ReportPointController::class,'index'])->name('report-point.index');
+  
+  Route::resource('attendance', AttendanceController::class)->only('index');
+
+  Route::resource('asset', AssetController::class)->except(['create']);
+  Route::resource('asset-assign', AssetAssignController::class)->only(['store','update','destroy']);
+
+  Route::resource('security-check', SecurityCheckController::class);
+  
+  Route::resource('cctv-check', CctvCheckController::class);
+
+  Route::resource('ticket', TicketController::class)->except(['create','store']);
 });
+
+
+Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
+Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
+
+
 
 Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');
 

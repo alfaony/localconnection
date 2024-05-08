@@ -73,6 +73,39 @@
     </div>
     @endcanAccess
 </div>
+
+@if(Auth::user()->role->name == \App\Schemas\RoleSchema::BM)
+<div class="container">
+    <div class="py-4">
+        <h2>Perlengkapan Stok Habis</h2>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nama Perlengkapan</th>
+                        <th>Kode Perlengkapan</th>
+                        <th>Stok Tersedia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($equipments as $equipment)
+                        <tr>
+                            <td>{{ $equipment->name }}</td>
+                            <td>{{ $equipment->code }}</td>
+                            <td>{{ $equipment->total_stock }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="text-center">Tidak ada data stok habis.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@endif
 @endsection
 @section('js')
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

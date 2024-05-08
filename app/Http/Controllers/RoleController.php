@@ -35,6 +35,9 @@ class RoleController extends Controller
         $dataPermission = $permission->groupBy('table')->toArray();
 
         $mainMenus = [
+            'assets',
+            'asset_assigns',
+            'attendances',
             'homes',
             'pricelists',
             'employees',
@@ -51,7 +54,11 @@ class RoleController extends Controller
             'basts',
             'reports',
             'setting_companies',
-            'roles'
+            'equipment',
+            'equipment_reductions',
+            'tasks',
+            'task_assigns',
+            'report_points',
         ];
 
         $checked = array_merge($mainMenus);
@@ -116,25 +123,31 @@ class RoleController extends Controller
             ->all();
         
             $mainMenus = [
-            'homes',
-            'pricelists',
-            'employees',
-            'managers',
-            'users',
-            'products',
-            'customers',
-            'quotes',
-            'work_orders',
-            'agreement_letters',
-            'projects',
-            'supliers',
-            'report_projects',
-            'basts',
-            'reports',
-            'setting_companies',
-            'roles'
-        ];
-        
+                'assets',
+                'asset_assigns',
+                'attendances',
+                'homes',
+                'pricelists',
+                'employees',
+                'managers',
+                'users',
+                'products',
+                'customers',
+                'quotes',
+                'work_orders',
+                'agreement_letters',
+                'projects',
+                'supliers',
+                'report_projects',
+                'basts',
+                'reports',
+                'setting_companies',
+                'equipment',
+                'equipment_reductions',
+                'tasks',
+                'task_assigns',
+                'report_points',
+            ];
         $checked = array_merge($mainMenus);
 
         return view('role.createOrEdit',compact('role','permission','rolePermissions','dataPermission','is_editable','mainMenus','checked'));
@@ -159,6 +172,9 @@ class RoleController extends Controller
         
         // dd($dataPermission);
         $mainMenus = [
+            'assets',
+            'asset_assigns',
+            'attendances',
             'homes',
             'pricelists',
             'employees',
@@ -175,7 +191,11 @@ class RoleController extends Controller
             'basts',
             'reports',
             'setting_companies',
-            'roles'
+            'equipment',
+            'equipment_reductions',
+            'tasks',
+            'task_assigns',
+            'report_points',
         ];
         
         $checked = array_merge($mainMenus);

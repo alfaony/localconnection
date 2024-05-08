@@ -59,7 +59,7 @@ $no = ($customer->currentPage() - 1) * $customer->perPage() + 1;
                     <input type="text" class="form-control" placeholder="Hendra" name="pic" value="{{ old('pic') ?? @$customerEdit->pic }}" required>
                 </div>
                 <div class="form-group">
-                    <label>Pemberi Tugas:</label>
+                    <label>Pemberi Pekerjaan:</label>
                     <input type="text" class="form-control" placeholder="Michele" name="assignor" value="{{ old('assignor') ?? @$customerEdit->assignor }}" required>
                 </div>
                 <div class="form-group">

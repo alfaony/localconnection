@@ -10,6 +10,10 @@ use App\Helpers\Access;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 
+use App\Models\EquipmentReduction;
+use App\Models\TaskAssign;
+use App\Observers\EquipmentReductionObserver;
+use App\Observers\TaskAssignObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(Dispatcher $events)
     {
+        EquipmentReduction::observe(EquipmentReductionObserver::class);
+        TaskAssign::observe(TaskAssignObserver::class);
 
         Schema::defaultStringLength(191);
         if ($this->app->environment('production') || $this->app->environment('development')) 
@@ -58,8 +64,17 @@ class AppServiceProvider extends ServiceProvider
                 'reports',
                 'companies',
                 'setting_companies',
-                'roles'
+                'roles',
+                'attendances',
             ];
+
+            $equipmentMenuArray = array();
+            $taskMenuArray = array();
+            $securityMenuArray = array();
+
+            $equipmentMenu = ['equipment','equipment_reductions'];
+            $taskMenu = ['report_points','tasks','task_assigns'];
+            $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
 
             $menus = [
                 'homes' => [
@@ -153,9 +168,65 @@ class AppServiceProvider extends ServiceProvider
                     'route'         => 'role.index',
                     'icon' => 'fa fa-cog',
                 ],
+
+                'equipment' => [
+                    'text'        => 'Daftar Perlengkapan',
+                    'route'         => 'equipment.index',
+                    'icon' => 'fa fa-list-ul',
+                ],
+
+                'equipment_reductions' => [
+                    'text'        => 'Pengeluaran',
+                    'route'         => 'equipment-reduction.index',
+                    'icon' => 'fa fa-check',
+                ],
+
+                'tasks' => [
+                    'text'        => 'Pekerjaan',
+                    'route'         => 'task.index',
+                    'icon' => 'fa fa-tasks',
+                ],
+
+                'task_assigns' => [
+                    'text'        => 'Penugasan',
+                    'route'         => 'task-assign.index',
+                    'icon' => 'fa fa-list-alt',
+                ],
+
+                'assets' => [
+                    'text'        => 'Akses',
+                    'route'         => 'asset.index',
+                    'icon' => 'fa fa-briefcase',
+                ],
+
+                'attendances' => [
+                    'text'        => 'Kehadiran',
+                    'route'         => 'attendance.index',
+                    'icon' => 'fa fa-calendar',
+                ],
+
+                'report_points' => [
+                    'text'        => 'Laporan Poin',
+                    'route'         => 'report-point.index',
+                    'icon' => 'fa fa-book',
+                ],
+                'security_checks' => [
+                    'text'        => 'Kontrol Keamanan',
+                    'route'         => 'security-check.index',
+                    'icon' => 'fa fa-check',
+                ],
+                'cctv_checks' => [
+                    'text'        => 'Kontrol Cctv',
+                    'route'         => 'cctv-check.index',
+                    'icon' => 'fa fa-check',
+                ],
+                'tickets' => [
+                    'text'        => 'Tiket',
+                    'route'         => 'ticket.index',
+                    'icon' => 'fa fa-envelope',
+                ],
             ];
 
-            // dd(Access::can("index", "rol"));
             foreach ($listMenu as $role) 
             {
                 if(Access::can("index", $role))
@@ -163,6 +234,64 @@ class AppServiceProvider extends ServiceProvider
                     $event->menu->add($menus[$role]);
                 }
             }
+
+            foreach ($equipmentMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($equipmentMenuArray,$menus[$role]);
+                }
+            }
+
+            foreach ($taskMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($taskMenuArray,$menus[$role]);
+                }
+            }
+
+            foreach ($securityMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($securityMenuArray,$menus[$role]);
+                }
+            }
+
+            $equipmentMenu = 
+            [
+                'text'    => 'Perlengkapan',
+                'submenu' => $equipmentMenuArray
+            ];
+
+            $taskMenu = 
+            [
+                'text'    => 'Manajemen Pekerjaan',
+                'submenu' => $taskMenuArray
+            ];
+
+            $securityMenu = 
+            [
+                'text'    => 'Manajemen Keamanan',
+                'submenu' => $securityMenuArray
+            ];
+
+            if($equipmentMenu['submenu'] )
+            {
+                $event->menu->add($equipmentMenu);
+            }
+
+            if($taskMenu['submenu'] )
+            {
+                $event->menu->add($taskMenu);
+            }
+            
+            if($securityMenu['submenu'] )
+            {
+                $event->menu->add($securityMenu);
+            }
+            
         });
 
         // die;
