@@ -169,12 +169,13 @@
             <table class="table table-bordered mt-3" id="tableQuote">
                 <thead>
                     <tr class="d-flex">
-                        <th class="col-1">No</th>
+                        <th class="col-auto">#</th>
                         <th class="col-3">Produk/Jasa</th>
+                        <th class="col-1">Satuan</th>
                         <th class="col-3">Description</th>
                         <th class="col-2">Qty</th>
                         <th class="col-2">Total</th>
-                        <th class="col-1">Action</th>
+                        <th class="col"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -182,16 +183,19 @@
                     @php $nomorBaris = 1; @endphp
                     @foreach($quote->quoteProduct->sortBy('sort') as $a)
                     <tr class="d-flex" data-key="{{ $a->id }}">
-                        <td class="col-1">
+                        <td class="col-auto">
                             {{ $nomorBaris++ }}
                         </td>
                         <td class="col-3">
                             <select class="form-control productChange select2" name="product[]" id="product_{{ $a->id }}" required>
                                 <option value="" selected disabled>Pilih</option>
                                 @foreach($product as $b)
-                                <option value="{{ $b->id }}" data-key="{{ $a->id }}"  {{ $a->product_id == $b->id ? 'selected' : '' }} >{{ $b->name }}</option>
+                                <option value="{{ $b->id }}" data-key="{{ $a->id }}" data-methodcount="{{ $a->method_count }}" {{ $a->product_id == $b->id ? 'selected' : '' }} >{{ $b->name }}</option>
                                 @endforeach
                             </select>
+                        </td>
+                        <td class="col-1" id="method_count_${key}">
+                            {{ $a->product->method_count ?? "" }}
                         </td>
                         <td class="col-3">
                             <input type="hidden" class="thriveEditor" data-ids="{{ $a->id }}" id="description_{{ $a->id }}"  name="description[]" value="{{ old('description') ?? @$a->description }}" required>
@@ -204,10 +208,10 @@
                         <td class="col-2" id="sub_total_show_{{ $a->id }}">
                             {{ 'Rp. '.number_format($a->sub_total,0,',','.') }}
                         </td>
-                        <td class="col-1">
+                        <td class="col">
                             <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]" value="{{ $a->id }}">
                             <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
-                            <button class="btn btn-danger btnHapusData" data-id="{{ $a->id }}"><i class="fa fa-trash"></i></button>
+                            <button class="btn btn-danger btn-sm btnHapusData" data-id="{{ $a->id }}"><i class="fa fa-trash"></i></button>
                         </td>
                     </tr>
                     @endforeach
@@ -372,6 +376,7 @@
             e.preventDefault();
 
             var key = $(this).find(':selected').data('key');
+            var methodcount = $(this).find(':selected').data('methodcount') ?? "";
 
             var productSelected = $(this).val();
             var qty = $("#qty_"+key).val();
@@ -383,6 +388,7 @@
 
                 if(productSelected && key && qty && price) {
                     countProduct(productSelected, key, qty, price);
+                    $("#method_count_"+key).html(methodcount);
                 }
             });
         });
@@ -430,12 +436,12 @@
 
             $.each(dataSelect, function(index, product) 
             {
-                projectOptions += `<option value="${product.id}" data-key="${key}">${product.name} </option>`;
+                projectOptions += `<option value="${product.id}" data-methodcount="${product.method_count}" data-key="${key}">${product.name} </option>`;
             });
 
             const row = `
                 <tr class="d-flex" data-key="${key}">
-                    <td class="col-1">
+                    <td class="col">
                         ${noBaris}
                     </td>
                     <td class="col-3">
@@ -443,6 +449,8 @@
                             <option value="" selected disabled>Pilih</option>
                             ${projectOptions}
                         </select>
+                    </td>
+                    <td class="col-1" id="method_count_${key}">
                     </td>
                     <td class="col-3">
                         <input type="hidden" class="thriveEditor" data-ids="${key}" id="description_${key}"  name="description[]" required>
@@ -455,10 +463,10 @@
                     <td class="col-2" id="sub_total_show_${key}">
                         Rp 0
                     </td>
-                    <td class="col-1">
+                    <td class="col">
                         <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]">
                         <input type="hidden" class="form-control" placeholder="Total" id="sub_total_${key}" name="sub_total[]">
-                        <button class="btn btn-danger btnHapus"><i class="fa fa-trash"></i></button>
+                        <button class="btn btn-danger btn-sm btnHapus"><i class="fa fa-trash"></i></button>
                     </td>
                 </tr>
             `;
