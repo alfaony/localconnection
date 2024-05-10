@@ -66,7 +66,7 @@
                 $('#photo-inputs').append(`
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" name="descriptions[]" placeholder="Deskripsi Foto" required>
-                        <input type="file" class="form-control" name="photos[]" accept="image/*" capture="environment" onchange="compressAndAddImage(event)" required>
+                        <input type="file" class="form-control" name="photos[]" accept="image/*" capture="environment" onchange="compressAndAddImage(this)" required>
                         <button class="btn btn-danger remove-photo" type="button"><i class="fa fa-minus"></i></button>
                     </div>
                 `);
@@ -83,30 +83,39 @@
     });
 </script>
 <script>
-function compressImage(event) {
-    const file = event.target.files[0];
+function compressAndAddImage() {
+    const fileInput = event.target;
+
     const reader = new FileReader();
+    reader.readAsDataURL(fileInput.files[0]);
     reader.onload = function (event) {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = function () {
-            const elem = document.createElement('canvas');
-            const scaleFactor = 0.5; // Adjust scaleFactor to get smaller images
-            elem.width = img.width * scaleFactor;
-            elem.height = img.height * scaleFactor;
-            const ctx = elem.getContext('2d');
-            ctx.drawImage(img, 0, 0, elem.width, elem.height);
+        const imgElement = document.createElement("img");
+        imgElement.src = event.target.result;
+        imgElement.onload = function (e) {
+            const canvas = document.createElement("canvas");
+            const MAX_WIDTH = 800; // Define the maximum width of the image
+
+            const scaleSize = MAX_WIDTH / e.target.width;
+            canvas.width = MAX_WIDTH;
+            canvas.height = e.target.height * scaleSize;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(e.target, 0, 0, canvas.width, canvas.height);
             ctx.canvas.toBlob((blob) => {
-                const newFile = new File([blob], file.name, {
+                const file = new File([blob], "compressed_"+fileInput.files[0].name, {
                     type: 'image/jpeg',
-                    lastModified: Date.now()
+                    quality: 0.8 // Lowering the quality to reduce file size
                 });
-                // Replace the input file with new compressed file
-                event.target.files[0] = newFile;
-            }, 'image/jpeg', 0.75); // Adjust quality from 0 to 1
-        };
-    };
-    reader.readAsDataURL(file);
+
+                // Update the file input with the compressed image file
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+
+                // Update the preview image
+            }, 'image/jpeg', 0.5); // Lowering quality setting here
+        }
+    }
 }
 </script>
 
