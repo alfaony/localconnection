@@ -99,6 +99,7 @@ function compressImage(event) {
             ctx.canvas.toBlob((blob) => {
                 const newFile = new File([blob], file.name, {
                     type: 'image/jpeg',
+                    quality: 0.5, 
                     lastModified: Date.now()
                 });
                 // Replace the input file with new compressed file
