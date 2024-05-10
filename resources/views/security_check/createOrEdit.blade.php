@@ -103,7 +103,7 @@ function compressImage(event) {
                 });
                 // Replace the input file with new compressed file
                 event.target.files[0] = newFile;
-            }, 'image/jpeg', 0.75); // Adjust quality from 0 to 1
+            }, 'image/jpeg', 0.5); // Adjust quality from 0 to 1
         };
     };
     reader.readAsDataURL(file);
