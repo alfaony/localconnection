@@ -16,8 +16,16 @@
                     <p class="card-text"><strong>Tanggal Paten:</strong> {{ \Carbon\Carbon::parse($ipRight->patent_date)->format('d-m-Y')  }}</p>
                     <p class="card-text"><strong>Nomor Paten:</strong> {{ $ipRight->patent_number }}</p>
                     <p class="card-text"><strong>Deskripsi:</strong> {!! $ipRight->description !!}</p>
-                    <p class="card-text"><strong>Status:</strong> {{ $ipRight->status }}</p>
-                    <p class="card-text"><strong>Diapprove oleh:</strong> {{ $ipRight->approver->name ?? 'Belum diapprove' }}</p>
+                    <p><strong>Status:</strong> @switch($ipRight->status)
+                            @case('in review')
+                                <i class="fa fa-eye" style="color: green;"></i> In Review
+                                @break
+                            @case('complete')
+                                <i class="fa fa-check" style="color: green;"></i> Complete
+                                @break
+                        @endswitch</p>
+                    <p>
+                    <p class="card-text"><strong>Diapprove oleh:</strong> {{ $ipRight->approvalUser->name ?? 'Belum diapprove' }}</p>
 
                     @if($ipRight->file_path)
                     <div class="mb-3">
