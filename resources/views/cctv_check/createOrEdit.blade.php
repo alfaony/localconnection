@@ -36,7 +36,7 @@
                     <label for="photos" class="form-label">Foto</label>
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" name="descriptions[]" placeholder="Deskripsi Foto" required>
-                        <input type="file" class="form-control" id="photo" name="photos[]" accept="image/*" capture="environment" onchange="compressAndAddImage(event)" required>
+                        <input type="file" class="form-control" id="photo" name="photos[]" accept="image/*"  onchange="compressAndAddImage(event)" required>
                         <button class="btn btn-danger remove-photo" type="button"><i class="fa fa-minus"></i></button>
                     </div>
                 </div>
@@ -65,7 +65,7 @@
                 $('#photo-inputs').append(`
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" name="descriptions[]" placeholder="Deskripsi Foto" required>
-                        <input type="file" class="form-control" name="photos[]" accept="image/*" capture="environment" onchange="compressAndAddImage(event)" required>
+                        <input type="file" class="form-control" name="photos[]" accept="image/*"  onchange="compressAndAddImage(event)" required>
                         <button class="btn btn-danger remove-photo" type="button"><i class="fa fa-minus"></i></button>
                     </div>
                 `);
