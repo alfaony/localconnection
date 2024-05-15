@@ -150,8 +150,8 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('training', TrainingController::class);
   Route::put('training/addpoint/{slug}', [TrainingController::class, 'addPoint'])->name('training.addPoint');
   
-  Route::resource('ipright', IpRightController::class);
-  Route::put('ipright/addpoint/{slug}', [IpRightController::class, 'addPoint'])->name('ipright.addPoint');
+  Route::resource('ip-right', IpRightController::class);
+  Route::put('ip-right/addpoint/{slug}', [IpRightController::class, 'addPoint'])->name('ip-right.addPoint');
   
   Route::resource('sales_achievement', SalesAchievementController::class);
   Route::put('sales_achievement/addpoint/{slug}', [SalesAchievementController::class, 'addPoint'])->name('sales_achievement.addPoint');

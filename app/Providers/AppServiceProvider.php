@@ -234,7 +234,7 @@ class AppServiceProvider extends ServiceProvider
                 ],
                 'ip_rights' => [
                     'text'        => 'Hak Cipta',
-                    'route'         => 'ipright.index',
+                    'route'         => 'ip-right.index',
                     'icon' => 'fa fa-gavel',
                 ],
                 'sales_achievements' => [

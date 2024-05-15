@@ -5,7 +5,7 @@
     <div class="card shadow-sm">
         <div class="card-header">{{ isset($ipRight) ? 'Edit Hak Cipta' : 'Mendaftarkan Hak Cipta' }}</div>
         <div class="card-body">
-            <form action="{{ isset($ipRight) ? route('ipright.update', $ipRight->slug) : route('ipright.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ isset($ipRight) ? route('ip-right.update', $ipRight->slug) : route('ip-right.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if(isset($ipRight))
                     @method('PUT')

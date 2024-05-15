@@ -64,7 +64,7 @@ class IpRightController extends Controller
 
         $ipRight->save();
 
-        return redirect()->route('ipright.index')->with('success', 'Hak Cipta Berhasil Ditambahkan.');
+        return redirect()->route('ip-right.index')->with('success', 'Hak Cipta Berhasil Ditambahkan.');
     }
 
     public function show($slug)
@@ -111,7 +111,7 @@ class IpRightController extends Controller
         $ipRight->description =  $request->description;
         $ipRight->save();
 
-        return redirect()->route('ipright.index')->with('success', 'Hak Cipta Berhasil Diperbarui.');
+        return redirect()->route('ip-right.index')->with('success', 'Hak Cipta Berhasil Diperbarui.');
     }
 
     public function destroy($slug)
@@ -122,7 +122,7 @@ class IpRightController extends Controller
 
         $ipRight->delete();
 
-        return redirect()->route('ipright.index')->with('success', 'Hak Cipta Berhasil Dihapus.');
+        return redirect()->route('ip-right.index')->with('success', 'Hak Cipta Berhasil Dihapus.');
     }
 
     public function addPoint(Request $request, $slug)
@@ -139,6 +139,6 @@ class IpRightController extends Controller
         $ipRight->save();
 
 
-        return redirect()->route('ipright.show',$ipRight->slug)->with('success', 'Point Hak Itelektual Berhasil Ditambahkan.');
+        return redirect()->route('ip-right.show',$ipRight->slug)->with('success', 'Point Hak Itelektual Berhasil Ditambahkan.');
     }
 }

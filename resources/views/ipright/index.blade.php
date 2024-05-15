@@ -4,7 +4,7 @@
 <div class="container p-3 mt-3">
     <h2>Daftar Hak Cipta</h2>
     @canAccess('create','ip_rights')
-    <a href="{{ route('ipright.create') }}" class="btn btn-primary mb-4"><i class="fa fa-plus"></i> Tambah Hak Cipta</a>
+    <a href="{{ route('ip-right.create') }}" class="btn btn-primary mb-4"><i class="fa fa-plus"></i> Tambah Hak Cipta</a>
     @endcanAccess
     @if(session('success'))
         <div class="alert alert-success">
@@ -12,7 +12,7 @@
         </div>
     @endif
     @canAccess('index','task_assigns')
-    <form method="GET" action="{{ route('ipright.index') }}" class="mb-3">
+    <form method="GET" action="{{ route('ip-right.index') }}" class="mb-3">
         <div class="row g-1 align-items-end">
             <div class="col-12 col-md-2">
                 <select class="form-control" id="task" name="status">
@@ -64,14 +64,14 @@
                     </td>
                     <td>
                         @canAccess('show','ip_rights')
-                        <a href="{{ route('ipright.show', $ipRight->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
+                        <a href="{{ route('ip-right.show', $ipRight->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
                         @endcanAccess
                         @if(!$ipRight->approved)
                         @canAccess('edit','ip_rights')
-                        <a href="{{ route('ipright.edit', $ipRight->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
+                        <a href="{{ route('ip-right.edit', $ipRight->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
                         @endcanAccess
                         @canAccess('destroy','ip_rights')
-                        <form action="{{ route('ipright.destroy', $ipRight->slug) }}" method="POST" style="display:inline-block;">
+                        <form action="{{ route('ip-right.destroy', $ipRight->slug) }}" method="POST" style="display:inline-block;">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>

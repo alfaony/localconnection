@@ -29,7 +29,7 @@
                     <h5>Poin Hak Kekayaan Intelektual</h5>
                     @if(!$ipRight->point && $ipRight->user->approvement_user_id == Auth::user()->id)
                     @canAccess('addpoint','ip_rights')
-                    <form action="{{ route('ipright.addPoint', $ipRight->slug) }}" method="POST" class="p-3">
+                    <form action="{{ route('ip-right.addPoint', $ipRight->slug) }}" method="POST" class="p-3">
                         @csrf
                         @method('put')
                         <div class="mb-3">
@@ -52,10 +52,10 @@
             <div class="d-flex justify-content-between mt-4">
                 @if(!$ipRight->point)
                 @canAccess('edit','ip_rights')
-                <a href="{{ route('ipright.edit', $ipRight->id) }}" class="btn btn-warning">Edit</a>
+                <a href="{{ route('ip-right.edit', $ipRight->id) }}" class="btn btn-warning">Edit</a>
                 @endcanAccess
                 @endif
-                <a href="{{ route('ipright.index') }}" class="btn btn-secondary">Kembali</a>
+                <a href="{{ route('ip-right.index') }}" class="btn btn-secondary">Kembali</a>
             </div>
         </div>
     </div>
