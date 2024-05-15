@@ -65,6 +65,7 @@ class RoleController extends Controller
             'trainings',
             'ip_rights',
             'sales_achievements',
+            'report_points',
         ];
 
         $checked = array_merge($mainMenus);
@@ -159,6 +160,7 @@ class RoleController extends Controller
                 'trainings',
                 'ip_rights',
                 'sales_achievements',
+                'report_points',
             ];
         $checked = array_merge($mainMenus);
 
@@ -214,6 +216,8 @@ class RoleController extends Controller
             'trainings',
             'ip_rights',
             'sales_achievements',
+            'report_points',
+
         ];
         
         $checked = array_merge($mainMenus);

@@ -76,7 +76,7 @@ class AppServiceProvider extends ServiceProvider
             $equipmentMenu = ['equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
-            $productivityMenu = ['trainings','ip_rights','sales_achievements'];
+            $productivityMenu = ['report_productivities','trainings','ip_rights','sales_achievements'];
 
             $menus = [
                 'homes' => [
@@ -210,6 +210,11 @@ class AppServiceProvider extends ServiceProvider
                 'report_points' => [
                     'text'        => 'Laporan Poin',
                     'route'         => 'report-point.index',
+                    'icon' => 'fa fa-book',
+                ],
+                'report_productivities' => [
+                    'text'        => 'Laporan Poin',
+                    'route'         => 'report-productivity.index',
                     'icon' => 'fa fa-book',
                 ],
                 'security_checks' => [

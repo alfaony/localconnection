@@ -39,6 +39,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\IpRightController;
 use App\Http\Controllers\SalesAchievementController;
+use App\Http\Controllers\ReportPointProductivityController;
 
 /*
 |--------------------------------------------------------------------------
@@ -155,9 +156,10 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   
   Route::resource('sales_achievement', SalesAchievementController::class);
   Route::put('sales_achievement/addpoint/{slug}', [SalesAchievementController::class, 'addpoint'])->name('sales_achievement.addPoint');
+  
+  Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
 });
 
-Route::resource('province', ProvinceController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
