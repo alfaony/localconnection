@@ -51,7 +51,7 @@ class User extends Authenticatable
     {
         return 'slug';
     }
-    
+
     protected $fillable = [
         'name',
         'email',
@@ -96,10 +96,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(TaskAssign::class,'user_assign_id');
     }
-    
+
     public function settingCompany()
     {
         return $this->hasMany(SettingCompany::class);
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approvement_user_id');
     }
 
     public function scopeByCompany($query,$companyId)
@@ -109,12 +114,12 @@ class User extends Authenticatable
             return $query->where("company_id",$companyId);
         }
     }
-    
+
     public function scopeByRole($query,$role)
     {
         if($role)
         {
-            return $query->whereHas('role', function ($query) use ($role) 
+            return $query->whereHas('role', function ($query) use ($role)
             {
                 $query->where('name', $role);
             });

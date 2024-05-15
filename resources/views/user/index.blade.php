@@ -1,9 +1,5 @@
 @extends('adminlte::page')
 
-@section('content_header')
-    <h1>Data Pengguna</h1>
-@stop
-
 @php
 $no = ($user->currentPage() - 1) * $user->perPage() + 1;
 $totalUser = $totalUser + 1; // Get the total number of projects
@@ -32,39 +28,43 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         </div>
     @endif
 </div>
-<div class="container">
-    @canAccess('store','users')
+<div class="container p-3 mt-3">
     <div class="col-md-12 mt-2">
+        @if(!@$userEdit)
+        @canAccess('store','users')
         <p id="penggunaNo"></p>
-        @if(@$userEdit)
-        <form action="{{ route('user.update',$userEdit) }}" method="post">
-        @method('put')
-        @else
         <form action="{{ route('user.store') }}" method="post">
-        @endif
             @csrf
             <label for="name">Nama:</label>
             <input type="text" id="name" name="name" placeholder="Anwar" value="{{ old('name') ?? @$userEdit->name }}" required>
 
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
-            
+
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
-            
+
             @if($roleAccess)
             <label for="phone">Role:</label>
-            <select name="role" class="form-control md-2" required>
+            <select name="role" class="form-control mb-2 select2" required>
                 <option value="" selected disabled>Pilih</option>
                 @foreach($role as $a)
                 <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                @endforeach
+            </select>
+
+            <label for="phone">User Persetujuan:</label>
+            <select name="approvement_user_id" class="form-control mb-2 user-select2" required>
+                <option value="" selected disabled>Pilih</option>
+                @foreach($users as $a)
+                <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ." - ".  $a->company->name }} </option>
                 @endforeach
             </select>
             @endif
 
             @if($companyAccess && !@$userEdit)
             <label for="phone">Company:</label>
-            <select name="company" class="form-control md-2" required>
+            <select name="company" class="form-control mb-2" required>
                 <option value="" selected disabled>Pilih</option>
                 @foreach($company as $a)
                 <option value="{{ $a->id }}" {{ @$userEdit->company_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
@@ -75,10 +75,10 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             @if(!@$userEdit)
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" placeholder="**********" value="{{ old('password') }}" required>
-            
+
             <label for="confirmPassword">Confirm Password:</label>
             <input type="password" id="confirmPassword" name="confirmPassword" placeholder="**********">
-            
+
             <button id="buttonSubmit" type="submit">Simpan</button>
             @else
             @if(@$userEdit->id == Auth::user()->id)
@@ -94,9 +94,75 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <button id="buttonSubmit" type="submit">Ubah</button>
             @endif
         </form>
+        @endcanAccess
+        @elseif(@$userEdit)
+        @canAccess('update','users')
+        <form action="{{ route('user.update',$userEdit) }}" method="post">
+        @method('put')
+            @csrf
+            <label for="name">Nama:</label>
+            <input type="text" id="name" name="name" placeholder="Anwar" value="{{ old('name') ?? @$userEdit->name }}" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
+
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
+    
+            @if($roleAccess)
+            <label for="phone">Role:</label>
+            <select name="role" class="form-control mb-2 select2" required>
+                <option value="" selected disabled>Pilih</option>
+                @foreach($role as $a)
+                <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                @endforeach
+            </select>
+
+            <label for="phone">User Persetujuan:</label>
+            <select name="approvement_user_id" class="form-control mb-2 user-select2" required>
+                <option value="" selected disabled>Pilih</option>
+                @foreach($users as $a)
+                <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ." ( ".  $a->company->name." )"}} </option>
+                @endforeach
+            </select>
+            @endif
+
+            @if($companyAccess && !@$userEdit)
+            <label for="phone">Company:</label>
+            <select name="company" class="form-control mb-2" required>
+                <option value="" selected disabled>Pilih</option>
+                @foreach($company as $a)
+                <option value="{{ $a->id }}" {{ @$userEdit->company_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                @endforeach
+            </select>
+            @endif
+
+            @if(!@$userEdit)
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="**********" value="{{ old('password') }}" required>
+
+            <label for="confirmPassword">Confirm Password:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="**********">
+
+            <button id="buttonSubmit" type="submit">Simpan</button>
+            @else
+            @if(@$userEdit->id == Auth::user()->id)
+            <label for="oldPassword">Password Lama:</label>
+            <input type="password" id="oldPassword" name="oldPassword" placeholder="**********">
+
+            <label for="newPassword">Password Baru:</label>
+            <input type="password" id="newPassword" name="newPassword" placeholder="**********">
+
+            <label for="confirmPassword">Konfirmasi Password:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="**********">
+            @endif
+            <button id="buttonSubmit" type="submit">Ubah</button>
+            @endif
+        </form>
+        @endcanAccess
+        @endif
 
     </div>
-    @endcanAccess
     <div class="col-md-12 mt-2">
         <h3>Daftar Pengguna</h3>
         <form action="{{ route('user.index') }}" method="get">
@@ -109,13 +175,14 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 </div>
             </div>
         </form>
-    
+
         <table class="table table-bordered">
             <tr>
                 <th>No</th>
                 <th>Nama</th>
                 <th>Email</th>
                 <th>Perusahaan</th>
+                <th>Pic Persetujuan</th>
                 <th>Aksi</th>
             </tr>
             @forelse($user as $a)
@@ -123,6 +190,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <td>{{ $no++ }}</td>
                 <td>{{ $a->name }}</td>
                 <td>{{ $a->email }}</td>
+                <td>{{ $a->approver ? $a->approver->name : "Belum Memiliki Pic Persetujuan" }}</td>
                 <td> {{ $a->company ? $a->company->name : '' }} </td>
                 <td>
                     <form method="post" action="{{ route('user.destroy',$a) }}">
@@ -156,22 +224,37 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 @section('js')
 <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
-    $(document).ready(function () 
+    $(document).ready(function()
+    {
+        $('.select2').select2({
+            width: '100%',
+            placeholder: 'Pilih Tugas'
+        });
+
+        $('.user-select2').select2({
+            width: '100%',
+            placeholder: 'Pilih Petugas'
+        });
+    });
+</script>
+<script>
+    $(document).ready(function ()
     {
         let nomor = "{{ $totalUser }}";
         document.getElementById('penggunaNo').innerHTML = "No Pengguna :"+nomor;
 
 
         let getPrice = document.getElementById("budget").value;
-        if (getPrice) 
+        if (getPrice)
         {
             document.getElementById("budget_show").value = getPrice;
             formatRupiahFormat(document.getElementById("budget_show"),"budget"); // Format default value
         }
 
     });
-    function formatRupiahFormat(input, inputNonFormat) 
+    function formatRupiahFormat(input, inputNonFormat)
     {
         let numStr = input.value.toString().replace(/[^,\d]/g, '');
         let split = numStr.split(',');
@@ -203,6 +286,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 @stop
 
 @section('css')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <style>
         body {
             font-family: Arial, sans-serif;
@@ -242,6 +326,17 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             border: none;
             border-radius: 5px;
             cursor: pointer;
+        }
+        .select2-selection__rendered
+        {
+            line-height: 31px !important;
+        }
+        .select2-container .select2-selection--single
+        {
+            height: 35px !important;
+        }
+        .select2-selection__arrow {
+            height: 34px !important;
         }
 </style>
 @stop

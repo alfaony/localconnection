@@ -71,10 +71,12 @@ class AppServiceProvider extends ServiceProvider
             $equipmentMenuArray = array();
             $taskMenuArray = array();
             $securityMenuArray = array();
+            $productivityMenuArray = array();
 
             $equipmentMenu = ['equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
+            $productivityMenu = ['trainings','ip_rights','sales_achievements'];
 
             $menus = [
                 'homes' => [
@@ -225,6 +227,21 @@ class AppServiceProvider extends ServiceProvider
                     'route'         => 'ticket.index',
                     'icon' => 'fa fa-envelope',
                 ],
+                'trainings' => [
+                    'text'        => 'Pelatihan',
+                    'route'         => 'training.index',
+                    'icon' => 'fa fa-graduation-cap',
+                ],
+                'ip_rights' => [
+                    'text'        => 'Hak Cipta',
+                    'route'         => 'ipright.index',
+                    'icon' => 'fa fa-gavel',
+                ],
+                'sales_achievements' => [
+                    'text'        => 'Pencapaian Penjualan',
+                    'route'         => 'sales_achievement.index',
+                    'icon' => 'fa fa-line-chart',
+                ],
             ];
 
             foreach ($listMenu as $role) 
@@ -259,6 +276,20 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($productivityMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($productivityMenuArray,$menus[$role]);
+                }
+            }
+
+            $productivityMenu = 
+            [
+                'text'    => 'Produktifitas',
+                'submenu' => $productivityMenuArray
+            ];
+
             $equipmentMenu = 
             [
                 'text'    => 'Perlengkapan',
@@ -276,6 +307,11 @@ class AppServiceProvider extends ServiceProvider
                 'text'    => 'Manajemen Keamanan',
                 'submenu' => $securityMenuArray
             ];
+
+            if($productivityMenu['submenu'] )
+            {
+                $event->menu->add($productivityMenu);
+            }
 
             if($equipmentMenu['submenu'] )
             {

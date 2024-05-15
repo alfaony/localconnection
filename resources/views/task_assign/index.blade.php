@@ -71,17 +71,17 @@
             <thead>
                 <tr>
                     @if(request('task') == "all" )
-                    <th>Tanggal</th>
+                    <th class="col-2">Tanggal</th>
                     @endif
-                    <th>Status</th>
-                    <th>Pekerjaan</th>
+                    <th class="col-1">Status</th>
+                    <th class="col-auto">Pekerjaan</th>
                     @if((Auth::user()->role->name != \App\Schemas\RoleSchema::OB))
-                    <th>Poin</th>
+                    <th class="col-1">Poin</th>
                     @endif
                     @if((Auth::user()->role->name != \App\Schemas\RoleSchema::OB))
-                    <th>Penugasan</th>
+                    <th class="col-2">Penugasan</th>
                     @endif
-                    <th>Aksi</th>
+                    <th class="col-2">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -142,7 +142,7 @@
 @endsection
 @section('css')
     <style>
-        body 
+        body
         {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;

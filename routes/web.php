@@ -36,6 +36,9 @@ use App\Http\Controllers\AssetAssignController;
 use App\Http\Controllers\SecurityCheckController;
 use App\Http\Controllers\CctvCheckController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\TrainingController;
+use App\Http\Controllers\IpRightController;
+use App\Http\Controllers\SalesAchievementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,7 +62,7 @@ Auth::routes([
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 
-Route::group(['middleware' => ['auth','role.permission']], function() 
+Route::group(['middleware' => ['auth','role.permission']], function()
 {
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
@@ -77,9 +80,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('manager', ManagerController::class);
 
   Route::resource('customer', CustomerController::class)->except(['create','show']);
-  
+
   Route::resource('product', ProductController::class)->except(['create','show']);
-  
+
   Route::delete('quote/destroyProduct/product/{QuoteProduct}',[QuoteController::class,'destroyProduct'])->name('quote.destroy.product');
   Route::get('quote/productPrice/counting',[QuoteController::class,'productPrice'])->name('quote.productPrice');
   Route::get('quote/select2', [QuoteController::class, 'select2'])->name('quote.select2');
@@ -97,7 +100,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('work-order/dataTableJson', [WorkOrderController::class, 'dataTableJson'])->name('work-order.datatable');
   Route::get('work-order/productCounting/counting',[WorkOrderController::class,'productCounting'])->name('work-order.productCounting');
   Route::resource('work-order', WorkOrderController::class)->except(['show']);
-  
+
   Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');
   Route::get('agreement-letter/dataTableJson', [AgreementLetterController::class, 'dataTableJson'])->name('agreement-letter.datatable');
   Route::resource('agreement-letter', AgreementLetterController::class)->except(['show']);
@@ -117,32 +120,41 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('pricelist/dataTableJson', [PricelistController::class, 'dataTableJson'])->name('pricelist.datatable');
   Route::get('pricelist', [PricelistController::class, 'index'])->name('pricelist.index');
   Route::get('pricelist/show/{product}', [PricelistController::class, 'show'])->name('pricelist.show');
-  
+
   Route::resource('company', CompanyController::class)->except(['create','show']);
-  
+
   Route::get('equipment/history/{slug}', [EquipmentController::class, 'history'])->name('equipment.history');
   Route::resource('equipment', EquipmentController::class);
-  
+
   Route::resource('equipment-reduction', EquipmentReductionController::class);
-  
+
   Route::resource('task', TaskController::class)->except(['create','show']);
-  
+
   Route::put('task-assign/approvement/{slug}', [TaskAssignController::class, 'approvement'])->name('task-assign.approvement');
   Route::put('task-assign/report/{slug}', [TaskAssignController::class, 'report'])->name('task-assign.report');
   Route::resource('task-assign', TaskAssignController::class);
 
   Route::get('report-point',[ReportPointController::class,'index'])->name('report-point.index');
-  
+
   Route::resource('attendance', AttendanceController::class)->only('index');
 
   Route::resource('asset', AssetController::class)->except(['create']);
   Route::resource('asset-assign', AssetAssignController::class)->only(['store','update','destroy']);
 
   Route::resource('security-check', SecurityCheckController::class);
-  
+
   Route::resource('cctv-check', CctvCheckController::class);
 
   Route::resource('ticket', TicketController::class)->except(['create','store']);
+  
+  Route::resource('training', TrainingController::class);
+  Route::put('training/addpoint/{slug}', [TrainingController::class, 'addPoint'])->name('training.addPoint');
+  
+  Route::resource('ipright', IpRightController::class);
+  Route::put('ipright/addpoint/{slug}', [IpRightController::class, 'addPoint'])->name('ipright.addPoint');
+  
+  Route::resource('sales_achievement', SalesAchievementController::class);
+  Route::put('sales_achievement/addpoint/{slug}', [SalesAchievementController::class, 'addPoint'])->name('sales_achievement.addPoint');
 });
 
 
