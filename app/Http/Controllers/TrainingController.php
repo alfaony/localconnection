@@ -127,7 +127,7 @@ class TrainingController extends Controller
         return redirect()->route('training.index')->with('success', 'Training Berhasil Dihapus.');
     }
 
-    public function addPoint(Request $request, $slug)
+    public function addpoint(Request $request, $slug)
     {
         $request->validate([
             'point' => 'required|integer',

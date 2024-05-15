@@ -63,7 +63,7 @@
                         {{ $achievement->user->name ?? "" }}
                     </td>
                     <td>
-                        @canAccess('shhow','sales_achievements')
+                        @canAccess('show','sales_achievements')
                         <a href="{{ route('sales_achievement.show', $achievement->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
                         @endcanAccess
                         @if(!$achievement->approved)

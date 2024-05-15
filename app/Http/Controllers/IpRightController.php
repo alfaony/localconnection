@@ -125,7 +125,7 @@ class IpRightController extends Controller
         return redirect()->route('ip-right.index')->with('success', 'Hak Cipta Berhasil Dihapus.');
     }
 
-    public function addPoint(Request $request, $slug)
+    public function addpoint(Request $request, $slug)
     {
         $request->validate([
             'point' => 'required|integer',

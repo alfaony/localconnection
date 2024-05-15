@@ -148,15 +148,16 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('ticket', TicketController::class)->except(['create','store']);
   
   Route::resource('training', TrainingController::class);
-  Route::put('training/addpoint/{slug}', [TrainingController::class, 'addPoint'])->name('training.addPoint');
+  Route::put('training/addpoint/{slug}', [TrainingController::class, 'addpoint'])->name('training.addPoint');
   
   Route::resource('ip-right', IpRightController::class);
-  Route::put('ip-right/addpoint/{slug}', [IpRightController::class, 'addPoint'])->name('ip-right.addPoint');
+  Route::put('ip-right/addpoint/{slug}', [IpRightController::class, 'addpoint'])->name('ip-right.addPoint');
   
   Route::resource('sales_achievement', SalesAchievementController::class);
-  Route::put('sales_achievement/addpoint/{slug}', [SalesAchievementController::class, 'addPoint'])->name('sales_achievement.addPoint');
+  Route::put('sales_achievement/addpoint/{slug}', [SalesAchievementController::class, 'addpoint'])->name('sales_achievement.addPoint');
 });
 
+Route::resource('province', ProvinceController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

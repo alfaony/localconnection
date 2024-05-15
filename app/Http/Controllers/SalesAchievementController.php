@@ -97,7 +97,7 @@ class SalesAchievementController extends Controller
         return redirect()->route('sales_achievement.index')->with('success', 'Sales Achievement deleted successfully.');
     }
 
-    public function addPoint(Request $request, $slug)
+    public function addpoint(Request $request, $slug)
     {
         $request->validate([
             'point' => 'required|integer',
