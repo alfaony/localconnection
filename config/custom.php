@@ -40,4 +40,11 @@ return
         'complete' => 'Complete'
      ],
 
+     'statusTask' =>
+     [
+        'overdue' => 'Kemarin',
+        'today' => 'Hari ini',
+        'upcomming' => 'Yang Akan datang',
+     ],
+
 ];

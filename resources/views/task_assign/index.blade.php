@@ -17,8 +17,6 @@
     @if(Session::get('delete'))
     <div class="alert alert-success mt-3">Penugasan Berhasil Terhapus</div>
     @endif
-
-
 </div>
 <div class="container p-3">
     @canAccess('store','task_assigns')

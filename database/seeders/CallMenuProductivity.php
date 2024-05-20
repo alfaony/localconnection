@@ -17,6 +17,6 @@ class CallMenuProductivity extends Seeder
         $this->call(RolePermissionForDirecturManagerStaff::class);
         $this->call(PermissionForMenuProductivity::class);
         $this->call(PermissionForReportPoinProductivity::class);
-        
+        $this->call(PermissionForMenuDailyActivity::class);
     }
 }

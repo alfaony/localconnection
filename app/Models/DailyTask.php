@@ -1,0 +1,191 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
+use Ramsey\Uuid\Uuid;
+use Carbon\Carbon;
+
+use App\Schemas\ParamSchema;
+
+class DailyTask extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
+    protected $keyType = 'string'; // Tipe kunci primer adalah string
+    
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Saat membuat model baru, tetapkan UUID
+        static::creating(function ($model) 
+        {
+            $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
+        });
+    }
+
+    public function setNameAttribute($value)
+    {
+        $this->attributes['name'] = $value;
+        $this->attributes['slug'] = $this->createUniqueSlug($value);
+    }
+
+    protected function createUniqueSlug($title)
+    {
+        $slug = Str::slug($title);
+        $baseSlug = $slug;
+
+        $count = 1;
+        while (static::where('slug', $slug)->withTrashed()->exists()) 
+        {
+            $slug = "{$baseSlug}-{$count}";
+            $count++;
+        }
+
+        return $slug;
+    }
+
+    public function assign()
+    {
+        return $this->belongsTo(User::class,'assignment_user_id')->withTrashed();
+    }
+        
+    public function user()
+    {
+        return $this->belongsTo(User::class)->withTrashed();
+    }
+
+    public function taskStatus()
+    {
+        return $this->belongsTo(TaskStatus::class)->withTrashed();
+
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(DailyTaskCategory::class,'daily_task_category_id')->withTrashed();
+    }
+
+    public function type()
+    {
+        return $this->belongsTo(DailyTaskType::class,'daily_task_type_id')->withTrashed();
+    }
+
+    public function head()
+    {
+        return $this->belongsTo(DailyTask::class,'child_daily_task_id')->withTrashed();
+    }
+
+    public function children()
+    {
+        return $this->hasMany(DailyTask::class, 'child_daily_task_id');
+    }
+    
+    public function media()
+    {
+        return $this->hasMany(DailyTaskMedia::class);
+    }
+
+    public function extend()
+    {
+        return $this->hasMany(DailyTaskExtend::class);
+    }
+
+    public function message()
+    {
+        return $this->hasMany(DailyTaskMessage::class)->orderBy('created_at', 'asc');
+    }
+    
+
+    public function isOverdue()
+    {
+        $startDate = Carbon::parse($this->start_date);
+        $endDate = Carbon::parse($this->end_date);
+        $today = Carbon::today();
+
+        return ($this->taskStatus->name == \App\Schemas\ParamSchema::DOING || $this->taskStatus->name == \App\Schemas\ParamSchema::INREVIEW) && $today->gt($endDate);
+    }
+
+    public function getNameShowAttribute()
+    {
+        $latestExtend = $this->extend()->latest()->first();
+        if ($latestExtend) {
+            return "Extend: {$latestExtend->extend} {$this->name}";
+        }
+        return $this->name;
+    }
+
+    public function getDateShowAttribute()
+    {
+        // Atur lokal ke bahasa Indonesia
+        Carbon::setLocale('id');
+        
+        $startDate = Carbon::parse($this->start_date);
+        $endDate = Carbon::parse($this->end_date);
+        $now = Carbon::now();
+        $tomorrow = Carbon::tomorrow();
+
+        if ($startDate->isSameDay($endDate)) {
+            if ($startDate->isToday()) {
+                return 'Hari Ini';
+            } elseif ($startDate->isTomorrow()) {
+                return 'Besok';
+            } elseif ($startDate->isSameWeek($now)) {
+                return $startDate->translatedFormat('l');
+            } else {
+                return $startDate->translatedFormat('d F Y');
+            }
+        } else {
+            if ($startDate->isSameWeek($now) && $endDate->isSameWeek($now)) {
+                return $startDate->translatedFormat('l') . ' - ' . $endDate->translatedFormat('l');
+            } else {
+                return $startDate->translatedFormat('d') . ' - ' . $endDate->translatedFormat('d F Y');
+            }
+        }
+    }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }
+    }
+
+    public function scopeUserTasks($query, $userId)
+    {
+        return $query->where(function($query) use ($userId) {
+                    $query->where('user_id', $userId)
+                          ->orWhere('assignment_user_id', $userId);
+                })
+                ;
+    }
+
+    private function translateMonth($month)
+    {
+        $months = [
+            'January' => 'Januari',
+            'February' => 'Februari',
+            'March' => 'Maret',
+            'April' => 'April',
+            'May' => 'Mei',
+            'June' => 'Juni',
+            'July' => 'Juli',
+            'August' => 'Agustus',
+            'September' => 'September',
+            'October' => 'Oktober',
+            'November' => 'November',
+            'December' => 'Desember',
+        ];
+
+        return $months[$month] ?? $month;
+    }
+}

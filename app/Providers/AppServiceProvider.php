@@ -76,7 +76,7 @@ class AppServiceProvider extends ServiceProvider
             $equipmentMenu = ['equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
-            $productivityMenu = ['report_productivities','trainings','ip_rights','sales_achievements'];
+            $productivityMenu = ['report_productivities','dailytasks','trainings','ip_rights','sales_achievements'];
 
             $menus = [
                 'homes' => [
@@ -246,6 +246,12 @@ class AppServiceProvider extends ServiceProvider
                     'text'        => 'Pencapaian Penjualan',
                     'route'         => 'sales_achievement.index',
                     'icon' => 'fa fa-line-chart',
+                ],
+                'dailytasks' => [
+                    'text'        => 'Tugas Harian',
+                    'route'         => 'dailytask.index',
+                    'icon' => 'fa fa-tasks',
+
                 ],
             ];
 

@@ -45,7 +45,7 @@
             @foreach ($trainings as $training)
                 <tr>
                     <td>{{ $training->name }}</td>
-                    <td>{{ $training->certification_date }}</td>
+                    <td>{{ \Carbon\Carbon::parse($training->certification_date)->format('d-m-Y') }}
                     <td>
                         @switch($training->status)
                             @case('in review')

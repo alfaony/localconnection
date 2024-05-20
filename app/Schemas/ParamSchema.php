@@ -42,5 +42,10 @@ class ParamSchema
 
     const DONE = "done";
 
+    const ONTIME = "ontime";
+
+    const LATE = "late";
+
+    const RECURRING = "Recurring";
 
 }

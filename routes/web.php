@@ -40,6 +40,7 @@ use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\IpRightController;
 use App\Http\Controllers\SalesAchievementController;
 use App\Http\Controllers\ReportPointProductivityController;
+use App\Http\Controllers\DailyTaskController;
 
 /*
 |--------------------------------------------------------------------------
@@ -158,8 +159,16 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::put('sales_achievement/addpoint/{slug}', [SalesAchievementController::class, 'addpoint'])->name('sales_achievement.addPoint');
   
   Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
-});
 
+  Route::put('dailytask/storesubtask/{slug}', [DailyTaskController::class,'storesubtask'])->name('dailytask.storesubtask');
+  Route::put('dailytask/comment/{slug}', [DailyTaskController::class,'comment'])->name('dailytask.comment');
+  Route::put('dailytask/extend/{slug}', [DailyTaskController::class,'extend'])->name('dailytask.extend');
+  Route::put('dailytask/updatemedia/{slug}', [DailyTaskController::class,'updatemedia'])->name('dailytask.updatemedia');
+  Route::put('dailytask/report/{slug}', [DailyTaskController::class,'report'])->name('dailytask.report');
+  Route::delete('dailytask/deletemedia/{id}', [DailyTaskController::class, 'deletemedia'])->name('dailytask.deletemedia');
+  Route::put('dailytask/approvement/{slug}', [DailyTaskController::class,'approvement'])->name('dailytask.approvement');
+  Route::resource('dailytask', DailyTaskController::class);
+});
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

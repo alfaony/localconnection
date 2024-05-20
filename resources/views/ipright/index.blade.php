@@ -74,7 +74,7 @@
                         <form action="{{ route('ip-right.destroy', $ipRight->slug) }}" method="POST" style="display:inline-block;">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                            <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                         </form>
                         @endcanAccess
                         @endif

@@ -6,11 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 use Carbon\Carbon;
+use App\Schemas\ParamSchema;
 
 use App\Models\Training;
 use App\Models\IpRight;
 use App\Models\SalesAchievement;
 use App\Models\User;
+use App\Models\TaskStatus;
+use App\Models\DailyTask;
 
 class ReportPointProductivityController extends Controller
 {
@@ -38,8 +41,9 @@ class ReportPointProductivityController extends Controller
         // Retrieve all users
         $users = $query->byCompany(Auth::user()->company_id)->paginate(10);
 
+        $complate = TaskStatus::select('id')->where('name',ParamSchema::COMPLATE)->firstOrFail()->id;
         // Map the user data to include points from each model within the date range
-        $reports = $users->map(function ($user) use ($startDate, $endDate) {
+        $reports = $users->map(function ($user) use ($startDate, $endDate, $complate) {
             $trainingPoints = Training::where('user_id', $user->id)
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->sum('point');
@@ -52,12 +56,18 @@ class ReportPointProductivityController extends Controller
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->sum('points');
 
+            $dailyTaskPoints = DailyTask::where('assignment_user_id', $user->id)
+                ->whereBetween('submit', [$startDate, $endDate])
+                ->where('task_status_id', $complate)
+                ->sum('point');
+
             return [
                 'name' => $user->name,
                 'training_points' => $trainingPoints,
                 'ip_right_points' => $ipRightPoints,
                 'sales_achievement_points' => $salesAchievementPoints,
-                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints,
+                'daily_task_point' => $dailyTaskPoints,
+                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints,
             ];
         });
 
