@@ -66,7 +66,7 @@
             <div class="d-flex justify-content-between mt-4">
                 @if(!$training->point)
                 @canAccess('edit','trainings')
-                <a href="{{ route('training.edit', $training->id) }}" class="btn btn-warning">Edit Training</a>
+                <a href="{{ route('training.edit', $training->slug) }}" class="btn btn-warning">Edit Training</a>
                 @endcanAccess
                 @endif
                 <a href="{{ route('training.index') }}" class="btn btn-secondary">Kembali Training</a>

@@ -57,6 +57,15 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
+                @if(@$training->point && @$training->user->approvement_user_id == Auth::user()->id)
+                <div class="mb-3">
+                    <label for="points" class="form-label">Poin</label>
+                    <input type="number" class="form-control" id="points" name="point" value="{{ old('point', isset($training) ? $training->point : '') }}" >
+                    @error('point')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                @endif
                 <div class="mb-3">
                     <label for="certification_file" class="form-label">Upload Sertifikasi</label>
                     <input type="file" class="form-control @error('certification_file') is-invalid @enderror" id="certification_file" name="certification_file" {{ !isset($training) ? 'required' : '' }} accept="application/pdf">
@@ -70,14 +79,18 @@
                         </div>
                     @endif
                 </div>
-                @if(Auth::user()->approvement_user_id)
+                @if(@$training->point && @$training->user->approvement_user_id == Auth::user()->id)
                 <button type="submit" class="btn btn-primary">{{ isset($training) ? 'Ubah' : 'Simpan' }}</button>
                 @else
-                <div class="mt-5">
-                    <span class="alert alert-warning" role="alert">
-                        Silahkan hubungi admin atau atasan Anda untuk memberikan approval.
-                    </span>
-                </div>
+                    @if(Auth::user()->approvement_user_id)
+                    <button type="submit" class="btn btn-primary">{{ isset($training) ? 'Ubah' : 'Simpan' }}</button>
+                    @else
+                    <div class="mt-5">
+                        <span class="alert alert-warning" role="alert">
+                            Silahkan hubungi admin atau atasan Anda untuk memberikan approval.
+                        </span>
+                    </div>
+                    @endif
                 @endif
             </form>
         </div>

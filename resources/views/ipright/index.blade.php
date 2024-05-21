@@ -22,6 +22,16 @@
                     @endforeach
                 </select>
             </div>
+            @if(Auth::user()->role->name != \App\Schemas\RoleSchema::STAFF)
+            <div class="col-12 col-md-3">
+                <select class="form-control select2" id="user" name="user">
+                    <option value="">Select User</option>
+                    @foreach ($users as $user)
+                        <option value="{{ $user->name }}" {{ request('user') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
 
             <div class="col-12 col-md-auto mt-2">
                 <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Search</button>
@@ -77,6 +87,10 @@
                             <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                         </form>
                         @endcanAccess
+                        @else
+                            @if($ipRight->point && $ipRight->user->approvement_user_id == Auth::user()->id)
+                                <a href="{{ route('ip-right.edit', $ipRight->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
+                            @endif
                         @endif
                     </td>
                 </tr>
@@ -89,16 +103,37 @@
     </div>
 </div>
 @endsection
+@section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () 
+    {
+        $('.select2').select2();
+    });
+</script>
+@endsection
 @section('css')
-    <style>
-        body
-        {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-        }
-        .container {
-            background-color: #fff;
-            border-radius: 5px;
-        }
-    </style>
-@stop
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    body
+    {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+    }
+    .container {
+        background-color: #fff;
+        border-radius: 5px;
+    }
+    .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+</style>
+@endsection

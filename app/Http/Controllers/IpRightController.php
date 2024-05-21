@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use App\Schemas\ParamSchema;
 
 use App\Models\IpRight;
+use App\Models\User;
+
 
 class IpRightController extends Controller
 {
@@ -21,10 +23,19 @@ class IpRightController extends Controller
             $query->where('status',$request->status);
         }
 
+        if ($request->has('user') && $request->user != '') 
+        {
+            $query->whereHas('user', function ($q) use ($request) 
+            {
+                $q->where('name', 'like', '%' . $request->user . '%');
+            });
+        }
+
+        $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
         $ipRights = $query->byUserAndApproval(Auth::user()->id)->orderBy('created_at','desc')->paginate(10);
         $status = config('custom.statusApproval');
 
-        return view('ipright.index', compact('ipRights','status'));
+        return view('ipright.index', compact('ipRights','status', 'users'));
     }
 
     public function create()
@@ -103,12 +114,10 @@ class IpRightController extends Controller
         }
 
         $ipRight->name = $request->name;
-        $ipRight->user_id = Auth::user()->id;
-        $ipRight->approval_user_id = Auth::user()->id;
-        $ipRight->status = ParamSchema::INREVIEW;
         $ipRight->patent_date =  $request->patent_date;
         $ipRight->patent_number = $request->patent_number;
         $ipRight->description =  $request->description;
+        $ipRight->point =  $request->point ?? NULL;
         $ipRight->save();
 
         return redirect()->route('ip-right.index')->with('success', 'Hak Cipta Berhasil Diperbarui.');

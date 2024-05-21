@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\SalesAchievement;
+use App\Models\User;
 use App\Schemas\ParamSchema;
 
 class SalesAchievementController extends Controller
@@ -19,9 +20,17 @@ class SalesAchievementController extends Controller
         {
             $query->where('status',$request->status);
         }
+        if ($request->has('user') && $request->user != '') 
+        {
+            $query->whereHas('user', function ($q) use ($request) 
+            {
+                $q->where('name', 'like', '%' . $request->user . '%');
+            });
+        }
 
+        $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
         $achievements = $query->byUserAndApproval(Auth::user()->id)->paginate(10);
-        return view('sales_achievement.index', compact('achievements','status'));
+        return view('sales_achievement.index', compact('achievements','status', 'users'));
     }
 
     public function create()
@@ -78,9 +87,8 @@ class SalesAchievementController extends Controller
 
         $salesAchievement = SalesAchievement::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
 
-        $salesAchievement->user_id = Auth::id(); // secara otomatis mengatur user_id ke pengguna yang sedang login
-        $salesAchievement->approval_user_id = Auth::id(); // secara otomatis mengatur user_id ke pengguna yang sedang login
         $salesAchievement->period = $request->period;
+        $salesAchievement->points = $request->point ?? NULL;
         $salesAchievement->sales_amount = $request->sales_amount;
         $salesAchievement->total_presentations = $request->total_presentations;
         $salesAchievement->total_offers_issued = $request->total_offers_issued;

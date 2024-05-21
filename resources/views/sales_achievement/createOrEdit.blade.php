@@ -25,7 +25,7 @@
                 <label for="period" class="form-label">Periode Capaian Penjualan</label>
                 <select class="form-control @error('period') is-invalid @enderror" id="period" name="period" required>
                     @foreach ($months as $key => $month)
-                        <option value="{{ $key }}" {{ old('period', isset($salesAchievement) ? $salesAchievement->period : '') == $month ? 'selected' : '' }}>
+                        <option value="{{ $key }}" {{ old('period', isset($salesAchievement) ? $salesAchievement->period : '') == $key ? 'selected' : '' }}>
                             {{ $month }}
                         </option>
                     @endforeach
@@ -64,14 +64,28 @@
                     </span>
                 @enderror
             </div>
-            @if(Auth::user()->approvement_user_id)
-            <button type="submit" class="btn btn-primary">{{ isset($salesAchievement) ? 'Ubah' : 'Simpan' }}</button>
+            @if(@$salesAchievement->points && @$salesAchievement->user->approvement_user_id == Auth::user()->id)
+            <div class="mb-3">
+                <label for="points" class="form-label">Poin</label>
+                <input type="number" class="form-control" id="points" name="point" value="{{ old('point', isset($salesAchievement) ? $salesAchievement->points : '') }}" >
+                @error('point')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            @endif
+
+            @if(@$salesAchievement->points && @$salesAchievement->user->approvement_user_id == Auth::user()->id)
+                <button type="submit" class="btn btn-primary">{{ isset($salesAchievement) ? 'Ubah' : 'Simpan' }}</button>
             @else
-            <div class="mt-5">
-                    <span class="alert alert-warning" role="alert">
-                        Silahkan hubungi admin atau atasan Anda untuk memberikan approval.
-                    </span>
-                </div>
+                @if(Auth::user()->approvement_user_id)
+                <button type="submit" class="btn btn-primary">{{ isset($salesAchievement) ? 'Ubah' : 'Simpan' }}</button>
+                @else
+                <div class="mt-5">
+                        <span class="alert alert-warning" role="alert">
+                            Silahkan hubungi admin atau atasan Anda untuk memberikan approval.
+                        </span>
+                    </div>
+                @endif
             @endif
         </form>
     </div>

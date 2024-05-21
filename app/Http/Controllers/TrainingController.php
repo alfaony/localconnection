@@ -8,6 +8,7 @@ use App\Schemas\ParamSchema;
 
 use App\Models\Training;
 use App\Models\Skill;
+use App\Models\User;
 
 class TrainingController extends Controller
 {
@@ -19,11 +20,19 @@ class TrainingController extends Controller
         {
             $query->where('status',$request->status);
         }
+        if ($request->has('user') && $request->user != '') 
+        {
+            $query->whereHas('user', function ($q) use ($request) 
+            {
+                $q->where('name', 'like', '%' . $request->user . '%');
+            });
+        }
 
+        $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
         $trainings = $query->byUserAndApproval(Auth::user()->id)->orderBy('created_at','desc')->paginate(10);
         $status = config('custom.statusApproval');
 
-        return view('training.index', compact('trainings','status'));
+        return view('training.index', compact('trainings','status', 'users'));
     }
 
     public function create()
@@ -103,12 +112,12 @@ class TrainingController extends Controller
 
         $training->name = $request->name;
         $training->skills_mastered = $skillsIds;
-        $training->user_id = Auth::user()->id;
-        $training->status = ParamSchema::INREVIEW;
+        $training->point = $request->point ?? NULL;
         $training->certification_date = $request->certification_date;
         $training->certification_number = $request->certification_number;
 
-        if ($request->hasFile('certification_file')) {
+        if ($request->hasFile('certification_file')) 
+        {
             $file = $request->file('certification_file');
             $filename = time() . '_' . $file->getClientOriginalName();
             $file->storeAs('certifications', $filename, 'public');

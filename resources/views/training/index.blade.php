@@ -22,6 +22,16 @@
                     @endforeach
                 </select>
             </div>
+            @if(Auth::user()->role->name != \App\Schemas\RoleSchema::STAFF)
+            <div class="col-12 col-md-3">
+                <select class="form-control select2" id="user" name="user">
+                    <option value="">Select User</option>
+                    @foreach ($users as $user)
+                        <option value="{{ $user->name }}" {{ request('user') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
 
             <div class="col-12 col-md-auto mt-2">
                 <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Search</button>
@@ -32,67 +42,91 @@
 
     <div class="table-responsive-md">
         <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Nama Pelatihan</th>
-                <th>Tanggal Pelatihan</th>
-                <th>Status</th>
-                <th>Pengajuan</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($trainings as $training)
+            <thead>
                 <tr>
-                    <td>{{ $training->name }}</td>
-                    <td>{{ \Carbon\Carbon::parse($training->certification_date)->format('d-m-Y') }}
-                    <td>
-                        @switch($training->status)
-                            @case('in review')
-                                <i class="fa fa-eye" style="color: green;"></i> In Review
-                                @break
-                            @case('complete')
-                                <i class="fa fa-check" style="color: green;"></i> Complete
-                                @break
-                        @endswitch
-                    </td>
-                    <td>{{ $training->user->name ?? "" }}</td>
-                    <td>
-                        @canAccess('show','trainings')
-                        <a href="{{ route('training.show', $training->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
-                        @endcanAccess
-                        @if(!$training->point)
-                        @canAccess('edit','trainings')
-                        <a href="{{ route('training.edit', $training->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
-                        @endcanAccess
-                        @canAccess('destroy','trainings')
-                        <form action="{{ route('training.destroy', $training->slug) }}" method="POST" class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i></button>
-                        </form>
-                        @endcanAccess
-                        @endif
-                    </td>
+                    <th>Nama Pelatihan</th>
+                    <th>Tanggal Pelatihan</th>
+                    <th>Status</th>
+                    <th>Pengajuan</th>
+                    <th>Aksi</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
-    {{ $trainings->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-
-</div>
+            </thead>
+            <tbody>
+                @foreach ($trainings as $training)
+                    <tr>
+                        <td>{{ $training->name }}</td>
+                        <td>{{ \Carbon\Carbon::parse($training->certification_date)->format('d-m-Y') }}
+                        <td>
+                            @switch($training->status)
+                                @case('in review')
+                                    <i class="fa fa-eye" style="color: green;"></i> In Review
+                                    @break
+                                @case('complete')
+                                    <i class="fa fa-check" style="color: green;"></i> Complete
+                                    @break
+                            @endswitch
+                        </td>
+                        <td>{{ $training->user->name ?? "" }}</td>
+                        <td>
+                            @canAccess('show','trainings')
+                            <a href="{{ route('training.show', $training->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
+                            @endcanAccess
+                            @if(!$training->point)
+                            @canAccess('edit','trainings')
+                            <a href="{{ route('training.edit', $training->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
+                            @endcanAccess
+                            @canAccess('destroy','trainings')
+                            <form action="{{ route('training.destroy', $training->slug) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menghapus data ini?')"><i class="fa fa-trash"></i></button>
+                            </form>
+                            @endcanAccess
+                            @else
+                                @if($training->point && $training->user->approvement_user_id == Auth::user()->id)
+                                    <a href="{{ route('training.edit', $training->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
+                                @endif
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        {{ $trainings->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+    </div>
 </div>
 @endsection
+@section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () 
+    {
+        $('.select2').select2();
+    });
+</script>
+@endsection
 @section('css')
-    <style>
-        body
-        {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-        }
-        .container {
-            background-color: #fff;
-            border-radius: 5px;
-        }
-    </style>
-@stop
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    body
+    {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+    }
+    .container {
+        background-color: #fff;
+        border-radius: 5px;
+    }
+    .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+</style>
+@endsection

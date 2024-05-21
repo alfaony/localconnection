@@ -37,6 +37,15 @@
                         </span>
                     @enderror
                 </div>
+                @if(@$ipRight->point && @$ipRight->user->approvement_user_id == Auth::user()->id)
+                <div class="mb-3">
+                    <label for="points" class="form-label">Poin</label>
+                    <input type="number" class="form-control" id="points" name="point" value="{{ old('point', isset($ipRight) ? $ipRight->point : '') }}" >
+                    @error('point')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                @endif
                 <div class="form-group">
                     <label for="description">Deskripsi</label>
                     <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" value="{{ old('description', isset($ipRight) ? $ipRight->description : '') }}"/>
@@ -60,14 +69,18 @@
                         </div>
                     @endif
                 </div>
-                @if(Auth::user()->approvement_user_id)
+                @if(@$ipRight->point && @$ipRight->user->approvement_user_id == Auth::user()->id)
                 <button type="submit" class="btn btn-primary">{{ isset($ipRight) ? 'Ubah' : 'Simpan' }}</button>
                 @else
-                <div class="mt-5">
-                    <span class="alert alert-warning" role="alert">
-                        Silahkan hubungi admin atau atasan Anda untuk memberikan approval.
-                    </span>
-                </div>
+                    @if(Auth::user()->approvement_user_id)
+                    <button type="submit" class="btn btn-primary">{{ isset($ipRight) ? 'Ubah' : 'Simpan' }}</button>
+                    @else
+                    <div class="mt-5">
+                        <span class="alert alert-warning" role="alert">
+                            Silahkan hubungi admin atau atasan Anda untuk memberikan approval.
+                        </span>
+                    </div>
+                    @endif
                 @endif
             </form>
         </div>

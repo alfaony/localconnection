@@ -29,7 +29,7 @@
         <div class="row g-3 align-items-end">
             <div class="col-12 col-md-2">
                 <select class="form-control" id="task" name="task">
-                    <option value="">All</option>
+                    <option value="all">All</option>
                     @foreach ($taskTimeFrame as $status => $value)
                         <option value="{{ $status }}" {{ request('task') == $status ? 'selected' : '' }}>{{ ucfirst($value) }}</option>
                     @endforeach
