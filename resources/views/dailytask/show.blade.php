@@ -300,9 +300,12 @@
                     <!-- Existing Sub Tasks -->
                     <ul class="list-group mt-3" id="existing-tasks-list">
                         @foreach($subTasks as $subTask)
+                            @php
+                            $isOverdueSub = $subTask->isOverdue();
+                            @endphp
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <a href="{{ route('dailytask.show', $subTask->slug) }}" >{{ Str::limit($subTask->name,15) }}</a>
-                                <span class="{{ $isOverdue ? 'text-danger' : '' }}">
+                                <span class="{{ $isOverdueSub ? 'text-danger' : '' }}">
                                     {{ $subTask->dateShow }}
                                 </span>
                                 <span>
