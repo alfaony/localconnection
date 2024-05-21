@@ -124,11 +124,29 @@ class DailyTask extends Model
     {
         // Atur lokal ke bahasa Indonesia
         Carbon::setLocale('id');
-        
+
         $startDate = Carbon::parse($this->start_date);
         $endDate = Carbon::parse($this->end_date);
         $now = Carbon::now();
-        $tomorrow = Carbon::tomorrow();
+
+        // Fungsi untuk menerjemahkan bulan
+        $translateMonth = function ($date) {
+            $months = [
+                'January' => 'Januari',
+                'February' => 'Februari',
+                'March' => 'Maret',
+                'April' => 'April',
+                'May' => 'Mei',
+                'June' => 'Juni',
+                'July' => 'Juli',
+                'August' => 'Agustus',
+                'September' => 'September',
+                'October' => 'Oktober',
+                'November' => 'November',
+                'December' => 'Desember',
+            ];
+            return $months[$date->format('F')] ?? $date->format('F');
+        };
 
         if ($startDate->isSameDay($endDate)) {
             if ($startDate->isToday()) {
@@ -138,13 +156,16 @@ class DailyTask extends Model
             } elseif ($startDate->isSameWeek($now)) {
                 return $startDate->translatedFormat('l');
             } else {
-                return $startDate->translatedFormat('d F Y');
+                return $startDate->format('d') . ' ' . $translateMonth($startDate) . ' ' . $startDate->format('Y');
             }
         } else {
+            $startStr = $startDate->isToday() ? 'Hari Ini' : ($startDate->isTomorrow() ? 'Besok' : $startDate->format('d') . ' ' . $translateMonth($startDate));
+            $endStr = $endDate->isToday() ? 'Hari Ini' : ($endDate->isTomorrow() ? 'Besok' : $endDate->format('d') . ' ' . $translateMonth($endDate) . ' ' . $endDate->format('Y'));
+            
             if ($startDate->isSameWeek($now) && $endDate->isSameWeek($now)) {
-                return $startDate->translatedFormat('l') . ' - ' . $endDate->translatedFormat('l');
+                return $startStr . ' - ' . $endDate->translatedFormat('l');
             } else {
-                return $startDate->translatedFormat('d') . ' - ' . $endDate->translatedFormat('d F Y');
+                return $startStr . ' - ' . $endStr;
             }
         }
     }

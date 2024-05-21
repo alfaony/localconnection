@@ -14,8 +14,10 @@ class DailyTaskStoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_date' => 'required|array',
+            'start_date.*' => 'required|date',
+            'end_date' => 'required|array',
+            'end_date.*' => 'required|date|after_or_equal:start_date.*',
             'assignment_user_id' => 'required|array',
             'assignment_user_id.*' => 'required|uuid',
             'category_id' => 'required|array',
@@ -32,11 +34,11 @@ class DailyTaskStoreRequest extends FormRequest
     public function messages()
     {
         return [
-            'start_date.required' => 'Tanggal mulai harus diisi.',
-            'start_date.date' => 'Tanggal mulai harus berupa tanggal yang valid.',
-            'end_date.required' => 'Tanggal selesai harus diisi.',
-            'end_date.date' => 'Tanggal selesai harus berupa tanggal yang valid.',
-            'end_date.after_or_equal' => 'The end date must be a date after or equal to start date.',
+            'start_date.*.required' => 'Tanggal mulai harus diisi.',
+            'start_date.*.date' => 'Tanggal mulai harus berupa tanggal yang valid.',
+            'end_date.*.required' => 'Tanggal selesai harus diisi.',
+            'end_date.*.date' => 'Tanggal selesai harus berupa tanggal yang valid.',
+            'end_date.*.after_or_equal' => 'The end date must be a date after or equal to start date.',
             'assignment_user_id.required' => 'penugasan harus diisi.',
             'assignment_user_id.array' => 'penugasan harus berupa array.',
             'assignment_user_id.*.required' => 'Setiap penugasan harus diisi.',

@@ -25,14 +25,16 @@
         @endif
 
         <!-- Card for Task Details -->
-        <div class="card p-3 mt-3 shadow-sm">
-            <div class="card-header">
-                <h5>Detail Tugas Harian</h5>
-                <p>{{ $dailytask->nameShow ?? '' }}</p>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ route('dailytask.index') }}">Tugas Harian</a></li>
                 @if($dailytask->head)
-                <a href="{{ route('dailytask.show',$dailytask->head->slug) }}"> - {{  $dailytask->head->name }}</a>
+                    <li class="breadcrumb-item"><a href="{{ route('dailytask.show', $dailytask->head->slug) }}">{{ $dailytask->head->name }}</a></li>
                 @endif
-            </div>
+                <li class="breadcrumb-item active" aria-current="page">{{ $dailytask->nameShow ?? '' }}</li>
+            </ol>
+        </nav>
+        <div class="card p-3 mt-3 shadow-sm">
             <div class="card-body row">
                 <!-- Left Column -->
                 <div class="col-md-6 mb-3 mb-md-0 mr-md-3">
@@ -298,29 +300,51 @@
                     </form>
 
                     <!-- Existing Sub Tasks -->
-                    <ul class="list-group mt-3" id="existing-tasks-list">
+                    <ul class="list-group mt-3" id="existing-ttasks-list">
                         @foreach($subTasks as $subTask)
                             @php
-                            $isOverdueSub = $subTask->isOverdue();
+                                $isOverdueSub = $subTask->isOverdue();
                             @endphp
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="{{ route('dailytask.show', $subTask->slug) }}" >{{ Str::limit($subTask->name,15) }}</a>
-                                <span class="{{ $isOverdueSub ? 'text-danger' : '' }}">
-                                    {{ $subTask->dateShow }}
-                                </span>
-                                <span>
-                                    {{ $subTask->assign ? $subTask->assign->name : '' }}
-                                </span>
-                                <span>
-                                    <form action="{{ route('dailytask.destroy', $subTask->slug) }}" method="POST" style="display:inline-block;">
-                                        <a href="{{ route('dailytask.edit', $subTask->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
+                            <li class="list-group-item">
+                                <div class="task-details">
+                                    <span class="task-name">
+                                        <a href="{{ route('dailytask.show', $subTask->slug) }}">{{ Str::limit($subTask->name, 15) }}</a>
+                                    </span>
+                                    <span class="{{ $isOverdueSub ? 'text-danger' : '' }}">
+                                        {{ $subTask->dateShow }}
+                                    </span>
+                                    <span>
+                                        @switch($subTask->taskStatus->name)
+                                            @case('doing')
+                                                <i class="fa fa-hourglass-start"></i>
+                                                @break
+                                            @case('in review')
+                                                <i class="fa fa-eye" style="color: green;"></i>
+                                                @break
+                                            @case('not complete')
+                                                <i class="fa fa-times-circle" style="color: red;"></i>
+                                                @break
+                                            @case('complete')
+                                                <i class="fa fa-check" style="color: green;"></i>
+                                                @break
+                                            @default
+                                                {{ $dailytask->taskStatus->name }}
+                                        @endswitch
+                                    </span>
+                                    <span>
+                                        {{ $subTask->assign ? $subTask->assign->name : '' }}
+                                    </span>
+                                </div>
+                                <div class="task-actions">
+                                    <a href="{{ route('dailytask.edit', $subTask->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
+                                    <form action="{{ route('dailytask.destroy', $subTask->slug) }}" method="POST">
                                         @if($dailytask->user_id == Auth::user()->id)
-                                        @csrf
-                                        @method('DELETE')
-                                        <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                            @csrf
+                                            @method('DELETE')
+                                            <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                                         @endif
                                     </form>
-                                </span>
+                                </div>
                             </li>
                         @endforeach
                     </ul>
@@ -653,6 +677,33 @@ $(document).ready(function() {
     {
         min-height: 150px;
         height: auto;
+    }
+</style>
+<style>
+    .list-group-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .task-details {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .task-details span {
+        margin-right: 10px;
+    }
+    .task-actions {
+        display: flex;
+        align-items: center;
+    }
+    .task-actions form {
+        margin: 0;
+    }
+    .task-actions a,
+    .task-actions button {
+        margin-right: 5px;
     }
 </style>
 @endsection

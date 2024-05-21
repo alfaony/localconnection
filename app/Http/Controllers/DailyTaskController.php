@@ -42,7 +42,7 @@ class DailyTaskController extends Controller
         // Query dasar untuk tugas harian berdasarkan user ID
         $query = DailyTask::orderBy('created_at', 'desc');
 
-        if(!$statusFilter && !$search)
+        if(!$statusFilter && !$search && $taskFilter != 'all')
         {
             $query->whereHas('taskStatus', function ($query)
             {
@@ -133,6 +133,8 @@ class DailyTaskController extends Controller
         DB::beginTransaction();
         try {
             
+            $startDates = $request->start_date;
+            $endDates = $request->end_date;
             $assignmentUserIds = $request->assignment_user_id;
             $categoryIds = $request->category_id;
             $typeIds = $request->type_id;
@@ -146,8 +148,8 @@ class DailyTaskController extends Controller
                 $dailyTask = new DailyTask();
                 $dailyTask->user_id = Auth::user()->id;
                 $dailyTask->task_status_id = $doing->id;
-                $dailyTask->start_date = $request->start_date;
-                $dailyTask->end_date = $request->end_date;
+                $dailyTask->start_date = $startDates[$i];
+                $dailyTask->end_date = $endDates[$i];
                 $dailyTask->assignment_user_id = $assignmentUserIds[$i];
                 $dailyTask->daily_task_category_id = $this->manageCategory($categoryIds[$i]);
                 $dailyTask->daily_task_type_id = $typeIds[$i];
@@ -209,11 +211,12 @@ class DailyTaskController extends Controller
         $dailyTask->assignment_user_id = $request->assignment_user_id;
         $dailyTask->daily_task_category_id = $this->manageCategory($request->category_id);
         $dailyTask->daily_task_type_id = $request->type_id;
+        $dailyTask->point = $request->point;
         $dailyTask->name = $request->name;
         $dailyTask->description = $request->description;
         $dailyTask->save();
 
-        $this->message($dailyTask->id,'edit','Mengubah Task'.$dailyTask->name);
+        $this->message($dailyTask->id,'edit','Mengubah Task '.$dailyTask->name);
 
         return redirect()->route('dailytask.index')->with('update', true);
     }
@@ -272,10 +275,9 @@ class DailyTaskController extends Controller
             $startDate = Carbon::parse($dailytask->start_date)->startOfDay();
             $endDate = Carbon::parse($dailytask->end_date)->endOfDay();
             $submitDate = Carbon::parse($dailytask->submit)->startOfDay();
+
             
-            $statusSubmit = ($submitDate->between($startDate, $endDate) || $submitDate->equalTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
-            
-            $dailytask->status_submit = $statusSubmit;
+            $dailytask->status_submit = ($submitDate->lessThanOrEqualTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
             
             $this->message($dailytask->id,'report',' Membuat Laporan Tugas '.$dailytask->name);
             $dailytask->save();
@@ -405,7 +407,7 @@ class DailyTaskController extends Controller
 
             $dailytask->extend()->save($extend);
 
-            $this->message($dailytask->id,'extend',$extendNumber.' Memperpanjang Tugas '.$dailytask->name);
+            $this->message($dailytask->id,'extend',"extend ".$extendNumber." memperpanjang tugas ".$dailytask->name." menjadi ".Carbon::parse($dailytask->end_date)->format('d-m-Y'));
             DB::commit();
             return redirect()->route('dailytask.show', $dailytask->slug)->with('extend', true);
 

@@ -18,18 +18,18 @@
             <h2>Buat Tugas Harian</h2>
             <form action="{{ route('dailytask.store') }}" method="POST">
                 @csrf
-                <div class="form-group">
-                    <label for="assignment_user_id">Tanggal</label>
-                    <div class="input-group">
-                        <input type="date" class="form-control" name="start_date" placeholder="Mulai Tanggal" value="{{ request('start_date') }}" required>
-                        <span class="input-group-text">hingga</span>
-                        <input type="date" class="form-control" name="end_date" placeholder="Sampai Tanggal" value="{{ request('end_date') }}" required>
-                    </div>
-                </div>
 
                 <div id="dynamic-form-fields">
                     <div class="dynamic-field card mb-3">
                         <div class="card-body">
+                            <div class="form-group">
+                                <label for="assignment_user_id">Tanggal</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" value="{{ request('start_date') }}" required>
+                                    <span class="input-group-text">hingga</span>
+                                    <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" value="{{ request('end_date') }}" required>
+                                </div>
+                            </div>
                             <div class="form-row">
                                 <div class="col-md-5">
                                     <div class="form-group">
@@ -105,6 +105,14 @@
             let fieldHTML = `
                 <div class="dynamic-field card mb-3">
                     <div class="card-body">
+                        <div class="form-group">
+                            <label for="assignment_user_id">Tanggal</label>
+                            <div class="input-group">
+                                <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" value="{{ request('start_date') }}" required>
+                                <span class="input-group-text">hingga</span>
+                                <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" value="{{ request('end_date') }}" required>
+                            </div>
+                        </div>
                         <div class="form-row">
                             <div class="col-md-5">
                                 <div class="form-group">
@@ -165,6 +173,10 @@
             }
         });
 
+        $('#dynamic-form-fields').on('change', '.start-date', function() {
+            var startDateValue = $(this).val();
+            $(this).closest('.dynamic-field').find('.end-date').val(startDateValue);
+        })
         $('input[name="start_date"]').on('change', function() {
             var startDateValue = $(this).val(); // Ambil nilai dari startDate
             $('input[name="end_date"]').val(startDateValue); // Set nilai startDate ke endDate

@@ -68,6 +68,19 @@
                             <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" placeholder="yang akan dicetak di perjanjian" value="{!! $dailytask->description !!}"/>
                         </div>
                     </div>
+                    @if(@$dailytask->point)
+                    @canAccess('approvement','dailytasks')
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="points" class="form-label">Poin</label>
+                            <input type="number" class="form-control" id="points" name="point" value="{{ old('point', isset($dailytask) ? $dailytask->point : '') }}" >
+                            @error('point')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    @endcanAccess
+                    @endif
                 </div>
 
                 <button type="submit" class="btn btn-primary">Simpan</button>
@@ -88,12 +101,13 @@
         $('.select2').select2();
         $('.selectEdit2').select2({tags:true});
 
-        generateThriveEditor("description_description");
-
         $('input[name="start_date"]').on('change', function() {
             var startDateValue = $(this).val(); // Ambil nilai dari startDate
             $('input[name="end_date"]').val(startDateValue); // Set nilai startDate ke endDate
         });
+
+        generateThriveEditor("description_description");
+
     });
 </script>
 @endsection

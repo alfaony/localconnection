@@ -118,6 +118,7 @@
                         <td>{{ $dailytask->user->name ?? '' }}</td>
                         <td>{{ $dailytask->assign->name ?? '' }}</td>
                         <td>
+                            @if(!$dailytask->approved)
                             <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
                                 @canAccess('show','dailytasks')
                                 <a href="{{ route('dailytask.show', $dailytask->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
@@ -133,6 +134,16 @@
                                 @endcanAccess
                                 @endif
                             </form>
+                            @else
+                            @canAccess('show','dailytasks')
+                            <a href="{{ route('dailytask.show', $dailytask->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
+                            @endcanAccess
+                            @canAccess('edit','dailytasks')
+                            @canAccess('approvement','dailytasks')
+                            <a href="{{ route('dailytask.edit', $dailytask->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
+                            @endcanAccess
+                            @endcanAccess
+                            @endif
                         </td>
                     </tr>
                 @endforeach
