@@ -211,7 +211,7 @@ class DailyTaskController extends Controller
         $dailyTask->assignment_user_id = $request->assignment_user_id;
         $dailyTask->daily_task_category_id = $this->manageCategory($request->category_id);
         $dailyTask->daily_task_type_id = $request->type_id;
-        $dailyTask->point = $request->point;
+        $dailyTask->point = $request->point ?? 0;
         $dailyTask->name = $request->name;
         $dailyTask->description = $request->description;
         $dailyTask->save();
@@ -233,32 +233,28 @@ class DailyTaskController extends Controller
     {
         $request->validate([
             'note' => 'required|string',
-            'media.*' => 'required|file|max:2048'
+            'media.*' => 'nullable|file|max:10240'
         ]);
-        
+
         DB::beginTransaction();
         try {
-            //code...
-            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
-            $inReivew = TaskStatus::where('name',ParamSchema::INREVIEW)->firstOrFail()->id;
-            
-            $dailytask->report_note = $request->note;
-            $dailytask->task_status_id = $inReivew;
+            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $inReview = TaskStatus::where('name', ParamSchema::INREVIEW)->firstOrFail()->id;
 
-            if ($request->hasFile('media')) 
-            {
+            $dailytask->report_note = $request->note;
+            $dailytask->task_status_id = $inReview;
+
+            if ($request->hasFile('media')) {
                 foreach ($request->file('media') as $file) {
-                    // Generate a unique file name
                     $timestamp = time();
                     $randomString = rand(100, 999);
                     $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
                     $extension = $file->getClientOriginalExtension();
                     $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
-        
-                    // Store the file with the new name
+
                     $path = $file->storeAs('media', $fileName, 'public');
                     $mediaType = $file->getClientMimeType();
-        
+
                     DailyTaskMedia::create([
                         'daily_task_id' => $dailytask->id,
                         'file_path' => $path,
@@ -267,33 +263,30 @@ class DailyTaskController extends Controller
                 }
             }
 
-            // Simpan tanggal submit
             $submitDate = Carbon::now();
             $dailytask->submit = $submitDate;
-            
-            // Tentukan status submit
-            $startDate = Carbon::parse($dailytask->start_date)->startOfDay();
+
+            // $startDate = Carbon::parse($dailytask->start_date)->startOfDay();
             $endDate = Carbon::parse($dailytask->end_date)->endOfDay();
             $submitDate = Carbon::parse($dailytask->submit)->startOfDay();
 
-            
             $dailytask->status_submit = ($submitDate->lessThanOrEqualTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
-            
-            $this->message($dailytask->id,'report',' Membuat Laporan Tugas '.$dailytask->name);
+
+            $this->message($dailytask->id, 'report', ' Membuat Laporan Tugas ' . $dailytask->name);
             $dailytask->save();
 
-            if($dailytask->type->name == ParamSchema::RECURRING){$this->projectRecurring($dailytask);}
+            if ($dailytask->type->name == ParamSchema::RECURRING) 
+            {
+                $this->projectRecurring($dailytask);
+            }
 
             DB::commit();
             return redirect()->route('dailytask.show', $dailytask->slug)->with('report', true);
         } catch (\Throwable $th) {
-            //throw $th;
-            // dd($th);
             DB::rollback();
             Log::error($th->getMessage());
             return redirect()->route('dailytask.show', $dailytask->slug);
         }
-
     }
 
     public function updatemedia(Request $request, $slug)
