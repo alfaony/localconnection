@@ -69,10 +69,7 @@
                 <div class="mb-3">
                     <label for="certification_file" class="form-label">Upload Sertifikasi</label>
                     <input type="file" class="form-control @error('certification_file') is-invalid @enderror" id="certification_file" name="certification_file" {{ !isset($training) ? 'required' : '' }} accept="application/pdf">
-
-                    @error('certification_file')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                    <div id="file-error" style="color: red; display: none;">File tidak diizinkan lebih 2MB.</div>
                     @if(isset($training) && $training->certification_file)
                         <div class="mt-2">
                             <strong>Current File:</strong> {{ $training->certification_file }}
@@ -102,6 +99,20 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <!-- Select2 JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+    document.getElementById('certification_file').addEventListener('change', function(event) {
+        const fileInput = event.target;
+        const file = fileInput.files[0];
+        const fileError = document.getElementById('file-error');
+
+        if (file.size > 2 * 1024 * 1024) { // 2MB
+            fileError.style.display = 'block';
+            fileInput.value = ''; // Remove the file from the input
+        } else {
+            fileError.style.display = 'none';
+        }
+    });
+</script>
 <script>
 $(document).ready(function() {
     $('.js-example-responsive').select2({

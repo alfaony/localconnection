@@ -58,6 +58,7 @@
                 <div class="form-group">
                     <label for="file_path">Upload Hak Cipta</label>
                     <input type="file" class="form-control @error('file_path') is-invalid @enderror" name="file_path" accept="application/pdf" {{ isset($ipRight) ? '' : 'required' }}>
+                    <div id="file-error" style="color: red; display: none;">File tidak diizinkan lebih 2MB.</div>
                     @error('file_path')
                         <span class="invalid-feedback" role="alert">
                             <strong>{{ $message }}</strong>
@@ -92,7 +93,20 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
+<script>
+    document.getElementById('file_path').addEventListener('change', function(event) {
+        const fileInput = event.target;
+        const file = fileInput.files[0];
+        const fileError = document.getElementById('file-error');
 
+        if (file.size > 2 * 1024 * 1024) { // 2MB
+            fileError.style.display = 'block';
+            fileInput.value = ''; // Remove the file from the input
+        } else {
+            fileError.style.display = 'none';
+        }
+    });
+</script>
 @stop
 @section('css')
 <!-- Select2 CSS -->
