@@ -156,17 +156,27 @@ class DailyTask extends Model
             } elseif ($startDate->isSameWeek($now)) {
                 return $startDate->translatedFormat('l');
             } else {
-                return $startDate->format('d') . ' ' . $translateMonth($startDate) . ' ' . $startDate->format('Y');
+                return $startDate->format('d') . ' ' . $translateMonth($startDate);
             }
         } else {
             $startStr = $startDate->isToday() ? 'Hari Ini' : ($startDate->isTomorrow() ? 'Besok' : $startDate->format('d') . ' ' . $translateMonth($startDate));
-            $endStr = $endDate->isToday() ? 'Hari Ini' : ($endDate->isTomorrow() ? 'Besok' : $endDate->format('d') . ' ' . $translateMonth($endDate) . ' ' . $endDate->format('Y'));
-            
-            if ($startDate->isSameWeek($now) && $endDate->isSameWeek($now)) {
-                return $startStr . ' - ' . $endDate->translatedFormat('l');
-            } else {
-                return $startStr . ' - ' . $endStr;
+            $endStr = $endDate->isToday() ? 'Hari Ini' : ($endDate->isTomorrow() ? 'Besok' : $endDate->format('d') . ' ' . $translateMonth($endDate));
+
+            if ($startDate->year !== $endDate->year) {
+                $startStr .= ' ' . $startDate->format('Y');
+                $endStr .= ' ' . $endDate->format('Y');
+            } elseif ($startDate->month !== $endDate->month) {
+                $startStr .= ' ' . $startDate->format('Y');
             }
+
+            if ($startDate->isSameWeek($now) && $endDate->isSameWeek($now)) {
+                if ($endDate->isToday()) {
+                    return $startStr . ' - Hari Ini';
+                } elseif ($endDate->isTomorrow()) {
+                    return $startStr . ' - Besok';
+                }
+            }
+            return $startStr . ' - ' . $endStr;
         }
     }
 
