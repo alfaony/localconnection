@@ -1,6 +1,17 @@
 @extends('adminlte::page')
 
 @section('content')
+<div class="col-md-12">
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+</div>
 <div class="container p-3">
     <div class="card shadow-sm">
         <div class="card-header">{{ isset($ipRight) ? 'Edit Hak Cipta' : 'Mendaftarkan Hak Cipta' }}</div>
@@ -47,17 +58,17 @@
                 </div>
                 @endif
                 <div class="form-group">
-                    <label for="description">Deskripsi</label>
-                    <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" value="{{ old('description', isset($ipRight) ? $ipRight->description : '') }}"/>
                     @error('description')
                         <span class="invalid-feedback" role="alert">
                             <strong>{{ $message }}</strong>
                         </span>
                     @enderror
+                    <label for="description">Deskripsi</label>
+                    <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" value="{{ old('description', isset($ipRight) ? $ipRight->description : '') }}"/>
                 </div>
                 <div class="form-group">
                     <label for="file_path">Upload Hak Cipta</label>
-                    <input type="file" class="form-control @error('file_path') is-invalid @enderror" name="file_path" accept="application/pdf" {{ isset($ipRight) ? '' : 'required' }}>
+                    <input type="file" class="form-control @error('file_path') is-invalid @enderror" id="file_path" name="file_path" accept="application/pdf" {{ isset($ipRight) ? '' : 'required' }}>
                     <div id="file-error" style="color: red; display: none;">File tidak diizinkan lebih 2MB.</div>
                     @error('file_path')
                         <span class="invalid-feedback" role="alert">
