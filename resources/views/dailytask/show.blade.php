@@ -135,7 +135,7 @@
                     @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::DOING)
                     @canAccess('report','dailytasks')
                         <h6>Laporan Tugas</h6>
-                        <form action="{{ route('dailytask.report', $dailytask->slug) }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('dailytask.report', $dailytask->slug) }}" method="POST" enctype="multipart/form-data" id="reportForm">
                             @csrf
                             @method('PUT')
                             <div class="form-group">
@@ -144,7 +144,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="media">Upload</label>
-                                <input type="file" name="media[]" class="form-control" multiple>
+                                <input type="file" id="mediaReport" name="media[]" class="form-control" multiple>
                             </div>
                             <button type="submit" class="btn btn-primary">Simpan Laporan</button>
                         </form>
@@ -261,7 +261,7 @@
                 <div class="card-body">
                     <!-- Form for Adding Sub Task -->
                     @canAccess('storesubtask','dailytasks')
-                    <form action="{{ route('dailytask.storesubtask', $dailytask->slug) }}" method="POST">
+                    <form action="{{ route('dailytask.storesubtask', $dailytask->slug) }}" method="POST" id="subForm">
                         @csrf
                         @method('PUT')
                         <!-- Row for Dates -->
@@ -371,7 +371,7 @@
                         </div>
                         <div class="form-group">
                             <label for="comment">Upload File</label>
-                            <input type="file" name="file_path" class="form-control">
+                            <input type="file" id="mediaComment" name="file_path" class="form-control">
                         </div>
                         <button type="submit" class="btn btn-primary btn-sm"> <i class="fa fa-plus"></i> Komentar</button>
                     </form>
@@ -419,7 +419,7 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="media">Upload Media</label>
-                            <input type="file" name="media[]" class="form-control" multiple>
+                            <input type="file" id="mediaInput" name="media[]" class="form-control" multiple>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -591,9 +591,90 @@
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
+    $('#mediaReport').on('change', function() 
+    {
+        var maxFileSize = 3 * 1024 * 1024; // 5MB in bytes
+        var files = this.files;
+        var validFiles = [];
+
+        for (var i = 0; i < files.length; i++) {
+            if (files[i].size > maxFileSize) {
+                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus.');
+            } else {
+                validFiles.push(files[i]);
+            }
+        }
+
+        // Clear the input and add back the valid files
+        $(this).val('');
+        var dataTransfer = new DataTransfer();
+        for (var j = 0; j < validFiles.length; j++) {
+            dataTransfer.items.add(validFiles[j]);
+        }
+        this.files = dataTransfer.files;
+    });
+
+    $('#mediaComment').on('change', function() 
+    {
+        var maxFileSize = 3 * 1024 * 1024; // 5MB in bytes
+        var files = this.files;
+        var validFiles = [];
+
+        for (var i = 0; i < files.length; i++) {
+            if (files[i].size > maxFileSize) {
+                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus.');
+            } else {
+                validFiles.push(files[i]);
+            }
+        }
+
+        // Clear the input and add back the valid files
+        $(this).val('');
+        var dataTransfer = new DataTransfer();
+        for (var j = 0; j < validFiles.length; j++) {
+            dataTransfer.items.add(validFiles[j]);
+        }
+        this.files = dataTransfer.files;
+    });
+
+    $('#mediaInput').on('change', function() 
+    {
+        var maxFileSize = 3 * 1024 * 1024; // 5MB in bytes
+        var files = this.files;
+        var validFiles = [];
+
+        for (var i = 0; i < files.length; i++) {
+            if (files[i].size > maxFileSize) {
+                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus.');
+            } else {
+                validFiles.push(files[i]);
+            }
+        }
+
+        // Clear the input and add back the valid files
+        $(this).val('');
+        var dataTransfer = new DataTransfer();
+        for (var j = 0; j < validFiles.length; j++) {
+            dataTransfer.items.add(validFiles[j]);
+        }
+        this.files = dataTransfer.files;
+    });
+</script>
+<script>
 $(document).ready(function() {
     $('#commentForm').on('submit', function(e) {
         var messageContent = $('#description_message').val().trim();
+        var messageContentText = $('<div>').html(messageContent).text().trim();
+
+        // Check if the message is empty or only contains empty HTML tags
+        if (messageContent === '' || messageContentText === '') {
+            e.preventDefault(); // Prevent form submit
+            alert('Field komentar wajib diisi!');
+        }
+    });
+
+    $('#reportForm').on('submit', function(e) {
+        var messageContent = $('#description_note').val().trim();
         var messageContentText = $('<div>').html(messageContent).text().trim();
 
         // Check if the message is empty or only contains empty HTML tags
