@@ -48,4 +48,5 @@ class ParamSchema
 
     const RECURRING = "Recurring";
 
+    const MULTISELECT = "multi_select";
 }

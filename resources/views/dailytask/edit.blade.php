@@ -57,6 +57,20 @@
                                 @endforeach
                             </select>
                         </div>
+                        @canAccess('getcustomfield','daily_task_projects')
+                        <div class="form-group">
+                            <label for="project_id">Pilih Proyek</label>
+                            <select id="project_id" name="project_id" class="form-control select2" onchange="loadCustomFields();">
+                                <option disabled>Pilih Proyek</option>
+                                @foreach($projects as $project)
+                                    <option value="{{ $project->id }}" {{ $dailytask->daily_task_project_id == $project->id ? 'selected' : '' }}>{{ $project->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div id="custom-fields-container"></div>
+                        @endcanAccess
+
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
@@ -91,11 +105,40 @@
 @endsection
 
 @section('js')
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
+<script>
+    function loadCustomFields(dailyTaskId = null) 
+    {
+        var projectId = $('#project_id').val();
+        var url = '{{ url('daily_task_project/getcustomfield') }}/' + projectId;
+        
 
+        console.log(url);
+        $.ajax({
+            url: url,
+            type: 'GET',
+            data: 
+            {
+                dailyTaskId: dailyTaskId // Passing dailyTaskId to the server
+            },
+            success: function(data) {
+                $('#custom-fields-container').html(data);
+                $('.select2-single, .select2-multiple').select2(); // Re-initialize select2
+            }
+        });
+    }
+
+    $(document).ready(function() 
+    {
+        $('.select2').select2();
+        // Assume you have a dailyTaskId variable available or extract it from the form
+        var dailyTaskId = "{{ $dailytask->id }}";
+        loadCustomFields(dailyTaskId);
+    });
+</script>
 <script>
     $(document).ready(function() {
         $('.select2').select2();

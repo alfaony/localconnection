@@ -47,4 +47,10 @@ return
         'upcomming' => 'Yang Akan datang',
      ],
 
+     'statusSelect' =>
+     [
+        'single_select' => 'Single Select',
+        'multi_select' => 'Multi Select',
+     ],
+
 ];

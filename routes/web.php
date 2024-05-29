@@ -41,6 +41,8 @@ use App\Http\Controllers\IpRightController;
 use App\Http\Controllers\SalesAchievementController;
 use App\Http\Controllers\ReportPointProductivityController;
 use App\Http\Controllers\DailyTaskController;
+use App\Http\Controllers\DailyTaskProjectController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -168,7 +170,14 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::delete('dailytask/deletemedia/{id}', [DailyTaskController::class, 'deletemedia'])->name('dailytask.deletemedia');
   Route::put('dailytask/approvement/{slug}', [DailyTaskController::class,'approvement'])->name('dailytask.approvement');
   Route::resource('dailytask', DailyTaskController::class);
+  
+  Route::put('daily_task_project/customfieldstore/{slug}', [DailyTaskProjectController::class, 'customfieldstore'])->name('customfieldstore');
+  Route::put('daily_task_project/customfieldupdate/{id}', [DailyTaskProjectController::class, 'customfieldupdate'])->name('customfieldupdate');
+  Route::delete('daily_task_project/customfielddestroy/{id}', [DailyTaskProjectController::class, 'customfielddestroy'])->name('customfielddestroy');
+  Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
+  Route::resource('daily_task_project', DailyTaskProjectController::class);
 });
+
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

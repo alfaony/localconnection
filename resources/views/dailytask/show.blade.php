@@ -34,6 +34,7 @@
                 <li class="breadcrumb-item active" aria-current="page">{{ $dailytask->nameShow ?? '' }}</li>
             </ol>
         </nav>
+
         <div class="card p-3 mt-3 shadow-sm">
             <div class="card-body row">
                 <!-- Left Column -->
@@ -107,6 +108,56 @@
                     </div>
 
                     <div class="form-group row">
+                        <label for="name" class="col-sm-4 col-form-label">Project:</label>
+                        <div class="col-sm-8">
+                            <p class="form-control-plaintext">{{ $dailytask->project->name ?? "" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row">
+                        <label for="name" class="col-sm-4 col-form-label">Project Detail:</label>
+                        <div class="col-sm-8">
+                            <p class="form-control-plaintext">{{ $dailytask->project->name ?? "" }}</p>
+                        </div>
+                    </div>
+
+                    @if($dailytask->customFieldValues)
+                        @php
+                            $customFields = [];
+                        @endphp
+                        @foreach($dailytask->customFieldValues as $custom)
+                            @php
+                                $customField = $custom->customField;
+                                $customFieldValue = $custom->customFieldValue;
+                                $fieldName = $customField->name ?? '';
+                                $fieldValue = $customFieldValue->value ?? '';
+                                if ($customField->type === \App\Schemas\ParamSchema::MULTISELECT) {
+                                    if (!isset($customFields[$fieldName])) {
+                                        $customFields[$fieldName] = [];
+                                    }
+                                    $customFields[$fieldName][] = $fieldValue;
+                                } else {
+                                    $customFields[$fieldName] = $fieldValue;
+                                }
+                            @endphp
+                        @endforeach
+                        @foreach($customFields as $fieldName => $fieldValue)
+                            <div class="form-group row">
+                                <label for="name" class="col-sm-4 col-form-label">{{ $fieldName }} :</label>
+                                <div class="col-sm-8">
+                                    @if(is_array($fieldValue))
+                                        @foreach($fieldValue as $value)
+                                            <p class="form-control-plaintext">{{ $value }}</p>
+                                        @endforeach
+                                    @else
+                                        <p class="form-control-plaintext">{{ $fieldValue }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+
+                    <div class="form-group row">
                         <label for="name" class="col-sm-4 col-form-label">Tugas:</label>
                         <div class="col-sm-8">
                             <p class="form-control-plaintext">{{ $dailytask->name }}</p>
@@ -121,11 +172,11 @@
                     </div>
 
                     @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::DOING)
-                    @canAccess('extend','dailytasks')
-                        <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#extendTaskModal">
-                            <i class="fa fa-book"></i> Perpanjang Tugas
-                        </button>
-                    @endcanAccess
+                        @canAccess('extend','dailytasks')
+                            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#extendTaskModal">
+                                <i class="fa fa-book"></i> Perpanjang Tugas
+                            </button>
+                        @endcanAccess
                     @endif
 
                 </div>
@@ -133,21 +184,21 @@
                 <!-- Right Column -->
                 <div class="col-md-5">
                     @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::DOING)
-                    @canAccess('report','dailytasks')
-                        <h6>Laporan Tugas</h6>
-                        <form action="{{ route('dailytask.report', $dailytask->slug) }}" method="POST" enctype="multipart/form-data" id="reportForm">
-                            @csrf
-                            @method('PUT')
-                            <div class="form-group">
-                                <label for="note">Catatan</label>
-                                <input class="thriveEditor form-control" id="description_note" data-ids="note" name="note" placeholder="yang akan dicetak di perjanjian"/>
-                            </div>
-                            <div class="form-group">
-                                <label for="media">Upload</label>
-                                <input type="file" id="mediaReport" name="media[]" class="form-control" multiple>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Simpan Laporan</button>
-                        </form>
+                        @canAccess('report','dailytasks')
+                            <h6>Laporan Tugas</h6>
+                            <form action="{{ route('dailytask.report', $dailytask->slug) }}" method="POST" enctype="multipart/form-data" id="reportForm">
+                                @csrf
+                                @method('PUT')
+                                <div class="form-group">
+                                    <label for="note">Catatan</label>
+                                    <input class="thriveEditor form-control" id="description_note" data-ids="note" name="note" placeholder="yang akan dicetak di perjanjian"/>
+                                </div>
+                                <div class="form-group">
+                                    <label for="media">Upload</label>
+                                    <input type="file" id="mediaReport" name="media[]" class="form-control" multiple>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Simpan Laporan</button>
+                            </form>
                         @endcanAccess
                     @endif
 
@@ -380,7 +431,7 @@
                 
                     <!-- Comment List -->
                     <h6 class="mt-4">Riwayat Aktifitas</h6>
-                    <div style="max-height: 70vh; overflow-y: auto;">
+                    <div style="max-height: 50vh; overflow-y: auto;">
                         @foreach($dailytask->message as $comment)
                             <div class="media mb-3">
                                 {{-- <img src="{{ $comment->user->profile_image_url ?? 'https://via.placeholder.com/50' }}" class="mr-3" alt="User Image"> --}}

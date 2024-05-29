@@ -24,6 +24,9 @@ use App\Models\TaskStatus;
 use App\Models\DailyTaskMedia;
 use App\Models\DailyTaskExtend;
 use App\Models\DailyTaskMessage;
+use App\Models\DailyTaskProject;
+use App\Models\DailyTaskCustomFieldValue;
+
 
 class DailyTaskController extends Controller
 {
@@ -123,13 +126,13 @@ class DailyTaskController extends Controller
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
         $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
         $types = DailyTaskType::get();
+        $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
 
-        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks'));
+        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks', 'projects'));
     }
 
     public function store(DailyTaskStoreRequest $request)
     {
-        
         DB::beginTransaction();
         try {
             
@@ -138,8 +141,10 @@ class DailyTaskController extends Controller
             $assignmentUserIds = $request->assignment_user_id;
             $categoryIds = $request->category_id;
             $typeIds = $request->type_id;
+            $projectIds = $request->project_id;
             $names = $request->name;
             $descriptions = $request->description ?? [];
+
             $doing = TaskStatus::where('name',ParamSchema::DOING)->firstOrFail();
 
             
@@ -153,10 +158,36 @@ class DailyTaskController extends Controller
                 $dailyTask->assignment_user_id = $assignmentUserIds[$i];
                 $dailyTask->daily_task_category_id = $this->manageCategory($categoryIds[$i]);
                 $dailyTask->daily_task_type_id = $typeIds[$i];
+                $dailyTask->daily_task_project_id = $projectIds[$i];
                 $dailyTask->name = $names[$i];
                 $dailyTask->description = $descriptions[$i] ?? null;
                 $dailyTask->point = 0; // Assuming default value is 0
                 $dailyTask->save();
+
+                // Menyimpan custom_field
+                if (isset($request->custom_field_values)) {
+                    // dd("here");
+                    foreach ($request->custom_field_values as $customFieldId => $customFieldValueId) {
+                        if(is_array($customFieldValueId))
+                        {
+                            // 
+                            foreach($customFieldValueId as $valueId)
+                            {
+                                DailyTaskCustomFieldValue::create([
+                                    'daily_task_id' => $dailyTask->id,
+                                    'custom_field_id' => $customFieldId,
+                                    'custom_field_value_id' => $valueId,
+                                ]);
+                            }
+                        }else{
+                            DailyTaskCustomFieldValue::create([
+                                'daily_task_id' => $dailyTask->id,
+                                'custom_field_id' => $customFieldId,
+                                'custom_field_value_id' => $customFieldValueId,
+                            ]);
+                        }
+                    }
+                }
 
                 $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
             }
@@ -166,7 +197,7 @@ class DailyTaskController extends Controller
             return redirect()->route('dailytask.index')->with('store', true);
         } catch (\Throwable $th) {
 
-            // dd($th);
+            dd($th);
             Log::error($th->getMessage());
             DB::rollback();
 
@@ -196,29 +227,69 @@ class DailyTaskController extends Controller
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
         $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
         $types = DailyTaskType::get();
+        $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
 
-        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask'));
+
+        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects'));
 
     }
 
     public function update(DailyTaskRequest $request, $slug)
     {
+        DB::beginTransaction();
+        try {
+            $dailyTask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+    
+            $dailyTask->start_date = $request->start_date;
+            $dailyTask->end_date = $request->end_date;
+            $dailyTask->assignment_user_id = $request->assignment_user_id;
+            $dailyTask->daily_task_category_id = $this->manageCategory($request->category_id);
+            $dailyTask->daily_task_type_id = $request->type_id;
+            $dailyTask->point = $request->point ?? 0;
+            $dailyTask->name = $request->name;
+            $dailyTask->description = $request->description;
+            $dailyTask->daily_task_project_id = $request->project_id ?? NULL ;
+            $dailyTask->save();
+    
+            $dailyTask->customFieldValues()->delete();
+    
+            // Menyimpan custom_field
+            if (isset($request->custom_field_values)) {
+                // dd("here");
+                foreach ($request->custom_field_values as $customFieldId => $customFieldValueId) {
+                    if(is_array($customFieldValueId))
+                    {
+                        // 
+                        foreach($customFieldValueId as $valueId)
+                        {
+                            DailyTaskCustomFieldValue::create([
+                                'daily_task_id' => $dailyTask->id,
+                                'custom_field_id' => $customFieldId,
+                                'custom_field_value_id' => $valueId,
+                            ]);
+                        }
+                    }else{
+                        DailyTaskCustomFieldValue::create([
+                            'daily_task_id' => $dailyTask->id,
+                            'custom_field_id' => $customFieldId,
+                            'custom_field_value_id' => $customFieldValueId,
+                        ]);
+                    }
+                }
+            }
+    
+            $this->message($dailyTask->id,'edit','Mengubah Task '.$dailyTask->name);
 
-        $dailyTask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+            DB::commit();
+            return redirect()->route('dailytask.index')->with('update', true);
+        } catch (\Throwable $th) {
+            dd($th);
+            DB::rollback();
+            Log::error($th->getMessage());
 
-        $dailyTask->start_date = $request->start_date;
-        $dailyTask->end_date = $request->end_date;
-        $dailyTask->assignment_user_id = $request->assignment_user_id;
-        $dailyTask->daily_task_category_id = $this->manageCategory($request->category_id);
-        $dailyTask->daily_task_type_id = $request->type_id;
-        $dailyTask->point = $request->point ?? 0;
-        $dailyTask->name = $request->name;
-        $dailyTask->description = $request->description;
-        $dailyTask->save();
+            return redirect()->route('dailytask.index')->with('update', false);
 
-        $this->message($dailyTask->id,'edit','Mengubah Task '.$dailyTask->name);
-
-        return redirect()->route('dailytask.index')->with('update', true);
+        }
     }
 
     public function destroy($slug)

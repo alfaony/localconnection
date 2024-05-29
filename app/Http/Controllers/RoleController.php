@@ -67,7 +67,7 @@ class RoleController extends Controller
             'sales_achievements',
             'report_points',
             'dailytasks',
-
+            'daily_task_projects'
         ];
 
         $checked = array_merge($mainMenus);
@@ -164,7 +164,7 @@ class RoleController extends Controller
                 'sales_achievements',
                 'report_points',
                 'dailytasks',
-
+                'daily_task_projects'
             ];
         $checked = array_merge($mainMenus);
 
@@ -222,7 +222,7 @@ class RoleController extends Controller
             'sales_achievements',
             'report_points',
             'dailytasks',
-
+            'daily_task_projects'
         ];
         
         $checked = array_merge($mainMenus);

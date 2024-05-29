@@ -1,18 +1,18 @@
 @extends('adminlte::page')
 
 @section('content')
-<div class="col-md-12">
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-</div>
 <div class="container py-3">
+    <div class="col-md-12">
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+    </div>
     <div class="card shadow-sm">
         <div class="card-body">
             <h2>Buat Tugas Harian</h2>
@@ -25,9 +25,9 @@
                             <div class="form-group">
                                 <label for="assignment_user_id">Tanggal</label>
                                 <div class="input-group">
-                                    <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" value="{{ request('start_date') }}" required>
+                                    <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" required>
                                     <span class="input-group-text">hingga</span>
-                                    <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" value="{{ request('end_date') }}" required>
+                                    <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" required>
                                 </div>
                             </div>
                             <div class="form-row">
@@ -41,7 +41,6 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    
                                     <div class="form-group">
                                         <label for="category_id">Kategori</label>
                                         <select name="category_id[]" class="form-control select2 category-select2" required>
@@ -60,6 +59,18 @@
                                             @endforeach
                                         </select>
                                     </div>
+                                    @canAccess('getcustomfield','daily_task_projects')
+                                    <div class="form-group">
+                                        <label for="project_id">Pilih Proyek</label>
+                                        <select class="form-control select2 project-select" name="project_id[]" required>
+                                            <option selected disabled>Pilih Proyek</option>
+                                            @foreach($projects as $project)
+                                                <option value="{{ $project->id }}">{{ $project->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div id="custom-fields-container-0"></div>
+                                    @endcanAccess
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -79,9 +90,8 @@
                     </div>
                 </div>
 
-
                 <button type="button" id="add-task-user" class="btn btn-info mb-2 add-button"><i class="fa fa-plus"></i> Tugas</button>
-                <button type="submit" class="btn btn-success mb-2"><i class="fa fa-save"></i> {{ isset($taskAssign) ? 'Update' : 'Simpan' }}</button>
+                <button type="submit" class="btn btn-success mb-2"><i class="fa fa-save"></i> Simpan</button>
             </form>
         </div>
     </div>
@@ -95,12 +105,38 @@
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 
 <script>
-    $(document).ready(function() {
+    $(document).ready(function() 
+    {
         initializeSelect2();
 
-        // Add button functionality
-        $('.add-button').on('click', function() {
+        $('#dynamic-form-fields').on('change', '.project-select', function() {
+            var projectId = $(this).val();
+            var index = $(this).closest('.dynamic-field').index();
+            console.log(index);
+
+            if (projectId) {
+                $.ajax({
+                    url: '{{ url('daily_task_project/getcustomfield') }}/' + projectId,
+                    data:
+                    {
+                        index:index
+                    },
+                    type: 'GET',
+                    success: function(data) 
+                    {
+                        $('#custom-fields-container-' + index).html(data);
+                        initializeSelect2ForContainer(index);
+                    }
+                });
+            } else {
+                $('#custom-fields-container-' + index).html('');
+            }
+        });
+
+        $('.add-button').on('click', function() 
+        {
             var indexKeys = generateRandomString(4);
+            var newIndex = $('.dynamic-field').length;
 
             let fieldHTML = `
                 <div class="dynamic-field card mb-3">
@@ -108,9 +144,9 @@
                         <div class="form-group">
                             <label for="assignment_user_id">Tanggal</label>
                             <div class="input-group">
-                                <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" value="{{ request('start_date') }}" required>
+                                <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" required>
                                 <span class="input-group-text">hingga</span>
-                                <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" value="{{ request('end_date') }}" required>
+                                <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" required>
                             </div>
                         </div>
                         <div class="form-row">
@@ -129,7 +165,7 @@
                                     <select name="category_id[]" class="form-control select2 category-select2" required>
                                         <option selected disabled>Pilih Kategori</option>
                                         @foreach($categories as $category)
-                                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                            <option value="{{ $category->name }}">{{ $category->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -142,6 +178,16 @@
                                         @endforeach
                                     </select>
                                 </div>
+                                <div class="form-group">
+                                    <label for="project_id">Pilih Proyek</label>
+                                    <select class="form-control select2 project-select" name="project_id[]" required>
+                                        <option selected disabled>Pilih Proyek</option>
+                                        @foreach($projects as $project)
+                                            <option value="{{ $project->id }}">{{ $project->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div id="custom-fields-container-${newIndex}"></div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -159,46 +205,57 @@
                         </div>
                     </div>
                 </div>`;
-            $('#dynamic-form-fields').append(fieldHTML);
+                $('#dynamic-form-fields').append(fieldHTML);
 
-            initializeSelect2(); // Reinitialize Select2
+                initializeSelect2();
+                generateThriveEditor("description_" + indexKeys);
+                });
 
-            generateThriveEditor("description_" + indexKeys);
+                $('#dynamic-form-fields').on('click', '.remove-button', function() {
+                if ($('#dynamic-form-fields .dynamic-field').length > 1) {
+                    $(this).closest('.dynamic-field').remove();
+                }
+
+            });
+
+            $('#dynamic-form-fields').on('change', '.start-date', function() {
+                var startDateValue = $(this).val();
+                $(this).closest('.dynamic-field').find('.end-date').val(startDateValue);
+            });
+
+            $('input[name="start_date"]').on('change', function() {
+                var startDateValue = $(this).val();
+                $('input[name="end_date"]').val(startDateValue);
+            });
+
         });
 
-        // Remove button functionality
-        $('#dynamic-form-fields').on('click', '.remove-button', function() {
-            if ($('#dynamic-form-fields .dynamic-field').length > 1) {
-                $(this).closest('.dynamic-field').remove();
-            }
-        });
-
-        $('#dynamic-form-fields').on('change', '.start-date', function() {
-            var startDateValue = $(this).val();
-            $(this).closest('.dynamic-field').find('.end-date').val(startDateValue);
-        })
-        $('input[name="start_date"]').on('change', function() {
-            var startDateValue = $(this).val(); // Ambil nilai dari startDate
-            $('input[name="end_date"]').val(startDateValue); // Set nilai startDate ke endDate
-        });
-    });
-
-    function initializeSelect2() {
-        $('.select2').select2();
-        $('.category-select2').select2({
-            tags: true
-        });
-    }
-
-    function generateRandomString(length) {
-        var result = '';
-        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        var charactersLength = characters.length;
-        for (var i = 0; i < length; i++) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        function initializeSelect2() 
+        {
+            $('.select2').select2();
+            $('.category-select2').select2({
+                tags: true
+            });
         }
-        return result;
-    }
+
+        function initializeSelect2ForContainer(index) 
+        {
+            $('.select2-single-'+index+', .select2-multiple-'+index+'').select2({
+                width: '100%' // Adjust width as needed
+            });
+        }
+
+        function generateRandomString(length) 
+        {
+            var result = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            var charactersLength = characters.length;
+            for (var i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
+
 </script>
 @endsection
 
@@ -213,6 +270,8 @@
     .container {
         background-color: #fff;
         border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     .select2-selection__rendered {
         line-height: 31px !important;
@@ -223,5 +282,27 @@
     .select2-selection__arrow {
         height: 34px !important;
     }
+    .card {
+        margin-bottom: 20px;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .input-group-text {
+        padding: 0 10px;
+    }
+    .remove-button {
+        padding: 0 10px;
+    }
+    .add-button {
+        margin-bottom: 20px;
+    }
+    .thriveEditor {
+        height: 100px;
+    }
 </style>
 @endsection
+
