@@ -48,11 +48,11 @@ class PermissionForMenuDailyTaskProject extends Seeder
                 PermissionRole::create(['role_id' => $staff->id, 'permission_id' => $permission->id]);
 
             }
-            // else
-            // {
-            //     PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
-            //     PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
-            // }
+            else
+            {
+                PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
+            }
         }
     }
 }
