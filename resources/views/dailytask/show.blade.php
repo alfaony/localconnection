@@ -40,6 +40,13 @@
                 <!-- Left Column -->
                 <div class="col-md-6 mb-3 mb-md-0 mr-md-3">
                     <div class="form-group row">
+                        <label for="name" class="col-sm-4 col-form-label">Project:</label>
+                        <div class="col-sm-8">
+                            <p class="form-control-plaintext">{{ $dailytask->project->name ?? "" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
                         <label for="start_date" class="col-sm-4 col-form-label">Tanggal:</label>
                         <div class="col-sm-8">
                             <p class="form-control-plaintext {{ $isOverdue ? 'text-danger' : '' }}">
@@ -104,20 +111,6 @@
                         <label for="name" class="col-sm-4 col-form-label">Tipe:</label>
                         <div class="col-sm-8">
                             <p class="form-control-plaintext">{{ $dailytask->type->name ?? "" }}</p>
-                        </div>
-                    </div>
-
-                    <div class="form-group row">
-                        <label for="name" class="col-sm-4 col-form-label">Project:</label>
-                        <div class="col-sm-8">
-                            <p class="form-control-plaintext">{{ $dailytask->project->name ?? "" }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group row">
-                        <label for="name" class="col-sm-4 col-form-label">Project Detail:</label>
-                        <div class="col-sm-8">
-                            <p class="form-control-plaintext">{{ $dailytask->project->name ?? "" }}</p>
                         </div>
                     </div>
 
