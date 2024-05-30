@@ -41,7 +41,7 @@
                             <button type="button" class="btn btn-danger ml-2 remove-custom-field-value"><i class="fa fa-trash"></i> </button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i>  Custom Field Value</button>
+                    <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i>  Option</button>
                     <button type="button" class="btn btn-danger remove-custom-field"><i class="fa fa-trash"></i> Custom Field</button>
                 </div>
             </div>
@@ -84,7 +84,7 @@
                     <button type="button" class="btn btn-danger ml-2 remove-custom-field-value"><i class="fa fa-trash"></i> </button>
                     </div>
                 </div>
-                <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i>  Custom Field Value</button>
+                <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i>  Option</button>
                 <button type="button" class="btn btn-danger remove-custom-field "><i class="fa fa-trash"></i> Custom Field</button>
                 </div>
             </div>
@@ -92,7 +92,7 @@
             $('#custom-fields-container').append(customFieldTemplate);
         });
 
-        // <i class="fa fa-plus"></i>  Custom Field Value
+        // <i class="fa fa-plus"></i>  Option
         $(document).on('click', '.add-custom-field-value', function() {
             const index = $(this).closest('.custom-field').index();
             const customFieldValueTemplate = `
@@ -109,7 +109,7 @@
             $(this).closest('.custom-field').remove();
         });
 
-        // <i class="fa fa-trash"></i> Custom Field Value
+        // <i class="fa fa-trash"></i> Option
         $(document).on('click', '.remove-custom-field-value', function() {
             $(this).closest('.form-group').remove();
         });

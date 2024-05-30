@@ -73,11 +73,14 @@ class DailyTaskController extends Controller
 
         // Filter berdasarkan user
         if ($userFilter) 
-        {
-            $query->whereHas('assign', function ($q) use ($userFilter) 
+        {   
+            if($userFilter != ParamSchema::ALL)
             {
-                $q->where('name', $userFilter);
-            });
+                $query->whereHas('assign', function ($q) use ($userFilter) 
+                {
+                    $q->where('name', $userFilter);
+                });
+            }
         }
         else
         {
@@ -166,7 +169,6 @@ class DailyTaskController extends Controller
 
                 // Menyimpan custom_field
                 if (isset($request->custom_field_values)) {
-                    // dd("here");
                     foreach ($request->custom_field_values as $customFieldId => $customFieldValueId) {
                         if(is_array($customFieldValueId))
                         {
@@ -197,7 +199,7 @@ class DailyTaskController extends Controller
             return redirect()->route('dailytask.index')->with('store', true);
         } catch (\Throwable $th) {
 
-            dd($th);
+            // dd($th);
             Log::error($th->getMessage());
             DB::rollback();
 
@@ -283,7 +285,7 @@ class DailyTaskController extends Controller
             DB::commit();
             return redirect()->route('dailytask.index')->with('update', true);
         } catch (\Throwable $th) {
-            dd($th);
+            // dd($th);
             DB::rollback();
             Log::error($th->getMessage());
 
@@ -527,23 +529,49 @@ class DailyTaskController extends Controller
         $dailyTaskHead = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $doing = TaskStatus::where('name',ParamSchema::DOING)->firstOrFail();
 
-        $dailyTask = new DailyTask();
-        $dailyTask->user_id = Auth::user()->id;
-        $dailyTask->task_status_id = $doing->id;
-        $dailyTask->child_daily_task_id = $dailyTaskHead->id;
-        $dailyTask->start_date = $request->start_date;
-        $dailyTask->end_date = $request->end_date;
-        $dailyTask->assignment_user_id = $request->user_id;
-        $dailyTask->daily_task_category_id = $dailyTaskHead->daily_task_category_id;
-        $dailyTask->daily_task_type_id = $dailyTaskHead->daily_task_type_id;
-        $dailyTask->name = $request->name;
-        $dailyTask->description = $request->description_subtask;
-        $dailyTask->point = 0; // Assuming default value is 0
-        $dailyTask->save();
+        DB::beginTransaction();
+        try {
+            $dailyTask = new DailyTask();
+            $dailyTask->user_id = Auth::user()->id;
+            $dailyTask->task_status_id = $doing->id;
+            $dailyTask->child_daily_task_id = $dailyTaskHead->id;
+            $dailyTask->start_date = $request->start_date;
+            $dailyTask->end_date = $request->end_date;
+            $dailyTask->assignment_user_id = $request->user_id;
+            $dailyTask->daily_task_category_id = $dailyTaskHead->daily_task_category_id;
+            $dailyTask->daily_task_type_id = $dailyTaskHead->daily_task_type_id;
+            $dailyTask->daily_task_project_id = $dailyTaskHead->daily_task_project_id;
+            $dailyTask->name = $request->name;
+            $dailyTask->description = $request->description_subtask;
+            $dailyTask->point = 0; // Assuming default value is 0
+            $dailyTask->save();
+    
+    
+            // Duplicate Custom Field
+            if ($dailyTaskHead->customFieldValues->count() > 0)
+            {
+                foreach ($dailyTaskHead->customFieldValues as $customFieldValue) {
+                    DailyTaskCustomFieldValue::create([
+                        'daily_task_id' => $dailyTask->id,
+                        'custom_field_id' => $customFieldValue->custom_field_id,
+                        'custom_field_value_id' => $customFieldValue->custom_field_value_id,
+                    ]);
+                }
+            }
+    
+            $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
+            
+            DB::commit();
+            return redirect()->route('dailytask.show', $dailyTaskHead->slug)->with('Subtask', true);
+        } catch (\Throwable $th) 
+        {
+            //throw $th;
+            DB::rollback();
+            Log::error($th->getMessage());
+            
+            return redirect()->route('dailytask.show', $dailyTaskHead->slug)->with('Subtask', false);
+        }
 
-        $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
-        
-        return redirect()->route('dailytask.show', $dailyTaskHead->slug)->with('Subtask', true);
     }
 
     protected function message($dailyTaskId, $template, $message, $filePath = null)

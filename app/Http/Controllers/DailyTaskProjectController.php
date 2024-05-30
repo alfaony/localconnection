@@ -52,7 +52,7 @@ class DailyTaskProjectController extends Controller
                     'type' => $request->custom_field_type[$index],
                 ]);
     
-                // Create custom field values
+                // Create options
                 $ordering = 1;
                 foreach ($request->custom_field_value[$index] as $value) {
                     DailyTaskProjectCustomFieldValue::create([
@@ -80,6 +80,18 @@ class DailyTaskProjectController extends Controller
         $statusSelect = config('custom.statusSelect');
         return view('daily_task_project.show',compact('statusSelect','project'));
     }
+
+    public function showproject($slug)
+    {
+        $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+        $customFields = $project->customFields;
+        $tasks = DailyTask::where('daily_task_project_id', $project->id)
+                        ->with(['user', 'customFieldValues'])
+                        ->paginate(10);
+
+        return view('daily_task_project.show_project', compact('tasks', 'customFields', 'project'));
+    }
+
     
     public function update(Request $request, $slug)
     {
@@ -134,7 +146,7 @@ class DailyTaskProjectController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('daily_task_project.show', $slug)->with('success', 'Custom field created successfully.');
+            return redirect()->back()->with('success', 'Custom field created successfully.');
         } catch (\Throwable $th) {
             DB::rollback();
             // dd($th);
@@ -183,7 +195,7 @@ class DailyTaskProjectController extends Controller
             $customField->values()->whereNotIn('id', $existingValueIds)->delete();
 
             DB::commit();
-            return redirect()->route('daily_task_project.show', $customField->daily_task_project->slug)->with('success', 'Custom field updated successfully.');
+            return redirect()->back()->with('success', 'Custom field updated successfully.');
         } catch (\Throwable $th) {
             DB::rollback();
             // dd($th);

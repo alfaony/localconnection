@@ -38,7 +38,7 @@
             @if(Auth::user()->role->name != \App\Schemas\RoleSchema::STAFF)
             <div class="col-12 col-md-3">
                 <select class="form-control select2" id="user" name="user">
-                    <option value="">Select User</option>
+                    <option value="all">All User</option>
                     @foreach ($users as $user)
                         <option value="{{ $user->name }}" {{ request('user') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
                     @endforeach

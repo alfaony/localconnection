@@ -40,9 +40,27 @@
                 <!-- Left Column -->
                 <div class="col-md-6 mb-3 mb-md-0 mr-md-3">
                     <div class="form-group row">
-                        <label for="name" class="col-sm-4 col-form-label">Project:</label>
+                        <label for="name" class="col-sm-4 col-form-label">Proyek:</label>
                         <div class="col-sm-8">
-                            <p class="form-control-plaintext">{{ $dailytask->project->name ?? "" }}</p>
+                            <p class="form-control-plaintext">
+                                @if($dailytask->project)
+                                <a href="{{ route('daily_task_project.showproject', $dailytask->project->slug) }}" class="btn btn-info badge badge-pill btn-sm badge-md">{{ $dailytask->project->name ?? "" }}</a>
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="name" class="col-sm-4 col-form-label">Tugas:</label>
+                        <div class="col-sm-8">
+                            <p class="form-control-plaintext">{{ $dailytask->name }}</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="name" class="col-sm-4 col-form-label">Ditugaskan:</label>
+                        <div class="col-sm-8">
+                            <p class="form-control-plaintext"><span class="badge badge badge-pill badge-info">{{ $dailytask->assign->name ?? '' }}</span></p>
                         </div>
                     </div>
 
@@ -114,55 +132,73 @@
                         </div>
                     </div>
 
-                    @if($dailytask->customFieldValues)
-                        @php
-                            $customFields = [];
-                        @endphp
-                        @foreach($dailytask->customFieldValues as $custom)
-                            @php
-                                $customField = $custom->customField;
-                                $customFieldValue = $custom->customFieldValue;
-                                $fieldName = $customField->name ?? '';
-                                $fieldValue = $customFieldValue->value ?? '';
-                                if ($customField->type === \App\Schemas\ParamSchema::MULTISELECT) {
-                                    if (!isset($customFields[$fieldName])) {
-                                        $customFields[$fieldName] = [];
-                                    }
-                                    $customFields[$fieldName][] = $fieldValue;
-                                } else {
-                                    $customFields[$fieldName] = $fieldValue;
-                                }
-                            @endphp
-                        @endforeach
-                        @foreach($customFields as $fieldName => $fieldValue)
-                            <div class="form-group row">
-                                <label for="name" class="col-sm-4 col-form-label">{{ $fieldName }} :</label>
-                                <div class="col-sm-8">
-                                    @if(is_array($fieldValue))
-                                        @foreach($fieldValue as $value)
-                                            <p class="form-control-plaintext">{{ $value }}</p>
-                                        @endforeach
-                                    @else
-                                        <p class="form-control-plaintext">{{ $fieldValue }}</p>
-                                    @endif
-                                </div>
-                            </div>
-                        @endforeach
-                    @endif
-
-                    <div class="form-group row">
-                        <label for="name" class="col-sm-4 col-form-label">Tugas:</label>
-                        <div class="col-sm-8">
-                            <p class="form-control-plaintext">{{ $dailytask->name }}</p>
-                        </div>
-                    </div>
-
                     <div class="form-group row">
                         <label for="description" class="col-sm-4 col-form-label">Deskripsi:</label>
                         <div class="col-sm-8" style="max-height: 40vh; overflow-y: auto;">
                             <p class="form-control-plaintext">{!! $dailytask->description !!}</p>
                         </div>
                     </div>
+
+                    @if($dailytask->customFieldValues)
+                    <div class="accordion" id="customFieldAccordion">
+                        <div class="card">
+                            <div class="card-header" id="headingOne">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                        Detail Project
+                                    </button>
+                                </h2>
+                            </div>
+
+                            <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#customFieldAccordion">
+                                <div class="card-body">
+                                    @php
+                                        $customFields = [];
+                                    @endphp
+                                    @foreach($dailytask->customFieldValues as $custom)
+                                        @php
+                                            $customField = $custom->customField;
+                                            $customFieldValue = $custom->customFieldValue;
+                                            $fieldName = $customField->name ?? '';
+                                            $fieldValue = $customFieldValue->value ?? '';
+                                            if ($customField->type === \App\Schemas\ParamSchema::MULTISELECT) {
+                                                if (!isset($customFields[$fieldName])) {
+                                                    $customFields[$fieldName] = [];
+                                                }
+                                                $customFields[$fieldName][] = $fieldValue;
+                                            } else {
+                                                $customFields[$fieldName] = $fieldValue;
+                                            }
+                                        @endphp
+                                    @endforeach
+                                    @if($customFields)
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <tbody>
+                                                @foreach($customFields as $fieldName => $fieldValue)
+                                                <tr>
+                                                    <td><strong>{{ $fieldName }}</strong></td>
+                                                    <td>
+                                                        @if(is_array($fieldValue))
+                                                            @foreach($fieldValue as $value)
+                                                                <span class="d-block badge badge-info badge badge-pill badge-sm m-1">{{ $value }}</span>
+                                                            @endforeach
+                                                        @else
+                                                            {{ $fieldValue }}
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    @endif
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
 
                     @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::DOING)
                         @canAccess('extend','dailytasks')
@@ -631,9 +667,12 @@
 @endsection
 
 @section('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
 <script>
     $('#mediaReport').on('change', function() 
     {

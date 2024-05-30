@@ -107,7 +107,8 @@
 <script>
     $(document).ready(function() 
     {
-        initializeSelect2();
+        // initializeSelect2();
+        $('.select2').select2();
 
         $('#dynamic-form-fields').on('change', '.project-select', function() {
             var projectId = $(this).val();
@@ -139,7 +140,7 @@
             var newIndex = $('.dynamic-field').length;
 
             let fieldHTML = `
-                <div class="dynamic-field card mb-3">
+            <div class="dynamic-field card mb-3">
                     <div class="card-body">
                         <div class="form-group">
                             <label for="assignment_user_id">Tanggal</label>
@@ -153,7 +154,7 @@
                             <div class="col-md-5">
                                 <div class="form-group">
                                     <label for="assignment_user_id">Ditugaskan</label>
-                                    <select name="assignment_user_id[]" class="form-control select2" required>
+                                    <select name="assignment_user_id[]" class="form-control select3" required>
                                         <option selected disabled>Pilih Ditugaskan</option>
                                         @foreach($users as $user)
                                             <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -162,7 +163,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="category_id">Kategori</label>
-                                    <select name="category_id[]" class="form-control select2 category-select2" required>
+                                    <select name="category_id[]" class="form-control select3 category-select3" required>
                                         <option selected disabled>Pilih Kategori</option>
                                         @foreach($categories as $category)
                                             <option value="{{ $category->name }}">{{ $category->name }}</option>
@@ -171,7 +172,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="type_id">Jenis</label>
-                                    <select name="type_id[]" class="form-control select2" required>
+                                    <select name="type_id[]" class="form-control select3" required>
                                         <option selected disabled>Pilih Tipe</option>
                                         @foreach($types as $type)
                                             <option value="{{ $type->id }}">{{ $type->name }}</option>
@@ -180,7 +181,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="project_id">Pilih Proyek</label>
-                                    <select class="form-control select2 project-select" name="project_id[]" required>
+                                    <select class="form-control select3 project-select" name="project_id[]" required>
                                         <option selected disabled>Pilih Proyek</option>
                                         @foreach($projects as $project)
                                             <option value="{{ $project->id }}">{{ $project->name }}</option>
@@ -204,7 +205,8 @@
                             </div>
                         </div>
                     </div>
-                </div>`;
+                </div>
+                `;
                 $('#dynamic-form-fields').append(fieldHTML);
 
                 initializeSelect2();
@@ -232,7 +234,7 @@
 
         function initializeSelect2() 
         {
-            $('.select2').select2();
+            $('.select3').select2();
             $('.category-select2').select2({
                 tags: true
             });

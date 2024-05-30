@@ -138,7 +138,7 @@
                             <button type="button" class="btn btn-danger ml-2 remove-custom-field-value"><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i> Tambah Value</button>
+                    <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i> Option</button>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -165,13 +165,13 @@
             `;
         }
 
-        // Add custom field value in create modal
+        // Add option in create modal
         $(document).on('click', '.add-custom-field-value', function() {
             const containerId = $(this).data('id') ? `#custom-field-values-container${$(this).data('id')}` : '#custom-field-values-container';
             $(containerId).append(addCustomFieldValue());
         });
 
-        // Remove custom field value
+        // Remove option
         $(document).on('click', '.remove-custom-field-value', function() {
             $(this).closest('.form-group').remove();
         });
