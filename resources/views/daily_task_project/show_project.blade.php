@@ -97,7 +97,7 @@
                                             @endphp
 
                                             @foreach($value as $val)
-                                                <span class="badge badge-pill badge-info">{{ $val->customFieldValue->value }}</span>
+                                                <span class="badge badge-pill badge-info">{{ $val->customFieldValue ? $val->customFieldValue->value : "" }}</span>
                                             @endforeach
                                         </td>
                                     @endforeach
