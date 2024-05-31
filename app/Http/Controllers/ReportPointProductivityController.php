@@ -30,7 +30,7 @@ class ReportPointProductivityController extends Controller
         }
 
         if ($request->has('end_date')) {
-            $endDate = Carbon::parse($request->input('end_date'));
+            $endDate = Carbon::parse($request->input('end_date'))->endOfDay();       ;
         }
 
         $query = User::query();
@@ -38,6 +38,7 @@ class ReportPointProductivityController extends Controller
         {
             $query->where('id', $request->input('user_id'));
         }
+
         // Retrieve all users
         $users = $query->byCompany(Auth::user()->company_id)->paginate(10);
 
