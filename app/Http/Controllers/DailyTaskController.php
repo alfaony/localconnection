@@ -214,7 +214,7 @@ class DailyTaskController extends Controller
     {
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
 
-        $showProject = Access::can('showproject','daily_task_project');
+        $showProject = Access::can('showproject','daily_task_projects');
 
         $users = User::byCompany(Auth::user()->company_id)->get();
         $subTasks = DailyTask::byCompany(Auth::user()->company_id)->where('child_daily_task_id',$dailytask->id)->orderBy('created_at','desc')->get();
