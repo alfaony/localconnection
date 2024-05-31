@@ -109,6 +109,9 @@
     {
         // initializeSelect2();
         $('.select2').select2();
+        $('.category-select2').select2({
+            tags: true
+        });
 
         $('#dynamic-form-fields').on('change', '.project-select', function() {
             var projectId = $(this).val();
@@ -235,7 +238,7 @@
         function initializeSelect2() 
         {
             $('.select3').select2();
-            $('.category-select2').select2({
+            $('.category-select3').select2({
                 tags: true
             });
         }
