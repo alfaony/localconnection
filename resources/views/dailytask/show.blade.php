@@ -42,18 +42,20 @@
                     <div class="form-group row">
                         <label for="name" class="col-sm-4 col-form-label">Proyek:</label>
                         <div class="col-sm-8">
-                            {{-- 
+                            @if($showProject)
                             <p class="form-control-plaintext">
                                 @if($dailytask->project)
                                 <a href="{{ route('daily_task_project.showproject', $dailytask->project->slug) }}" class="btn btn-info badge badge-pill btn-sm badge-md">{{ $dailytask->project->name ?? "" }}</a>
                                 @endif
                             </p>
-                            --}}
+                            @else 
                             <p class="form-control-plaintext">
                                 @if($dailytask->project)
-                                    {{ $dailytask->project->name ?? "" }}
+                                {{ $dailytask->project->name ?? "" }}
                                 @endif
-                            </p>              
+                            </p> 
+                            @endif
+
 
                         </div>
                     </div>

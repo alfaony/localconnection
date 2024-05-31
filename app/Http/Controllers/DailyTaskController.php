@@ -13,8 +13,9 @@ use App\Http\Requests\DailyTaskStoreRequest;
 use App\Http\Requests\DailyTaskRequest;
 use App\Http\Requests\DailyTaskSubTaskRequest;
 
-use App\Schemas\ParamSchema;
 use Carbon\Carbon;
+use App\Helpers\Access;
+use App\Schemas\ParamSchema;
 
 use App\Models\User;
 use App\Models\DailyTask;
@@ -213,13 +214,15 @@ class DailyTaskController extends Controller
     {
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
 
+        $showProject = Access::can('showproject','daily_task_project');
+
         $users = User::byCompany(Auth::user()->company_id)->get();
         $subTasks = DailyTask::byCompany(Auth::user()->company_id)->where('child_daily_task_id',$dailytask->id)->orderBy('created_at','desc')->get();
         $types = DailyTaskType::get();
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
 
         
-        return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks'));
+        return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject'));
     }
 
     public function edit($slug)
