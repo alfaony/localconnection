@@ -178,6 +178,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('daily_task_project', DailyTaskProjectController::class);
 });
 
+Route::get('daily_task_project/showproject/{slug}', [DailyTaskProjectController::class,'showproject'])->name('daily_task_project.showproject');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

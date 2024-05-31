@@ -1,10 +1,13 @@
 @extends('adminlte::page')
 
-@section('content_header')
-    <h2>Detail Proyek</h2>
-@stop
 
 @section('content')
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ route('daily_task_project.index') }}">Proyek</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ $project->name ?? '' }}</li>
+    </ol>
+</nav>
 <div class="container p-3">
     @if(session('success'))
         <div class="alert alert-success">
@@ -71,7 +74,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label for="custom_field_type">Tipe</label>
-                                            <select class="form-control" name="custom_field_type" required>
+                                            <select class="form-control" name="custom_field_type" disabled required>
                                                 @foreach($statusSelect as $key => $value)
                                                 <option value="{{ $key }}" {{ $customField->type == $key ? 'selected' : '' }}>{{ $value }}</option>
                                                 @endforeach

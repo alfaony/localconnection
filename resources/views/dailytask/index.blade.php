@@ -46,7 +46,7 @@
             </div>
             @endif
             <div class="col-12 col-md-3">
-                <select class="form-control" id="status" name="status">
+                <select class="form-control select2" id="status" name="status">
                     <option value="">Select Status</option>
                     @foreach ($taskStatuss as $status)
                         <option value="{{ $status->name }}" {{ request('status') == $status->name ? 'selected' : '' }}>{{ ucfirst($status->name) }}</option>

@@ -7,11 +7,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+use App\Models\User;
 use App\Models\DailyTask;
+use App\Models\TaskStatus;
 use App\Models\DailyTaskProject;
 use App\Models\DailyTaskProjectCustomField;
 use App\Models\DailyTaskProjectCustomFieldValue;
 
+use App\Schemas\ParamSchema;
 
 class DailyTaskProjectController extends Controller
 {
@@ -81,15 +84,48 @@ class DailyTaskProjectController extends Controller
         return view('daily_task_project.show',compact('statusSelect','project'));
     }
 
-    public function showproject($slug)
+    public function showproject(Request $request, $slug)
     {
+        // Ambil filter dari request
+        $userFilter = $request->input('user');
+        $statusFilter = $request->input('status');
+        $search = $request->input('task_name');
+        
+        $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
+        $taskStatuss = TaskStatus::all(); // Ambil semua status tugas
         $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $customFields = $project->customFields;
-        $tasks = DailyTask::where('daily_task_project_id', $project->id)
-                        ->with(['user', 'customFieldValues'])
-                        ->paginate(10);
 
-        return view('daily_task_project.show_project', compact('tasks', 'customFields', 'project'));
+        
+        $query = DailyTask::query();
+
+        if ($userFilter) 
+        {   
+            if($userFilter != ParamSchema::ALL)
+            {
+                $query->whereHas('assign', function ($q) use ($userFilter) 
+                {
+                    $q->where('name', $userFilter);
+                });
+            }
+        }
+
+        // Filter berdasarkan status
+        if ($statusFilter) 
+        {
+            $query->whereHas('taskStatus', function ($q) use ($statusFilter) {
+                $q->where('name', $statusFilter);
+            });
+        }
+
+        if ($search) 
+        {
+            $query->where('name', 'like', "%{$search}%"); // Add other fields as necessary
+        }
+
+        $tasks = $query->where('daily_task_project_id', $project->id)->with(['user', 'customFieldValues'])->paginate(10);
+
+        return view('daily_task_project.show_project', compact('tasks', 'customFields', 'project', 'users', 'taskStatuss'));
     }
 
     

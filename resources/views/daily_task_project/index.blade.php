@@ -5,7 +5,7 @@
 @stop
 
 @section('content')
-<div class="container p-3">
+<div class="container-fluid p-3">
 @if(session('success'))
     <div class="alert alert-success">
         {{ session('success') }}
@@ -27,6 +27,7 @@
         <tr>
             <td>{{ $project->name }}</td>
             <td>
+                <a href="{{ route('daily_task_project.showproject', $project->slug) }}" class="btn btn-sm btn-warning"><i class="fa fa-tasks"></i></a>
                 @canAccess('show','daily_task_projects')
                 <a href="{{ route('daily_task_project.show', $project->slug) }}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
                 @endcanAccess
@@ -70,6 +71,8 @@
     @endforeach
     </tbody>
 </table>
+
+{{ $projects->withQueryString()->links('vendor.pagination.bootstrap-4') }}
 
 <!-- Create Modal -->
 <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">
