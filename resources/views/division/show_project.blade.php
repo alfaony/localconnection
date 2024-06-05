@@ -50,8 +50,7 @@
                         <thead>
                             <tr>
                                 <th class="col-2">Nama Tugas</th>
-                                <th class="col-2">Dibuat</th>
-                                <th class="col-2">Ditugaskan</th>
+                                <th class="col-1">Ditugaskan</th>
                                 <th class="col-2">Tanggal</th>
                                 <th class="col-1">Status</th>
                                 @foreach($customFields as $field)
@@ -68,7 +67,6 @@
                                         @endcanAccess
                                     </td>
                                     <td>{{ $task->user->name }}</td>
-                                    <td>{{ $task->assign->name }}</td>
                                     <td>
                                         <span class="{{ $task->isOverdue() ? 'text-danger' : '' }}">
                                             {{ $task->dateShow }}
@@ -111,9 +109,7 @@
                             @endforelse
                         </tbody>
                     </table>
-                    <div class="mt-2">
-                        {{ $tasks->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-                    </div>
+                    {{ $tasks->links() }}
                 </div>
             </div>
         </div>

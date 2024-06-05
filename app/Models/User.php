@@ -107,6 +107,11 @@ class User extends Authenticatable
         return $this->belongsTo(User::class, 'approvement_user_id');
     }
 
+    public function divisions()
+    {
+        return $this->belongsToMany(Division::class);
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

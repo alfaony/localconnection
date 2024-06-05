@@ -1,81 +1,189 @@
 @extends('adminlte::page')
 
-{{-- @section('title', 'User') --}}
+@section('title', 'Dashboard')
 
 @section('content_header')
     <h1>Dashboard</h1>
 @stop
 
 @section('content')
-<div class="container">
-    @canAccess('showReport','homes')
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total Proyek Aktif</h5>
-                    <p class="card-text">{{ $totalActiveProjects }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total Pekerja Aktif</h5>
-                    <p class="card-text">{{ $totalActiveWorkers }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-danger mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Anggaran Pembelian</h5>
-                    <p class="card-text">{{ 'Rp. '.number_format($totalPurchaseBudget,0,',','.') }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total Proyek Aktif</h5>
-                    <p class="card-text">{{ 'Rp. '.number_format($activeProjectsBudget,0,',','.') }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Anggaran Pekerja</h5>
-                    <p class="card-text">{{ 'Rp. '.number_format($activeEmployeeBudget,0,',','.') }}</p>
-                    
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total Quote</h5>
-                    <p class="card-text">{{ $totalQuote }}</p>
+@canAccess('showReport','homes')
+<div class="card py-3">
+    <div class="card-header">
+        <h5>Laporan Overview Proyek</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Proyek Aktif</h5>
+                        <p class="card-text">{{ $totalActiveProjects }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Pekerja Aktif</h5>
+                        <p class="card-text">{{ $totalActiveWorkers }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-danger mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Anggaran Pembelian</h5>
+                        <p class="card-text">{{ 'Rp. '.number_format($totalPurchaseBudget,0,',','.') }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Anggaran Proyek Aktif</h5>
+                        <p class="card-text">{{ 'Rp. '.number_format($activeProjectsBudget,0,',','.') }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Anggaran Pekerja</h5>
+                        <p class="card-text">{{ 'Rp. '.number_format($activeEmployeeBudget,0,',','.') }}</p>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total SPK</h5>
-                    <p class="card-text">{{ $totalWorkOrder }}</p>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Kutipan</h5>
+                        <p class="card-text">{{ $totalQuote }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Total SPK</h5>
+                        <p class="card-text">{{ $totalWorkOrder }}</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    @endcanAccess
 </div>
+@endcanAccess
+@canAccess('showReportPointDaily','homes')
+<div class="card py-3">
+    <div class="card-header">
+        <h5>Laporan Overview Pekerjaan Harian</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- Date filters -->
+                <form method="GET" action="{{ route('home') }}" class="mb-3">
+                    <div class="mb-4 row">
+                        <div class="col-md-6">
+                            <label for="start_date" class="form-label">Tanggal Mulai:</label>
+                            <input type="date" class="form-control" name="start_date" id="start_date" value="{{ request('start_date') }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="end_date" class="form-label">Tanggal Akhir:</label>
+                            <input type="date" class="form-control" name="end_date" id="end_date" value="{{ request('end_date') }}">
+                        </div>
+                        <div class="col-md-12 mt-2">
+                            <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Cari</button>
+                            <button type="button" onclick="window.location.href='{{ route('home') }}'" class="btn btn-secondary"><i class="fa fa-times"></i> Tampilkan Semua</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info mb-3">
+                    <div class="card-header">Poin Tugas</div>
+                    <div class="card-body">
+                        <p class="card-text">{{ $dailyTaskPoints }} Poin</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info mb-3">
+                    <div class="card-header">Poin Training</div>
+                    <div class="card-body">
+                        <p class="card-text">{{ $trainingPoints }} Poin</p>
+                    </div>
+                </div>
+            </div>
+            @if(Auth::user()->role->name == \App\Schemas\RoleSchema::SALES)
+            <div class="col-md-3">
+                <div class="card text-white bg-info mb-3">
+                    <div class="card-header">Poin Penjualan</div>
+                    <div class="card-body">
+                        <p class="card-text">{{ $ipRightPoints }} Poin</p>
+                    </div>
+                </div>
+            </div>
+            @else
+            <div class="col-md-3">
+                <div class="card text-white bg-info mb-3">
+                    <div class="card-header">Poin Hak Cipta</div>
+                    <div class="card-body">
+                        <p class="card-text">{{ $ipRightPoints }} Poin</p>
+                    </div>
+                </div>
+            </div>
+            @endif
+            <div class="col-md-3">
+                <div class="card bg-success mb-3">
+                    <div class="card-header">Jumlah Tugas Diselesaikan</div>
+                    <div class="card-body">
+                        <p class="card-text">{{ $dailyTaskCompleteCount }} Tugas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card bg-light mb-3">
+                    <div class="card-header text-danger">Jumlah Tugas Overdue</div>
+                    <div class="card-body">
+                        <p class="card-text">{{ $dailyTaskCountOverdue }} Tugas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-light mb-3">
+                    <div class="card-header text-primary">Jumlah Hari Ini</div>
+                    <div class="card-body">
+                        <p class="card-text">{{ $dailyTaskCountToday }} Tugas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light mb-3">
+                    <div class="card-header text-green">Jumlah Tugas Mendatang</div>
+                    <div class="card-body">
+                        <p class="card-text">{{ $dailyTaskCountUpcoming }} Tugas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endcanAccess
+
+
+
 
 @if(Auth::user()->role->name == \App\Schemas\RoleSchema::BM)
-<div class="container">
+<div class="row">
     <div class="py-4">
         <h2>Perlengkapan Stok Habis</h2>
         <div class="table-responsive">
@@ -104,9 +212,33 @@
         </div>
     </div>
 </div>
-
 @endif
 @endsection
+
 @section('js')
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('input[name="start_date"]').on('change', function() {
+            var startDateValue = $(this).val();
+            $('input[name="end_date"]').val(startDateValue);
+        });
+    });
+</script>
 @stop
+
+@section('css')
+<style>
+    .card-header {
+        font-weight: bold;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .form-label {
+        font-weight: bold;
+    }
+</style>
+@endsection

@@ -19,6 +19,11 @@
         @if(Session::get('delete'))
         <div class="alert alert-success mt-3">Tugas Berhasil Terhapus</div>
         @endif
+        @if(session('error'))
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        @endif
     </div>
 
     @canAccess('create','dailytasks')

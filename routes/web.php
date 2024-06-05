@@ -42,6 +42,8 @@ use App\Http\Controllers\SalesAchievementController;
 use App\Http\Controllers\ReportPointProductivityController;
 use App\Http\Controllers\DailyTaskController;
 use App\Http\Controllers\DailyTaskProjectController;
+use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\ObjectiveController;
 
 
 /*
@@ -175,10 +177,17 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::put('daily_task_project/customfieldupdate/{id}', [DailyTaskProjectController::class, 'customfieldupdate'])->name('customfieldupdate');
   Route::delete('daily_task_project/customfielddestroy/{id}', [DailyTaskProjectController::class, 'customfielddestroy'])->name('customfielddestroy');
   Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
+  Route::get('daily_task_project/showproject/{slug}', [DailyTaskProjectController::class,'showproject'])->name('daily_task_project.showproject');
   Route::resource('daily_task_project', DailyTaskProjectController::class);
+
+
+  
+  Route::get('objective/showtask/{objective}', [ObjectiveController::class,'showtask'])->name('objective.showtask');
+  Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
+  Route::resource('objective', ObjectiveController::class);
+  Route::resource('division', DivisionController::class);
 });
 
-Route::get('daily_task_project/showproject/{slug}', [DailyTaskProjectController::class,'showproject'])->name('daily_task_project.showproject');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

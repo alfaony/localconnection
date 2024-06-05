@@ -1,24 +1,25 @@
 @extends('adminlte::page')
 
-@section('title', 'Project Tasks')
+@section('title', 'Keyresult Tasks')
 
 @section('content')
 <div class="container-fluid">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('daily_task_project.index') }}">Proyek</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ $project->name ?? '' }}</li>
+            <li class="breadcrumb-item"><a href="{{ route('objective.index') }}">Objective</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('objective.show',$keyResult->objective->slug) }}"> {{ $keyResult->objective->name }} </a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ $keyResult->result ?? '' }}</li>
         </ol>
     </nav>
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h5>Proyek : {{ $project->name }}</h5>
+                    <h5>Key Result : {{ $keyResult->result }}</h5>
                 </div>
                 <div class="card-body">
                    <div class="mb-3">
-                        <form method="GET" action="{{ route('daily_task_project.showproject', $project->slug)  }}"> <!-- Adjust the route as needed -->
+                        <form method="GET" action="{{ route('objective.showtask', $keyResult->slug)  }}"> <!-- Adjust the route as needed -->
                             <div class="row">
                                 <div class="col-md-3">
                                     <input type="text" name="task_name" class="form-control" placeholder="Search by Task Name" value="{{ request('task_name') }}">
@@ -41,7 +42,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <button type="submit" class="btn btn-primary">Search</button>
-                                    <a href="{{ route('daily_task_project.showproject',$project->slug) }}" class="btn btn-secondary">Reset</a>
+                                    <a href="{{ route('objective.showtask',$keyResult->slug) }}" class="btn btn-secondary">Reset</a>
                                 </div>
                             </div>
                         </form>
@@ -49,14 +50,11 @@
                     <table class="table table-bordered table-responsive-sm">
                         <thead>
                             <tr>
-                                <th class="col-2">Nama Tugas</th>
-                                <th class="col-2">Dibuat</th>
-                                <th class="col-2">Ditugaskan</th>
+                                <th class="col-3">Nama Tugas</th>
+                                <th class="col-1">Ditugaskan</th>
                                 <th class="col-2">Tanggal</th>
                                 <th class="col-1">Status</th>
-                                @foreach($customFields as $field)
-                                    <th class="col-3">{{ $field->name }}</th>
-                                @endforeach
+                                
                             </tr>
                         </thead>
                         <tbody>
@@ -67,7 +65,6 @@
                                         <a href="{{ route('dailytask.show', $task->slug) }}" class="btn btn-info badge-pill badge-light">{{ $task->name }}</a>
                                         @endcanAccess
                                     </td>
-                                    <td>{{ $task->user->name }}</td>
                                     <td>{{ $task->assign->name }}</td>
                                     <td>
                                         <span class="{{ $task->isOverdue() ? 'text-danger' : '' }}">
@@ -92,21 +89,10 @@
                                             {{ $task->taskStatus->name }}
                                     @endswitch
                                     </td>
-                                    @foreach($customFields as $field)
-                                        <td>
-                                            @php
-                                                $value = $task->customFieldValues->where('custom_field_id', $field->id);
-                                            @endphp
-
-                                            @foreach($value as $val)
-                                                <span class="badge badge-pill badge-info">{{ $val->customFieldValue ? $val->customFieldValue->value : "" }}</span>
-                                            @endforeach
-                                        </td>
-                                    @endforeach
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3 + {{ count($customFields) }}">No tasks found</td>
+                                    <td colspan="3">No tasks found</td>
                                 </tr>
                             @endforelse
                         </tbody>

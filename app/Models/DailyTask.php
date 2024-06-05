@@ -105,10 +105,15 @@ class DailyTask extends Model
     {
         return $this->belongsTo(DailyTaskProject::class, 'daily_task_project_id');
     }
-
+    
     public function customFieldValues()
     {
         return $this->hasMany(DailyTaskCustomFieldValue::class);
+    }
+
+    public function keyResults()
+    {
+        return $this->belongsToMany(ObjectiveKeyResult::class);
     }
 
     public function isOverdue()

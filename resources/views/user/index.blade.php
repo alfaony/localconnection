@@ -44,6 +44,13 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
 
+            <label for="phone">Divisi:</label>
+            <select name="divisions[]" multiple class="form-control select2">
+                @foreach ($divisions as $division)
+                    <option value="{{ $division->id }}">{{ $division->name }}</option>
+                @endforeach
+            </select>
+    
             @if($roleAccess)
             <label for="phone">Role:</label>
             <select name="role" class="form-control mb-2 select2" required>
@@ -54,7 +61,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             </select>
 
             <label for="phone">User Persetujuan:</label>
-            <select name="approvement_user_id" class="form-control mb-2 user-select2" required>
+            <select name="approvement_user_id" class="form-control mb-2 user-select2">
                 <option value="" selected disabled>Pilih</option>
                 @foreach($users as $a)
                 <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ." - ".  $a->company->name }} </option>
@@ -108,7 +115,14 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
-    
+
+            <label for="phone">Divisi:</label>
+            <select name="divisions[]" multiple class="form-control select-division">
+                @foreach ($divisions as $division)
+                    <option value="{{ $division->id }}" {{ isset($divisionsUser) && in_array($division->id, $divisionsUser) ? 'selected' : '' }}>{{ $division->name }}</option>
+                @endforeach
+            </select>
+
             @if($roleAccess)
             <label for="phone">Role:</label>
             <select name="role" class="form-control mb-2 select2" required>
@@ -119,7 +133,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             </select>
 
             <label for="phone">User Persetujuan:</label>
-            <select name="approvement_user_id" class="form-control mb-2 user-select2" required>
+            <select name="approvement_user_id" class="form-control mb-2 user-select2">
                 <option value="" selected disabled>Pilih</option>
                 @foreach($users as $a)
                 <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ." ( ".  $a->company->name." )"}} </option>
@@ -237,6 +251,12 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             width: '100%',
             placeholder: 'Pilih Petugas'
         });
+
+        $('.select-division').select2({
+            placeholder: "Select Divisions",
+            tags: true,
+            maximumSelectionLength: 5
+        });
     });
 </script>
 <script>
@@ -337,6 +357,18 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         }
         .select2-selection__arrow {
             height: 34px !important;
+        }
+
+        .select2-selection__choice
+        {
+            background-color: #007bff !important;
+            border: 1px solid #007bff !important;
+        }
+
+        .select2-selection__choice__remove
+        {
+            color: #fe0700 !important;
+            border: 1px solid #007bff !important;
         }
 </style>
 @stop

@@ -381,6 +381,7 @@
                                 </select>
                             </div>
                         </div>
+                        <div id="custom-fields-container"></div>
                         <!-- Row for Description -->
                         <div class="form-group">
                             <label for="description">Deskripsi</label>
@@ -677,13 +678,39 @@
 @endsection
 
 @section('js')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.slim.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
 <script>
+    $(document).ready(function() 
+    {
+        $('.select2').select2();
+        // Assume you have a dailyTaskId variable available or extract it from the form
+        var dailyTaskId = "{{ $dailytask->id }}";
+        loadCustomFields(dailyTaskId);
+    });
+    function loadCustomFields(dailyTaskId = null) 
+    {
+        var projectId = "{{ $dailytask->daily_task_project_id }}";
+        var url = '{{ url('daily_task_project/getcustomfield') }}/' + projectId;
+        
+        $.ajax({
+            url: url,
+            type: 'GET',
+            data: 
+            {
+                dailyTaskId: dailyTaskId // Passing dailyTaskId to the server
+            },
+            success: function(data) {
+                $('#custom-fields-container').html(data);
+                $('.select2-single, .select2-multiple').select2(); // Re-initialize select2
+            }
+        });
+    }
+
     $('#mediaReport').on('change', function() 
     {
         var maxFileSize = 3 * 1024 * 1024; // 5MB in bytes
@@ -878,6 +905,17 @@ $(document).ready(function() {
     .task-actions a,
     .task-actions button {
         margin-right: 5px;
+    }
+    .select2-selection__choice
+    {
+        background-color: #007bff !important;
+        border: 1px solid #007bff !important;
+    }
+
+    .select2-selection__choice__remove
+    {
+        color: #fe0700 !important;
+        border: 1px solid #007bff !important;
     }
 </style>
 @endsection

@@ -20,6 +20,16 @@
                 @csrf
                 @method('PUT')
                 <div class="form-group">
+                    <label for="assignment_user_id">Objective</label>
+                    <select name="objective[]" id="objective_id" class="form-control objective-select select2" required>
+                        <option selected disabled>Pilih Objective</option>
+                        @foreach($objectives as $objective)
+                            <option value="{{ $objective->id }}" {{ $dailytask->objective_id == $objective->id ? 'selected' : ''}}>{{ $objective->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div id="keyresult-fields-container"></div>
+                <div class="form-group">
                     <label for="assignment_user_id">Tanggal</label>
                     <div class="input-group">
                         <input type="date" class="form-control" name="start_date" placeholder="Mulai Tanggal" value="{{ $dailytask->start_date }}" required>
@@ -63,7 +73,7 @@
                             <select id="project_id" name="project_id" class="form-control select2" onchange="loadCustomFields();">
                                 <option disabled>Pilih Proyek</option>
                                 @foreach($projects as $project)
-                                    <option value="{{ $project->id }}" {{ $dailytask->daily_task_project_id == $project->id ? 'selected' : '' }}>{{ $project->name }}</option>
+                                    <option value="{{ $project->id }}" {{ $dailytask->daily_task_project_id == $project->id ? 'selected' : '' }} >{{ $project->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -131,12 +141,35 @@
         });
     }
 
+    function loadKeyResult(dailyTaskId = null) 
+    {
+        var objectiveId = $('#objective_id').val();
+        console.log(objectiveId);
+        var url = '{{ url('objective/getresult') }}/' + objectiveId;
+        
+
+        console.log(url);
+        $.ajax({
+            url: url,
+            type: 'GET',
+            data: 
+            {
+                dailyTaskId: dailyTaskId // Passing dailyTaskId to the server
+            },
+            success: function(data) {
+                $('#keyresult-fields-container').html(data);
+                $('.select2-single, .select2-multiple').select2(); // Re-initialize select2
+            }
+        });
+    }
+
     $(document).ready(function() 
     {
         $('.select2').select2();
         // Assume you have a dailyTaskId variable available or extract it from the form
         var dailyTaskId = "{{ $dailytask->id }}";
         loadCustomFields(dailyTaskId);
+        loadKeyResult(dailyTaskId);
     });
 </script>
 <script>
@@ -178,6 +211,17 @@
         }
         .select2-selection__arrow {
             height: 34px !important;
+        }
+        .select2-selection__choice
+        {
+            background-color: #007bff !important;
+            border: 1px solid #007bff !important;
+        }
+
+        .select2-selection__choice__remove
+        {
+            color: #fe0700 !important;
+            border: 1px solid #007bff !important;
         }
 </style>
 @endsection

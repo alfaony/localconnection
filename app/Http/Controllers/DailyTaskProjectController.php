@@ -194,7 +194,6 @@ class DailyTaskProjectController extends Controller
     {
         $request->validate([
             'custom_field_name' => 'required|string|max:255',
-            'custom_field_type' => 'required|string|in:single_select,multi_select',
             'custom_field_value' => 'required|array',
             'custom_field_value.*' => 'required|string|max:255',
         ]);
@@ -204,7 +203,6 @@ class DailyTaskProjectController extends Controller
             $customField = DailyTaskProjectCustomField::findOrFail($id);
             $customField->update([
                 'name' => $request->custom_field_name,
-                'type' => $request->custom_field_type,
             ]);
 
             $existingValueIds = [];
@@ -234,8 +232,8 @@ class DailyTaskProjectController extends Controller
             return redirect()->back()->with('success', 'Custom field updated successfully.');
         } catch (\Throwable $th) {
             DB::rollback();
-            // dd($th);
-            // return redirect()->route('daily_task_project.show', $customField->daily_task_project->slug)->with('error', 'An error occurred: ' . $th->getMessage());
+            Log::error($th->getMessage());
+            return redirect()->back();
         }
     }
 

@@ -51,4 +51,6 @@ class ParamSchema
     const MULTISELECT = "multi_select";
 
     const ALL = "all";
+
+    const TODO = "todo";
 }

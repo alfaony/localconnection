@@ -7,10 +7,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use App\Schemas\RoleSchema;
 
+use App\Http\Requests\UserRequest;
+
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Company;
-use App\Http\Requests\UserRequest;
+use App\Models\Division;
 
 
 class UserController extends Controller
@@ -25,6 +27,7 @@ class UserController extends Controller
         $company = Company::orderBy('name','asc')->get();
         $companyAccess = false;
         $roleAccess = false;
+        $divisions = Division::byCompany(Auth::user()->company_id)->get();
 
         
         if(Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::HR)
@@ -66,7 +69,7 @@ class UserController extends Controller
         }
 
 
-        return view('user.index',compact('user','totalUser','role','company', 'companyAccess', 'roleAccess','users'));
+        return view('user.index',compact('user','totalUser','role','company', 'companyAccess', 'roleAccess','users', 'divisions'));
     }
 
     /**
@@ -87,6 +90,11 @@ class UserController extends Controller
         $user->approvement_user_id = $request->post('approvement_user_id') ?? NULL;
         $user->save();
 
+
+        $divisions = $request->input('divisions');
+        if ($divisions) {
+            $user->divisions()->attach($divisions);
+        }
         return redirect()->back()->with('store',true);
     }
 
@@ -100,6 +108,8 @@ class UserController extends Controller
     {
         $userEdit = User::where('slug', $slug)->firstOrFail();
         $company = Company::orderBy('name','asc')->get();
+        $divisions = Division::byCompany(Auth::user()->company_id)->get();
+        $divisionsUser = $userEdit->divisions ? $userEdit->divisions->pluck('id')->toArray() : NULL ;
 
         $companyAccess = false;
         $roleAccess = false;
@@ -145,7 +155,7 @@ class UserController extends Controller
         }
 
 
-        return view('user.index', compact('userEdit','user','totalUser','role', 'company', 'companyAccess', 'roleAccess','users'));
+        return view('user.index', compact('userEdit','user','totalUser','role', 'company', 'companyAccess', 'roleAccess','users', 'divisions','divisionsUser'));
     }
 
     /**
@@ -156,17 +166,7 @@ class UserController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(UserRequest $request, User $user)
-    {
-        // $request->validate(
-        //     [
-        //     'email' => [
-        //         'required',
-        //         'email',
-        //         Rule::unique('users', 'email')->ignore($user->id),
-        //     ],
-        //     'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
-        // ]);
-
+    {        
         $user->name = $request->post('name');
         $user->email = $request->post('email');
         $user->phone = $request->post('phone');
@@ -177,6 +177,9 @@ class UserController extends Controller
         {
             $user->password = bcrypt($request->post('newPassword'));
         }
+
+        $divisions = $request->input('divisions');
+        $user->divisions()->sync($divisions);
 
         $user->save();
 

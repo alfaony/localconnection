@@ -23,6 +23,18 @@
                     <div class="dynamic-field card mb-3">
                         <div class="card-body">
                             <div class="form-group">
+                                <label for="assignment_user_id">Objective</label>
+                                @canAccess('getresult','objectives')
+                                <select name="objective[]" class="form-control objective-select select2" required>
+                                    <option selected disabled>Pilih Objective</option>
+                                    @foreach($objectives as $objective)
+                                        <option value="{{ $objective->id }}">{{ $objective->name }}</option>
+                                    @endforeach
+                                </select>
+                                @endcanAccess
+                            </div>
+                            <div id="keyresult-fields-container-0"></div>
+                            <div class="form-group">
                                 <label for="assignment_user_id">Tanggal</label>
                                 <div class="input-group">
                                     <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" required>
@@ -137,6 +149,31 @@
             }
         });
 
+
+        $('#dynamic-form-fields').on('change', '.objective-select', function() {
+            var objective = $(this).val();
+            var index = $(this).closest('.dynamic-field').index();
+            console.log(index);
+
+            if (objective) {
+                $.ajax({
+                    url: '{{ url('objective/getresult') }}/' + objective,
+                    data:
+                    {
+                        index:index
+                    },
+                    type: 'GET',
+                    success: function(data) 
+                    {
+                        $('#keyresult-fields-container-' + index).html(data);
+                        initializeSelect2ForContainer(index);
+                    }
+                });
+            } else {
+                $('#keyresult-fields-container-' + index).html('');
+            }
+        });
+
         $('.add-button').on('click', function() 
         {
             var indexKeys = generateRandomString(4);
@@ -145,6 +182,16 @@
             let fieldHTML = `
             <div class="dynamic-field card mb-3">
                     <div class="card-body">
+                        <div class="form-group">
+                                <label for="assignment_user_id">Objective</label>
+                                <select name="objective[]" class="form-control objective-select select3" required>
+                                    <option selected disabled>Pilih Objective</option>
+                                    @foreach($objectives as $objective)
+                                        <option value="{{ $objective->id }}">{{ $objective->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div id="keyresult-fields-container-${newIndex}"></div>
                         <div class="form-group">
                             <label for="assignment_user_id">Tanggal</label>
                             <div class="input-group">
@@ -307,6 +354,17 @@
     }
     .thriveEditor {
         height: 100px;
+    }
+    .select2-selection__choice
+    {
+        background-color: #007bff !important;
+        border: 1px solid #007bff !important;
+    }
+
+    .select2-selection__choice__remove
+    {
+        color: #fe0700 !important;
+        border: 1px solid #007bff !important;
     }
 </style>
 @endsection

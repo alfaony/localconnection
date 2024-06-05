@@ -27,6 +27,8 @@ use App\Models\DailyTaskExtend;
 use App\Models\DailyTaskMessage;
 use App\Models\DailyTaskProject;
 use App\Models\DailyTaskCustomFieldValue;
+use App\Models\Objective;
+
 
 
 class DailyTaskController extends Controller
@@ -131,8 +133,23 @@ class DailyTaskController extends Controller
         $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
         $types = DailyTaskType::get();
         $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
+        $objectives = Objective::byCompany(Auth::user()->company_id)->get();
+        $user = Auth::user(); // Get the current authenticated user
+        $divisionIds = $user->divisions->pluck('id');
 
-        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks', 'projects'));
+        if ($divisionIds->isEmpty()) {
+            // Handle the case where the user does not belong to any divisions
+            // You can return an empty collection or a message, or redirect
+            return redirect()->route('dailytask.index')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
+        } else {
+            // Proceed with fetching objectives related to the user's divisions
+            $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
+                $query->whereIn('id', $divisionIds);
+            })->get();
+        }
+
+
+        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks', 'projects', 'objectives'));
     }
 
     public function store(DailyTaskStoreRequest $request)
@@ -149,6 +166,8 @@ class DailyTaskController extends Controller
             $names = $request->name;
             $descriptions = $request->description ?? [];
 
+        $objectives = $request->objective ?? [];
+
             $doing = TaskStatus::where('name',ParamSchema::DOING)->firstOrFail();
 
             
@@ -162,10 +181,11 @@ class DailyTaskController extends Controller
                 $dailyTask->assignment_user_id = $assignmentUserIds[$i];
                 $dailyTask->daily_task_category_id = $this->manageCategory($categoryIds[$i]);
                 $dailyTask->daily_task_type_id = $typeIds[$i];
-                $dailyTask->daily_task_project_id = $projectIds[$i];
+                $dailyTask->daily_task_project_id = $projectIds[$i] ?? NULL;
                 $dailyTask->name = $names[$i];
                 $dailyTask->description = $descriptions[$i] ?? null;
                 $dailyTask->point = 0; // Assuming default value is 0
+                $dailyTask->objective_id = $objectives[$i] ?? NULL;
                 $dailyTask->save();
 
                 // Menyimpan custom_field
@@ -190,6 +210,12 @@ class DailyTaskController extends Controller
                             ]);
                         }
                     }
+                }
+
+                $keyResults = $request->input('key_result_' . $i);
+                if (!empty($keyResults)) 
+                {
+                    $dailyTask->keyResults()->attach($keyResults);
                 }
 
                 $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
@@ -233,9 +259,22 @@ class DailyTaskController extends Controller
         $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
         $types = DailyTaskType::get();
         $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
+        $user = Auth::user(); // Get the current authenticated user
+        $divisionIds = $user->divisions->pluck('id');
+
+        if ($divisionIds->isEmpty()) {
+            // Handle the case where the user does not belong to any divisions
+            // You can return an empty collection or a message, or redirect
+            return redirect()->route('dailytask.index')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
+        } else {
+            // Proceed with fetching objectives related to the user's divisions
+            $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
+                $query->whereIn('id', $divisionIds);
+            })->get();
+        }
 
 
-        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects'));
+        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives'));
 
     }
 
@@ -282,7 +321,10 @@ class DailyTaskController extends Controller
                     }
                 }
             }
-    
+
+            $keyResults = $request->input('key_result_0');
+            $dailyTask->keyResults()->sync($keyResults);
+
             $this->message($dailyTask->id,'edit','Mengubah Task '.$dailyTask->name);
 
             DB::commit();
@@ -551,17 +593,34 @@ class DailyTaskController extends Controller
     
     
             // Duplicate Custom Field
-            if ($dailyTaskHead->customFieldValues->count() > 0)
-            {
-                foreach ($dailyTaskHead->customFieldValues as $customFieldValue) {
-                    DailyTaskCustomFieldValue::create([
-                        'daily_task_id' => $dailyTask->id,
-                        'custom_field_id' => $customFieldValue->custom_field_id,
-                        'custom_field_value_id' => $customFieldValue->custom_field_value_id,
-                    ]);
+            if (isset($request->custom_field_values)) {
+                foreach ($request->custom_field_values as $customFieldId => $customFieldValueId) {
+                    if(is_array($customFieldValueId))
+                    {
+                        // 
+                        foreach($customFieldValueId as $valueId)
+                        {
+                            DailyTaskCustomFieldValue::create([
+                                'daily_task_id' => $dailyTask->id,
+                                'custom_field_id' => $customFieldId,
+                                'custom_field_value_id' => $valueId,
+                            ]);
+                        }
+                    }else{
+                        DailyTaskCustomFieldValue::create([
+                            'daily_task_id' => $dailyTask->id,
+                            'custom_field_id' => $customFieldId,
+                            'custom_field_value_id' => $customFieldValueId,
+                        ]);
+                    }
                 }
             }
-    
+
+            foreach ($dailyTaskHead->keyResults as $okr) 
+            {
+                $dailyTask->keyResults()->attach($okr->id);
+            }
+
             $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
             
             DB::commit();
@@ -569,6 +628,7 @@ class DailyTaskController extends Controller
         } catch (\Throwable $th) 
         {
             //throw $th;
+            // dd($th);
             DB::rollback();
             Log::error($th->getMessage());
             
