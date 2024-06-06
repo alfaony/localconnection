@@ -676,8 +676,7 @@ class DailyTaskController extends Controller
 
         $this->message($dailyTask->id,'report','Tugas '.$dailyTask->name.' dikerjakan');
         $this->statusrecord($dailyTask, $doing);
-        return redirect()->route('dailytask.show', $dailyTask->slug)->with('Working', false);
-
+        return redirect()->route('dailytask.show', $dailyTask->slug)->with('Working', true);
     }
 
     protected function message($dailyTaskId, $template, $message, $filePath = null)
