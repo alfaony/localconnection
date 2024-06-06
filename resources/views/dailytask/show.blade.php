@@ -9,7 +9,7 @@
 @section('content')
 
         <!-- Alert Messages -->
-        @foreach (['report', 'deletemedia', 'updatemedia', 'approvement', 'extend', 'comment', 'Subtask'] as $msg)
+        @foreach (['report', 'deletemedia', 'updatemedia', 'approvement', 'extend', 'comment', 'Subtask','Working'] as $msg)
             @if(Session::get($msg))
                 <div class="alert alert-success mt-3">{{ ucfirst($msg) }} Berhasil</div>
             @endif
@@ -110,6 +110,9 @@
                         <div class="col-sm-8">
                             <p class="form-control-plaintext">
                                 @switch($dailytask->taskStatus->name)
+                                    @case('todo')
+                                        <i class="fa fa-list-alt"></i> Todo
+                                        @break
                                     @case('doing')
                                         <i class="fa fa-hourglass-start"></i> Doing
                                         @break
@@ -209,7 +212,7 @@
                         </div>
                     </div>
                     @endif
-
+                                            
                     @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::DOING)
                         @canAccess('extend','dailytasks')
                             <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#extendTaskModal">
@@ -222,6 +225,16 @@
 
                 <!-- Right Column -->
                 <div class="col-md-5">
+                    @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::TODO || $dailytask->taskStatus->name == \App\Schemas\ParamSchema::NOTCOMPLATE )                    
+                        <h6>Tugas</h6>
+                        <form action="{{ route('dailytask.statuschange',$dailytask->slug) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="task_status" value="{{ $doing->id }}"> <!-- Replace 1 with the actual task ID -->
+                            <button type="submit" class="btn btn-success">Mulai Pekerjaan</button>
+                        </form>
+                    @endif
+                    
                     @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::DOING)
                         @canAccess('report','dailytasks')
                             <h6>Laporan Tugas</h6>
@@ -241,7 +254,7 @@
                         @endcanAccess
                     @endif
 
-                    @if($dailytask->taskStatus->name != \App\Schemas\ParamSchema::DOING)
+                    @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::INREVIEW)
                         <h6>Laporan Catatan dan Media</h6>
                         @if($dailytask->report_note)
                             <div class="form-group">
@@ -312,10 +325,18 @@
                             @csrf
                             @method('PUT')
                             <div class="form-group">
-                                <label for="point">Poin</label>
-                                <input type="number" name="point" class="form-control" value="{{ $dailytask->point }}" required>
+                                <label for="point">Status Tugas</label>
+                                <select name="task_status" id="" class="form-control select2" required>
+                                    @foreach($approvement as $a)
+                                        <option value="{{ $a->id }}">{{ ucfirst($a->name) }}</option>
+                                    @endforeach
+                                </select>
                             </div>
-                            <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure?')">Selesaikan Tugas</button>
+                            <div class="form-group">
+                                <label for="point">Poin</label>
+                                <input type="number" name="point" class="form-control" value="{{ $dailytask->point }}">
+                            </div>
+                            <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure?')">Tugas</button>
                         </form>
                         @endcanAccess
                     @elseif($dailytask->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE)
@@ -406,6 +427,9 @@
                                     </span>
                                     <span>
                                         @switch($subTask->taskStatus->name)
+                                             @case('todo')
+                                            <i class="fa fa-list-alt"></i>
+                                            @break
                                             @case('doing')
                                                 <i class="fa fa-hourglass-start"></i>
                                                 @break
@@ -448,47 +472,105 @@
         <div class="col-md-6 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">Komentar Aktifitas</h6>
+                    <h6 class="mb-0">Aktifitas</h6>
                 </div>
                 <div class="card-body">
-                @if($dailytask->taskStatus->name != \App\Schemas\ParamSchema::COMPLATE)
-                    @canAccess('comment','dailytasks')
-                    <form id="commentForm" action="{{ route('dailytask.comment', $dailytask->slug) }}" method="POST"  enctype="multipart/form-data">
-                        @csrf
-                        @method('PUT')
-                        <div class="form-group">
-                            <label for="comment">Komentar</label>
-                            <input type="text" name="message" class="form-control thriveEditor" id="description_message" data-ids="message">
-                        </div>
-                        <div class="form-group">
-                            <label for="comment">Upload File</label>
-                            <input type="file" id="mediaComment" name="file_path" class="form-control">
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-sm"> <i class="fa fa-plus"></i> Komentar</button>
-                    </form>
-                    @endcanAccess
-                @endif
+                    @if($dailytask->taskStatus->name != \App\Schemas\ParamSchema::COMPLATE)
+                        @canAccess('comment','dailytasks')
+                        <form id="commentForm" action="{{ route('dailytask.comment', $dailytask->slug) }}" method="POST"  enctype="multipart/form-data">
+                            @csrf
+                            @method('PUT')
+                            <div class="form-group">
+                                <label for="comment">Komentar</label>
+                                <input type="text" name="message" class="form-control thriveEditor" id="description_message" data-ids="message">
+                            </div>
+                            <div class="form-group">
+                                <label for="comment">Upload File</label>
+                                <input type="file" id="mediaComment" name="file_path" class="form-control">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm"> <i class="fa fa-plus"></i> Komentar</button>
+                        </form>
+                        @endcanAccess
+                    @endif
                 
                     <!-- Comment List -->
-                    <h6 class="mt-4">Riwayat Aktifitas</h6>
-                    <div style="max-height: 50vh; overflow-y: auto;">
-                        @foreach($dailytask->message as $comment)
-                            <div class="media mb-3">
-                                {{-- <img src="{{ $comment->user->profile_image_url ?? 'https://via.placeholder.com/50' }}" class="mr-3" alt="User Image"> --}}
-                                <div class="media-body">
-                                    <h6 class="mt-0"> {{ $comment->user ? $comment->user->name : '-' }}</h6>
-                                    {!! $comment->message !!}
-                                    <small class="text-muted">Posted on: {{ $comment->created_at->format('d-m-Y') }}</small>
-                                    @if($comment->file_path)
-                                        <div class="mt-2">
-                                            <a href="{{ asset('storage/' . $comment->file_path) }}" target="_blank" class="btn btn-primary btn-sm">
-                                                <i class="fa fa-download"></i> Download Attachment
-                                            </a>
+                    <ul class="nav nav-tabs mt-3" id="taskTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="comments-tab" data-toggle="tab" href="#comments" role="tab" aria-controls="comments" aria-selected="true">Komentar Aktifitas</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="status-tab" data-toggle="tab" href="#status" role="tab" aria-controls="status" aria-selected="false">Riwayat Timeline</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content mt-3">
+                        <!-- Komentar Aktifitas Tab -->
+                        <div class="tab-pane fade show active" id="comments" role="tabpanel" aria-labelledby="comments-tab">
+                            <h6 class="mt-4">Riwayat Aktifitas</h6>
+                            <div style="max-height: 50vh; overflow-y: auto;">
+                                @foreach($dailytask->message as $comment)
+                                    <div class="media mb-3">
+                                        {{-- <img src="{{ $comment->user->profile_image_url ?? 'https://via.placeholder.com/50' }}" class="mr-3" alt="User Image"> --}}
+                                        <div class="media-body">
+                                            <h6 class="mt-0"> {{ $comment->user ? $comment->user->name : '-' }}</h6>
+                                            {!! $comment->message !!}
+                                            <small class="text-muted">Posted on: {{ $comment->created_at->format('d-m-Y') }}</small>
+                                            @if($comment->file_path)
+                                                <div class="mt-2">
+                                                    <a href="{{ asset('storage/' . $comment->file_path) }}" target="_blank" class="btn btn-primary btn-sm">
+                                                        <i class="fa fa-download"></i> Download Attachment
+                                                    </a>
+                                                </div>
+                                            @endif
                                         </div>
-                                    @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <!-- Riwayat Status Tab -->
+                        <div class="tab-pane fade" id="status" role="tabpanel" aria-labelledby="status-tab">
+                            <div class="card-body" style="max-height: 50vh; overflow-y: auto;">
+                                <div class="timeline">
+                                    @foreach ($dailytask->statusRecords as $index => $record)
+                                        <div class="timeline-item">
+                                            <div class="timeline-icon">
+                                                @switch($record->taskStatus->name)
+                                                    @case('todo')
+                                                        <i class="fa fa-list"></i>
+                                                        @break
+                                                    @case('doing')
+                                                        <i class="fa fa-hourglass-start"></i>
+                                                        @break
+                                                    @case('in review')
+                                                        <i class="fa fa-eye" style="color: green;"></i>
+                                                        @break
+                                                    @case('not complete')
+                                                        <i class="fa fa-times-circle" style="color: red;"></i>
+                                                        @break
+                                                    @case('complete')
+                                                        <i class="fa fa-check" style="color: green;"></i>
+                                                        @break
+                                                    @default
+                                                        <i class="fa fa-info-circle"></i>
+                                                @endswitch
+                                            </div>
+                                            <div class="timeline-content">
+                                                <h5>{{ ucfirst($record->taskStatus->name) }}</h5>
+                                                <p>
+                                                    @if ($index > 0)
+                                                        @php
+                                                            $previousRecord = $dailytask->statusRecords[$index - 1];
+                                                            $timeDiff = $record->created_at->diffForHumans($previousRecord->created_at, true);
+                                                        @endphp
+                                                        <span> {{ $previousRecord->taskStatus->name }} </span>
+                                                        <span class="text-muted">{{ $timeDiff }}</span>
+                                                    @endif
+                                                </p>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
-                        @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
@@ -916,6 +998,69 @@ $(document).ready(function() {
     {
         color: #fe0700 !important;
         border: 1px solid #007bff !important;
+    }
+</style>
+<style>
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+        list-style: none;
+    }
+    .timeline:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #c5c5c5;
+        left: 20px;
+        margin-right: -1.5px;
+    }
+    .timeline-item {
+        margin: 0 0 20px;
+        padding-left: 40px;
+        position: relative;
+    }
+    .timeline-item:before {
+        content: "";
+        display: table;
+    }
+    .timeline-item:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+    .timeline-icon {
+        position: absolute;
+        left: 10px;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #f4f4f4;
+        border: 0px solid #c5c5c5;
+        text-align: center;
+        line-height: 12px;
+    }
+    .timeline-icon i {
+        font-size: 12px;
+        line-height: 12px;
+        margin-top: 4px;
+    }
+    .timeline-content {
+        position: relative;
+        padding: 10px 15px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .timeline-content h5 {
+        margin-top: 0;
+        color: #333;
+    }
+    .timeline-content p {
+        margin: 0;
+        font-size: 14px;
     }
 </style>
 @endsection

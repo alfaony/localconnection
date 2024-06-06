@@ -103,7 +103,7 @@ class DailyTask extends Model
     
     public function project()
     {
-        return $this->belongsTo(DailyTaskProject::class, 'daily_task_project_id');
+        return $this->belongsTo(DailyTaskProject::class, 'daily_task_project_id')->withTrashed();;
     }
     
     public function customFieldValues()
@@ -114,6 +114,11 @@ class DailyTask extends Model
     public function keyResults()
     {
         return $this->belongsToMany(ObjectiveKeyResult::class);
+    }
+
+    public function statusRecords()
+    {
+        return $this->hasMany(DailyTaskStatusRecord::class);
     }
 
     public function isOverdue()

@@ -188,6 +188,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('division', DivisionController::class);
 });
 
+Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

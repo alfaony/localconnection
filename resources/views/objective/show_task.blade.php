@@ -62,7 +62,7 @@
                                 <tr>
                                     <td>
                                         @canAccess('show','dailytasks')
-                                        <a href="{{ route('dailytask.show', $task->slug) }}" class="btn btn-info badge-pill badge-light">{{ $task->name }}</a>
+                                        <a href="{{ route('dailytask.show', $task->slug) }}" class="btn btn-info badge-light">{{ $task->name }}</a>
                                         @endcanAccess
                                     </td>
                                     <td>{{ $task->assign->name }}</td>
@@ -73,6 +73,9 @@
                                     </td>
                                     <td>
                                     @switch($task->taskStatus->name)
+                                        @case('todo')
+                                            <i class="fa fa-list-alt"></i> Todo
+                                            @break
                                         @case('doing')
                                             <i class="fa fa-hourglass-start"></i>
                                             @break

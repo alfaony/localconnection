@@ -99,6 +99,9 @@
                         </td>
                         <td>
                         @switch($dailytask->taskStatus->name)
+                            @case('todo')
+                                <i class="fa fa-list-alt"></i> Todo
+                                @break
                             @case('doing')
                                 <i class="fa fa-hourglass-start"></i> Doing
                                 @break

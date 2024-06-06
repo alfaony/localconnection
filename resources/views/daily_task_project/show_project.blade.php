@@ -49,13 +49,13 @@
                     <table class="table table-bordered table-responsive-sm">
                         <thead>
                             <tr>
-                                <th class="col-2">Nama Tugas</th>
+                                <th class="col-4">Nama Tugas</th>
                                 <th class="col-2">Dibuat</th>
                                 <th class="col-2">Ditugaskan</th>
                                 <th class="col-2">Tanggal</th>
                                 <th class="col-1">Status</th>
                                 @foreach($customFields as $field)
-                                    <th class="col-3">{{ $field->name }}</th>
+                                    <th class="col-2">{{ $field->name }}</th>
                                 @endforeach
                             </tr>
                         </thead>
@@ -64,7 +64,7 @@
                                 <tr>
                                     <td>
                                         @canAccess('show','dailytasks')
-                                        <a href="{{ route('dailytask.show', $task->slug) }}" class="btn btn-info badge-pill badge-light">{{ $task->name }}</a>
+                                        <a href="{{ route('dailytask.show', $task->slug) }}" class="btn btn-info badge-light">{{ $task->name }}</a>
                                         @endcanAccess
                                     </td>
                                     <td>{{ $task->user->name }}</td>
@@ -76,6 +76,9 @@
                                     </td>
                                     <td>
                                     @switch($task->taskStatus->name)
+                                        @case('todo')
+                                            <i class="fa fa-list-alt"></i> Todo
+                                            @break
                                         @case('doing')
                                             <i class="fa fa-hourglass-start"></i>
                                             @break

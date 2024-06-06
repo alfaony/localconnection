@@ -28,6 +28,7 @@ use App\Models\DailyTaskMessage;
 use App\Models\DailyTaskProject;
 use App\Models\DailyTaskCustomFieldValue;
 use App\Models\Objective;
+use App\Models\DailyTaskStatusRecord;
 
 
 
@@ -52,7 +53,7 @@ class DailyTaskController extends Controller
         {
             $query->whereHas('taskStatus', function ($query)
             {
-                $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW);
+                $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO);
             })
             ;
         }
@@ -168,7 +169,7 @@ class DailyTaskController extends Controller
 
         $objectives = $request->objective ?? [];
 
-            $doing = TaskStatus::where('name',ParamSchema::DOING)->firstOrFail();
+            $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
 
             
             for ($i = 0; $i < count($names); $i++)
@@ -219,6 +220,8 @@ class DailyTaskController extends Controller
                 }
 
                 $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
+                $this->statusrecord($dailyTask, $doing);
+
             }
 
             
@@ -239,6 +242,9 @@ class DailyTaskController extends Controller
     public function show($slug)
     {
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+        $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+
+        $approvement = TaskStatus::where('name',ParamSchema::COMPLATE)->orWhere('name',ParamSchema::NOTCOMPLATE)->get();
 
         $showProject = Access::can('showproject','daily_task_projects');
 
@@ -248,7 +254,7 @@ class DailyTaskController extends Controller
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
 
         
-        return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject'));
+        return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement'));
     }
 
     public function edit($slug)
@@ -357,10 +363,10 @@ class DailyTaskController extends Controller
         DB::beginTransaction();
         try {
             $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-            $inReview = TaskStatus::where('name', ParamSchema::INREVIEW)->firstOrFail()->id;
+            $inReview = TaskStatus::where('name', ParamSchema::INREVIEW)->firstOrFail();
 
             $dailytask->report_note = $request->note;
-            $dailytask->task_status_id = $inReview;
+            $dailytask->task_status_id = $inReview->id;
 
             if ($request->hasFile('media')) {
                 foreach ($request->file('media') as $file) {
@@ -391,6 +397,7 @@ class DailyTaskController extends Controller
             $dailytask->status_submit = ($submitDate->lessThanOrEqualTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
 
             $this->message($dailytask->id, 'report', ' Membuat Laporan Tugas ' . $dailytask->name);
+            $this->statusrecord($dailytask, $inReview);
             $dailytask->save();
 
             if ($dailytask->type->name == ParamSchema::RECURRING) 
@@ -469,20 +476,40 @@ class DailyTaskController extends Controller
     {
         $request->validate(
         [
-            'point' => 'required|integer',
+            'point' => 'nullable|integer',
+            'task_status' => 'required|exists:task_statuses,id',
         ]);
-        $complete = TaskStatus::where('name',ParamSchema::COMPLATE)->firstOrFail()->id;
+        
+        $taskStatuss = TaskStatus::find($request->task_status);
 
         DB::beginTransaction();
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         try {
             //code...
             $dailytask->point = $request->point;
-            $dailytask->task_status_id = $complete;
-            $dailytask->approved = TRUE;
-            $dailytask->save();
+            $dailytask->task_status_id = $taskStatuss->id;
+            $dailytask->approved = $taskStatuss->name == ParamSchema::COMPLATE ? TRUE : FALSE;
             
-            $this->message($dailytask->id,'approvement','Membuat Persetujuan Tugas '.$dailytask->name);
+            $taskStatuss->name == ParamSchema::COMPLATE ? $this->message($dailytask->id,'approvement','Membuat Persetujuan Tugas '.$dailytask->name) : $this->message($dailytask->id,'reject','Membuat Penolakan Tugas '.$dailytask->name);
+            $this->statusrecord($dailytask, $taskStatuss);
+
+            if($taskStatuss->name == ParamSchema::NOTCOMPLATE)
+            {
+                $dailytask->report_note = NULL;
+                $dailytask->submit = NULL;
+                $dailytask->status_submit = NULL;
+                
+
+                if ($dailytask->media()->exists()) 
+                {
+                    foreach ($dailytask->media as $media) {
+                        $media->delete(); // This will also remove the file from storage due to the boot method in the Media model
+                    }
+                }
+            }
+
+            $dailytask->save();
+
             DB::commit();
             return redirect()->route('dailytask.show', $dailytask->slug)->with('approvement', true);
         } catch (\Throwable $th) {
@@ -572,7 +599,7 @@ class DailyTaskController extends Controller
     public function storesubtask(DailyTaskSubTaskRequest $request,$slug)
     {
         $dailyTaskHead = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
-        $doing = TaskStatus::where('name',ParamSchema::DOING)->firstOrFail();
+        $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
 
         DB::beginTransaction();
         try {
@@ -622,6 +649,8 @@ class DailyTaskController extends Controller
             }
 
             $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
+            $this->statusrecord($dailyTask, $doing);
+
             
             DB::commit();
             return redirect()->route('dailytask.show', $dailyTaskHead->slug)->with('Subtask', true);
@@ -634,6 +663,20 @@ class DailyTaskController extends Controller
             
             return redirect()->route('dailytask.show', $dailyTaskHead->slug)->with('Subtask', false);
         }
+
+    }
+
+    public function statuschange(Request $request,$slug)
+    {
+        $dailyTask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+        $doing = TaskStatus::where('name',ParamSchema::DOING)->firstOrFail();
+        $dailyTask->task_status_id = $doing->id;
+        
+        $dailyTask->save();
+
+        $this->message($dailyTask->id,'report','Tugas '.$dailyTask->name.' dikerjakan');
+        $this->statusrecord($dailyTask, $doing);
+        return redirect()->route('dailytask.show', $dailyTask->slug)->with('Working', false);
 
     }
 
@@ -696,11 +739,23 @@ class DailyTaskController extends Controller
                 </div>
                 ';
                 break;
+
+            case 'reject':
+                $message = 
+                '
+                <div class="alert alert-secondary d-flex align-items-center" role="alert" style="background-color: #e2e3e5; border-color: #ae2121; color: #ae2121;">
+                    <i class="fa fa-times-circle mr-2" style="color: #ae2121;"></i>
+                    <div>
+                        '.$message.'
+                    </div>
+                </div>
+                ';
+                break;
             default:
                 $message = 
                 '
                 <div class="alert alert-secondary d-flex align-items-center" role="alert" style="background-color: #e2e3e5; border-color: #383d41; color: #383d41;">
-                    <i class="fa fa-clock mr-2" style="color: #383d41;"></i>
+                    <i class="fa fa-comment mr-2" style="color: #383d41;"></i>
                     <div>
                         '.$message.'
                     </div>
@@ -715,6 +770,17 @@ class DailyTaskController extends Controller
         $dailyTaskMessage->message = $message;
         $dailyTaskMessage->file_path = $filePath ?? NULL;
         $dailyTaskMessage->save();
+
+        return true;
+    }   
+
+    protected function statusrecord($dailyTask, $status)
+    {
+        DailyTaskStatusRecord::create([
+            'daily_task_id' => $dailyTask->id,
+            'task_status_id' => $status->id,
+            'date' => now(),
+        ]);
 
         return true;
     }
