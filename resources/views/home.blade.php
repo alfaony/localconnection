@@ -99,7 +99,7 @@
                         </div>
                         <div class="col-md-12 mt-2">
                             <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Cari</button>
-                            <button type="button" onclick="window.location.href='{{ route('home') }}'" class="btn btn-secondary"><i class="fa fa-times"></i> Tampilkan Semua</button>
+                            <button type="button" onclick="window.location.href='{{ route('home') }}'" class="btn btn-secondary"><i class="fa fa-times"></i> Reset</button>
                         </div>
                     </div>
                 </form>
@@ -148,7 +148,71 @@
                 </div>
             </div>
         </div>
-        
+        <div class="row">
+            <!-- Todo Card -->
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-left-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title">Todo</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Jumlah Task: {{ $dailyTaskTodoCount }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Doing Card -->
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-left-info">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title">Doing</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Jumlah Task: {{ $dailyTasDoingCount }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- In Review Card -->
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-left-warning">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="card-title">In Review</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Jumlah Task: {{ $dailyTaskInreviewCount }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Complete Card -->
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-left-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title">Complete</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Jumlah Task: {{ $dailyTaskCompleteCount }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Not Complete Card -->
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-left-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="card-title">Not Complete</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Jumlah Task: {{ $dailyTaskNotComplateCount }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card py-3">
+    <div class="card-body">
         <div class="row">
             <div class="col-md-3">
                 <div class="card bg-light mb-3">
@@ -166,7 +230,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card bg-light mb-3">
                     <div class="card-header text-green">Jumlah Tugas Mendatang</div>
                     <div class="card-body">
@@ -177,6 +241,8 @@
         </div>
     </div>
 </div>
+
+
 @endcanAccess
 
 
@@ -241,4 +307,5 @@
         font-weight: bold;
     }
 </style>
+
 @endsection

@@ -65,7 +65,12 @@ class HomeController extends Controller
 
         $startDate = Carbon::now()->startOfMonth();
         $endDate = Carbon::now()->endOfMonth();
+        
+        $todo = TaskStatus::select('id')->where('name',ParamSchema::TODO)->firstOrFail()->id;
+        $doing = TaskStatus::select('id')->where('name',ParamSchema::DOING)->firstOrFail()->id;
+        $inReivew = TaskStatus::select('id')->where('name',ParamSchema::INREVIEW)->firstOrFail()->id;
         $complate = TaskStatus::select('id')->where('name',ParamSchema::COMPLATE)->firstOrFail()->id;
+        $notComplate = TaskStatus::select('id')->where('name',ParamSchema::NOTCOMPLATE)->firstOrFail()->id;
 
         // Retrieve the date range from the request if provided
         if ($request->has('start_date')) {
@@ -88,11 +93,16 @@ class HomeController extends Controller
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('points');
         
-        $dailyTask = DailyTask::where('assignment_user_id', Auth::user()->id)
-            ->whereBetween('submit', [$startDate, $endDate]);
+        $dailyTask = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate]);
 
         $dailyTaskPoints = $dailyTask->where('task_status_id', $complate)->sum('point');
+        
+        $dailyTaskTodoCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $todo)->count();
+        $dailyTasDoingCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $doing)->count();
+        $dailyTaskInreviewCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $inReivew)->count();
+        $dailyTaskNotComplateCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $notComplate)->count();
         $dailyTaskCompleteCount = $dailyTask->where('task_status_id', $complate)->count();
+
 
         $dailyTaskCountOverdue = DailyTask::where('assignment_user_id', Auth::user()->id)
         ->whereHas('taskStatus', function ($query)
@@ -117,6 +127,6 @@ class HomeController extends Controller
         
 
 
-        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday'));
+        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday', 'dailyTaskTodoCount', 'dailyTasDoingCount', 'dailyTaskInreviewCount', 'dailyTaskNotComplateCount'));
     }
 }
