@@ -88,7 +88,8 @@
                             <label for="submit_date" class="col-sm-4 col-form-label">Tanggal Submit:</label>
                             <div class="col-sm-8">
                                 <p class="form-control-plaintext {{ $dailytask->status_submit == 'late' ? 'text-danger' : 'text-success' }}">
-                                    {{ \Carbon\Carbon::parse($dailytask->submit)->format('d-m-Y') }}
+                                    {{ \Carbon\Carbon::parse($dailytask->submit)->format('d-m-Y') }} 
+                                    {{ $dailytask->date_range_submit }}
                                 </p>
                             </div>
                         </div>

@@ -116,11 +116,33 @@ class DailyTask extends Model
         return $this->belongsToMany(ObjectiveKeyResult::class);
     }
 
+    
     public function statusRecords()
     {
         return $this->hasMany(DailyTaskStatusRecord::class);
     }
 
+    public function getDateRangeSubmitAttribute()
+    {
+        if ($this->submit && $this->start_date) {
+            $startDate = Carbon::parse($this->start_date);
+            $submitDate = Carbon::parse($this->submit);
+            $endDate = Carbon::parse($this->end_date);
+
+            if ($submitDate < $startDate) {
+                $days = $startDate->diffInDays($submitDate);
+                return "Kurang {$days} Hari";
+            } elseif ($submitDate <= $endDate) {
+                $days = $startDate->diffInDays($submitDate) + 1;
+                return "{$days} Hari";
+            } else {
+                $days = $submitDate->diffInDays($startDate) + 1;
+                return "Terlambat {$days} Hari";
+            }
+        }
+        return "Tanggal tidak lengkap";
+    }
+    
     public function isOverdue()
     {
         $startDate = Carbon::parse($this->start_date);
