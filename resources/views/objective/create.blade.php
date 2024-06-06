@@ -11,12 +11,35 @@
             {{ session('success') }}
         </div>
     @endif
+    @if(session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <form method="POST" action="{{ route('objective.store') }}">
         @csrf
         <div id="custom-fields-container">
             <div class="custom-field card mb-3">
                 <div class="card-body">
                     <div class="form-row">
+                        <div class="col-md-12 mb-3">
+                            <label for="custom_field_name">Misi</label>
+                            <select class="form-control custom-field-type" name="mission_id[]" required>
+                                <option selected disabled>-- Pilih Misi --</option>
+                                @foreach ($missions as $mission)
+                                    <option value="{{ $mission->id }}">{{ $mission->mission }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div class="col-md-8 mb-3">
                             <label for="custom_field_name">Objective</label>
                             <input type="text" class="form-control custom-field-name" name="objective_name[]" required>
@@ -72,6 +95,15 @@
             <div class="custom-field card mb-3">
                 <div class="card-body">
                 <div class="form-row">
+                    <div class="col-md-12 mb-3">
+                        <label for="custom_field_name">Misi</label>
+                        <select class="form-control custom-field-type" name="mission_id[]" required>
+                            <option selected disabled>-- Pilih Misi --</option>
+                            @foreach ($missions as $mission)
+                                <option value="{{ $mission->id }}">{{ $mission->mission }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-md-8 mb-3">
                     <label for="custom_field_name">Nama Objective</label>
                     <input type="text" class="form-control custom-field-name" name="objective_name[]" required>

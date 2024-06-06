@@ -13,7 +13,7 @@ class Objective extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['id', 'division_id', 'name', 'user_id', 'start_date', 'end_date'];
+    protected $fillable = ['id', 'division_id','mission_id', 'name', 'user_id', 'start_date', 'end_date'];
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string

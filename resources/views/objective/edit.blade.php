@@ -27,6 +27,15 @@
             <div class="custom-field card mb-3">
                 <div class="card-body">
                     <div class="form-row">
+                        <div class="col-md-12 mb-3">
+                            <label for="custom_field_name">Misi</label>
+                            <select class="form-control custom-field-type" name="mission_id" required>
+                                <option selected disabled>-- Pilih Misi --</option>
+                                @foreach ($missions as $mission)
+                                    <option value="{{ $mission->id }}" {{ $objective->mission_id == $mission->id ? 'selected' : '' }}>{{ $mission->mission }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div class="col-md-8 mb-3">
                             <label for="custom_field_name">Objective</label>
                             <input type="text" class="form-control custom-field-name" name="objective_name" value="{{ $objective->name }}" required>

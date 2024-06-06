@@ -7,14 +7,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+use App\Http\Requests\ObjectiveStoreRequest;
+
 use App\Models\Objective;
 use App\Models\Division;
 use App\Models\DailyTask;
 use App\Models\User;
 use App\Models\ObjectiveKeyResult;
 use App\Models\TaskStatus;
-
-
+use App\Models\Mission;
 
 
 class ObjectiveController extends Controller
@@ -39,7 +40,9 @@ class ObjectiveController extends Controller
     public function create()
     {
         $divisions = Division::byCompany(Auth::user()->company_id)->get();
-        return view('objective.create', compact('divisions'));
+        $missions = Mission::where('company_id',Auth::user()->company_id)->get();
+
+        return view('objective.create', compact('divisions','missions'));
     }
 
     /**
@@ -48,17 +51,8 @@ class ObjectiveController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ObjectiveStoreRequest $request)
     {
-        // $request->validate([
-        //     'objective_name' => 'nullable|array',
-        //     'objective_name.*' => 'required_with:objective_name|string|max:255',
-        //     'division_id' => 'nullable|array',
-        //     'division_id.*' => 'required_with:objective_name|exists:divisions,id',
-        //     'custom_field_value' => 'nullable|array',
-        //     'custom_field_value.*' => 'required_with:custom_field_name|array',
-        //     'custom_field_value.*.*' => 'required_with:custom_field_name|string|max:255',
-        // ]);
         DB::beginTransaction();
         try {
             // dd($request->all());
@@ -67,6 +61,7 @@ class ObjectiveController extends Controller
                 // Create custom field
                 $objective = Objective::create([
                     'division_id' => $request->division_id[$index],
+                    'mission_id' => $request->mission_id[$index],
                     'user_id' => Auth::user()->id,
                     'start_date' => $request->start_date_objective[$index] ?? null,
                     'end_date' => $request->end_date_objective[$index] ?? null,
@@ -118,7 +113,9 @@ class ObjectiveController extends Controller
     {
         $objective = Objective::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $divisions = Division::byCompany(Auth::user()->company_id)->get();
-        return view('objective.edit', compact('divisions','objective'));
+        $missions = Mission::where('company_id',Auth::user()->company_id)->get();
+
+        return view('objective.edit', compact('divisions','objective', 'missions'));
     }
 
     /**
@@ -132,6 +129,7 @@ class ObjectiveController extends Controller
     {
         $request->validate([
             'division_id' => 'required|exists:divisions,id',
+            'mission_id' => 'required|exists:missions,id',
             'start_date_objective' => 'nullable|date',
             'end_date_objective' => 'nullable|date|after_or_equal:start_date_objective',
             'objective_name' => 'required|string|max:255',
@@ -148,6 +146,7 @@ class ObjectiveController extends Controller
             $objective = Objective::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             $objective->update([
                 'division_id' => $request->division_id,
+                'mission_id' => $request->mission_id,
                 'start_date' => $request->start_date_objective ?? null,
                 'end_date' => $request->end_date_objective ?? NULL,
                 'name' => $request->objective_name,

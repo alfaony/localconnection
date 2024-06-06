@@ -44,7 +44,8 @@ use App\Http\Controllers\DailyTaskController;
 use App\Http\Controllers\DailyTaskProjectController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\ObjectiveController;
-
+use App\Http\Controllers\VisionController;
+use App\Http\Controllers\MissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -187,6 +188,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('objective', ObjectiveController::class);
   Route::resource('division', DivisionController::class);
   Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
+  
+  Route::resource('vision', VisionController::class);
+  Route::resource('mission', MissionController::class)->except(['index', 'show', 'create', 'edit']);
 });
 
 
