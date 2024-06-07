@@ -46,6 +46,7 @@ use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\ObjectiveController;
 use App\Http\Controllers\VisionController;
 use App\Http\Controllers\MissionController;
+use App\Http\Controllers\ProjectDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,7 +68,6 @@ Auth::routes([
   ]);
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
 
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
@@ -165,6 +165,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   
   Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
 
+  Route::get('dailytask/projectdashboard', [ProjectDashboardController::class,'projectdashboard'])->name('project.projectdashboard');
   Route::put('dailytask/storesubtask/{slug}', [DailyTaskController::class,'storesubtask'])->name('dailytask.storesubtask');
   Route::put('dailytask/comment/{slug}', [DailyTaskController::class,'comment'])->name('dailytask.comment');
   Route::put('dailytask/extend/{slug}', [DailyTaskController::class,'extend'])->name('dailytask.extend');
@@ -192,6 +193,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('vision', VisionController::class);
   Route::resource('mission', MissionController::class)->except(['index', 'show', 'create', 'edit']);
 });
+
 
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');

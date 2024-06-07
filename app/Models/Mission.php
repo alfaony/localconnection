@@ -53,4 +53,9 @@ class Mission extends Model
     {
         return $this->belongsTo(Vision::class);
     }
+
+    public function objectives()
+    {
+        return $this->hasMany(Objective::class);
+    }
 }
