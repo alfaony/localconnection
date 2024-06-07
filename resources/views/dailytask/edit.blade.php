@@ -213,7 +213,7 @@
 <script>
     $(document).ready(function() {
         $('.select2').select2();
-        $('.selectEdit2').select2({tags:true});
+        $('.selectEdit2').select2();
 
         $('input[name="start_date"]').on('change', function() {
             var startDateValue = $(this).val(); // Ambil nilai dari startDate
