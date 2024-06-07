@@ -33,8 +33,8 @@
                     <div class="form-row">
                         <div class="col-md-12 mb-3">
                             <label for="custom_field_name">Misi</label>
-                            <select class="form-control custom-field-type" name="mission_id[]" required>
-                                <option selected disabled>-- Pilih Misi --</option>
+                            <select class="form-control custom-field-type select2" name="mission_id[]" required>
+                                <option value="" selected disabled>-- Pilih Misi --</option>
                                 @foreach ($missions as $mission)
                                     <option value="{{ $mission->id }}">{{ $mission->mission }}</option>
                                 @endforeach
@@ -85,8 +85,14 @@
 
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
+        $('.select2').select2({
+            placeholder: 'Pilih',
+            allowClear: true
+        });
+
         let customFieldIndex = 0;
 
         $('#add-custom-field').click(function() {
@@ -97,8 +103,8 @@
                 <div class="form-row">
                     <div class="col-md-12 mb-3">
                         <label for="custom_field_name">Misi</label>
-                        <select class="form-control custom-field-type" name="mission_id[]" required>
-                            <option selected disabled>-- Pilih Misi --</option>
+                        <select class="form-control custom-field-type select3" name="mission_id[]" required>
+                            <option value="" selected disabled>-- Pilih Misi --</option>
                             @foreach ($missions as $mission)
                                 <option value="{{ $mission->id }}">{{ $mission->mission }}</option>
                             @endforeach
@@ -143,6 +149,7 @@
             `;
             $('#custom-fields-container').append(customFieldTemplate);
             syncDates();
+            
         });
 
         $(document).on('click', '.add-custom-field-value', function() {
@@ -177,10 +184,63 @@
                 let startDateValue = $(this).val();
                 $(this).closest('.form-group').find('.end-date').val(startDateValue);
             });
+
+            $('.select3').select2({
+                placeholder: 'Pilih',
+                allowClear: true
+            });
+
         }
 
         syncDates(); // Initial call to setup the listeners
     });
 </script>
 
+@endsection
+@section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+    .card {
+        margin-bottom: 20px;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .input-group-text {
+        padding: 0 10px;
+    }
+    .remove-button {
+        padding: 0 10px;
+    }
+    .add-button {
+        margin-bottom: 20px;
+    }
+    .thriveEditor {
+        height: 100px;
+    }
+    .select2-selection__choice
+    {
+        background-color: #007bff !important;
+        border: 1px solid #007bff !important;
+    }
+
+    .select2-selection__choice__remove
+    {
+        color: #fe0700 !important;
+        border: 1px solid #007bff !important;
+    }
+</style>
 @endsection
