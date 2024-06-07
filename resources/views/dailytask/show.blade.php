@@ -347,7 +347,7 @@
                                 <label for="point">Poin</label>
                                 <input type="number" name="point" class="form-control" value="{{ $dailytask->point }}">
                             </div>
-                            <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure?')">Tugas</button>
+                            <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure?')">Simpan Tugas</button>
                         </form>
                         @endcanAccess
                     @elseif($dailytask->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE)

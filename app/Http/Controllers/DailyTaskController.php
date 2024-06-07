@@ -503,12 +503,12 @@ class DailyTaskController extends Controller
                 $dailytask->status_submit = NULL;
                 
 
-                if ($dailytask->media()->exists()) 
-                {
-                    foreach ($dailytask->media as $media) {
-                        $media->delete(); // This will also remove the file from storage due to the boot method in the Media model
-                    }
-                }
+                // if ($dailytask->media()->exists()) 
+                // {
+                //     foreach ($dailytask->media as $media) {
+                //         $media->delete(); // This will also remove the file from storage due to the boot method in the Media model
+                //     }
+                // }
             }
 
             $dailytask->save();
