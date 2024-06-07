@@ -3,15 +3,16 @@
 @section('title', 'Task Tracking')
 
 @section('content')
-<div class="card py-3 mt-3 ">
+<div class="card p-3 mt-3 ">
     <h2 class="card-body mb-4">Task Tracking</h2>
     <div class="accordion" id="visionAccordion">
         @foreach($visions as $vision)
-        <div class="card">
+        <div class="card m-3">
             <div class="card-header d-flex justify-content-between align-items-center" id="headingVision{{ $vision->id }}">
                 <h5 class="mb-0">
                     <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseVision{{ $vision->id }}" aria-expanded="true" aria-controls="collapseVision{{ $vision->id }}">
-                        Visi: {{ $vision->name }} ({{ $vision->missions->sum(function($mission) {
+                        Visi: {{ $vision->vision }} 
+                        ({{ $vision->missions->sum(function($mission) {
                             return $mission->objectives->sum(function($objective) {
                                 return $objective->keyResults->sum(function($keyResult) {
                                     return $keyResult->dailyTasks->count();
@@ -26,12 +27,13 @@
             <div id="collapseVision{{ $vision->id }}" class="collapse" aria-labelledby="headingVision{{ $vision->id }}" data-parent="#visionAccordion">
                 <div class="card-body">
                     <div class="accordion" id="missionAccordion{{ $vision->id }}">
+                        <h5 class="p-3">Misi</h5>
                         @foreach($vision->missions as $mission)
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center" id="headingMission{{ $mission->id }}">
                                 <h5 class="mb-0">
                                     <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseMission{{ $mission->id }}" aria-expanded="false" aria-controls="collapseMission{{ $mission->id }}">
-                                        Misi: {{ $mission->name }} ({{ $mission->objectives->sum(function($objective) {
+                                        {{ $mission->mission }} ({{ $mission->objectives->sum(function($objective) {
                                             return $objective->keyResults->sum(function($keyResult) {
                                                 return $keyResult->dailyTasks->count();
                                             });
@@ -42,13 +44,14 @@
                             </div>
                             <div id="collapseMission{{ $mission->id }}" class="collapse" aria-labelledby="headingMission{{ $mission->id }}" data-parent="#missionAccordion{{ $vision->id }}">
                                 <div class="card-body">
+                                    <h5 class="p-3">Objective</h5>
                                     <div class="accordion" id="objectiveAccordion{{ $mission->id }}">
                                         @foreach($mission->objectives as $objective)
                                         <div class="card">
                                             <div class="card-header d-flex justify-content-between align-items-center" id="headingObjective{{ $objective->id }}">
                                                 <h5 class="mb-0">
                                                     <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseObjective{{ $objective->id }}" aria-expanded="false" aria-controls="collapseObjective{{ $objective->id }}">
-                                                        Objective: {{ $objective->name }} ({{ $objective->keyResults->sum(function($keyResult) {
+                                                        {{ $objective->name }} ({{ $objective->keyResults->sum(function($keyResult) {
                                                             return $keyResult->dailyTasks->count();
                                                         }) }} Task)
                                                     </button>
@@ -57,13 +60,14 @@
                                             </div>
                                             <div id="collapseObjective{{ $objective->id }}" class="collapse" aria-labelledby="headingObjective{{ $objective->id }}" data-parent="#objectiveAccordion{{ $mission->id }}">
                                                 <div class="card-body">
+                                                    <h5 class="p-3" >Key Result</h5>
                                                     <div class="accordion" id="keyResultAccordion{{ $objective->id }}">
                                                         @foreach($objective->keyResults as $keyResult)
                                                         <div class="card">
                                                             <div class="card-header d-flex justify-content-between align-items-center" id="headingKeyResult{{ $keyResult->id }}">
                                                                 <h5 class="mb-0">
                                                                     <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseKeyResult{{ $keyResult->id }}" aria-expanded="false" aria-controls="collapseKeyResult{{ $keyResult->id }}">
-                                                                        Key Result: {{ $keyResult->name }} ({{ $keyResult->dailyTasks->count() }} Task)
+                                                                        {{ $keyResult->result }} ({{ $keyResult->dailyTasks->count() }} Task)
                                                                     </button>
                                                                 </h5>
                                                 
