@@ -27,5 +27,6 @@ class CallMenuProductivity extends Seeder
         $this->call(PermissionForMenuObjective::class);       
         $this->call(PermissionForDailyTaskStatusChange::class);       
         $this->call(PermissionForVisionAndMission::class);
+        $this->call(CategoryDailyTaskSeeder::class);
     }
 }

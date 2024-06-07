@@ -32,6 +32,11 @@ class Project extends Model
         $this->attributes['slug'] = $this->createUniqueSlug($value);
     }
 
+    public function dailyTaskProjects()
+    {
+        return $this->belongsToMany(DailyTaskProject::class);
+    }
+
     protected function createUniqueSlug($title)
     {
         $slug = Str::slug($title);

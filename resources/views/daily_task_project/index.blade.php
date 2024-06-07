@@ -1,80 +1,82 @@
 @extends('adminlte::page')
 
 @section('content_header')
-    <h2>Proyek Tugas Harian</h2>
+    <h2>Main Proyek Tugas Harian</h2>
 @stop
 
 @section('content')
-<div class="container-fluid p-3">
+<div class="card p-3">
 @if(session('success'))
     <div class="alert alert-success">
         {{ session('success') }}
     </div>
 @endif
-{{-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createModal"><i class="fa fa-plus"></i> Project</button>--}}
-@canAccess('create','daily_task_projects')
-<a class="btn btn-primary" href="{{ route('daily_task_project.create') }}"><i class="fa fa-plus"></i> Project</a>
-@endcanAccess
-<table class="table mt-3">
-    <thead>
-    <tr>
-        <th>Proyek</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach($projects as $project)
+<div class="card-bdoy">
+    {{-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createModal"><i class="fa fa-plus"></i> Project</button>--}}
+    @canAccess('create','daily_task_projects')
+    <a class="btn btn-primary" href="{{ route('daily_task_project.create') }}"><i class="fa fa-plus"></i> Main Project</a>
+    @endcanAccess
+    <table class="table mt-3">
+        <thead>
         <tr>
-            <td>{{ $project->name }}</td>
-            <td>
-                @canAccess('showproject','daily_task_projects')
-                <a href="{{ route('daily_task_project.showproject', $project->slug) }}" class="btn btn-sm btn-warning"><i class="fa fa-tasks"></i></a>
-                @endcanAccess
-                @canAccess('show','daily_task_projects')
-                <a href="{{ route('daily_task_project.show', $project->slug) }}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
-                @endcanAccess
-                @canAccess('edit','daily_task_projects')
-                <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#editModal{{ $project->slug }}" ><i class="fa fa-edit"></i></button>
-                @endcanAccess
-                @canAccess('destroy','daily_task_projects')
-                <form action="{{ route('daily_task_project.destroy', $project->slug) }}" method="POST" style="display:inline-block;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
-                </form>
-                @endcanAccess
-            </td>
+            <th>Proyek</th>
+            <th>Actions</th>
         </tr>
-
-        <!-- Edit Modal -->
-        <div class="modal fade" id="editModal{{ $project->slug }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editModalLabel">Edit Project</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form action="{{ route('daily_task_project.update', $project->slug) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="form-group">
-                                <label for="name">Name</label>
-                                <input type="text" class="form-control" name="name" value="{{ $project->name }}" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Update</button>
-                        </form>
+        </thead>
+        <tbody>
+        @foreach($projects as $project)
+            <tr>
+                <td>{{ $project->name }}</td>
+                <td>
+                    @canAccess('showproject','daily_task_projects')
+                    <a href="{{ route('daily_task_project.showproject', $project->slug) }}" class="btn btn-sm btn-warning"><i class="fa fa-tasks"></i></a>
+                    @endcanAccess
+                    @canAccess('show','daily_task_projects')
+                    <a href="{{ route('daily_task_project.show', $project->slug) }}" class="btn btn-sm btn-primary"><i class="fa fa-eye"></i></a>
+                    @endcanAccess
+                    @canAccess('edit','daily_task_projects')
+                    <a href="{{ route('daily_task_project.edit',$project->slug) }}" class="btn btn-info btn-sm" ><i class="fa fa-edit"></i></a>
+                    @endcanAccess
+                    @canAccess('destroy','daily_task_projects')
+                    <form action="{{ route('daily_task_project.destroy', $project->slug) }}" method="POST" style="display:inline-block;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
+                    </form>
+                    @endcanAccess
+                </td>
+            </tr>
+    
+            <!-- Edit Modal -->
+            <div class="modal fade" id="editModal{{ $project->slug }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editModalLabel">Edit Project</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="{{ route('daily_task_project.update', $project->slug) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <div class="form-group">
+                                    <label for="name">Name</label>
+                                    <input type="text" class="form-control" name="name" value="{{ $project->name }}" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    @endforeach
-    </tbody>
-</table>
-
-{{ $projects->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+        @endforeach
+        </tbody>
+    </table>
+    
+    {{ $projects->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+</div>
 
 <!-- Create Modal -->
 <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">

@@ -5,8 +5,8 @@
 @stop
 
 @section('content')
-<div class="container p-3">
-    <div class="col-md-12">
+<div class="card p-3">
+    <div class="card-body col-md-12">
         @if(Session::get('store'))
         <div class="alert alert-success mt-3">Tugas Berhasil Ditambahkan</div>
         @endif
@@ -27,7 +27,7 @@
     </div>
 
     @canAccess('create','dailytasks')
-    <a href="{{ route('dailytask.create') }}" class="btn btn-primary mb-3"><i class="fa fa-plus"></i><span> Tugas</span></a>
+    <a href="{{ route('dailytask.create') }}" class="btn btn-primary mb-3 col-md-2"><i class="fa fa-plus"></i><span> Tugas</span></a>
     @endcanAccess
     @canAccess('index','dailytasks')
     <form method="GET" action="{{ route('dailytask.index') }}" class="mb-3">
@@ -100,7 +100,7 @@
                         <td>
                         @switch($dailytask->taskStatus->name)
                             @case('todo')
-                                <i class="fa fa-list-alt"></i> Todo
+                                <i class="fa fa-list-alt"></i> Doing
                                 @break
                             @case('doing')
                                 <i class="fa fa-hourglass-start"></i> Doing

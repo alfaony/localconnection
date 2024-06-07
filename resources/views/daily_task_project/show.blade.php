@@ -8,7 +8,7 @@
         <li class="breadcrumb-item active" aria-current="page">{{ $project->name ?? '' }}</li>
     </ol>
 </nav>
-<div class="container p-3">
+<div class="card p-3">
     @if(session('success'))
         <div class="alert alert-success">
             {{ session('success') }}
@@ -19,12 +19,20 @@
             {{ session('error') }}
         </div>
     @endif
-    <div class="card mb-4">
+    <div class="card-body mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3>{{ $project->name }}</h3>
             @canAccess('customfieldstore','daily_task_projects')
             <button class="btn btn-primary" data-toggle="modal" data-target="#createCustomFieldModal"><i class="fa fa-plus"></i> Custom Field</button>
             @endcanAccess
+        </div>
+        <div class="card-body">
+            <h5>Proyek</h5>
+            <ul class="list-group mb-3">
+                @foreach($project->projects as $a)
+                    <li class="list-group-item">{{ $a->title }}</li>
+                @endforeach
+            </ul>
         </div>
         <div class="card-body">
             <h5>Custom Fields</h5>

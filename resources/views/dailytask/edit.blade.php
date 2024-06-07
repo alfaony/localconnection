@@ -12,102 +12,140 @@
         </div>
     @endif
 </div>
-<div class="container py-3">
-    <div class="card shadow-sm">
+
+    <div class="col-md-12">
+        @if(Session::get('store'))
+        <div class="alert alert-success mt-3">Tugas Berhasil Ditambahkan</div>
+        @endif
+        @if(Session::get('update'))
+        <div class="alert alert-success mt-3">Tugas Berhasil Diperbarui</div>
+        @endif
+        @if(Session::get('report'))
+        <div class="alert alert-success mt-3">Tugas Berhasil Ditambahkan</div>
+        @endif
+        @if(Session::get('delete'))
+        <div class="alert alert-success mt-3">Tugas Berhasil Terhapus</div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        @endif
+    </div>
+
+    <div class="card shadow-sm p-3 mt-3">
         <div class="card-body">
             <h2>Edit Tugas Harian</h2>
             <form action="{{ route('dailytask.update', $dailytask->slug) }}" method="POST">
                 @csrf
                 @method('PUT')
-                <div class="form-group">
-                    <label for="assignment_user_id">Objective</label>
-                    <select name="objective[]" id="objective_id" class="form-control objective-select select2" required>
-                        <option selected disabled>Pilih Objective</option>
-                        @foreach($objectives as $objective)
-                            <option value="{{ $objective->id }}" {{ $dailytask->objective_id == $objective->id ? 'selected' : ''}}>{{ $objective->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div id="keyresult-fields-container"></div>
-                <div class="form-group">
-                    <label for="assignment_user_id">Tanggal</label>
-                    <div class="input-group">
-                        <input type="date" class="form-control" name="start_date" placeholder="Mulai Tanggal" value="{{ $dailytask->start_date }}" required>
-                        <span class="input-group-text">hingga</span>
-                        <input type="date" class="form-control" name="end_date" placeholder="Sampai Tanggal" value="{{ $dailytask->end_date }}" required>
+
+                <div class="dynamic-field mb-3 shadow-sm">
+                    <!-- Objective and Project Section -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="objective_id">Objective</label>
+                                        <select name="objective[]" id="objective_id" class="form-control objective-select select2" required>
+                                            <option selected disabled>Pilih Objective</option>
+                                            @foreach($objectives as $objective)
+                                                <option value="{{ $objective->id }}" {{ $dailytask->objective_id == $objective->id ? 'selected' : ''}}>{{ $objective->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div id="keyresult-fields-container"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="project_id">Pilih Main Proyek</label>
+                                        @canAccess('getcustomfield','daily_task_projects')
+                                        <select id="project_id" name="project_id" class="form-control select2" onchange="loadCustomFields();">
+                                            <option selected disabled>Pilih Proyek</option>
+                                            @foreach($projects as $project)
+                                                <option value="{{ $project->id }}" {{ $dailytask->daily_task_project_id == $project->id ? 'selected' : '' }}>{{ $project->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @endcanAccess
+                                    </div>
+                                    <div id="custom-fields-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Task Details Section -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="start_date">Tanggal</label>
+                                        <div class="input-group">
+                                            <input type="date" class="form-control start-date" name="start_date" placeholder="Mulai Tanggal" value="{{ $dailytask->start_date }}" required>
+                                            <span class="input-group-text">hingga</span>
+                                            <input type="date" class="form-control end-date" name="end_date" placeholder="Sampai Tanggal" value="{{ $dailytask->end_date }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="assignment_user_id">Ditugaskan</label>
+                                        <select name="assignment_user_id" class="form-control select2" required>
+                                            <option selected disabled>Pilih Ditugaskan</option>
+                                            @foreach($users as $user)
+                                                <option value="{{ $user->id }}" {{ $dailytask->assignment_user_id == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="category_id">Kategori</label>
+                                        <select name="category_id" class="form-control selectEdit2" required>
+                                            <option selected disabled>Pilih Kategori</option>
+                                            @foreach($categories as $category)
+                                                <option value="{{ $category->id }}" {{ $dailytask->daily_task_category_id == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="type_id">Jenis</label>
+                                        <select name="type_id" class="form-control select2" required>
+                                            <option selected disabled>Pilih Tipe</option>
+                                            @foreach($types as $type)
+                                                <option value="{{ $type->id }}" {{ $dailytask->daily_task_type_id == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="name">Tugas</label>
+                                        <input type="text" name="name" class="form-control" value="{{ $dailytask->name }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="description">Deskripsi</label>
+                                        <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" placeholder="yang akan dicetak di perjanjian" value="{!! $dailytask->description !!}"/>
+                                    </div>
+                                </div>
+                                @if(@$dailytask->point)
+                                @canAccess('approvement','dailytasks')
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="points" class="form-label">Poin</label>
+                                        <input type="number" class="form-control" id="points" name="point" value="{{ old('point', isset($dailytask) ? $dailytask->point : '') }}" >
+                                        @error('point')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                @endcanAccess
+                                @endif
+                            </div>
+                            
+                            <div class="text-right">
+                                <button type="submit" class="btn btn-primary">Simpan</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <div class="form-row">
-                    <div class="col-md-5">
-                        <div class="form-group">
-                            <label for="assignment_user_id">Ditugaskan</label>
-                            <select name="assignment_user_id" class="form-control select2" required>
-                                <option selected disabled>Pilih Ditugaskan</option>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}" {{ $dailytask->assignment_user_id == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="category_id">Kategori</label>
-                            <select name="category_id" class="form-control selectEdit2" required>
-                                <option selected disabled>Pilih Kategori</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->name }}" {{ $dailytask->daily_task_category_id == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="type_id">Jenis</label>
-                            <select name="type_id" class="form-control select2" required>
-                                <option selected disabled>Pilih Tipe</option>
-                                @foreach($types as $type)
-                                    <option value="{{ $type->id }}" {{ $dailytask->daily_task_type_id == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @canAccess('getcustomfield','daily_task_projects')
-                        <div class="form-group">
-                            <label for="project_id">Pilih Proyek</label>
-                            <select id="project_id" name="project_id" class="form-control select2" onchange="loadCustomFields();">
-                                <option disabled>Pilih Proyek</option>
-                                @foreach($projects as $project)
-                                    <option value="{{ $project->id }}" {{ $dailytask->daily_task_project_id == $project->id ? 'selected' : '' }} >{{ $project->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div id="custom-fields-container"></div>
-                        @endcanAccess
-
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="name">Tugas</label>
-                            <input type="text" name="name" class="form-control" value="{{ $dailytask->name }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="description">Deskripsi</label>
-                            <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" placeholder="yang akan dicetak di perjanjian" value="{!! $dailytask->description !!}"/>
-                        </div>
-                    </div>
-                    @if(@$dailytask->point)
-                    @canAccess('approvement','dailytasks')
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="points" class="form-label">Poin</label>
-                            <input type="number" class="form-control" id="points" name="point" value="{{ old('point', isset($dailytask) ? $dailytask->point : '') }}" >
-                            @error('point')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                    @endcanAccess
-                    @endif
-                </div>
-
-                <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
         </div>
     </div>
@@ -213,15 +251,15 @@
             height: 34px !important;
         }
         .select2-selection__choice
-        {
-            background-color: #007bff !important;
-            border: 1px solid #007bff !important;
-        }
+    {
+        background-color: #007bff !important;
+        border: 1px solid #007bff !important;
+    }
 
-        .select2-selection__choice__remove
-        {
-            color: #fe0700 !important;
-            border: 1px solid #007bff !important;
-        }
+    .select2-selection__choice__remove
+    {
+        color: #fe0700 !important;
+        border: 1px solid #007bff !important;
+    }
 </style>
 @endsection

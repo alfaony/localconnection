@@ -1,8 +1,8 @@
 @extends('adminlte::page')
 
 @section('content')
-<div class="container py-3">
-    <div class="col-md-12">
+
+    <div class="col-md-12 p-3">
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul>
@@ -20,82 +20,98 @@
                 @csrf
 
                 <div id="dynamic-form-fields">
-                    <div class="dynamic-field card mb-3">
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label for="assignment_user_id">Objective</label>
-                                @canAccess('getresult','objectives')
-                                <select name="objective[]" class="form-control objective-select select2" required>
-                                    <option selected disabled>Pilih Objective</option>
-                                    @foreach($objectives as $objective)
-                                        <option value="{{ $objective->id }}">{{ $objective->name }}</option>
-                                    @endforeach
-                                </select>
-                                @endcanAccess
+                    <div class="dynamic-field mb-3 shadow-sm mt-3">
+                        <!-- Objective and Project Section -->
+                        <h5>Tugas 1</h5>
+                        <div class="card mb-1">
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="assignment_user_id">Objective</label>
+                                            @canAccess('getresult','objectives')
+                                            <select name="objective[]" class="form-control objective-select select2" required>
+                                                <option value="" disabled selected>-- Pilih --</option>
+                                                @foreach($objectives as $objective)
+                                                    <option value="{{ $objective->id }}">{{ ucfirst($objective->name) }}</option>
+                                                @endforeach
+                                            </select>
+                                            @endcanAccess
+                                        </div>
+                                        <div id="keyresult-fields-container-0"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="project_id">Pilih Main Proyek</label>
+                                            @canAccess('getcustomfield','daily_task_projects')
+                                            <select class="form-control select2 project-select" name="project_id[]" required>
+                                                <option value="" disabled selected>-- Pilih --</option>
+                                                @foreach($projects as $project)
+                                                    <option value="{{ $project->id }}">{{ ucfirst($project->name) }}</option>
+                                                @endforeach
+                                            </select>
+                                            @endcanAccess
+                                        </div>
+                                        <div id="custom-fields-container-0"></div>
+                                    </div>
+                                </div>
                             </div>
-                            <div id="keyresult-fields-container-0"></div>
-                            <div class="form-group">
-                                <label for="assignment_user_id">Tanggal</label>
-                                <div class="input-group">
-                                    <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" required>
-                                    <span class="input-group-text">hingga</span>
-                                    <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" required>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="col-md-5">
-                                    <div class="form-group">
-                                        <label for="assignment_user_id">Ditugaskan</label>
-                                        <select name="assignment_user_id[]" class="form-control select2" required>
-                                            <option selected disabled>Pilih Ditugaskan</option>
-                                            @foreach($users as $user)
-                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                            @endforeach
-                                        </select>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <!-- Task Details Section -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="assignment_user_id">Tanggal</label>
+                                            <div class="input-group">
+                                                <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" required>
+                                                <span class="input-group-text">hingga</span>
+                                                <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="assignment_user_id">Ditugaskan</label>
+                                            <select name="assignment_user_id[]" class="form-control select2" required>
+                                                <option value="" selected disabled>Pilih Ditugaskan</option>
+                                                @foreach($users as $user)
+                                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="category_id">Kategori</label>
+                                            <select name="category_id[]" class="form-control select2 category-select2" required>
+                                                <option value="" selected disabled>Pilih Kategori</option>
+                                                @foreach($categories as $category)
+                                                    <option value="{{ $category->name }}">{{ ucfirst($category->name) }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="type_id">Jenis</label>
+                                            <select name="type_id[]" class="form-control select2" required>
+                                                <option value="" selected disabled>Pilih Tipe</option>
+                                                @foreach($types as $type)
+                                                    <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="category_id">Kategori</label>
-                                        <select name="category_id[]" class="form-control select2 category-select2" required>
-                                            <option selected disabled>Pilih Kategori</option>
-                                            @foreach($categories as $category)
-                                                <option value="{{ $category->name }}">{{ $category->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="type_id">Jenis</label>
-                                        <select name="type_id[]" class="form-control select2" required>
-                                            <option selected disabled>Pilih Tipe</option>
-                                            @foreach($types as $type)
-                                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="project_id">Pilih Proyek</label>
-                                        @canAccess('getcustomfield','daily_task_projects')
-                                        <select class="form-control select2 project-select" name="project_id[]" required>
-                                            <option selected disabled>Pilih Proyek</option>
-                                            @foreach($projects as $project)
-                                                <option value="{{ $project->id }}">{{ $project->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        @endcanAccess
-                                    </div>
-                                    <div id="custom-fields-container-0"></div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="name">Tugas</label>
-                                        <input type="text" name="name[]" class="form-control" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="description">Deskripsi</label>
-                                        <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description[]" placeholder="yang akan dicetak di perjanjian"/>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="name">Tugas</label>
+                                            <input type="text" name="name[]" class="form-control" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="description">Deskripsi</label>
+                                            <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description[]" placeholder="yang akan dicetak di perjanjian"/>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-1 d-flex align-items-center">
-                                    <button type="button" class="btn btn-danger remove-button mr-2 btn-sm"><i class="fa fa-trash"></i></button>
+                                
+                                <div class="text-right">
+                                    <button type="button" class="btn btn-danger remove-button btn-sm"><i class="fa fa-trash"></i> Hapus</button>
                                 </div>
                             </div>
                         </div>
@@ -109,7 +125,6 @@
             </form>
         </div>
     </div>
-</div>
 @endsection
 
 @section('js')
@@ -122,10 +137,11 @@
     $(document).ready(function() 
     {
         // initializeSelect2();
-        $('.select2').select2();
-        $('.category-select2').select2({
-            tags: true
+        $('.select2').select2({
+            placeholder: 'Pilih',
+            allowClear: true
         });
+        $('.category-select2').select2();
 
         $('#dynamic-form-fields').on('change', '.project-select', function() {
             var projectId = $(this).val();
@@ -180,34 +196,59 @@
         {
             var indexKeys = generateRandomString(4);
             var newIndex = $('.dynamic-field').length;
+            nomor = newIndex + 1;
 
             let fieldHTML = `
-            <div class="dynamic-field card mb-3">
+            <div class="dynamic-field mb-3 shadow-sm mt-3">
+                <!-- Objective and Project Section -->
+                <h5>Tugas ${nomor}</h5>
+                <div class="card mb-1">
                     <div class="card-body">
-                        <div class="form-group">
-                                <label for="assignment_user_id">Objective</label>
-                                <select name="objective[]" class="form-control objective-select select3" required>
-                                    <option selected disabled>Pilih Objective</option>
-                                    @foreach($objectives as $objective)
-                                        <option value="{{ $objective->id }}">{{ $objective->name }}</option>
-                                    @endforeach
-                                </select>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="assignment_user_id">Objective</label>
+                                    <select name="objective[]" class="form-control objective-select select3" required>
+                                        <option value="" disabled selected>-- Pilih --</option>
+                                        @foreach($objectives as $objective)
+                                            <option value="{{ $objective->id }}">{{ $objective->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div id="keyresult-fields-container-${newIndex}"></div>
                             </div>
-                            <div id="keyresult-fields-container-${newIndex}"></div>
-                        <div class="form-group">
-                            <label for="assignment_user_id">Tanggal</label>
-                            <div class="input-group">
-                                <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" required>
-                                <span class="input-group-text">hingga</span>
-                                <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" required>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="project_id">Pilih Main Proyek</label>
+                                    <select class="form-control select3 project-select" name="project_id[]" required>
+                                        <option value="" disabled selected>-- Pilih --</option>
+                                        @foreach($projects as $project)
+                                            <option value="{{ $project->id }}">{{ $project->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div id="custom-fields-container-${newIndex}"></div>
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="col-md-5">
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Task Details Section -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="assignment_user_id">Tanggal</label>
+                                    <div class="input-group">
+                                        <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" required>
+                                        <span class="input-group-text">hingga</span>
+                                        <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" required>
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label for="assignment_user_id">Ditugaskan</label>
                                     <select name="assignment_user_id[]" class="form-control select3" required>
-                                        <option selected disabled>Pilih Ditugaskan</option>
+                                        <option value="" selected disabled>Pilih Ditugaskan</option>
                                         @foreach($users as $user)
                                             <option value="{{ $user->id }}">{{ $user->name }}</option>
                                         @endforeach
@@ -216,31 +257,21 @@
                                 <div class="form-group">
                                     <label for="category_id">Kategori</label>
                                     <select name="category_id[]" class="form-control select3 category-select3" required>
-                                        <option selected disabled>Pilih Kategori</option>
+                                        <option value="" selected disabled>Pilih Kategori</option>
                                         @foreach($categories as $category)
-                                            <option value="{{ $category->name }}">{{ $category->name }}</option>
+                                            <option value="{{ $category->name }}">{{ ucfirst($category->name) }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="type_id">Jenis</label>
                                     <select name="type_id[]" class="form-control select3" required>
-                                        <option selected disabled>Pilih Tipe</option>
+                                        <option value="" selected disabled>Pilih Tipe</option>
                                         @foreach($types as $type)
                                             <option value="{{ $type->id }}">{{ $type->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="form-group">
-                                    <label for="project_id">Pilih Proyek</label>
-                                    <select class="form-control select3 project-select" name="project_id[]" required>
-                                        <option selected disabled>Pilih Proyek</option>
-                                        @foreach($projects as $project)
-                                            <option value="{{ $project->id }}">{{ $project->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div id="custom-fields-container-${newIndex}"></div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -252,12 +283,13 @@
                                     <input class="thriveEditor form-control" id="description_description_${indexKeys}" data-ids="description_${indexKeys}" name="description[]" placeholder="yang akan dicetak di perjanjian"/>
                                 </div>
                             </div>
-                            <div class="col-md-1 d-flex align-items-center">
-                                <button type="button" class="btn btn-danger remove-button mr-2 btn-sm"><i class="fa fa-trash"></i></button>
-                            </div>
+                        </div>
+                        <div class="text-right">
+                            <button type="button" class="btn btn-danger remove-button btn-sm"><i class="fa fa-trash"></i> Hapus</button>
                         </div>
                     </div>
                 </div>
+            </div>
                 `;
                 $('#dynamic-form-fields').append(fieldHTML);
 
@@ -286,10 +318,10 @@
 
         function initializeSelect2() 
         {
-            $('.select3').select2();
-            $('.category-select3').select2({
-                tags: true
+            $('.select3').select2({
+                placeholder: 'Pilih',
             });
+            $('.category-select3').select2();
         }
 
         function initializeSelect2ForContainer(index) 

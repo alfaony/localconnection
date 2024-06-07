@@ -13,51 +13,24 @@
     @endif
 
     <div class="card-body">
-        <form method="POST" action="{{ route('daily_task_project.store') }}">
+        <form action="{{ route('daily_task_project.update', $dailyTaskProject->slug) }}" method="POST">
             @csrf
+            @method('PUT')
             <div class="form-group">
-                <label for="project_name">Main Proyek</label>
-                <input type="text" class="form-control" id="project_name" name="project_name" required>
+                <label for="name">Nama Proyek</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ $dailyTaskProject->name }}" required>
             </div>
             <div class="form-group">
-                <label for="projects">Proyek</label>
-                <select name="projects[]" id="projects" class="form-control select2" multiple required>
+                <label for="projects">Proyek Terkait</label>
+                <select class="form-control select2" id="projects" name="projects[]" multiple="multiple" required>
                     @foreach($projects as $project)
-                        <option value="{{ $project->id }}">{{ $project->title }}</option>
+                        <option value="{{ $project->id }}" {{ $dailyTaskProject->projects->contains($project->id) ? 'selected' : '' }}>
+                            {{ $project->title }}
+                        </option>
                     @endforeach
                 </select>
             </div>
-            <div id="custom-fields-container">
-                <div class="custom-field card mb-3">
-                    <div class="card-body">
-                        <div class="form-row">
-                            <div class="col-md-8 mb-3">
-                                <label for="custom_field_name">Nama Custom Field</label>
-                                <input type="text" class="form-control custom-field-name" name="custom_field_name[]" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="custom_field_type">Tipe</label>
-                                <select class="form-control custom-field-type" name="custom_field_type[]" required>
-                                    @foreach ($statusSelect as $key => $value)
-                                        <option value="{{ $key }}">{{ $value }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="custom-field-values">
-                            <label for="custom_field_type">Value</label>
-                            <div class="form-group d-flex">
-                                <input type="text" class="form-control custom-field-value" name="custom_field_value[0][]" required>
-                                <button type="button" class="btn btn-danger ml-2 remove-custom-field-value"><i class="fa fa-trash"></i> </button>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i>  Option</button>
-                        <button type="button" class="btn btn-danger remove-custom-field"><i class="fa fa-trash"></i> Custom Field</button>
-                    </div>
-                </div>
-            </div>
-            <button type="button" class="btn btn-secondary" id="add-custom-field"><i class="fa fa-plus"></i>  Custom Field</button>
-            <button type="submit" class="btn btn-primary">Simpan Proyek</button>
+            <button type="submit" class="btn btn-primary"><i class="fa fa-submit"></i> Perubahan</button>
         </form>
     </div>
 </div>
@@ -69,7 +42,7 @@
 <script>
     $(document).ready(function() {
         $('.select2').select2({
-            placeholder: 'Pilih Proyek',
+            placeholder: 'Select Projects',
             allowClear: true
         });
     });

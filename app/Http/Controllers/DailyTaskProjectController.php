@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 use App\Models\User;
+use App\Models\Project;
 use App\Models\DailyTask;
 use App\Models\TaskStatus;
 use App\Models\DailyTaskProject;
@@ -29,6 +30,8 @@ class DailyTaskProjectController extends Controller
         // Validate the request inputs
         $request->validate([
             'project_name' => 'required|string|max:255',
+            'projects' => 'required|array',
+            'projects.*' => 'required|exists:projects,id',
             'custom_field_name' => 'nullable|array',
             'custom_field_name.*' => 'required_with:custom_field_name|string|max:255',
             'custom_field_type' => 'nullable|array',
@@ -37,14 +40,18 @@ class DailyTaskProjectController extends Controller
             'custom_field_value.*' => 'required_with:custom_field_name|array',
             'custom_field_value.*.*' => 'required_with:custom_field_name|string|max:255',
         ]);
-    
+        
         // Create the project
 
         $project = DailyTaskProject::create([
             'user_id' => auth()->id(),
             'name' => $request->project_name,
         ]);
-    
+        
+
+        // Attach the project to the selected projects
+        $project->projects()->attach($request->projects);
+
         // Check if there are custom fields
         if ($request->has('custom_field_name')) {
             foreach ($request->custom_field_name as $index => $fieldName) {
@@ -74,7 +81,21 @@ class DailyTaskProjectController extends Controller
     public function create()
     {
         $statusSelect = config('custom.statusSelect');
-        return view('daily_task_project.create',compact('statusSelect'));
+        $projects = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('dailyTaskProjects')->get();
+        
+        return view('daily_task_project.create',compact('statusSelect', 'projects'));
+    }
+
+    public function edit($slug)
+    {
+        $statusSelect = config('custom.statusSelect');
+        $dailyTaskProject = DailyTaskProject::with('projects')->byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+        $assignedProjectIds = DailyTaskProject::with('projects')->get()->pluck('projects.*.id')->flatten()->unique()->toArray();
+        $projects = Project::byCompany(Auth::user()->company_id)->whereNotIn('id', $assignedProjectIds)->orWhereHas('dailyTaskProjects', function ($query) use ($dailyTaskProject) {
+            $query->where('daily_task_project_id', $dailyTaskProject->id);
+        })->get();
+        
+        return view('daily_task_project.edit',compact('dailyTaskProject', 'projects','statusSelect'));
     }
 
     public function show($slug)
@@ -133,6 +154,8 @@ class DailyTaskProjectController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'projects' => 'required|array',
+            'projects.*' => 'exists:projects,id',
         ]);
 
         $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
@@ -140,6 +163,8 @@ class DailyTaskProjectController extends Controller
         $project->update([
             'name' => $request->name,
         ]);
+
+        $project->projects()->sync($request->projects);
 
         return redirect()->route('daily_task_project.index')->with('success', 'Project updated successfully.');
     }
@@ -261,15 +286,17 @@ class DailyTaskProjectController extends Controller
         $selectedValues = [];
         $dailyTaskId = $request->dailyTaskId;
         $index = $request->index;
+        $dataProyek = NULL;
     
         if ($dailyTaskId) {
             $dailyTask = DailyTask::with('customFieldValues')->find($dailyTaskId);
+            $dataProyek = $dailyTask->project_id;
             foreach ($dailyTask->customFieldValues as $value) {
                 $selectedValues[$value->custom_field_id][] = $value->custom_field_value_id;
             }
         }
     
-        return view('partials.custom-fields', compact('customFields', 'selectedValues','index'));
+        return view('partials.custom-fields', compact('customFields', 'selectedValues','index','project','dataProyek'));
     }
 
 }

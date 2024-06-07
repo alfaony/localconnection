@@ -40,7 +40,7 @@
                 <!-- Left Column -->
                 <div class="col-md-6 mb-3 mb-md-0 mr-md-3">
                     <div class="form-group row">
-                        <label for="name" class="col-sm-4 col-form-label">Proyek:</label>
+                        <label for="name" class="col-sm-4 col-form-label">Main Proyek:</label>
                         <div class="col-sm-8">
                             @if($showProject)
                             <p class="form-control-plaintext">
@@ -55,10 +55,20 @@
                                 @endif
                             </p> 
                             @endif
-
-
                         </div>
                     </div>
+
+                    @if($dailytask->dataProject)
+                    <div class="form-group row">
+                        <label for="name" class="col-sm-4 col-form-label">Data Proyek:</label>
+                        <div class="col-sm-8">
+
+                            <p class="form-control-plaintext">
+                                {{ $dailytask->dataProject->title ?? "" }}
+                            </p> 
+                        </div>
+                    </div>
+                    @endif
 
                     <div class="form-group row">
                         <label for="name" class="col-sm-4 col-form-label">Tugas:</label>

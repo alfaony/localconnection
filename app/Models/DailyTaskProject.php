@@ -54,6 +54,11 @@ class DailyTaskProject extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class);
+    }
+
     public function customFields()
     {
         return $this->hasMany(DailyTaskProjectCustomField::class);

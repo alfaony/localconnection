@@ -12,7 +12,9 @@ class VisionController extends Controller
     public function index()
     {
         $vision = Vision::where('company_id',Auth::user()->company_id)->with('missions')->first();
-        return view('vision_mission.index', compact('vision'));
+        $missions = $vision->missions()->paginate(5); // Adjust the number 5 to the desired items per page
+
+        return view('vision_mission.index', compact('vision','missions'));
     }
 
     public function store(Request $request)

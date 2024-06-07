@@ -103,7 +103,12 @@ class DailyTask extends Model
     
     public function project()
     {
-        return $this->belongsTo(DailyTaskProject::class, 'daily_task_project_id')->withTrashed();;
+        return $this->belongsTo(DailyTaskProject::class, 'daily_task_project_id')->withTrashed();
+    }
+
+    public function dataProject()
+    {
+        return $this->belongsTo(Project::class,'project_id')->withTrashed();
     }
     
     public function customFieldValues()

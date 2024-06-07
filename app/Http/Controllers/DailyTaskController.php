@@ -164,6 +164,7 @@ class DailyTaskController extends Controller
             $categoryIds = $request->category_id;
             $typeIds = $request->type_id;
             $projectIds = $request->project_id;
+            $dataProjects = $request->data_project_id;
             $names = $request->name;
             $descriptions = $request->description ?? [];
 
@@ -182,6 +183,7 @@ class DailyTaskController extends Controller
                 $dailyTask->assignment_user_id = $assignmentUserIds[$i];
                 $dailyTask->daily_task_category_id = $this->manageCategory($categoryIds[$i]);
                 $dailyTask->daily_task_type_id = $typeIds[$i];
+                $dailyTask->project_id = $dataProjects[$i];
                 $dailyTask->daily_task_project_id = $projectIds[$i] ?? NULL;
                 $dailyTask->name = $names[$i];
                 $dailyTask->description = $descriptions[$i] ?? null;
@@ -289,7 +291,7 @@ class DailyTaskController extends Controller
         DB::beginTransaction();
         try {
             $dailyTask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
-    
+            
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
             $dailyTask->assignment_user_id = $request->assignment_user_id;
@@ -299,6 +301,7 @@ class DailyTaskController extends Controller
             $dailyTask->name = $request->name;
             $dailyTask->description = $request->description;
             $dailyTask->daily_task_project_id = $request->project_id ?? NULL ;
+            $dailyTask->project_id = $request->data_project_id[0] ?? NULL ;
             $dailyTask->save();
     
             $dailyTask->customFieldValues()->delete();
@@ -336,7 +339,7 @@ class DailyTaskController extends Controller
             DB::commit();
             return redirect()->route('dailytask.index')->with('update', true);
         } catch (\Throwable $th) {
-            // dd($th);
+            dd($th);
             DB::rollback();
             Log::error($th->getMessage());
 
@@ -788,7 +791,7 @@ class DailyTaskController extends Controller
     {
         // Temukan tugas asli berdasarkan slug
         // Buat salinan tugas asli
-        $doing = TaskStatus::where('name',ParamSchema::DOING)->firstOrFail();
+        $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
 
         $newTask = $dailytask->replicate();
 

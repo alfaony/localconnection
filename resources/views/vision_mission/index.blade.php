@@ -51,25 +51,50 @@
         </div>
         <div class="card-body">
             @if($vision && @$vision->missions->count())
-                <ul class="list-group">
-                    @foreach(@$vision->missions as $mission)
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ $mission->mission }}
-                            <div>
-                                @canAccess('update','missions')
-                                <button class="btn btn-sm btn-info" data-toggle="modal" data-target="#editMissionModal{{ $mission->id }}"><i class="fa fa-edit"></i></button>
-                                @endcanAccess
-                                @canAccess('destroy','missions')
-                                <form action="{{ route('mission.destroy', $mission->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus misi ini?')"><i class="fa fa-trash"></i></button>
-                                </form>
-                                @endcanAccess
-                            </div>
-                        </li>
-                    @endforeach
-                </ul>
+            <ul class="list-group mb-3">
+                @foreach($missions as $mission)
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ $mission->mission }}
+                        <div>
+                            @canAccess('update', 'missions')
+                            <button class="btn btn-sm btn-info" data-toggle="modal" data-target="#editMissionModal{{ $mission->id }}"><i class="fa fa-edit"></i></button>
+                            @endcanAccess
+                            @canAccess('destroy', 'missions')
+                            <form action="{{ route('mission.destroy', $mission->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus misi ini?')"><i class="fa fa-trash"></i></button>
+                            </form>
+                            @endcanAccess
+                        </div>
+                    </li>
+
+                    <!-- Edit Mission Modal -->
+                    <div class="modal fade" id="editMissionModal{{ $mission->id }}" tabindex="-1" role="dialog" aria-labelledby="editMissionModalLabel{{ $mission->id }}" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <form action="{{ route('mission.update', $mission->id) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editMissionModalLabel{{ $mission->id }}">Edit Misi</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="form-group">
+                                            <label for="mission">Misi</label>
+                                            <input type="text" class="form-control" id="mission" name="mission" value="{{ $mission->mission }}" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Simpan</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </ul>
             @else
                 <p>Belum ada misi.</p>
             @endif
@@ -153,34 +178,6 @@
     </div>
 </div>
 
-<!-- Edit Mission Modals -->
-@if($vision && @$vision->missions->count())
-@foreach(@$vision->missions as $mission)
-<div class="modal fade" id="editMissionModal{{ $mission->id }}" tabindex="-1" role="dialog" aria-labelledby="editMissionModalLabel{{ $mission->id }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editMissionModalLabel{{ $mission->id }}">Edit Misi</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('mission.update', $mission->id) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="form-group">
-                        <label for="mission">Misi</label>
-                        <input type="text" class="form-control" id="mission" name="mission" value="{{ $mission->mission }}" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-@endforeach
-@endif
 
 @endsection
 

@@ -253,7 +253,7 @@ class AppServiceProvider extends ServiceProvider
                     'icon' => 'fa fa-tasks',
                 ],
                 'daily_task_projects' => [
-                    'text'        => 'Proyek Tugas Harian',
+                    'text'        => 'Main Proyek Tugas',
                     'route'         => 'daily_task_project.index',
                     'icon' => 'fa fa-sitemap',
                 ],
