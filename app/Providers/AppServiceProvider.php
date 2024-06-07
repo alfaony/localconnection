@@ -76,7 +76,7 @@ class AppServiceProvider extends ServiceProvider
             $equipmentMenu = ['equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
-            $productivityMenu = ['report_productivities','visions','divisions','objectives', 'daily_task_projects', 'dailytasks','trainings','ip_rights','sales_achievements'];
+            $productivityMenu = ['report_productivities','project_dashboards','visions','divisions','objectives', 'daily_task_projects', 'dailytasks','trainings','ip_rights','sales_achievements'];
 
             $menus = [
                 'homes' => [
@@ -271,6 +271,16 @@ class AppServiceProvider extends ServiceProvider
                     'text'        => 'Visi & Misi',
                     'route'         => 'vision.index',
                     'icon' => 'fa fa-info-circle',
+                ],
+                'visions' => [
+                    'text'        => 'Visi & Misi',
+                    'route'         => 'vision.index',
+                    'icon' => 'fa fa-info-circle',
+                ],
+                'project_dashboards' => [
+                    'text'        => 'Dashboard Proyek',
+                    'route'         => 'projectdashboard.index',
+                    'icon' => 'fa fa-flag',
                 ],
             ];
 

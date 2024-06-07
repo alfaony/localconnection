@@ -70,6 +70,9 @@ class RoleController extends Controller
             'daily_task_projects',
             'objective',
             'division',
+            'vision',
+            'mission',
+            'project_dashboards',
         ];
 
         $checked = array_merge($mainMenus);
@@ -169,6 +172,9 @@ class RoleController extends Controller
                 'daily_task_projects',
                 'objective',
                 'division',
+                'vision',
+                'mission',
+                'project_dashboards',
             ];
         $checked = array_merge($mainMenus);
 
@@ -229,6 +235,9 @@ class RoleController extends Controller
             'daily_task_projects',
             'objective',
             'division',
+            'vision',
+            'mission',
+            'project_dashboards',
         ];
         
         $checked = array_merge($mainMenus);

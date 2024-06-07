@@ -21,7 +21,7 @@ class PermissionForMenuProjectDashboardTable extends Seeder
     public function run()
     {   
 
-        $methods = ['projectdashboard'];
+        $methods = ['index'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $manager = Role::where('name',RoleSchema::MANAGER)->first();
@@ -31,11 +31,11 @@ class PermissionForMenuProjectDashboardTable extends Seeder
         {
             // create permision
             $permission = Permission::firstOrCreate([
-                'name' => ucwords($method).' Daily Task',
+                'name' => ucwords($method).' Project Dashboard',
             ],[
                 'method' => $method,
-                'table' => 'dailytasks',
-                'model' => 'DailyTask',
+                'table' => 'project_dashboards',
+                'model' => 'ProjectDashboard',
                 'guard_name' => 'web'
             ]);
 
