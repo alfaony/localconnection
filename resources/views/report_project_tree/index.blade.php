@@ -1,10 +1,10 @@
 @extends('adminlte::page')
 
-@section('title', 'Vision Report')
+@section('title', 'Task Tracking')
 
 @section('content')
 <div class="card py-3 mt-3 ">
-    <h2 class="card-body mb-4">Vision Report</h2>
+    <h2 class="card-body mb-4">Task Tracking</h2>
     <div class="accordion" id="visionAccordion">
         @foreach($visions as $vision)
         <div class="card">
