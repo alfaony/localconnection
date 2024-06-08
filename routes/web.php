@@ -193,8 +193,11 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('vision', VisionController::class);
   Route::resource('mission', MissionController::class)->except(['index', 'show', 'create', 'edit']);
 
+  Route::get('project-dashboard/fetchusertask/{userId}/{filter}', [ProjectDashboardController::class, 'fetchusertask'])->name('fetchusertask');
   Route::get('project-dashboard', [ProjectDashboardController::class,'index'])->name('projectdashboard.index');
 });
+
+// Add this to your routes/web.php
 
 
 

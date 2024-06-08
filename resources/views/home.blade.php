@@ -150,7 +150,7 @@
         </div>
         <div class="row">
             <!-- Todo Card -->
-            <div class="col-md-3 mb-4">
+            <div class="col-md-2 mb-4">
                 <div class="card shadow-sm border-left-primary">
                     <div class="card-header bg-primary text-white">
                         <h5 class="card-title">Todo</h5>
@@ -162,7 +162,7 @@
             </div>
             
             <!-- Doing Card -->
-            <div class="col-md-3 mb-4">
+            <div class="col-md-2 mb-4">
                 <div class="card shadow-sm border-left-info">
                     <div class="card-header bg-info text-white">
                         <h5 class="card-title">Doing</h5>
@@ -174,7 +174,7 @@
             </div>
 
             <!-- In Review Card -->
-            <div class="col-md-3 mb-4">
+            <div class="col-md-2 mb-4">
                 <div class="card shadow-sm border-left-warning">
                     <div class="card-header bg-warning text-white">
                         <h5 class="card-title">In Review</h5>
@@ -186,7 +186,7 @@
             </div>
 
             <!-- Complete Card -->
-            <div class="col-md-3 mb-4">
+            <div class="col-md-2 mb-4">
                 <div class="card shadow-sm border-left-success">
                     <div class="card-header bg-success text-white">
                         <h5 class="card-title">Complete</h5>
@@ -198,7 +198,7 @@
             </div>
 
             <!-- Not Complete Card -->
-            <div class="col-md-3 mb-4">
+            <div class="col-md-2 mb-4">
                 <div class="card shadow-sm border-left-danger">
                     <div class="card-header bg-danger text-white">
                         <h5 class="card-title">Not Complete</h5>

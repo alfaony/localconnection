@@ -278,7 +278,7 @@ class AppServiceProvider extends ServiceProvider
                     'icon' => 'fa fa-info-circle',
                 ],
                 'project_dashboards' => [
-                    'text'        => 'Dashboard Proyek',
+                    'text'        => 'Dashboard Tracking Tugas',
                     'route'         => 'projectdashboard.index',
                     'icon' => 'fa fa-flag',
                 ],

@@ -53,7 +53,7 @@ class DailyTaskController extends Controller
         {
             $query->whereHas('taskStatus', function ($query)
             {
-                $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO);
+                $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO)->orWhere('name',ParamSchema::NOTCOMPLATE);
             })
             ;
         }
