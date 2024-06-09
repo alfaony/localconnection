@@ -302,6 +302,9 @@ class DailyTaskController extends Controller
             $dailyTask->description = $request->description;
             $dailyTask->daily_task_project_id = $request->project_id ?? NULL ;
             $dailyTask->project_id = $request->data_project_id[0] ?? NULL ;
+            $dailyTask->daily_task_category_id = $request->category_id;
+            $dailyTask->objective_id = $request->objective;
+
             $dailyTask->save();
     
             $dailyTask->customFieldValues()->delete();

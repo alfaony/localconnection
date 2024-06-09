@@ -77,6 +77,7 @@ class ProjectDashboardController extends Controller
             $headName = $task->head ? "< ". Str::limit($task->head->name,40) : '';
 
             return [
+                'is_overdue' => $task->isOverdue(),
                 'name_show' => $task->nameShow.' '.$headName,
                 'task_status' => $task->taskStatus,
                 'date_show' => $task->date_show,

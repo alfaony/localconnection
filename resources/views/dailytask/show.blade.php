@@ -223,6 +223,34 @@
                         </div>
                     </div>
                     @endif
+                    <!-- Accordion for Objective and Key Results -->
+                    <div class="accordion mt-4" id="objectiveAccordion">
+                        <div class="card">
+                            <div class="card-header" id="headingObjectives">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseObjectives" aria-expanded="true" aria-controls="collapseObjectives">
+                                        Objective Dan Key Result
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="collapseObjectives" class="collapse" aria-labelledby="headingObjectives" data-parent="#objectiveAccordion">
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label for="objective_name">Objective:</label>
+                                        <span class="d-block badge badge-info badge badge-pill badge-sm m-1">{{ $dailytask->objective ? $dailytask->objective->name : '' }}</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <label for="objective_name">Key Result:</label>
+                                    @foreach($dailytask->keyResults as $keyResult)
+                                    <div class="form-group">
+                                        <span class="d-block badge badge-info badge badge-pill badge-sm m-1">{{ $keyResult->result }}</span>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                                             
                     @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::DOING)
                         @canAccess('extend','dailytasks')

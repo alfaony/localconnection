@@ -48,7 +48,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="objective_id">Objective</label>
-                                        <select name="objective[]" id="objective_id" class="form-control objective-select select2" required>
+                                        <select name="objective" id="objective_id" class="form-control objective-select select2" onchange="loadKeyResult();" required>
                                             <option selected disabled>Pilih Objective</option>
                                             @foreach($objectives as $objective)
                                                 <option value="{{ $objective->id }}" {{ $dailytask->objective_id == $objective->id ? 'selected' : ''}}>{{ $objective->name }}</option>
@@ -101,7 +101,7 @@
                                         <select name="category_id" class="form-control selectEdit2" required>
                                             <option selected disabled>Pilih Kategori</option>
                                             @foreach($categories as $category)
-                                                <option value="{{ $category->id }}" {{ $dailytask->daily_task_category_id == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                                <option value="{{ $category->id }}" {{ $dailytask->daily_task_category_id == $category->id ? 'selected' : '' }}>{{ ucfirst($category->name) }}</option>
                                             @endforeach
                                         </select>
                                     </div>

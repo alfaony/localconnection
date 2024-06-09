@@ -343,12 +343,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     {
                         url = '-';
                     }
+                    
+                    if(task.is_overdue)
+                    {
+                        date_show = `<span class="text-danger"> ${task.date_show }</span>`;
+                    }else
+                    {
+                        date_show = `<span> ${task.date_show}</span>`;
+                    }
 
-                    console.log(task);
+
                     tasksHtml += `<tr>
                                     <td>${task.name_show}</td>
                                     <td>${statusIcon} ${task.task_status.name}</td>
-                                    <td>${task.date_show}</td>
+                                    <td>${date_show}</td>
                                     <td>${task.user_create}</td>
                                     <td>
                                         ${url}

@@ -116,10 +116,16 @@ class DailyTask extends Model
         return $this->hasMany(DailyTaskCustomFieldValue::class);
     }
 
+    public function objective()
+    {
+        return $this->belongsTo(Objective::class)->withTrashed();
+    }
     public function keyResults()
     {
         return $this->belongsToMany(ObjectiveKeyResult::class);
     }
+
+    
 
     
     public function statusRecords()
