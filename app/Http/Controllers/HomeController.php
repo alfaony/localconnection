@@ -17,6 +17,12 @@ use App\Models\Quote;
 use App\Models\WorkOrder;
 use App\Models\Equipment;
 
+use App\Models\Training;
+use App\Models\IpRight;
+use App\Models\SalesAchievement;
+use App\Models\TaskStatus;
+use App\Models\DailyTask;
+
 class HomeController extends Controller
 {
     /**
@@ -34,7 +40,7 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function index()
+    public function index(Request $request)
     {
         $totalActiveProjects = Project::byCompany(Auth::user()->company_id)->byDateRange()->count() ?? 0;
 
@@ -56,6 +62,71 @@ class HomeController extends Controller
 
         $equipments = Equipment::byCompany(Auth::user()->company_id)->where('total_stock', ParamSchema::LIMIT)->get();
 
-        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments'));
+
+        $startDate = Carbon::now()->startOfMonth();
+        $endDate = Carbon::now()->endOfMonth();
+        
+        $todo = TaskStatus::select('id')->where('name',ParamSchema::TODO)->firstOrFail()->id;
+        $doing = TaskStatus::select('id')->where('name',ParamSchema::DOING)->firstOrFail()->id;
+        $inReivew = TaskStatus::select('id')->where('name',ParamSchema::INREVIEW)->firstOrFail()->id;
+        $complate = TaskStatus::select('id')->where('name',ParamSchema::COMPLATE)->firstOrFail()->id;
+        $notComplate = TaskStatus::select('id')->where('name',ParamSchema::NOTCOMPLATE)->firstOrFail()->id;
+
+        // Retrieve the date range from the request if provided
+        if ($request->has('start_date')) {
+            $startDate = Carbon::parse($request->input('start_date'));
+        }
+
+        if ($request->has('end_date')) {
+            $endDate = Carbon::parse($request->input('end_date'))->endOfDay();       ;
+        }
+
+        $trainingPoints = Training::where('user_id', Auth::user()->id)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('point');
+
+        $ipRightPoints = IpRight::where('user_id', Auth::user()->id)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('point');
+
+        $salesAchievementPoints = SalesAchievement::where('user_id', Auth::user()->id)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('points');
+        
+        $dailyTask = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate]);
+
+        $dailyTaskPoints = $dailyTask->where('task_status_id', $complate)->sum('point');
+        
+        $dailyTaskTodoCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $todo)->count();
+        $dailyTasDoingCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $doing)->count();
+        $dailyTaskInreviewCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $inReivew)->count();
+        $dailyTaskNotComplateCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $notComplate)->count();
+        $dailyTaskCompleteCount = $dailyTask->where('task_status_id', $complate)->count();
+
+
+        $dailyTaskCountOverdue = DailyTask::where('assignment_user_id', Auth::user()->id)
+        ->whereHas('taskStatus', function ($query)
+        {
+            $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW);
+        })
+        ->whereDate('start_date', '<', now())->whereDate('end_date', '<', now())->count()
+        ;
+
+        $dailyTaskCountUpcoming = DailyTask::where('assignment_user_id', Auth::user()->id)->whereHas('taskStatus', function ($query)
+        {
+            $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW);
+        })
+        ->where('start_date', '>', now())->count()
+        ;
+
+        $dailyTaskCountToday = DailyTask::where('assignment_user_id', Auth::user()->id)->whereHas('taskStatus', function ($query)
+        {
+            $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW);
+        })
+        ->whereDate('start_date', '<=', now())->whereDate('end_date', '>=', now())->count();
+        
+
+
+        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday', 'dailyTaskTodoCount', 'dailyTasDoingCount', 'dailyTaskInreviewCount', 'dailyTaskNotComplateCount'));
     }
 }

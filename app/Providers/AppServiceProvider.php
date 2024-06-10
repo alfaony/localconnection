@@ -71,10 +71,12 @@ class AppServiceProvider extends ServiceProvider
             $equipmentMenuArray = array();
             $taskMenuArray = array();
             $securityMenuArray = array();
+            $productivityMenuArray = array();
 
             $equipmentMenu = ['equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
+            $productivityMenu = ['report_productivities','project_dashboards','visions','divisions','objectives', 'daily_task_projects', 'dailytasks','trainings','ip_rights','sales_achievements'];
 
             $menus = [
                 'homes' => [
@@ -210,6 +212,11 @@ class AppServiceProvider extends ServiceProvider
                     'route'         => 'report-point.index',
                     'icon' => 'fa fa-book',
                 ],
+                'report_productivities' => [
+                    'text'        => 'Laporan Poin',
+                    'route'         => 'report-productivity.index',
+                    'icon' => 'fa fa-book',
+                ],
                 'security_checks' => [
                     'text'        => 'Kontrol Keamanan',
                     'route'         => 'security-check.index',
@@ -224,6 +231,56 @@ class AppServiceProvider extends ServiceProvider
                     'text'        => 'Tiket',
                     'route'         => 'ticket.index',
                     'icon' => 'fa fa-envelope',
+                ],
+                'trainings' => [
+                    'text'        => 'Pelatihan',
+                    'route'         => 'training.index',
+                    'icon' => 'fa fa-graduation-cap',
+                ],
+                'ip_rights' => [
+                    'text'        => 'Hak Cipta',
+                    'route'         => 'ip-right.index',
+                    'icon' => 'fa fa-gavel',
+                ],
+                'sales_achievements' => [
+                    'text'        => 'Pencapaian Penjualan',
+                    'route'         => 'sales_achievement.index',
+                    'icon' => 'fa fa-line-chart',
+                ],
+                'dailytasks' => [
+                    'text'        => 'Tugas Harian',
+                    'route'         => 'dailytask.index',
+                    'icon' => 'fa fa-tasks',
+                ],
+                'daily_task_projects' => [
+                    'text'        => 'Main Proyek Tugas',
+                    'route'         => 'daily_task_project.index',
+                    'icon' => 'fa fa-sitemap',
+                ],
+                'divisions' => [
+                    'text'        => 'Divisi',
+                    'route'         => 'division.index',
+                    'icon' => 'fa fa-users',
+                ],
+                'objectives' => [
+                    'text'        => 'Objective',
+                    'route'         => 'objective.index',
+                    'icon' => 'fa fa-bars',
+                ],
+                'visions' => [
+                    'text'        => 'Visi & Misi',
+                    'route'         => 'vision.index',
+                    'icon' => 'fa fa-info-circle',
+                ],
+                'visions' => [
+                    'text'        => 'Visi & Misi',
+                    'route'         => 'vision.index',
+                    'icon' => 'fa fa-info-circle',
+                ],
+                'project_dashboards' => [
+                    'text'        => 'Dashboard Tracking Tugas',
+                    'route'         => 'projectdashboard.index',
+                    'icon' => 'fa fa-flag',
                 ],
             ];
 
@@ -259,6 +316,20 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($productivityMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($productivityMenuArray,$menus[$role]);
+                }
+            }
+
+            $productivityMenu = 
+            [
+                'text'    => 'Produktifitas',
+                'submenu' => $productivityMenuArray
+            ];
+
             $equipmentMenu = 
             [
                 'text'    => 'Perlengkapan',
@@ -276,6 +347,11 @@ class AppServiceProvider extends ServiceProvider
                 'text'    => 'Manajemen Keamanan',
                 'submenu' => $securityMenuArray
             ];
+
+            if($productivityMenu['submenu'] )
+            {
+                $event->menu->add($productivityMenu);
+            }
 
             if($equipmentMenu['submenu'] )
             {

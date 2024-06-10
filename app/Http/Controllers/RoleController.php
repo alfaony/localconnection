@@ -59,6 +59,20 @@ class RoleController extends Controller
             'tasks',
             'task_assigns',
             'report_points',
+            'security_checks',
+            'cctv_checks',
+            'tickets',
+            'trainings',
+            'ip_rights',
+            'sales_achievements',
+            'report_points',
+            'dailytasks',
+            'daily_task_projects',
+            'objective',
+            'division',
+            'vision',
+            'mission',
+            'project_dashboards',
         ];
 
         $checked = array_merge($mainMenus);
@@ -147,6 +161,20 @@ class RoleController extends Controller
                 'tasks',
                 'task_assigns',
                 'report_points',
+                'security_checks',
+                'cctv_checks',
+                'tickets',
+                'trainings',
+                'ip_rights',
+                'sales_achievements',
+                'report_points',
+                'dailytasks',
+                'daily_task_projects',
+                'objective',
+                'division',
+                'vision',
+                'mission',
+                'project_dashboards',
             ];
         $checked = array_merge($mainMenus);
 
@@ -196,6 +224,20 @@ class RoleController extends Controller
             'tasks',
             'task_assigns',
             'report_points',
+            'security_checks',
+            'cctv_checks',
+            'tickets',
+            'trainings',
+            'ip_rights',
+            'sales_achievements',
+            'report_points',
+            'dailytasks',
+            'daily_task_projects',
+            'objective',
+            'division',
+            'vision',
+            'mission',
+            'project_dashboards',
         ];
         
         $checked = array_merge($mainMenus);

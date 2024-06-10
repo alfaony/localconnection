@@ -1,21 +1,56 @@
 <?php
 
-return 
+return
 [
     /**
      * default payment mode
      */
 
-     'paymentMode' => 
+     'paymentMode' =>
      [
         'daily' => 'Harian',
         'monthly' => 'Bulanan'
      ],
 
-     'agreementTemplate' => 
+     'agreementTemplate' =>
      [
         'templateBos3' => 'Template Bos 3',
         'templateBos1' => 'Template Bos 1'
+     ],
+
+     'month' =>
+     [
+        '01' => 'Januari',
+        '02' => 'Februari',
+        '03' => 'Maret',
+        '04' => 'April',
+        '05' => 'Mei',
+        '06' => 'Juni',
+        '07' => 'Juli',
+        '08' => 'Agustus',
+        '09' => 'September',
+        '10' => 'Oktober',
+        '11' => 'November',
+        '12' => 'Desember',
+     ],
+
+     'statusApproval' =>
+     [
+        'in review' => 'In Review',
+        'complete' => 'Complete'
+     ],
+
+     'statusTask' =>
+     [
+        'overdue' => 'Kemarin',
+        'today' => 'Hari ini',
+        'upcomming' => 'Yang Akan datang',
+     ],
+
+     'statusSelect' =>
+     [
+        'single_select' => 'Single Select',
+        'multi_select' => 'Multi Select',
      ],
 
 ];

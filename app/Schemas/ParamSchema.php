@@ -42,5 +42,15 @@ class ParamSchema
 
     const DONE = "done";
 
+    const ONTIME = "ontime";
 
+    const LATE = "late";
+
+    const RECURRING = "Recurring";
+
+    const MULTISELECT = "multi_select";
+
+    const ALL = "all";
+
+    const TODO = "todo";
 }

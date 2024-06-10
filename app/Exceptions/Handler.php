@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Http;
 
@@ -91,5 +92,15 @@ class Handler extends ExceptionHandler
         $response = Http::post(config('services.discord.webhook_url'), $request);
 
         return $response->successful();
+    }
+
+    public function render($request, Throwable $exception)
+    {
+        if ($exception instanceof PostTooLargeException) 
+        {
+            return redirect()->back()->with('store', true); 
+        }
+
+        return parent::render($request, $exception);
     }
 }

@@ -16,4 +16,7 @@ class RoleSchema
     const OB = 'Office Boy';
     const BM = 'Building Manager';
     const SECURITY = 'Security';
+    const DIRECTOR = 'Director';
+    const MANAGER = 'Manager';
+    const STAFF = 'Staff';
 }
