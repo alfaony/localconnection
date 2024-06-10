@@ -26,6 +26,7 @@ class PermissionForMenuProductivity extends Seeder
         $salesAchivement = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2','addpoint'];
 
         $root = Role::where('name',RoleSchema::ROOT)->first();
+        $admin = Role::where('name',RoleSchema::ADMIN)->first();
         $director = Role::where('name',RoleSchema::DIRECTOR)->first();
         $manager = Role::where('name',RoleSchema::MANAGER)->first();
         $staff = Role::where('name',RoleSchema::STAFF)->first();
@@ -48,11 +49,13 @@ class PermissionForMenuProductivity extends Seeder
             if($method == "addpoint")
             {
                 PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
             }else
             {
                 PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $staff->id, 'permission_id' => $permission->id]);
@@ -76,10 +79,12 @@ class PermissionForMenuProductivity extends Seeder
             {
                 PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
             }else
             {
                 PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $staff->id, 'permission_id' => $permission->id]);
@@ -103,11 +108,13 @@ class PermissionForMenuProductivity extends Seeder
             {
                 PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
             }else
             {
                 PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $sales->id, 'permission_id' => $permission->id]);
             }

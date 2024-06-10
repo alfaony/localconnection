@@ -26,7 +26,7 @@ return new class extends Migration
     public function down()
     {
         Schema::table('daily_tasks', function (Blueprint $table) {
-            $table->integer('point')->default(0);
+            $table->integer('point')->default(0)->change();
         });
     }
 };

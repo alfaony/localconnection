@@ -24,6 +24,7 @@ class PermissionForReportPoinProductivity extends Seeder
         $reports = ['index'];
 
         $root = Role::where('name',RoleSchema::ROOT)->first();
+        $admin = Role::where('name',RoleSchema::ADMIN)->first();
         $director = Role::where('name',RoleSchema::DIRECTOR)->first();
         $manager = Role::where('name',RoleSchema::MANAGER)->first();
 
@@ -42,6 +43,7 @@ class PermissionForReportPoinProductivity extends Seeder
 
             //assign role & permission
             PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
             PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
             PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
         }

@@ -24,6 +24,8 @@ class PermissionForMenuDailyTaskProject extends Seeder
         $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2', 'customfieldstore' ,'customfieldupdate' ,'customfielddestroy' ,'getcustomfield'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
+        $admin = Role::where('name',RoleSchema::ADMIN)->first();
+        $director = Role::where('name',RoleSchema::DIRECTOR)->first();
         $manager = Role::where('name',RoleSchema::MANAGER)->first();
         $staff = Role::where('name',RoleSchema::STAFF)->first();
 
@@ -44,6 +46,8 @@ class PermissionForMenuDailyTaskProject extends Seeder
             if($method == "getcustomfield")
             {
                 PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $staff->id, 'permission_id' => $permission->id]);
 
@@ -51,6 +55,8 @@ class PermissionForMenuDailyTaskProject extends Seeder
             else
             {
                 PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
             }
         }

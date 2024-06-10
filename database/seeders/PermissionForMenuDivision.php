@@ -24,6 +24,9 @@ class PermissionForMenuDivision extends Seeder
         $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
+        $admin = Role::where('name',RoleSchema::ADMIN)->first();
+        $director = Role::where('name',RoleSchema::DIRECTOR)->first();
+
 
         foreach ($methods as $method) 
         {
@@ -39,6 +42,8 @@ class PermissionForMenuDivision extends Seeder
 
             //assign role & permission
             PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
         }
     }
 }
