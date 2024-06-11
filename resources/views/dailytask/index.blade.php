@@ -40,7 +40,7 @@
                     @endforeach
                 </select>
             </div>
-            @if(Auth::user()->role->name != \App\Schemas\RoleSchema::STAFF)
+            @if(Auth::user()->role->name != \App\Schemas\RoleSchema::STAFF && Auth::user()->role->name != \App\Schemas\RoleSchema::SALES)
             <div class="col-12 col-md-3">
                 <select class="form-control select2" id="user" name="user">
                     <option value="all">All User</option>
