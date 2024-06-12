@@ -34,5 +34,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuSecurity::class);
         $this->call(PermissionForTicketSeeder::class);
         $this->call(CallMenuProductivity::class);
+        $this->call(PermissionForMenuUserProfile::class);
     }
 }

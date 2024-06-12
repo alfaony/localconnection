@@ -8,6 +8,11 @@
 
 @section('content')
 
+<div class="col-md-12 mt-2">
+    @if(Session::get('updateProfile'))
+    <div class="alert alert-success mt-3">Pengguna Berhasil Perbarui</div>
+    @endif
+</div>
 @canAccess('showReport','homes')
 <div class="card py-3">
     <div class="card-header">

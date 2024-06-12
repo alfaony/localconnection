@@ -101,6 +101,21 @@ class ProjectController extends Controller
     }
 
     /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\Project  $project
+     * @return \Illuminate\Http\Response
+     */
+    public function show($slug)
+    {
+        $projectEdit = Project::where('slug', $slug)->firstOrFail();
+        $workOrder = $projectEdit->workOrder;
+
+
+        return view('project.show', compact('projectEdit', 'workOrder'));
+    }
+
+    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request

@@ -153,6 +153,9 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                     <form method="post" action="{{ route('project.destroy',$a) }}">
                         @csrf
                         @method('delete')
+                        @canAccess('show','projects')
+                        <a href="{{ route('project.show',$a->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
+                        @endcanAccess
                         @canAccess('edit','projects')
                         <a href="{{ route('project.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
                         @endcanAccess
