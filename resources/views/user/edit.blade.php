@@ -27,9 +27,9 @@
 
 <div class="card">
     <div class="card-body">
-        <h2>{{ @$userEdit ? 'Edit Profile' : 'Create User Profile' }}</h2>
+        <h2 class="mb-4">{{ @$userEdit ? 'Edit Profile' : 'Create User Profile' }}</h2>
         
-        <form action="{{ route('user.profileUpdate',$userEdit->slug) }}" method="post">
+        <form action="{{ route('user.profileUpdate', $userEdit->slug) }}" method="post">
             @csrf
             @if($userEdit)
             @method('PUT')
@@ -42,7 +42,7 @@
 
             <div class="form-group">
                 <label for="email">Email:</label>
-                <p class="form-control-plaintext">{{ old('email') ?? @$userEdit->email }}<p>
+                <p class="form-control-plaintext">{{ old('email') ?? @$userEdit->email }}</p>
             </div>
 
             <div class="form-group">
@@ -53,57 +53,49 @@
             <div class="form-group">
                 <label for="divisions">Divisi:</label>
                 @foreach($userEdit->divisions as $division)
-                <p class="form-control-plaintext">
-                    {{ $division->name }}
-                </p>
+                <p class="form-control-plaintext">{{ $division->name }}</p>
                 @endforeach
             </div>
-            
-
 
             <div class="form-group">
                 <label for="approvement_user_id">User Persetujuan:</label>
-                <p class="form-control-plaintext">
-                    {{ $userEdit->approver ? $userEdit->approver->name : '' }}
-                </p>
+                <p class="form-control-plaintext">{{ $userEdit->approver ? $userEdit->approver->name : '' }}</p>
             </div>
 
             <div class="form-group">
                 <label for="company">Company:</label>
-                <p class="form-control-plaintext">
-                    {{ $userEdit->company ? $userEdit->company->name : '' }}
-                </p>
+                <p class="form-control-plaintext">{{ $userEdit->company ? $userEdit->company->name : '' }}</p>
             </div>
 
             @if(!@$userEdit)
             <div class="form-group">
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="**********" value="{{ old('password') }}" required>
+                <input type="password" id="password" name="password" class="form-control" placeholder="**********" value="{{ old('password') }}" autocomplete="new-password">
             </div>
 
             <div class="form-group">
                 <label for="confirmPassword">Confirm Password:</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="**********">
+                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="**********" autocomplete="new-password">
             </div>
             @else
             @if(@$userEdit->id == Auth::user()->id)
             <div class="form-group">
                 <label for="oldPassword">Password Lama:</label>
-                <input type="password" id="oldPassword" name="oldPassword" class="form-control" placeholder="**********">
+                <input type="password" id="oldPassword" name="oldPassword" class="form-control" placeholder="**********" autocomplete="off" >
             </div>
 
             <div class="form-group">
                 <label for="newPassword">Password Baru:</label>
-                <input type="password" id="newPassword" name="newPassword" class="form-control" placeholder="**********">
+                <input type="password" id="newPassword" name="newPassword" class="form-control" placeholder="**********" autocomplete="new-password">
             </div>
 
             <div class="form-group">
                 <label for="confirmPassword">Konfirmasi Password:</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="**********">
+                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="**********" autocomplete="new-password">
             </div>
             @endif
             @endif
-            <div class="form-group">
+            <div class="form-group text-right">
                 <button id="buttonSubmit" type="submit" class="btn btn-primary">{{ @$userEdit ? 'Ubah' : 'Simpan' }}</button>
             </div>
         </form>
@@ -118,6 +110,26 @@
     .form-group {
         margin-bottom: 1.5rem;
     }
+    .card {
+        margin-top: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .card-body {
+        padding: 20px;
+    }
+    .form-control-plaintext {
+        padding-left: 0;
+        font-weight: bold;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
 </style>
 @endsection
 
@@ -127,14 +139,6 @@
     $(document).ready(function() {
         $('.select2').select2();
         $('.user-select2').select2();
-
-        $('#alertCheckbox').change(function() {
-            if ($(this).is(':checked')) {
-                $('#alertOptions').show();
-            } else {
-                $('#alertOptions').hide();
-            }
-        });
     });
 </script>
 @endsection
