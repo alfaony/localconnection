@@ -131,7 +131,7 @@
                                 @canAccess('show','dailytasks')
                                 <a href="{{ route('dailytask.show', $dailytask->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
                                 @endcanAccess
-                                @if($dailytask->user_id == Auth::user()->id)
+                                @if(($dailytask->user_id == Auth::user()->id) || (Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER && $dailytask->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE))
                                 @canAccess('edit','dailytasks')
                                 <a href="{{ route('dailytask.edit', $dailytask->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
                                 @endcanAccess
