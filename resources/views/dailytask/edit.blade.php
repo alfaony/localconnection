@@ -125,7 +125,7 @@
                                         <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" placeholder="yang akan dicetak di perjanjian" value="{!! $dailytask->description !!}"/>
                                     </div>
                                 </div>
-                                @if(@$dailytask->point)
+                                @if(@$dailytask->approved)
                                 @canAccess('approvement','dailytasks')
                                 <div class="col-md-12">
                                     <div class="form-group">
