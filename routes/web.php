@@ -47,6 +47,7 @@ use App\Http\Controllers\ObjectiveController;
 use App\Http\Controllers\VisionController;
 use App\Http\Controllers\MissionController;
 use App\Http\Controllers\ProjectDashboardController;
+use App\Http\Controllers\DailyTaskCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -198,6 +199,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::get('project-dashboard/fetchusertask/{userId}/{filter}', [ProjectDashboardController::class, 'fetchusertask'])->name('fetchusertask');
   Route::get('project-dashboard', [ProjectDashboardController::class,'index'])->name('projectdashboard.index');
+
+  Route::resource('daily-task-category', DailyTaskCategoryController::class);
+
 });
 
 // Add this to your routes/web.php

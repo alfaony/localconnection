@@ -73,7 +73,8 @@ class RoleController extends Controller
             'visions',
             'missions',
             'project_dashboards',
-            'report_productivities'
+            'report_productivities',
+            'daily_task_categories'
         ];
 
         $checked = array_merge($mainMenus);
@@ -176,7 +177,8 @@ class RoleController extends Controller
                 'visions',
                 'missions',
                 'project_dashboards',
-                'report_productivities'
+                'report_productivities',
+                'daily_task_categories'
             ];
         $checked = array_merge($mainMenus);
 
@@ -239,7 +241,9 @@ class RoleController extends Controller
                 'visions',
                 'missions',
                 'project_dashboards',
-                'report_productivities'
+                'report_productivities',
+                'daily_task_categories'
+
             ];
         
         $checked = array_merge($mainMenus);
