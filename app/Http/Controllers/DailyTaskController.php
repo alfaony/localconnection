@@ -29,6 +29,7 @@ use App\Models\DailyTaskProject;
 use App\Models\DailyTaskCustomFieldValue;
 use App\Models\Objective;
 use App\Models\DailyTaskStatusRecord;
+use App\Models\SettingCompany;
 
 
 
@@ -172,7 +173,7 @@ class DailyTaskController extends Controller
             $names = $request->name;
             $descriptions = $request->description ?? [];
 
-        $objectives = $request->objective ?? [];
+            $objectives = $request->objective ?? [];
 
             $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
 
@@ -259,7 +260,7 @@ class DailyTaskController extends Controller
         $types = DailyTaskType::get();
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
 
-        
+
         return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement'));
     }
 
@@ -299,7 +300,7 @@ class DailyTaskController extends Controller
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
             $dailyTask->assignment_user_id = $request->assignment_user_id;
-            $dailyTask->daily_task_category_id = $this->manageCategory($request->category_id);
+            $dailyTask->daily_task_category_id = $request->category_id;
             $dailyTask->daily_task_type_id = $request->type_id;
             $dailyTask->point = $request->point ?? 0;
             $dailyTask->name = $request->name;
