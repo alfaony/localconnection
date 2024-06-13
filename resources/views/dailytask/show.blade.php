@@ -14,6 +14,9 @@
                 <div class="alert alert-success mt-3">{{ ucfirst($msg) }} Berhasil</div>
             @endif
         @endforeach
+        @if(Session::get('delete'))
+        <div class="alert alert-success mt-3">Tugas Berhasil Terhapus</div>
+        @endif
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul>
@@ -916,17 +919,6 @@ $(document).ready(function() {
 
     $('#reportForm').on('submit', function(e) {
         var messageContent = $('#description_note').val().trim();
-        var messageContentText = $('<div>').html(messageContent).text().trim();
-
-        // Check if the message is empty or only contains empty HTML tags
-        if (messageContent === '' || messageContentText === '') {
-            e.preventDefault(); // Prevent form submit
-            alert('Field komentar wajib diisi!');
-        }
-    });
-
-    $('#subForm').on('submit', function(e) {
-        var messageContent = $('#description_description_subtask').val().trim();
         var messageContentText = $('<div>').html(messageContent).text().trim();
 
         // Check if the message is empty or only contains empty HTML tags

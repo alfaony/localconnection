@@ -84,7 +84,7 @@
                                             <select name="category_id[]" class="form-control select2 category-select2" required>
                                                 <option value="" selected disabled>Pilih Kategori</option>
                                                 @foreach($categories as $category)
-                                                    <option value="{{ $category->name }}">{{ ucfirst($category->name) }}</option>
+                                                    <option value="{{ $category->id }}">{{ ucfirst($category->name) }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -259,7 +259,7 @@
                                     <select name="category_id[]" class="form-control select3 category-select3" required>
                                         <option value="" selected disabled>Pilih Kategori</option>
                                         @foreach($categories as $category)
-                                            <option value="{{ $category->name }}">{{ ucfirst($category->name) }}</option>
+                                            <option value="{{ $category->id }}">{{ ucfirst($category->name) }}</option>
                                         @endforeach
                                     </select>
                                 </div>

@@ -47,6 +47,7 @@ use App\Http\Controllers\ObjectiveController;
 use App\Http\Controllers\VisionController;
 use App\Http\Controllers\MissionController;
 use App\Http\Controllers\ProjectDashboardController;
+use App\Http\Controllers\DailyTaskCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +74,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 {
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
+  
+  Route::get('user/profileEdit/{slug}', [UserController::class,'profileEdit'])->name('user.profileEdit');
+  Route::put('user/profileUpdate/{slug}', [UserController::class,'profileUpdate'])->name('user.profileUpdate');
   Route::resource('user', UserController::class);
 
   Route::delete('suplier/deletePurchase/purchase/{purchase}',[SuplierController::class,'deletePurchase'])->name('suplier.destroy.purchase');
@@ -195,6 +199,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::get('project-dashboard/fetchusertask/{userId}/{filter}', [ProjectDashboardController::class, 'fetchusertask'])->name('fetchusertask');
   Route::get('project-dashboard', [ProjectDashboardController::class,'index'])->name('projectdashboard.index');
+
+  Route::resource('daily-task-category', DailyTaskCategoryController::class);
+
 });
 
 // Add this to your routes/web.php

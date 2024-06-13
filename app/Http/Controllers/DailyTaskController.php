@@ -29,6 +29,7 @@ use App\Models\DailyTaskProject;
 use App\Models\DailyTaskCustomFieldValue;
 use App\Models\Objective;
 use App\Models\DailyTaskStatusRecord;
+use App\Models\SettingCompany;
 
 
 
@@ -172,7 +173,7 @@ class DailyTaskController extends Controller
             $names = $request->name;
             $descriptions = $request->description ?? [];
 
-        $objectives = $request->objective ?? [];
+            $objectives = $request->objective ?? [];
 
             $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
 
@@ -185,7 +186,7 @@ class DailyTaskController extends Controller
                 $dailyTask->start_date = $startDates[$i];
                 $dailyTask->end_date = $endDates[$i];
                 $dailyTask->assignment_user_id = $assignmentUserIds[$i];
-                $dailyTask->daily_task_category_id = $this->manageCategory($categoryIds[$i]);
+                $dailyTask->daily_task_category_id = $categoryIds[$i];
                 $dailyTask->daily_task_type_id = $typeIds[$i];
                 $dailyTask->project_id = $dataProjects[$i];
                 $dailyTask->daily_task_project_id = $projectIds[$i] ?? NULL;
@@ -259,7 +260,7 @@ class DailyTaskController extends Controller
         $types = DailyTaskType::get();
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
 
-        
+
         return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement'));
     }
 
@@ -274,6 +275,8 @@ class DailyTaskController extends Controller
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
 
+        $child = $dailytask->head ? TRUE : FALSE ;
+
         if ($divisionIds->isEmpty()) {
             // Handle the case where the user does not belong to any divisions
             // You can return an empty collection or a message, or redirect
@@ -286,7 +289,7 @@ class DailyTaskController extends Controller
         }
 
 
-        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives'));
+        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child'));
 
     }
 
@@ -299,7 +302,7 @@ class DailyTaskController extends Controller
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
             $dailyTask->assignment_user_id = $request->assignment_user_id;
-            $dailyTask->daily_task_category_id = $this->manageCategory($request->category_id);
+            $dailyTask->daily_task_category_id = $request->category_id;
             $dailyTask->daily_task_type_id = $request->type_id;
             $dailyTask->point = $request->point ?? 0;
             $dailyTask->name = $request->name;
@@ -339,7 +342,21 @@ class DailyTaskController extends Controller
             }
 
             $keyResults = $request->input('key_result_0');
-            $dailyTask->keyResults()->sync($keyResults);
+
+            if($keyResults)
+            {
+                $dailyTask->keyResults()->sync($keyResults);
+            }
+
+            if($dailyTask->children)
+            {
+                foreach ($dailyTask->children as $dailyTaskChild) 
+                {
+                    $dailyTaskChild->objective_id = $request->objective;
+                    $dailyTaskChild->keyResults()->sync($keyResults);
+                    $dailyTaskChild->save();
+                }
+            }
 
             $this->message($dailyTask->id,'edit','Mengubah Task '.$dailyTask->name);
 
@@ -360,7 +377,7 @@ class DailyTaskController extends Controller
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $dailytask->delete();
 
-        return redirect()->route('dailytask.index')->with('delete',true) ;
+        return redirect()->back()->with('delete',true) ;
     }
 
     public function report(Request $request, $slug)
@@ -623,9 +640,11 @@ class DailyTaskController extends Controller
             $dailyTask->daily_task_category_id = $dailyTaskHead->daily_task_category_id;
             $dailyTask->daily_task_type_id = $dailyTaskHead->daily_task_type_id;
             $dailyTask->daily_task_project_id = $dailyTaskHead->daily_task_project_id;
+            $dailyTask->objective_id = $dailyTaskHead->objective_id;
             $dailyTask->name = $request->name;
             $dailyTask->description = $request->description_subtask;
             $dailyTask->point = 0; // Assuming default value is 0
+            $dailyTask->project_id = $request->data_project_id[0] ?? NULL ;
             $dailyTask->save();
     
     

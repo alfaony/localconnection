@@ -51,7 +51,10 @@
                                         <select name="objective" id="objective_id" class="form-control objective-select select2" onchange="loadKeyResult();" required>
                                             <option selected disabled>Pilih Objective</option>
                                             @foreach($objectives as $objective)
-                                                <option value="{{ $objective->id }}" {{ $dailytask->objective_id == $objective->id ? 'selected' : ''}}>{{ $objective->name }}</option>
+                                                <option value="{{ $objective->id }}" {{ $dailytask->objective_id == $objective->id ? 'selected' : ''}} 
+                                                    {{ ($dailytask->head)  && ($dailytask->objective_id != $objective->id) ?   'disabled' : '' }}>
+                                                    {{ $objective->name }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -125,7 +128,7 @@
                                         <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" placeholder="yang akan dicetak di perjanjian" value="{!! $dailytask->description !!}"/>
                                     </div>
                                 </div>
-                                @if(@$dailytask->point)
+                                @if(@$dailytask->approved)
                                 @canAccess('approvement','dailytasks')
                                 <div class="col-md-12">
                                     <div class="form-group">
@@ -158,6 +161,7 @@
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
+    
     function loadCustomFields(dailyTaskId = null) 
     {
         var projectId = $('#project_id').val();

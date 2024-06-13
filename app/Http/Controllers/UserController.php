@@ -14,6 +14,7 @@ use App\Models\Role;
 use App\Models\Company;
 use App\Models\Division;
 
+use App\Rules\MatchOldPassword;
 
 class UserController extends Controller
 {
@@ -198,4 +199,62 @@ class UserController extends Controller
         $user->delete();
         return redirect()->back()->with('delete',true);
     }
+
+    /**
+     * User Profile edit
+     */
+    public function profileEdit($slug)
+    {
+        $userEdit = User::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+
+        if($userEdit->id != Auth::user()->id)
+        {
+            return redirect()->back();
+        }
+        return view('user.edit', compact('userEdit'));
+    }
+
+    /**
+     * User Profile update
+     */
+    public function profileUpdate(Request $request, $slug)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
+            'oldPassword' => ['nullable', new MatchOldPassword],
+        ]);
+
+        $user = User::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        if($user->id != Auth::user()->id)
+        {
+            return redirect()->back();
+        }
+        $user->name = $request->post('name');
+        $user->phone = $request->post('phone');
+
+        if($request->post('oldPassword'))
+        {
+            $request->validate([
+                'newPassword' => 'min:6',
+                'confirmPassword' => 'same:newPassword',
+            ],
+            [
+                'newPassword.required' => 'Password baru harus diisi.',
+                'newPassword.min' => 'Password baru minimal 6 karakter.',
+                'confirmPassword.required' => 'Konfirmasi password harus diisi.',
+                'confirmPassword.same' => 'Konfirmasi password harus sama dengan password.',
+            ]
+        );
+
+            $user->password = bcrypt($request->post('newPassword'));
+        }
+
+        $user->save();
+
+        return redirect()->to(route('home'))->with('updateProfile',true);
+
+        
+    }
+    
 }

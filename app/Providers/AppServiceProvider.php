@@ -76,7 +76,7 @@ class AppServiceProvider extends ServiceProvider
             $equipmentMenu = ['equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
-            $productivityMenu = ['report_productivities','project_dashboards','visions','divisions','objectives', 'daily_task_projects', 'dailytasks','trainings','ip_rights','sales_achievements'];
+            $productivityMenu = ['report_productivities','project_dashboards','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
 
             $menus = [
                 'homes' => [
@@ -282,6 +282,14 @@ class AppServiceProvider extends ServiceProvider
                     'route'         => 'projectdashboard.index',
                     'icon' => 'fa fa-flag',
                 ],
+
+                'daily_task_categories' => [
+                    'text'        => 'Kategori Tugas Harian',
+                    'route'         => 'daily-task-category.index',
+                    'icon' => 'fa fa-check',
+                ],
+
+
             ];
 
             foreach ($listMenu as $role) 

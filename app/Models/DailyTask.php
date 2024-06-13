@@ -160,7 +160,7 @@ class DailyTask extends Model
         $endDate = Carbon::parse($this->end_date);
         $today = Carbon::today();
 
-        return ($this->taskStatus->name == \App\Schemas\ParamSchema::DOING || $this->taskStatus->name == \App\Schemas\ParamSchema::INREVIEW) && $today->gt($endDate);
+        return ($this->taskStatus->name == \App\Schemas\ParamSchema::DOING || $this->taskStatus->name == \App\Schemas\ParamSchema::INREVIEW || $this->taskStatus->name == \App\Schemas\ParamSchema::TODO ) && $today->gt($endDate);
     }
 
     public function getNameShowAttribute()
