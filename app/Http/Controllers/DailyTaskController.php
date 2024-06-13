@@ -186,7 +186,7 @@ class DailyTaskController extends Controller
                 $dailyTask->start_date = $startDates[$i];
                 $dailyTask->end_date = $endDates[$i];
                 $dailyTask->assignment_user_id = $assignmentUserIds[$i];
-                $dailyTask->daily_task_category_id = $this->manageCategory($categoryIds[$i]);
+                $dailyTask->daily_task_category_id = $categoryIds[$i];
                 $dailyTask->daily_task_type_id = $typeIds[$i];
                 $dailyTask->project_id = $dataProjects[$i];
                 $dailyTask->daily_task_project_id = $projectIds[$i] ?? NULL;
