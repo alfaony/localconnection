@@ -837,7 +837,7 @@
 
     $('#mediaReport').on('change', function() 
     {
-        var maxFileSize = 3 * 1024 * 1024; // 5MB in bytes
+        var maxFileSize = 1 * 1024 * 1024; // 5MB in bytes
         var files = this.files;
         var validFiles = [];
 
@@ -860,7 +860,7 @@
 
     $('#mediaComment').on('change', function() 
     {
-        var maxFileSize = 3 * 1024 * 1024; // 5MB in bytes
+        var maxFileSize = 2 * 1024 * 1024; // 5MB in bytes
         var files = this.files;
         var validFiles = [];
 
@@ -883,7 +883,7 @@
 
     $('#mediaInput').on('change', function() 
     {
-        var maxFileSize = 3 * 1024 * 1024; // 5MB in bytes
+        var maxFileSize = 2 * 1024 * 1024; // 5MB in bytes
         var files = this.files;
         var validFiles = [];
 
