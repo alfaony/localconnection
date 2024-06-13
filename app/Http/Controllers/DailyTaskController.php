@@ -384,7 +384,12 @@ class DailyTaskController extends Controller
     {
         $request->validate([
             'note' => 'required|string',
-            'media.*' => 'nullable|file|max:10240'
+            'media.*' => 'nullable|file|max:1024'
+        ], [
+            'note.required' => 'Catatan wajib diisi.',
+            'note.string' => 'Catatan harus berupa teks.',
+            'media.*.file' => 'Setiap media harus berupa file.',
+            'media.*.max' => 'Ukuran file media tidak boleh lebih dari 1MB.'
         ]);
 
         DB::beginTransaction();
