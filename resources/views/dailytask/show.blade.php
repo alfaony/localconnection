@@ -837,13 +837,13 @@
 
     $('#mediaReport').on('change', function() 
     {
-        var maxFileSize = 3 * 1024 * 1024; // 5MB in bytes
+        var maxFileSize = 1 * 1024 * 1024; // 5MB in bytes
         var files = this.files;
         var validFiles = [];
 
         for (var i = 0; i < files.length; i++) {
             if (files[i].size > maxFileSize) {
-                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus.');
+                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus. Batas maksimal 1 Mb');
             } else {
                 validFiles.push(files[i]);
             }
@@ -860,13 +860,13 @@
 
     $('#mediaComment').on('change', function() 
     {
-        var maxFileSize = 3 * 1024 * 1024; // 5MB in bytes
+        var maxFileSize = 1 * 1024 * 1024; // 5MB in bytes
         var files = this.files;
         var validFiles = [];
 
         for (var i = 0; i < files.length; i++) {
             if (files[i].size > maxFileSize) {
-                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus.');
+                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus. Batas maksimal 1 Mb');
             } else {
                 validFiles.push(files[i]);
             }
@@ -883,13 +883,13 @@
 
     $('#mediaInput').on('change', function() 
     {
-        var maxFileSize = 3 * 1024 * 1024; // 5MB in bytes
+        var maxFileSize = 1 * 1024 * 1024; // 5MB in bytes
         var files = this.files;
         var validFiles = [];
 
         for (var i = 0; i < files.length; i++) {
             if (files[i].size > maxFileSize) {
-                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus.');
+                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus. Batas maksimal 1 Mb');
             } else {
                 validFiles.push(files[i]);
             }
