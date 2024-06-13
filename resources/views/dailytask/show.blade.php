@@ -925,17 +925,6 @@ $(document).ready(function() {
         }
     });
 
-    $('#subForm').on('submit', function(e) {
-        var messageContent = $('#description_description_subtask').val().trim();
-        var messageContentText = $('<div>').html(messageContent).text().trim();
-
-        // Check if the message is empty or only contains empty HTML tags
-        if (messageContent === '' || messageContentText === '') {
-            e.preventDefault(); // Prevent form submit
-            alert('Field komentar wajib diisi!');
-        }
-    });
-
     $('.select2').select2({
         width: '100%',
         placeholder: 'Pilih'
