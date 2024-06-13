@@ -624,6 +624,7 @@ class DailyTaskController extends Controller
             $dailyTask->daily_task_category_id = $dailyTaskHead->daily_task_category_id;
             $dailyTask->daily_task_type_id = $dailyTaskHead->daily_task_type_id;
             $dailyTask->daily_task_project_id = $dailyTaskHead->daily_task_project_id;
+            $dailyTask->objective_id = $dailyTaskHead->objective_id;
             $dailyTask->name = $request->name;
             $dailyTask->description = $request->description_subtask;
             $dailyTask->point = 0; // Assuming default value is 0
