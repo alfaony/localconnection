@@ -212,15 +212,17 @@ class ObjectiveController extends Controller
         $index = $request->index ?? 0;
         $dailyTaskId = $request->dailyTaskId;
         $selectedKeyResults = [];
+        $hasHead = false;
 
         if ($dailyTaskId) {
             $dailyTask = DailyTask::with('keyResults')->find($dailyTaskId);
             if ($dailyTask) {
                 $selectedKeyResults = $dailyTask->keyResults->pluck('id')->toArray();
+                $hasHead = $dailyTask->head ? true : false;
             }
         }
 
-        return view('partials.keyresult-fields', compact('keyResult', 'selectedKeyResults', 'index'));
+        return view('partials.keyresult-fields', compact('keyResult', 'selectedKeyResults', 'index' ,'hasHead'));
     }
 
     public function showtask(Request $request, $slug)

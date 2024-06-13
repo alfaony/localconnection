@@ -275,6 +275,8 @@ class DailyTaskController extends Controller
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
 
+        $child = $dailytask->head ? TRUE : FALSE ;
+
         if ($divisionIds->isEmpty()) {
             // Handle the case where the user does not belong to any divisions
             // You can return an empty collection or a message, or redirect
@@ -287,7 +289,7 @@ class DailyTaskController extends Controller
         }
 
 
-        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives'));
+        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child'));
 
     }
 
@@ -340,7 +342,21 @@ class DailyTaskController extends Controller
             }
 
             $keyResults = $request->input('key_result_0');
-            $dailyTask->keyResults()->sync($keyResults);
+
+            if($keyResults)
+            {
+                $dailyTask->keyResults()->sync($keyResults);
+            }
+
+            if($dailyTask->children)
+            {
+                foreach ($dailyTask->children as $dailyTaskChild) 
+                {
+                    $dailyTaskChild->objective_id = $request->objective;
+                    $dailyTaskChild->keyResults()->sync($keyResults);
+                    $dailyTaskChild->save();
+                }
+            }
 
             $this->message($dailyTask->id,'edit','Mengubah Task '.$dailyTask->name);
 
@@ -361,7 +377,7 @@ class DailyTaskController extends Controller
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $dailytask->delete();
 
-        return redirect()->route('dailytask.index')->with('delete',true) ;
+        return redirect()->back()->with('delete',true) ;
     }
 
     public function report(Request $request, $slug)
@@ -628,6 +644,7 @@ class DailyTaskController extends Controller
             $dailyTask->name = $request->name;
             $dailyTask->description = $request->description_subtask;
             $dailyTask->point = 0; // Assuming default value is 0
+            $dailyTask->project_id = $request->data_project_id[0] ?? NULL ;
             $dailyTask->save();
     
     

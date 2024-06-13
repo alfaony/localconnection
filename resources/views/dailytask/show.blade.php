@@ -14,6 +14,9 @@
                 <div class="alert alert-success mt-3">{{ ucfirst($msg) }} Berhasil</div>
             @endif
         @endforeach
+        @if(Session::get('delete'))
+        <div class="alert alert-success mt-3">Tugas Berhasil Terhapus</div>
+        @endif
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul>
