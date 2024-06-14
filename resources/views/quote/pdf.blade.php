@@ -200,7 +200,9 @@
     </div>
   </div>
   <div class="col-md-12 text-center mt-3"> <!-- Penambahan class text-center dan mt-3 -->
+        @canAccess('edit','quotes')
         <a href="{{ route('quote.edit',$quote->slug) }}" class="btn btn-primary"><i class="fa fa-edit"></i>Edit</a>
+        @endcanAccess
         <button type="button" id="downloadQuote" class="btn btn-success"><i class="fa fa-file-pdf"></i> {{__('Download')}}</button>
     </div>
 </div>
