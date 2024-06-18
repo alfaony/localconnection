@@ -48,6 +48,8 @@ use App\Http\Controllers\VisionController;
 use App\Http\Controllers\MissionController;
 use App\Http\Controllers\ProjectDashboardController;
 use App\Http\Controllers\DailyTaskCategoryController;
+use App\Http\Controllers\DivisionBudgetController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -202,9 +204,12 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::resource('daily-task-category', DailyTaskCategoryController::class);
 
+  Route::resource('division-budget', DivisionBudgetController::class);
+  Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
 });
 
 // Add this to your routes/web.php
+
 
 
 

@@ -27,7 +27,9 @@ class ObjectiveController extends Controller
      */
     public function index()
     {
-        $objectives = Objective::byCompany(Auth::user()->company_id)->paginate(10);
+        $objectives = Objective::byCompany(Auth::user()->company_id)
+        ->byUserDivisions(Auth::user()->id)
+        ->paginate(10);
         $divisions = Division::byCompany(Auth::user()->company_id)->get();
         return view('objective.index', compact('objectives', 'divisions'));
     }
@@ -39,7 +41,8 @@ class ObjectiveController extends Controller
      */
     public function create()
     {
-        $divisions = Division::byCompany(Auth::user()->company_id)->get();
+        $user = User::with('divisions')->find(Auth::user()->id);
+        $divisions = $user->divisions()->get();
         $missions = Mission::where('company_id',Auth::user()->company_id)->get();
 
         return view('objective.create', compact('divisions','missions'));
@@ -112,7 +115,8 @@ class ObjectiveController extends Controller
     public function edit($slug)
     {
         $objective = Objective::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-        $divisions = Division::byCompany(Auth::user()->company_id)->get();
+        $user = User::with('divisions')->find(Auth::user()->id);
+        $divisions = $user->divisions()->get();
         $missions = Mission::where('company_id',Auth::user()->company_id)->get();
 
         return view('objective.edit', compact('divisions','objective', 'missions'));

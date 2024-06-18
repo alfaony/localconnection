@@ -76,7 +76,7 @@ class AppServiceProvider extends ServiceProvider
             $equipmentMenu = ['equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
-            $productivityMenu = ['report_productivities','project_dashboards','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
+            $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
 
             $menus = [
                 'homes' => [
@@ -289,7 +289,11 @@ class AppServiceProvider extends ServiceProvider
                     'icon' => 'fa fa-check',
                 ],
 
-
+                'division_budgets' => [
+                    'text'        => 'Pengajuan Anggaran',
+                    'route'         => 'division-budget.index',
+                    'icon' => 'fa fa-money-bill',
+                ],
             ];
 
             foreach ($listMenu as $role) 
