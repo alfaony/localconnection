@@ -86,6 +86,22 @@ class Project extends Model
         return $this->budgets - $this->purchase;
     }
 
+    public function getProgressPercentageAttribute()
+    {
+        $now = Carbon::now();
+        $start_date = Carbon::parse($this->start_date);
+        $end_date = Carbon::parse($this->end_date);
+
+        if ($now->greaterThanOrEqualTo($end_date)) {
+            return 100;
+        }
+
+        $totalDuration = $start_date->diffInSeconds($end_date);
+        $elapsedDuration = $start_date->diffInSeconds($now);
+
+        return $totalDuration > 0 ? round(($elapsedDuration / $totalDuration) * 100, 2) : 0;
+    }
+    
     public function workOrder()
     {
         return $this->belongsTo(WorkOrder::class)->withTrashed();

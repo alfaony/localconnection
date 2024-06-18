@@ -139,6 +139,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             <tr>
                 <th>No Proyek</th>
                 <th>Nama Proyek</th>
+                <th>Presentase Proyek</th>
                 <th>Nomor SPK</th>
                 <th>Total SPK</th>
                 <th>Aksi</th>
@@ -149,6 +150,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             <tr>
                 <td>{{ $no++ }}</td>
                 <td>{{ $a->title }}</td>
+                <td> {{ $a->progress_percentage. "%"  ?? "0%" }} </td>
                 <td>{{ $a->workOrder ? $a->workOrder->number_result : '' }}</td>
                 <td>{{ $a->workOrder ? 'Rp. '.number_format($a->workOrder->total,0,',','.') : '' }}</td>
                 <td>
