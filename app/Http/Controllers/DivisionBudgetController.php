@@ -8,12 +8,18 @@ use Illuminate\Http\Request;
 use Auth;
 
 use App\Schemas\RoleSchema;
+use App\Helpers\Access;
 
 class DivisionBudgetController extends Controller
 {
     public function index()
     {
         $userRoleName = Auth::user()->role->name;
+        $approval = false;
+        if(Access::can('approve','division_budgets'))
+        {
+            $approval = true;
+        }
 
         if($userRoleName == RoleSchema::ROOT || $userRoleName == RoleSchema::ADMIN || $userRoleName == RoleSchema::DIRECTOR)
         {
@@ -22,7 +28,7 @@ class DivisionBudgetController extends Controller
         {
             $divisionBudgets = DivisionBudget::where('user_id', Auth::id())->with('division', 'user')->orderBy('created_at','desc')->paginate(10);
         }
-            return view('division_budget.index', compact('divisionBudgets'));
+            return view('division_budget.index', compact('divisionBudgets','approval'));
     }
 
     public function create()
@@ -105,8 +111,9 @@ class DivisionBudgetController extends Controller
         $request->validate([
             'status' => 'required|in:1,0',
         ]);
+
         $divisionBudget = DivisionBudget::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-        $divisionBudget->update(['is_approved' => $request->status]);
+        $divisionBudget->update(['is_approved' => $request->status,'notes' => $request->notes]);
 
         $approvement = $request->status == 1 ? 'approve' : 'notapprove';
 
