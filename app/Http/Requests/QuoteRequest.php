@@ -25,6 +25,8 @@ class QuoteRequest extends FormRequest
     {
         return [
             'customer'  =>  'required|exists:customers,id',
+            'leads_from'  =>  'required|in:1,2',
+            'division_budget'  =>  'nullable|exists:division_budgets,id',
             'date' => 'required|date',
             'tax' => 'nullable|numeric|min:0|max:100',
             'service_fee' => 'nullable|numeric|min:0|max:100',
@@ -51,6 +53,11 @@ class QuoteRequest extends FormRequest
     public function messages()
     {
         return [
+            'customer.required' => 'Pelanggan diperlukan.',
+            'customer.exists' => 'Pelanggan tidak ditemukan.',
+            'leads_from.required' => 'Leads diperlukan.',
+            'leads_from.in' => 'Leads tidak valid.',
+            'division_budget.exists' => 'Anggaran divisi tidak ditemukan.',
             'date.required' => 'Tanggal wajib diisi.',
             'tax.required' => 'Pajak diperlukan.',
             'tax.numeric' => 'Pajak harus dalam format angka.',

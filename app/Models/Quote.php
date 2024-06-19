@@ -68,6 +68,11 @@ class Quote extends Model
         return $this->belongsTo(Customer::class)->withTrashed();
     }
 
+    public function divisionBudget()
+    {
+        return $this->belongsTo(DivisionBudget::class,'division_budget_id')->withTrashed();
+    }
+
     public function getQuoteNumberResultAttribute()
     {
         $date = Carbon::parse($this->created_at)->format('m/Y');

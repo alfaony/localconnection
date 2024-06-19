@@ -84,7 +84,9 @@ class DivisionBudgetController extends Controller
     public function show($slug)
     {
         $divisionBudget = DivisionBudget::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-        return view('division_budgets.show', compact('divisionBudget'));
+        $initialBudget = ($divisionBudget->quotes->sum('total') ?? 0) + $divisionBudget->amount;
+
+        return view('division_budget.show', compact('divisionBudget', 'initialBudget'));
     }
 
     public function destroy($slug)

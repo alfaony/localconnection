@@ -64,6 +64,34 @@ class DivisionBudget extends Model
         return $this->belongsTo(Division::class);
     }
 
+    // DivisionBudget.php
+    public function quotes()
+    {
+        return $this->hasMany(Quote::class, 'division_budget_id');
+    }
+
+    // Quote.php
+    public function divisionBudget()
+    {
+        return $this->belongsTo(DivisionBudget::class);
+    }
+
+    public function getInitialBudgetAttribute()
+    {
+        return $this->quotes->sum('total') + $this->amount;
+    }
+
+    public function getBudgetUsagePercentageAttribute()
+    {
+        $initialBudget = $this->initial_budget;
+        $usedBudget = $this->quotes->sum('total');
+
+        if ($initialBudget == 0) {
+            return 0;
+        }
+
+        return round(($usedBudget / $initialBudget) * 100, 2);
+    }
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

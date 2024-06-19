@@ -13,11 +13,14 @@ use Carbon\Carbon;
 use App\Helpers\Access;
 
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
+
 use App\Models\Quote;
 use App\Models\QuoteProduct;
 use App\Models\Product;
 use App\Models\Customer;
 use App\Models\SettingCompany;
+use App\Models\DivisionBudget;
 
 
 class QuoteController extends Controller
@@ -46,8 +49,27 @@ class QuoteController extends Controller
         $nomor = Quote::byCompany(Auth::user()->company_id)->withTrashed()->max('quote_number') + 1;
         $nomorQuote = $nomor.'/'.$date;
         $date = Carbon::now();
+
+        $leadsFrom  = config('custom.leads_from');
+        $user = Auth::user();
+        $divisionIds = $user->divisions->pluck('id');
+
+        if ($divisionIds->isEmpty()) {
+            // Handle the case where the user does not belong to any divisions
+            // You can return an empty collection or a message, or redirect
+            return redirect()->route('quote.index')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
+        } else {
+            // Proceed with fetching objectives related to the user's divisions
+
+            $divisionBudget = DivisionBudget::whereHas('division', function ($query) use ($divisionIds) 
+            {
+                $query->whereIn('id', $divisionIds);
+            })
+            ->where('is_approved', true)
+            ->get();
+        }
         
-        return view('quote.createOrEdit',compact('product','customer','nomorQuote','userCreate','nomor'));
+        return view('quote.createOrEdit',compact('product','customer','nomorQuote','userCreate','nomor','leadsFrom','divisionBudget'));
     }
 
     /**
@@ -58,9 +80,9 @@ class QuoteController extends Controller
      */
     public function store(QuoteRequest $request)
     {
+        DB::beginTransaction();
         try 
         {
-            DB::beginTransaction();
             $no = $request->post('nomor') ?? 0; 
             $date = Carbon::now()->format('m/Y');
             $quoteNumber = Quote::byCompany(Auth::user()->company_id)->withTrashed()->max('quote_number') + 1;
@@ -80,6 +102,8 @@ class QuoteController extends Controller
             $quote->quote_transition = $request->post('quote_transition');
             $quote->payment_term = $request->post('payment_term');
             $quote->third_party_docs = $request->post('third_party_docs');
+            $quote->leads_from = $request->leads_from ?? NULL;
+            $quote->division_budget_id = $request->division_budget ?? NULL;
             
             $quote->user_created_id = Auth::user()->id;
             $quote->user_updated_id = Auth::user()->id;
@@ -104,7 +128,12 @@ class QuoteController extends Controller
                 $quote->quoteProduct()->save($quoteProduct);
             }
 
-            $this->grandTotal($quote);
+            $grandTotal = $this->grandTotal($quote);
+            // Kurangi jumlah budget
+            if ($request->division_budget) {
+                $this->adjustBudget($request->division_budget, -$grandTotal);
+            }
+
             DB::commit();
             // return redirect()->to(route('quote.index'))->with('store',true);
             return redirect()->to(route('quote.download.pdf', ['slug' => $quote->slug]))->with('store',true);
@@ -131,13 +160,31 @@ class QuoteController extends Controller
         $product = Product::byCompany(Auth::user()->company_id)->get();
         $customer = Customer::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $quote = Quote::where('slug', $slug)->firstOrFail();
+        $leadsFrom  = config('custom.leads_from');
+        $user = Auth::user();
+        $divisionIds = $user->divisions->pluck('id');
+
+        if ($divisionIds->isEmpty()) {
+            // Handle the case where the user does not belong to any divisions
+            // You can return an empty collection or a message, or redirect
+            return redirect()->route('quote.index')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
+        } else {
+            // Proceed with fetching objectives related to the user's divisions
+
+            $divisionBudget = DivisionBudget::whereHas('division', function ($query) use ($divisionIds) 
+            {
+                $query->whereIn('id', $divisionIds);
+            })
+            ->where('is_approved', true)
+            ->get();
+        }
 
         $date = Carbon::parse($quote->created_at)->format('m/Y');
         $nomor = $request->get('nomor') ?? 0;
         $nomorQuote = $quote->quote_number_result ?? '';
         $userCreate = $quote->userCreate ? $quote->userCreate->name : '';
 
-        return view('quote.createOrEdit',compact('product','customer','nomorQuote','quote','userCreate','nomor'));
+        return view('quote.createOrEdit',compact('product','customer','nomorQuote','quote','userCreate','nomor','leadsFrom','divisionBudget'));
     }
 
     /**
@@ -149,11 +196,18 @@ class QuoteController extends Controller
      */
     public function update(QuoteRequest $request, $slug)
     {
+        DB::beginTransaction();
         try 
         {
-            DB::beginTransaction();
-            $no = $request->post('nomor') ?? 0; 
             $quote = Quote::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            
+            // Jika ada perubahan pada division_budget_id, kembalikan anggaran yang lama terlebih dahulu
+            if ($quote->division_budget_id) 
+            {
+                $this->adjustBudget($quote->division_budget_id, $quote->total);
+            }
+    
+            // Perbarui data quote
             $quote->customer_id = $request->post('customer');
             $quote->date = $request->post('date');
             $quote->tax = $request->post('tax');
@@ -165,23 +219,22 @@ class QuoteController extends Controller
             $quote->quote_transition = $request->post('quote_transition');
             $quote->payment_term = $request->post('payment_term');
             $quote->third_party_docs = $request->post('third_party_docs');
-            
             $quote->user_updated_id = Auth::user()->id;
+            $quote->leads_from = $request->leads_from ?? NULL;
+            $quote->division_budget_id = $request->division_budget ?? NULL;
             $quote->save();
 
+            // Hapus produk quote sebelumnya dan tambahkan yang baru
+            $quote->quoteProduct()->delete();
+            
             $product = $request->post('product');
             $description = $request->post('description');
             $qty = $request->post('qty');
             $price = $request->post('price');
             $sub_total = $request->post('sub_total');
-            $ids = $request->input('ids');
 
-            // destroy transaction
-            $quote->quoteProduct()->delete();
-            
             for ($i = 0; $i < count($product); $i++) 
             {
-
                 $quoteProduct = new QuoteProduct;
                 $quoteProduct->sort = $i + 1;
                 $quoteProduct->product_id = $product[$i];
@@ -191,45 +244,23 @@ class QuoteController extends Controller
                 $quoteProduct->description = $description[$i];
 
                 $quote->quoteProduct()->save($quoteProduct);
-
-                // $id = $ids[$i];
-                // if(!$id)
-                // {
-                //     $quoteProduct = new QuoteProduct;
-                //     $quoteProduct->sort = $i + 1;
-                //     $quoteProduct->product_id = $product[$i];
-                //     $quoteProduct->price_sell = $price[$i];
-                //     $quoteProduct->qty = $qty[$i];
-                //     $quoteProduct->sub_total = $sub_total[$i];
-                //     $quoteProduct->description = $description[$i];
-    
-                //     $quote->quoteProduct()->save($quoteProduct);
-                // }else
-                // {
-                //     $quoteProduct = QuoteProduct::find($id);
-                //     $quoteProduct->sort = $i + 1;
-                //     $quoteProduct->product_id = $product[$i];
-                //     $quoteProduct->price_sell = $price[$i];
-                //     $quoteProduct->qty = $qty[$i];
-                //     $quoteProduct->sub_total = $sub_total[$i];
-                //     $quoteProduct->description = $description[$i];
-                //     $quoteProduct->save();
-                // }
-
             }
 
-            $this->grandTotal($quote);
+            // Hitung grand total
+            $grandTotal = $this->grandTotal($quote);
+
+            // Kurangi anggaran dengan grand total baru
+            if ($request->division_budget) {
+                $this->adjustBudget($request->division_budget, -$grandTotal);
+            }
+
             DB::commit();
 
             return redirect()->to(route('quote.download.pdf', ['slug' => $quote->slug]))->with('store',true);
         } catch (\Throwable $th) {
-            //throw $th;
-            // dd($th);
-
             DB::rollback();
             Log::error($th);
             return redirect()->to(route('quote.index'))->with('false',true);
-
         }
     }
 
@@ -254,6 +285,10 @@ class QuoteController extends Controller
             // Delete
             // Menghapus relasi terlebih dahulu
             $quote = Quote::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            if ($quote->division_budget_id) 
+            {
+                $this->adjustBudget($quote->division_budget_id, $quote->total);
+            }
             $quote->quoteProduct()->delete();
             
             $quote->delete();
@@ -278,32 +313,56 @@ class QuoteController extends Controller
     {
         $service_fee = $request->service_fee ?? 0;
         $tax = $request->tax ?? 0;
-
         $total = $request->total ?? 0;
         $charges = $request->charges ?? 0;
         $discount = $request->discount ?? 0;
+        $division_budget_id = $request->division_budget ?? NULL;
+        $quote_id = $request->quote_id ?? NULL;
 
-        // return $tax;
+        // Hitung total setelah diskon dan biaya tambahan
         $totalAll = ($total + $charges) - $discount;
-        $serviceFee = $service_fee != 0 ? round(($totalAll * $service_fee) / ParamSchema::PERCENTAGE) : 0 ;
-        
+        $serviceFee = $service_fee != 0 ? round(($totalAll * $service_fee) / 100) : 0;
         $totalAfterServiceFee = $totalAll + $serviceFee;
-        $ppn = $tax != 0 ? round(($totalAfterServiceFee * $tax) / ParamSchema::PERCENTAGE) : 0 ;
-        
+        $ppn = $tax != 0 ? round(($totalAfterServiceFee * $tax) / 100) : 0;
         $grandTotal = $totalAfterServiceFee + $ppn;
 
-        $result = 
-        [
+        // Ambil jumlah budget berdasarkan ID division_budget
+        $budgetAmount = 0;
+        if ($division_budget_id > 0) {
+            $budget = DivisionBudget::find($division_budget_id);
+            if ($budget) {
+                $budgetAmount = $budget->amount;
+
+                // Jika ini adalah update dan division_budget_id sama dengan yang ada di quote, tambahkan kembali grandTotal sebelumnya
+                if ($quote_id) 
+                {
+                    $quote = Quote::find($quote_id);
+                    if ($quote && ($quote->division_budget_id == $division_budget_id)) {
+                        $budgetAmount += $quote->total;
+                    }
+                }
+            }
+        }
+
+        $save = true;
+        $result = [
             'total' => $total,
-            'service_fee' =>'Rp. '.number_format($serviceFee,0,',','.'),
-            'ppn' => 'Rp. '.number_format($ppn,0,',','.'),
-            'grand_total' => 'Rp. '.number_format($grandTotal,0,',','.'),
-            // 'test' => $request->all()
+            'service_fee' => 'Rp. '.number_format($serviceFee, 0, ',', '.'),
+            'ppn' => 'Rp. '.number_format($ppn, 0, ',', '.'),
+            'grand_total' => 'Rp. '.number_format($grandTotal, 0, ',', '.'),
+            'grand_total_raw' => $grandTotal,
+            'budget_amount' => $budgetAmount,
         ];
+
+        // Periksa apakah grand total melebihi division budget
+        if ( isset($division_budget_id) && $grandTotal > $budgetAmount) {
+            $save = false;
+        }
 
         return [
             'status' => 200,
             'message' => 'okay',
+            'save' => $save,
             'data' => $result
         ];
     }
@@ -415,6 +474,8 @@ class QuoteController extends Controller
 
         $quote->total = $grandTotal;
         $quote->save();
+
+        return $grandTotal;
     }
 
     /**
@@ -502,4 +563,13 @@ class QuoteController extends Controller
                 
         return response()->json($quote);
      }
+
+     private function adjustBudget($division_budget_id, $amount)
+    {
+        $budget = DivisionBudget::find($division_budget_id);
+        if ($budget) {
+            $budget->amount += $amount;
+            $budget->save();
+        }
+    }
 }

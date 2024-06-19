@@ -37,7 +37,9 @@
                 <tr>
                     <th class="col-2">Name</th>
                     <th class="col-1">Divisi</th>
-                    <th class="col-3">Anggaran</th>
+                    <th class="col-2">Anggaran</th>
+                    <th class="col-2">Sisa Anggaran</th>
+                    <th class="col-2">Presentase Penyerapan</th>
                     <th class="col-3">Aksi</th>
                 </tr>
             </thead>
@@ -46,7 +48,9 @@
                 <tr>
                     <td>{{ $budget->name }}</td>
                     <td>{{ $budget->division->name }}</td>
+                    <td>{{ 'Rp.'.number_format($budget->initial_budget,0,',','.') }}</td>
                     <td>{{ 'Rp.'.number_format($budget->amount,0,',','.') }}</td>
+                    <td> {{ $budget->budget_usage_percentage }} %</td>
                     <td>
                         @if(!isset($budget->is_approved))
                         @canAccess('edit','division_budgets')
@@ -76,21 +80,23 @@
                         @endcanAccess
 
                         @elseif($budget->is_approved == 0)
-                        <button type="button" class="btn btn-danger"><i class="fa fa-times"></i></button>
-                        
+                        <button type="button" class="btn btn-danger" disabled><i class="fa fa-times"></i></button>
                         @canAccess('edit','division_budgets')
                         <a href="{{ route('division-budget.edit', $budget->slug) }}" class="btn btn-warning"><i class="fa fa-edit"></i></a>
                         @endcanAccess
-
+                        
                         @else
-                        <button type="button" class="btn btn-success"><i class="fa fa-check"></i></button>
+                        @canAccess('show','division_budgets')
+                        <a href="{{ route('division-budget.show', $budget->slug) }}" class="btn btn-info"><i class="fa fa-eye"></i></a>
+                        @endcanAccess
+                        <button type="button" class="btn btn-success" disabled><i class="fa fa-check"></i></button>
                         @endif
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
-        {{ $divisionBudgets->links() }}
+        {{ $divisionBudgets->withQueryString()->links('vendor.pagination.bootstrap-4') }}
     </div>
 </div>
 @endsection
