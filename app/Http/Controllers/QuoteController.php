@@ -328,7 +328,11 @@ class QuoteController extends Controller
 
         // Ambil jumlah budget berdasarkan ID division_budget
         $budgetAmount = 0;
-        if ($division_budget_id > 0) {
+        $calculationExternal = false;
+        $budgetSisa = 0;
+        if (isset($division_budget_id)) 
+        {
+            $calculationExternal = true;
             $budget = DivisionBudget::find($division_budget_id);
             if ($budget) {
                 $budgetAmount = $budget->amount;
@@ -341,6 +345,8 @@ class QuoteController extends Controller
                         $budgetAmount += $quote->total;
                     }
                 }
+
+                $budgetSisa = $budgetAmount - $grandTotal;
             }
         }
 
@@ -352,6 +358,8 @@ class QuoteController extends Controller
             'grand_total' => 'Rp. '.number_format($grandTotal, 0, ',', '.'),
             'grand_total_raw' => $grandTotal,
             'budget_amount' => $budgetAmount,
+            'calculationExternal' => $calculationExternal,
+            'remaining_budget' => 'Rp. '.number_format($budgetSisa, 0, ',', '.'),
         ];
 
         // Periksa apakah grand total melebihi division budget

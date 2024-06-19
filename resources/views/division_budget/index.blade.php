@@ -33,7 +33,7 @@
     </div>
     <div class="card-body">
         <table class="table table-bordered table-striped">
-            <thead class="thead-dark">
+            <thead>
                 <tr>
                     <th class="col-2">Name</th>
                     <th class="col-1">Divisi</th>

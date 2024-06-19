@@ -162,10 +162,28 @@
             
             <div class="row mt-2" id="budget_amount_row" style="display: none;">
                 <div class="col-2">
-                    <label>Anggaran Sisa:</label>
+                    <label>Anggaran:</label>
                 </div>
                 <div class="col-6">
                     <p id="budget_amount"></p>
+                </div>
+            </div>
+
+            <div class="row mt-2" id="budget_usage_row" style="display: none;">
+                <div class="col-2">
+                    <label>Penggunaan Anggaran:</label>
+                </div>
+                <div class="col-6">
+                    <p id="budget_usage"></p>
+                </div>
+            </div>
+
+            <div class="row mt-2" id="remaining_budget_row" style="display: none;">
+                <div class="col-2">
+                    <label>Sisa Anggaran:</label>
+                </div>
+                <div class="col-6">
+                    <p id="remaining_budget"></p>
                 </div>
             </div>
 
@@ -286,6 +304,7 @@
                     <div class="d-flex justify-content-between mb-2">
                         <strong>Grand Total:</strong>
                         <strong id="grand_total_result">Rp 0</strong>
+                        <input type="hidden" id="grand_total_result_raw" value="70000">
                     </div>
                 </div>
             </div>
@@ -337,6 +356,8 @@
                 $('#division_budget').removeAttr('required');
                 $('#budget_amount_row').hide();
                 $('#budget_amount').text('');
+
+                $('#division_budget').val('').trigger('change');
             }
         });
 
@@ -350,14 +371,25 @@
         // Event listener for division_budget select change
         $('#division_budget').change(function () {
             var selectedBudget = parseFloat($(this).find(':selected').data('budget'));
-            var grandTotal = parseFloat($('#grand_total_result').text().replace(/[^\d]/g, ''));
+            var grandTotal = parseFloat("{{ @$quote->total ?? 0 }}");
+            var currentQuoteId = "{{ @$quote->id ?? '' }}";
+            var currentDivisionBudgetId = "{{ @$quote->division_budget_id ?? '' }}";
+            var selectedDivisionBudgetId = $(this).val();
 
-            if (selectedBudget || selectedBudget === 0) {
+            if (currentQuoteId && currentDivisionBudgetId == selectedDivisionBudgetId) {
+                // If the selected budget matches the quote's division_budget_id, add the total
+                selectedBudget += grandTotal;
+            }
+
+            console.log(grandTotal);
+            console.log("------");
+            if (selectedBudget || selectedBudget === 0) 
+            {
                 $('#budget_amount_row').show();
                 if (selectedBudget == 0) {
                     $('#budget_amount').text('Rp 0');
                 } else {
-                    selectedBudget; // Tambahkan grand total saat ini jika ada
+                    selectedBudget ; // Tambahkan grand total saat ini jika ada
                     $('#budget_amount').text('Rp ' + selectedBudget.toLocaleString('id-ID'));
                 }
                 calculation();
@@ -709,7 +741,20 @@
                     $("#service_fee_result").html(values.service_fee);
                     $("#ppn_result").html(values.ppn);
                     $("#grand_total_result").html(values.grand_total);
+                    
+                    console.log(response.data.calculationExternal);
+                    $('#budget_usage_row').hide();
+                    $('#remaining_budget_row').hide();
+                    
+                    if(response.data.calculationExternal)
+                    {
+                        console.log("here");
+                        $('#budget_usage_row').show();
+                        $('#remaining_budget_row').show();
 
+                        $('#budget_usage').html(values.grand_total);
+                        $('#remaining_budget').html(values.remaining_budget);
+                    }
                     // Check if grand total exceeds division budget
                     if (!response.save) {
                         Swal.fire({
