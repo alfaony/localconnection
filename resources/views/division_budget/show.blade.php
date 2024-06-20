@@ -2,11 +2,14 @@
 
 @section('title', 'Detail Anggaran Divisi')
 
-@section('content_header')
-    <h1>Detail Anggaran Divisi</h1>
-@stop
 
 @section('content')
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ route('division-budget.index') }}">Pengajuan Anggaran</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ $divisionBudget->name ?? '' }}</li>
+    </ol>
+</nav>
 <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
         <h3 class="card-title">{{ $divisionBudget->name }}</h3>
@@ -27,7 +30,7 @@
         <h4 class="mb-3">Quotes</h4>
         <div class="table-responsive">
             <table class="table table-striped table-bordered">
-                <thead class="thead-dark">
+                <thead>
                     <tr>
                         <th>No Quote</th>
                         <th>Total</th>
