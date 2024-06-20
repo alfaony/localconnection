@@ -59,9 +59,18 @@ class HomeController extends Controller
 
         $totalQuote = Quote::byCompany(Auth::user()->company_id)->count() ?? 0;
         $totalWorkOrder = WorkOrder::byCompany(Auth::user()->company_id)->count() ?? 0;
-        $quotesWithoutWorkOrder = Quote::byCompany(Auth::user()->company_id)
-                                        ->doesntHave('workOrder')
-                                        ->paginate(10);
+
+        // Quote
+        $searchQuote = $request->input('search_quote');
+
+        $quotesQuery = Quote::doesntHave('workOrder');
+
+        if ($searchQuote) {
+            $quotesQuery->where('number_result', 'like', "%{$searchQuote}%");
+        }
+        $quotesWithoutWorkOrder = $quotesQuery->paginate(10);
+        
+
 
 
         $equipments = Equipment::byCompany(Auth::user()->company_id)->where('total_stock', ParamSchema::LIMIT)->get();
