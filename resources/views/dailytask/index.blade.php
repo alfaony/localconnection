@@ -58,8 +58,12 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-12 col-md-2">
-                <input type="date" class="form-control" id="date" name="date" value="{{ request('date') }}">
+            <div class="col-12 col-md-4">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="{{ request('start_date') && request('end_date') ? request('start_date').' - '.request('end_date') : '' }}">
+                    <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
+                    <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
+                </div>
             </div>
             <div class="col-12 col-md-2">
                 <input type="text" class="form-control" id="search" name="search" placeholder="Search" value="{{ request('search') }}">
@@ -162,19 +166,48 @@
     </div>
 </div>
 @endsection
+
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script>
-    $(document).ready(function () 
-    {
+    $(document).ready(function () {
+        // Initialize Select2
         $('.select2').select2();
+
+        // Initialize Daterangepicker
+        $('#date_range').daterangepicker({
+            autoUpdateInput: false, // Prevents the input from being automatically populated
+            locale: {
+                format: 'DD-MM-YYYY',
+                cancelLabel: 'Clear' // Adds a clear button to the picker
+            }
+        });
+
+        $('#date_range').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('DD-MM-YYYY') + ' - ' + picker.endDate.format('DD-MM-YYYY'));
+        });
+
+        $('#date_range').on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+        });
+
+        // Capture the date range selection
+        $('#date_range').on('apply.daterangepicker', function(ev, picker) {
+            $('#start_date').val(picker.startDate.format('DD-MM-YYYY'));
+            $('#end_date').val(picker.endDate.format('DD-MM-YYYY'));
+        });
     });
 </script>
 @endsection
+
 @section('css')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <style>
     body {
         font-family: Arial, sans-serif;

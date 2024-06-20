@@ -62,11 +62,11 @@
             </div>
         </div>
         
-        <div class="row">
+        <div class="row mt-3">
             <div class="col-md-4">
                 <div class="card text-white bg-warning mb-3">
                     <div class="card-body">
-                        <h5 class="card-title">Total Kutipan</h5>
+                        <h5 class="card-title">Total Quote</h5>
                         <p class="card-text">{{ $totalQuote }}</p>
                     </div>
                 </div>
@@ -79,6 +79,45 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="card-header">
+            <h5> Quote Tanpa SPK </h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>No Quote</th>
+                        <th>Total</th>
+                        @canAccess('downloadPdf','quotes')
+                        <th>Aksi</th>
+                        @endcanAccess
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($quotesWithoutWorkOrder as $quote)
+                    <tr>
+                        <td>{{ $quote->number_result }}</td>
+                        <td>Rp {{ number_format($quote->total, 0, ',', '.') }}</td>
+                        @canAccess('downloadPdf','quotes')
+                        <td>
+                            <a href="{{ route('quote.download.pdf', $quote->slug) }}" class="btn btn-sm btn-primary">
+                                <i class="fa fa-eye"></i> Quote
+                            </a>
+                        </td>
+                        @endcanAccess
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="3" class="text-center">Tidak ada quotes tanpa WorkOrder.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+
+            {{ $quotesWithoutWorkOrder->withQueryString()->links('vendor.pagination.bootstrap-4') }}
         </div>
     </div>
 </div>
