@@ -66,13 +66,7 @@
     .card {
         border-radius: 10px;
     }
-    .table thead th {
-        background-color: #343a40;
-        color: #fff;
-    }
-    .table-striped tbody tr:nth-of-type(odd) {
-        background-color: rgba(0, 0, 0, 0.05);
-    }
+
     .table-responsive {
         margin-top: 20px;
     }
