@@ -85,6 +85,17 @@
         <div class="card-header">
             <h5> Quote Tanpa SPK </h5>
         </div>
+        <!-- Add Search Form -->
+        <form method="GET" action="{{ route('home') }}" class="mb-3">
+            <div class="row mt-2 align-items-center">
+                <div class="col-auto">
+                    <input type="text" name="search_quote" class="form-control" placeholder="Cari No Quote">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Cari</button>
+                </div>
+            </div>
+        </form>
         <div class="table-responsive">
             <table class="table table-striped table-bordered">
                 <thead class="thead-dark">
