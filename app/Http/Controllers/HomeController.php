@@ -120,21 +120,30 @@ class HomeController extends Controller
         $dailyTaskCountOverdue = DailyTask::where('assignment_user_id', Auth::user()->id)
         ->whereHas('taskStatus', function ($query)
         {
-            $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO);
+            $query->where(function($query) 
+            {
+                $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO)->orWhere('name',ParamSchema::NOTCOMPLATE);
+            });
         })
         ->whereDate('start_date', '<', now())->whereDate('end_date', '<', now())->count()
         ;
 
         $dailyTaskCountUpcoming = DailyTask::where('assignment_user_id', Auth::user()->id)->whereHas('taskStatus', function ($query)
         {
-            $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO);
+            $query->where(function($query) 
+            {
+                $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO)->orWhere('name',ParamSchema::NOTCOMPLATE);
+            });
         })
         ->where('start_date', '>', now())->count()
         ;
 
         $dailyTaskCountToday = DailyTask::where('assignment_user_id', Auth::user()->id)->whereHas('taskStatus', function ($query)
         {
-            $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO);
+            $query->where(function($query) 
+            {
+                $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO)->orWhere('name',ParamSchema::NOTCOMPLATE);
+            });
         })
         ->whereDate('start_date', '<=', now())->whereDate('end_date', '>=', now())->count();
         
