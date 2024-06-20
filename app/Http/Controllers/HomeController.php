@@ -109,12 +109,17 @@ class HomeController extends Controller
         $dailyTask = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate]);
 
         $dailyTaskPoints = $dailyTask->where('task_status_id', $complate)->sum('point');
+
         
-        $dailyTaskTodoCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $todo)->count();
-        $dailyTasDoingCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $doing)->count();
-        $dailyTaskInreviewCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $inReivew)->count();
-        $dailyTaskNotComplateCount = DailyTask::where('assignment_user_id', Auth::user()->id)->whereBetween('submit', [$startDate, $endDate])->where('task_status_id', $notComplate)->count();
-        $dailyTaskCompleteCount = $dailyTask->where('task_status_id', $complate)->count();
+        $dailyTaskQuery = DailyTask::where('assignment_user_id', Auth::user()->id)
+            ->whereBetween('start_date', [$startDate, $endDate]);
+
+        $dailyTaskTodoCount = $dailyTaskQuery->clone()->where('task_status_id', $todo)->count();
+        $dailyTasDoingCount = $dailyTaskQuery->clone()->where('task_status_id', $doing)->count();
+        $dailyTaskInreviewCount = $dailyTaskQuery->clone()->where('task_status_id', $inReivew)->count();
+        $dailyTaskNotComplateCount = $dailyTaskQuery->clone()->where('task_status_id', $notComplate)->count();
+
+        $dailyTaskCompleteCount = $dailyTaskQuery->clone()->where('task_status_id', $complate)->count();
 
 
         $dailyTaskCountOverdue = DailyTask::where('assignment_user_id', Auth::user()->id)
@@ -149,6 +154,6 @@ class HomeController extends Controller
         
 
 
-        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday', 'dailyTaskTodoCount', 'dailyTasDoingCount', 'dailyTaskInreviewCount', 'dailyTaskNotComplateCount', 'quotesWithoutWorkOrder'));
+        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday', 'dailyTaskTodoCount', 'dailyTasDoingCount', 'dailyTaskInreviewCount', 'dailyTaskNotComplateCount', 'quotesWithoutWorkOrder','startDate','endDate'));
     }
 }

@@ -146,11 +146,12 @@
                     <div class="mb-4 row">
                         <div class="col-md-6">
                             <label for="start_date" class="form-label">Tanggal Mulai:</label>
-                            <input type="date" class="form-control" name="start_date" id="start_date" value="{{ request('start_date') }}">
+                            <input type="date" class="form-control" name="start_date" id="start_date" value="{{ request('start_date') ?? $startDate->format('Y-m-d') }}">
                         </div>
+
                         <div class="col-md-6">
                             <label for="end_date" class="form-label">Tanggal Akhir:</label>
-                            <input type="date" class="form-control" name="end_date" id="end_date" value="{{ request('end_date') }}">
+                            <input type="date" class="form-control" name="end_date" id="end_date" value="{{ request('end_date')  ?? $endDate->format('Y-m-d') }}">
                         </div>
                         <div class="col-md-12 mt-2">
                             <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Cari</button>

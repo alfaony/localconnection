@@ -44,8 +44,8 @@ class DailyTaskController extends Controller
         $taskFilter = $request->input('task') ?? 'today';
         $userFilter = $request->input('user');
         $statusFilter = $request->input('status');
-        $start_date = Carbon::parse($request->input('start_date'));
-        $end_date = Carbon::parse($request->input('end_date'));
+        $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null; // Parse tanggal dari string ke Carbon
+        $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
         $search = $request->input('search');
 
         // Query dasar untuk tugas harian berdasarkan user ID
@@ -114,6 +114,7 @@ class DailyTaskController extends Controller
         } elseif ($end_date) {
             $query->whereDate('end_date', '=', $end_date);
         }
+
         
         if ($search) 
         {
