@@ -108,13 +108,8 @@ class DailyTaskController extends Controller
         // Filter berdasarkan tanggal
         if ($start_date && $end_date) 
         {
-            $query->whereDate('start_date', '>=', $start_date)->whereDate('end_date', '<=', $end_date);
-        } elseif ($start_date) {
-            $query->whereDate('start_date', '=', $start_date);
-        } elseif ($end_date) {
-            $query->whereDate('end_date', '=', $end_date);
+            $query->byDateRange($start_date, $end_date);
         }
-
         
         if ($search) 
         {
