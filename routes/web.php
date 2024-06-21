@@ -48,6 +48,8 @@ use App\Http\Controllers\VisionController;
 use App\Http\Controllers\MissionController;
 use App\Http\Controllers\ProjectDashboardController;
 use App\Http\Controllers\DailyTaskCategoryController;
+use App\Http\Controllers\ShiftingObController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -205,8 +207,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 });
 
 // Add this to your routes/web.php
-
-
+Route::resource('shifting', ShiftingObController::class)->only(['index','store','update','destroy']);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
