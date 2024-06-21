@@ -68,6 +68,11 @@ class Quote extends Model
         return $this->belongsTo(Customer::class)->withTrashed();
     }
 
+    public function workOrder()
+    {
+        return $this->hasOne(WorkOrder::class);
+    }
+    
     public function getQuoteNumberResultAttribute()
     {
         $date = Carbon::parse($this->created_at)->format('m/Y');

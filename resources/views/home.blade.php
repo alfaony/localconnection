@@ -62,11 +62,11 @@
             </div>
         </div>
         
-        <div class="row">
+        <div class="row mt-3">
             <div class="col-md-4">
                 <div class="card text-white bg-warning mb-3">
                     <div class="card-body">
-                        <h5 class="card-title">Total Kutipan</h5>
+                        <h5 class="card-title">Total Quote</h5>
                         <p class="card-text">{{ $totalQuote }}</p>
                     </div>
                 </div>
@@ -79,6 +79,56 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="card-header">
+            <h5> Quote Tanpa SPK </h5>
+        </div>
+        <!-- Add Search Form -->
+        <form method="GET" action="{{ route('home') }}" class="mb-3">
+            <div class="row mt-2 align-items-center">
+                <div class="col-auto">
+                    <input type="text" name="search_quote" class="form-control" placeholder="Cari No Quote">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Cari</button>
+                </div>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>No Quote</th>
+                        <th>Total</th>
+                        @canAccess('downloadPdf','quotes')
+                        <th>Aksi</th>
+                        @endcanAccess
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($quotesWithoutWorkOrder as $quote)
+                    <tr>
+                        <td>{{ $quote->number_result }}</td>
+                        <td>Rp {{ number_format($quote->total, 0, ',', '.') }}</td>
+                        @canAccess('downloadPdf','quotes')
+                        <td>
+                            <a href="{{ route('quote.download.pdf', $quote->slug) }}" class="btn btn-sm btn-primary">
+                                <i class="fa fa-eye"></i> Quote
+                            </a>
+                        </td>
+                        @endcanAccess
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="3" class="text-center">Tidak ada quotes tanpa WorkOrder.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+
+            {{ $quotesWithoutWorkOrder->withQueryString()->links('vendor.pagination.bootstrap-4') }}
         </div>
     </div>
 </div>
@@ -96,11 +146,12 @@
                     <div class="mb-4 row">
                         <div class="col-md-6">
                             <label for="start_date" class="form-label">Tanggal Mulai:</label>
-                            <input type="date" class="form-control" name="start_date" id="start_date" value="{{ request('start_date') }}">
+                            <input type="date" class="form-control" name="start_date" id="start_date" value="{{ request('start_date') ?? $startDate->format('Y-m-d') }}">
                         </div>
+
                         <div class="col-md-6">
                             <label for="end_date" class="form-label">Tanggal Akhir:</label>
-                            <input type="date" class="form-control" name="end_date" id="end_date" value="{{ request('end_date') }}">
+                            <input type="date" class="form-control" name="end_date" id="end_date" value="{{ request('end_date')  ?? $endDate->format('Y-m-d') }}">
                         </div>
                         <div class="col-md-12 mt-2">
                             <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Cari</button>

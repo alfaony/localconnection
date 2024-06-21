@@ -147,7 +147,7 @@ class DailyTask extends Model
                 $days = $startDate->diffInDays($submitDate) + 1;
                 return "{$days} Hari";
             } else {
-                $days = $submitDate->diffInDays($startDate) + 1;
+                $days = $submitDate->diffInDays($startDate);
                 return "Terlambat {$days} Hari";
             }
         }
@@ -250,6 +250,24 @@ class DailyTask extends Model
                           ->orWhere('assignment_user_id', $userId);
                 })
                 ;
+    }
+
+    public function scopeByDateRange($query, $start_date, $end_date)
+    {
+        if($start_date && $end_date)
+        {
+            $query->where(function ($query) use ($start_date, $end_date) {
+                $query->whereDate('start_date', '>=', $start_date)
+                    ->whereDate('end_date', '<=', $end_date);
+            })
+            ->orWhere(function ($query) use ($start_date, $end_date) {
+                $query->orWhereDate('start_date', '>=', $start_date)->whereDate('start_date', '<=', $end_date);
+            })
+            ->orWhere(function ($query) use ($start_date, $end_date) {
+                $query->orWhereDate('end_date', '<=', $end_date)->whereDate('end_date', '>=', $start_date);
+            })
+            ;
+        }
     }
 
     private function translateMonth($month)
