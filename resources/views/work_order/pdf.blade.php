@@ -445,7 +445,7 @@
       color: #000000;    /* Warna teks, ganti dengan warna yang diinginkan */
     }
     .scrollable-div {
-      max-height: 700px; /* Tinggi maksimum yang diinginkan untuk container */
+      max-height: 600px; /* Tinggi maksimum yang diinginkan untuk container */
       overflow-y: auto; /* Menambahkan scrollbar vertikal jika konten melebihi 800px */
     }
 </style>
