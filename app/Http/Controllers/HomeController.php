@@ -63,7 +63,7 @@ class HomeController extends Controller
         // Quote
         $searchQuote = $request->input('search_quote');
 
-        $quotesQuery = Quote::doesntHave('workOrder');
+        $quotesQuery = Quote::byCompany(Auth::user()->company_id)->doesntHave('workOrder');
 
         if ($searchQuote) {
             $quotesQuery->where('number_result', 'like', "%{$searchQuote}%");
