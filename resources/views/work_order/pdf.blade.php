@@ -10,7 +10,7 @@
         <div class="alert alert-success mt-3">Surat Perintah Kerja Berhasil Diperbarui</div>
         @endif
     </div>
-    <div class="card" id="printThis">
+    <div class="card scrollable-div" id="printThis">
         <div class="card-body">
             <div class="row">
                 <div class="col-6">
@@ -443,6 +443,10 @@
     {
       font-weight: bold;  /* Membuat teks menjadi tebal */
       color: #000000;    /* Warna teks, ganti dengan warna yang diinginkan */
+    }
+    .scrollable-div {
+      max-height: 600px; /* Tinggi maksimum yang diinginkan untuk container */
+      overflow-y: auto; /* Menambahkan scrollbar vertikal jika konten melebihi 800px */
     }
 </style>
 @stop
