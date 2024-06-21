@@ -144,10 +144,10 @@ class DailyTask extends Model
                 $days = $startDate->diffInDays($submitDate);
                 return "Kurang {$days} Hari";
             } elseif ($submitDate <= $endDate) {
-                $days = $startDate->diffInDays($submitDate) + 1;
+                $days = $startDate->diffInDays($submitDate);
                 return "{$days} Hari";
             } else {
-                $days = $submitDate->diffInDays($startDate) + 1;
+                $days = $submitDate->diffInDays($startDate);
                 return "Terlambat {$days} Hari";
             }
         }
