@@ -68,7 +68,7 @@ class HomeController extends Controller
         // Quote
         $searchQuote = $request->input('search_quote');
 
-        $quotesQuery = Quote::doesntHave('workOrder');
+        $quotesQuery = Quote::byCompany(Auth::user()->company_id)->doesntHave('workOrder');
 
         if ($searchQuote) {
             $quotesQuery->where('number_result', 'like', "%{$searchQuote}%");
@@ -116,16 +116,22 @@ class HomeController extends Controller
         $dailyTaskPoints = $dailyTask->where('task_status_id', $complate)->sum('point');
 
         
-        $dailyTaskQuery = DailyTask::where('assignment_user_id', Auth::user()->id)
-            ->whereBetween('start_date', [$startDate, $endDate]);
-
-        $dailyTaskTodoCount = $dailyTaskQuery->clone()->where('task_status_id', $todo)->count();
-        $dailyTasDoingCount = $dailyTaskQuery->clone()->where('task_status_id', $doing)->count();
-        $dailyTaskInreviewCount = $dailyTaskQuery->clone()->where('task_status_id', $inReivew)->count();
-        $dailyTaskNotComplateCount = $dailyTaskQuery->clone()->where('task_status_id', $notComplate)->count();
-
-        $dailyTaskCompleteCount = $dailyTaskQuery->clone()->where('task_status_id', $complate)->count();
-
+        $dailyTaskCounts = DailyTask::where('assignment_user_id', Auth::user()->id)
+        ->whereBetween('start_date', [$startDate, $endDate])
+        ->selectRaw('
+            COUNT(CASE WHEN task_status_id = ? THEN 1 END) as dailyTaskTodoCount,
+            COUNT(CASE WHEN task_status_id = ? THEN 1 END) as dailyTaskDoingCount,
+            COUNT(CASE WHEN task_status_id = ? THEN 1 END) as dailyTaskInreviewCount,
+            COUNT(CASE WHEN task_status_id = ? THEN 1 END) as dailyTaskNotCompleteCount,
+            COUNT(CASE WHEN task_status_id = ? THEN 1 END) as dailyTaskCompleteCount
+        ', [$todo, $doing, $inReivew, $notComplate, $complate])
+        ->first();
+    
+        $dailyTaskTodoCount = $dailyTaskCounts->dailyTaskTodoCount;
+        $dailyTasDoingCount = $dailyTaskCounts->dailyTaskDoingCount;
+        $dailyTaskInreviewCount = $dailyTaskCounts->dailyTaskInreviewCount;
+        $dailyTaskNotComplateCount = $dailyTaskCounts->dailyTaskNotCompleteCount;
+        $dailyTaskCompleteCount = $dailyTaskCounts->dailyTaskCompleteCount;
 
         $dailyTaskCountOverdue = DailyTask::where('assignment_user_id', Auth::user()->id)
         ->whereHas('taskStatus', function ($query)
