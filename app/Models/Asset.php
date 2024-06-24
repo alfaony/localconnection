@@ -26,6 +26,11 @@ class Asset extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
     
+    public function assetType()
+    {
+        return $this->belongsTo(AssetType::class);
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)
