@@ -62,7 +62,7 @@ class ScheduleOb extends Model
 
     public function shiftingOb()
     {
-        return $this->belongsTo(ShiftingOb::class);
+        return $this->belongsTo(ShiftingOb::class)->withTrashed();
     }
 
     public function scopeByCompany($query,$companyId)

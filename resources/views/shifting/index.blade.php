@@ -13,9 +13,11 @@
 
     <div class="card">
         <div class="card-body">
+            @canAccess('create','shifting_obs')
             <div class="mb-3">
                 <button class="btn btn-primary" data-toggle="modal" data-target="#createModal"><i class="fa fa-plus"></i> Shifting</button>
             </div>
+            @endcanAccess
         
             <div class="table-responsive">
                 <table class="table table-bordered table-striped">
@@ -32,12 +34,16 @@
                                 <td>{{ $shift->name }}</td>
                                 <td>{{ $shift->clock_in }}</td>
                                 <td>
+                                    @canAccess('update','shifting_obs')
                                     <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editModal{{ $shift->slug }}"><i class="fa fa-edit"></i></button>
-                                    <form action="{{ route('shifting.destroy', $shift->slug) }}" method="POST" style="display:inline-block;">
+                                    @endcanAccess
+                                    @canAccess('destroy','shifting_obs')
+                                    <form action="{{ route('shifting-ob.destroy', $shift->slug) }}" method="POST" style="display:inline-block;">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')" title="Delete"><i title="Delete" class="fa fa-trash"></i></button>
                                     </form>
+                                    @endcanAccess
                                 </td>
                             </tr>
                             <!-- Edit Modal -->
@@ -50,7 +56,7 @@
                                                 <span aria-hidden="true">&times;</span>
                                             </button>
                                         </div>
-                                        <form action="{{ route('shifting.update', $shift->slug) }}" method="POST">
+                                        <form action="{{ route('shifting-ob.update', $shift->slug) }}" method="POST">
                                             @csrf
                                             @method('PUT')
                                             <div class="modal-body">
@@ -90,7 +96,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="{{ route('shifting.store') }}" method="POST">
+                <form action="{{ route('shifting-ob.store') }}" method="POST">
                     @csrf
                     <div class="modal-body">
                         <div class="form-group">

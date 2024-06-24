@@ -297,12 +297,16 @@
         </div>
     </div>
 </div>
-
-
 @endcanAccess
 
 
-
+@canAccess('showScheduleOb','homes')
+<div class="card py-3">
+    <div class="card-body">
+        <div id="calendar"></div>
+    </div>
+</div>
+@endcanAccess
 
 @if(Auth::user()->role->name == \App\Schemas\RoleSchema::BM)
 <div class="row">
@@ -338,7 +342,9 @@
 @endsection
 
 @section('js')
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script>
     $(document).ready(function () {
         $('input[name="start_date"]').on('change', function() {
@@ -347,9 +353,35 @@
         });
     });
 </script>
+@canAccess('showScheduleOb','homes')
+<script>
+    $(document).ready(function () {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            events: [
+                @foreach($schedules as $schedule)
+                {
+                    title: '{{ $schedule->user->name }} - {{ $schedule->shiftingOb->name }}',
+                    start: '{{ $schedule->date }}',
+                    id: '{{ $schedule->id }}',
+                    extendedProps: {
+                        user_id: '{{ $schedule->user_id }}',
+                        shifting_ob_id: '{{ $schedule->shifting_ob_id }}'
+                    }
+                },
+                @endforeach
+            ]
+        });
+
+        calendar.render();
+    });
+</script>
+@endcanAccess
 @stop
 
 @section('css')
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.css" rel="stylesheet">
 <style>
     .card-header {
         font-weight: bold;
@@ -363,5 +395,4 @@
         font-weight: bold;
     }
 </style>
-
 @endsection

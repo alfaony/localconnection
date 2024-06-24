@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 
 use Carbon\Carbon;
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
+use App\Helpers\Access;
 
 use App\Models\Project;
 use App\Models\Suplier;
@@ -22,6 +24,7 @@ use App\Models\IpRight;
 use App\Models\SalesAchievement;
 use App\Models\TaskStatus;
 use App\Models\DailyTask;
+use App\Models\ScheduleOb;
 
 class HomeController extends Controller
 {
@@ -41,7 +44,9 @@ class HomeController extends Controller
      * @return \Illuminate\Contracts\Support\Renderable
      */
     public function index(Request $request)
-    {
+    {   
+        $schedules = NULL;
+
         $totalActiveProjects = Project::byCompany(Auth::user()->company_id)->byDateRange()->count() ?? 0;
 
         // $activeProjectsBudget = Project::byDateRange()->sum('budget') ?? 0;
@@ -152,8 +157,18 @@ class HomeController extends Controller
         })
         ->whereDate('start_date', '<=', now())->whereDate('end_date', '>=', now())->count();
         
+        if(Access::can('showScheduleOb','homes'))
+        {
+            if(Auth::user()->role->name == RoleSchema::OB)
+            {
+                $schedules = ScheduleOb::byCompany(Auth::user()->company_id)->where('user_id',Auth::user()->id)->with('user', 'shiftingOb')->get();
+            }
+            else
+            {
+                $schedules = ScheduleOb::byCompany(Auth::user()->company_id)->with('user', 'shiftingOb')->get();
+            }
+        }
 
-
-        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday', 'dailyTaskTodoCount', 'dailyTasDoingCount', 'dailyTaskInreviewCount', 'dailyTaskNotComplateCount', 'quotesWithoutWorkOrder','startDate','endDate'));
+        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday', 'dailyTaskTodoCount', 'dailyTasDoingCount', 'dailyTaskInreviewCount', 'dailyTaskNotComplateCount', 'quotesWithoutWorkOrder','startDate','endDate','schedules'));
     }
 }

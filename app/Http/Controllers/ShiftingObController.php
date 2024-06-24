@@ -30,7 +30,7 @@ class ShiftingObController extends Controller
             'user_id' => Auth::user()->id,
         ]);
 
-        return redirect()->route('shifting.index')->with('success', 'Shifting berhasil dibuat.');
+        return redirect()->route('shifting-ob.index')->with('success', 'Shifting berhasil dibuat.');
     }
 
     public function update(Request $request, $slug)
@@ -47,7 +47,7 @@ class ShiftingObController extends Controller
             'user_id' => Auth::user()->id,
         ]);
 
-        return redirect()->route('shifting.index')->with('success', 'Shifting berhasil diperbarui.');
+        return redirect()->route('shifting-ob.index')->with('success', 'Shifting berhasil diperbarui.');
     }
 
     public function destroy($slug)
@@ -55,6 +55,6 @@ class ShiftingObController extends Controller
         $shifting = ShiftingOb::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $shifting->delete();
 
-        return redirect()->route('shifting.index')->with('success', 'Shifting berhasil dihapus.');
+        return redirect()->route('shifting-ob.index')->with('success', 'Shifting berhasil dihapus.');
     }
 }

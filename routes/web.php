@@ -49,6 +49,7 @@ use App\Http\Controllers\MissionController;
 use App\Http\Controllers\ProjectDashboardController;
 use App\Http\Controllers\DailyTaskCategoryController;
 use App\Http\Controllers\ShiftingObController;
+use App\Http\Controllers\ScheduleObController;
 
 
 /*
@@ -204,10 +205,12 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::resource('daily-task-category', DailyTaskCategoryController::class);
 
+  Route::resource('shifting-ob', ShiftingObController::class)->only(['index','store','update','destroy']);
+  Route::resource('schedule-ob', ScheduleObController::class)->except(['edit','create','show']);
 });
 
 // Add this to your routes/web.php
-Route::resource('shifting', ShiftingObController::class)->only(['index','store','update','destroy']);
+
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
