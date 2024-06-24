@@ -66,6 +66,8 @@ class AppServiceProvider extends ServiceProvider
                 'setting_companies',
                 'roles',
                 'attendances',
+                'shifting_obs',
+                'schedule_obs',
             ];
 
             $equipmentMenuArray = array();
@@ -288,8 +290,17 @@ class AppServiceProvider extends ServiceProvider
                     'route'         => 'daily-task-category.index',
                     'icon' => 'fa fa-check',
                 ],
-
-
+                'shifting_obs' => [
+                    'text' => 'Shifting OB',
+                    'route' => 'shifting-ob.index',
+                    'icon' => 'fa fa-calendar',
+                ],
+                'schedule_obs' => 
+                [
+                    'text' => 'Schedule OB',
+                    'route' => 'schedule-ob.index',
+                    'icon' => 'fa fa-clock',
+                ],
             ];
 
             foreach ($listMenu as $role) 
