@@ -220,13 +220,6 @@
         calendar.render();
 
         $('#date').attr('min', new Date().toISOString().split("T")[0]);
-        $('#createScheduleForm').on('submit', function(event) {
-            var dateValue = $('#date').val();
-            if (new Date(dateValue) < new Date()) {
-                event.preventDefault();
-                alert('Tidak bisa memilih tanggal yang telah lewat.');
-            }
-        });
     });
 </script>
 @endsection
