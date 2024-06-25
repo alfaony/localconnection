@@ -44,7 +44,7 @@ $totalSuplier = $totalSuplier + 1; // Get the total number of projects
                 <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
             </div>
             <div class="p-2">
-                <input type="text" name="suplier" class="form-control" placeholder="Search">
+                <input type="text" name="search" class="form-control" placeholder="Search">
             </div>
             <div class="p-2">
             @php
@@ -64,6 +64,7 @@ $totalSuplier = $totalSuplier + 1; // Get the total number of projects
             <tr>
                 <th>No. Pembelian</th>
                 <th>Nama Supplier</th>
+                <th>Proyek</th>
                 <th>Total Pembelian</th>
                 <th>Dibuat</th>
                 <th>Aksi</th>
@@ -74,6 +75,7 @@ $totalSuplier = $totalSuplier + 1; // Get the total number of projects
             <tr>
                 <td>{{ $no }}</td>
                 <td>{{ $a->name }}</td>
+                <td> {{ $a->project->title ?? "" }} </td>
                 <td>{{ 'Rp. '.number_format($a->total_price,0,',','.')  ?? 'Rp. 0' }}</td>
                 <td>
                     {{ $a->created_by }}
