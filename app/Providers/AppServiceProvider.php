@@ -300,6 +300,7 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Schedule OB',
                     'route' => 'schedule-ob.index',
                     'icon' => 'fa fa-clock',
+                ],
 
                 'division_budgets' => [
                     'text'        => 'Pengajuan Anggaran',
