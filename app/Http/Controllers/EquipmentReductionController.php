@@ -29,7 +29,7 @@ class EquipmentReductionController extends Controller
         }
     
         $order = $request->input('order', 'desc'); // Default is 'desc'
-        $query->orderBy('date', $order);
+        $query->byCompany(Auth::user()->company_id)->orderBy('date', $order);
     
         $equipmentReductions = $query->paginate(10);
 

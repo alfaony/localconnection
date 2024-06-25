@@ -53,12 +53,12 @@ class Suplier extends Model
 
     public function project()
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Project::class)->withTrashed();
     }
 
     public function workOrder()
     {
-        return $this->belongsTo(WorkOrder::class);
+        return $this->belongsTo(WorkOrder::class)->withTrashed();
     }
 
     public function purchase()
@@ -75,6 +75,15 @@ class Suplier extends Model
         });
     }
 
+    public function scopeBySearch($query, $search)
+    {
+        return $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', '%' . $search . '%')
+            ->orWhereHas('project', function ($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%');
+            });
+        });
+    }
     public function getCreatedByAttribute()
     {
         return $this->user->name ??  '';

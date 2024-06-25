@@ -26,8 +26,12 @@ class SuplierController extends Controller
     {
         $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
 
-        $suplier = Suplier::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('suplier') . '%')
-        ->OrderBy('created_at',$order)->paginate(10);
+        $search = $request->get('search');
+
+        $suplier = Suplier::byCompany(Auth::user()->company_id)
+            ->bySearch($search)
+            ->orderBy('created_at', $order)
+            ->paginate(10);
 
         $totalSuplier = Suplier::byCompany(Auth::user()->company_id)->count();
 
