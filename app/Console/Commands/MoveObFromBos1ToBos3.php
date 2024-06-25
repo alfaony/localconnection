@@ -51,51 +51,57 @@ class MoveObFromBos1ToBos3 extends Command
         DB::beginTransaction();
         try {
             //code...
-            foreach($userBM as $user){
-                $user->company_id = $bos3->id;
-                $user->save();
-            }
-
-            foreach($userOb as $user)
+            if($bos1 && $bos3)
             {
-                $user->company_id = $bos3->id;
-                $user->save();
-            }
-
-            // Asset Migration
-            $asset = Asset::byCompany($bos1->id)->get();        
-            if ($asset->isEmpty()) 
-            {
-                $this->info('No assets found for BOS 1');
-            } else {
-                foreach($asset as $a)
-                {
-                $name = $a->assetType->name;
-                $assetTypeNew = AssetType::where('name',$name)->byCompany($bos3->id)->first();
-
-                $a->asset_type_id = $assetTypeNew->id;
-                $a->save();
+                foreach($userBM as $user){
+                    $user->company_id = $bos3->id;
+                    $user->save();
                 }
-            }
-
-            $equipmentReduction = EquipmentReduction::byCompany($bos1->id)->get();
-            if ($equipmentReduction->isEmpty()) 
-            {
-                $this->info('No equipment reduction found for BOS 1');
-            } else 
-            {
-                foreach($equipmentReduction as $a )
+    
+                foreach($userOb as $user)
                 {
-                    $reductionName = $a->reduction->name;
-                    $reductionNew = Reduction::where('name',$reductionName)->byCompany($bos3->id)->first();
-                    $a->reduction_id = $reductionNew->id;
+                    $user->company_id = $bos3->id;
+                    $user->save();
+                }
+    
+                // Asset Migration
+                $asset = Asset::byCompany($bos1->id)->get();        
+                if ($asset->isEmpty()) 
+                {
+                    $this->info('No assets found for BOS 1');
+                } else {
+                    foreach($asset as $a)
+                    {
+                    $name = $a->assetType->name;
+                    $assetTypeNew = AssetType::where('name',$name)->byCompany($bos3->id)->first();
+    
+                    $a->asset_type_id = $assetTypeNew->id;
                     $a->save();
+                    }
                 }
+    
+                $equipmentReduction = EquipmentReduction::byCompany($bos1->id)->get();
+                if ($equipmentReduction->isEmpty()) 
+                {
+                    $this->info('No equipment reduction found for BOS 1');
+                } else 
+                {
+                    foreach($equipmentReduction as $a )
+                    {
+                        $reductionName = $a->reduction->name;
+                        $reductionNew = Reduction::where('name',$reductionName)->byCompany($bos3->id)->first();
+                        $a->reduction_id = $reductionNew->id;
+                        $a->save();
+                    }
+                }
+    
+    
+                DB::commit();
+                $this->info('Migration Success BOS 1 KE BOS 3 OB');
+            }else
+            {
+                $this->info('Company not found');
             }
-
-
-            DB::commit();
-            $this->info('Migration Success BOS 1 KE BOS 3 OB');
 
             return Command::SUCCESS;
         } catch (\Throwable $th) {

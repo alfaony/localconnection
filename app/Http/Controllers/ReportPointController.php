@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
 
@@ -33,7 +33,7 @@ class ReportPointController extends Controller
         
         $obId = Role::select('id')->where('name',RoleSchema::OB)->first()->id;
 
-        $users = User::with(['taskAssigns' => function ($query) use ($startOfMonth, $endOfMonth) {
+        $users = User::byCompany(Auth::user()->company_id)->with(['taskAssigns' => function ($query) use ($startOfMonth, $endOfMonth) {
                 $query->whereBetween('date', [$startOfMonth, $endOfMonth]);
             }, 'attendances' => function ($query) use ($startOfMonth, $endOfMonth) {
                 $query->whereBetween('date', [$startOfMonth, $endOfMonth]);
