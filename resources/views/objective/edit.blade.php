@@ -44,9 +44,11 @@
                             <label for="custom_field_type">Divisi</label>
                             <select class="form-control custom-field-type" name="division_id" required>
                                 <option disabled selected>--Pilih--</option>
-                                @foreach ($divisions as $division)
+                                @forelse ($divisions as $division)
                                     <option value="{{ $division->id }}" {{ $objective->division_id == $division->id ? 'selected' : '' }} >{{ $division->name }}</option>
-                                @endforeach
+                                @empty
+                                <option value="" disabled selected >-- Belum Memiliki Divisi --</option>
+                                @endforelse
                             </select>
                         </div>
                         <div class="col-md-12">

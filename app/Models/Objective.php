@@ -140,4 +140,12 @@ class Objective extends Model
             });
         }
     }
+
+    public function scopeByUserDivisions($query, $userId)
+    {
+        $user = User::with('divisions')->find($userId);
+        $divisionIds = $user->divisions->pluck('id');
+
+        return $query->whereIn('division_id', $divisionIds);
+    }
 }
