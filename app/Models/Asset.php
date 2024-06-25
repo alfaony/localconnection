@@ -28,7 +28,7 @@ class Asset extends Model
     
     public function assetType()
     {
-        return $this->belongsTo(AssetType::class);
+        return $this->belongsTo(AssetType::class)->withTrashed();
     }
 
     public function scopeByCompany($query,$companyId)
