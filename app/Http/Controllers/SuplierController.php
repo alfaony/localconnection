@@ -28,15 +28,10 @@ class SuplierController extends Controller
 
         $search = $request->get('search');
 
-        $query = Suplier::byCompany(Auth::user()->company_id)
-            ->where(function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhereHas('project', function ($q) use ($search) {
-                      $q->where('title', 'like', '%' . $search . '%');
-                  });
-            });
-    
-        $suplier = $query->orderBy('created_at', $order)->paginate(10);
+        $suplier = Suplier::byCompany(Auth::user()->company_id)
+            ->bySearch($search)
+            ->orderBy('created_at', $order)
+            ->paginate(10);
 
         $totalSuplier = Suplier::byCompany(Auth::user()->company_id)->count();
 
