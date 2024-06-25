@@ -75,6 +75,15 @@ class Suplier extends Model
         });
     }
 
+    public function scopeBySearch($query, $search)
+    {
+        return $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', '%' . $search . '%')
+            ->orWhereHas('project', function ($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%');
+            });
+        });
+    }
     public function getCreatedByAttribute()
     {
         return $this->user->name ??  '';
