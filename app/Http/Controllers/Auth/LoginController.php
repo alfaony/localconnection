@@ -94,9 +94,13 @@ class LoginController extends Controller
                     $late_point = $smtpConfig['late_point'] ?? 0;
                     $on_time_poin = $smtpConfig['on_time_poin'] ?? 0;
 
-                    $attendanceTime = Carbon::createFromTimeString($clock_in);
+                    $attendanceTime = Carbon::createFromTimeString($clock_in)->endOfMinute();
                     $points = $now->gt($attendanceTime) ? $late_point : $on_time_poin;
                     
+                    if ($now->eq($attendanceTime)) 
+                    {
+                        $points = $on_time_poin;
+                    }
 
                     $attendance = new Attendance();
                     $attendance->user_id = $user->id;
