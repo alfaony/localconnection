@@ -66,6 +66,8 @@ class AppServiceProvider extends ServiceProvider
                 'setting_companies',
                 'roles',
                 'attendances',
+                'shifting_obs',
+                'schedule_obs',
             ];
 
             $equipmentMenuArray = array();
@@ -76,7 +78,7 @@ class AppServiceProvider extends ServiceProvider
             $equipmentMenu = ['equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
-            $productivityMenu = ['report_productivities','project_dashboards','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
+            $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
 
             $menus = [
                 'homes' => [
@@ -288,8 +290,23 @@ class AppServiceProvider extends ServiceProvider
                     'route'         => 'daily-task-category.index',
                     'icon' => 'fa fa-check',
                 ],
+                'shifting_obs' => [
+                    'text' => 'Shifting OB',
+                    'route' => 'shifting-ob.index',
+                    'icon' => 'fa fa-calendar',
+                ],
+                'schedule_obs' => 
+                [
+                    'text' => 'Schedule OB',
+                    'route' => 'schedule-ob.index',
+                    'icon' => 'fa fa-clock',
+                ],
 
-
+                'division_budgets' => [
+                    'text'        => 'Pengajuan Anggaran',
+                    'route'         => 'division-budget.index',
+                    'icon' => 'fa fa-money-bill',
+                ],
             ];
 
             foreach ($listMenu as $role) 

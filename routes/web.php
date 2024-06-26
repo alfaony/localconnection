@@ -48,6 +48,10 @@ use App\Http\Controllers\VisionController;
 use App\Http\Controllers\MissionController;
 use App\Http\Controllers\ProjectDashboardController;
 use App\Http\Controllers\DailyTaskCategoryController;
+use App\Http\Controllers\ShiftingObController;
+use App\Http\Controllers\ScheduleObController;
+use App\Http\Controllers\DivisionBudgetController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -202,9 +206,14 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::resource('daily-task-category', DailyTaskCategoryController::class);
 
+  Route::resource('shifting-ob', ShiftingObController::class)->only(['index','store','update','destroy']);
+  Route::resource('schedule-ob', ScheduleObController::class)->except(['edit','create','show']);
+  Route::resource('division-budget', DivisionBudgetController::class);
+  Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
 });
 
 // Add this to your routes/web.php
+
 
 
 

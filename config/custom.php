@@ -53,4 +53,11 @@ return
         'multi_select' => 'Multi Select',
      ],
 
+
+     'leads_from' =>
+     [
+        '1' => 'Internal',
+        '2' => 'External',
+     ],
+
 ];
