@@ -48,10 +48,15 @@ class MoveObFromBos1ToBos3 extends Command
         $userBM = User::where('company_id',$bos1->id)->where('role_id',$bm->id)->get();
         $userOb = User::where('company_id',$bos1->id)->where('role_id',$ob->id)->get();
 
+
+        // Pic BOS 3
+        $admin = Role::where('name',RoleSchema::ADMIN)->first();
+        $user = User::where('company_id', $bos3->id)->where('role_id', $admin->id)->first();
+        
         DB::beginTransaction();
         try {
             //code...
-            if($bos1 && $bos3)
+            if($bos1 && $bos3 && $user)
             {
                 foreach($userBM as $user){
                     $user->company_id = $bos3->id;
@@ -63,7 +68,7 @@ class MoveObFromBos1ToBos3 extends Command
                     $user->company_id = $bos3->id;
                     $user->save();
                 }
-    
+
                 // Asset Migration
                 $asset = Asset::byCompany($bos1->id)->get();        
                 if ($asset->isEmpty()) 
@@ -74,6 +79,15 @@ class MoveObFromBos1ToBos3 extends Command
                     {
                     $name = $a->assetType->name;
                     $assetTypeNew = AssetType::where('name',$name)->byCompany($bos3->id)->first();
+                    if (!$assetTypeNew) 
+                    {
+                        $assetTypeNew = new AssetType();
+                        $assetTypeNew->name = $name;
+                        $assetTypeNew->user_id = $user->id;
+                        $assetTypeNew->save();
+
+                        $this->info("Created new AssetType: $name");
+                    }
     
                     $a->asset_type_id = $assetTypeNew->id;
                     $a->save();
@@ -90,6 +104,14 @@ class MoveObFromBos1ToBos3 extends Command
                     {
                         $reductionName = $a->reduction->name;
                         $reductionNew = Reduction::where('name',$reductionName)->byCompany($bos3->id)->first();
+                        if(!$reductionNew)
+                        {
+                            $reductionNew = new Reduction();
+                            $reductionNew->name = $reductionName;
+                            $reductionNew->user_id = $user->id;
+                            $reductionNew->save();
+                        }
+
                         $a->reduction_id = $reductionNew->id;
                         $a->save();
                     }
