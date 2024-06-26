@@ -59,7 +59,9 @@
                         </div>
                         <div class="form-group">
                             <label for="date">Tanggal</label>
-                            <input type="date" class="form-control" name="date" id="date" required>
+                            <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="" required>
+                            <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
+                            <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -154,6 +156,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script>
     $(document).ready(function () {
         $('.select2').select2({
@@ -220,12 +224,30 @@
         calendar.render();
 
         $('#date').attr('min', new Date().toISOString().split("T")[0]);
-        $('#createScheduleForm').on('submit', function(event) {
-            var dateValue = $('#date').val();
-            if (new Date(dateValue) < new Date()) {
-                event.preventDefault();
-                alert('Tidak bisa memilih tanggal yang telah lewat.');
-            }
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        // Initialize Daterangepicker
+        var currentDate = moment().format('DD-MM-YYYY');
+        
+        $('#date_range').daterangepicker({
+            autoUpdateInput: false, // Prevents the input from being automatically populated
+            locale: {
+                format: 'DD-MM-YYYY',
+                cancelLabel: 'Clear' // Adds a clear button to the picker
+            },
+            minDate: currentDate // Set the minimum date to the current date
+        });
+
+        $('#date_range').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('DD-MM-YYYY') + ' - ' + picker.endDate.format('DD-MM-YYYY'));
+        });
+
+        // Capture the date range selection
+        $('#date_range').on('apply.daterangepicker', function(ev, picker) {
+            $('#start_date').val(picker.startDate.format('DD-MM-YYYY'));
+            $('#end_date').val(picker.endDate.format('DD-MM-YYYY'));
         });
     });
 </script>
@@ -234,6 +256,7 @@
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <style>
     .modal-title {
         font-weight: bold;

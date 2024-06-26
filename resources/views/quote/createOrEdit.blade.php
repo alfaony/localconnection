@@ -42,7 +42,7 @@
                     </div>
                 </div>
             </div>
-        
+            
             <div class="row mt-3">
                 <div class="col-2">
                     <p>No Quotation:</p>
@@ -128,6 +128,62 @@
                         <input type="text" class="form-control calculation" id="charges_show"  oninput="formatRupiahFormat(this,'charges')"  />
                         <input type="hidden" class="form-control" name="charges" id="charges" value="{{ old('charges') ?? @$quote->charges }}" />
                     </div>
+                </div>
+            </div>
+
+            <div class="row mt-5">
+                <div class="col-2">
+                    <label>Lead From:</label>
+                </div>
+                <div class="col-6">
+                    <select id="leads_from" name="leads_from" class="form-control select2" required>
+                        <option value="" selected disabled>Leads From</option>
+                        @foreach($leadsFrom as $id => $a)
+                        <option value="{{ $id }}" {{ @$quote->leads_from == $id ? 'selected' : '' }}>{{ $a }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <!-- DivisionBudget select field, hidden by default -->
+            <div class="row mt-3" id="division_budget_row" style="display: none;">
+                <div class="col-2">
+                    <label>Division Budget:</label>
+                </div>
+                <div class="col-6">
+                    <select name="division_budget" id="division_budget" class="form-control select2">
+                        <option value="" selected disabled>Division Budget</option>
+                        @foreach($divisionBudget as $a)
+                        <option value="{{ $a->id }}" data-budget="{{ $a->amount }}" {{ @$quote->division_budget_id == $a->id ? 'selected' : '' }}>{{ $a->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mt-2" id="budget_amount_row" style="display: none;">
+                <div class="col-2">
+                    <label>Anggaran:</label>
+                </div>
+                <div class="col-6">
+                    <p id="budget_amount"></p>
+                </div>
+            </div>
+
+            <div class="row mt-2" id="budget_usage_row" style="display: none;">
+                <div class="col-2">
+                    <label>Penggunaan Anggaran:</label>
+                </div>
+                <div class="col-6">
+                    <p id="budget_usage"></p>
+                </div>
+            </div>
+
+            <div class="row mt-2" id="remaining_budget_row" style="display: none;">
+                <div class="col-2">
+                    <label>Sisa Anggaran:</label>
+                </div>
+                <div class="col-6">
+                    <p id="remaining_budget"></p>
                 </div>
             </div>
 
@@ -248,6 +304,7 @@
                     <div class="d-flex justify-content-between mb-2">
                         <strong>Grand Total:</strong>
                         <strong id="grand_total_result">Rp 0</strong>
+                        <input type="hidden" id="grand_total_result_raw" value="70000">
                     </div>
                 </div>
             </div>
@@ -287,6 +344,65 @@
             id = textarea.getAttribute('data-ids');
             generateCkEditor(id);
         });
+
+        // Event listener for leads_from select change
+        $('#leads_from').change(function () {
+            var selectedValue = $(this).val();
+            if (selectedValue == '1') {
+                $('#division_budget_row').show();
+                $('#division_budget').attr('required', 'required');
+            } else {
+                $('#division_budget_row').hide();
+                $('#division_budget').removeAttr('required');
+                $('#budget_amount_row').hide();
+                $('#budget_amount').text('');
+
+                $('#division_budget').val('').trigger('change');
+            }
+        });
+
+        // Check initial value on page load (for edit scenario)
+        var initialLeadsFrom = $('#leads_from').val();
+        if (initialLeadsFrom == '1') {
+            $('#division_budget_row').show();
+            $('#division_budget').attr('required', 'required');
+        }
+
+        // Event listener for division_budget select change
+        $('#division_budget').change(function () {
+            var selectedBudget = parseFloat($(this).find(':selected').data('budget'));
+            var grandTotal = parseFloat("{{ @$quote->total ?? 0 }}");
+            var currentQuoteId = "{{ @$quote->id ?? '' }}";
+            var currentDivisionBudgetId = "{{ @$quote->division_budget_id ?? '' }}";
+            var selectedDivisionBudgetId = $(this).val();
+
+            if (currentQuoteId && currentDivisionBudgetId == selectedDivisionBudgetId) {
+                // If the selected budget matches the quote's division_budget_id, add the total
+                selectedBudget += grandTotal;
+            }
+
+            console.log(grandTotal);
+            console.log("------");
+            if (selectedBudget || selectedBudget === 0) 
+            {
+                $('#budget_amount_row').show();
+                if (selectedBudget == 0) {
+                    $('#budget_amount').text('Rp 0');
+                } else {
+                    selectedBudget ; // Tambahkan grand total saat ini jika ada
+                    $('#budget_amount').text('Rp ' + selectedBudget.toLocaleString('id-ID'));
+                }
+                calculation();
+            } else {
+                $('#budget_amount_row').hide();
+                $('#budget_amount').text('');
+            }
+        });
+
+        // Trigger change event if there's an initial value for division_budget
+        if ($('#division_budget').val()) {
+            $('#division_budget').trigger('change');
+        }
     });
 
     function generateCkEditor(id)
@@ -421,7 +537,7 @@
         
         $('.select2').select2({
             width: '100%',
-            placeholder: 'Pilih Customer'
+            placeholder: '-- Pilih --'
         });
 
         // change
@@ -592,52 +708,82 @@
     
     function calculation()
     {
-        console.log("----CALCULATION WORKING-----");
-
         var tax = parseInt($("#tax").val()) || 0;
         var service_fee = parseInt($("#service_fee").val()) || 0;
-
         var discount = parseInt($("#discount").val()) || 0;
         var charges = parseInt($("#charges").val()) || 0;
+        var divisionBudget = $("#division_budget").val();
+        var total = 0;
+        var quote_id = "{{ @$quote->id ?? '' }}";
 
-        
-        var ppn_title = tax <= 0 ? 'PPN: 0%' : 'PPN: '+tax+'%';
-        var service_fee_title = service_fee <= 0 ? 'Service Fee: 0%' : 'Service Fee: '+service_fee+'%';
-
-        var sub_total = 0;
         $('#tableQuote tbody tr').each(function() 
         {
-            // console.log($(this).find('input[name="sub_total[]"]'));
             var subTotal = parseFloat($(this).find('input[name="sub_total[]"]').val() || 0);
-            console.log(subTotal);
-            sub_total += subTotal;
+            total += subTotal;
         });
-
 
         $.ajax({
             type: "GET",
             url: "{{ route('quote.counting') }}",
-            data: {total:sub_total,tax:tax,service_fee:service_fee,discount:discount,charges:charges},
+            data: {
+                total: total,
+                tax: tax,
+                service_fee: service_fee,
+                discount: discount,
+                charges: charges,
+                division_budget: divisionBudget,
+                quote_id: quote_id
+            },
             success: function (response) 
             {
-                if(response.data)
-                {
-                    console.log(response.data.total);
+                if(response.status === 200) {
                     values = response.data;
-                    console.log(values);
-
                     $("#service_fee_result").html(values.service_fee);
                     $("#ppn_result").html(values.ppn);
                     $("#grand_total_result").html(values.grand_total);
-                }  
+                    
+                    console.log(response.data.calculationExternal);
+                    $('#budget_usage_row').hide();
+                    $('#remaining_budget_row').hide();
+                    
+                    if(response.data.calculationExternal)
+                    {
+                        console.log("here");
+                        $('#budget_usage_row').show();
+                        $('#remaining_budget_row').show();
+
+                        $('#budget_usage').html(values.grand_total);
+                        $('#remaining_budget').html(values.remaining_budget);
+                    }
+                    // Check if grand total exceeds division budget
+                    if (!response.save) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Grand Total Melebihi Anggaran Divisi!',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+
+                        // Disable submit button
+                        $("#submit").attr('disabled', 'disabled');
+                    } else {
+                        // Enable submit button if grand total is within the budget
+                        $("#submit").removeAttr('disabled');
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: response.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
             }
         });
 
-        $("#service_fee_title").html(service_fee_title);
-        $("#ppn_title").html(ppn_title);
         $("#discount_result").html(formatRupiah(discount,'Rp. '));
         $("#charges_result").html(formatRupiah(charges,'Rp. '));
-        $("#sub_total_result").html(formatRupiah(sub_total,'Rp. '));
+        $("#sub_total_result").html(formatRupiah(total,'Rp. '));
     }
 
     function updateNomorBaris() {

@@ -26,15 +26,15 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Nama</th>
-                    <th>Total Pekerjaan</th>
-                    <th>Poin Pekerjaan Selesai</th>
-                    <th>Poin Pekerjaan Tidak Selesai</th>
-                    <th>Poin Keterlambatan</th>
-                    <th>Poin Bonus Kehadiran</th>
-                    <th>Total Poin</th>
-                    <th>Kalkulasi</th>
-                </tr>
+                <th class="text-center col-2">Nama</th>
+                <th class="text-center col-1">Total Pekerjaan</th>
+                <th class="text-center col-1">Poin Pekerjaan Selesai</th>
+                <th class="text-center col-1">Poin Pekerjaan Tidak Selesai</th>
+                <th class="text-center col-1">Poin Keterlambatan</th>
+                <th class="text-center col-1">Poin Bonus Kehadiran</th>
+                <th class="text-center col-1">Total Poin</th>
+                <th class="text-center col-auto">Kalkulasi</th>
+            </tr>
             </thead>
             <tbody> 
                 @foreach ($reports as $report)
