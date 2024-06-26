@@ -54,7 +54,7 @@ class ScheduleObController extends Controller
     
             // Check for conflicts in the date range
             $conflict = ScheduleOb::where('user_id', $request->user_id)
-                ->where('shifting_ob_id', $request->shifting_ob_id)
+                // ->where('shifting_ob_id', $request->shifting_ob_id)
                 ->whereBetween('date', [$startDate, $endDate])
                 ->first();
     
@@ -123,7 +123,7 @@ class ScheduleObController extends Controller
     private function checkScheduleConflict($userId, $shiftingObId, $date, $scheduleId = null)
     {
         $query = ScheduleOb::where('user_id', $userId)
-            ->where('shifting_ob_id', $shiftingObId)
+            // ->where('shifting_ob_id', $shiftingObId)
             ->where('date', $date);
 
         if ($scheduleId) {
