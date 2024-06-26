@@ -348,16 +348,22 @@
         // Event listener for leads_from select change
         $('#leads_from').change(function () {
             var selectedValue = $(this).val();
-            if (selectedValue == '1') {
+            if (selectedValue == '1') 
+            {
                 $('#division_budget_row').show();
                 $('#division_budget').attr('required', 'required');
+                $("#submit").attr('disabled', 'disabled');
+
             } else {
                 $('#division_budget_row').hide();
                 $('#division_budget').removeAttr('required');
                 $('#budget_amount_row').hide();
+                $('#budget_usage_row').hide();
+                $('#remaining_budget_row').hide();
                 $('#budget_amount').text('');
 
                 $('#division_budget').val('').trigger('change');
+                $("#submit").removeAttr('disabled');
             }
         });
 
@@ -381,8 +387,6 @@
                 selectedBudget += grandTotal;
             }
 
-            console.log(grandTotal);
-            console.log("------");
             if (selectedBudget || selectedBudget === 0) 
             {
                 $('#budget_amount_row').show();
@@ -742,7 +746,6 @@
                     $("#ppn_result").html(values.ppn);
                     $("#grand_total_result").html(values.grand_total);
                     
-                    console.log(response.data.calculationExternal);
                     $('#budget_usage_row').hide();
                     $('#remaining_budget_row').hide();
                     
