@@ -68,6 +68,14 @@ $no = ($company->currentPage() - 1) * $company->perPage() + 1;
                     <span class="text-danger text-sm">{{ $message }}</span>
                     @enderror
                 </div>
+
+                <div class="form-group">
+                    <label for="name">Nama PT</label>
+                    <input type="text" name="company_pt" class="form-control" value="{{ old('name', isset($data['name']) ? $data['name'] : '') }}" required>
+                    @error('company_name')
+                    <span class="text-danger text-sm">{{ $message }}</span>
+                    @enderror
+                </div>
         
                 <div class="form-group">
                     <label for="alamat">Alamat</label>
