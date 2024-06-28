@@ -6,19 +6,28 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 use App\Models\User;
 use App\Models\Division;
 use App\Models\Objective;
 use App\Models\ObjectiveKeyResult;
+use App\Models\DailyTask;
 
 use App\Schemas\ParamSchema;
+use App\Helpers\Access;
 
 class DivisionController extends Controller
 {
     public function index()
     {
-        $divisions = Division::byCompany(Auth::user()->company_id)->paginate(10);
+        // Mengambil user yang sedang login
+        $user = Auth::user();
+        
+        // Menggunakan relasi untuk mengambil divisi yang terkait dengan user tersebut
+        $divisions = $user->divisions()->paginate(10);
+        
+        // Mengirim data divisi ke view
         return view('division.index', compact('divisions'));
     }
 
@@ -45,8 +54,41 @@ class DivisionController extends Controller
     public function show($slug)
     {
         $division = Division::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-        $statusSelect = config('custom.statusSelect');
-        return view('divisions.show', compact('statusSelect', 'division'));
+
+        $today = \Carbon\Carbon::today();
+    
+        // Get users with their overdue tasks
+        $overdueTasks = User::where('company_id',Auth::user()->company_id)
+        ->whereHas('divisions', function ($query) use ($division) {
+            $query->where('divisions.id', $division->id);
+        })
+        ->withCount(['dailyTaskAssigns' => function($query) use ($today) 
+        {
+            $query->where('end_date', '<', $today);
+            $query->whereHas('taskStatus', function ($query)
+            {
+                $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO)->orWhere('name',ParamSchema::NOTCOMPLATE);
+            });
+        }])
+        ->orderBy('daily_task_assigns_count', 'desc')
+        ->get();
+
+        
+        // Get users with their tasks due today or upcoming
+        $upcomingTasks = User::where('company_id',Auth::user()->company_id)
+        ->whereHas('divisions', function ($query) use ($division) {
+            $query->where('divisions.id', $division->id);
+        })
+        ->withCount(['dailyTaskAssigns' => function($query) use ($today) {
+            $query->where('end_date', '>=', $today);
+            $query->whereHas('taskStatus', function ($query)
+            {
+                $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO)->orWhere('name',ParamSchema::NOTCOMPLATE);
+            });
+        }])
+        ->orderBy('daily_task_assigns_count', 'desc')
+        ->get();
+        return view('division.show', compact('overdueTasks', 'upcomingTasks', 'division'));
     }
 
     public function showDivision(Request $request, $slug)
@@ -222,5 +264,44 @@ class DivisionController extends Controller
         }
 
         return view('partials.objective-fields', compact('objectives', 'selectedValues', 'index'));
+    }
+
+    public function fetchusertask($userId,$filter)
+    {
+        $today = \Carbon\Carbon::today();
+        
+        $query = DailyTask::with('taskStatus')
+            ->where('assignment_user_id', $userId)
+            ->whereHas('taskStatus', function ($query) {
+                $query->where('name', ParamSchema::DOING)
+                    ->orWhere('name', ParamSchema::INREVIEW)
+                    ->orWhere('name', ParamSchema::TODO)
+                    ->orWhere('name', ParamSchema::NOTCOMPLATE);
+            });
+
+        if ($filter === 'overdue') {
+            $query->where('end_date', '<', $today);
+        } elseif ($filter === 'upcoming') {
+            $query->where('end_date', '>=', $today);
+        }
+        
+        $tasks = $query->get()->map(function ($task) {
+            $url = NULL;
+            if (Access::can('show', 'dailytasks')) {
+                $url = route('dailytask.show', $task->slug);
+            }
+            
+            $headName = $task->head ? "< ". Str::limit($task->head->name,40) : '';
+
+            return [
+                'is_overdue' => $task->isOverdue(),
+                'name_show' => $task->nameShow.' '.$headName,
+                'task_status' => $task->taskStatus,
+                'date_show' => $task->date_show,
+                'user_create' => $task->user ? $task->user->name : '',
+                'url' => $url,
+            ];
+        });
+        return response()->json($tasks);
     }
 }
