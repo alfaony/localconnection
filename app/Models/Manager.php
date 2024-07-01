@@ -18,6 +18,11 @@ class Manager extends Model
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
 
+    
+    protected static function booted()
+    {
+        static::addGlobalScope(new RoleScope());
+    }
     protected static function boot()
     {
         parent::boot();
@@ -40,7 +45,7 @@ class Manager extends Model
         $baseSlug = $slug;
 
         $count = 1;
-        while (static::where('slug', $slug)->withTrashed()->exists()) 
+        while (static::withoutGlobalScopes()->where('slug', $slug)->withTrashed()->exists()) 
         {
             $slug = "{$baseSlug}-{$count}";
             $count++;

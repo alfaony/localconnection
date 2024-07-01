@@ -70,7 +70,7 @@ class WorkOrder extends Model
 
     public function project()
     {
-        return $this->hasOne(Project::class);
+        return $this->hasOne(Project::class)->withoutGlobalScopes();
     }
     
     public function scopeByNumberResult($query,$number_result)
