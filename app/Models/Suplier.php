@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
-use App\Scopes\RoleScope;
+use Illuminate\Support\Facades\Auth;
+use App\Schemas\RoleSchema;
 
 class Suplier extends Model
 {
@@ -17,11 +18,6 @@ class Suplier extends Model
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
 
-    
-    protected static function booted()
-    {
-        static::addGlobalScope(new RoleScope());
-    }
     protected static function boot()
     {
         parent::boot();
@@ -108,6 +104,17 @@ class Suplier extends Model
             {
                 $query->where('company_id', $companyId);
             });
+        }
+    }
+
+    public function scopeByRole($query)
+    {
+        if(Auth::user()->role->name == RoleSchema::STAFF || Auth::user()->role->name == RoleSchema::PM)
+        {
+            return $query->where('user_id', Auth::user()->id);
+        }
+        {
+            return $query->byCompany(Auth::user()->company_id);
         }
     }
 }
