@@ -428,6 +428,11 @@ class AppServiceProvider extends ServiceProvider
                 'submenu' => $securityMenuArray
             ];
 
+            if($managementCompanyMenu['submenu'] )
+            {
+                $event->menu->add($managementCompanyMenu);
+            }
+            
             if($managementSalesMenu['submenu'] )
             {
                 $event->menu->add($managementSalesMenu);
@@ -436,11 +441,6 @@ class AppServiceProvider extends ServiceProvider
             if($productivityMenu['submenu'] )
             {
                 $event->menu->add($productivityMenu);
-            }
-
-            if($managementCompanyMenu['submenu'] )
-            {
-                $event->menu->add($managementCompanyMenu);
             }
 
             if($managementObMenu['submenu'] )
