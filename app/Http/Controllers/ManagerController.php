@@ -55,7 +55,7 @@ class ManagerController extends Controller
     {
         $nomor = $request->get('nomor') ?? 0;
 
-        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('manager')->orderBy('created_at', 'desc')->get();
+        $project = Project::byRole()->whereDoesntHave('manager')->orderBy('created_at', 'desc')->get();
         $employee = Employee::byCompany(Auth::user()->company_id)->get();
         $dateNow = Carbon::now();
         $paymentMode = config('custom.paymentMode');
@@ -152,7 +152,7 @@ class ManagerController extends Controller
         $employee = Employee::byCompany(Auth::user()->company_id)->get();
         $paymentMode = config('custom.paymentMode');
         $manager = Manager::where('slug', $slug)->firstOrFail();
-        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('manager')->orWhere('id', $manager->project_id)->orderBy('created_at', 'desc')->get();
+        $project = Project::byRole()->whereDoesntHave('manager')->orWhere('id', $manager->project_id)->orderBy('created_at', 'desc')->get();
         $dateNow = $manager->date ?? Carbon::now();
         $dateCreate = Carbon::parse($manager->created_at)->format('Y-m-d');
         

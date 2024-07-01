@@ -46,7 +46,7 @@ class SuplierController extends Controller
     public function create(Request $request)
     {
         $nomor = $request->get('nomor');
-        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('suplier')->orderBy('created_at', 'desc')->get();
+        $project = Project::byRole()->whereDoesntHave('suplier')->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::now()->format('Y-m-d');
         $product = Product::byCompany(Auth::user()->company_id)->get();
 
@@ -138,7 +138,7 @@ class SuplierController extends Controller
     {
         $nomor = $request->nomor ?? 0 ;
         $suplier = Suplier::where('slug', $slug)->firstOrFail();
-        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('suplier')->orWhere('id', $suplier->project_id)->orderBy('created_at', 'desc')->get();
+        $project = Project::byRole()->whereDoesntHave('suplier')->orWhere('id', $suplier->project_id)->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::parse($suplier->created_at)->format('Y-m-d');
         $product = Product::byCompany(Auth::user()->company_id)->get();
 
