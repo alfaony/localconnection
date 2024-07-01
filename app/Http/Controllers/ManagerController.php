@@ -29,7 +29,7 @@ class ManagerController extends Controller
     {
         $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
 
-        $manager = Manager::byCompany(Auth::user()->company_id)
+        $manager = Manager::byRole()
         ->where(function ($query) use ($request) {
             $searchTerm = '%' . $request->get('search') . '%';
             // Search in the manager's name
@@ -42,7 +42,7 @@ class ManagerController extends Controller
         ->orderBy('created_at', $order)
         ->paginate(10);
 
-        $totalManager = Manager::byCompany(Auth::user()->company_id)->count();
+        $totalManager = Manager::byRole()->count();
         return view('manager.index',compact('manager','totalManager'));
     }
 
@@ -172,7 +172,7 @@ class ManagerController extends Controller
         // dd($request->all());
         try {
             DB::beginTransaction();
-            $manager = Manager::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $manager = Manager::byRole()->where('slug', $slug)->firstOrFail();
             $manager->project_id = $request->input('project');
             $manager->user_id = Auth::user()->id;
             $manager->date = $request->input('date');
@@ -246,7 +246,7 @@ class ManagerController extends Controller
      */
     public function destroy($slug)
     {
-        $manager = Manager::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        $manager = Manager::byRole()->where('slug', $slug)->firstOrFail();
         $manager->job()->delete();
         $manager->delete();
 

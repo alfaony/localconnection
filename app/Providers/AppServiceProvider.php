@@ -49,9 +49,31 @@ class AppServiceProvider extends ServiceProvider
             $listMenu = [
                 'homes',
                 'pricelists',
+                'roles',
+            ];
+
+            $managementCompanyArray = array();
+            $managementSalesArray = array();
+            $managementObArray = array();
+            $equipmentMenuArray = array();
+            $taskMenuArray = array();
+            $securityMenuArray = array();
+            $productivityMenuArray = array();
+
+            $equipmentMenu = ['equipment','equipment_reductions'];
+            $taskMenu = ['report_points','tasks','task_assigns'];
+            $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
+            $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
+            $managementCompanyMenu = 
+            [
                 'employees',
-                'managers',
                 'users',
+                'companies',
+                'setting_companies',
+            ];
+            $managementSalesMenu = 
+            [
+                'managers',
                 'products',
                 'customers',
                 'quotes',
@@ -62,23 +84,14 @@ class AppServiceProvider extends ServiceProvider
                 'report_projects',
                 'basts',
                 'reports',
-                'companies',
-                'setting_companies',
-                'roles',
+            ];
+
+            $managementObMenu = 
+            [
                 'attendances',
                 'shifting_obs',
                 'schedule_obs',
             ];
-
-            $equipmentMenuArray = array();
-            $taskMenuArray = array();
-            $securityMenuArray = array();
-            $productivityMenuArray = array();
-
-            $equipmentMenu = ['equipment','equipment_reductions'];
-            $taskMenu = ['report_points','tasks','task_assigns'];
-            $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
-            $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
 
             $menus = [
                 'homes' => [
@@ -317,6 +330,30 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($managementSalesMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($managementSalesArray,$menus[$role]);
+                }
+            }
+
+            foreach ($managementCompanyMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($managementCompanyArray,$menus[$role]);
+                }
+            }
+
+            foreach ($managementObMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($managementObArray,$menus[$role]);
+                }
+            }
+
             foreach ($equipmentMenu as $role) 
             {
                 if(Access::can("index", $role))
@@ -349,10 +386,28 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            $managementSalesMenu = 
+            [
+                'text'    => 'Manajemen Penjualan',
+                'submenu' => $managementSalesArray
+            ];
+
             $productivityMenu = 
             [
                 'text'    => 'Produktifitas',
                 'submenu' => $productivityMenuArray
+            ];
+
+            $managementCompanyMenu = 
+            [
+                'text'    => 'Manajemen Perusahaan',
+                'submenu' => $managementCompanyArray
+            ];
+            
+            $managementObMenu = 
+            [
+                'text'    => 'Manajemen OB',
+                'submenu' => $managementObArray
             ];
 
             $equipmentMenu = 
@@ -373,9 +428,24 @@ class AppServiceProvider extends ServiceProvider
                 'submenu' => $securityMenuArray
             ];
 
+            if($managementCompanyMenu['submenu'] )
+            {
+                $event->menu->add($managementCompanyMenu);
+            }
+            
+            if($managementSalesMenu['submenu'] )
+            {
+                $event->menu->add($managementSalesMenu);
+            }
+
             if($productivityMenu['submenu'] )
             {
                 $event->menu->add($productivityMenu);
+            }
+
+            if($managementObMenu['submenu'] )
+            {
+                $event->menu->add($managementObMenu);
             }
 
             if($equipmentMenu['submenu'] )

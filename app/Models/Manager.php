@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
+use App\Schemas\RoleSchema;
 
 class Manager extends Model
 {
@@ -84,6 +86,17 @@ class Manager extends Model
             {
                 $query->where('company_id', $companyId);
             });
+        }
+    }
+
+    public function scopeByRole($query)
+    {
+        if(Auth::user()->role->name == RoleSchema::STAFF || Auth::user()->role->name == RoleSchema::PM)
+        {
+            return $query->where('user_id', Auth::user()->id);
+        }
+        {
+            return $query->byCompany(Auth::user()->company_id);
         }
     }
 }
