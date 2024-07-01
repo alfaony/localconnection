@@ -37,6 +37,20 @@ class RoleScope implements Scope
                 {
                     $builder->where('user_id',Auth::user()->id);
                 }
+
+            case RoleSchema::PM:
+                if($table == 'projects')
+                {
+                    $builder->where('user_id',Auth::user()->id);
+                }
+                if($table == 'supliers')
+                {
+                    $builder->where('user_id',Auth::user()->id);
+                }
+                if($table == 'managers')
+                {
+                    $builder->where('user_id',Auth::user()->id);
+                }
             case RoleSchema::BM:
                 if($table == 'task_assigns')
                 {
