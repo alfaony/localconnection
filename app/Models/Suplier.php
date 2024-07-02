@@ -40,7 +40,7 @@ class Suplier extends Model
         $baseSlug = $slug;
 
         $count = 1;
-        while (static::withoutGlobalScopes()->where('slug', $slug)->withTrashed()->exists()) {
+        while (static::where('slug', $slug)->withTrashed()->exists()) {
             $slug = "{$baseSlug}-{$count}";
             $count++;
         }
