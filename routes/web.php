@@ -188,6 +188,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::delete('daily_task_project/customfielddestroy/{id}', [DailyTaskProjectController::class, 'customfielddestroy'])->name('customfielddestroy');
   Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
   Route::get('daily_task_project/showproject/{slug}', [DailyTaskProjectController::class,'showproject'])->name('daily_task_project.showproject');
+  Route::get('daily_task_project/createdailytask/{slug}', [DailyTaskProjectController::class,'createdailytask'])->name('daily_task_project.createdailytask');
   Route::resource('daily_task_project', DailyTaskProjectController::class);
   
   Route::get('objective/showtask/{objective}', [ObjectiveController::class,'showtask'])->name('objective.showtask');
