@@ -125,7 +125,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="description">Deskripsi</label>
-                                        <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" placeholder="yang akan dicetak di perjanjian" value="{!! $dailytask->description !!}"/>
+                                        <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" placeholder="yang akan dicetak di perjanjian" value="{{ $dailytask->description }}"/>
                                     </div>
                                 </div>
                                 @if(@$dailytask->approved)
