@@ -17,6 +17,23 @@
     <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
         <div class="card-body">
             <div class="accordion" id="taskAccordion">
+                <form method="GET" action="{{ route('projectdashboard.index') }}" class="mb-3">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <select class="form-control select2" name="division_id">
+                                <option value="" selected>-- Divisi --</option>
+                                @foreach($divisions as $division)
+                                    <option value="{{ $division->id }}" {{ request('division_id') == $division->id ? 'selected' : '' }}>
+                                        {{ $division->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </div>
+                    </div>
+                </form>
                 <div class="card">
                     <div class="card-header" id="headingOverdue">
                         <h5 class="mb-0">
@@ -221,6 +238,11 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2();
+    });
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Data for Overdue Tasks
@@ -454,6 +476,28 @@ document.addEventListener('DOMContentLoaded', function () {
     .accordion .card-header {
         cursor: pointer;
     }
+    .select2-selection__rendered
+    {
+        line-height: 31px !important;
+    }
+    .select2-container .select2-selection--single
+    {
+        height: 35px !important;
+    }
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
 
+    .select2-selection__choice
+    {
+        background-color: #007bff !important;
+        border: 1px solid #007bff !important;
+    }
+
+    .select2-selection__choice__remove
+    {
+        color: #fe0700 !important;
+        border: 1px solid #007bff !important;
+    }
 </style>
 @endsection

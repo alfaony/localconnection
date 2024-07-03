@@ -165,8 +165,7 @@
                             <p class="form-control-plaintext">{!! $dailytask->description !!}</p>
                         </div>
                     </div>
-
-                    @if($dailytask->customFieldValues)
+                    @if($dailytask->customFieldValues && count($dailytask->customFieldValues) > 0)
                     <div class="accordion" id="customFieldAccordion">
                         <div class="card">
                             <div class="card-header" id="headingOne">

@@ -48,7 +48,7 @@ class Division extends Model
 
         return $slug;
     }
-
+    
     public function user()
     {
         return $this->belongsTo(User::class)->withTrashed();
@@ -59,10 +59,10 @@ class Division extends Model
         return $this->hasMany(Objective::class);
     }
 
-    // public function tasks()
-    // {
-    //     return $this->hasMany(DailyTask::class);
-    // }
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
 
     public function scopeByCompany($query,$companyId)
     {

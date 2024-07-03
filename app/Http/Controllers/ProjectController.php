@@ -22,7 +22,7 @@ class ProjectController extends Controller
     {   
         $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
 
-        $project = Project::byCompany(Auth::user()->company_id)
+        $project = Project::byRole()
         ->where(function ($query) use ($request) {
             $searchTerm = '%' . $request->get('search') . '%';
             // Search in the manager's name
@@ -34,7 +34,7 @@ class ProjectController extends Controller
         })
         ->OrderBy('created_at',$order)->paginate(10);
 
-        $totalProject = Project::byCompany(Auth::user()->company_id)->count();
+        $totalProject = Project::byRole()->count();
         $workOrder = WorkOrder::whereDoesntHave('project')
         ->byCompany(Auth::user()->company_id)
         ->orderBy('created_at','desc')
@@ -84,9 +84,9 @@ class ProjectController extends Controller
      */
     public function edit($slug)
     {
-        $totalProject = Project::byCompany(Auth::user()->company_id)->count();
+        $totalProject = Project::byRole()->count();
         $projectEdit = Project::where('slug', $slug)->firstOrFail();
-        $project = Project::byCompany(Auth::user()->company_id)->OrderBy('created_at','asc')->paginate(10);
+        $project = Project::byRole()->OrderBy('created_at','asc')->paginate(10);
         // $workOrder = WorkOrder::all();
         $workOrder = WorkOrder::whereDoesntHave('project')
         ->byCompany(Auth::user()->company_id)
@@ -124,7 +124,7 @@ class ProjectController extends Controller
      */
     public function update(ProjectRequest $request, $slug)
     {
-        $project = Project::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        $project = Project::byRole()->where('slug', $slug)->firstOrFail();
         $project->user_id = Auth::user()->id;
         $project->title = $request->post('title');
         $project->budget = $request->post('budget');
@@ -155,7 +155,7 @@ class ProjectController extends Controller
      */
     public function destroy($slug)
     {
-        $project = Project::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        $project = Project::byRole()->where('slug', $slug)->firstOrFail();
         $project->delete();
         return redirect()->back()->with('delete',true);
     }

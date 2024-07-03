@@ -180,6 +180,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::put('dailytask/report/{slug}', [DailyTaskController::class,'report'])->name('dailytask.report');
   Route::delete('dailytask/deletemedia/{id}', [DailyTaskController::class, 'deletemedia'])->name('dailytask.deletemedia');
   Route::put('dailytask/approvement/{slug}', [DailyTaskController::class,'approvement'])->name('dailytask.approvement');
+  Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
   Route::resource('dailytask', DailyTaskController::class);
   
   Route::put('daily_task_project/customfieldstore/{slug}', [DailyTaskProjectController::class, 'customfieldstore'])->name('customfieldstore');
@@ -187,16 +188,15 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::delete('daily_task_project/customfielddestroy/{id}', [DailyTaskProjectController::class, 'customfielddestroy'])->name('customfielddestroy');
   Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
   Route::get('daily_task_project/showproject/{slug}', [DailyTaskProjectController::class,'showproject'])->name('daily_task_project.showproject');
+  Route::get('daily_task_project/createdailytask/{slug}', [DailyTaskProjectController::class,'createdailytask'])->name('daily_task_project.createdailytask');
   Route::resource('daily_task_project', DailyTaskProjectController::class);
-
-
   
   Route::get('objective/showtask/{objective}', [ObjectiveController::class,'showtask'])->name('objective.showtask');
   Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
   Route::resource('objective', ObjectiveController::class);
+
+  Route::get('division/fetchusertask/{userId}/{filter}', [DivisionController::class, 'fetchusertask'])->name('division.fetchusertask');
   Route::resource('division', DivisionController::class);
-  Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
-  
   
   Route::resource('vision', VisionController::class);
   Route::resource('mission', MissionController::class)->except(['index', 'show', 'create', 'edit']);
@@ -211,7 +211,6 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('division-budget', DivisionBudgetController::class);
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
 });
-
 // Add this to your routes/web.php
 
 

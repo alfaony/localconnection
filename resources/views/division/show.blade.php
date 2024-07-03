@@ -1,183 +1,304 @@
 @extends('adminlte::page')
 
+@section('title', 'Task Tracking')
 
 @section('content')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('daily_task_project.index') }}">Proyek</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{{ $project->name ?? '' }}</li>
+        <li class="breadcrumb-item"><a href="{{ route('division.index') }}">Divisi</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ $division->name ?? '' }}</li>
     </ol>
 </nav>
-<div class="container p-3">
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h3>{{ $project->name }}</h3>
-            @canAccess('customfieldstore','daily_task_projects')
-            <button class="btn btn-primary" data-toggle="modal" data-target="#createCustomFieldModal"><i class="fa fa-plus"></i> Custom Field</button>
-            @endcanAccess
-        </div>
-        <div class="card-body">
-            <h5>Custom Fields</h5>
-            <ul class="list-group mb-3">
-                @foreach($project->customFields as $customField)
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>
-                            <strong>{{ $customField->name }}</strong> ({{ $customField->type == 'single_select' ? 'Single Select' : 'Multi Select' }})
-                            <ul class="list-unstyled">
-                                @foreach($customField->values->sortBy('ordering') as $value)
-                                    <li>{{ $value->value }}</li>
-                                @endforeach
-                            </ul>
-                        </span>
-                        <span>
-                            @canAccess('customfieldupdate','daily_task_projects')
-                            <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editCustomFieldModal{{ $customField->id }}"><i class="fa fa-edit"></i></button>
-                            @endcanAccess
-                            @canAccess('customfielddestroy','daily_task_projects')
-                            <form action="{{ route('customfielddestroy', $customField->id) }}" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this custom field?')"><i class="fa fa-trash"></i></button>
-                            </form>
-                            @endcanAccess
-                        </span>
-                    </li>
-
-                    <!-- Edit Custom Field Modal -->
-                    @canAccess('customfieldupdate','daily_task_projects')
-                    <div class="modal fade" id="editCustomFieldModal{{ $customField->id }}" tabindex="-1" role="dialog" aria-labelledby="editCustomFieldModalLabel{{ $customField->id }}" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                            <form action="{{ route('customfieldupdate', $customField->id) }}" method="POST">
-                                @csrf
-                                @method('PUT')
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="editCustomFieldModalLabel{{ $customField->id }}">Edit Custom Field</h5>
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="form-group">
-                                            <label for="custom_field_name">Nama Custom Field</label>
-                                            <input type="text" class="form-control" name="custom_field_name" value="{{ $customField->name }}" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="custom_field_type">Tipe</label>
-                                            <select class="form-control" name="custom_field_type" disabled required>
-                                                @foreach($statusSelect as $key => $value)
-                                                <option value="{{ $key }}" {{ $customField->type == $key ? 'selected' : '' }}>{{ $value }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div id="custom-field-values-container{{ $customField->id }}">
-                                            <label for="custom_field_value">Values</label>
-                                            @foreach($customField->values->sortBy('ordering') as $value)
-                                                <div class="form-group d-flex">
-                                                    <input type="text" class="form-control custom-field-value" name="custom_field_value[]" value="{{ $value->value }}" required>
-                                                    <button type="button" class="btn btn-danger btn-sm ml-2 remove-custom-field-value"><i class="fa fa-trash"></i></button>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                        <button type="button" class="btn btn-secondary add-custom-field-value btn-sm" data-id="{{ $customField->id }}"><i class="fa fa-plus"></i> Tambah Value</button>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        <button type="submit" class="btn btn-primary">Save changes</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    @endcanAccess
-                @endforeach
-            </ul>
-        </div>
+<div id="accordion">
+@canAccess('fetchusertask', 'project_dashboards')
+  <div class="card p-3 mt-3">
+    <div class="card-header" id="headingOne">
+      <h5 class="mb-0">
+        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Pantauan Tugas
+        </button>
+      </h5>
     </div>
-</div>
 
-@canAccess('customfieldstore','daily_task_projects')
-<!-- Create Custom Field Modal -->
-<div class="modal fade" id="createCustomFieldModal" tabindex="-1" role="dialog" aria-labelledby="createCustomFieldModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <form id="createCustomFieldForm" action="{{ route('customfieldstore', $project->slug) }}" method="POST">
-            @csrf
-            @method('PUT')
-            <input type="hidden" name="project_id" value="{{ $project->id }}">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createCustomFieldModalLabel">Tambah Custom Field</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="custom_field_name">Nama Custom Field</label>
-                        <input type="text" class="form-control" id="custom_field_name" name="custom_field_name" required>
+    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+        <div class="card-body">
+            <div class="accordion" id="taskAccordion">
+                <div class="card">
+                    <div class="card-header" id="headingOverdue">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOverdue" aria-expanded="true" aria-controls="collapseOverdue">
+                                Overdue Tasks
+                            </button>
+                        </h5>
                     </div>
-                    <div class="form-group">
-                        <label for="custom_field_type">Tipe</label>
-                        <select class="form-control" id="custom_field_type" name="custom_field_type" required>
-                            @foreach($statusSelect as $key => $value)
-                            <option value="{{ $key }}">{{ $value }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div id="custom-field-values-container">
-                        <label for="custom_field_value">Values</label>
-                        <div class="form-group d-flex">
-                            <input type="text" class="form-control custom-field-value" name="custom_field_value[]" required>
-                            <button type="button" class="btn btn-danger ml-2 remove-custom-field-value"><i class="fa fa-trash"></i></button>
+                    <div id="collapseOverdue" class="collapse show" aria-labelledby="headingOverdue" data-parent="#taskAccordion">
+                        <div class="card-body">
+                            <canvas id="overdueTasksChart"></canvas>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i> Option</button>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save changes</button>
+                <div class="card">
+                    <div class="card-header" id="headingUpcoming">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseUpcoming" aria-expanded="false" aria-controls="collapseUpcoming">
+                                Upcoming Tasks
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseUpcoming" class="collapse" aria-labelledby="headingUpcoming" data-parent="#taskAccordion">
+                        <div class="card-body">
+                            <canvas id="upcomingTasksChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </form>
+            <div class="mt-5">
+                <h3>Tasks : <span id="userName"></span></h3>
+                <div id="userTasks"></div>
+            </div>
+        </div>
     </div>
-</div>
+
+  </div>
 @endcanAccess
-
 @endsection
-
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Data for Overdue Tasks
+    var overdueLabels = @json($overdueTasks->pluck('name'));
+    var overdueData = @json($overdueTasks->pluck('daily_task_assigns_count'));
+    
+    // Data for Upcoming Tasks
+    var upcomingLabels = @json($upcomingTasks->pluck('name'));
+    var upcomingData = @json($upcomingTasks->pluck('daily_task_assigns_count'));
+
+    // Overdue Tasks Chart
+    var ctxOverdue = document.getElementById('overdueTasksChart').getContext('2d');
+    var overdueTasksChart = new Chart(ctxOverdue, {
+        type: 'bar',
+        data: {
+            labels: overdueLabels,
+            datasets: [{
+                label: 'Overdue Tasks',
+                data: overdueData,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            onClick: function(e, elements) {
+                if (elements.length > 0) {
+                    var index = elements[0].index;
+                    var userName = overdueLabels[index];
+                    var userId = @json($overdueTasks->pluck('id'))[index];
+                    console.log('User ID:', userId, 'User Name:', userName);
+                    fetchUserTasks(userId, userName, 'overdue');
+                }
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+
+    // Upcoming Tasks Chart
+    var ctxUpcoming = document.getElementById('upcomingTasksChart').getContext('2d');
+    var upcomingTasksChart = new Chart(ctxUpcoming, {
+        type: 'bar',
+        data: {
+            labels: upcomingLabels,
+            datasets: [{
+                label: 'Upcoming Tasks',
+                data: upcomingData,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            onClick: function(e, elements) {
+                if (elements.length > 0) {
+                    var index = elements[0].index;
+                    var userName = upcomingLabels[index];
+                    var userId = @json($upcomingTasks->pluck('id'))[index];
+                    fetchUserTasks(userId, userName,'upcoming');
+                }
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        }
+    });
+
+    function fetchUserTasks(userId, userName, filter = 'overdue') 
+    {
+        document.getElementById('userName').innerText = userName;
+        document.getElementById('userTasks').innerHTML = 'Loading...';
+        
+        let url = `{{ route('division.fetchusertask', [':userId', ':filter']) }}`;
+        url = url.replace(':userId', userId);
+        url = url.replace(':filter', filter);
+
+        fetch(url.replace(':userId', userId))
+            .then(response => response.json())
+            .then(tasks => {
+                let tasksHtml = '<table class="table table-bordered"><thead><tr><th>Tugas</th><th>Status</th><th>Tanggal</th><th>Dibuat</th><th>Action</th></tr></thead><tbody>';
+                tasks.forEach(task => {
+                    let statusIcon = '';
+                    let url = '';
+                    switch (task.task_status.name) {
+                        case 'todo':
+                            statusIcon = '<i class="fa fa-list-alt"></i>';
+                            break;
+                        case 'doing':
+                            statusIcon = '<i class="fa fa-hourglass-start"></i>';
+                            break;
+                        case 'in review':
+                            statusIcon = '<i class="fa fa-eye" style="color: green;"></i>';
+                            break;
+                        case 'not complete':
+                            statusIcon = '<i class="fa fa-times-circle" style="color: red;"></i>';
+                            break;
+                        case 'complete':
+                            statusIcon = '<i class="fa fa-check" style="color: green;"></i>';
+                            break;
+                        default:
+                            statusIcon = task.task_status.name;
+                    }
+
+                    if(task)
+                    {
+                        url = `<a href="${task.url}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>`;
+                    }else
+                    {
+                        url = '-';
+                    }
+                    
+                    if(task.is_overdue)
+                    {
+                        date_show = `<span class="text-danger"> ${task.date_show }</span>`;
+                    }else
+                    {
+                        date_show = `<span> ${task.date_show}</span>`;
+                    }
+
+
+                    tasksHtml += `<tr>
+                                    <td>${task.name_show}</td>
+                                    <td>${statusIcon} ${task.task_status.name}</td>
+                                    <td>${date_show}</td>
+                                    <td>${task.user_create}</td>
+                                    <td>
+                                        ${url}
+                                    </td>
+                                </tr>`;
+                });
+                tasksHtml += '</tbody></table>';
+                document.getElementById('userTasks').innerHTML = tasksHtml;
+            })
+            .catch(error => {
+                document.getElementById('userTasks').innerHTML = 'Error fetching tasks.';
+                console.error('Error fetching tasks:', error);
+        });
+    }
+});
+</script>
 <script>
     $(document).ready(function() {
-        function addCustomFieldValue(index) {
-            return `
-                <div class="form-group d-flex">
-                    <input type="text" class="form-control custom-field-value" name="custom_field_value[]" required>
-                    <button type="button" class="btn btn-danger ml-2 remove-custom-field-value"><i class="fa fa-trash"></i></button>
-                </div>
-            `;
-        }
-
-        // Add option in create modal
-        $(document).on('click', '.add-custom-field-value', function() {
-            const containerId = $(this).data('id') ? `#custom-field-values-container${$(this).data('id')}` : '#custom-field-values-container';
-            $(containerId).append(addCustomFieldValue());
-        });
-
-        // Remove option
-        $(document).on('click', '.remove-custom-field-value', function() {
-            $(this).closest('.form-group').remove();
+        $('.collapse').on('show.bs.collapse', function () {
+            $(this).parent().find('.rotate-icon').addClass('rotate');
+        }).on('hide.bs.collapse', function () {
+            $(this).parent().find('.rotate-icon').removeClass('rotate');
         });
     });
 </script>
+@endsection
+@section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<style>
+.card-header .btn-link {
+    color: #007bff;
+    text-decoration: none;
+}
+.card-header .btn-link:hover {
+    text-decoration: underline;
+}
+.card-header i {
+    transition: transform 0.3s ease;
+}
+.card-header .collapsed .fa-chevron-right {
+    transform: rotate(0);
+}
+.card-header[aria-expanded="true"] .fa-chevron-right {
+    transform: rotate(90deg);
+}
+.list-group-item {
+    border: none;
+    padding-left: 2rem;
+}
+</style>
+<style>
+    .list-group-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .task-details {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .task-details span {
+        margin-right: 10px;
+    }
+    .task-actions {
+        display: flex;
+        align-items: center;
+    }
+    .task-actions form {
+        margin: 0;
+    }
+    .task-actions a,
+    .task-actions button {
+        margin-right: 5px;
+    }
+    .select2-selection__choice
+    {
+        background-color: #007bff !important;
+        border: 2px solid #007bff !important;
+    }
+
+    .select2-selection__choice__remove
+    {
+        color: #fe0700 !important;
+        border: 2px solid #007bff !important;
+    }
+    #userTasks 
+    {
+        max-height: 500px;
+        overflow-y: auto;
+        margin-top: 20px;
+    }
+
+    .accordion .card-header {
+        cursor: pointer;
+    }
+
+</style>
 @endsection

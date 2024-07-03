@@ -78,7 +78,6 @@ class RoleScope implements Scope
                     $builder->where('user_id',Auth::user()->id);
                 }
                 break;
-
         }
     }
 }
