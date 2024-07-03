@@ -151,7 +151,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::get('report-point',[ReportPointController::class,'index'])->name('report-point.index');
 
-  Route::resource('attendance', AttendanceController::class)->only('index');
+  Route::resource('attendance', AttendanceController::class);
 
   Route::resource('asset', AssetController::class)->except(['create']);
   Route::resource('asset-assign', AssetAssignController::class)->only(['store','update','destroy']);

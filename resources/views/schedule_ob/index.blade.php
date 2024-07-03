@@ -53,7 +53,7 @@
                             <label for="shifting_ob_id">Shift</label>
                             <select class="form-control select2" name="shifting_ob_id" required>
                                 @foreach($shifts as $shift)
-                                    <option value="{{ $shift->id }}">{{ $shift->name }} - {{ $shift->clock_in }}</option>
+                                    <option value="{{ $shift->id }}">{{ $shift->name }} ({{ $shift->clock_in }} - {{ $shift->clock_out ?? "-" }}) </option>
                                 @endforeach
                             </select>
                         </div>

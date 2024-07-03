@@ -16,9 +16,9 @@ return new class extends Migration
         Schema::table('attendances', function (Blueprint $table) {
             $table->string('pic_in')->after('clock_out')->nullable();
             $table->string('pic_out')->after('pic_in')->nullable();
-            $table->string('status_in')->after('pic_out')->nullable();
-            $table->string('status_out')->after('status_in')->nullable();
-            $table->string('note')->after('status_in')->nullable();
+            $table->boolean('ontime_in')->after('pic_out')->nullable();
+            $table->boolean('ontime_out')->after('ontime_in')->nullable();
+            $table->string('note')->after('ontime_out')->nullable();
         });
     }
 
@@ -32,8 +32,8 @@ return new class extends Migration
         Schema::table('attendances', function (Blueprint $table) {
             $table->dropColumn('pic_in');
             $table->dropColumn('pic_out');
-            $table->dropColumn('status_in');
-            $table->dropColumn('status_out');
+            $table->dropColumn('ontime_in');
+            $table->dropColumn('ontime_out');
             $table->dropColumn('note');
         });
     }

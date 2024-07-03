@@ -15,7 +15,21 @@ class Attendance extends Model
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
-    
+    protected $fillable = [
+        'date',
+        'clock_in',
+        'clock_out',
+        'pic_in',
+        'pic_out',
+        'user_id',
+        'ontime_in',
+        'ontime_out',
+        'point',
+        'schedule_ob_id',
+        'slug',
+        'note'
+    ];
+
     protected static function booted()
     {
         static::addGlobalScope(new RoleScope());
@@ -57,6 +71,12 @@ class Attendance extends Model
     {
         return $this->belongsTo(User::class)->withTrashed();
     }
+
+    public function schedule()
+    {
+        return $this->belongsTo(ScheduleOb::class,'schedule_ob_id')->withTrashed();
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

@@ -20,7 +20,7 @@ class PermissionForMenuAttendanceSeeder extends Seeder
      */
     public function run()
     {
-        $equipment = ['index'];
+        $equipment = ['index','create','store','show','edit','update','destroy'];
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $bm = Role::where('name',RoleSchema::BM)->first();
         $ob = Role::where('name',RoleSchema::OB)->first();
