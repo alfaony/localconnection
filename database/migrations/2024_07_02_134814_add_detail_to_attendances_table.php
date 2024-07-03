@@ -14,11 +14,11 @@ return new class extends Migration
     public function up()
     {
         Schema::table('attendances', function (Blueprint $table) {
-            $table->string('pic_in')->after('clock_out')->nullable();
-            $table->string('pic_out')->after('pic_in')->nullable();
-            $table->boolean('ontime_in')->after('pic_out')->nullable();
-            $table->boolean('ontime_out')->after('ontime_in')->nullable();
-            $table->string('note')->after('ontime_out')->nullable();
+            $table->string('pic_in')->after('clock_out')->nullable(true);
+            $table->string('pic_out')->after('pic_in')->nullable(true);
+            $table->boolean('ontime_in')->after('pic_out')->nullable(true);
+            $table->boolean('ontime_out')->after('ontime_in')->nullable(true);
+            $table->string('note')->after('ontime_out')->nullable(true);
         });
     }
 

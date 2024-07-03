@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('shifting_obs', function (Blueprint $table) {
-            $table->time('clock_out')->after('clock_in')->nullable();
+            $table->time('clock_out')->after('clock_in')->nullable(true);
         });
     }
 
