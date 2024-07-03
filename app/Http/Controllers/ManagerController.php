@@ -29,7 +29,7 @@ class ManagerController extends Controller
     {
         $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
 
-        $manager = Manager::byCompany(Auth::user()->company_id)
+        $manager = Manager::byRole()
         ->where(function ($query) use ($request) {
             $searchTerm = '%' . $request->get('search') . '%';
             // Search in the manager's name
@@ -42,7 +42,7 @@ class ManagerController extends Controller
         ->orderBy('created_at', $order)
         ->paginate(10);
 
-        $totalManager = Manager::byCompany(Auth::user()->company_id)->count();
+        $totalManager = Manager::byRole()->count();
         return view('manager.index',compact('manager','totalManager'));
     }
 
@@ -55,7 +55,7 @@ class ManagerController extends Controller
     {
         $nomor = $request->get('nomor') ?? 0;
 
-        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('manager')->orderBy('created_at', 'desc')->get();
+        $project = Project::byRole()->whereDoesntHave('manager')->orderBy('created_at', 'desc')->get();
         $employee = Employee::byCompany(Auth::user()->company_id)->get();
         $dateNow = Carbon::now();
         $paymentMode = config('custom.paymentMode');
@@ -152,7 +152,7 @@ class ManagerController extends Controller
         $employee = Employee::byCompany(Auth::user()->company_id)->get();
         $paymentMode = config('custom.paymentMode');
         $manager = Manager::where('slug', $slug)->firstOrFail();
-        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('manager')->orWhere('id', $manager->project_id)->orderBy('created_at', 'desc')->get();
+        $project = Project::byRole()->whereDoesntHave('manager')->orWhere('id', $manager->project_id)->orderBy('created_at', 'desc')->get();
         $dateNow = $manager->date ?? Carbon::now();
         $dateCreate = Carbon::parse($manager->created_at)->format('Y-m-d');
         
@@ -172,7 +172,7 @@ class ManagerController extends Controller
         // dd($request->all());
         try {
             DB::beginTransaction();
-            $manager = Manager::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $manager = Manager::byRole()->where('slug', $slug)->firstOrFail();
             $manager->project_id = $request->input('project');
             $manager->user_id = Auth::user()->id;
             $manager->date = $request->input('date');
@@ -246,7 +246,7 @@ class ManagerController extends Controller
      */
     public function destroy($slug)
     {
-        $manager = Manager::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        $manager = Manager::byRole()->where('slug', $slug)->firstOrFail();
         $manager->job()->delete();
         $manager->delete();
 

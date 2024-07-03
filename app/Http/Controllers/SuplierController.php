@@ -28,12 +28,12 @@ class SuplierController extends Controller
 
         $search = $request->get('search');
 
-        $suplier = Suplier::byCompany(Auth::user()->company_id)
+        $suplier = Suplier::byRole()
             ->bySearch($search)
             ->orderBy('created_at', $order)
             ->paginate(10);
 
-        $totalSuplier = Suplier::byCompany(Auth::user()->company_id)->count();
+        $totalSuplier = Suplier::byRole()->count();
 
         return view('suplier.index',compact('suplier','totalSuplier'));
     }
@@ -46,7 +46,7 @@ class SuplierController extends Controller
     public function create(Request $request)
     {
         $nomor = $request->get('nomor');
-        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('suplier')->orderBy('created_at', 'desc')->get();
+        $project = Project::byRole()->whereDoesntHave('suplier')->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::now()->format('Y-m-d');
         $product = Product::byCompany(Auth::user()->company_id)->get();
 
@@ -138,7 +138,7 @@ class SuplierController extends Controller
     {
         $nomor = $request->nomor ?? 0 ;
         $suplier = Suplier::where('slug', $slug)->firstOrFail();
-        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('suplier')->orWhere('id', $suplier->project_id)->orderBy('created_at', 'desc')->get();
+        $project = Project::byRole()->whereDoesntHave('suplier')->orWhere('id', $suplier->project_id)->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::parse($suplier->created_at)->format('Y-m-d');
         $product = Product::byCompany(Auth::user()->company_id)->get();
 
@@ -159,7 +159,7 @@ class SuplierController extends Controller
         try {
             DB::beginTransaction();
 
-            $suplier = Suplier::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $suplier = Suplier::byRole()->where('slug', $slug)->firstOrFail();
             $suplier->user_id = Auth::user()->id;
             $suplier->project_id = $request->post('project');
             $suplier->date = $request->post('date');
@@ -237,7 +237,7 @@ class SuplierController extends Controller
      */
     public function destroy($slug)
     {
-        $suplier = Suplier::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        $suplier = Suplier::byRole()->where('slug', $slug)->firstOrFail();
         $suplier->purchase()->delete();
         $suplier->delete();
 

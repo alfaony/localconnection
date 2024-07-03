@@ -235,7 +235,14 @@ class DailyTaskController extends Controller
 
             
             DB::commit();
-            return redirect()->route('dailytask.index')->with('store', true);
+
+            if($request->source && $request->slug)
+            {
+                return redirect()->route($request->source,$request->slug)->with('dailytaskstore', true);
+            }else
+            {
+                return redirect()->route('dailytask.index')->with('store', true);
+            }
         } catch (\Throwable $th) {
 
             // dd($th);
@@ -264,6 +271,24 @@ class DailyTaskController extends Controller
 
 
         return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement'));
+    }
+
+    public function createdailytask($slug)
+    {
+        $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+        $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+
+        $approvement = TaskStatus::where('name',ParamSchema::COMPLATE)->orWhere('name',ParamSchema::NOTCOMPLATE)->get();
+
+        $showProject = Access::can('showproject','daily_task_projects');
+
+        $users = User::byCompany(Auth::user()->company_id)->get();
+        $subTasks = DailyTask::byCompany(Auth::user()->company_id)->where('child_daily_task_id',$dailytask->id)->orderBy('created_at','desc')->get();
+        $types = DailyTaskType::get();
+        $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
+
+
+        return view('dailytask.createdailytask', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement'));
     }
 
     public function edit($slug)

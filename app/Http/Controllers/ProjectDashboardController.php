@@ -10,6 +10,7 @@ use App\Schemas\ParamSchema;
 use App\Models\Vision;
 use App\Models\User;
 use App\Models\DailyTask;
+use App\Models\Division; // Add this line to import Division model
 
 use App\Helpers\Access;
 
@@ -18,38 +19,63 @@ class ProjectDashboardController extends Controller
     public function index(Request $request)
     {
         $today = \Carbon\Carbon::today();
-    
+        $divisionId = $request->get('division_id'); // Get the division filter from the request
+
         // Get users with their overdue tasks
-        $overdueTasks = User::where('company_id',Auth::user()->company_id)->withCount(['dailyTaskAssigns' => function($query) use ($today) 
-        {
-            $query->where('end_date', '<', $today);
-            $query->whereHas('taskStatus', function ($query)
-            {
-                $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO)->orWhere('name',ParamSchema::NOTCOMPLATE);
-            });
-        }])
-        ->orderBy('daily_task_assigns_count', 'desc')
-        ->get();
+        $overdueTasksQuery = User::where('company_id', Auth::user()->company_id)
+            ->withCount(['dailyTaskAssigns' => function ($query) use ($today) {
+                $query->where('end_date', '<', $today);
+                $query->whereHas('taskStatus', function ($query) {
+                    $query->where('name', ParamSchema::DOING)
+                        ->orWhere('name', ParamSchema::INREVIEW)
+                        ->orWhere('name', ParamSchema::TODO)
+                        ->orWhere('name', ParamSchema::NOTCOMPLATE);
+                });
+            }])
+            ->orderBy('daily_task_assigns_count', 'desc');
 
-        
+        // Apply division filter if provided
+        if ($divisionId) {
+            $overdueTasksQuery->whereHas('divisions', function ($query) use ($divisionId) {
+                $query->where('division_id', $divisionId);
+            });
+        }
+
+        $overdueTasks = $overdueTasksQuery->get();
+
         // Get users with their tasks due today or upcoming
-        $upcomingTasks = User::where('company_id',Auth::user()->company_id)->withCount(['dailyTaskAssigns' => function($query) use ($today) {
-            $query->where('end_date', '>=', $today);
-            $query->whereHas('taskStatus', function ($query)
-            {
-                $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO)->orWhere('name',ParamSchema::NOTCOMPLATE);
+        $upcomingTasksQuery = User::where('company_id', Auth::user()->company_id)
+            ->withCount(['dailyTaskAssigns' => function ($query) use ($today) {
+                $query->where('end_date', '>=', $today);
+                $query->whereHas('taskStatus', function ($query) {
+                    $query->where('name', ParamSchema::DOING)
+                        ->orWhere('name', ParamSchema::INREVIEW)
+                        ->orWhere('name', ParamSchema::TODO)
+                        ->orWhere('name', ParamSchema::NOTCOMPLATE);
+                });
+            }])
+            ->orderBy('daily_task_assigns_count', 'desc');
+
+        // Apply division filter if provided
+        if ($divisionId) {
+            $upcomingTasksQuery->whereHas('divisions', function ($query) use ($divisionId) {
+                $query->where('division_id', $divisionId);
             });
-        }])
-        ->orderBy('daily_task_assigns_count', 'desc')
-        ->get();
+        }
 
+        $upcomingTasks = $upcomingTasksQuery->get();
 
-        $visions = Vision::where('company_id',Auth::user()->company_id)->with(['missions.objectives.keyResults.dailyTasks'])->get();
+        $visions = Vision::where('company_id', Auth::user()->company_id)
+            ->with(['missions.objectives.keyResults.dailyTasks'])
+            ->get();
 
-        return view('report_project_tree.index', compact('visions','overdueTasks','upcomingTasks'));
+        $user = Auth::user();
+        $divisions = $user->divisions()->paginate(10);
+
+        return view('report_project_tree.index', compact('visions', 'overdueTasks', 'upcomingTasks', 'divisions'));
     }
 
-    public function fetchusertask($userId,$filter)
+    public function fetchusertask($userId, $filter)
     {
         $today = \Carbon\Carbon::today();
         
@@ -87,6 +113,4 @@ class ProjectDashboardController extends Controller
         });
         return response()->json($tasks);
     }
-
-
 }

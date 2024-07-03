@@ -28,6 +28,9 @@
             <tr>
                 <td>{{ $division->name }}</td>
                 <td>
+                    @canAccess('show','divisions')
+                    <a href="{{ route('division.show',$division->slug) }}" class="btn btn-success btn-sm"><i class="fa fa-eye"></i></a>
+                    @endcanAccess
                     @canAccess('edit','divisions')
                     <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#editModal{{ $division->slug }}" ><i class="fa fa-edit"></i></button>
                     @endcanAccess
