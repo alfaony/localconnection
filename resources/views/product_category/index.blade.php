@@ -30,6 +30,7 @@
 
 
 <div class="card py-3">
+    @canAccess('update','product_categories')
     <div class="card-body">
         <form id="categoryForm" method="post" action="{{ route('product-category.store') }}">
             @csrf
@@ -42,6 +43,7 @@
             <button type="button" class="btn btn-secondary" id="formCancelButton" style="display:none;">Batal</button>
         </form>
     </div>
+    @endcanAccess
 </div>
 
 <div class="card mt-4">
@@ -61,12 +63,16 @@
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $category->name }}</td>
                         <td>
+                            @canAccess('update','product_categories')
                             <button class="btn btn-primary btn-sm edit-category" data-id="{{ $category->slug }}" data-name="{{ $category->name }}">Edit</button>
+                            @endcanAccess
+                            @canAccess('destroy','product_categories')
                             <form action="{{ route('product-category.destroy', $category->slug) }}" method="post" style="display:inline-block;">
                                 @csrf
                                 @method('DELETE')
                                 <button onclick="return confirm('Apakah Anda yakin ingin menghapus kategori ini?')" class="btn btn-danger btn-sm">Hapus</button>
                             </form>
+                            @endcanAccess
                         </td>
                     </tr>
                 @endforeach

@@ -97,6 +97,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('customer', CustomerController::class)->except(['create','show']);
 
   Route::resource('product', ProductController::class)->except(['create','show']);
+  Route::resource('product-category', ProductCategoryController::class);
 
   Route::delete('quote/destroyProduct/product/{QuoteProduct}',[QuoteController::class,'destroyProduct'])->name('quote.destroy.product');
   Route::get('quote/productPrice/counting',[QuoteController::class,'productPrice'])->name('quote.productPrice');
@@ -212,8 +213,6 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
 });
 // Add this to your routes/web.php
-Route::resource('product-category', ProductCategoryController::class);
-
 
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
