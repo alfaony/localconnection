@@ -31,71 +31,82 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
     @endif
 </div>
 
-<div class="container">
-    <div class="card">
-        @canAccess('store','products')
-        <div class="card-body">            
-            @if(@$productEdit)
-            <form method="post" action="{{ route('product.update',$productEdit) }}">
-            @php $totalProducts = $nomor; @endphp
-            @method('put')
-            @else
-            <form method="post" action="{{ route('product.store') }}">
-            @php $totalProducts = $totalProduct + 1; @endphp
-            @endif
-                @csrf
-                <div class="form-group">
-                    <p id="productNo"></p>
-                </div>
-                <div class="form-group">
-                    <label>Nama Produk/Jasa:</label>
-                    <input type="text" class="form-control" placeholder="Google Ads" name="name"  value="{{ old('name') ?? @$productEdit->name }}" required>
-                </div>
-                <div class="form-group">
-                    <label>Harga Jual:</label>
-                    <input type="text" class="form-control" id="price_sell_show"  placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'price_sell')" required/>
-                    <input type="hidden" id="price_sell" name="price_sell" name="price_sell"  value="{{ old('price_sell') ?? @$productEdit->price_sell }}">
-                </div>
 
-                <div class="form-group">
-                    <label>Harga Beli:</label>
-                    <input type="text" class="form-control"  id="price_buy_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'price_buy')"/>
-                    <input type="hidden" id="price_buy" name="price_buy" name="name"  value="{{ old('price_buy') ?? @$productEdit->price_buy }}">
-                </div>
-        
-                <div class="form-group">
-                    <label>Satuan Penghitung:</label>
-                    <input type="text" class="form-control" name="method_count"  value="{{ old('method_count') ?? @$productEdit->method_count }}" required>
-                </div>
-                
-                <button class="btn btn-primary">Simpan</button>
-            </form>
+<div class="card">
+    @canAccess('store','products')
+    <div class="card-body">            
+        @if(@$productEdit)
+        <form method="post" action="{{ route('product.update',$productEdit) }}">
+        @php $totalProducts = $nomor; @endphp
+        @method('put')
+        @else
+        <form method="post" action="{{ route('product.store') }}">
+        @php $totalProducts = $totalProduct + 1; @endphp
+        @endif
+            @csrf
+            <div class="form-group">
+                <p id="productNo"></p>
             </div>
-        </div>
-        @endcanAccess
-
-        <div class="card mt-4">
-            <div class="card-body">
-                <form action="{{ route('product.index') }}" method="get">
-                    <div class="d-flex flex-row-reverse">
-                        <div class="p-2">
-                            <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
-                        </div>
-                        <div class="p-2">
-                            <input type="text" name="product" class="form-control" placeholder="Search">
-                        </div>
-                        <div class="p-2">
-                        @php
-                            $order = request('order', 'desc');
-                        @endphp
-                            <select name="order" class="form-control">
-                                <option value="asc" {{ $order == 'asc' ? 'selected' : '' }} >A - Z Created By</option>
-                                <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
-                            </select>
-                        </div>
-                    </div>
-                </form>
+            <div class="form-group">
+                <label>Nama Produk/Jasa:</label>
+                <input type="text" class="form-control" placeholder="Google Ads" name="name"  value="{{ old('name') ?? @$productEdit->name }}" required>
+            </div>
+            <div class="form-group">
+                <label>Kategori Product</label>
+                <select name="product_category_id" class="form-control select2">
+                    <option value="">-- Pilih<--/option>
+                    @foreach($productCategory as $a)
+                    <option value="{{ $a->id }}" {{ old('product_category_id') == $a->id || @$productEdit->product_category_id == $a->id ? 'selected' : '' }}>{{ $a->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             
+            <div class="form-group">
+                <label>Harga Jual:</label>
+                <input type="text" class="form-control" id="price_sell_show"  placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'price_sell')" required/>
+                <input type="hidden" id="price_sell" name="price_sell" name="price_sell"  value="{{ old('price_sell') ?? @$productEdit->price_sell }}">
+            </div>
+
+            <div class="form-group">
+                <label>Harga Beli:</label>
+                <input type="text" class="form-control"  id="price_buy_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'price_buy')"/>
+                <input type="hidden" id="price_buy" name="price_buy" name="name"  value="{{ old('price_buy') ?? @$productEdit->price_buy }}">
+            </div>
+    
+            <div class="form-group">
+                <label>Satuan Penghitung:</label>
+                <input type="text" class="form-control" name="method_count"  value="{{ old('method_count') ?? @$productEdit->method_count }}" required>
+            </div>
+            
+            <button class="btn btn-primary">Simpan</button>
+        </form>
+        </div>
+    </div>
+    @endcanAccess
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <form action="{{ route('product.index') }}" method="get">
+                <div class="d-flex flex-row-reverse">
+                    <div class="p-2">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                    </div>
+                    <div class="p-2">
+                        <input type="text" name="product" class="form-control" placeholder="Search">
+                    </div>
+                    <div class="p-2">
+                    @php
+                        $order = request('order', 'desc');
+                    @endphp
+                        <select name="order" class="form-control">
+                            <option value="asc" {{ $order == 'asc' ? 'selected' : '' }} >A - Z Created By</option>
+                            <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead>
                         <tr>
@@ -104,7 +115,7 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
                             <th>Actions</th>
                         </tr>
                     </thead>
-
+    
                     @forelse($product as $a)
                     <tr>
                         <td>{{ $no }}</td>
@@ -134,14 +145,21 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
                 {{ $product->withQueryString()->links('vendor.pagination.bootstrap-4') }}
             </div>
         </div>
+    </div>
 </div>
+
 @stop
 @section('js')
 <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
     $(document).ready(function () 
     {
+        $('.select2').select2({
+            width: '100%',
+            placeholder: 'Pilih'
+        });
 
         let nomor = "{{ $totalProducts }}";
         document.getElementById('productNo').innerHTML = "No Produk :"+nomor;
@@ -190,6 +208,7 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
 </script>
 @stop
 @section('css')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <style>
         body 
         {
@@ -222,6 +241,29 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
         .pagination > .active > a {
             background-color: #007bff;
             color: #ffffff;
+        }
+        .select2-selection__rendered
+        {
+            line-height: 31px !important;
+        }
+        .select2-container .select2-selection--single
+        {
+            height: 35px !important;
+        }
+        .select2-selection__arrow {
+            height: 34px !important;
+        }
+
+        .select2-selection__choice
+        {
+            background-color: #007bff !important;
+            border: 1px solid #007bff !important;
+        }
+
+        .select2-selection__choice__remove
+        {
+            color: #fe0700 !important;
+            border: 1px solid #007bff !important;
         }
     </style>
 @stop

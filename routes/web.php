@@ -51,7 +51,7 @@ use App\Http\Controllers\DailyTaskCategoryController;
 use App\Http\Controllers\ShiftingObController;
 use App\Http\Controllers\ScheduleObController;
 use App\Http\Controllers\DivisionBudgetController;
-
+use App\Http\Controllers\ProductCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -212,7 +212,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
 });
 // Add this to your routes/web.php
-
+Route::resource('product-category', ProductCategoryController::class);
 
 
 
