@@ -42,12 +42,10 @@
                     @csrf
                     <div class="modal-body">
                         <div class="form-group">
-                            <label for="user_id">User</label>
-                            <select class="form-control select2" name="user_id" required>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                @endforeach
-                            </select>
+                            <label for="date">Tanggal</label>
+                            <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="" required>
+                            <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
+                            <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
                         </div>
                         <div class="form-group">
                             <label for="shifting_ob_id">Shift</label>
@@ -58,10 +56,12 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="date">Tanggal</label>
-                            <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="" required>
-                            <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
-                            <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
+                            <label for="user_id">User</label>
+                            <select class="form-control select2" name="user_id" required>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -89,13 +89,9 @@
                     @csrf
                     @method('PUT')
                     <div class="modal-body">
-                        <div class="form-group">
-                            <label for="user_id">User</label>
-                            <select class="form-control select2" name="user_id" id="edit_user_id" required>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                @endforeach
-                            </select>
+                         <div class="form-group">
+                            <label for="date">Tanggal</label>
+                            <input type="date" class="form-control" name="date" id="edit_date" required>
                         </div>
                         <div class="form-group">
                             <label for="shifting_ob_id">Shift</label>
@@ -106,8 +102,12 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="date">Tanggal</label>
-                            <input type="date" class="form-control" name="date" id="edit_date" required>
+                            <label for="user_id">User</label>
+                            <select class="form-control select2" name="user_id" id="edit_user_id" required>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
                     <div class="modal-footer">
