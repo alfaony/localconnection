@@ -53,4 +53,6 @@ class ParamSchema
     const ALL = "all";
 
     const TODO = "todo";
+
+    const CLOCKOUT = "17:00";
 }

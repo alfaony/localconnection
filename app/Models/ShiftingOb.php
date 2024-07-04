@@ -17,7 +17,7 @@ class ShiftingOb extends Model
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
-    protected $fillable = ['name', 'clock_in', 'user_id'];
+    protected $fillable = ['name', 'clock_in', 'clock_out', 'user_id'];
     
     protected static function boot()
     {
