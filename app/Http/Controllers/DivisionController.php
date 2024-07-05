@@ -25,7 +25,7 @@ class DivisionController extends Controller
         $user = Auth::user();
         
         // Menggunakan relasi untuk mengambil divisi yang terkait dengan user tersebut
-        $divisions = $user->divisions()->paginate(10);
+        $divisions = Division::byCompany($user->company_id)->paginate(10);
         
         // Mengirim data divisi ke view
         return view('division.index', compact('divisions'));

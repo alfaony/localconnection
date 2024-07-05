@@ -15,7 +15,7 @@ class DailyTaskMedia extends Model
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
     
-    protected $fillable = ['daily_task_id', 'file_path', 'file_type'];
+    protected $fillable = ['daily_task_id', 'file_path', 'file_type','status'];
     
     protected static function boot()
     {

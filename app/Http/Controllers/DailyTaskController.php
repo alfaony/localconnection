@@ -38,7 +38,7 @@ class DailyTaskController extends Controller
     public function index(Request $request)
     {
         // Ambil user ID dari autentikasi
-        $userId = Auth::user()->id;
+        $userId = Auth::user();
 
         // Ambil filter dari request
         $taskFilter = $request->input('task') ?? 'today';
@@ -47,6 +47,8 @@ class DailyTaskController extends Controller
         $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null; // Parse tanggal dari string ke Carbon
         $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
         $search = $request->input('search');
+        $division = $request->input('division');
+        $divisions = $userId->divisions()->paginate(10);
 
         // Query dasar untuk tugas harian berdasarkan user ID
         $query = DailyTask::orderBy('created_at', 'desc');
@@ -94,7 +96,7 @@ class DailyTaskController extends Controller
         }
         else
         {
-            $query->UserTasks($userId);
+            $query->UserTasks($userId->id);
         }
 
         // Filter berdasarkan status
@@ -115,6 +117,13 @@ class DailyTaskController extends Controller
         {
             $query->where('name', 'like', "%{$search}%"); // Add other fields as necessary
         }
+
+        // Filter berdasarkan divisi
+        if ($division) {
+            $query->whereHas('user.divisions', function ($q) use ($division) {
+                $q->where('name', $division);
+            });
+        }
         // Paginate hasil query
         $dailyTasksTes = $query->get();
 
@@ -131,7 +140,7 @@ class DailyTaskController extends Controller
         $taskStatuss = TaskStatus::all(); // Ambil semua status tugas
 
         // Kembalikan view dengan data
-        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss'));
+        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss', 'divisions'));
     }
 
     public function create()
@@ -228,12 +237,34 @@ class DailyTaskController extends Controller
                     $dailyTask->keyResults()->attach($keyResults);
                 }
 
+
+                // Menyimpan Attachment Jika Terdapat
+                if ($request->hasFile('attachments_' . $i)) {
+                    foreach ($request->file('attachments_' . $i) as $file) 
+                    {
+                        $timestamp = time();
+                        $randomString = rand(100, 999);
+                        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                        $extension = $file->getClientOriginalExtension();
+                        $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
+    
+                        $path = $file->storeAs('media', $fileName, 'public');
+                        $mediaType = $file->getClientMimeType();
+    
+                        DailyTaskMedia::create([
+                            'daily_task_id' => $dailyTask->id,
+                            'file_path' => $path,
+                            'file_type' => $mediaType,
+                            'status' => ParamSchema::FILETASK,
+                        ]);
+                    }
+                }
+
                 $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
                 $this->statusrecord($dailyTask, $doing);
 
             }
 
-            
             DB::commit();
 
             if($request->source && $request->slug)
@@ -502,6 +533,7 @@ class DailyTaskController extends Controller
                         'daily_task_id' => $dailytask->id,
                         'file_path' => $path,
                         'file_type' => $mediaType,
+                        'status' => $request->status,
                     ]);
                 }
             }

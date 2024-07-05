@@ -53,4 +53,8 @@ class ParamSchema
     const ALL = "all";
 
     const TODO = "todo";
+
+    const FILEREPORT = "file_report";
+
+    const FILETASK = "file_task";
 }

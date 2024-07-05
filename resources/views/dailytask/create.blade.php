@@ -16,7 +16,7 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <h2>Buat Tugas Harian</h2>
-            <form action="{{ route('dailytask.store') }}" method="POST">
+            <form action="{{ route('dailytask.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 <div id="dynamic-form-fields">
@@ -97,6 +97,12 @@
                                                 @endforeach
                                             </select>
                                         </div>
+                                        <div class="form-group">
+                                            <label for="type_id">File</label>
+                                            <input type="file" name="attachments_0[]" class="form-control attachment-input" multiple>
+                                        </div>
+                                        
+
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -142,6 +148,10 @@
             allowClear: true
         });
         $('.category-select2').select2();
+
+        $('.attachment-input').on('change', function() {
+            validateAttachments(this);
+        });
 
         $('#dynamic-form-fields').on('change', '.project-select', function() {
             var projectId = $(this).val();
@@ -272,6 +282,10 @@
                                         @endforeach
                                     </select>
                                 </div>
+                                <div class="form-group">
+                                    <label for="type_id">File</label>
+                                    <input type="file" name="attachments_${nomor}[]" class="form-control attachment-input" multiple>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -322,6 +336,10 @@
                 placeholder: 'Pilih',
             });
             $('.category-select3').select2();
+
+            $('.attachment-input').on('change', function() {
+                validateAttachments(this);
+            });
         }
 
         function initializeSelect2ForContainer(index) 
@@ -340,6 +358,23 @@
                 result += characters.charAt(Math.floor(Math.random() * charactersLength));
             }
             return result;
+        }
+
+        // Function to validate attachments
+        function validateAttachments(input) {
+            var maxSize = 1 * 1024 * 1024; // 1 MB
+            var files = input.files;
+            var validFiles = new DataTransfer(); // DataTransfer object to hold valid files
+
+            for (var i = 0; i < files.length; i++) {
+                if (files[i].size > maxSize) {
+                    alert('File ' + files[i].name + ' terhapus, Maksimal file 1 Mb');
+                } else {
+                    validFiles.items.add(files[i]); // Add valid files to DataTransfer object
+                }
+            }
+
+            input.files = validFiles.files; // Update input with valid files
         }
 
 </script>
