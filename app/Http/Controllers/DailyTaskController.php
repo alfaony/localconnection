@@ -13,6 +13,10 @@ use App\Http\Requests\DailyTaskStoreRequest;
 use App\Http\Requests\DailyTaskRequest;
 use App\Http\Requests\DailyTaskSubTaskRequest;
 
+use App\Exports\DailyTaskTemplateExport;
+use App\Imports\DailyTaskImport;
+use Maatwebsite\Excel\Facades\Excel;
+
 use Carbon\Carbon;
 use App\Helpers\Access;
 use App\Schemas\ParamSchema;
@@ -739,6 +743,63 @@ class DailyTaskController extends Controller
         $this->statusrecord($dailyTask, $doing);
         return redirect()->route('dailytask.show', $dailyTask->slug)->with('Working', true);
     }
+
+    // Import
+    public function import(Request $request)
+    {
+        $request->validate([
+            'import_file' => 'required|mimes:xlsx',
+            'objective_id' => 'exists:objectives,id',
+            'project_id' => 'exists:daily_task_projects,id',
+            'category_id' => 'exists:daily_task_categories,id',
+            'data_project_id' => 'required|array',
+            'data_project_id.*' => 'required|uuid|exists:projects,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            Excel::import(new DailyTaskImport($request->all()), $request->file('import_file'));
+            DB::commit();
+
+            return redirect()->route('dailytask.index')->with('import', true);
+        } catch (\Exception $e) {
+            DB::rollback();
+            $errors = explode("\n", $e->getMessage());
+            return redirect()->back()->withErrors($errors)->withInput();
+        }
+    }
+
+    public function template()
+    {
+        $users = User::byCompany(Auth::user()->company_id)->get();
+        $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
+        $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
+        $types = DailyTaskType::get();
+        $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
+        $objectives = Objective::byCompany(Auth::user()->company_id)->get();
+        $user = Auth::user(); // Get the current authenticated user
+        $divisionIds = $user->divisions->pluck('id');
+
+        if ($divisionIds->isEmpty()) {
+            // Handle the case where the user does not belong to any divisions
+            // You can return an empty collection or a message, or redirect
+            return redirect()->back()->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
+        } else {
+            // Proceed with fetching objectives related to the user's divisions
+            $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
+                $query->whereIn('id', $divisionIds);
+            })->get();
+        }
+
+
+        return view('dailytask.importtemplate',compact('categories', 'types', 'users', 'childTasks', 'projects', 'objectives'));
+    }
+
+    public function downloadtemplate()
+    {
+        return Excel::download(new DailyTaskTemplateExport, 'DailyTaskTemplate.xlsx');
+    }
+    
 
     protected function message($dailyTaskId, $template, $message, $filePath = null)
     {
