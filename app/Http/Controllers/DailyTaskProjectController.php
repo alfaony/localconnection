@@ -115,28 +115,10 @@ class DailyTaskProjectController extends Controller
         $statusFilter = $request->input('status');
         $search = $request->input('task_name');
         
-        $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
-        $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
-        $types = DailyTaskType::get();
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
         $taskStatuss = TaskStatus::all(); // Ambil semua status tugas
         $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $customFields = $project->customFields;
-
-        $user = Auth::user(); // Get the current authenticated user
-        $divisionIds = $user->divisions->pluck('id');
-        $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
-
-        if ($divisionIds->isEmpty()) {
-            // Handle the case where the user does not belong to any divisions
-            // You can return an empty collection or a message, or redirect
-            return redirect()->route('daily_task_project.show_project')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
-        } else {
-            // Proceed with fetching objectives related to the user's divisions
-            $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
-                $query->whereIn('id', $divisionIds);
-            })->get();
-        }
 
         $query = DailyTask::query();
 
@@ -166,7 +148,7 @@ class DailyTaskProjectController extends Controller
 
         $tasks = $query->where('daily_task_project_id', $project->id)->with(['user', 'customFieldValues'])->orderBy('created_at','desc')->paginate(10);
 
-        return view('daily_task_project.show_project', compact('tasks', 'customFields', 'project', 'users', 'taskStatuss', 'objectives', 'projects', 'categories', 'childTasks', 'types'));
+        return view('daily_task_project.show_project', compact('tasks', 'customFields', 'project', 'users', 'taskStatuss'));
     }
 
     
@@ -336,7 +318,7 @@ class DailyTaskProjectController extends Controller
         if ($divisionIds->isEmpty()) {
             // Handle the case where the user does not belong to any divisions
             // You can return an empty collection or a message, or redirect
-            return redirect()->route('daily_task_project.show_project')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
+            return redirect()->route('daily_task_project.showproject',$slug)->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
         } else {
             // Proceed with fetching objectives related to the user's divisions
             $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
