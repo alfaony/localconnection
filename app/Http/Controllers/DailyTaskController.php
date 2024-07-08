@@ -52,7 +52,7 @@ class DailyTaskController extends Controller
         $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
         $search = $request->input('search');
         $division = $request->input('division');
-        $divisions = $userId->divisions()->paginate(10);
+        $divisions = $userId->divisions()->get();
 
         // Query dasar untuk tugas harian berdasarkan user ID
         $query = DailyTask::orderBy('created_at', 'desc');
