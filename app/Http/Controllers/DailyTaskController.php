@@ -128,7 +128,7 @@ class DailyTaskController extends Controller
             'upcoming' => 'Upcoming'
         ];
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
-        $taskStatuss = TaskStatus::all(); // Ambil semua status tugas
+        $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
 
         // Kembalikan view dengan data
         return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss'));

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 
+use App\Schemas\ParamSchema;
 class TaskStatus extends Model
 {
     use HasFactory, SoftDeletes;
@@ -45,5 +46,16 @@ class TaskStatus extends Model
         }
 
         return $slug;
+    }
+
+    public function scopeBySort($query, $backlogs = false)
+    {
+        if ($backlogs) 
+        {
+            return $query->orderBy('sort', 'desc');
+        }else
+        {
+            return $query->where('name','!=',ParamSchema::BACKLOG)->orderBy('sort');
+        }
     }
 }
