@@ -14,12 +14,12 @@ class DailyTaskStoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'start_date' => 'required|array',
-            'start_date.*' => 'required|date',
-            'end_date' => 'required|array',
-            'end_date.*' => 'required|date|after_or_equal:start_date.*',
-            'assignment_user_id' => 'required|array',
-            'assignment_user_id.*' => 'required|uuid|exists:users,id',
+            'start_date' => 'nullable|array',
+            'start_date.*' => 'nullable|date',
+            'end_date' => 'nullable|array',
+            'end_date.*' => 'nullable|date|after_or_equal:start_date.*',
+            'assignment_user_id' => 'nullable|array',
+            'assignment_user_id.*' => 'nullable|uuid|exists:users,id',
             'category_id' => 'required|array',
             'category_id.*' => 'required|string',
             'type_id' => 'required|array',

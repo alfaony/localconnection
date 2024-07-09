@@ -116,7 +116,7 @@ class DailyTaskProjectController extends Controller
         $search = $request->input('task_name');
         
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
-        $taskStatuss = TaskStatus::all(); // Ambil semua status tugas
+        $taskStatuss = TaskStatus::bySort(true)->get(); // Ambil semua status tugas
         $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $customFields = $project->customFields;
 
@@ -307,7 +307,7 @@ class DailyTaskProjectController extends Controller
         $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
         $types = DailyTaskType::get();
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
-        $taskStatuss = TaskStatus::all(); // Ambil semua status tugas
+        $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
         $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $customFields = $project->customFields;
 

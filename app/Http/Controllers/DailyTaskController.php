@@ -177,17 +177,26 @@ class DailyTaskController extends Controller
 
             $objectives = $request->objective ?? [];
 
-            $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
-
+            
             
             for ($i = 0; $i < count($names); $i++)
             {
+                
+                if($startDates[$i] && $endDates[$i] && $assignmentUserIds[$i])
+                {
+                    $status = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+                }else
+                {
+                    $status = TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail();
+
+                }
+
                 $dailyTask = new DailyTask();
                 $dailyTask->user_id = Auth::user()->id;
-                $dailyTask->task_status_id = $doing->id;
-                $dailyTask->start_date = $startDates[$i];
-                $dailyTask->end_date = $endDates[$i];
-                $dailyTask->assignment_user_id = $assignmentUserIds[$i];
+                $dailyTask->task_status_id = $status->id;
+                $dailyTask->start_date = $startDates[$i] ?? NULL; 
+                $dailyTask->end_date = $endDates[$i] ?? NULL;
+                $dailyTask->assignment_user_id = $assignmentUserIds[$i] ?? NULL;
                 $dailyTask->daily_task_category_id = $categoryIds[$i];
                 $dailyTask->daily_task_type_id = $typeIds[$i];
                 $dailyTask->project_id = $dataProjects[$i];
@@ -229,7 +238,7 @@ class DailyTaskController extends Controller
                 }
 
                 $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
-                $this->statusrecord($dailyTask, $doing);
+                $this->statusrecord($dailyTask, $status);
 
             }
 
@@ -245,7 +254,7 @@ class DailyTaskController extends Controller
             }
         } catch (\Throwable $th) {
 
-            // dd($th);
+            dd($th);
             Log::error($th->getMessage());
             DB::rollback();
 

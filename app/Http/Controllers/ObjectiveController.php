@@ -260,7 +260,7 @@ class ObjectiveController extends Controller
         $tasks = $tasksQuery->paginate(10);
 
         $users = User::byCompany(Auth::user()->company_id)->get();
-        $taskStatuss = TaskStatus::all();
+        $taskStatuss = TaskStatus::bySort()->get();
 
         return view('objective.show_task', compact('keyResult', 'tasks', 'users', 'taskStatuss'));
     }

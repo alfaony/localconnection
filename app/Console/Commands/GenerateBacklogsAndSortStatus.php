@@ -31,9 +31,14 @@ class GenerateBacklogsAndSortStatus extends Command
     public function handle()
     {
         // ADD BACKLOG
-        $task = new TaskStatus();
-        $task->name = ParamSchema::BACKLOG;
-        $task->save();
+        $task = TaskStatus::where('name',ParamSchema::BACKLOG)->first();
+        
+        if(!$task)
+        {
+            $task = new TaskStatus();
+            $task->name = ParamSchema::BACKLOG;
+            $task->save();
+        }
         
         // ADD SORT
         $tasks =  TaskStatus::all();
