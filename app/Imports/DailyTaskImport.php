@@ -73,6 +73,9 @@ class DailyTaskSheetImport implements ToCollection, WithCalculatedFormulas, With
 
         foreach ($rows as $rowIndex => $row) 
         {
+            if ($row->filter()->isEmpty()) {
+                continue; // Skip the empty row
+            }
             try {
                 $this->validateRow($row, $rowIndex);
                 
