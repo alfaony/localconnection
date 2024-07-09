@@ -75,6 +75,7 @@ class AppServiceProvider extends ServiceProvider
             [
                 'managers',
                 'products',
+                'product_categories',
                 'customers',
                 'quotes',
                 'work_orders',
@@ -319,6 +320,11 @@ class AppServiceProvider extends ServiceProvider
                     'text'        => 'Pengajuan Anggaran',
                     'route'         => 'division-budget.index',
                     'icon' => 'fa fa-money-bill',
+                ],
+                'product_categories' => [
+                    'text' => 'Kategori Product',
+                    'route' => 'product-category.index',
+                    'icon' => 'fa fa-list',
                 ],
             ];
 

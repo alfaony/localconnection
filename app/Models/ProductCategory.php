@@ -7,33 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
-use App\Scopes\RoleScope;
+use Carbon\Carbon;
 
-class Attendance extends Model
+class ProductCategory extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory,SoftDeletes;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
-    protected $fillable = [
-        'date',
-        'clock_in',
-        'clock_out',
-        'pic_in',
-        'pic_out',
-        'user_id',
-        'ontime_in',
-        'ontime_out',
-        'point',
-        'schedule_ob_id',
-        'slug',
-        'note'
-    ];
-
-    protected static function booted()
-    {
-        static::addGlobalScope(new RoleScope());
-    }
+    protected $fillable = ['name','slug','user_id'];
 
     protected static function boot()
     {
@@ -46,9 +28,9 @@ class Attendance extends Model
         });
     }
 
-    public function setDateAttribute($value)
+    public function setNameAttribute($value)
     {
-        $this->attributes['date'] = $value;
+        $this->attributes['name'] = $value;
         $this->attributes['slug'] = $this->createUniqueSlug($value);
     }
 
@@ -58,8 +40,7 @@ class Attendance extends Model
         $baseSlug = $slug;
 
         $count = 1;
-        while (static::withoutGlobalScopes()->where('slug', $slug)->withTrashed()->exists()) 
-        {
+        while (static::where('slug', $slug)->withTrashed()->exists()) {
             $slug = "{$baseSlug}-{$count}";
             $count++;
         }
@@ -67,14 +48,14 @@ class Attendance extends Model
         return $slug;
     }
 
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class)->withTrashed();
-    }
-
-    public function schedule()
-    {
-        return $this->belongsTo(ScheduleOb::class,'schedule_ob_id')->withTrashed();
     }
 
     public function scopeByCompany($query,$companyId)

@@ -22,11 +22,20 @@ class ShiftingObController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'clock_in' => 'required',
+            'clock_out' => 'required|after:clock_in',
+        ], [
+            'name.required' => 'Nama harus diisi.',
+            'name.string' => 'Nama harus berupa teks.',
+            'name.max' => 'Nama tidak boleh lebih dari 255 karakter.',
+            'clock_in.required' => 'Waktu masuk harus diisi.',
+            'clock_out.required' => 'Waktu keluar harus diisi.',
+            'clock_out.after' => 'Waktu keluar harus setelah waktu masuk.',
         ]);
 
         ShiftingOb::create([
             'name' => $request->name,
             'clock_in' => $request->clock_in,
+            'clock_out' => $request->clock_out,
             'user_id' => Auth::user()->id,
         ]);
 
@@ -38,12 +47,21 @@ class ShiftingObController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'clock_in' => 'required',
+            'clock_out' => 'required|after:clock_in',
+        ], [
+            'name.required' => 'Nama harus diisi.',
+            'name.string' => 'Nama harus berupa teks.',
+            'name.max' => 'Nama tidak boleh lebih dari 255 karakter.',
+            'clock_in.required' => 'Waktu masuk harus diisi.',
+            'clock_out.required' => 'Waktu keluar harus diisi.',
+            'clock_out.after' => 'Waktu keluar harus setelah waktu masuk.',
         ]);
 
         $shifting = ShiftingOb::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $shifting->update([
             'name' => $request->name,
             'clock_in' => $request->clock_in,
+            'clock_out' => $request->clock_out,
             'user_id' => Auth::user()->id,
         ]);
 

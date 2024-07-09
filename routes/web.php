@@ -51,7 +51,7 @@ use App\Http\Controllers\DailyTaskCategoryController;
 use App\Http\Controllers\ShiftingObController;
 use App\Http\Controllers\ScheduleObController;
 use App\Http\Controllers\DivisionBudgetController;
-
+use App\Http\Controllers\ProductCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -97,6 +97,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('customer', CustomerController::class)->except(['create','show']);
 
   Route::resource('product', ProductController::class)->except(['create','show']);
+  Route::resource('product-category', ProductCategoryController::class);
 
   Route::delete('quote/destroyProduct/product/{QuoteProduct}',[QuoteController::class,'destroyProduct'])->name('quote.destroy.product');
   Route::get('quote/productPrice/counting',[QuoteController::class,'productPrice'])->name('quote.productPrice');
@@ -151,7 +152,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::get('report-point',[ReportPointController::class,'index'])->name('report-point.index');
 
-  Route::resource('attendance', AttendanceController::class)->only('index');
+  Route::resource('attendance', AttendanceController::class);
 
   Route::resource('asset', AssetController::class)->except(['create']);
   Route::resource('asset-assign', AssetAssignController::class)->only(['store','update','destroy']);

@@ -57,4 +57,5 @@ class ParamSchema
     const FILEREPORT = "file_report";
 
     const FILETASK = "file_task";
+    const CLOCKOUT = "17:00";
 }

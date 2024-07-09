@@ -286,7 +286,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md3">
                 <div class="card bg-light mb-3">
                     <div class="card-header text-green">Jumlah Tugas Mendatang</div>
                     <div class="card-body">
@@ -343,6 +343,8 @@
 
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script>
@@ -355,7 +357,7 @@
 </script>
 @canAccess('showScheduleOb','homes')
 <script>
-    $(document).ready(function () {
+    document.addEventListener('DOMContentLoaded', function () {
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
@@ -364,6 +366,14 @@
                 {
                     title: '{{ $schedule->user->name }} - {{ $schedule->shiftingOb->name }}',
                     start: '{{ $schedule->date }}',
+                    description: `
+                        <b>User:</b> {{ $schedule->user->name }}<br>
+                        <b>Shift:</b> {{ $schedule->shiftingOb->name }}<br>
+                        <b>Clock In:</b> {{ $schedule->shiftingOb->clock_in }}<br>
+                        <b>Clock Out:</b> {{ $schedule->shiftingOb->clock_out }}<br>
+                        <b>Real Clock In:</b> {{ $schedule->attendance ? $schedule->attendance->clock_in : '-' }}<br>
+                        <b>Real Clock Out:</b> {{ $schedule->attendance ? $schedule->attendance->clock_out : '-' }}<br>
+                    `,
                     id: '{{ $schedule->id }}',
                     extendedProps: {
                         user_id: '{{ $schedule->user_id }}',
@@ -371,16 +381,25 @@
                     }
                 },
                 @endforeach
-            ]
+            ],
+            eventDidMount: function(info) {
+                new bootstrap.Tooltip(info.el, {
+                    title: info.event.extendedProps.description,
+                    html: true,
+                    container: 'body'
+                });
+            }
         });
 
         calendar.render();
     });
 </script>
 @endcanAccess
+
 @stop
 
 @section('css')
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.css" rel="stylesheet">
 <style>
     .card-header {

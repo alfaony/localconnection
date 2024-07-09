@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\ProductRequest;
 
 use App\Models\Product;
+use App\Models\ProductCategory;
 
 class ProductController extends Controller
 {
@@ -22,10 +23,11 @@ class ProductController extends Controller
 
         $product = Product::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('product') . '%')
         ->OrderBy('created_at',$order)->paginate(10);
+        $productCategory = ProductCategory::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->get();
 
         $totalProduct = Product::byCompany(Auth::user()->company_id)->count();
 
-        return view('product.index',compact('product','totalProduct'));
+        return view('product.index',compact('product','totalProduct', 'productCategory'));
     }
 
     // /**
@@ -51,6 +53,7 @@ class ProductController extends Controller
         $product->price_buy = $request->post('price_buy') ?? 0;
         $product->price_sell = $request->post('price_sell');
         $product->method_count = $request->post('method_count');
+        $product->product_category_id = $request->product_category_id;
         $product->user_created_id = Auth::user()->id;
         $product->user_updated_id = Auth::user()->id;
         $product->save();
@@ -82,8 +85,9 @@ class ProductController extends Controller
         $totalProduct = Product::byCompany(Auth::user()->company_id)->count();
         $productEdit = Product::where('slug', $slug)->firstOrFail();
         $product = Product::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->paginate(10);
+        $productCategory = ProductCategory::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->get();
         
-        return view('product.index', compact('productEdit','product','totalProduct','nomor'));
+        return view('product.index', compact('productEdit','product','totalProduct','nomor','productCategory'));
     }
 
     /**
@@ -100,6 +104,7 @@ class ProductController extends Controller
         $product->price_buy = $request->post('price_buy') ?? 0;
         $product->price_sell = $request->post('price_sell');
         $product->method_count = $request->post('method_count');
+        $product->product_category_id = $request->product_category_id;
         $product->user_updated_id = Auth::user()->id;
         $product->save();
 
