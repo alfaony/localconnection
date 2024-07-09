@@ -10,6 +10,9 @@
         @if(Session::get('store'))
         <div class="alert alert-success mt-3">Tugas Berhasil Ditambahkan</div>
         @endif
+        @if(Session::get('import'))
+        <div class="alert alert-success mt-3">Import Tugas Berhasil</div>
+        @endif
         @if(Session::get('update'))
         <div class="alert alert-success mt-3">Tugas Berhasil Diperbarui</div>
         @endif

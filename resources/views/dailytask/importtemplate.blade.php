@@ -80,8 +80,9 @@
             <div class="row mb-3">
                 <div class="col-md-12">
                     <div class="form-group">
-                        <label for="file">Upload CSV File</label>
-                        <input type="file" name="import_file" class="form-control" required>
+                        <label for="file">Upload Excel File</label>
+                        <input type="file" name="import_file" class="form-control" accept=".xlsx, .xls" required>
+                    </div>
                     </div>
                     @canAccess('import','dailytasks')
                     <button type="submit" class="btn btn-primary">
