@@ -60,6 +60,11 @@ class ScheduleOb extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function attendance()
+    {
+        return $this->hasOne(Attendance::class)->withTrashed();
+    }
+
     public function shiftingOb()
     {
         return $this->belongsTo(ShiftingOb::class)->withTrashed();

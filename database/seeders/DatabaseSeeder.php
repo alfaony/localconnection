@@ -42,5 +42,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForCreateDailyTaskOnProject::class);
         $this->call(PermissionForDailyTaskImportImportSeeder::class);
         $this->call(PermissionForMenuProductCategory::class);
+        $this->call(PermissionForMenuAttendanceSeeder::class);
     }
 }
