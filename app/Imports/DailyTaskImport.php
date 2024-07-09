@@ -92,6 +92,7 @@ class DailyTaskSheetImport implements ToCollection, WithCalculatedFormulas, With
 
 
                 $check = $this->dailyTaskSubmit($end_date,$submit_date);
+
                 $categoryId = $this->getCategoryId($category);
 
                 $dailyTask = new DailyTask();
@@ -101,6 +102,7 @@ class DailyTaskSheetImport implements ToCollection, WithCalculatedFormulas, With
                 $dailyTask->end_date = Carbon::parse($end_date);
                 $dailyTask->assignment_user_id = $this->getUserIdByEmail($user_email);
                 $dailyTask->daily_task_category_id = $categoryId;
+                $dailyTask->status_submit = $check['statusReport'];
                 $dailyTask->daily_task_type_id = $this->getTypeId($type);
                 $dailyTask->project_id = $this->dataProjectId;
                 $dailyTask->daily_task_project_id = $this->projectId;
