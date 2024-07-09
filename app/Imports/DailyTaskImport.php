@@ -198,7 +198,7 @@ class DailyTaskSheetImport implements ToCollection, WithCalculatedFormulas, With
                 'end_date' => 'required|date|after_or_equal:start_date',
                 'category' => 'required|exists:daily_task_categories,name',
                 'type' => 'required|exists:daily_task_types,name',
-                'user_email' => 'required|email',
+                'user_email' => 'required|email,exists:users,email',
                 'submit_date' => 'nullable|date',
                 'task_name' => 'required|string|max:255'
             ],
@@ -216,6 +216,7 @@ class DailyTaskSheetImport implements ToCollection, WithCalculatedFormulas, With
                 'type.exists' => 'Tipe yang dipilih tidak valid.',
                 'user_email.required' => 'Email pengguna harus diisi.',
                 'user_email.email' => 'Format email tidak valid.',
+                'user_email.exists' => 'email tidak valid.',
                 'submit_date.date' => 'Tanggal submit harus berupa tanggal yang valid.',
                 'task_name.required' => 'Nama tugas harus diisi.',
                 'task_name.string' => 'Nama tugas harus berupa string.',
