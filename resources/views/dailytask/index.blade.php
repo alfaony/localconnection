@@ -30,7 +30,7 @@
         @canAccess('create','dailytasks')
         <a href="{{ route('dailytask.create') }}" class="btn btn-primary mb-3 col-md-2"><i class="fa fa-plus"></i><span> Tugas</span></a>
         @endcanAccess
-        @canAccess('create','dailytasks')
+        @canAccess('template','dailytasks')
         <a href="{{ route('dailytask.template') }}" class="btn btn-info mb-3 col-md-2"><i class="fa fa-plus"></i><span> Import Tugas</span></a>
         @endcanAccess
     </div>
