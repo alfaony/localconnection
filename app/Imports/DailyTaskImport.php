@@ -198,7 +198,7 @@ class DailyTaskSheetImport implements ToCollection, WithCalculatedFormulas, With
                 'end_date' => 'required|date|after_or_equal:start_date',
                 'category' => 'required|exists:daily_task_categories,name',
                 'type' => 'required|exists:daily_task_types,name',
-                'user_email' => 'required|email,exists:users,email',
+                'user_email' => 'required|email|exists:users,email',
                 'submit_date' => 'nullable|date',
                 'task_name' => 'required|string|max:255'
             ],
