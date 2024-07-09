@@ -71,11 +71,13 @@ class DailyTaskSheetImport implements ToCollection, WithCalculatedFormulas, With
     {
         $errors = [];
 
-        foreach ($rows as $rowIndex => $row) 
+        $filteredRows = $rows->filter(function ($row) {
+            return $row->filter()->isNotEmpty();
+        });
+        
+        foreach ($filteredRows as $rowIndex => $row) 
         {
-            if ($row->filter()->isEmpty()) {
-                continue; // Skip the empty row
-            }
+
             try {
                 $this->validateRow($row, $rowIndex);
                 
