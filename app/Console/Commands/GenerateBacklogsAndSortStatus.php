@@ -53,16 +53,19 @@ class GenerateBacklogsAndSortStatus extends Command
                 case ParamSchema::TODO:
                     $sort = 2;
                     break;
-                case ParamSchema::INREVIEW:
+                case ParamSchema::DOING:
                     $sort = 3;
                     break;
-
-                case ParamSchema::NOTCOMPLATE:
+                case ParamSchema::INREVIEW:
                     $sort = 4;
                     break;
 
-                case ParamSchema::COMPLATE:
+                case ParamSchema::NOTCOMPLATE:
                     $sort = 5;
+                    break;
+
+                case ParamSchema::COMPLATE:
+                    $sort = 6;
                     break;
             }
 

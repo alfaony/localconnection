@@ -35,7 +35,7 @@
                                     <input type="text" name="task_name" class="form-control" placeholder="Search by Task Name" value="{{ request('task_name') }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <select class="form-control selectSearch" id="user" name="user">
+                                    <select class="form-control selectSearch select2" id="user" name="user">
                                         <option value="all">All User</option>
                                         @foreach ($users as $user)
                                             <option value="{{ $user->name }}" {{ request('user') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
@@ -51,6 +51,20 @@
                                     </select>
                                 </div>
                                 <div class="col-md-3">
+                                    <select class="form-control selectSearch" id="custom_field" name="custom_field_value">
+                                        <option value="">Select Custom Field</option>
+                                        @foreach ($customFields as $fields)
+                                            <optgroup label="{{ $fields->name }}">
+                                                @foreach ($fields->values->sortBy('ordering') as $field)
+                                                    <option value="{{ $field->id }}" {{ request('custom_field_value') == $field->id ? 'selected' : '' }}>{{ $field->value }}</option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-3">
                                     <button type="submit" class="btn btn-primary">Search</button>
                                     <a href="{{ route('daily_task_project.showproject',$project->slug) }}" class="btn btn-secondary">Reset</a>
                                 </div>
@@ -60,7 +74,7 @@
                     <table class="table table-bordered table-responsive-sm">
                         <thead>
                             <tr>
-                                <th class="col-4">Nama Tugas</th>
+                                <th class="col-3">Nama Tugas</th>
                                 <th class="col-2">Dibuat</th>
                                 <th class="col-2">Ditugaskan</th>
                                 <th class="col-2">Tanggal</th>
@@ -79,7 +93,7 @@
                                         @endcanAccess
                                     </td>
                                     <td>{{ $task->user->name }}</td>
-                                    <td>{{ $task->assig ? $task->assig->name : ""}}</td>
+                                    <td>{{ $task->assign ? $task->assign->name : ""}}</td>
                                     <td>
                                         <span class="{{ $task->isOverdue() ? 'text-danger' : '' }}">
                                             {{ $task->dateShow }}
@@ -87,6 +101,9 @@
                                     </td>
                                     <td>
                                     @switch($task->taskStatus->name)
+                                        @case('backlog')
+                                            <i class="fa fa-clipboard-list"></i> Backlog
+                                            @break
                                         @case('todo')
                                             <i class="fa fa-list-alt"></i> Todo
                                             @break
@@ -140,134 +157,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
-
 <script>
-    $(document).ready(function() 
-    {
-        // initializeSelect2();
-        loadCustomFields('{{ $project->id }}');
-
-        $('.select2').select2({
-            dropdownParent: $('#createTaskModal'),
-            placeholder: 'Pilih',
-            allowClear: true,
-            width: '100%' // Adjust width as needed
-        });
-        $('.category-select2').select2({
-            dropdownParent: $('#createTaskModal'),
-            width: '100%' // Adjust width as needed
-        });
-
-        $('#dynamic-form-fields').on('change', '.project-select', function() {
-            var projectId = $(this).val();
-            var index = $(this).closest('.dynamic-field').index();
-            console.log(index);
-
-            if (projectId) {
-                $.ajax({
-                    url: '{{ url('daily_task_project/getcustomfield') }}/' + projectId,
-                    data:
-                    {
-                        index:index
-                    },
-                    type: 'GET',
-                    success: function(data) 
-                    {
-                        $('#custom-fields-container-' + index).html(data);
-                        initializeSelect2ForContainer(index);
-                    }
-                });
-            } else {
-                $('#custom-fields-container-' + index).html('');
-            }
-        });
-
-
-        $('#dynamic-form-fields').on('change', '.objective-select', function() {
-            var objective = $(this).val();
-            var index = $(this).closest('.dynamic-field').index();
-            console.log(index);
-
-            if (objective) {
-                $.ajax({
-                    url: '{{ url('objective/getresult') }}/' + objective,
-                    data:
-                    {
-                        index:index
-                    },
-                    type: 'GET',
-                    success: function(data) 
-                    {
-                        $('#keyresult-fields-container-' + index).html(data);
-                        initializeSelect2ForContainer(index);
-                    }
-                });
-            } else {
-                $('#keyresult-fields-container-' + index).html('');
-            }
-        });
-
-            $('#dynamic-form-fields').on('change', '.start-date', function() {
-                var startDateValue = $(this).val();
-                $(this).closest('.dynamic-field').find('.end-date').val(startDateValue);
-            });
-
-            $('input[name="start_date"]').on('change', function() {
-                var startDateValue = $(this).val();
-                $('input[name="end_date"]').val(startDateValue);
-            });
-
+    $(document).ready(function() {
+        $('.selectSearch').select2();
     });
-
-        function initializeSelect2() 
-        {
-            $('.select3').select2({
-                placeholder: 'Pilih',
-                width: '100%' // Adjust width as needed
-            });
-            $('.category-select3').select2({
-                width: '100%' // Adjust width as needed
-            });
-        }
-
-        function initializeSelect2ForContainer(index) 
-        {
-            $('.select2-single-'+index+', .select2-multiple-'+index+'').select2({
-                width: '100%' // Adjust width as needed
-            });
-        }
-
-        function generateRandomString(length) 
-        {
-            var result = '';
-            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            var charactersLength = characters.length;
-            for (var i = 0; i < length; i++) {
-                result += characters.charAt(Math.floor(Math.random() * charactersLength));
-            }
-            return result;
-        }
-
-        function loadCustomFields(projectId) 
-        {
-            var projectId = projectId
-            var url = '{{ url('daily_task_project/getcustomfield') }}/' + projectId;
-            
-
-            console.log(url);
-            $.ajax({
-                url: url,
-                type: 'GET',
-                success: function(data) 
-                {
-                    $('#custom-fields-container-0').html(data);
-                    $('.select2-single, .select2-multiple').select2({
-                        width: '100%' // Adjust width as needed
-                    }); // Re-initialize select2
-                }
-            });
-        }
-
 </script>
 @endsection
 @section('css')

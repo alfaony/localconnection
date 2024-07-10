@@ -114,6 +114,7 @@ class DailyTaskProjectController extends Controller
         $userFilter = $request->input('user');
         $statusFilter = $request->input('status');
         $search = $request->input('task_name');
+        $customFieldvalue = $request->input('custom_field_value');
         
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
         $taskStatuss = TaskStatus::bySort(true)->get(); // Ambil semua status tugas
@@ -131,6 +132,14 @@ class DailyTaskProjectController extends Controller
                     $q->where('name', $userFilter);
                 });
             }
+        }
+
+        if ($customFieldvalue) 
+        {
+                $query->whereHas('customFieldValues', function ($q) use ($customFieldvalue) 
+                {
+                    $q->where('custom_field_value_id', $customFieldvalue);
+                });
         }
 
         // Filter berdasarkan status

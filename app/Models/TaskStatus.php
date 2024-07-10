@@ -52,7 +52,7 @@ class TaskStatus extends Model
     {
         if ($backlogs) 
         {
-            return $query->orderBy('sort', 'desc');
+            return $query->orderBy('sort');
         }else
         {
             return $query->where('name','!=',ParamSchema::BACKLOG)->orderBy('sort');
