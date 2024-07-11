@@ -51,7 +51,7 @@ use App\Http\Controllers\DailyTaskCategoryController;
 use App\Http\Controllers\ShiftingObController;
 use App\Http\Controllers\ScheduleObController;
 use App\Http\Controllers\DivisionBudgetController;
-
+use App\Http\Controllers\ProductCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -97,6 +97,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('customer', CustomerController::class)->except(['create','show']);
 
   Route::resource('product', ProductController::class)->except(['create','show']);
+  Route::resource('product-category', ProductCategoryController::class);
 
   Route::delete('quote/destroyProduct/product/{QuoteProduct}',[QuoteController::class,'destroyProduct'])->name('quote.destroy.product');
   Route::get('quote/productPrice/counting',[QuoteController::class,'productPrice'])->name('quote.productPrice');
@@ -151,7 +152,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::get('report-point',[ReportPointController::class,'index'])->name('report-point.index');
 
-  Route::resource('attendance', AttendanceController::class)->only('index');
+  Route::resource('attendance', AttendanceController::class);
 
   Route::resource('asset', AssetController::class)->except(['create']);
   Route::resource('asset-assign', AssetAssignController::class)->only(['store','update','destroy']);
@@ -173,6 +174,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   
   Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
 
+  Route::get('dailytask/template', [DailyTaskController::class, 'template'])->name('dailytask.template');
+  Route::get('dailytask/downloadtemplate', [DailyTaskController::class, 'downloadtemplate'])->name('dailytask.downloadtemplate');
+  Route::post('dailytask/import', [DailyTaskController::class, 'import'])->name('dailytask.import');
   Route::put('dailytask/storesubtask/{slug}', [DailyTaskController::class,'storesubtask'])->name('dailytask.storesubtask');
   Route::put('dailytask/comment/{slug}', [DailyTaskController::class,'comment'])->name('dailytask.comment');
   Route::put('dailytask/extend/{slug}', [DailyTaskController::class,'extend'])->name('dailytask.extend');
@@ -212,8 +216,6 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
 });
 // Add this to your routes/web.php
-
-
 
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');

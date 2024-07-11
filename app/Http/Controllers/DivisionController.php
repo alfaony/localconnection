@@ -15,6 +15,7 @@ use App\Models\ObjectiveKeyResult;
 use App\Models\DailyTask;
 
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
 use App\Helpers\Access;
 
 class DivisionController extends Controller
@@ -25,7 +26,14 @@ class DivisionController extends Controller
         $user = Auth::user();
         
         // Menggunakan relasi untuk mengambil divisi yang terkait dengan user tersebut
-        $divisions = $user->divisions()->paginate(10);
+        if($user->role->name == RoleSchema::ADMIN || $user->role->name == RoleSchema::ROOT)
+        {
+            $divisions = Division::byCompany($user->company_id)->paginate(10);
+        }
+        else
+        {
+            $divisions = $user->divisions()->paginate(10);
+        }
         
         // Mengirim data divisi ke view
         return view('division.index', compact('divisions'));

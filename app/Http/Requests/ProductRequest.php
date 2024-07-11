@@ -27,7 +27,8 @@ class ProductRequest extends FormRequest
             'name' => 'required|string|max:255',
             'price_buy' => 'nullable|numeric',
             'price_sell' => 'required|numeric',
-            'method_count' => 'required|string|max:255'
+            'method_count' => 'required|string|max:255',
+            'product_category_id' => 'nullable|exists:product_categories,id',
         ];
     }
 
@@ -39,7 +40,8 @@ class ProductRequest extends FormRequest
             'price_buy.numeric' => 'Harga beli harus berupa angka.',
             'price_sell.required' => 'Harga jual wajib diisi.',
             'price_sell.numeric' => 'Harga jual harus berupa angka.',
-            'method_count.required' => 'Metode perhitungan wajib diisi.'
+            'method_count.required' => 'Metode perhitungan wajib diisi.',
+            'product_category_id.exists' => 'Kategori produk tidak valid.',
         ];
     }
 }

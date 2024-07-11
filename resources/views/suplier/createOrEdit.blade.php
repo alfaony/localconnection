@@ -89,42 +89,46 @@
     
     <table class="table table-bordered mt-4" id="tabelPembelian">
         <thead>
-            <tr>
-                <th width="5%">No</th>
-                <th width="15%">Product</th>
-                <th width="20%">Deskripsi</th>
-                <th width="10%">Harga Satuan</th>
-                <th width="10%">Jumlah</th>
-                <th width="10%">Total</th>
-                <th width="5%">Aksi</th>
+            <tr class="d-flex">
+                <th class="col-1">No</th>
+                <th class="col-2">Product</th>
+                <th class="col-3">Deskripsi</th>
+                <th class="col-2">Harga Satuan</th>
+                <th class="col-1">Jumlah</th>
+                <th class="col-2">Total</th>
+                <th class="col-1">Aksi</th>
             </tr>
         </thead>
         <tbody>
             @if(@$suplier)
             @php $noChild = 1; @endphp
             @foreach($suplier->purchase->sortBy('sort') as $a)
-            <tr data-keyss="{{$a->id}}">
-                <td width="5%">{{ $noChild++ }}</td>
-                <td width="15%">
+            <tr class="d-flex" data-keyss="{{$a->id}}">
+                <td class="col-1">{{ $noChild++ }}</td>
+                <td class="col-2">
                     <select class="form-control productChange selectConfig" name="product[]" id="product_{{ $a->id }}" required>
                         <option value="" selected disabled>Pilih</option>
-                        @foreach($product as $b)
-                        <option value="{{ $b->id }}" data-key="{{ $a->id }}"  {{ $a->product_id == $b->id ? 'selected' : '' }} >{{ $b->name }}</option>
+                        @foreach($product->groupBy('category.name') as $category => $group)
+                            <optgroup class="select2-result-selectable" label="{{ $category ?? 'Other' }}">
+                                @foreach($group as $item)
+                                    <option value="{{ $item->id }}" data-key="{{ $a->id }}" data-methodcount="{{ $a->method_count }}" {{ $a->product_id == $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                                @endforeach
+                            </optgroup>
                         @endforeach
                     </select>
                 </td>
-                <td width="20%">
+                <td class="col-3">
                     <input type="text" class="thriveEditor" data-ids="{{ $a->id }}" name="description[]" id="description_{{ $a->id }}" placeholder="Deskripsi" value="{{ $a->description }}" required>
                 </td>
-                <td width="10%" id="price_show_{{ $a->id }}">
+                <td class="col-2" id="price_show_{{ $a->id }}">
                     Rp. {{ number_format($a->price,0,',','.') }}
                 </td>
-                <td width="10%"> 
+                <td class="col-1"> 
                     <input type="hidden" name="price[]" class="form-control" data-keyss="{{ $a->id }}" id="price_{{ $a->id }}" value="{{ $a->price }}" required>
                     <input type="number" name="qty[]" class="form-control qty" data-keyss="{{$a->id}}" id="qty_{{$a->id}}" placeholder="Jumlah" value="{{ $a->qty }}" required>
                 </td>
-                <td width="10%" id="sub_total_show_{{$a->id}}">{{'Rp. '.number_format($a->sub_total_price,0,',','.') }} </td>
-                <td width="5%">
+                <td class="col-2" id="sub_total_show_{{$a->id}}">{{'Rp. '.number_format($a->sub_total_price,0,',','.') }} </td>
+                <td class="col-1">
                     <input type="hidden" name="idChild[]" value="{{ $a->id }}">
                     <input type="hidden" name="sub_total[]" class="form-control" id="sub_total_{{$a->id}}" placeholder="Harga Satuan" value="{{ $a->sub_total_price }}">
                     <button type="button" data-id="{{ $a->id }}" class="btn btn-sm btn-danger btnHapusData"><i class="fa fa-trash"></i></button>
@@ -364,36 +368,36 @@ $(document).ready(function() {
         
         if(userConfirmation) 
         {
-            let url = "{{ route('suplier.destroy.purchase',':id') }}";
-            url = url.replace(':id',dataId);
+            // let url = "{{ route('suplier.destroy.purchase',':id') }}";
+            // url = url.replace(':id',dataId);
 
-            $.ajax({
-                type: "POST", // atau "DELETE" sesuai dengan metode yang Anda gunakan
-                url: url, // Gantikan dengan endpoint Anda
-                data: 
-                {
-                    id: dataId,
-                    _token: "{{ csrf_token() }}", // Untuk Laravel, tambahkan CSRF token
-                    _method: "DELETE" // Untuk Laravel, tambahkan CSRF token
-                },
-                success: function(response) 
-                {
-            Swal.fire({
-                title: 'Berhasil!',
-                text: 'Berhasil Menghapus Data',
-                icon: 'success',
-                timer: 1500, // 3 detik
-                timerProgressBar: true,
-                showConfirmButton: false,
-                showConfirmButton: false, // Menghilangkan tombol OK/Confirm
-            });
+            // $.ajax({
+            //     type: "POST", // atau "DELETE" sesuai dengan metode yang Anda gunakan
+            //     url: url, // Gantikan dengan endpoint Anda
+            //     data: 
+            //     {
+            //         id: dataId,
+            //         _token: "{{ csrf_token() }}", // Untuk Laravel, tambahkan CSRF token
+            //         _method: "DELETE" // Untuk Laravel, tambahkan CSRF token
+            //     },
+            //     success: function(response) 
+            //     {
+            // Swal.fire({
+            //     title: 'Berhasil!',
+            //     text: 'Berhasil Menghapus Data',
+            //     icon: 'success',
+            //     timer: 1500, // 3 detik
+            //     timerProgressBar: true,
+            //     showConfirmButton: false,
+            //     showConfirmButton: false, // Menghilangkan tombol OK/Confirm
+            // });
 
-                },
-                error: function(jqXHR, textStatus, errorThrown) 
-                {
-                    alert("Terjadi kesalahan saat menghapus data");
-                }
-            });
+            //     },
+            //     error: function(jqXHR, textStatus, errorThrown) 
+            //     {
+            //         alert("Terjadi kesalahan saat menghapus data");
+            //     }
+            // });
 
             $(this).closest('tr').remove(); // Hapus baris yang berisi tombol yang diklik
             updateNomorBaris(); // Perbarui nomor baris
@@ -406,33 +410,54 @@ $(document).ready(function() {
         var noBaris = $('#tabelPembelian tbody tr').length + 1; // Menghitung jumlah baris untuk nomor baris selanjutnya
         var indexKeys = generateRandomString(4);
         var dataSelect = @json($product);
-        
-        var projectOptions = '';
 
-        $.each(dataSelect, function(index, product) {
-            var isSelected = product.id == defaultProductId ? 'selected' : '';
-            projectOptions += `<option value="${product.id}" data-key="${indexKeys}" ${isSelected}>${product.name} </option>`;
+        if (!Array.isArray(dataSelect)) 
+        {
+            console.error("dataSelect is not an array");
+            return;
+        }
+
+        var projectOptions = '';
+        var groupedProducts = {};
+
+        // Group products by category
+        dataSelect.forEach(function (product) {
+            var category = product.category ? product.category.name : 'Other';
+            if (!groupedProducts[category]) {
+                groupedProducts[category] = [];
+            }
+            groupedProducts[category].push(product);
+        });
+
+        // Generate options with optgroup
+        $.each(groupedProducts, function (category, products) {
+            projectOptions += `<optgroup label="${category}">`;
+            products.forEach(function (product) {
+                var isSelected = product.id == defaultProductId ? 'selected' : '';
+                projectOptions += `<option value="${product.id}" data-key="${indexKeys}" ${isSelected}>${product.name} </option>`;
+            });
+            projectOptions += `</optgroup>`;
         });
 
         var row = `
-            <tr>
-                <td>${noBaris}</td>
-                <td width="15%">
+            <tr class="d-flex">
+                <td class="col-1">${noBaris}</td>
+                <td class="col-2">
                     <select class="form-control productChange" name="product[]" id="product_${indexKeys}" required>
                         <option value="" selected disabled>Pilih</option>
                         ${projectOptions}
                     </select>
                 </td>
-                <td width="10%"><input type="text" class="form-control thriveEditor" name="description[]" id="description_${indexKeys}" value="${defaultDescription}"  placeholder="Deskripsi" required></td>
-                <td>
+                <td class="col-3"><input type="text" class="form-control thriveEditor" name="description[]" id="description_${indexKeys}" value=""  placeholder="Deskripsi" required></td>
+                <td class="col-2">
                     <input type="text" class="form-control price" id="price_show_${indexKeys}" oninput="formatRupiahUpdate(this,'${indexKeys}')" name="price_show[]" data-keyss=${indexKeys} value="${price ?? 0}" required>
                 </td>
-                <td width="10%"> 
+                <td class="col-1"> 
                     <input type="hidden" name="price[]" class="form-control" data-keyss=${indexKeys} id="price_${indexKeys}" value="${price ?? 0}" required>
                     <input type="number" name="qty[]" class="form-control qty" data-keyss=${indexKeys} id="qty_${indexKeys}" placeholder="Jumlah" value="${defaultQty}" required>
                 </td>
-                <td id="sub_total_show_${indexKeys}">Rp 0</td>
-                <td>
+                <td class="col-2" id="sub_total_show_${indexKeys}">Rp 0</td>
+                <td class="col-1">
                     <input type="hidden" name="idChild[]" value="">
                     <input type="hidden" name="sub_total[]" class="form-control" id="sub_total_${indexKeys}" placeholder="Harga Satuan">
                     <button class="btn btn-danger btn-sm btnHapus"><i class="fa fa-trash"></i></button>
@@ -603,6 +628,11 @@ $(document).ready(function() {
     }
     .select2-selection__arrow {
         height: 34px !important;
+    }
+    .ql-container 
+    {
+        min-height: 150px;
+        height: auto;
     }
 </style>
 @stop

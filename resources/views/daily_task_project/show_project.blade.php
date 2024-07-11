@@ -79,7 +79,7 @@
                                         @endcanAccess
                                     </td>
                                     <td>{{ $task->user->name }}</td>
-                                    <td>{{ $task->assign->name }}</td>
+                                    <td>{{ $task->assign ? $task->assign->name : "" }}</td>
                                     <td>
                                         <span class="{{ $task->isOverdue() ? 'text-danger' : '' }}">
                                             {{ $task->dateShow }}

@@ -146,7 +146,7 @@ class DailyTaskProjectController extends Controller
             $query->where('name', 'like', "%{$search}%"); // Add other fields as necessary
         }
 
-        $tasks = $query->where('daily_task_project_id', $project->id)->with(['user', 'customFieldValues'])->paginate(10);
+        $tasks = $query->where('daily_task_project_id', $project->id)->with(['user', 'customFieldValues'])->orderBy('created_at','desc')->paginate(10);
 
         return view('daily_task_project.show_project', compact('tasks', 'customFields', 'project', 'users', 'taskStatuss'));
     }

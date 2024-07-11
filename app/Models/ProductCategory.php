@@ -9,20 +9,14 @@ use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
 
-use App\Schemas\ParamSchema;
-
-class ScheduleOb extends Model
+class ProductCategory extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory,SoftDeletes;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
-    protected $fillable = [
-        'user_id',
-        'shifting_ob_id',
-        'date',
-    ];
-    
+    protected $fillable = ['name','slug','user_id'];
+
     protected static function boot()
     {
         parent::boot();
@@ -34,9 +28,9 @@ class ScheduleOb extends Model
         });
     }
 
-    public function setDateAttribute($value)
+    public function setNameAttribute($value)
     {
-        $this->attributes['date'] = $value;
+        $this->attributes['name'] = $value;
         $this->attributes['slug'] = $this->createUniqueSlug($value);
     }
 
@@ -46,8 +40,7 @@ class ScheduleOb extends Model
         $baseSlug = $slug;
 
         $count = 1;
-        while (static::where('slug', $slug)->withTrashed()->exists()) 
-        {
+        while (static::where('slug', $slug)->withTrashed()->exists()) {
             $slug = "{$baseSlug}-{$count}";
             $count++;
         }
@@ -55,19 +48,14 @@ class ScheduleOb extends Model
         return $slug;
     }
 
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
     public function user()
     {
-        return $this->belongsTo(User::class);
-    }
-
-    public function attendance()
-    {
-        return $this->hasOne(Attendance::class)->withTrashed();
-    }
-
-    public function shiftingOb()
-    {
-        return $this->belongsTo(ShiftingOb::class)->withTrashed();
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function scopeByCompany($query,$companyId)

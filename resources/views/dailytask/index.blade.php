@@ -10,6 +10,9 @@
         @if(Session::get('store'))
         <div class="alert alert-success mt-3">Tugas Berhasil Ditambahkan</div>
         @endif
+        @if(Session::get('import'))
+        <div class="alert alert-success mt-3">Import Tugas Berhasil</div>
+        @endif
         @if(Session::get('update'))
         <div class="alert alert-success mt-3">Tugas Berhasil Diperbarui</div>
         @endif
@@ -26,51 +29,92 @@
         @endif
     </div>
 
-    @canAccess('create','dailytasks')
-    <a href="{{ route('dailytask.create') }}" class="btn btn-primary mb-3 col-md-2"><i class="fa fa-plus"></i><span> Tugas</span></a>
-    @endcanAccess
+    <div class="col-md-12">
+        @canAccess('create','dailytasks')
+        <a href="{{ route('dailytask.create') }}" class="btn btn-primary mb-3 col-md-2"><i class="fa fa-plus"></i><span> Tugas</span></a>
+        @endcanAccess
+        @canAccess('template','dailytasks')
+        <a href="{{ route('dailytask.template') }}" class="btn btn-info mb-3 col-md-2"><i class="fa fa-plus"></i><span> Import Tugas</span></a>
+        @endcanAccess
+    </div>
     @canAccess('index','dailytasks')
     <form method="GET" action="{{ route('dailytask.index') }}" class="mb-3">
-        <div class="row g-3 align-items-end">
+        <div class="row align-items-end gy-2">
             <div class="col-12 col-md-2">
-                <select class="form-control" id="task" name="task">
-                    <option value="all">All</option>
-                    @foreach ($taskTimeFrame as $status => $value)
-                        <option value="{{ $status }}" {{ request('task') == $status ? 'selected' : '' }}>{{ ucfirst($value) }}</option>
-                    @endforeach
-                </select>
-            </div>
-            @if(Auth::user()->role->name != \App\Schemas\RoleSchema::STAFF && Auth::user()->role->name != \App\Schemas\RoleSchema::SALES)
-            <div class="col-12 col-md-3">
-                <select class="form-control select2" id="user" name="user">
-                    <option value="all">All User</option>
-                    @foreach ($users as $user)
-                        <option value="{{ $user->name }}" {{ request('user') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            @endif
-            <div class="col-12 col-md-3">
-                <select class="form-control select2" id="status" name="status">
-                    <option value="">Select Status</option>
-                    @foreach ($taskStatuss as $status)
-                        <option value="{{ $status->name }}" {{ request('status') == $status->name ? 'selected' : '' }}>{{ ucfirst($status->name) }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="{{ request('start_date') && request('end_date') ? request('start_date').' - '.request('end_date') : '' }}">
-                    <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
-                    <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
+                <div class="form-group">
+                    <label for="task">Task</label>
+                    <select class="form-control" id="task" name="task">
+                        <option value="all">All</option>
+                        @foreach ($taskTimeFrame as $status => $value)
+                            <option value="{{ $status }}" {{ request('task') == $status ? 'selected' : '' }}>{{ ucfirst($value) }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
-            <div class="col-12 col-md-2">
-                <input type="text" class="form-control" id="search" name="search" placeholder="Search" value="{{ request('search') }}">
+
+            @if(Auth::user()->role->name != \App\Schemas\RoleSchema::STAFF && Auth::user()->role->name != \App\Schemas\RoleSchema::SALES)
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="user">User</label>
+                    <select class="form-control UserSelect2" id="user" name="user">
+                        <option value="all">All User</option>
+                        @foreach ($users as $user)
+                            <option value="{{ $user->name }}" {{ request('user') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
-            <div class="col-12 col-md-auto mt-2">
-                <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Search</button>
-                <button type="button" onclick="window.location.href='{{ route('dailytask.index') }}?task=all'" class="btn btn-secondary"><i class="fa fa-times"></i> Show All</button>
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="division">Division</label>
+                    <select class="form-control select2" id="user" name="division">
+                        <option value="">-- Divisi --</option>
+                        @foreach ($divisions as $division)
+                            <option value="{{ $division->name }}" {{ request('division') == $division->name ? 'selected' : '' }}>{{ $division->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            @endif
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select class="form-control select2" id="status" name="status">
+                        <option value="">Select Status</option>
+                        @foreach ($taskStatuss as $status)
+                            <option value="{{ $status->name }}" {{ request('status') == $status->name ? 'selected' : '' }}>{{ ucfirst($status->name) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="form-group">
+                    <label for="date_range">Date Range</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="{{ request('start_date') && request('end_date') ? request('start_date').' - '.request('end_date') : '' }}">
+                        <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
+                        <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-2">
+                <div class="form-group">
+                    <label for="search">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" placeholder="Search" value="{{ request('search') }}">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-auto">
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <div>
+                        <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Search</button>
+                        <button type="button" onclick="window.location.href='{{ route('dailytask.index') }}?task=all'" class="btn btn-secondary"><i class="fa fa-times"></i> Show All</button>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
@@ -177,6 +221,7 @@
     $(document).ready(function () {
         // Initialize Select2
         $('.select2').select2();
+        $('.UserSelect2').select2();
 
         // Initialize Daterangepicker
         $('#date_range').daterangepicker({

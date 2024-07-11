@@ -165,6 +165,59 @@
                             <p class="form-control-plaintext">{!! $dailytask->description !!}</p>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label for="media">Media:</label>
+                        @if($dailytask->user_id == Auth::user()->id)
+                            @canAccess('updatemedia','dailytasks')
+                            <button class="btn btn-success mb-3 btn-sm" data-toggle="modal" data-target="#uploadModalAttachForm">
+                                <i class="fa fa-plus"></i> File
+                            </button>
+                            @endcanAccess
+                        @endif
+                        @if($dailytask->taskMedia->count())
+                        <div class="row" style="max-height: 200px; overflow-y: auto;">
+                            @foreach($dailytask->taskMedia as $media)
+                                <div class="card mr-2">
+                                    <div class="card-body d-flex justify-content-between align-items-center">
+                                        <div>
+                                            @if(strpos($media->file_type, 'image') !== false)
+                                                <i class="fa fa-file-image-o"></i> {{ Str::limit(basename($media->file_path), 15) }}
+                                            @elseif(strpos($media->file_type, 'pdf') !== false)
+                                                <i class="fa fa-file-pdf-o"></i> {{ Str::limit(basename($media->file_path), 15) }}
+                                            @elseif(strpos($media->file_type, 'msword') !== false || strpos($media->file_type, 'officedocument.wordprocessingml.document') !== false)
+                                                <i class="fa fa-file-word-o"></i> {{ Str::limit(basename($media->file_path), 15) }}
+                                            @else
+                                                <i class="fa fa-file"></i> {{ Str::limit(basename($media->file_path), 15) }}
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <div class="dropdown">
+                                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton{{ $media->id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <i class="fa fa-ellipsis-v"></i>
+                                                </button>
+                                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ $media->id }}">
+                                                    <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                                        <i class="fa fa-download"></i> Lihat
+                                                    </a>
+                                                    @canAccess('deletemedia','dailytasks')
+                                                    <form action="{{ route('dailytask.deletemedia', $media->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this file?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fa fa-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                    @endcanAccess
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+
                     @if($dailytask->customFieldValues && count($dailytask->customFieldValues) > 0)
                     <div class="accordion" id="customFieldAccordion">
                         <div class="card">
@@ -329,7 +382,7 @@
                                                         </button>
                                                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ $media->id }}">
                                                             <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
-                                                                <i class="fa fa-download"></i> Download
+                                                                <i class="fa fa-download"></i> Lihat
                                                             </a>
                                                             @canAccess('deletemedia','dailytasks')
                                                             <form action="{{ route('dailytask.deletemedia', $media->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this file?');">
@@ -558,7 +611,7 @@
                                             @if($comment->file_path)
                                                 <div class="mt-2">
                                                     <a href="{{ asset('storage/' . $comment->file_path) }}" target="_blank" class="btn btn-primary btn-sm">
-                                                        <i class="fa fa-download"></i> Download Attachment
+                                                        <i class="fa fa-download"></i> Lihat File
                                                     </a>
                                                 </div>
                                             @endif
@@ -636,6 +689,36 @@
                             <input type="file" id="mediaInput" name="media[]" class="form-control" multiple>
                         </div>
                     </div>
+                    <input type="hidden" name="status" value="file_report">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModalAttachForm" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form action="{{ route('dailytask.updatemedia', $dailytask->slug) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="uploadModalLabel">Upload More Files</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="media">Upload Media</label>
+                            <input type="file" id="mediaInput" name="media[]" class="form-control" multiple>
+                        </div>
+                    </div>
+                    <input type="hidden" name="status" value="file_task">
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">Upload</button>
