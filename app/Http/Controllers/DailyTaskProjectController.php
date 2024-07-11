@@ -138,7 +138,7 @@ class DailyTaskProjectController extends Controller
         return response()->json(['success' => true, 'task' => $task->load('assign')]);
     }
 
-    public function updateStatus(Request $request)
+    public function updatestatus(Request $request)
     {
         $task = DailyTask::find($request->taskId);
         $task->task_status_id = TaskStatus::where('name', $request->newStatus)->first()->id;

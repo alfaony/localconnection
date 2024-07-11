@@ -24,6 +24,7 @@
         <div class="kanban-container">
             <div class="kanban-row">
                 @foreach ($tasksByStatus as $status => $taskGroup)
+                    @canAccess('updatestatus','daily_task_projects')
                     <div class="kanban-column">
                         <div class="card">
                             <div class="card-header bg-primary text-white">
@@ -45,7 +46,9 @@
                                             </p>
                                             <a href="{{ route('dailytask.show', $task->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i> Lihat</a>
                                             @if(!$task->assign)
+                                                @canAccess('assign','daily_task_projects')
                                                 <button class="btn btn-secondary btn-sm assign-button" data-task-id="{{ $task->id }}" data-task-slug="{{ $task->slug }}"><i class="fa fa-user"></i> Assign</button>
+                                                @endcanAccess
                                             @endif
                                         </div>
                                     </div>
@@ -54,6 +57,7 @@
                             </div>
                         </div>
                     </div>
+                    @endcanAccess
                 @endforeach
             </div>
         </div>
@@ -211,35 +215,25 @@
                 $(ui.helper).addClass('dragging');
             },
             receive: function(event, ui) {
-                var taskCard = $(ui.helper);
+                var taskCard = $(ui.item); // Updated to use ui.item
                 var taskId = taskCard.data('task-id');
                 var userId = taskCard.data('user-id');
                 var startDate = taskCard.data('start-date');
                 var endDate = taskCard.data('end-date');
                 
-                console.log(userId, startDate, endDate);
+                var newStatus = $(this).data('status');
 
-                if(!userId || !startDate || !endDate) {
-                    swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Harap pilih pengguna, tanggal mulai, dan tanggal selesai terlebih dahulu!',
-                        timer: 2000,
-                        timerProgressBar: true,
-                        showConfirmButton: false
-                    });
-
-                    // Cancel the drop
-                    $(ui.sender).sortable('cancel');
-                    return false;
-                }
+                console.log("SortAble");
+                console.log(taskCard);
+                console.log(taskId);
+                console.log(userId);
 
                 // Remove the placeholder if it exists
                 $(this).find('.empty-status-placeholder').remove();
 
                 // Make an AJAX request to update the task status
                 $.ajax({
-                    url: '{{ route('dailytask.updateStatus') }}', // Adjust the route accordingly
+                    url: '{{ route('dailytask.updatestatus') }}', // Adjust the route accordingly
                     method: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}',
@@ -252,12 +246,12 @@
                                 icon: 'success',
                                 title: 'Success',
                                 text: 'Task status updated successfully!',
-                                timer: 3000,
+                                timer: 1000,
                                 didOpen: () => {
                                     Swal.showLoading();
                                     const b = Swal.getHtmlContainer().querySelector('b');
                                     timerInterval = setInterval(() => {
-                                        b.textContent = Swal.getTimerLeft()
+                                        b.textContent = Swal.getTimerLeft();
                                     }, 100);
                                 },
                                 willClose: () => {
@@ -265,10 +259,25 @@
                                     location.reload(); // Reload the page after the delay
                                 }
                             });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message || 'Failed to update task status.',
+                                timer: 3000,
+                                timerProgressBar: true,
+                                showConfirmButton: false,
+                                willClose: () => {
+                                    location.reload(); // Reload the page after the delay
+                                }
+                            });
+                            $(ui.sender).sortable('cancel');
                         }
                     },
+
                     error: function() {
-                        alert('An error occurred while updating the task status.');
+                        $(ui.sender).sortable('cancel');
+                        // alert('An error occurred while updating the task status.');
                     }
                 });
             }
@@ -292,6 +301,7 @@
                 var startDate = taskCard.data('start-date');
                 var endDate = taskCard.data('end-date');
 
+                console.log("droppable");
                 console.log(userId, startDate, endDate);
 
                 
@@ -300,10 +310,12 @@
                         icon: 'error',
                         title: 'Error',
                         text: 'Harap pilih pengguna, tanggal mulai, dan tanggal selesai terlebih dahulu!',
-                        timer: 1000,
+                        timer: 3000,
                         timerProgressBar: true,
                         showConfirmButton: false
                     });
+
+                    $(ui.sender).droppable('cancel');
                     return false;
                 }
 
@@ -314,7 +326,7 @@
 
                 // Make an AJAX request to update the task status
                 $.ajax({
-                    url: '{{ route('dailytask.updateStatus') }}', // Adjust the route accordingly
+                    url: '{{ route('dailytask.updatestatus') }}', // Adjust the route accordingly
                     method: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}',
@@ -327,7 +339,7 @@
                                 icon: 'success',
                                 title: 'Success',
                                 text: 'Task Berhasil Diperbarui!',
-                                timer: 1200,
+                                timer: 1000,
                                 timerProgressBar: true,
                                 showConfirmButton: false,
                                 willClose: () => {
@@ -335,9 +347,6 @@
                                 }
                             });
                         }
-                    },
-                    error: function() {
-                        alert('An error occurred while updating the task status.');
                     }
                 });
             }

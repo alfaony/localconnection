@@ -465,25 +465,32 @@ class DailyTaskController extends Controller
 
     public function updateStatus(Request $request)
     {
-        $task = DailyTask::find($request->taskId);
-        if ($task) {
+        $task = DailyTask::byCompany(Auth::user()->company_id)->find($request->taskId);
+        if (!$task->assign) {
+            return response()->json(['success' => false, 'message' => 'Silakan pilih pengguna yang ditugaskan, tanggal mulai, dan tanggal selesai terlebih dahulu!']);
+        }
+        elseif ($task) {
             $currentStatus = TaskStatus::find($task->task_status_id);
             $newStatus = TaskStatus::where('name', $request->newStatus)->first();
-            
-            if ($newStatus) {
+            if($newStatus && ($newStatus->name == ParamSchema::COMPLATE || $newStatus->name == ParamSchema::NOTCOMPLATE))
+            {
+                return response()->json(['success' => false, 'message' => 'Status tugas '.$newStatus->name.' tidak dapat diubah manual']);
+            }
+            elseif ($newStatus) {
                 // Check if the new status sort order is not less than the current status sort order
                 if ($newStatus->sort >= $currentStatus->sort) {
                     $task->task_status_id = $newStatus->id;
                     $task->save();
 
-                    return response()->json(['success' => true]);
+                    return response()->json(['success' => true, 'message' => 'Status tugas berhasil diperbarui!']);
                 } else {
-                    return response()->json(['success' => false, 'message' => 'Cannot move to a previous status']);
+                    return response()->json(['success' => false, 'message' => 'Tidak dapat memindahkan tugas ke status sebelumnya.']);
                 }
             }
         }
-        return response()->json(['success' => false, 'message' => 'Invalid task or status']);
+        return response()->json(['success' => false, 'message' => 'Tugas atau status tidak valid.']);
     }
+
 
 
     public function destroy($slug)
