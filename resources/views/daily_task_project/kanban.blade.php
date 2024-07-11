@@ -300,10 +300,6 @@
                 var userId = taskCard.data('user-id');
                 var startDate = taskCard.data('start-date');
                 var endDate = taskCard.data('end-date');
-
-                console.log("droppable");
-                console.log(userId, startDate, endDate);
-
                 
                 if(!userId || !startDate || !endDate) {
                     swal.fire({
@@ -319,36 +315,8 @@
                     return false;
                 }
 
-                var newStatus = $(this).data('status');
-
                 // Append the task card to the new column
                 $(this).append(taskCard);
-
-                // Make an AJAX request to update the task status
-                $.ajax({
-                    url: '{{ route('dailytask.updatestatus') }}', // Adjust the route accordingly
-                    method: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        taskId: taskId,
-                        newStatus: newStatus
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: 'Task Berhasil Diperbarui!',
-                                timer: 1000,
-                                timerProgressBar: true,
-                                showConfirmButton: false,
-                                willClose: () => {
-                                    location.reload(); // Reload the page after the delay
-                                }
-                            });
-                        }
-                    }
-                });
             }
         });
 

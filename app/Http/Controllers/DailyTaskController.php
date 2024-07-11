@@ -463,7 +463,7 @@ class DailyTaskController extends Controller
         return redirect()->back()->with('assign', true);
     }
 
-    public function updateStatus(Request $request)
+    public function updatestatus (Request $request)
     {
         $task = DailyTask::byCompany(Auth::user()->company_id)->find($request->taskId);
         if (!$task->assign) {
@@ -481,6 +481,8 @@ class DailyTaskController extends Controller
                 if ($newStatus->sort >= $currentStatus->sort) {
                     $task->task_status_id = $newStatus->id;
                     $task->save();
+
+                    $this->statusrecord($task, $newStatus);
 
                     return response()->json(['success' => true, 'message' => 'Status tugas berhasil diperbarui!']);
                 } else {
