@@ -21,7 +21,7 @@ class PermissionForMenuDailyTaskProjectKanbanSeeder extends Seeder
     public function run()
     {   
 
-        $methods = ['kanban','updatestatus','assign'];
+        $methods = ['kanban'];
        
         $roles = Role::all();
 
@@ -44,6 +44,28 @@ class PermissionForMenuDailyTaskProjectKanbanSeeder extends Seeder
                 PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
             }
         }
+
+        $methodsDaily = ['kanban','updatestatus','assign'];
+
+        foreach ($methodsDaily as $method) 
+        {
+            // create permision
+            $permission = Permission::firstOrCreate([
+                'name' => ucwords($method).' Daily Task',
+            ],[
+                'method' => $method,
+                'table' => 'dailytasks',
+                'model' => 'DailyTask',
+                'guard_name' => 'web'
+            ]);
+
+            //assign role & permission
+            foreach ($roles as $role) 
+            {
+                PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
+            }
+        }
+
     }
 }
 
