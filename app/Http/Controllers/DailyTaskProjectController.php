@@ -108,6 +108,45 @@ class DailyTaskProjectController extends Controller
         return view('daily_task_project.show',compact('statusSelect','project'));
     }
 
+    public function kanban($slug)
+    {
+        $project = DailyTaskProject::where('slug', $slug)->firstOrFail();
+        $statuses = TaskStatus::orderBy('sort')->get();
+        $users = User::byCompany(Auth::user()->company_id)->get();
+
+        $tasks = DailyTask::where('daily_task_project_id', $project->id)
+                            ->with('taskStatus')
+                            ->get()
+                            ->sortBy('taskStatus.sort')
+                            ->groupBy('taskStatus.name');
+        
+        $tasksByStatus = $statuses->mapWithKeys(function ($status) use ($tasks) {
+            return [$status->name => $tasks->get($status->name, collect())];
+        });
+        
+        return view('daily_task_project.kanban', compact('project', 'tasksByStatus', 'statuses', 'users'));
+    }
+    public function updateTaskFields(Request $request)
+    {
+        $task = DailyTask::find($request->taskId);
+        $task->start_date = $request->startDate;
+        $task->end_date = $request->endDate;
+        $task->assign_user_id = $request->assignUserId;
+        $task->task_status_id = TaskStatus::where('name', $request->newStatus)->first()->id;
+        $task->save();
+
+        return response()->json(['success' => true, 'task' => $task->load('assign')]);
+    }
+
+    public function updateStatus(Request $request)
+    {
+        $task = DailyTask::find($request->taskId);
+        $task->task_status_id = TaskStatus::where('name', $request->newStatus)->first()->id;
+        $task->save();
+
+        return response()->json(['success' => true]);
+    }
+
     public function showproject(Request $request, $slug)
     {
         // Ambil filter dari request

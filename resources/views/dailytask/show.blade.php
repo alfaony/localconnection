@@ -124,6 +124,9 @@
                         <div class="col-sm-8">
                             <p class="form-control-plaintext">
                                 @switch($dailytask->taskStatus->name)
+                                    @case('backlog')
+                                        <i class="fa fa-clipboard-list"></i> Backlog
+                                        @break
                                     @case('todo')
                                         <i class="fa fa-list-alt"></i> Todo
                                         @break
@@ -420,11 +423,11 @@
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="start_date">Tanggal Mulai</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                                <input type="date" class="form-control" id="start_date" name="start_date" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="end_date">Tanggal Selesai</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" required>
+                                <input type="date" class="form-control" id="end_date" name="end_date" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                             </div>
                         </div>
                         <!-- Row for Task Name and Users -->
@@ -435,7 +438,7 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="user_id">Ditugaskan</label>
-                                <select class="form-control select2" id="user_id" name="user_id" required>
+                                <select class="form-control select2" id="user_id" name="user_id" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                                     <option value="">Pilih User</option>
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -453,24 +456,27 @@
                     </form>
 
                     <!-- Existing Sub Tasks -->
-                    <ul class="list-group mt-3" id="existing-ttasks-list">
+                    <ul class="list-group mt-3" id="existing-tasks-list">
                         @foreach($subTasks as $subTask)
                             @php
                                 $isOverdueSub = $subTask->isOverdue();
                             @endphp
-                            <li class="list-group-item">
-                                <div class="task-details">
-                                    <span class="task-name">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="task-details d-flex flex-column flex-md-row align-items-md-center">
+                                    <span class="task-name mr-md-3">
                                         <a href="{{ route('dailytask.show', $subTask->slug) }}">{{ Str::limit($subTask->name, 15) }}</a>
                                     </span>
-                                    <span class="{{ $isOverdueSub ? 'text-danger' : '' }}">
+                                    <span class="{{ $isOverdueSub ? 'text-danger' : '' }} mr-md-3">
                                         {{ $subTask->dateShow }}
                                     </span>
-                                    <span>
+                                    <span class="mr-md-3">
                                         @switch($subTask->taskStatus->name)
-                                             @case('todo')
-                                            <i class="fa fa-list-alt"></i>
+                                        @case('backlog')
+                                            <i class="fa fa-clipboard-list"></i>
                                             @break
+                                            @case('todo')
+                                                <i class="fa fa-list-alt"></i>
+                                                @break
                                             @case('doing')
                                                 <i class="fa fa-hourglass-start"></i>
                                                 @break
@@ -484,17 +490,17 @@
                                                 <i class="fa fa-check" style="color: green;"></i>
                                                 @break
                                             @default
-                                                {{ $dailytask->taskStatus->name }}
+                                                {{ $subTask->taskStatus->name }}
                                         @endswitch
                                     </span>
                                     <span>
                                         {{ $subTask->assign ? $subTask->assign->name : '' }}
                                     </span>
                                 </div>
-                                <div class="task-actions">
-                                    <a href="{{ route('dailytask.edit', $subTask->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
+                                <div class="task-actions d-flex">
+                                    <a href="{{ route('dailytask.edit', $subTask->slug) }}" class="btn btn-warning btn-sm mr-1"><i class="fa fa-edit"></i></a>
                                     <form action="{{ route('dailytask.destroy', $subTask->slug) }}" method="POST">
-                                        @if($dailytask->user_id == Auth::user()->id)
+                                        @if($subTask->user_id == Auth::user()->id)
                                             @csrf
                                             @method('DELETE')
                                             <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
@@ -575,6 +581,9 @@
                                         <div class="timeline-item">
                                             <div class="timeline-icon">
                                                 @switch($record->taskStatus->name)
+                                                    @case('backlog')
+                                                        <i class="fa fa-clipboard-list"></i>
+                                                        @break
                                                     @case('todo')
                                                         <i class="fa fa-list"></i>
                                                         @break
@@ -713,7 +722,7 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Add Task Modal -->
     <div class="modal fade" id="addTaskModal" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -737,15 +746,15 @@
                         </div>
                         <div class="form-group">
                             <label for="start_date">Tanggal Mulai</label>
-                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            <input type="date" class="form-control" id="start_date" name="start_date" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                         </div>
                         <div class="form-group">
                             <label for="end_date">Tanggal Berakhir</label>
-                            <input type="date" class="form-control" id="end_date" name="end_date" required>
+                            <input type="date" class="form-control" id="end_date" name="end_date" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                         </div>
                         <div class="form-group">
                             <label for="assignment_user_id">Ditugaskan</label>
-                            <select class="form-control select2" id="assignment_user_id" name="assignment_user_id" required>
+                            <select class="form-control select2" id="assignment_user_id" name="assignment_user_id" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                                 @foreach($users as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
                                 @endforeach
@@ -1093,4 +1102,45 @@ $(document).ready(function() {
         font-size: 14px;
     }
 </style>
+<style>
+    .task-details {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+    }
+
+    @media (min-width: 768px) {
+        .task-details {
+            flex-direction: row;
+        }
+    }
+
+    .task-actions {
+        display: flex;
+        align-items: center;
+    }
+
+    .task-details span,
+    .task-details a {
+        margin-right: 10px;
+    }
+
+    .list-group-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .task-name {
+        min-width: 120px;
+        max-width: 150px;
+    }
+
+    .task-details > span,
+    .task-details > a {
+        white-space: nowrap;
+    }
+</style>
+
 @endsection

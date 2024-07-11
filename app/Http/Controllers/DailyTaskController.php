@@ -408,6 +408,49 @@ class DailyTaskController extends Controller
         }
     }
 
+    public function assign(Request $request, $slug)
+    {
+        $request->validate([
+            'assignment_user_id' => 'required|exists:users,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+
+        $dailytask->assignment_user_id = $request->assignment_user_id;
+        $dailytask->start_date = $request->start_date;
+        $dailytask->end_date = $request->end_date;
+        $dailytask->save();
+
+        $this->message($dailytask->id,'create','Mengalokasikan Tugas '.$dailytask->name.' kepada '.User::find($request->assignment_user_id)->name);
+
+        return redirect()->back()->with('assign', true);
+    }
+
+    public function updateStatus(Request $request)
+    {
+        $task = DailyTask::find($request->taskId);
+        if ($task) {
+            $currentStatus = TaskStatus::find($task->task_status_id);
+            $newStatus = TaskStatus::where('name', $request->newStatus)->first();
+            
+            if ($newStatus) {
+                // Check if the new status sort order is not less than the current status sort order
+                if ($newStatus->sort >= $currentStatus->sort) {
+                    $task->task_status_id = $newStatus->id;
+                    $task->save();
+
+                    return response()->json(['success' => true]);
+                } else {
+                    return response()->json(['success' => false, 'message' => 'Cannot move to a previous status']);
+                }
+            }
+        }
+        return response()->json(['success' => false, 'message' => 'Invalid task or status']);
+    }
+
+
     public function destroy($slug)
     {
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
@@ -667,13 +710,21 @@ class DailyTaskController extends Controller
     public function storesubtask(DailyTaskSubTaskRequest $request,$slug)
     {
         $dailyTaskHead = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
-        $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+
+        if($request->start_date && $request->end_date && $request->user_id)
+        {
+            $status = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+        }else
+        {
+            $status = TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail();
+        }
 
         DB::beginTransaction();
         try {
+
             $dailyTask = new DailyTask();
             $dailyTask->user_id = Auth::user()->id;
-            $dailyTask->task_status_id = $doing->id;
+            $dailyTask->task_status_id = $status->id;
             $dailyTask->child_daily_task_id = $dailyTaskHead->id;
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
@@ -719,7 +770,7 @@ class DailyTaskController extends Controller
             }
 
             $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
-            $this->statusrecord($dailyTask, $doing);
+            $this->statusrecord($dailyTask, $status);
 
             
             DB::commit();

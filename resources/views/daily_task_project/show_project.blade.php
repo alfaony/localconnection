@@ -23,6 +23,9 @@
             @canAccess('createdailytask','daily_task_projects')
             <a href="{{ route('daily_task_project.createdailytask',$project->slug) }}" class="btn btn-primary mb-3"><i class="fa fa-plus"></i> Tugas Harian</a>
             @endcanAccess
+            @canAccess('showproject','daily_task_projects')
+                <a href="{{ route('daily_task_project.kanban', $project->slug) }}" class="btn btn-primary btn-info mb-3"><i class="fa fa-columns"></i> Board</a>
+            @endcanAccess
             <div class="card">
                 <div class="card-header d-flex justify-content-between">
                     <h5>Proyek : {{ $project->name }}</h5>

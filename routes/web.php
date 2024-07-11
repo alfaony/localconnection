@@ -74,6 +74,10 @@ Auth::routes([
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+Route::get('daily_task_project/kanban/{slug}', [DailyTaskProjectController::class,'kanban'])->name('daily_task_project.kanban');
+Route::post('dailytask/update-status', [DailyTaskController::class, 'updateStatus'])->name('dailytask.updateStatus');
+Route::put('dailytask/assign/{slug}', [DailyTaskController::class, 'assign'])->name('dailytask.assign');
+
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
   Route::resource('project', ProjectController::class);
