@@ -24,7 +24,7 @@
         <div class="kanban-container">
             <div class="kanban-row">
                 @foreach ($tasksByStatus as $status => $taskGroup)
-                    @canAccess('updatestatus','daily_task_projects')
+                    @canAccess('updatestatus','dailytasks')
                     <div class="kanban-column">
                         <div class="card">
                             <div class="card-header bg-primary text-white">
@@ -46,7 +46,7 @@
                                             </p>
                                             <a href="{{ route('dailytask.show', $task->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i> Lihat</a>
                                             @if(!$task->assign)
-                                                @canAccess('assign','daily_task_projects')
+                                                @canAccess('assign','dailytasks')
                                                 <button class="btn btn-secondary btn-sm assign-button" data-task-id="{{ $task->id }}" data-task-slug="{{ $task->slug }}"><i class="fa fa-user"></i> Assign</button>
                                                 @endcanAccess
                                             @endif
