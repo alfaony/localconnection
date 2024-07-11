@@ -42,7 +42,7 @@ class QuoteController extends Controller
      */
     public function create(Request $request)
     {
-        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
         $customer = Customer::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $date = Carbon::now()->format('m/Y');
@@ -157,7 +157,7 @@ class QuoteController extends Controller
      */
     public function edit($slug,Request $request)
     {
-        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
         $customer = Customer::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $quote = Quote::where('slug', $slug)->firstOrFail();
         $leadsFrom  = config('custom.leads_from');

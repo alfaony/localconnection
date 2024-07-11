@@ -16,7 +16,7 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <h2>Buat Tugas Harian</h2>
-            <form action="{{ route('dailytask.store') }}" method="POST">
+            <form action="{{ route('dailytask.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div id="dynamic-form-fields">
                         <div class="dynamic-field mb-3 shadow-sm mt-3">
@@ -95,6 +95,10 @@
                                                     @endforeach
                                                 </select>
                                             </div>
+                                            <div class="form-group">
+                                                <label for="type_id">File</label>
+                                                <input type="file" name="attachments_0[]" class="form-control attachment-input" multiple>
+                                            </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
@@ -133,6 +137,9 @@
     $(document).ready(function() 
     {
         // initializeSelect2();
+        $('.attachment-input').on('change', function() {
+            validateAttachments(this);
+        });
         loadCustomFields('{{ $project->id }}');
 
         $('.select2').select2({
@@ -252,6 +259,23 @@
                     }); // Re-initialize select2
                 }
             });
+        }
+
+        // Function to validate attachments
+        function validateAttachments(input) {
+            var maxSize = 1 * 1024 * 1024; // 1 MB
+            var files = input.files;
+            var validFiles = new DataTransfer(); // DataTransfer object to hold valid files
+
+            for (var i = 0; i < files.length; i++) {
+                if (files[i].size > maxSize) {
+                    alert('File ' + files[i].name + ' terhapus, Maksimal file 1 Mb');
+                } else {
+                    validFiles.items.add(files[i]); // Add valid files to DataTransfer object
+                }
+            }
+
+            input.files = validFiles.files; // Update input with valid files
         }
 
 </script>

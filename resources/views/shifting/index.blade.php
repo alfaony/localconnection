@@ -11,6 +11,16 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
             @canAccess('create','shifting_obs')
@@ -25,6 +35,7 @@
                         <tr>
                             <th>Nama</th>
                             <th>Jam Masuk</th>
+                            <th>Jam Keluar</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -33,6 +44,7 @@
                             <tr>
                                 <td>{{ $shift->name }}</td>
                                 <td>{{ $shift->clock_in }}</td>
+                                <td>{{ $shift->clock_out ?? "-" }}</td>
                                 <td>
                                     @canAccess('update','shifting_obs')
                                     <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editModal{{ $shift->slug }}"><i class="fa fa-edit"></i></button>
@@ -67,6 +79,10 @@
                                                 <div class="form-group">
                                                     <label for="clock_in">Jam Masuk</label>
                                                     <input type="time" class="form-control" name="clock_in" value="{{ $shift->clock_in }}" required>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="clock_in">Jam Keluar</label>
+                                                    <input type="time" class="form-control" name="clock_out" value="{{ $shift->clock_out }}" required>
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
@@ -106,6 +122,10 @@
                         <div class="form-group">
                             <label for="clock_in">Jam Masuk</label>
                             <input type="time" class="form-control" name="clock_in" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="clock_in">Jam Masuk</label>
+                            <input type="time" class="form-control" name="clock_out" required>
                         </div>
                     </div>
                     <div class="modal-footer">

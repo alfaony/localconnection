@@ -79,6 +79,11 @@ class Product extends Model
         return $this->belongsTo(User::class,'user_created_id')->withTrashed();
     }
 
+    public function category()
+    {
+        return $this->belongsTo(ProductCategory::class,'product_category_id')->withTrashed();
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

@@ -16,7 +16,7 @@
         </div>
     @endif
 </div>
-<div class="container">
+<div class="card">
     @if(@$quote)
     <form method="post" action="{{ route('quote.update',$quote) }}">
     @method('put')
@@ -24,7 +24,7 @@
     <form method="post" action="{{ route('quote.store') }}">
     @endif
     @csrf
-    <div class="card">
+    <div class="card-body">
         <div class="card-body">
             <div class="row mt-3">
                 <div class="offset-md-6 col-6">
@@ -245,11 +245,16 @@
                         <td class="col-3">
                             <select class="form-control productChange select2" name="product[]" id="product_{{ $a->id }}" required>
                                 <option value="" selected disabled>Pilih</option>
-                                @foreach($product as $b)
-                                <option value="{{ $b->id }}" data-key="{{ $a->id }}" data-methodcount="{{ $a->method_count }}" {{ $a->product_id == $b->id ? 'selected' : '' }} >{{ $b->name }}</option>
+                                @foreach($product->groupBy('category.name') as $category => $group)
+                                    <optgroup class="select2-result-selectable" label="{{ $category ?? 'Other' }}">
+                                        @foreach($group as $item)
+                                            <option value="{{ $item->id }}" data-key="{{ $a->id }}" data-methodcount="{{ $a->method_count }}" {{ $a->product_id == $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                                        @endforeach
+                                    </optgroup>
                                 @endforeach
                             </select>
                         </td>
+
                         <td class="col-1" id="method_count_${key}">
                             {{ $a->product->method_count ?? "" }}
                         </td>
@@ -274,10 +279,9 @@
                     @endif
                 </tbody>
             </table>
-        
             <div class="row mt-3">
                 <div class="col-md-8">
-                    <button class="btn btn-primary mb-2 allowSubmit" id="btnTambahBarisProduct"><i class="fa fa-plus"></i> Product</button>
+                    <button type="button" class="btn btn-primary mb-2 allowSubmit" id="btnTambahBarisProduct"><i class="fa fa-plus"></i> Product</button>
                 </div>
                 <div class="col-4 offset-8">
                     <div class="d-flex justify-content-between mb-2">
@@ -547,16 +551,39 @@
         // change
         
 
-        $('#btnTambahBarisProduct').click(function() {            
+        $('#btnTambahBarisProduct').click(function(e) {  
+            e.preventDefault();
+
             var key = generateRandomString(4);
             var noBaris = $('#tableQuote tbody tr').length + 1; // Menghitung jumlah baris untuk nomor baris selanjutnya
             var dataSelect = @json($product);
-            
-            var projectOptions = '';
 
-            $.each(dataSelect, function(index, product) 
+            if (!Array.isArray(dataSelect)) 
             {
-                projectOptions += `<option value="${product.id}" data-methodcount="${product.method_count}" data-key="${key}">${product.name} </option>`;
+                console.error("dataSelect is not an array");
+                return;
+            }
+
+            var projectOptions = '';
+            var groupedProducts = {};
+
+            // Group products by category
+            dataSelect.forEach(function (product) {
+                console.log(product.category);
+                var category = product.category ? product.category.name : 'Other';
+                if (!groupedProducts[category]) {
+                    groupedProducts[category] = [];
+                }
+                groupedProducts[category].push(product);
+            });
+
+            // Generate options with optgroup
+            $.each(groupedProducts, function (category, products) {
+                projectOptions += `<optgroup label="${category}">`;
+                products.forEach(function (product) {
+                    projectOptions += `<option value="${product.id}" data-methodcount="${product.method_count}" data-key="${key}">${product.name}</option>`;
+                });
+                projectOptions += `</optgroup>`;
             });
 
             const row = `
@@ -565,7 +592,7 @@
                         ${noBaris}
                     </td>
                     <td class="col-3">
-                        <select class="form-control productChange" name="product[]" id="product_${key}" required>
+                        <select class="form-control productChange select2" name="product[]" id="product_${key}" required>
                             <option value="" selected disabled>Pilih</option>
                             ${projectOptions}
                         </select>
@@ -573,7 +600,7 @@
                     <td class="col-1" id="method_count_${key}">
                     </td>
                     <td class="col-3">
-                        <input type="hidden" class="thriveEditor" data-ids="${key}" id="description_${key}"  name="description[]" required>
+                        <input type="hidden" class="thriveEditor" data-ids="${key}" id="description_${key}" name="description[]" required>
                         <div id="editor_${key}" style="min-height: 120px;"></div>
                     </td>
                     <td class="col-2">

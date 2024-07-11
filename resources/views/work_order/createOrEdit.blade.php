@@ -111,8 +111,12 @@
                             <td class="col-3">
                                 <select class="form-control productChange select2" name="product[]" id="product_{{ $a->id }}" required>
                                     <option value="" selected disabled>Pilih</option>
-                                    @foreach($product as $b)
-                                    <option value="{{ $b->id }}" data-key="{{ $a->id }}" {{ $a->product_id == $b->id ? 'selected' : '' }} >{{ $b->name }}</option>
+                                    @foreach($product->groupBy('category.name') as $category => $group)
+                                        <optgroup class="select2-result-selectable" label="{{ $category ?? 'Other' }}">
+                                            @foreach($group as $item)
+                                                <option value="{{ $item->id }}" data-key="{{ $a->id }}" data-methodcount="{{ $a->method_count }}" {{ $a->product_id == $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                                            @endforeach
+                                        </optgroup>
                                     @endforeach
                                 </select>
                             </td>
@@ -366,12 +370,32 @@
             var key = generateRandomString(4);
             var noBaris = $('#tableWorkOrder tbody tr').length + 1; // Menghitung jumlah baris untuk nomor baris selanjutnya
             var dataSelect = @json($product);
-            
-            var projectOptions = '';
 
-            $.each(dataSelect, function(index, product) 
+            if (!Array.isArray(dataSelect)) 
             {
-                projectOptions += `<option value="${product.id}" data-key="${key}">${product.name} </option>`;
+                console.error("dataSelect is not an array");
+                return;
+            }
+
+            var projectOptions = '';
+            var groupedProducts = {};
+
+            // Group products by category
+            dataSelect.forEach(function (product) {
+                var category = product.category ? product.category.name : 'Other';
+                if (!groupedProducts[category]) {
+                    groupedProducts[category] = [];
+                }
+                groupedProducts[category].push(product);
+            });
+
+            // Generate options with optgroup
+            $.each(groupedProducts, function (category, products) {
+                projectOptions += `<optgroup label="${category}">`;
+                products.forEach(function (product) {
+                    projectOptions += `<option value="${product.id}" data-methodcount="${product.method_count}" data-key="${key}">${product.name}</option>`;
+                });
+                projectOptions += `</optgroup>`;
             });
 
             const row = `
@@ -380,7 +404,7 @@
                         ${noBaris}
                         </td>
                     <td class="col-3">
-                        <select class="form-control productChange" name="product[]" id="product_${key}" required>
+                        <select class="form-control productChange select2" name="product[]" id="product_${key}" required>
                             <option value="" selected disabled>Pilih</option>
                             ${projectOptions}
                         </select>
@@ -494,12 +518,33 @@
         var key = generateRandomString(4);
         var noBaris = $('#tableWorkOrder tbody tr').length + 1;
         var dataSelect = @json($product);
-        
-        var projectOptions = '';
 
-        $.each(dataSelect, function(index, product) {
-            var isSelected = product.id == defaultProductId ? 'selected' : '';
-            projectOptions += `<option value="${product.id}" data-key="${key}" ${isSelected}>${product.name} </option>`;
+        if (!Array.isArray(dataSelect)) 
+        {
+            console.error("dataSelect is not an array");
+            return;
+        }
+
+        var projectOptions = '';
+        var groupedProducts = {};
+
+        // Group products by category
+        dataSelect.forEach(function (product) {
+            var category = product.category ? product.category.name : 'Other';
+            if (!groupedProducts[category]) {
+                groupedProducts[category] = [];
+            }
+            groupedProducts[category].push(product);
+        });
+
+        // Generate options with optgroup
+        $.each(groupedProducts, function (category, products) {
+            projectOptions += `<optgroup label="${category}">`;
+            products.forEach(function (product) {
+                var isSelected = product.id == defaultProductId ? 'selected' : '';
+                projectOptions += `<option value="${product.id}" data-key="${key}" ${isSelected}>${product.name}</option>`;
+            });
+            projectOptions += `</optgroup>`;
         });
 
         const row = `
@@ -512,7 +557,7 @@
                     </select>
                 </td>
                 <td class="col-3">
-                    <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" value="${defaultDescription}"  placeholder="Description" required>
+                    <input type="text" class="thriveEditor" data-ids="${key}" name="description[]" id="description_${key}" value=""  placeholder="Description" required>
                 </td>
                 <td class="col-2">
                     <input type="hidden" id="price_${key}" name="price[]" data-key="${key}" min="1" class="form-control" value="" required>

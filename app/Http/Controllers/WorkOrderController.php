@@ -38,7 +38,7 @@ class WorkOrderController extends Controller
      */
     public function create()
     {   
-        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
         // $quote = Quote::orderBy('created_at','desc')->get();
 
         $userCreate = Auth::user()->name;
@@ -123,7 +123,7 @@ class WorkOrderController extends Controller
     public function edit($slug)
     {
         // dd($slug);
-        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
         // $quote = Quote::orderBy('created_at','desc')->get();
         
         $workOrder = WorkOrder::where('slug', $slug)->firstOrFail();

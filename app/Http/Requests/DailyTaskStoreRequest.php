@@ -32,6 +32,7 @@ class DailyTaskStoreRequest extends FormRequest
             'name.*' => 'required|string|max:255',
             'description' => 'nullable|array',
             'description.*' => 'nullable|string',
+            'attachments_*.*' => 'nullable|file|max:1024' // 1 MB max
         ];
     }
 
@@ -70,6 +71,8 @@ class DailyTaskStoreRequest extends FormRequest
             'name.*.max' => 'Setiap nama tidak boleh lebih dari 255 karakter.',
             'description.array' => 'Deskripsi harus berupa array.',
             'description.*.string' => 'Setiap deskripsi harus berupa string.',
+            'attachments_*.*.file' => 'Attachments harus berupa file.',
+            'attachments_*.*.max' => 'Attachments tidak boleh lebih dari 1 MB.'
         ];
     }
 }

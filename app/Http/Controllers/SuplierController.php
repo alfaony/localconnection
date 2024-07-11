@@ -48,7 +48,7 @@ class SuplierController extends Controller
         $nomor = $request->get('nomor');
         $project = Project::byRole()->whereDoesntHave('suplier')->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::now()->format('Y-m-d');
-        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $product = Product::byCompany(Auth::user()->company_id)->with('category')->get();
 
 
         return view('suplier.createOrEdit',compact('nomor','project','dateCreate','product'));
@@ -140,7 +140,7 @@ class SuplierController extends Controller
         $suplier = Suplier::where('slug', $slug)->firstOrFail();
         $project = Project::byRole()->whereDoesntHave('suplier')->orWhere('id', $suplier->project_id)->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::parse($suplier->created_at)->format('Y-m-d');
-        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $product = Product::byCompany(Auth::user()->company_id)->with('category')->get();
 
 
         return view('suplier.createOrEdit',compact('suplier','nomor','project','dateCreate','product'));   
@@ -184,34 +184,36 @@ class SuplierController extends Controller
             $subTotals = $request->input('sub_total');
             $idChild = $request->input('idChild');
             
+            // Destroy workOrder
+            $suplier->purchase()->delete();
             // Loop melalui salah satu array (karena semua memiliki panjang yang sama)
             for ($i = 0; $i < count($product); $i++) 
             {
 
-                $id = $idChild[$i];
+                $purchase = new Purchase();
+                $purchase->sort = $i + 1;
+                $purchase->product_id = $product[$i];
+                $purchase->description = $descriptions[$i];
+                $purchase->price = $prices[$i];
+                $purchase->qty = $qtys[$i];
+                $purchase->sub_total_price = $subTotals[$i];
 
-                if(!$id)
-                {
-                    $purchase = new Purchase();
-                    $purchase->sort = $i + 1;
-                    $purchase->product_id = $product[$i];
-                    $purchase->description = $descriptions[$i];
-                    $purchase->price = $prices[$i];
-                    $purchase->qty = $qtys[$i];
-                    $purchase->sub_total_price = $subTotals[$i];
-    
-                    $suplier->purchase()->save($purchase);
-                }else
-                {
-                    $purchases = Purchase::find($id);
-                    $purchases->sort = $i + 1;
-                    $purchases->product_id = $product[$i];
-                    $purchases->description = $descriptions[$i];
-                    $purchases->price = $prices[$i];
-                    $purchases->qty = $qtys[$i];
-                    $purchases->sub_total_price = $subTotals[$i];
-                    $purchases->save();
-                } 
+                $suplier->purchase()->save($purchase);
+                // $id = $idChild[$i];
+                
+                // if(!$id)
+                // {
+                // }else
+                // {
+                //     $purchases = Purchase::find($id);
+                //     $purchases->sort = $i + 1;
+                //     $purchases->product_id = $product[$i];
+                //     $purchases->description = $descriptions[$i];
+                //     $purchases->price = $prices[$i];
+                //     $purchases->qty = $qtys[$i];
+                //     $purchases->sub_total_price = $subTotals[$i];
+                //     $purchases->save();
+                // } 
             }
 
             $suplier->total_price = $suplier->purchase()->sum('sub_total_price') ?? 0;

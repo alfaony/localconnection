@@ -13,6 +13,10 @@ use App\Http\Requests\DailyTaskStoreRequest;
 use App\Http\Requests\DailyTaskRequest;
 use App\Http\Requests\DailyTaskSubTaskRequest;
 
+use App\Exports\DailyTaskTemplateExport;
+use App\Imports\DailyTaskImport;
+use Maatwebsite\Excel\Facades\Excel;
+
 use Carbon\Carbon;
 use App\Helpers\Access;
 use App\Schemas\ParamSchema;
@@ -38,7 +42,7 @@ class DailyTaskController extends Controller
     public function index(Request $request)
     {
         // Ambil user ID dari autentikasi
-        $userId = Auth::user()->id;
+        $userId = Auth::user();
 
         // Ambil filter dari request
         $taskFilter = $request->input('task') ?? 'today';
@@ -47,6 +51,8 @@ class DailyTaskController extends Controller
         $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null; // Parse tanggal dari string ke Carbon
         $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
         $search = $request->input('search');
+        $division = $request->input('division');
+        $divisions = $userId->divisions()->get();
 
         // Query dasar untuk tugas harian berdasarkan user ID
         $query = DailyTask::orderBy('created_at', 'desc');
@@ -94,7 +100,7 @@ class DailyTaskController extends Controller
         }
         else
         {
-            $query->UserTasks($userId);
+            $query->UserTasks($userId->id);
         }
 
         // Filter berdasarkan status
@@ -115,6 +121,13 @@ class DailyTaskController extends Controller
         {
             $query->where('name', 'like', "%{$search}%"); // Add other fields as necessary
         }
+
+        // Filter berdasarkan divisi
+        if ($division) {
+            $query->whereHas('user.divisions', function ($q) use ($division) {
+                $q->where('name', $division);
+            });
+        }
         // Paginate hasil query
         $dailyTasksTes = $query->get();
 
@@ -131,7 +144,7 @@ class DailyTaskController extends Controller
         $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
 
         // Kembalikan view dengan data
-        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss'));
+        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss', 'divisions'));
     }
 
     public function create()
@@ -237,12 +250,34 @@ class DailyTaskController extends Controller
                     $dailyTask->keyResults()->attach($keyResults);
                 }
 
+
+                // Menyimpan Attachment Jika Terdapat
+                if ($request->hasFile('attachments_' . $i)) {
+                    foreach ($request->file('attachments_' . $i) as $file) 
+                    {
+                        $timestamp = time();
+                        $randomString = rand(100, 999);
+                        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                        $extension = $file->getClientOriginalExtension();
+                        $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
+    
+                        $path = $file->storeAs('media', $fileName, 'public');
+                        $mediaType = $file->getClientMimeType();
+    
+                        DailyTaskMedia::create([
+                            'daily_task_id' => $dailyTask->id,
+                            'file_path' => $path,
+                            'file_type' => $mediaType,
+                            'status' => ParamSchema::FILETASK,
+                        ]);
+                    }
+                }
+
                 $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
                 $this->statusrecord($dailyTask, $status);
 
             }
 
-            
             DB::commit();
 
             if($request->source && $request->slug)
@@ -554,6 +589,7 @@ class DailyTaskController extends Controller
                         'daily_task_id' => $dailytask->id,
                         'file_path' => $path,
                         'file_type' => $mediaType,
+                        'status' => $request->status,
                     ]);
                 }
             }
@@ -799,6 +835,63 @@ class DailyTaskController extends Controller
         $this->statusrecord($dailyTask, $doing);
         return redirect()->route('dailytask.show', $dailyTask->slug)->with('Working', true);
     }
+
+    // Import
+    public function import(Request $request)
+    {
+        $request->validate([
+            'import_file' => 'required|mimes:xlsx',
+            'objective_id' => 'exists:objectives,id',
+            'project_id' => 'exists:daily_task_projects,id',
+            'category_id' => 'exists:daily_task_categories,id',
+            'data_project_id' => 'required|array',
+            'data_project_id.*' => 'required|uuid|exists:projects,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            Excel::import(new DailyTaskImport($request->all()), $request->file('import_file'));
+            DB::commit();
+
+            return redirect()->route('dailytask.index')->with('import', true);
+        } catch (\Exception $e) {
+            DB::rollback();
+            $errors = explode("\n", $e->getMessage());
+            return redirect()->back()->withErrors($errors)->withInput();
+        }
+    }
+
+    public function template()
+    {
+        $users = User::byCompany(Auth::user()->company_id)->get();
+        $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
+        $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
+        $types = DailyTaskType::get();
+        $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
+        $objectives = Objective::byCompany(Auth::user()->company_id)->get();
+        $user = Auth::user(); // Get the current authenticated user
+        $divisionIds = $user->divisions->pluck('id');
+
+        if ($divisionIds->isEmpty()) {
+            // Handle the case where the user does not belong to any divisions
+            // You can return an empty collection or a message, or redirect
+            return redirect()->back()->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
+        } else {
+            // Proceed with fetching objectives related to the user's divisions
+            $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
+                $query->whereIn('id', $divisionIds);
+            })->get();
+        }
+
+
+        return view('dailytask.importtemplate',compact('categories', 'types', 'users', 'childTasks', 'projects', 'objectives'));
+    }
+
+    public function downloadtemplate()
+    {
+        return Excel::download(new DailyTaskTemplateExport, 'DailyTaskTemplate.xlsx');
+    }
+    
 
     protected function message($dailyTaskId, $template, $message, $filePath = null)
     {

@@ -88,7 +88,12 @@ class DailyTask extends Model
     
     public function media()
     {
-        return $this->hasMany(DailyTaskMedia::class);
+        return $this->hasMany(DailyTaskMedia::class)->where('status', ParamSchema::FILEREPORT);
+    }
+
+    public function taskMedia()
+    {
+        return $this->hasMany(DailyTaskMedia::class)->where('status', ParamSchema::FILETASK);
     }
 
     public function extend()

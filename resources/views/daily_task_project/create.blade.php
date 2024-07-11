@@ -52,7 +52,7 @@
                             </div>
                         </div>
                         <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i>  Option</button>
-                        <button type="button" class="btn btn-danger remove-custom-field"><i class="fa fa-trash"></i> Custom Field</button>
+                        <button type="button" class="btn btn-danger remove-custom-field"><i class="fa fa-trash"></i> Hapus Field</button>
                     </div>
                 </div>
             </div>
@@ -105,7 +105,7 @@
                     </div>
                 </div>
                 <button type="button" class="btn btn-secondary add-custom-field-value"><i class="fa fa-plus"></i>  Option</button>
-                <button type="button" class="btn btn-danger remove-custom-field "><i class="fa fa-trash"></i> Custom Field</button>
+                <button type="button" class="btn btn-danger remove-custom-field "><i class="fa fa-trash"></i> Hapus Field</button>
                 </div>
             </div>
             `;
