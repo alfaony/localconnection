@@ -438,6 +438,12 @@
                         @endcanAccess
                     @elseif($dailytask->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE)
                         <h6>Informasi Pekerjaan</h6>
+                        @if($dailytask->report_note)
+                            <div class="form-group">
+                                <label for="notes">Catatan:</label>
+                                {!! $dailytask->report_note !!}
+                            </div>
+                        @endif
                         @if($dailytask->media->count())
                         <div class="row mb-3" style="max-height: 200px; overflow-y: auto;">
                             @foreach($dailytask->media as $media)
