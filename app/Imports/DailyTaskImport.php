@@ -117,6 +117,7 @@ class DailyTaskSheetImport implements ToCollection, WithCalculatedFormulas, With
 
                 $dailyTask->save();
 
+                $dailyTask->keyResults()->attach($this->keyResultIds);
 
                 // Duplicate Custom Field
             if (isset($this->custom_field_values)) {
