@@ -199,6 +199,16 @@
                             <a href="{{ route('dailytask.edit', $dailytask->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
                             @endcanAccess
                             @endcanAccess
+
+                            @if(Auth::user()->role->name == \App\Schemas\RoleSchema::ROOT || Auth::user()->role->name == \App\Schemas\RoleSchema::ADMIN || Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER)
+                            <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
+                                @csrf
+                                @method('DELETE')
+                                @canAccess('destroy','dailytasks')
+                                <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                @endcanAccess
+                            </form>
+                            @endif
                             @endif
                         </td>
                     </tr>

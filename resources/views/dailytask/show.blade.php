@@ -438,6 +438,26 @@
                         @endcanAccess
                     @elseif($dailytask->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE)
                         <h6>Informasi Pekerjaan</h6>
+                        <label for="media">Media:</label>
+                        <div class="row" style="max-height: 200px; overflow-y: auto;">
+                        @foreach($dailytask->media as $media)
+                            <div class="card mr-2">
+                                <div class="card-body d-flex justify-content-between align-items-center">
+                                    <div>
+                                        @if(strpos($media->file_type, 'image') !== false)
+                                            <i class="fa fa-file-image-o"></i> {{ Str::limit(basename($media->file_path), 15) }}
+                                        @elseif(strpos($media->file_type, 'pdf') !== false)
+                                            <i class="fa fa-file-pdf-o"></i> {{ Str::limit(basename($media->file_path), 15) }}
+                                        @elseif(strpos($media->file_type, 'msword') !== false || strpos($media->file_type, 'officedocument.wordprocessingml.document') !== false)
+                                            <i class="fa fa-file-word-o"></i> {{ Str::limit(basename($media->file_path), 15) }}
+                                        @else
+                                            <i class="fa fa-file"></i> {{ Str::limit(basename($media->file_path), 15) }}
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
                         <div class="alert alert-info">
                             <i class="fa fa-check-circle"></i> Pekerjaan telah diselesaikan.
                         </div>

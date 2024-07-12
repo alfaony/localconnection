@@ -66,6 +66,11 @@ class DailyTaskProjectController extends Controller
                 ]);
     
                 // Create options
+                if(!isset($request->custom_field_value))
+                {
+                    return redirect()->back()->withError('Custom field value Harus diisi');
+                }
+
                 $ordering = 1;
                 foreach ($request->custom_field_value[$index] as $value) {
                     DailyTaskProjectCustomFieldValue::create([
