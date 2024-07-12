@@ -54,7 +54,7 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
             <div class="form-group">
                 <label>Kategori Product</label>
                 <select name="product_category_id" class="form-control select2">
-                    <option value="">-- Pilih<--/option>
+                    <option value=""> -- Pilih -- </option>
                     @foreach($productCategory as $a)
                     <option value="{{ $a->id }}" {{ old('product_category_id') == $a->id || @$productEdit->product_category_id == $a->id ? 'selected' : '' }}>{{ $a->name }}</option>
                     @endforeach
@@ -158,7 +158,6 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
     {
         $('.select2').select2({
             width: '100%',
-            placeholder: 'Pilih'
         });
 
         let nomor = "{{ $totalProducts }}";
