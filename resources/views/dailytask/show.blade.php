@@ -91,7 +91,7 @@
                         <label for="start_date" class="col-sm-4 col-form-label">Tanggal:</label>
                         <div class="col-sm-8">
                             <p class="form-control-plaintext {{ $isOverdue ? 'text-danger' : '' }}">
-                                {{ $startDate->format('d-m-Y') }} - {{ $endDate->format('d-m-Y') }}
+                                {{ $dailytask->dateShow }}
                             </p>
                         </div>
                     </div>
