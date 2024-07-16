@@ -17,6 +17,7 @@
                 <div class="col-md-4">
                     <select id="productCategoryFilter" class="form-control">
                         <option value="">-- Pilih Kategori Produk --</option>
+                        <option value="all" selected>-- All Produk --</option>
                         @foreach($productCategories as $category)
                             <option value="{{ $category->id }}">{{ $category->name }}</option>
                         @endforeach

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Product;
 use App\Models\ProductCategory;
 
+use App\Schemas\ParamSchema;
 class PricelistController extends Controller
 {
     /**
@@ -50,7 +51,10 @@ class PricelistController extends Controller
     
         // Filter by product category if provided
         if ($request->has('product_category_id') && !empty($request->product_category_id)) {
-            $query->where('products.product_category_id', $request->product_category_id);
+            if($request->product_category_id != ParamSchema::ALL)
+            {
+                $query->where('products.product_category_id', $request->product_category_id);
+            }
         } else {
             // Default to products without a category
             $query->whereNull('products.product_category_id');
