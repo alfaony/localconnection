@@ -27,6 +27,13 @@ class DailyTask extends Model
         {
             $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
         });
+
+        static::deleting(function ($dailytask) {
+            // Cascade delete child tasks)
+            foreach ($dailytask->children as $child) {
+                $child->delete();
+            }
+        });
     }
 
     public function setNameAttribute($value)

@@ -492,11 +492,33 @@
                 </div>
             </div>
             <div class="d-flex justify-content-start mt-4">
-                @if($dailytask->user_id == Auth::user()->id)
                 @canAccess('edit','dailytasks')
+                @if($dailytask->user_id == Auth::user()->id)
                 <a href="{{ route('dailytask.edit', $dailytask->slug) }}" class="btn btn-info"><i class="fa fa-edit"></i> Edit</a>
                 @endif
                 @endcanAccess
+
+                @if(!$dailytask->approved)
+                <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
+                    @csrf
+                    @method('DELETE')
+                    @canAccess('destroy','dailytasks')
+                    <input type="hidden" name="redirect" value="index">
+                    <button type="button" class="btn btn-danger ml-2 delete-button"><i class="fa fa-trash"></i> Delete</button>
+                    @endcanAccess
+                </form>
+                @else
+                    @if(Auth::user()->role->name == \App\Schemas\RoleSchema::ROOT || Auth::user()->role->name == \App\Schemas\RoleSchema::ADMIN || Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER)
+                    <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
+                        @csrf
+                        @method('DELETE')
+                        @canAccess('destroy','dailytasks')
+                        <input type="hidden" name="redirect" value="index">
+                        <button type="button" class="btn btn-danger ml-2 delete-button"><i class="fa fa-trash"></i> Delete</button>
+                        @endcanAccess
+                    </form>
+                    @endif
+                @endif
                 <a href="{{ route('dailytask.index') }}" class="btn btn-secondary ml-2"><i class="fa fa-arrow-left"></i> Kembali</a>
             </div>
         </div>
@@ -599,7 +621,7 @@
                                         @if($subTask->user_id == Auth::user()->id)
                                             @csrf
                                             @method('DELETE')
-                                            <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                            <button type="button" class="btn btn-danger ml-2 delete-button btn-sm"><i class="fa fa-trash"></i></button>
                                         @endif
                                     </form>
                                 </div>
@@ -941,6 +963,7 @@
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     $(document).ready(function() 
@@ -1073,11 +1096,37 @@ $(document).ready(function() {
     });
 });
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.delete-button').forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                const form = this.closest('form');
+
+                Swal.fire({
+                    title: 'Apakah Anda Yakin Hapus Data?',
+                    text: "Data ini akan dihapus beserta child tasknya!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
+</script>
 @endsection
 
 @section('css')
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
     body {
         font-family: Arial, sans-serif;

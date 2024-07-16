@@ -289,7 +289,7 @@ class DailyTaskController extends Controller
             }
         } catch (\Throwable $th) {
 
-            dd($th);
+            // dd($th);
             Log::error($th->getMessage());
             DB::rollback();
 
@@ -495,12 +495,18 @@ class DailyTaskController extends Controller
 
 
 
-    public function destroy($slug)
+    public function destroy(Request $request, $slug)
     {
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $dailytask->delete();
 
-        return redirect()->back()->with('delete',true) ;
+        if($request->redirect)
+        {
+            return redirect()->route('dailytask.index')->with('delete',true);
+        }else
+        {
+            return redirect()->back()->with('delete',true);
+        }
     }
 
     public function report(Request $request, $slug)
