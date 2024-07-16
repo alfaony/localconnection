@@ -32,7 +32,11 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{{ route('dailytask.index') }}">Tugas Harian</a></li>
                 @if($dailytask->head)
+                    @if(!$dailytask->head->deleted_at)
                     <li class="breadcrumb-item"><a href="{{ route('dailytask.show', $dailytask->head->slug) }}">{{ $dailytask->head->name }}</a></li>
+                    @else
+                    <li class="breadcrumb-item active" aria-current="page">{{ $dailytask->head->name ?? '' }}</li>
+                    @endif
                 @endif
                 <li class="breadcrumb-item active" aria-current="page">{{ $dailytask->nameShow ?? '' }}</li>
             </ol>
