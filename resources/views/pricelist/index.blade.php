@@ -1,4 +1,3 @@
-
 @extends('adminlte::page')
 
 @section('content_header')
@@ -8,10 +7,21 @@
 <div class="container">
     <div class="card">
         <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <select id="productCategoryFilter" class="form-control">
+                        <option value="">-- Pilih Kategori Produk --</option>
+                        <option value="null">Tanpa Kategori</option>
+                        @foreach($productCategories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
             <div class="row">
-              <div class="col-md-12 text-center">
-                <h1>Daftar Semua List Product</h1>
-              </div>
+                <div class="col-md-12 text-center">
+                    <h1>Daftar Semua List Product</h1>
+                </div>
             </div>
             <table class="table table-bordered" id="tablePricelist">
                 <thead>
@@ -43,7 +53,9 @@
             ajax: {
                 url: '{{ route("pricelist.datatable")}}',
                 type: 'GET',
-                dataSrc: 'data'
+                data: function(d) {
+                    d.category = $('#productCategoryFilter').val();
+                }
             },
             columns: [
                 {data: 'name', name: 'name', orderable: true},
@@ -54,21 +66,21 @@
             lengthMenu: [100, 500, 1000], // Set the length menu options
             pageLength: 100 // Set the default page length
         });
+
+        // Apply the category filter
+        $('#productCategoryFilter').change(function() {
+            table.draw();
+        });
     });
 </script>
 
 <script>
     $(document).ready(function () {
-        
-        $("#btnCreateManager").click(function (e) 
-        { 
+        $("#btnCreateManager").click(function (e) { 
             e.preventDefault();
             let no = "1";
             let url = "{{ route('work-order.create') }}" + "?nomor="+no;
-
             window.location.href = url;
-            
-
         });
     });
 </script>
@@ -79,39 +91,35 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
 
 <style>
-   body {
-            font-family: Arial, sans-serif;
-            /* padding: 20px; */
-            background-color: #f4f4f4;
-        }
-        .container {
-            background-color: #fff;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        #buttonSubmit 
-        {
-            padding: 10px 20px;
-            margin-top: 10px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+    }
+    .container {
+        background-color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    table, th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    #buttonSubmit {
+        padding: 10px 20px;
+        margin-top: 10px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
 </style>
 @stop
