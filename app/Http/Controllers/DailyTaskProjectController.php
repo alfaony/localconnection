@@ -354,7 +354,7 @@ class DailyTaskProjectController extends Controller
         return view('partials.custom-fields', compact('customFields', 'selectedValues','index','project','dataProyek'));
     }
 
-    public function createdailytask($slug)
+    public function createdailytask(Request $request, $slug)
     {
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
         $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
@@ -363,6 +363,8 @@ class DailyTaskProjectController extends Controller
         $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
         $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $customFields = $project->customFields;
+        $redirect = $request->redirect ?? 'daily_task_project.showproject';
+
 
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
@@ -379,7 +381,7 @@ class DailyTaskProjectController extends Controller
             })->get();
         }
 
-        return view('daily_task_project.create_daily_task', compact('project', 'users', 'taskStatuss', 'objectives', 'projects', 'categories', 'childTasks', 'types', 'customFields'));
+        return view('daily_task_project.create_daily_task', compact('project', 'users', 'taskStatuss', 'objectives', 'projects', 'categories', 'childTasks', 'types', 'customFields', 'redirect'));
     }
 
 }

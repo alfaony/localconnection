@@ -116,7 +116,7 @@
                         </div>
                     </div>
 
-                    <input type="hidden" name="source" value="daily_task_project.showproject">
+                    <input type="hidden" name="source" value="{{ $redirect }}">
                     <input type="hidden" name="slug" value="{{ $project->slug }}">
                     
                     @canAccess('statuschange','dailytasks')

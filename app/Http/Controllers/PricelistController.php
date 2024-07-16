@@ -41,51 +41,57 @@ class PricelistController extends Controller
     public function dataTableJson(Request $request)
     {
         // Fetch data for the DataTable
-        $query = Product::query();
-
+        $query = Product::query()
+            ->leftJoin('product_categories', 'products.product_category_id', '=', 'product_categories.id')
+            ->select('products.*', 'product_categories.name as product_category_name');
+    
         // Filter by company ID
         $query->byCompany(Auth::user()->company_id);
-
+    
         // Filter by product category if provided
-        if ($request->has('category') && !empty($request->category)) {
-            $query->where('product_category_id', $request->category);
+        if ($request->has('product_category_id') && !empty($request->product_category_id)) {
+            $query->where('products.product_category_id', $request->product_category_id);
         } else {
             // Default to products without a category
-            $query->whereNull('product_category_id');
+            $query->whereNull('products.product_category_id');
         }
-
+    
         // Map column indexes to column names (this may vary based on your table structure)
-        $columnNames = ['name', 'price_sell'];
-
+        $columnNames = ['products.name', 'product_categories.name', 'products.price_sell'];
+    
         // Define searchable columns
         $searchable = [
-            0 => 'name',
-            1 => 'price_sell',
+            0 => 'products.name',
+            // 2 => 'products.price_sell',
         ];
-
+    
         // Define your bootstrap version (4 or 5)
         $bootstrap = 4;
-
+    
         // Add action buttons to each row
         $actionButtons = [];
-
+    
         if (Access::can('show', 'pricelists')) {
             $show = [
                 'name' => 'Show',
                 'route' => 'pricelist.show',
                 'id' => true,
             ];
-
+    
             array_push($actionButtons, $show);
         }
-
+    
         $response = datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
-
+    
         $data = $response->getData();
         foreach ($data->data as $index => $item) {
             $item->price_sell = 'Rp. ' . number_format($item->price_sell, 0, ',', '.'); // Format angka dengan 2 desimal
         }
-
+    
         return response()->json($data);
     }
+    
+    
+
+
 }

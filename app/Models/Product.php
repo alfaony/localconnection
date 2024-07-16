@@ -39,6 +39,10 @@ class Product extends Model
     {
         return $this->hasMany(\Spatie\Activitylog\Models\Activity::class, 'subject_id');
     }
+    public function productCategory()
+    {
+        return $this->belongsTo(ProductCategory::class,'product_category_id')->withTrashed();
+    }
     protected static function boot()
     {
         parent::boot();

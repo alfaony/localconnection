@@ -3,30 +3,31 @@
 @section('content_header')
     <h1>Pricelist Product</h1>
 @stop
+
 @section('content')
 <div class="container">
     <div class="card">
         <div class="card-body">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <h1>Daftar Semua List Product</h1>
+                </div>
+            </div>
             <div class="row mb-3">
                 <div class="col-md-4">
                     <select id="productCategoryFilter" class="form-control">
                         <option value="">-- Pilih Kategori Produk --</option>
-                        <option value="null">Tanpa Kategori</option>
                         @foreach($productCategories as $category)
                             <option value="{{ $category->id }}">{{ $category->name }}</option>
                         @endforeach
                     </select>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-12 text-center">
-                    <h1>Daftar Semua List Product</h1>
-                </div>
-            </div>
             <table class="table table-bordered" id="tablePricelist">
                 <thead>
                     <tr>
                         <th>Product</th>
+                        <th>Kategori Produk</th>
                         <th>Harga</th>
                         <th>Aksi</th>
                     </tr>
@@ -37,6 +38,7 @@
     </div>
 </div>
 @stop
+
 @section('js')
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -51,15 +53,16 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: '{{ route("pricelist.datatable")}}',
+                url: '{{ route("pricelist.datatable") }}',
                 type: 'GET',
                 data: function(d) {
-                    d.category = $('#productCategoryFilter').val();
+                    d.product_category_id = $('#productCategoryFilter').val(); // Kirimkan nilai filter kategori produk
                 }
             },
             columns: [
                 {data: 'name', name: 'name', orderable: true},
-                {data: 'price_sell', name: 'price_sell', orderable: true},
+                {data: 'product_category_name', name: 'product_category_name', orderable: false, searchable: false},
+                {data: 'price_sell', name: 'price_sell', orderable: true, searchable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
             order: [[0, 'asc']],
@@ -67,27 +70,33 @@
             pageLength: 100 // Set the default page length
         });
 
-        // Apply the category filter
+        // Reload DataTable when category filter changes
         $('#productCategoryFilter').change(function() {
-            table.draw();
+            table.ajax.reload();
         });
     });
 </script>
 
 <script>
     $(document).ready(function () {
-        $("#btnCreateManager").click(function (e) { 
+        
+        $("#btnCreateManager").click(function (e) 
+        { 
             e.preventDefault();
             let no = "1";
             let url = "{{ route('work-order.create') }}" + "?nomor="+no;
+
             window.location.href = url;
+            
+
         });
     });
 </script>
 @stop
+
 @section('css')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css"> 
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
 
 <style>

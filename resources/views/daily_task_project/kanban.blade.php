@@ -10,6 +10,9 @@
 @if(Session::get('assign'))
     <div class="alert alert-success mt-3">Tugas Berhasil Ditugaskan</div>
 @endif
+@if(Session::get('dailytaskstore'))
+    <div class="alert alert-success mt-3">Tugas Berhasil Ditambahkan</div>
+@endif
 @if($errors->any())
     <div class="alert alert-danger mt-3">
         <ul>
@@ -19,6 +22,14 @@
         </ul>
     </div>
 @endif
+<div class="col-md-12">
+    @canAccess('createdailytask','daily_task_projects')
+    <a href="{{ route('daily_task_project.createdailytask',['slug'=>$project->slug,'redirect' => 'daily_task_project.kanban']) }}" class="btn btn-primary mb-3"><i class="fa fa-plus"></i> Tugas Harian</a>
+    @endcanAccess
+    @canAccess('showproject','daily_task_projects')
+    <a href="{{ route('daily_task_project.showproject', $project->slug) }}" class="btn btn-warning mb-3"><i class="fa fa-tasks"></i> List Tugas Harian</a>
+    @endcanAccess
+</div>
 <div class="card">
     <div class="card-body">
         <div class="kanban-container">

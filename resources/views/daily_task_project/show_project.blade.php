@@ -21,7 +21,7 @@
     <div class="row">
         <div class="col-md-12">
             @canAccess('createdailytask','daily_task_projects')
-            <a href="{{ route('daily_task_project.createdailytask',$project->slug) }}" class="btn btn-primary mb-3"><i class="fa fa-plus"></i> Tugas Harian</a>
+            <a href="{{ route('daily_task_project.createdailytask',['slug'=>$project->slug,'redirect' => 'daily_task_project.showproject']) }}" class="btn btn-primary mb-3"><i class="fa fa-plus"></i> Tugas Harian</a>
             @endcanAccess
             @canAccess('kanban','daily_task_projects')
                 <a href="{{ route('daily_task_project.kanban', $project->slug) }}" class="btn btn-primary btn-info mb-3"><i class="fa fa-columns"></i> Board</a>
