@@ -575,24 +575,24 @@
                     </form>
 
                     <!-- Existing Sub Tasks -->
-                    <ul class="list-group mt-3" id="existing-tasks-list">
-                        @foreach($subTasks as $subTask)
-                            @php
-                                $isOverdueSub = $subTask->isOverdue();
-                            @endphp
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div class="task-details d-flex flex-column flex-md-row align-items-md-center">
-                                    <span class="task-name mr-md-3">
+                    <table class="table mt-3" id="existing-tasks-list">
+                        <tbody>
+                            @foreach($subTasks as $subTask)
+                                @php
+                                    $isOverdueSub = $subTask->isOverdue();
+                                @endphp
+                                <tr>
+                                    <td>
                                         <a href="{{ route('dailytask.show', $subTask->slug) }}" data-bs-toggle="tooltip" title="{{ $subTask->name }}">{{ Str::limit($subTask->name, 8) }}</a>
-                                    </span>
-                                    <span class="{{ $isOverdueSub ? 'text-danger' : '' }} mr-md-3">
+                                    </td>
+                                    <td class="{{ $isOverdueSub ? 'text-danger' : '' }}">
                                         {{ $subTask->dateShow }}
-                                    </span>
-                                    <span class="mr-md-3">
+                                    </td>
+                                    <td>
                                         @switch($subTask->taskStatus->name)
-                                        @case('backlog')
-                                            <i class="fa fa-clipboard-list"></i>
-                                            @break
+                                            @case('backlog')
+                                                <i class="fa fa-clipboard-list"></i>
+                                                @break
                                             @case('todo')
                                                 <i class="fa fa-list-alt"></i>
                                                 @break
@@ -611,24 +611,25 @@
                                             @default
                                                 {{ $subTask->taskStatus->name }}
                                         @endswitch
-                                    </span>
-                                    <span>
+                                    </td>
+                                    <td>
                                         {{ $subTask->assign ? $subTask->assign->name : '' }}
-                                    </span>
-                                </div>
-                                <div class="task-actions d-flex">
-                                    <a href="{{ route('dailytask.edit', $subTask->slug) }}" class="btn btn-warning btn-sm mr-1"><i class="fa fa-edit"></i></a>
-                                    <form action="{{ route('dailytask.destroy', $subTask->slug) }}" method="POST">
-                                        @if($subTask->user_id == Auth::user()->id)
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" class="btn btn-danger ml-2 delete-button btn-sm"><i class="fa fa-trash"></i></button>
-                                        @endif
-                                    </form>
-                                </div>
-                            </li>
-                        @endforeach
-                    </ul>
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('dailytask.edit', $subTask->slug) }}" class="btn btn-warning btn-sm mr-1"><i class="fa fa-edit"></i></a>
+                                        <form action="{{ route('dailytask.destroy', $subTask->slug) }}" method="POST" style="display:inline-block;">
+                                            @if($subTask->user_id == Auth::user()->id)
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-danger ml-2 delete-button btn-sm"><i class="fa fa-trash"></i></button>
+                                            @endif
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+
                     @endcanAccess
                 </div>
             </div>
