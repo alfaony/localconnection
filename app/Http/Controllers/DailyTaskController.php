@@ -378,7 +378,8 @@ class DailyTaskController extends Controller
         DB::beginTransaction();
         try {
             $dailyTask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
-            if($request->start_end && $request->end_date && $request->assignment_user_id)
+
+            if($request->start_date && $request->end_date && $request->assignment_user_id && ($dailyTask->taskStatus->name == ParamSchema::BACKLOG))
             {
                 $todo = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
                 $dailyTask->task_status_id = $todo->id;
