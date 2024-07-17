@@ -452,10 +452,12 @@ class DailyTaskController extends Controller
         ]);
 
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+        $todo = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
 
         $dailytask->assignment_user_id = $request->assignment_user_id;
         $dailytask->start_date = $request->start_date;
         $dailytask->end_date = $request->end_date;
+        $dailytask->task_status_id = $todo->id;
         $dailytask->save();
 
         $this->message($dailytask->id,'create','Mengalokasikan Tugas '.$dailytask->name.' kepada '.User::find($request->assignment_user_id)->name);
@@ -585,7 +587,9 @@ class DailyTaskController extends Controller
         try {
             //code...
             $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
-
+            $dailytask->report_note = $request->note;
+            $dailytask->save();
+            
             if ($request->hasFile('media'))
             {
                 foreach ($request->file('media') as $file) {

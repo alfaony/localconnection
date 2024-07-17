@@ -412,8 +412,8 @@
 
                         @if($dailytask->taskStatus->name != \App\Schemas\ParamSchema::COMPLATE)
                             @canAccess('updatemedia','dailytasks')
-                            <button class="btn btn-success mb-3" data-toggle="modal" data-target="#uploadModal">
-                                <i class="fa fa-upload"></i> Upload Lampiran
+                            <button class="btn btn-success mb-3" id="btn-modal-edit" data-description="{{ $dailytask->report_note ?? '' }}" data-decription="{{ $dailytask->report_note ?? '' }}" data-toggle="modal" data-target="#uploadModal">
+                                <i class="fa fa-upload"></i> Edit Lampiran
                             </button>
                             @endcanAccess
                         @endif
@@ -753,12 +753,14 @@
                 @method('PUT')
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="uploadModalLabel">Upload More Files</h5>
+                        <h5 class="modal-title" id="uploadModalLabel">Upload More Files & Update Laporan</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body">
+                        <div class="form-group" id="description-noted">
+                        </div>
                         <div class="form-group">
                             <label for="media">Upload Media</label>
                             <input type="file" id="mediaInput" name="media[]" class="form-control" multiple>
@@ -965,10 +967,24 @@
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
     $(document).ready(function() 
     {
+        $(document).ready(function () {
+            $('#btn-modal-edit').on('click', function (event) {
+                $("#description-noted").html(`
+                    <label for="note">Catatan</label>
+                    <input class="thriveEditor form-control" id="description_note_edit" data-ids="note_edit" name="note" placeholder="yang akan dicetak di perjanjian"/>
+                `);
+
+                var description = $(this).data('description'); // Extract info from data-* attributes
+                var modal = $("#uploadModal");
+                modal.find('#description_note_edit').val(description);
+
+                generateThriveEditor("note_edit", description);
+            });
+        });
+
         $('.select2').select2();
         // Assume you have a dailyTaskId variable available or extract it from the form
         var dailyTaskId = "{{ $dailytask->id }}";

@@ -85,14 +85,14 @@
                                     <div class="form-group">
                                         <label for="start_date">Tanggal</label>
                                         <div class="input-group">
-                                            <input type="date" class="form-control start-date" name="start_date" placeholder="Mulai Tanggal" value="{{ $dailytask->start_date }}" required>
+                                            <input type="date" class="form-control start-date" name="start_date" placeholder="Mulai Tanggal" value="{{ $dailytask->start_date }}" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }} >
                                             <span class="input-group-text">hingga</span>
-                                            <input type="date" class="form-control end-date" name="end_date" placeholder="Sampai Tanggal" value="{{ $dailytask->end_date }}" required>
+                                            <input type="date" class="form-control end-date" name="end_date" placeholder="Sampai Tanggal" value="{{ $dailytask->end_date }}" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                                         </div>
                                     </div>
                                     <div class="form-group">
                                         <label for="assignment_user_id">Ditugaskan</label>
-                                        <select name="assignment_user_id" class="form-control select2" required>
+                                        <select name="assignment_user_id" class="form-control select2" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                                             <option selected disabled>Pilih Ditugaskan</option>
                                             @foreach($users as $user)
                                                 <option value="{{ $user->id }}" {{ $dailytask->assignment_user_id == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>

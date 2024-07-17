@@ -75,6 +75,7 @@
     </div>
 </div>
 
+@canAccess('assign','dailytasks')
 <div class="modal fade" id="assignModal" tabindex="-1" role="dialog" aria-labelledby="assignModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -112,6 +113,7 @@
         </div>
     </div>
 </div>
+@endcanAccess
 @endsection
 
 @section('css')
@@ -313,14 +315,14 @@
                 var endDate = taskCard.data('end-date');
                 
                 if(!userId || !startDate || !endDate) {
-                    swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Harap pilih pengguna, tanggal mulai, dan tanggal selesai terlebih dahulu!',
-                        timer: 3000,
-                        timerProgressBar: true,
-                        showConfirmButton: false
-                    });
+                    // swal.fire({
+                    //     icon: 'error',
+                    //     title: 'Error',
+                    //     text: 'Harap pilih pengguna, tanggal mulai, dan tanggal selesai terlebih dahulu!',
+                    //     timer: 3000,
+                    //     timerProgressBar: true,
+                    //     showConfirmButton: false
+                    // });
 
                     $(ui.sender).droppable('cancel');
                     return false;
