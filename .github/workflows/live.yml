@@ -55,7 +55,7 @@ jobs:
         port: 2020
         script: |
           cd /var/www/keloola-projects/bos.keloola.com
-          php artisan migrate
+          echo "yes" | php artisan migrate
 
     - name: Clear Cache
       uses: appleboy/ssh-action@master
