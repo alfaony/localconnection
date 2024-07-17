@@ -20,7 +20,8 @@ class UpdateProductCategories extends Command
 
     public function handle()
     {
-        $filePath = storage_path($this->argument('file'));
+        $filePath = public_path($this->argument('file'));
+        
         $data = Excel::toArray([], $filePath)[0];
 
         DB::transaction(function () use ($data) {
