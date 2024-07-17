@@ -109,6 +109,15 @@ class DailyTaskController extends Controller
             $query->whereHas('taskStatus', function ($q) use ($statusFilter) {
                 $q->where('name', $statusFilter);
             });
+        }else
+        {
+            $query->whereHas('taskStatus', function ($query)
+            {
+                $query->where(function($query) 
+                {
+                    $query->where('name','!=',ParamSchema::BACKLOG);
+                });
+            });
         }
 
         // Filter berdasarkan tanggal

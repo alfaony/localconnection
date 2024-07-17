@@ -45,7 +45,7 @@
                                 @if ($taskGroup->isEmpty())
                                     <div class="empty-status-placeholder">Drop tasks here</div>
                                 @else
-                                    @foreach ($taskGroup as $task)
+                                    @foreach ($taskGroup->sortByDesc('start_date') as $task)
                                     <div class="card mb-2 task-card" data-user-id="{{ $task->assignment_user_id }}" data-start-date="{{ $task->start_date }}" data-end-date="{{ $task->end_date }}" data-task-id="{{ $task->id }}">
                                         <div class="card-body task-card-body">
                                             <h5 class="card-title">{{ $task->nameShow }} {{ $task->head ? "< ". Str::limit($task->head->name,10) : '' }}</h5>
