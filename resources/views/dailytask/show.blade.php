@@ -519,6 +519,7 @@
                     </form>
                     @endif
                 @endif
+                <button type="button" class="btn btn-primary ml-2 copy-link-button"><i class="fa fa-link"></i> Copy Link</button>
                 <a href="{{ route('dailytask.index') }}" class="btn btn-secondary ml-2"><i class="fa fa-arrow-left"></i> Kembali</a>
             </div>
         </div>
@@ -1120,6 +1121,28 @@ $(document).ready(function() {
             });
         });
     });
+
+    document.querySelectorAll('.copy-link-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const link = window.location.href;
+                navigator.clipboard.writeText(link).then(function() {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Link Tersalin',
+                        text: 'Link berhasil disalin ke clipboard',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    });
+                }, function(err) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Menyalin',
+                        text: 'Terjadi kesalahan saat menyalin link'
+                    });
+                });
+            });
+        });
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
