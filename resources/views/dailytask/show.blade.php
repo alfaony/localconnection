@@ -582,7 +582,7 @@
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <div class="task-details d-flex flex-column flex-md-row align-items-md-center">
                                     <span class="task-name mr-md-3">
-                                        <a href="{{ route('dailytask.show', $subTask->slug) }}" data-bs-toggle="tooltip" title="{{ $subTask->name }}">{{ Str::limit($subTask->name, 15) }}</a>
+                                        <a href="{{ route('dailytask.show', $subTask->slug) }}" data-bs-toggle="tooltip" title="{{ $subTask->name }}">{{ Str::limit($subTask->name, 8) }}</a>
                                     </span>
                                     <span class="{{ $isOverdueSub ? 'text-danger' : '' }} mr-md-3">
                                         {{ $subTask->dateShow }}
