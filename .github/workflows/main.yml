@@ -1,0 +1,83 @@
+name: Deploy to Staging Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Open Ownership
+      uses: appleboy/ssh-action@master
+      with:
+        host: "157.15.4.10"
+        username: "devops"
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: 2018
+        script: |
+          cd /var/www/keloola-projects/dev-bos.keloola.com
+          echo ${{ secrets.SSH_PASSWORD }} | sudo -S chown -R devops:devops storage bootstrap/cache
+          
+    - name: Git Pull
+      uses: appleboy/ssh-action@master
+      with:
+        host: "157.15.4.10"
+        username: "devops"
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: 2018
+        script: |
+          cd /var/www/keloola-projects/dev-bos.keloola.com
+          git pull origin develop
+
+    - name: Install Dependencies
+      uses: appleboy/ssh-action@master
+      with:
+        host: "157.15.4.10"
+        username: "devops"
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: 2018
+        script: |
+          cd /var/www/keloola-projects/dev-bos.keloola.com
+          php /home/devops/composer.phar update --no-interaction --prefer-dist --optimize-autoloader --no-dev --ignore-platform-reqs
+
+    - name: Run Migrations
+      uses: appleboy/ssh-action@master
+      with:
+        host: "157.15.4.10"
+        username: "devops"
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: 2018
+        script: |
+          cd /var/www/keloola-projects/dev-bos.keloola.com
+          php artisan migrate
+
+    - name: Clear Cache
+      uses: appleboy/ssh-action@master
+      with:
+        host: "157.15.4.10"
+        username: "devops"
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: 2018
+        script: |
+          cd /var/www/keloola-projects/dev-bos.keloola.com
+          php artisan optimize:clear
+          php artisan config:clear
+          php artisan view:clear
+          php artisan route:clear
+
+    - name: Close Ownership
+      uses: appleboy/ssh-action@master
+      with:
+        host: "157.15.4.10"
+        username: "devops"
+        password: ${{ secrets.SSH_PASSWORD }}
+        port: 2018
+        script: |
+          cd /var/www/keloola-projects/dev-bos.keloola.com
+          echo ${{ secrets.SSH_PASSWORD }} | sudo -S chown -R nginx:nginx storage bootstrap/cache
