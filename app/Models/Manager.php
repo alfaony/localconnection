@@ -31,7 +31,7 @@ class Manager extends Model
 
     public function setNameAttribute($value)
     {
-        if ($this->attributes['name'] ?? null !== $value) {
+       if ($this->name != $value || $this->slug == '') {
             $this->attributes['name'] = $value;
             $this->attributes['slug'] = $this->createUniqueSlug($value);
         } else {
