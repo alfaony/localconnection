@@ -77,7 +77,7 @@ class ObjectiveController extends Controller
                         'objective_id' => $objective->id,
                         'result' => $value,
                         'start_date' => $request->start_date[$index][$indexs] ?? null,
-                        'end_date' => $request->start_date[$index][$indexs] ?? null,
+                        'end_date' => $request->end_date[$index][$indexs] ?? null,
                     ]);
                 }
             }
@@ -163,7 +163,7 @@ class ObjectiveController extends Controller
                     $keyResult->update([
                         'result' => $value,
                         'start_date' => $request->start_date[$index] ?? null,
-                        'end_date' => $request->start_date[$index] ?? null,
+                        'end_date' => $request->end_date[$index] ?? null,
                     ]);
                     $existingValueIds[] = $keyResult->id;
                 } else {
@@ -172,7 +172,7 @@ class ObjectiveController extends Controller
                         'objective_id' => $objective->id,
                         'result' => $value,
                         'start_date' => $request->start_date[$index] ?? null,
-                        'end_date' => $request->start_date[$index] ?? null,
+                        'end_date' => $request->end_date[$index] ?? null,
                     ]);
 
                     $existingValueIds[] = $newValue->id;
@@ -260,7 +260,7 @@ class ObjectiveController extends Controller
         $tasks = $tasksQuery->paginate(10);
 
         $users = User::byCompany(Auth::user()->company_id)->get();
-        $taskStatuss = TaskStatus::all();
+        $taskStatuss = TaskStatus::bySort()->get();
 
         return view('objective.show_task', compact('keyResult', 'tasks', 'users', 'taskStatuss'));
     }

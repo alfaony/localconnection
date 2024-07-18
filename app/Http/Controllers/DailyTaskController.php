@@ -109,6 +109,15 @@ class DailyTaskController extends Controller
             $query->whereHas('taskStatus', function ($q) use ($statusFilter) {
                 $q->where('name', $statusFilter);
             });
+        }else
+        {
+            $query->whereHas('taskStatus', function ($query)
+            {
+                $query->where(function($query) 
+                {
+                    $query->where('name','!=',ParamSchema::BACKLOG);
+                });
+            });
         }
 
         // Filter berdasarkan tanggal
@@ -141,7 +150,7 @@ class DailyTaskController extends Controller
             'upcoming' => 'Upcoming'
         ];
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
-        $taskStatuss = TaskStatus::all(); // Ambil semua status tugas
+        $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
 
         // Kembalikan view dengan data
         return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss', 'divisions'));
@@ -190,17 +199,26 @@ class DailyTaskController extends Controller
 
             $objectives = $request->objective ?? [];
 
-            $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
-
+            
             
             for ($i = 0; $i < count($names); $i++)
             {
+                
+                if($startDates[$i] && $endDates[$i] && $assignmentUserIds[$i])
+                {
+                    $status = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+                }else
+                {
+                    $status = TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail();
+
+                }
+
                 $dailyTask = new DailyTask();
                 $dailyTask->user_id = Auth::user()->id;
-                $dailyTask->task_status_id = $doing->id;
-                $dailyTask->start_date = $startDates[$i];
-                $dailyTask->end_date = $endDates[$i];
-                $dailyTask->assignment_user_id = $assignmentUserIds[$i];
+                $dailyTask->task_status_id = $status->id;
+                $dailyTask->start_date = $startDates[$i] ?? NULL; 
+                $dailyTask->end_date = $endDates[$i] ?? NULL;
+                $dailyTask->assignment_user_id = $assignmentUserIds[$i] ?? NULL;
                 $dailyTask->daily_task_category_id = $categoryIds[$i];
                 $dailyTask->daily_task_type_id = $typeIds[$i];
                 $dailyTask->project_id = $dataProjects[$i];
@@ -265,7 +283,7 @@ class DailyTaskController extends Controller
                 }
 
                 $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
-                $this->statusrecord($dailyTask, $doing);
+                $this->statusrecord($dailyTask, $status);
 
             }
 
@@ -360,6 +378,12 @@ class DailyTaskController extends Controller
         DB::beginTransaction();
         try {
             $dailyTask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+
+            if($request->start_date && $request->end_date && $request->assignment_user_id && ($dailyTask->taskStatus->name == ParamSchema::BACKLOG))
+            {
+                $todo = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+                $dailyTask->task_status_id = $todo->id;
+            }
             
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
@@ -434,12 +458,72 @@ class DailyTaskController extends Controller
         }
     }
 
-    public function destroy($slug)
+    public function assign(Request $request, $slug)
+    {
+        $request->validate([
+            'assignment_user_id' => 'required|exists:users,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+        $todo = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+
+        $dailytask->assignment_user_id = $request->assignment_user_id;
+        $dailytask->start_date = $request->start_date;
+        $dailytask->end_date = $request->end_date;
+        $dailytask->task_status_id = $todo->id;
+        $dailytask->save();
+
+        $this->message($dailytask->id,'create','Mengalokasikan Tugas '.$dailytask->name.' kepada '.User::find($request->assignment_user_id)->name);
+
+        return redirect()->back()->with('assign', true);
+    }
+
+    public function updatestatus (Request $request)
+    {
+        $task = DailyTask::byCompany(Auth::user()->company_id)->find($request->taskId);
+        if (!$task->assign) {
+            return response()->json(['success' => false, 'message' => 'Silakan pilih pengguna yang ditugaskan, tanggal mulai, dan tanggal selesai terlebih dahulu!']);
+        }
+        elseif ($task) {
+            $currentStatus = TaskStatus::find($task->task_status_id);
+            $newStatus = TaskStatus::where('name', $request->newStatus)->first();
+            if($newStatus && ($newStatus->name == ParamSchema::COMPLATE || $newStatus->name == ParamSchema::NOTCOMPLATE))
+            {
+                return response()->json(['success' => false, 'message' => 'Status tugas '.$newStatus->name.' tidak dapat diubah manual']);
+            }
+            elseif ($newStatus) {
+                // Check if the new status sort order is not less than the current status sort order
+                if ($newStatus->sort >= $currentStatus->sort) {
+                    $task->task_status_id = $newStatus->id;
+                    $task->save();
+
+                    $this->statusrecord($task, $newStatus);
+
+                    return response()->json(['success' => true, 'message' => 'Status tugas berhasil diperbarui!']);
+                } else {
+                    return response()->json(['success' => false, 'message' => 'Tidak dapat memindahkan tugas ke status sebelumnya.']);
+                }
+            }
+        }
+        return response()->json(['success' => false, 'message' => 'Tugas atau status tidak valid.']);
+    }
+
+
+
+    public function destroy(Request $request, $slug)
     {
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $dailytask->delete();
 
-        return redirect()->back()->with('delete',true) ;
+        if($request->redirect)
+        {
+            return redirect()->route('dailytask.index')->with('delete',true);
+        }else
+        {
+            return redirect()->back()->with('delete',true);
+        }
     }
 
     public function report(Request $request, $slug)
@@ -518,7 +602,9 @@ class DailyTaskController extends Controller
         try {
             //code...
             $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
-
+            $dailytask->report_note = $request->note;
+            $dailytask->save();
+            
             if ($request->hasFile('media'))
             {
                 foreach ($request->file('media') as $file) {
@@ -694,13 +780,21 @@ class DailyTaskController extends Controller
     public function storesubtask(DailyTaskSubTaskRequest $request,$slug)
     {
         $dailyTaskHead = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
-        $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+
+        if($request->start_date && $request->end_date && $request->user_id)
+        {
+            $status = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+        }else
+        {
+            $status = TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail();
+        }
 
         DB::beginTransaction();
         try {
+
             $dailyTask = new DailyTask();
             $dailyTask->user_id = Auth::user()->id;
-            $dailyTask->task_status_id = $doing->id;
+            $dailyTask->task_status_id = $status->id;
             $dailyTask->child_daily_task_id = $dailyTaskHead->id;
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
@@ -746,7 +840,7 @@ class DailyTaskController extends Controller
             }
 
             $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
-            $this->statusrecord($dailyTask, $doing);
+            $this->statusrecord($dailyTask, $status);
 
             
             DB::commit();

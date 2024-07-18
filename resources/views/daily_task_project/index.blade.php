@@ -28,6 +28,9 @@
             <tr>
                 <td>{{ $project->name }}</td>
                 <td>
+                    @canAccess('kanban','daily_task_projects')
+                    <a href="{{ route('daily_task_project.kanban', $project->slug) }}" class="btn btn-sm btn-info"><i class="fa fa-columns"></i></a>
+                    @endcanAccess
                     @canAccess('showproject','daily_task_projects')
                     <a href="{{ route('daily_task_project.showproject', $project->slug) }}" class="btn btn-sm btn-warning"><i class="fa fa-tasks"></i></a>
                     @endcanAccess
