@@ -21,7 +21,9 @@ class ObjectiveKeyResult extends Model
     public function setResultAttribute($value)
     {
         $this->attributes['result'] = $value;
-        $this->attributes['slug'] = $this->createUniqueSlug($value);
+        if (empty($this->attributes['slug'])) {
+            $this->attributes['slug'] = $this->createUniqueSlug($value);
+        }
     }
 
     protected function createUniqueSlug($title)

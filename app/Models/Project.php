@@ -30,8 +30,12 @@ class Project extends Model
 
     public function setTitleAttribute($value)
     {
-        $this->attributes['title'] = $value;
-        $this->attributes['slug'] = $this->createUniqueSlug($value);
+        if ($this->attributes['title'] ?? null !== $value) {
+            $this->attributes['title'] = $value;
+            $this->attributes['slug'] = $this->createUniqueSlug($value);
+        } else {
+            $this->attributes['title'] = $value;
+        }
     }
 
     public function dailyTaskProjects()

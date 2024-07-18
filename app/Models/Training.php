@@ -33,7 +33,9 @@ class Training extends Model
     public function setNameAttribute($value)
     {
         $this->attributes['name'] = $value;
-        $this->attributes['slug'] = $this->createUniqueSlug($value);
+        if (empty($this->attributes['slug'])) {
+            $this->attributes['slug'] = $this->createUniqueSlug($value);
+        }
     }
 
     protected function createUniqueSlug($title)
