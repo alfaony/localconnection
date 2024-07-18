@@ -14,9 +14,9 @@ class DailyTaskSubTaskRequest extends FormRequest
     public function rules()
     {
         return [
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'assignment_user_id' => 'nullable|uuid',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'assignment_user_id' => 'nullable|uuid|exists:users,id',
             'child_daily_task_id' => 'nullable|uuid',
             'category_id' => 'nullable|string',
             'name' => 'required|string|max:255',
@@ -35,6 +35,7 @@ class DailyTaskSubTaskRequest extends FormRequest
             'user_id.required' => 'ID pengguna harus diisi.',
             'user_id.uuid' => 'ID pengguna harus berupa UUID yang valid.',
             'assignment_user_id.uuid' => 'ID pengguna penugasan harus berupa UUID yang valid.',
+            'assignment_user_id.exists' => 'ID pengguna penugasan tidak valid.',
             'child_daily_task_id.uuid' => 'ID tugas harian anak harus berupa UUID yang valid.',
             'category_id.required' => 'ID kategori harus diisi.',
             'category_id.uuid' => 'ID kategori harus berupa UUID yang valid.',

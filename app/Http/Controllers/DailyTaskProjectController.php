@@ -66,6 +66,11 @@ class DailyTaskProjectController extends Controller
                 ]);
     
                 // Create options
+                if(!isset($request->custom_field_value))
+                {
+                    return redirect()->back()->withError('Custom field value Harus diisi');
+                }
+
                 $ordering = 1;
                 foreach ($request->custom_field_value[$index] as $value) {
                     DailyTaskProjectCustomFieldValue::create([
@@ -108,15 +113,55 @@ class DailyTaskProjectController extends Controller
         return view('daily_task_project.show',compact('statusSelect','project'));
     }
 
+    public function kanban($slug)
+    {
+        $project = DailyTaskProject::where('slug', $slug)->firstOrFail();
+        $statuses = TaskStatus::orderBy('sort')->get();
+        $users = User::byCompany(Auth::user()->company_id)->get();
+
+        $tasks = DailyTask::where('daily_task_project_id', $project->id)
+                            ->with('taskStatus')
+                            ->get()
+                            ->sortBy('taskStatus.sort')
+                            ->groupBy('taskStatus.name');
+        
+        $tasksByStatus = $statuses->mapWithKeys(function ($status) use ($tasks) {
+            return [$status->name => $tasks->get($status->name, collect())];
+        });
+        
+        return view('daily_task_project.kanban', compact('project', 'tasksByStatus', 'statuses', 'users'));
+    }
+    public function updateTaskFields(Request $request)
+    {
+        $task = DailyTask::find($request->taskId);
+        $task->start_date = $request->startDate;
+        $task->end_date = $request->endDate;
+        $task->assign_user_id = $request->assignUserId;
+        $task->task_status_id = TaskStatus::where('name', $request->newStatus)->first()->id;
+        $task->save();
+
+        return response()->json(['success' => true, 'task' => $task->load('assign')]);
+    }
+
+    public function updatestatus(Request $request)
+    {
+        $task = DailyTask::find($request->taskId);
+        $task->task_status_id = TaskStatus::where('name', $request->newStatus)->first()->id;
+        $task->save();
+
+        return response()->json(['success' => true]);
+    }
+
     public function showproject(Request $request, $slug)
     {
         // Ambil filter dari request
         $userFilter = $request->input('user');
         $statusFilter = $request->input('status');
         $search = $request->input('task_name');
+        $customFieldvalue = $request->input('custom_field_value');
         
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
-        $taskStatuss = TaskStatus::all(); // Ambil semua status tugas
+        $taskStatuss = TaskStatus::bySort(true)->get(); // Ambil semua status tugas
         $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $customFields = $project->customFields;
 
@@ -131,6 +176,14 @@ class DailyTaskProjectController extends Controller
                     $q->where('name', $userFilter);
                 });
             }
+        }
+
+        if ($customFieldvalue) 
+        {
+                $query->whereHas('customFieldValues', function ($q) use ($customFieldvalue) 
+                {
+                    $q->where('custom_field_value_id', $customFieldvalue);
+                });
         }
 
         // Filter berdasarkan status
@@ -301,15 +354,17 @@ class DailyTaskProjectController extends Controller
         return view('partials.custom-fields', compact('customFields', 'selectedValues','index','project','dataProyek'));
     }
 
-    public function createdailytask($slug)
+    public function createdailytask(Request $request, $slug)
     {
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
         $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
         $types = DailyTaskType::get();
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
-        $taskStatuss = TaskStatus::all(); // Ambil semua status tugas
+        $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
         $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $customFields = $project->customFields;
+        $redirect = $request->redirect ?? 'daily_task_project.showproject';
+
 
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
@@ -326,7 +381,7 @@ class DailyTaskProjectController extends Controller
             })->get();
         }
 
-        return view('daily_task_project.create_daily_task', compact('project', 'users', 'taskStatuss', 'objectives', 'projects', 'categories', 'childTasks', 'types', 'customFields'));
+        return view('daily_task_project.create_daily_task', compact('project', 'users', 'taskStatuss', 'objectives', 'projects', 'categories', 'childTasks', 'types', 'customFields', 'redirect'));
     }
 
 }

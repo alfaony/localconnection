@@ -74,6 +74,8 @@ Auth::routes([
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+
+
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
   Route::resource('project', ProjectController::class);
@@ -187,6 +189,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
   Route::resource('dailytask', DailyTaskController::class);
   
+  Route::get('daily_task_project/kanban/{slug}', [DailyTaskProjectController::class,'kanban'])->name('daily_task_project.kanban');
+  Route::post('dailytask/updatestatus', [DailyTaskController::class, 'updatestatus'])->name('dailytask.updatestatus');
+  Route::put('dailytask/assign/{slug}', [DailyTaskController::class, 'assign'])->name('dailytask.assign');
   Route::put('daily_task_project/customfieldstore/{slug}', [DailyTaskProjectController::class, 'customfieldstore'])->name('customfieldstore');
   Route::put('daily_task_project/customfieldupdate/{id}', [DailyTaskProjectController::class, 'customfieldupdate'])->name('customfieldupdate');
   Route::delete('daily_task_project/customfielddestroy/{id}', [DailyTaskProjectController::class, 'customfielddestroy'])->name('customfielddestroy');

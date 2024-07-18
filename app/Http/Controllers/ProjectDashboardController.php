@@ -108,6 +108,7 @@ class ProjectDashboardController extends Controller
                 'task_status' => $task->taskStatus->name, // Change to 'name' to simplify sorting
                 'date_show' => $task->date_show,
                 'user_create' => $task->user ? $task->user->name : '',
+                'user_assign' => $task->assign ? $task->assign->name : '',
                 'url' => $url,
             ];
         });

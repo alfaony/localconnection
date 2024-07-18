@@ -32,7 +32,11 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{{ route('dailytask.index') }}">Tugas Harian</a></li>
                 @if($dailytask->head)
+                    @if(!$dailytask->head->deleted_at)
                     <li class="breadcrumb-item"><a href="{{ route('dailytask.show', $dailytask->head->slug) }}">{{ $dailytask->head->name }}</a></li>
+                    @else
+                    <li class="breadcrumb-item active" aria-current="page">{{ $dailytask->head->name ?? '' }}</li>
+                    @endif
                 @endif
                 <li class="breadcrumb-item active" aria-current="page">{{ $dailytask->nameShow ?? '' }}</li>
             </ol>
@@ -91,7 +95,7 @@
                         <label for="start_date" class="col-sm-4 col-form-label">Tanggal:</label>
                         <div class="col-sm-8">
                             <p class="form-control-plaintext {{ $isOverdue ? 'text-danger' : '' }}">
-                                {{ $startDate->format('d-m-Y') }} - {{ $endDate->format('d-m-Y') }}
+                                {{ $dailytask->dateShow }}
                             </p>
                         </div>
                     </div>
@@ -124,6 +128,9 @@
                         <div class="col-sm-8">
                             <p class="form-control-plaintext">
                                 @switch($dailytask->taskStatus->name)
+                                    @case('backlog')
+                                        <i class="fa fa-clipboard-list"></i> Backlog
+                                        @break
                                     @case('todo')
                                         <i class="fa fa-list-alt"></i> Todo
                                         @break
@@ -405,8 +412,8 @@
 
                         @if($dailytask->taskStatus->name != \App\Schemas\ParamSchema::COMPLATE)
                             @canAccess('updatemedia','dailytasks')
-                            <button class="btn btn-success mb-3" data-toggle="modal" data-target="#uploadModal">
-                                <i class="fa fa-upload"></i> Upload Lampiran
+                            <button class="btn btn-success mb-3" id="btn-modal-edit" data-description="{{ $dailytask->report_note ?? '' }}" data-decription="{{ $dailytask->report_note ?? '' }}" data-toggle="modal" data-target="#uploadModal">
+                                <i class="fa fa-upload"></i> Edit Lampiran
                             </button>
                             @endcanAccess
                         @endif
@@ -485,11 +492,34 @@
                 </div>
             </div>
             <div class="d-flex justify-content-start mt-4">
-                @if($dailytask->user_id == Auth::user()->id)
                 @canAccess('edit','dailytasks')
+                @if($dailytask->user_id == Auth::user()->id)
                 <a href="{{ route('dailytask.edit', $dailytask->slug) }}" class="btn btn-info"><i class="fa fa-edit"></i> Edit</a>
                 @endif
                 @endcanAccess
+
+                @if(!$dailytask->approved)
+                <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
+                    @csrf
+                    @method('DELETE')
+                    @canAccess('destroy','dailytasks')
+                    <input type="hidden" name="redirect" value="index">
+                    <button type="button" class="btn btn-danger ml-2 delete-button"><i class="fa fa-trash"></i> Delete</button>
+                    @endcanAccess
+                </form>
+                @else
+                    @if(Auth::user()->role->name == \App\Schemas\RoleSchema::ROOT || Auth::user()->role->name == \App\Schemas\RoleSchema::ADMIN || Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER)
+                    <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
+                        @csrf
+                        @method('DELETE')
+                        @canAccess('destroy','dailytasks')
+                        <input type="hidden" name="redirect" value="index">
+                        <button type="button" class="btn btn-danger ml-2 delete-button"><i class="fa fa-trash"></i> Delete</button>
+                        @endcanAccess
+                    </form>
+                    @endif
+                @endif
+                <button type="button" class="btn btn-primary ml-2 copy-link-button"><i class="fa fa-link"></i> Copy Link</button>
                 <a href="{{ route('dailytask.index') }}" class="btn btn-secondary ml-2"><i class="fa fa-arrow-left"></i> Kembali</a>
             </div>
         </div>
@@ -512,11 +542,11 @@
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="start_date">Tanggal Mulai</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                                <input type="date" class="form-control" id="start_date" name="start_date" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="end_date">Tanggal Selesai</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" required>
+                                <input type="date" class="form-control" id="end_date" name="end_date" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                             </div>
                         </div>
                         <!-- Row for Task Name and Users -->
@@ -527,7 +557,7 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="user_id">Ditugaskan</label>
-                                <select class="form-control select2" id="user_id" name="user_id" required>
+                                <select class="form-control select2" id="user_id" name="user_id" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                                     <option value="">Pilih User</option>
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -545,24 +575,27 @@
                     </form>
 
                     <!-- Existing Sub Tasks -->
-                    <ul class="list-group mt-3" id="existing-ttasks-list">
-                        @foreach($subTasks as $subTask)
-                            @php
-                                $isOverdueSub = $subTask->isOverdue();
-                            @endphp
-                            <li class="list-group-item">
-                                <div class="task-details">
-                                    <span class="task-name">
-                                        <a href="{{ route('dailytask.show', $subTask->slug) }}">{{ Str::limit($subTask->name, 15) }}</a>
-                                    </span>
-                                    <span class="{{ $isOverdueSub ? 'text-danger' : '' }}">
+                    <table class="table mt-3" id="existing-tasks-list">
+                        <tbody>
+                            @foreach($subTasks as $subTask)
+                                @php
+                                    $isOverdueSub = $subTask->isOverdue();
+                                @endphp
+                                <tr>
+                                    <td>
+                                        <a href="{{ route('dailytask.show', $subTask->slug) }}" data-bs-toggle="tooltip" title="{{ $subTask->name }}">{{ Str::limit($subTask->name, 8) }}</a>
+                                    </td>
+                                    <td class="{{ $isOverdueSub ? 'text-danger' : '' }}">
                                         {{ $subTask->dateShow }}
-                                    </span>
-                                    <span>
+                                    </td>
+                                    <td>
                                         @switch($subTask->taskStatus->name)
-                                             @case('todo')
-                                            <i class="fa fa-list-alt"></i>
-                                            @break
+                                            @case('backlog')
+                                                <i class="fa fa-clipboard-list"></i>
+                                                @break
+                                            @case('todo')
+                                                <i class="fa fa-list-alt"></i>
+                                                @break
                                             @case('doing')
                                                 <i class="fa fa-hourglass-start"></i>
                                                 @break
@@ -576,26 +609,27 @@
                                                 <i class="fa fa-check" style="color: green;"></i>
                                                 @break
                                             @default
-                                                {{ $dailytask->taskStatus->name }}
+                                                {{ $subTask->taskStatus->name }}
                                         @endswitch
-                                    </span>
-                                    <span>
+                                    </td>
+                                    <td>
                                         {{ $subTask->assign ? $subTask->assign->name : '' }}
-                                    </span>
-                                </div>
-                                <div class="task-actions">
-                                    <a href="{{ route('dailytask.edit', $subTask->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
-                                    <form action="{{ route('dailytask.destroy', $subTask->slug) }}" method="POST">
-                                        @if($dailytask->user_id == Auth::user()->id)
-                                            @csrf
-                                            @method('DELETE')
-                                            <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
-                                        @endif
-                                    </form>
-                                </div>
-                            </li>
-                        @endforeach
-                    </ul>
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('dailytask.edit', $subTask->slug) }}" class="btn btn-warning btn-sm mr-1"><i class="fa fa-edit"></i></a>
+                                        <form action="{{ route('dailytask.destroy', $subTask->slug) }}" method="POST" style="display:inline-block;">
+                                            @if($subTask->user_id == Auth::user()->id)
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="btn btn-danger ml-2 delete-button btn-sm"><i class="fa fa-trash"></i></button>
+                                            @endif
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+
                     @endcanAccess
                 </div>
             </div>
@@ -667,6 +701,9 @@
                                         <div class="timeline-item">
                                             <div class="timeline-icon">
                                                 @switch($record->taskStatus->name)
+                                                    @case('backlog')
+                                                        <i class="fa fa-clipboard-list"></i>
+                                                        @break
                                                     @case('todo')
                                                         <i class="fa fa-list"></i>
                                                         @break
@@ -717,12 +754,14 @@
                 @method('PUT')
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="uploadModalLabel">Upload More Files</h5>
+                        <h5 class="modal-title" id="uploadModalLabel">Upload More Files & Update Laporan</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body">
+                        <div class="form-group" id="description-noted">
+                        </div>
                         <div class="form-group">
                             <label for="media">Upload Media</label>
                             <input type="file" id="mediaInput" name="media[]" class="form-control" multiple>
@@ -835,7 +874,7 @@
             </div>
         </div>
     </div>
-
+    
     <!-- Add Task Modal -->
     <div class="modal fade" id="addTaskModal" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -859,15 +898,15 @@
                         </div>
                         <div class="form-group">
                             <label for="start_date">Tanggal Mulai</label>
-                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            <input type="date" class="form-control" id="start_date" name="start_date" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                         </div>
                         <div class="form-group">
                             <label for="end_date">Tanggal Berakhir</label>
-                            <input type="date" class="form-control" id="end_date" name="end_date" required>
+                            <input type="date" class="form-control" id="end_date" name="end_date" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                         </div>
                         <div class="form-group">
                             <label for="assignment_user_id">Ditugaskan</label>
-                            <select class="form-control select2" id="assignment_user_id" name="assignment_user_id" required>
+                            <select class="form-control select2" id="assignment_user_id" name="assignment_user_id" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
                                 @foreach($users as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
                                 @endforeach
@@ -928,10 +967,25 @@
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() 
     {
+        $(document).ready(function () {
+            $('#btn-modal-edit').on('click', function (event) {
+                $("#description-noted").html(`
+                    <label for="note">Catatan</label>
+                    <input class="thriveEditor form-control" id="description_note_edit" data-ids="note_edit" name="note" placeholder="yang akan dicetak di perjanjian"/>
+                `);
+
+                var description = $(this).data('description'); // Extract info from data-* attributes
+                var modal = $("#uploadModal");
+                modal.find('#description_note_edit').val(description);
+
+                generateThriveEditor("note_edit", description);
+            });
+        });
+
         $('.select2').select2();
         // Assume you have a dailyTaskId variable available or extract it from the form
         var dailyTaskId = "{{ $dailytask->id }}";
@@ -1060,11 +1114,67 @@ $(document).ready(function() {
     });
 });
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.delete-button').forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                const form = this.closest('form');
+
+                Swal.fire({
+                    title: 'Apakah Anda Yakin Hapus Data?',
+                    text: "Data ini akan dihapus beserta child tasknya!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
+
+    document.querySelectorAll('.copy-link-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const link = window.location.href;
+                navigator.clipboard.writeText(link).then(function() {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Link Tersalin',
+                        text: 'Link berhasil disalin ke clipboard',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    });
+                }, function(err) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Menyalin',
+                        text: 'Terjadi kesalahan saat menyalin link'
+                    });
+                });
+            });
+        });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
 @endsection
 
 @section('css')
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -1215,4 +1325,45 @@ $(document).ready(function() {
         font-size: 14px;
     }
 </style>
+<style>
+    .task-details {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+    }
+
+    @media (min-width: 768px) {
+        .task-details {
+            flex-direction: row;
+        }
+    }
+
+    .task-actions {
+        display: flex;
+        align-items: center;
+    }
+
+    .task-details span,
+    .task-details a {
+        margin-right: 10px;
+    }
+
+    .list-group-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .task-name {
+        min-width: 120px;
+        max-width: 150px;
+    }
+
+    .task-details > span,
+    .task-details > a {
+        white-space: nowrap;
+    }
+</style>
+
 @endsection

@@ -63,6 +63,11 @@ class DailyTaskProject extends Model
     {
         return $this->hasMany(DailyTaskProjectCustomField::class);
     }
+    
+    public function customFieldValues()
+    {
+        return $this->hasMany(DailyTask::class);
+    }
 
     public function tasks()
     {
