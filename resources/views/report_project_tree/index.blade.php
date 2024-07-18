@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 tasks.forEach(task => {
                     let statusIcon = '';
                     let url = '';
-                    switch (task.task_status.name) {
+                    switch (task.task_status) {
                         case 'todo':
                             statusIcon = '<i class="fa fa-list-alt"></i>';
                             break;
@@ -377,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     tasksHtml += `<tr>
                                     <td>${task.name_show}</td>
-                                    <td>${statusIcon} ${task.task_status.name}</td>
+                                    <td>${statusIcon} ${task.task_status}</td>
                                     <td>${date_show}</td>
                                     <td>${task.user_create}</td>
                                     <td>

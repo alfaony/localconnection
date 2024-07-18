@@ -93,24 +93,41 @@ class ProjectDashboardController extends Controller
         } elseif ($filter === 'upcoming') {
             $query->where('end_date', '>=', $today);
         }
-        
+
         $tasks = $query->get()->map(function ($task) {
             $url = NULL;
             if (Access::can('show', 'dailytasks')) {
                 $url = route('dailytask.show', $task->slug);
             }
             
-            $headName = $task->head ? "< ". Str::limit($task->head->name,40) : '';
+            $headName = $task->head ? "< ". Str::limit($task->head->name, 40) : '';
 
             return [
                 'is_overdue' => $task->isOverdue(),
                 'name_show' => $task->nameShow.' '.$headName,
-                'task_status' => $task->taskStatus,
+                'task_status' => $task->taskStatus->name, // Change to 'name' to simplify sorting
                 'date_show' => $task->date_show,
                 'user_create' => $task->user ? $task->user->name : '',
                 'url' => $url,
             ];
         });
+
+        // Sort the tasks by status
+        $tasks = $tasks->sortBy(function ($task) {
+            switch ($task['task_status']) {
+                case ParamSchema::DOING:
+                    return 1;
+                case ParamSchema::TODO:
+                    return 2;
+                case ParamSchema::NOTCOMPLATE:
+                    return 3;
+                case ParamSchema::INREVIEW:
+                    return 4; // If you want to handle 'not complete' tasks as well
+                default:
+                    return 5; // Default sorting for any other statuses
+            }
+        })->values(); // Reindex the collection after sorting
+
         return response()->json($tasks);
     }
 }
