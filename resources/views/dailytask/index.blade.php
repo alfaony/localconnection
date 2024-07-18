@@ -186,7 +186,7 @@
                                 @csrf
                                 @method('DELETE')
                                 @canAccess('destroy','dailytasks')
-                                <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                <button type="button" class="btn btn-danger delete-button btn-sm"><i class="fa fa-trash"></i></button>
                                 @endcanAccess
                                 @endif
                             </form>
@@ -205,7 +205,7 @@
                                 @csrf
                                 @method('DELETE')
                                 @canAccess('destroy','dailytasks')
-                                <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                                <button type="button" class="btn btn-danger delete-button btn-sm"><i class="fa fa-trash"></i></button>
                                 @endcanAccess
                             </form>
                             @endif
@@ -227,6 +227,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function () {
         // Initialize Select2
@@ -257,12 +258,38 @@
         });
     });
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.delete-button').forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                const form = this.closest('form');
+
+                Swal.fire({
+                    title: 'Apakah Anda Yakin Hapus Data?',
+                    text: "Data ini akan dihapus beserta child tasknya!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
+</script>
 @endsection
 
 @section('css')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
     body {
         font-family: Arial, sans-serif;

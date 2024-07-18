@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fetch(url.replace(':userId', userId))
             .then(response => response.json())
             .then(tasks => {
-                let tasksHtml = '<table class="table table-bordered"><thead><tr><th>Tugas</th><th>Status</th><th>Tanggal</th><th>Dibuat</th><th>Action</th></tr></thead><tbody>';
+                let tasksHtml = '<table class="table table-bordered"><thead><tr><th>Tugas</th><th>Status</th><th>Tanggal</th><th>Dibuat</th><th>Ditugaskan</th><th>Action</th></tr></thead><tbody>';
                 tasks.forEach(task => {
                     let statusIcon = '';
                     let url = '';
@@ -380,6 +380,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <td>${statusIcon} ${task.task_status.name}</td>
                                     <td>${date_show}</td>
                                     <td>${task.user_create}</td>
+                                    <td>${task.user_assign}</td>
                                     <td>
                                         ${url}
                                     </td>
