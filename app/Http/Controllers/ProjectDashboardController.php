@@ -114,7 +114,7 @@ class ProjectDashboardController extends Controller
             ];
         });
 
-        // Sort the tasks by status
+        // Sort the tasks by status 
         $tasks = $tasks->sortBy(function ($task) {
             switch ($task['task_status']) {
                 case ParamSchema::DOING:
@@ -130,6 +130,7 @@ class ProjectDashboardController extends Controller
             }
         })->values(); // Reindex the collection after sorting
 
+        // for each status, sort by start_date in descending order
         $sortedTasks = $tasks->groupBy('task_status')->map(function ($group) {
             return $group->sortByDesc('start_date');
         })->flatten(1)->values(); // Reindex the collection after flattening
