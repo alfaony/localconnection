@@ -110,6 +110,7 @@ class ProjectDashboardController extends Controller
                 'user_create' => $task->user ? $task->user->name : '',
                 'user_assign' => $task->assign ? $task->assign->name : '',
                 'url' => $url,
+                'start_date' => $task->start_date, // Add start_date to use it in sorting
             ];
         });
 
@@ -129,6 +130,10 @@ class ProjectDashboardController extends Controller
             }
         })->values(); // Reindex the collection after sorting
 
-        return response()->json($tasks);
+        $sortedTasks = $tasks->groupBy('task_status')->map(function ($group) {
+            return $group->sortByDesc('start_date');
+        })->flatten(1)->values(); // Reindex the collection after flattening
+    
+        return response()->json($sortedTasks);
     }
 }
