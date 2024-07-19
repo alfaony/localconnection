@@ -772,6 +772,7 @@
                     $("#service_fee_result").html(values.service_fee);
                     $("#ppn_result").html(values.ppn);
                     $("#ppn_title").html('PPN: ' +tax+ '%');
+                    
                     $("#grand_total_result").html(values.grand_total);
                     
                     $('#budget_usage_row').hide();
