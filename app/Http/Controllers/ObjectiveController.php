@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 use App\Http\Requests\ObjectiveStoreRequest;
+use App\Schemas\RoleSchema;
 
 use App\Models\Objective;
 use App\Models\Division;
@@ -27,9 +28,17 @@ class ObjectiveController extends Controller
      */
     public function index()
     {
-        $objectives = Objective::byCompany(Auth::user()->company_id)
-        ->byUserDivisions(Auth::user()->id)
-        ->paginate(10);
+        $query = Objective::query();
+        $userRoleName = Auth::user()->role->name;
+        if($userRoleName == RoleSchema::ROOT || $userRoleName == RoleSchema::ADMIN || $userRoleName == RoleSchema::DIRECTOR)
+        {
+            $query->byCompany(Auth::user()->company_id);
+        }else
+        {
+            $query->byUserDivisions(Auth::user()->id);
+            
+        }
+        $objectives =  $query->paginate(10);
         $divisions = Division::byCompany(Auth::user()->company_id)->get();
         return view('objective.index', compact('objectives', 'divisions'));
     }
