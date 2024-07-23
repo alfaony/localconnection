@@ -140,10 +140,6 @@ class DailyTask extends Model
     {
         return $this->belongsToMany(ObjectiveKeyResult::class);
     }
-
-    
-
-    
     public function statusRecords()
     {
         return $this->hasMany(DailyTaskStatusRecord::class);
