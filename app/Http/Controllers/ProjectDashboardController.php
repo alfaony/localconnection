@@ -110,6 +110,8 @@ class ProjectDashboardController extends Controller
                 'user_create' => $task->user ? $task->user->name : '',
                 'user_assign' => $task->assign ? $task->assign->name : '',
                 'url' => $url,
+                'main_project' => $task->project ? $task->project->name : '',
+                'data_project' => $task->dataProject ? $task->dataProject->title : '',
                 'start_date' => $task->start_date, // Add start_date to use it in sorting
             ];
         });
