@@ -1036,6 +1036,7 @@ class DailyTaskController extends Controller
     {
         // Temukan tugas asli berdasarkan slug
         // Buat salinan tugas asli
+        
         $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
 
         $newTask = $dailytask->replicate();
@@ -1052,6 +1053,12 @@ class DailyTaskController extends Controller
         $newTask->point = 0; // Assuming default value is 0
         // Simpan tugas baru
         $newTask->save();
+        
+        $keyResults = $dailytask->keyResults;
+        foreach ($keyResults as $keyResult) 
+        {
+            $newTask->keyResults()->attach($keyResult->id);
+        }
 
         $this->message($newTask->id,'create',' System Recurring Tugas '.$newTask->name,null);
         return true;
