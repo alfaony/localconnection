@@ -159,7 +159,7 @@ class DailyTask extends Model
                 $days = $startDate->diffInDays($submitDate) + 1;
                 return "{$days} Hari";
             } else {
-                $days = $submitDate->diffInDays($startDate);
+                $days = $submitDate->diffInDays($endDate);
                 return "Terlambat {$days} Hari";
             }
         }
