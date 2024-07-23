@@ -30,7 +30,7 @@ class ObjectiveController extends Controller
     {
         $userRoleName = Auth::user()->role->name;
         $query = Objective::query();
-
+        
         if( ($userRoleName != RoleSchema::ROOT )  && ( $userRoleName != RoleSchema::ADMIN ) && ( $userRoleName != RoleSchema::DIRECTOR ))
         {
             $query->byUserDivisions(Auth::user()->id);
