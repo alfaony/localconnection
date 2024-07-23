@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DivisionBudget;
 use App\Models\Division;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Auth;
 
 use App\Schemas\RoleSchema;
@@ -44,13 +45,26 @@ class DivisionBudgetController extends Controller
             'division_id' => 'required|exists:divisions,id',
             'name' => 'required|string|max:255',
             'amount' => 'required|integer|min:0',
+            'file.*' => 'nullable|mimes:pdf,doc,docx,xls,xlsx|max:1024', // Validasi untuk file
         ]);
+
+        $files = [];
+        if ($request->hasFile('file')) {
+            foreach ($request->file('file') as $file) {
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $extension = $file->getClientOriginalExtension();
+                $fileName = $originalName . '_' . uniqid() . '.' . $extension;
+                $path = $file->storeAs('file', $fileName, 'public');
+                $files[] = $path;
+            }
+        }
 
         DivisionBudget::create([
             'user_id' => Auth::id(),
             'division_id' => $request->division_id,
             'name' => $request->name,
             'amount' => $request->amount,
+            'file' => json_encode($files), // Simpan file dalam bentuk JSON
         ]);
 
         return redirect()->route('division-budget.index')->with('store', 'Pengajuan anggaran berhasil dibuat.');
@@ -95,15 +109,32 @@ class DivisionBudgetController extends Controller
         return view('division_budget.show', compact('divisionBudget', 'initialBudget'));
     }
 
-    public function destroy($slug)
+    public function destroy(Request $request, $slug)
     {
         $divisionBudget = DivisionBudget::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-        if($divisionBudget->is_approved == TRUE)
+
+        if($request->file && $request->action)
         {
-            return redirect()->route('division-budget.index')->with('error', 'Pengajuan anggaran tidak bisa diubah karena sudah diapprove.'); 
+            $files = json_decode($divisionBudget->file);
+
+            $filePath = urldecode($request->file);
+            if (($key = array_search($filePath, $files)) !== false) {
+                unset($files[$key]);
+                Storage::delete($filePath);
+                $divisionBudget->file = json_encode(array_values($files));
+                $divisionBudget->save();
+            }
+
+            return redirect()->back()->with('delete', 'File berhasil dihapus.');
+        }else
+        {
+            if($divisionBudget->is_approved == TRUE)
+            {
+                return redirect()->route('division-budget.index')->with('error', 'Pengajuan anggaran tidak bisa diubah karena sudah diapprove.'); 
+            }
+            $divisionBudget->delete();
+            return redirect()->route('division-budget.index')->with('delete', 'Pengajuan anggaran berhasil dihapus.');
         }
-        $divisionBudget->delete();
-        return redirect()->route('division-budget.index')->with('delete', 'Pengajuan anggaran berhasil dihapus.');
     }
 
     public function approve(Request $request, $slug)

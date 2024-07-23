@@ -7,9 +7,18 @@
 @endsection
 
 @section('content')
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="card">
     <div class="card-body">
-        <form action="{{ @$divisionBudget ? route('division-budget.update', $divisionBudget->slug) : route('division-budget.store') }}" method="post">
+        <form action="{{ @$divisionBudget ? route('division-budget.update', $divisionBudget->slug) : route('division-budget.store') }}" method="post" enctype="multipart/form-data">
             @csrf
             @if(@$divisionBudget)
             @method('PUT')
@@ -27,6 +36,11 @@
             <div class="form-group">
                 <label for="name">Nama Anggaran</label>
                 <input type="text" name="name" id="name" class="form-control" value="{{ old('name') ?? @$divisionBudget->name }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="name">File Pendukung</label>
+                <input type="file" name="file[]" id="file" class="form-control" multiple accept=".pdf, .doc, .docx, .xls, .xlsx">
             </div>
 
             <div class="form-group">
@@ -54,6 +68,30 @@
             document.getElementById("amount_show").value = amount;
             formatRupiahFormat(document.getElementById("amount_show"),"amount"); // Format default value
         }
+
+        $('#mediaReport').on('change', function() 
+        {
+            var maxFileSize = 1 * 1024 * 1024; // 5MB in bytes
+            var files = this.files;
+            var validFiles = [];
+
+            for (var i = 0; i < files.length; i++) {
+                if (files[i].size > maxFileSize) {
+                    alert('File ' + files[i].name + ' terlalu besar dan akan dihapus. Batas maksimal 1 Mb');
+                } else {
+                    validFiles.push(files[i]);
+                }
+            }
+
+            // Clear the input and add back the valid files
+            $(this).val('');
+            var dataTransfer = new DataTransfer();
+            for (var j = 0; j < validFiles.length; j++) {
+                dataTransfer.items.add(validFiles[j]);
+            }
+            this.files = dataTransfer.files;
+        });
+
     });
     function formatRupiahFormat(input, inputNonFormat) 
     {
