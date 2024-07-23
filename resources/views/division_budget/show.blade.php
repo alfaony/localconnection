@@ -89,7 +89,9 @@
                                         @canAccess('destroy','division_budgets')
                                         @csrf
                                         @method('DELETE')
+                                        @if($file && $divisionBudget->is_approved != 1)
                                         <button type="submit" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Delete</button>
+                                        @endif
                                         @endcanAccess
                                     </form>
                                 </td>

@@ -91,12 +91,26 @@ class DivisionBudgetController extends Controller
         ]);
 
         $divisionBudget = DivisionBudget::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-        $divisionBudget->update([
-            'division_id' => $request->division_id,
-            'name' => $request->name,
-            'amount' => $request->amount,
-            'is_approved' => NULL,
-        ]);
+
+        $divisionBudget->division_id = $request->division_id;
+        $divisionBudget->name = $request->name;
+        $divisionBudget->amount = $request->amount;
+        $divisionBudget->is_approved = NULL;
+
+        if ($request->hasFile('file')) {
+            $existingFiles = json_decode($divisionBudget->file, true) ?? [];
+            $newFiles = [];
+            foreach ($request->file('file') as $file) {
+                $filename = $file->getClientOriginalName();
+                $uniqueFilename = pathinfo($filename, PATHINFO_FILENAME) . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('files', $uniqueFilename);
+                $newFiles[] = $path;
+            }
+            $allFiles = array_merge($existingFiles, $newFiles);
+            $divisionBudget->file = json_encode($allFiles);
+        }
+
+        $divisionBudget->save();
 
         return redirect()->route('division-budget.index')->with('update', 'Pengajuan anggaran berhasil diubah.');
     }
@@ -113,7 +127,7 @@ class DivisionBudgetController extends Controller
     {
         $divisionBudget = DivisionBudget::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
 
-        if($request->file && $request->action)
+        if($request->action)
         {
             $files = json_decode($divisionBudget->file);
 
@@ -132,6 +146,15 @@ class DivisionBudgetController extends Controller
             {
                 return redirect()->route('division-budget.index')->with('error', 'Pengajuan anggaran tidak bisa diubah karena sudah diapprove.'); 
             }
+
+            if ($divisionBudget->file) {
+                $files = json_decode($divisionBudget->file);
+                foreach ($files as $file) 
+                {
+                    Storage::delete($file);
+                }
+            }
+    
             $divisionBudget->delete();
             return redirect()->route('division-budget.index')->with('delete', 'Pengajuan anggaran berhasil dihapus.');
         }

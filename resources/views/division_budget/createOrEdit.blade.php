@@ -40,7 +40,7 @@
 
             <div class="form-group">
                 <label for="name">File Pendukung</label>
-                <input type="file" name="file[]" id="file" class="form-control" multiple accept=".pdf, .doc, .docx, .xls, .xlsx">
+                <input type="file" id="mediaReport" name="file[]" id="file" class="form-control" multiple accept=".pdf, .doc, .docx, .xls, .xlsx">
             </div>
 
             <div class="form-group">
