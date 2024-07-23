@@ -138,10 +138,10 @@ class DailyTaskController extends Controller
             });
         }
         // Paginate hasil query
-        $dailyTasksTes = $query->get();
+        // $dailyTasksTes = $query->get();
 
         // dd($dailyTasksTes);
-        $dailyTasks = $query->paginate(10);
+        $dailyTasks = $query->byCompany(Auth::user()->company_id)->paginate(10);
 
         // Ambil data lain yang diperlukan untuk form
         $taskTimeFrame = [
