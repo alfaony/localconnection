@@ -98,6 +98,7 @@ class DailyTaskController extends Controller
                 });
             }
         }
+        
         else
         {
             $query->UserTasks($userId->id);
