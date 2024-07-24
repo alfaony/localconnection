@@ -255,6 +255,7 @@ class DivisionBudgetController extends Controller
 
         $data['title'] = $subject;
         
+        // Email Helper Notification
         return EmailNotifHelper::sentEmail(
             $fromEmail,
             $fromName,
