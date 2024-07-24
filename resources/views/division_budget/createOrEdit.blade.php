@@ -7,9 +7,18 @@
 @endsection
 
 @section('content')
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="card">
     <div class="card-body">
-        <form action="{{ @$divisionBudget ? route('division-budget.update', $divisionBudget->slug) : route('division-budget.store') }}" method="post">
+        <form action="{{ @$divisionBudget ? route('division-budget.update', $divisionBudget->slug) : route('division-budget.store') }}" method="post" enctype="multipart/form-data">
             @csrf
             @if(@$divisionBudget)
             @method('PUT')
@@ -30,9 +39,18 @@
             </div>
 
             <div class="form-group">
+                <label for="name">File Pendukung</label>
+                <input type="file" id="mediaReport" name="file[]" id="file" class="form-control" multiple accept=".pdf, .doc, .docx, .xls, .xlsx">
+            </div>
+
+            <div class="form-group">
                 <label for="amount">Jumlah Anggaran</label>
                 <input type="text" class="form-control"  id="amount_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'amount')" required/>
                 <input type="hidden" id="amount" name="amount" name="name"  value="{{ old('amount') ?? @$divisionBudget->amount }}">
+            </div>
+            <div class="form-group">
+                <label for="amount">Deskripsi</label>
+                <input type="text" class="thriveEditor" data-ids="divisions" name="description" id="description_divisions" value="{{ old('description') ?? @$divisionBudget->description }}">
             </div>
 
             <div class="form-group">
@@ -45,6 +63,8 @@
 @section('js')
 <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
     $(document).ready(function () 
     {
@@ -54,6 +74,30 @@
             document.getElementById("amount_show").value = amount;
             formatRupiahFormat(document.getElementById("amount_show"),"amount"); // Format default value
         }
+
+        $('#mediaReport').on('change', function() 
+        {
+            var maxFileSize = 1 * 1024 * 1024; // 5MB in bytes
+            var files = this.files;
+            var validFiles = [];
+
+            for (var i = 0; i < files.length; i++) {
+                if (files[i].size > maxFileSize) {
+                    alert('File ' + files[i].name + ' terlalu besar dan akan dihapus. Batas maksimal 1 Mb');
+                } else {
+                    validFiles.push(files[i]);
+                }
+            }
+
+            // Clear the input and add back the valid files
+            $(this).val('');
+            var dataTransfer = new DataTransfer();
+            for (var j = 0; j < validFiles.length; j++) {
+                dataTransfer.items.add(validFiles[j]);
+            }
+            this.files = dataTransfer.files;
+        });
+
     });
     function formatRupiahFormat(input, inputNonFormat) 
     {
@@ -83,4 +127,7 @@
         document.getElementById(inputNonFormat).value = parseInt(numStr);
     }
 </script>
+@stop
+@section('css')
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 @stop

@@ -20,7 +20,7 @@
     @if(Session::get('approve'))
         <div class="alert alert-success mt-3">Anggaran Divisi Berhasil Disetujui</div>
     @endif
-    @if(Session::get('reject'))
+    @if(Session::get('notapprove'))
         <div class="alert alert-danger mt-3">Anggaran Divisi Berhasil Tidak Disetujui</div>
     @endif
 </div>
@@ -41,8 +41,8 @@
                     <th class="col-2">Sisa Anggaran</th>
                     <th class="col-1">Presentase Penyerapan</th>
                     <th class="col-1">Status</th>
-                    <th class="col-1">Aksi</th>
-                    <th class="col-3">Catatan</th>
+                    <th class="col-2">Aksi</th>
+                    <th class="col-2">Catatan</th>
                 </tr>
             </thead>
             <tbody>
@@ -81,6 +81,10 @@
                         <a href="{{ route('division-budget.edit', $budget->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
                         @endcanAccess
 
+                        @canAccess('show','division_budgets')
+                        <a href="{{ route('division-budget.show', $budget->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
+                        @endcanAccess
+                        
                         @canAccess('destroy','division_budgets')
                         <form action="{{ route('division-budget.destroy', $budget->slug) }}" method="POST" style="display:inline-block;">
                             @csrf
