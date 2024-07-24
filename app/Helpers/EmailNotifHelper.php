@@ -57,6 +57,8 @@ class EmailNotifHelper
             }
         } catch (\Exception $e) {
             // dd($e);
+
+            // Log
             ErrorLogHelper::log($e);
             Log::error($e);
             self::emailLog($fromEmail, $fromName, json_encode($toEmails), json_encode($toNames), $subject, $view, json_encode($data), json_encode($smtpConfig), $companyId, NoticeSchema::FALSE, NoticeSchema::FAILED);
