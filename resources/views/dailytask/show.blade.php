@@ -492,32 +492,35 @@
                 </div>
             </div>
             <div class="d-flex justify-content-start mt-4">
+            @if(!$dailytask->approved)
+                <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
+                    @if(($dailytask->user_id == Auth::user()->id) || (Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER && $dailytask->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE))
+                    @canAccess('edit','dailytasks')
+                    <a href="{{ route('dailytask.edit', $dailytask->slug) }}" class="btn btn-warning ml-2"><i class="fa fa-edit"></i> Edit</a>
+                    @endcanAccess
+                    @csrf
+                    @method('DELETE')
+                    @canAccess('destroy','dailytasks')
+                    <button type="button" class="btn btn-danger delete-button ml-2"><i class="fa fa-trash"></i> Delete</button>
+                    @endcanAccess
+                    @endif
+                </form>
+                @else
                 @canAccess('edit','dailytasks')
-                @if($dailytask->user_id == Auth::user()->id)
-                <a href="{{ route('dailytask.edit', $dailytask->slug) }}" class="btn btn-info"><i class="fa fa-edit"></i> Edit</a>
-                @endif
+                @canAccess('approvement','dailytasks')
+                <a href="{{ route('dailytask.edit', $dailytask->slug) }}" class="btn btn-warning ml-2"><i class="fa fa-edit"></i> Edit</a>
+                @endcanAccess
                 @endcanAccess
 
-                @if(!$dailytask->approved)
+                @if(Auth::user()->role->name == \App\Schemas\RoleSchema::ROOT || Auth::user()->role->name == \App\Schemas\RoleSchema::ADMIN || Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER)
                 <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
                     @csrf
                     @method('DELETE')
                     @canAccess('destroy','dailytasks')
-                    <input type="hidden" name="redirect" value="index">
-                    <button type="button" class="btn btn-danger ml-2 delete-button"><i class="fa fa-trash"></i> Delete</button>
+                    <button type="button" class="btn btn-danger delete-button ml-2"><i class="fa fa-trash"></i> Delete</button>
                     @endcanAccess
                 </form>
-                @else
-                    @if(Auth::user()->role->name == \App\Schemas\RoleSchema::ROOT || Auth::user()->role->name == \App\Schemas\RoleSchema::ADMIN || Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER)
-                    <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
-                        @csrf
-                        @method('DELETE')
-                        @canAccess('destroy','dailytasks')
-                        <input type="hidden" name="redirect" value="index">
-                        <button type="button" class="btn btn-danger ml-2 delete-button"><i class="fa fa-trash"></i> Delete</button>
-                        @endcanAccess
-                    </form>
-                    @endif
+                @endif
                 @endif
                 <button type="button" class="btn btn-primary ml-2 copy-link-button"><i class="fa fa-link"></i> Copy Link</button>
                 <a href="{{ route('dailytask.index') }}" class="btn btn-secondary ml-2"><i class="fa fa-arrow-left"></i> Kembali</a>
