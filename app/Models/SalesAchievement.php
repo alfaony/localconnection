@@ -30,7 +30,9 @@ class SalesAchievement extends Model
     public function setPeriodAttribute($value)
     {
         $this->attributes['period'] = $value;
-        $this->attributes['slug'] = $this->createUniqueSlug($value);
+        if (empty($this->attributes['slug'])) {
+            $this->attributes['slug'] = $this->createUniqueSlug($value);
+        }
     }
 
     protected function createUniqueSlug($title)

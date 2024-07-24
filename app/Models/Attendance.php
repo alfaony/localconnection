@@ -49,7 +49,9 @@ class Attendance extends Model
     public function setDateAttribute($value)
     {
         $this->attributes['date'] = $value;
-        $this->attributes['slug'] = $this->createUniqueSlug($value);
+        if (empty($this->attributes['slug'])) {
+            $this->attributes['slug'] = $this->createUniqueSlug($value);
+        }
     }
 
     protected function createUniqueSlug($title)
