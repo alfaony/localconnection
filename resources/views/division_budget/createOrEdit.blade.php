@@ -48,6 +48,10 @@
                 <input type="text" class="form-control"  id="amount_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'amount')" required/>
                 <input type="hidden" id="amount" name="amount" name="name"  value="{{ old('amount') ?? @$divisionBudget->amount }}">
             </div>
+            <div class="form-group">
+                <label for="amount">Deskripsi</label>
+                <input type="text" class="thriveEditor" data-ids="divisions" name="description" id="description_divisions" value="{{ old('description') ?? @$divisionBudget->description }}">
+            </div>
 
             <div class="form-group">
                 <button type="submit" class="btn btn-primary">{{ @$divisionBudget ? 'Ubah' : 'Simpan' }}</button>
@@ -59,6 +63,8 @@
 @section('js')
 <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
     $(document).ready(function () 
     {
@@ -121,4 +127,7 @@
         document.getElementById(inputNonFormat).value = parseInt(numStr);
     }
 </script>
+@stop
+@section('css')
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 @stop

@@ -20,7 +20,7 @@
     @if(Session::get('approve'))
         <div class="alert alert-success mt-3">Anggaran Divisi Berhasil Disetujui</div>
     @endif
-    @if(Session::get('reject'))
+    @if(Session::get('notapprove'))
         <div class="alert alert-danger mt-3">Anggaran Divisi Berhasil Tidak Disetujui</div>
     @endif
 </div>

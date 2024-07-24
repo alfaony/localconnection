@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::table('division_budgets', function (Blueprint $table) {
             $table->json('file')->nullable();
+            $table->text('description')->nullable();
         });
     }
 
@@ -27,6 +28,7 @@ return new class extends Migration
     {
         Schema::table('division_budgets', function (Blueprint $table) {
             $table->dropColumn('file');
+            $table->dropColumn('description');
         });
     }
 };

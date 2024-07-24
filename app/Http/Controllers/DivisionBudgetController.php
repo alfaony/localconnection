@@ -4,8 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\DivisionBudget;
 use App\Models\Division;
+use App\Models\SettingCompany;
+use App\Models\User;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use App\Helpers\EmailNotifHelper;
 use Auth;
 
 use App\Schemas\RoleSchema;
@@ -59,13 +64,16 @@ class DivisionBudgetController extends Controller
             }
         }
 
-        DivisionBudget::create([
+        $budget = DivisionBudget::create([
             'user_id' => Auth::id(),
             'division_id' => $request->division_id,
             'name' => $request->name,
             'amount' => $request->amount,
             'file' => json_encode($files), // Simpan file dalam bentuk JSON
+            'description' => $request->description,
         ]);
+
+        $this->sendNotification($budget, 'store', Auth::user()->company_id);
 
         return redirect()->route('division-budget.index')->with('store', 'Pengajuan anggaran berhasil dibuat.');
     }
@@ -96,6 +104,7 @@ class DivisionBudgetController extends Controller
         $divisionBudget->name = $request->name;
         $divisionBudget->amount = $request->amount;
         $divisionBudget->is_approved = NULL;
+        $divisionBudget->description = $request->description;
 
         if ($request->hasFile('file')) {
             $existingFiles = json_decode($divisionBudget->file, true) ?? [];
@@ -111,6 +120,7 @@ class DivisionBudgetController extends Controller
         }
 
         $divisionBudget->save();
+        $this->sendNotification($divisionBudget, 'update', Auth::user()->company_id);
 
         return redirect()->route('division-budget.index')->with('update', 'Pengajuan anggaran berhasil diubah.');
     }
@@ -171,6 +181,91 @@ class DivisionBudgetController extends Controller
 
         $approvement = $request->status == 1 ? 'approve' : 'notapprove';
 
+        $this->sendNotification($divisionBudget, $approvement, Auth::user()->company_id,true,$request->notes);
+
         return redirect()->route('division-budget.index')->with($approvement, true);
+    }
+
+    protected function sendNotification($budget, $timeNotify, $companyId, $approval = null,  $notes = null)
+    {
+        $data = [
+            'name' => $budget->name,
+            'budget' => $budget->amount,
+            'description' => $budget->description,
+            'division' => $budget->division->name,
+            'user_create' => $budget->user->name,
+            'note' => $notes ?? '',
+            'approver_name' => Auth::user()->name,
+        ];
+        
+        $toEmails = [];
+        $toNames = [];
+        
+        if(!$approval)
+        {
+            $ccEmails = [Auth::user()->email];
+            $usersAdmin = User::where('company_id',Auth::user()->company_id)->whereHas('role', function($q){
+                $q->where('name',RoleSchema::ADMIN)->orWhere('name',RoleSchema::DIRECTOR);
+            })->get();
+
+            if($usersAdmin->isEmpty())
+            {
+                return false;
+            }
+
+            foreach ($usersAdmin as $user) 
+            {
+                $toEmails[] = $user->email;
+                $toNames[] = $user->name;
+            }
+        }else
+        {
+            $toEmails[] = $budget->user->email;
+            $toNames[] = $budget->user->name;
+            $ccEmails = [Auth::user()->email];
+        }
+
+
+        $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $fromEmail = $smtpConfig['username'] ?? '';
+        $fromName = $smtpConfig['name'] ?? '';
+
+        switch ($timeNotify) 
+        {
+            case "store":
+                $subject = 'Pemberitahuan Pengajuan Anggaran '.$budget->name;
+                $tamplate = 'email.notif_budgetting';
+                break;
+
+            case "update":
+                $subject = 'Pemberitahuan Perubahan Anggaran '.$budget->name;
+                $tamplate = 'email.notif_budgetting';
+                break;
+
+            case "approve":
+                $subject = 'Anggaran '.$budget->name.' Disetujui';
+                $tamplate = 'email.notif_budget_approval';
+                break;
+
+            case "notapprove":
+                $subject = 'Anggaran '.$budget->name.' Tidak Disetujui';
+                $tamplate = 'email.notif_budget_decline';
+                break;
+        }
+
+        $data['title'] = $subject;
+        
+        return EmailNotifHelper::sentEmail(
+            $fromEmail,
+            $fromName,
+            $toEmails, 
+            $toNames, 
+            $subject,
+            $tamplate,
+            $data, 
+            $smtpConfig, 
+            $companyId, 
+            $ccEmails
+        );
     }
 }

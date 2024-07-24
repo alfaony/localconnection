@@ -29,6 +29,10 @@
                 <p><strong>Anggaran Awal:</strong> Rp {{ number_format($divisionBudget->initial_budget, 0, ',', '.') }}</p>
                 <p><strong>Sisa Anggaran:</strong> Rp {{ number_format($divisionBudget->amount, 0, ',', '.') }}</p>
             </div>
+            <div class="col-md-12">
+                <h6><Strong>Deskripsi</Strong></h6>
+                {!! $divisionBudget->description !!}
+            </div>
         </div>
 
         <h4 class="mb-3">Quotes</h4>
