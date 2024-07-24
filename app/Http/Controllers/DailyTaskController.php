@@ -363,7 +363,7 @@ class DailyTaskController extends Controller
             // You can return an empty collection or a message, or redirect
             return redirect()->route('dailytask.index')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
         } else {
-            // Proceed with fetching objectives related to the user's divisions
+            // Proceed with fetching objectives related to the user's divisions when differirent objective
             $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
                 $query->whereIn('id', $divisionIds);
             })->orWhere('id',$dailytask->objective_id)->get();
