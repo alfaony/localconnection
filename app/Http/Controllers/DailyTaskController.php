@@ -98,6 +98,7 @@ class DailyTaskController extends Controller
                 });
             }
         }
+        
         else
         {
             $query->UserTasks($userId->id);
@@ -138,10 +139,10 @@ class DailyTaskController extends Controller
             });
         }
         // Paginate hasil query
-        $dailyTasksTes = $query->get();
+        // $dailyTasksTes = $query->get();
 
         // dd($dailyTasksTes);
-        $dailyTasks = $query->paginate(10);
+        $dailyTasks = $query->byCompany(Auth::user()->company_id)->paginate(10);
 
         // Ambil data lain yang diperlukan untuk form
         $taskTimeFrame = [
@@ -1036,6 +1037,7 @@ class DailyTaskController extends Controller
     {
         // Temukan tugas asli berdasarkan slug
         // Buat salinan tugas asli
+        
         $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
 
         $newTask = $dailytask->replicate();
@@ -1052,6 +1054,12 @@ class DailyTaskController extends Controller
         $newTask->point = 0; // Assuming default value is 0
         // Simpan tugas baru
         $newTask->save();
+        
+        $keyResults = $dailytask->keyResults;
+        foreach ($keyResults as $keyResult) 
+        {
+            $newTask->keyResults()->attach($keyResult->id);
+        }
 
         $this->message($newTask->id,'create',' System Recurring Tugas '.$newTask->name,null);
         return true;

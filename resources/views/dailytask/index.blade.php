@@ -52,7 +52,11 @@
                 </div>
             </div>
 
-            @if(Auth::user()->role->name != \App\Schemas\RoleSchema::STAFF && Auth::user()->role->name != \App\Schemas\RoleSchema::SALES)
+    
+
+            @php $userAccess=false; @endphp
+            @if((Auth::user()->role->name == \App\Schemas\RoleSchema::ROOT )|| ( Auth::user()->role->name == \App\Schemas\RoleSchema::ADMIN ) || ( Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER ))
+            @php $userAccess=true; @endphp
             <div class="col-12 col-md-3">
                 <div class="form-group">
                     <label for="user">User</label>
@@ -112,7 +116,7 @@
                     <label>&nbsp;</label>
                     <div>
                         <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Search</button>
-                        <button type="button" onclick="window.location.href='{{ route('dailytask.index') }}?task=all'" class="btn btn-secondary"><i class="fa fa-times"></i> Show All</button>
+                        <button type="button" onclick="window.location.href='{{ route('dailytask.index') }}?task=all{{ $userAccess ? '&user=all' : '' }}'" class="btn btn-secondary"><i class="fa fa-times"></i> Show All</button>
                     </div>
                 </div>
             </div>

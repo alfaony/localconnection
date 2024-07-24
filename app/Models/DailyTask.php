@@ -38,9 +38,11 @@ class DailyTask extends Model
 
     public function setNameAttribute($value)
     {
-        $this->attributes['name'] = $value;
-        if (empty($this->attributes['slug'])) {
+       if ($this->name != $value || $this->slug == '') {
+            $this->attributes['name'] = $value;
             $this->attributes['slug'] = $this->createUniqueSlug($value);
+        } else {
+            $this->attributes['name'] = $value;
         }
     }
 
@@ -138,10 +140,6 @@ class DailyTask extends Model
     {
         return $this->belongsToMany(ObjectiveKeyResult::class);
     }
-
-    
-
-    
     public function statusRecords()
     {
         return $this->hasMany(DailyTaskStatusRecord::class);
@@ -161,10 +159,11 @@ class DailyTask extends Model
                 $days = $startDate->diffInDays($submitDate) + 1;
                 return "{$days} Hari";
             } else {
-                $days = $submitDate->diffInDays($startDate);
+                $days = $submitDate->diffInDays($endDate);
                 return "Terlambat {$days} Hari";
             }
         }
+        
         return "Tanggal tidak lengkap";
     }
     

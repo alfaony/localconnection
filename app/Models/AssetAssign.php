@@ -29,7 +29,9 @@ class AssetAssign extends Model
     public function setPickedUpDateAttribute($value)
     {
         $this->attributes['picked_up_date'] = $value;
-        $this->attributes['slug'] = $this->createUniqueSlug($value);
+        if (empty($this->attributes['slug'])) {
+            $this->attributes['slug'] = $this->createUniqueSlug($value);
+        }
     }
 
     protected function createUniqueSlug($title)
