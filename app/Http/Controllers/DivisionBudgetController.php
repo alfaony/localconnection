@@ -63,6 +63,7 @@ class DivisionBudgetController extends Controller
         $files = [];
         if ($request->hasFile('file')) {
             foreach ($request->file('file') as $file) {
+                // Validate File Type
                 if (!in_array($file->getClientOriginalExtension(), ['pdf', 'doc', 'docx', 'xls', 'xlsx'])) 
                 {
                     return redirect()->back()->withErrors(['file' => 'File harus berupa PDF, DOC, DOCX, XLS, atau XLSX.']);
@@ -126,6 +127,7 @@ class DivisionBudgetController extends Controller
             $existingFiles = json_decode($divisionBudget->file, true) ?? [];
             $files = [];
             foreach ($request->file('file') as $file) {
+                // Validate File Type
                 if (!in_array($file->getClientOriginalExtension(), ['pdf', 'doc', 'docx', 'xls', 'xlsx'])) 
                 {
                     return redirect()->back()->withErrors(['file' => 'File harus berupa PDF, DOC, DOCX, XLS, atau XLSX.']);
