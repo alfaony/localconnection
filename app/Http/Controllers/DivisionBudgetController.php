@@ -59,8 +59,12 @@ class DivisionBudgetController extends Controller
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
                 $extension = $file->getClientOriginalExtension();
                 $fileName = $originalName . '_' . uniqid() . '.' . $extension;
-                $path = $file->storeAs('file', $fileName, 'public');
-                $files[] = $path;
+
+                if($fileName)
+                {
+                    $path = $file->storeAs('file', $fileName, 'public');
+                    $files[] = $path;
+                }
             }
         }
 
@@ -96,6 +100,7 @@ class DivisionBudgetController extends Controller
             'division_id' => 'required|exists:divisions,id',
             'name' => 'required|string|max:255',
             'amount' => 'required|integer|min:0',
+            'file.*' => 'nullable|mimes:pdf,doc,docx,xls,xlsx|max:1024', // Validasi untuk file
         ]);
 
         $divisionBudget = DivisionBudget::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
@@ -108,14 +113,19 @@ class DivisionBudgetController extends Controller
 
         if ($request->hasFile('file')) {
             $existingFiles = json_decode($divisionBudget->file, true) ?? [];
-            $newFiles = [];
+            $files = [];
             foreach ($request->file('file') as $file) {
-                $filename = $file->getClientOriginalName();
-                $uniqueFilename = pathinfo($filename, PATHINFO_FILENAME) . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('files', $uniqueFilename);
-                $newFiles[] = $path;
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $extension = $file->getClientOriginalExtension();
+                $fileName = $originalName . '_' . uniqid() . '.' . $extension;
+
+                if($fileName)
+                {
+                    $path = $file->storeAs('file', $fileName, 'public');
+                    $files[] = $path;
+                }
             }
-            $allFiles = array_merge($existingFiles, $newFiles);
+            $allFiles = array_merge($existingFiles, $files);
             $divisionBudget->file = json_encode($allFiles);
         }
 
