@@ -102,7 +102,7 @@ class DivisionBudgetController extends Controller
             'amount' => 'required|integer|min:0',
             'file.*' => 'nullable|mimes:pdf,doc,docx,xls,xlsx|max:1024', // Validasi untuk file
         ]);
-
+        
         $divisionBudget = DivisionBudget::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
 
         $divisionBudget->division_id = $request->division_id;
@@ -119,6 +119,7 @@ class DivisionBudgetController extends Controller
                 $extension = $file->getClientOriginalExtension();
                 $fileName = $originalName . '_' . uniqid() . '.' . $extension;
 
+                // Validation File
                 if($fileName)
                 {
                     $path = $file->storeAs('file', $fileName, 'public');
