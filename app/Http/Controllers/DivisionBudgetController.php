@@ -29,7 +29,14 @@ class DivisionBudgetController extends Controller
 
         if($userRoleName == RoleSchema::ROOT || $userRoleName == RoleSchema::ADMIN || $userRoleName == RoleSchema::DIRECTOR)
         {
-            $divisionBudgets = DivisionBudget::byCompany(Auth::user()->company_id)->with('division', 'user')->orderBy('is_approved','asc')->paginate(10);
+            $divisionBudgets = DivisionBudget::byCompany(Auth::user()->company_id)->with('division', 'user')->orderByRaw('
+            CASE 
+                WHEN is_approved IS NULL THEN 0 
+                WHEN is_approved = 0 THEN 1 
+                WHEN is_approved = 1 THEN 2 
+            END ASC, 
+            created_at DESC
+        ')->paginate(10);
         }else
         {
             $divisionBudgets = DivisionBudget::where('user_id', Auth::id())->with('division', 'user')->orderBy('created_at','desc')->paginate(10);
@@ -50,12 +57,16 @@ class DivisionBudgetController extends Controller
             'division_id' => 'required|exists:divisions,id',
             'name' => 'required|string|max:255',
             'amount' => 'required|integer|min:0',
-            'file.*' => 'nullable|mimes:pdf,doc,docx,xls,xlsx|max:1024', // Validasi untuk file
+            'file.*' => 'nullable|file|max:1024', // Validasi untuk file
         ]);
 
         $files = [];
         if ($request->hasFile('file')) {
             foreach ($request->file('file') as $file) {
+                if (!in_array($file->getClientOriginalExtension(), ['pdf', 'doc', 'docx', 'xls', 'xlsx'])) 
+                {
+                    return redirect()->back()->withErrors(['file' => 'File harus berupa PDF, DOC, DOCX, XLS, atau XLSX.']);
+                }
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
                 $extension = $file->getClientOriginalExtension();
                 $fileName = $originalName . '_' . uniqid() . '.' . $extension;
@@ -100,7 +111,7 @@ class DivisionBudgetController extends Controller
             'division_id' => 'required|exists:divisions,id',
             'name' => 'required|string|max:255',
             'amount' => 'required|integer|min:0',
-            'file.*' => 'nullable|mimes:pdf,doc,docx,xls,xlsx|max:1024', // Validasi untuk file
+            'file.*' => 'nullable|file|max:1024', // Validasi untuk file
         ]);
         
         $divisionBudget = DivisionBudget::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
@@ -115,6 +126,11 @@ class DivisionBudgetController extends Controller
             $existingFiles = json_decode($divisionBudget->file, true) ?? [];
             $files = [];
             foreach ($request->file('file') as $file) {
+                if (!in_array($file->getClientOriginalExtension(), ['pdf', 'doc', 'docx', 'xls', 'xlsx'])) 
+                {
+                    return redirect()->back()->withErrors(['file' => 'File harus berupa PDF, DOC, DOCX, XLS, atau XLSX.']);
+                }
+
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
                 $extension = $file->getClientOriginalExtension();
                 $fileName = $originalName . '_' . uniqid() . '.' . $extension;
