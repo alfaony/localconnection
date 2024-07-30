@@ -96,7 +96,7 @@ $no = ($customer->currentPage() - 1) * $customer->perPage() + 1;
                         <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
                     </div>
                     <div class="p-2">
-                        <input type="text" name="customer" class="form-control" placeholder="Search">
+                        <input type="text" name="search" class="form-control" placeholder="Search">
                     </div>
                     <div class="p-2">
                     @php
@@ -114,6 +114,9 @@ $no = ($customer->currentPage() - 1) * $customer->perPage() + 1;
                     <tr>
                         <th>No</th>
                         <th>Nama Customer</th>
+                        <th>Pic</th>
+                        <th>Direktur</th>
+                        <th>Email</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -122,6 +125,9 @@ $no = ($customer->currentPage() - 1) * $customer->perPage() + 1;
                     <tr>
                         <td>{{ $no }}</td>
                         <td>{{ $a->name }}</td>
+                        <td>{{ $a->pic }}</td>
+                        <td>{{ $a->director }}</td>
+                        <td>{{ $a->email }}</td>
                         <td>
                             <form method="post" action="{{ route('customer.destroy',$a) }}">
                                 @csrf
