@@ -254,8 +254,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 
         $('.select-division').select2({
             placeholder: "Select Divisions",
-            tags: true,
-            maximumSelectionLength: 5
+            tags: true
         });
     });
 </script>
