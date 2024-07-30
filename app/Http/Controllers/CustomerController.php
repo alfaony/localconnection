@@ -23,6 +23,7 @@ class CustomerController extends Controller
         $query = Customer::query();
         $query->byCompany(Auth::user()->company_id);
         
+        // Add Search
         if($request->has('search') && !empty($request->search)) 
         {
             $query->where(function($query) use ($request) 
