@@ -20,8 +20,22 @@ class CustomerController extends Controller
     {
         $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
 
-        $customer = Customer::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('customer') . '%')
-        ->OrderBy('created_at',$order)->paginate(10);
+        $query = Customer::query();
+        $query->byCompany(Auth::user()->company_id);
+        
+        // Add Search
+        if($request->has('search') && !empty($request->search)) 
+        {
+            $query->where(function($query) use ($request) 
+            {
+                $query->where('name','like','%'.$request->search.'%')
+                ->orWhere('director','like','%'.$request->search.'%')
+                ->orWhere('pic','like','%'.$request->search.'%')
+                ->orWhere('email','like','%'.$request->search.'%');
+            });
+        }
+        
+        $customer = $query->OrderBy('created_at',$order)->paginate(10);
 
         $totalCustomer = Customer::byCompany(Auth::user()->company_id)->count();
 

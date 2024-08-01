@@ -357,16 +357,16 @@ class DailyTaskController extends Controller
         $divisionIds = $user->divisions->pluck('id');
 
         $child = $dailytask->head ? TRUE : FALSE ;
-
+        
         if ($divisionIds->isEmpty()) {
             // Handle the case where the user does not belong to any divisions
             // You can return an empty collection or a message, or redirect
             return redirect()->route('dailytask.index')->with('error', 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.');
         } else {
-            // Proceed with fetching objectives related to the user's divisions
+            // Proceed with fetching objectives related to the user's divisions when differirent objective
             $objectives = Objective::whereHas('division', function ($query) use ($divisionIds) {
                 $query->whereIn('id', $divisionIds);
-            })->get();
+            })->orWhere('id',$dailytask->objective_id)->get();
         }
 
 

@@ -22,6 +22,8 @@ class DivisionBudget extends Model
         'amount',
         'is_approved',
         'notes',
+        'file',
+        'description',
     ];
 
     protected static function boot()

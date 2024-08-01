@@ -36,7 +36,7 @@ class TaskAssign extends Model
     {
         $this->attributes['date'] = $value;
         if (empty($this->attributes['slug'])) {
-            $this->attributes['slug'] = $this->createUniqueSlug($value);
+            $this->attributes['slug'] = Uuid::uuid4()->toString();
         }
     }
 
