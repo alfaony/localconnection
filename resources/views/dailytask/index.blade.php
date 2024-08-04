@@ -52,11 +52,15 @@
                 </div>
             </div>
 
+    
+
+            @php $userAccess=false; @endphp
+            @if((Auth::user()->role->name == \App\Schemas\RoleSchema::ROOT )|| ( Auth::user()->role->name == \App\Schemas\RoleSchema::ADMIN ) || ( Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER ))
+            @php $userAccess=true; @endphp
             <div class="col-12 col-md-3">
                 <div class="form-group">
                     <label for="user">User</label>
                     <select class="form-control UserSelect2" id="user" name="user">
-                        <option value="" selected disabled>-- Select User--</option>
                         <option value="all">All User</option>
                         @foreach ($users as $user)
                             <option value="{{ $user->name }}" {{ request('user') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
@@ -75,6 +79,7 @@
                     </select>
                 </div>
             </div>
+            @endif
 
             <div class="col-12 col-md-3">
                 <div class="form-group">
@@ -108,23 +113,10 @@
 
             <div class="col-12 col-md-auto">
                 <div class="form-group">
-                    <label for="user">Order By</label>
-                    @php
-                        $order = request('sort', 'desc');
-                    @endphp
-                        <select name="sort" class="form-control">
-                            <option value="asc" {{ $order == 'asc' ? 'selected' : '' }} >A - Z Created By</option>
-                            <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
-                        </select>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-auto">
-                <div class="form-group">
                     <label>&nbsp;</label>
                     <div>
                         <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Search</button>
-                        <button type="button" onclick="window.location.href='{{ route('dailytask.index') }}?task=all&user=all'" class="btn btn-secondary"><i class="fa fa-times"></i> Show All</button>
+                        <button type="button" onclick="window.location.href='{{ route('dailytask.index') }}?task=all{{ $userAccess ? '&user=all' : '' }}'" class="btn btn-secondary"><i class="fa fa-times"></i> Show All</button>
                     </div>
                 </div>
             </div>

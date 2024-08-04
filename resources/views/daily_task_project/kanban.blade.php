@@ -30,41 +30,6 @@
     <a href="{{ route('daily_task_project.showproject', $project->slug) }}" class="btn btn-warning mb-3"><i class="fa fa-tasks"></i> List Tugas Harian</a>
     @endcanAccess
 </div>
-<form method="GET" action="{{ route('daily_task_project.kanban', $project->slug)  }}"> <!-- Adjust the route as needed -->
-    <div class="row">        
-        <div class="col-md-3 mb-2">
-            <select class="form-control selectSearch selectUser2" id="user" name="user">
-                <option value="">All User</option>
-                @foreach ($users as $user)
-                    <option value="{{ $user->name }}" {{ request('user') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="col-md-3 mb-2">
-            <select class="form-control selectProject2" id="status" name="project">
-                <option value="" >Select Proyek</option>
-                @foreach ($dataProject as $data)
-                <option value="{{ $data->title }}" {{ request('project') == $data->title ? 'selected' : '' }}>{{ $data->title }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="col-md-3 mb-2">
-            <div class="form-group">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="{{ request('start_date') && request('end_date') ? request('start_date').' - '.request('end_date') : '' }}">
-                    <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
-                    <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row mt-2">
-        <div class="col-md-3 mb-2">
-            <button type="submit" class="btn btn-primary">Search</button>
-            <a href="{{ route('daily_task_project.kanban',$project->slug) }}" class="btn btn-secondary">Reset</a>
-        </div>
-    </div>
-</form>
 <div class="card">
     <div class="card-body">
         <div class="kanban-container">
@@ -154,7 +119,6 @@
 @section('css')
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <style>
     .kanban-container {
         overflow-x: auto;
@@ -241,32 +205,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-<script>
-    // Initialize Daterangepicker
-    $('#date_range').daterangepicker({
-        autoUpdateInput: false, // Prevents the input from being automatically populated
-        locale: {
-            format: 'DD-MM-YYYY',
-            cancelLabel: 'Clear' // Adds a clear button to the picker
-        }
-    });
-
-    $('#date_range').on('apply.daterangepicker', function(ev, picker) {
-        $(this).val(picker.startDate.format('DD-MM-YYYY') + ' - ' + picker.endDate.format('DD-MM-YYYY'));
-    });
-
-    $('#date_range').on('cancel.daterangepicker', function(ev, picker) {
-        $(this).val('');
-    });
-
-    // Capture the date range selection
-    $('#date_range').on('apply.daterangepicker', function(ev, picker) {
-        $('#start_date').val(picker.startDate.format('DD-MM-YYYY'));
-        $('#end_date').val(picker.endDate.format('DD-MM-YYYY'));
-    });
-</script>
 <script>
     $(document).ready(function() {
         // Initialize Select2
@@ -278,16 +216,6 @@
         $('.select2').select2({
             'placeholder': 'Select User', // Adjust the placeholder as needed
             dropdownParent: $('#assignModal'),
-            width: '100%'
-        });
-
-        $('.selectUser2').select2({
-            'placeholder': '-- Select User--', // Adjust the placeholder as needed
-            width: '100%'
-        });
-
-        $('.selectProject2').select2({
-            'placeholder': '-- Select Project--', // Adjust the placeholder as needed
             width: '100%'
         });
 

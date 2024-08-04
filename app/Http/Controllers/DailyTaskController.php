@@ -55,7 +55,7 @@ class DailyTaskController extends Controller
         $divisions = $userId->divisions()->get();
 
         // Query dasar untuk tugas harian berdasarkan user ID
-        $query = DailyTask::orderBy('created_at', $request->input('sort') ?? 'desc');
+        $query = DailyTask::orderBy('created_at', 'desc');
 
         if(!$statusFilter && !$search && $taskFilter != 'all')
         {
@@ -97,14 +97,6 @@ class DailyTaskController extends Controller
                     $q->where('name', $userFilter);
                 });
             }
-            // else
-            // {
-            //     $query->where(function($query) 
-            //     {
-            //         $query->where('assignment_user_id',Auth::user()->id)->orWhere('user_id',Auth::user()->id);
-            //     }
-            //     );
-            // }
         }
         
         else
