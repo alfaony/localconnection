@@ -20,6 +20,8 @@ use App\Models\DailyTaskProjectCustomFieldValue;
 
 use App\Schemas\ParamSchema;
 
+use Carbon\Carbon;
+
 class DailyTaskProjectController extends Controller
 {
     public function index()
@@ -113,13 +115,43 @@ class DailyTaskProjectController extends Controller
         return view('daily_task_project.show',compact('statusSelect','project'));
     }
 
-    public function kanban($slug)
+    public function kanban(Request $request, $slug)
     {
         $project = DailyTaskProject::where('slug', $slug)->firstOrFail();
         $statuses = TaskStatus::orderBy('sort')->get();
         $users = User::byCompany(Auth::user()->company_id)->get();
+        $dataProject = $project->projects() ? $project->projects()->get() : NULL;
 
-        $tasks = DailyTask::where('daily_task_project_id', $project->id)
+        // filter
+        $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null; // Parse tanggal dari string ke Carbon
+        $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
+        $projectFilter  = $request->input('project');
+        $userFilter = $request->input('user');
+
+        // dd($start_date, $end_date, $projectFilter, $userFilter);
+        $query = DailyTask::query();
+        
+        if ($start_date && $end_date) 
+        {
+            $query->byDateRange($start_date, $end_date);
+        }
+
+        if($projectFilter)
+        {
+            $query->whereHas('dataProject', function ($q) use ($projectFilter) 
+            {
+                $q->where('title', $projectFilter);
+            });
+        }
+        
+        if($request->input('user'))
+        {
+            $query->whereHas('assign', function ($q) use ($userFilter) 
+            {
+                $q->where('name', $userFilter);
+            });
+        }
+        $tasks = $query->where('daily_task_project_id', $project->id)
                             ->with('taskStatus')
                             ->get()
                             ->sortBy('taskStatus.sort')
@@ -129,7 +161,7 @@ class DailyTaskProjectController extends Controller
             return [$status->name => $tasks->get($status->name, collect())];
         });
         
-        return view('daily_task_project.kanban', compact('project', 'tasksByStatus', 'statuses', 'users'));
+        return view('daily_task_project.kanban', compact('project', 'tasksByStatus', 'statuses', 'users', 'dataProject'));
     }
     public function updateTaskFields(Request $request)
     {
@@ -159,10 +191,16 @@ class DailyTaskProjectController extends Controller
         $statusFilter = $request->input('status');
         $search = $request->input('task_name');
         $customFieldvalue = $request->input('custom_field_value');
+        $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null; // Parse tanggal dari string ke Carbon
+        $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
+        $projectFilter  = $request->input('project');
+
         
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
         $taskStatuss = TaskStatus::bySort(true)->get(); // Ambil semua status tugas
         $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+        $dataProject = $project->projects() ? $project->projects()->get() : NULL;
+
         $customFields = $project->customFields;
 
         $query = DailyTask::query();
@@ -199,9 +237,23 @@ class DailyTaskProjectController extends Controller
             $query->where('name', 'like', "%{$search}%"); // Add other fields as necessary
         }
 
+        // Filter berdasarkan tanggal
+        if ($start_date && $end_date) 
+        {
+            $query->byDateRange($start_date, $end_date);
+        }
+
+        if($projectFilter)
+        {
+            $query->whereHas('dataProject', function ($q) use ($projectFilter) 
+            {
+                $q->where('title', $projectFilter);
+            });
+        }
+
         $tasks = $query->where('daily_task_project_id', $project->id)->with(['user', 'customFieldValues'])->orderBy('created_at','desc')->paginate(10);
 
-        return view('daily_task_project.show_project', compact('tasks', 'customFields', 'project', 'users', 'taskStatuss'));
+        return view('daily_task_project.show_project', compact('tasks', 'customFields', 'project', 'users', 'taskStatuss', 'dataProject'));
     }
 
     
