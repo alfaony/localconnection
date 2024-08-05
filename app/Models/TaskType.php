@@ -29,7 +29,7 @@ class TaskType extends Model
     public function setNameAttribute($value)
     {
         $this->attributes['name'] = $value;
-        if (empty($this->attributes['slug'])) {
+        if (empty($this->slug)) {
             $this->attributes['slug'] = $this->createUniqueSlug($value);
         }
     }
