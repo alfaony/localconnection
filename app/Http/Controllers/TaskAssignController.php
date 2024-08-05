@@ -254,7 +254,7 @@ class TaskAssignController extends Controller
         ]);
         $status = TaskStatus::where('name',$request->status)->firstOrFail();
 
-        $taskAssign = TaskAssign::withoutGlobalScopes()->byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+        $taskAssign = TaskAssign::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $taskAssign->task_status_id = $status->id;
         $taskAssign->save();
 
