@@ -36,7 +36,7 @@ class User extends Authenticatable
     public function setEmailAttribute($value)
     {
         $this->attributes['email'] = $value;
-        if (empty($this->attributes['slug'])) {
+        if (empty($this->slug)) {
             $this->attributes['slug'] = $this->createUniqueSlug($value);
         }
     }

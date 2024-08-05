@@ -49,7 +49,7 @@ class Attendance extends Model
     public function setDateAttribute($value)
     {
         $this->attributes['date'] = $value;
-        if (empty($this->attributes['slug'])) {
+        if (empty($this->slug)) {
             $this->attributes['slug'] = Uuid::uuid4()->toString();
         }
     }
