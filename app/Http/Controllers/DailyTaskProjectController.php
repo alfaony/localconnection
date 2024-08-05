@@ -203,6 +203,7 @@ class DailyTaskProjectController extends Controller
 
         $customFields = $project->customFields;
 
+        // Add Filter
         $query = DailyTask::query();
 
         if ($userFilter) 
