@@ -32,6 +32,7 @@ class TaskAssign extends Model
         });
     }
 
+    // Update Slug
     public function setDateAttribute($value)
     {
         $this->attributes['date'] = $value;
