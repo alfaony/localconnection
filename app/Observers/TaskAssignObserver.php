@@ -82,6 +82,7 @@ class TaskAssignObserver
 
             if ($taskAssign->task->taskType->name == ParamSchema::REGULAR) {
                 $newTaskAssign = $taskAssign->replicate();
+                $newTaskAssign->slug = NULL;
                 $newTaskAssign->date = Carbon::parse($taskAssign->date)->addWeek();
                 $newTaskAssign->task_status_id = TaskStatus::where('name', ParamSchema::DOING)->first()->id;
                 $newTaskAssign->save();
