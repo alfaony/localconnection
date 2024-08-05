@@ -128,7 +128,7 @@ class DailyTaskProjectController extends Controller
         $projectFilter  = $request->input('project');
         $userFilter = $request->input('user');
 
-        // dd($start_date, $end_date, $projectFilter, $userFilter);
+        // Filter Add Comment
         $query = DailyTask::query();
         
         if ($start_date && $end_date) 
