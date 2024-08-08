@@ -97,14 +97,14 @@ class DailyTaskController extends Controller
                     $q->where('name', $userFilter);
                 });
             }
-            // else
-            // {
-            //     $query->where(function($query) 
-            //     {
-            //         $query->where('assignment_user_id',Auth::user()->id)->orWhere('user_id',Auth::user()->id);
-            //     }
-            //     );
-            // }
+            else
+            {
+                $query->where(function($query) 
+                {
+                    $query->where('assignment_user_id',Auth::user()->id)->orWhere('user_id',Auth::user()->id);
+                }
+                );
+            }
         }
         
         else
@@ -221,7 +221,7 @@ class DailyTaskController extends Controller
                     $status = TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail();
 
                 }
-
+                
                 $dailyTask = new DailyTask();
                 $dailyTask->user_id = Auth::user()->id;
                 $dailyTask->task_status_id = $status->id;
@@ -230,7 +230,7 @@ class DailyTaskController extends Controller
                 $dailyTask->assignment_user_id = $assignmentUserIds[$i] ?? NULL;
                 $dailyTask->daily_task_category_id = $categoryIds[$i];
                 $dailyTask->daily_task_type_id = $typeIds[$i];
-                $dailyTask->project_id = $dataProjects[$i];
+                $dailyTask->project_id = $dataProjects[$i] ?? NULL;
                 $dailyTask->daily_task_project_id = $projectIds[$i] ?? NULL;
                 $dailyTask->name = $names[$i];
                 $dailyTask->description = $descriptions[$i] ?? null;

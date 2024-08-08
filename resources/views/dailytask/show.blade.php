@@ -46,6 +46,7 @@
             <div class="card-body row">
                 <!-- Left Column -->
                 <div class="col-md-6 mb-3 mb-md-0 mr-md-3">
+                    @if($dailytask->project)
                     <div class="form-group row">
                         <label for="name" class="col-sm-4 col-form-label">Main Proyek:</label>
                         <div class="col-sm-8">
@@ -64,6 +65,7 @@
                             @endif
                         </div>
                     </div>
+                    @endif
 
                     @if($dailytask->dataProject)
                     <div class="form-group row">
