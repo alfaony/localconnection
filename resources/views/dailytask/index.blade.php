@@ -327,6 +327,7 @@
         height: 34px !important;
     }
 </style>
+<!-- Improvement CSS -->
 <style>
     .table-responsive td, .table-responsive th {
         white-space: nowrap;
