@@ -97,14 +97,14 @@ class DailyTaskController extends Controller
                     $q->where('name', $userFilter);
                 });
             }
-            // else
-            // {
-            //     $query->where(function($query) 
-            //     {
-            //         $query->where('assignment_user_id',Auth::user()->id)->orWhere('user_id',Auth::user()->id);
-            //     }
-            //     );
-            // }
+            else
+            {
+                $query->where(function($query) 
+                {
+                    $query->where('assignment_user_id',Auth::user()->id)->orWhere('user_id',Auth::user()->id);
+                }
+                );
+            }
         }
         
         else
@@ -307,7 +307,7 @@ class DailyTaskController extends Controller
             }
         } catch (\Throwable $th) {
 
-            dd($th);
+            // dd($th);
             Log::error($th->getMessage());
             DB::rollback();
 
