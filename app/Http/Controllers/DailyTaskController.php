@@ -147,9 +147,6 @@ class DailyTaskController extends Controller
             });
         }
         // Paginate hasil query
-        // $dailyTasksTes = $query->get();
-
-        // dd($dailyTasksTes);
         $dailyTasks = $query->byCompany(Auth::user()->company_id)->paginate(10);
 
         // Ambil data lain yang diperlukan untuk form
@@ -413,11 +410,9 @@ class DailyTaskController extends Controller
     
             // Menyimpan custom_field
             if (isset($request->custom_field_values)) {
-                // dd("here");
                 foreach ($request->custom_field_values as $customFieldId => $customFieldValueId) {
                     if(is_array($customFieldValueId))
                     {
-                        // 
                         foreach($customFieldValueId as $valueId)
                         {
                             DailyTaskCustomFieldValue::create([
