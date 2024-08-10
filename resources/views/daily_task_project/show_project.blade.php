@@ -90,79 +90,78 @@
                             </div>
                         </div>
                     </form>
-                    <table class="table table-bordered table-responsive-sm">
-                        <thead>
-                            <tr>
-                                <th class="col-3">Nama Tugas</th>
-                                <th class="col-2">Dibuat</th>
-                                <th class="col-2">Ditugaskan</th>
-                                <th class="col-2">Tanggal</th>
-                                <th class="col-1">Status</th>
-                                @foreach($customFields as $field)
-                                    <th class="col-2">{{ $field->name }}</th>
-                                @endforeach
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($tasks as $task)
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-responsive-sm">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        @canAccess('show','dailytasks')
-                                        <a href="{{ route('dailytask.show', $task->slug) }}" class="btn btn-info badge-light">{{ $task->name }}</a>
-                                        @endcanAccess
-                                    </td>
-                                    <td>{{ $task->user->name }}</td>
-                                    <td>{{ $task->assign ? $task->assign->name : ""}}</td>
-                                    <td>
-                                        <span class="{{ $task->isOverdue() ? 'text-danger' : '' }}">
-                                            {{ $task->dateShow }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                    @switch($task->taskStatus->name)
-                                        @case('backlog')
-                                            <i class="fa fa-clipboard-list"></i>
-                                            @break
-                                        @case('todo')
-                                            <i class="fa fa-list-alt"></i>
-                                            @break
-                                        @case('doing')
-                                            <i class="fa fa-hourglass-start"></i>
-                                            @break
-                                        @case('in review')
-                                            <i class="fa fa-eye" style="color: green;"></i>
-                                            @break
-                                        @case('not complete')
-                                            <i class="fa fa-times-circle" style="color: red;"></i>
-                                            @break
-                                        @case('complete')
-                                            <i class="fa fa-check" style="color: green;"></i>
-                                            @break
-                                        @default
-                                            {{ $task->taskStatus->name }}
-                                    @endswitch
-                                    </td>
+                                    <th class="col-3">Nama Tugas</th>
+                                    <th class="col-2">Dibuat</th>
+                                    <th class="col-2">Ditugaskan</th>
+                                    <th class="col-2">Tanggal</th>
+                                    <th class="col-1">Status</th>
                                     @foreach($customFields as $field)
-                                        <td>
-                                            @php
-                                                $value = $task->customFieldValues->where('custom_field_id', $field->id);
-                                            @endphp
-
-                                            @foreach($value as $val)
-                                                <span class="badge badge-pill badge-info">{{ $val->customFieldValue ? $val->customFieldValue->value : "" }}</span>
-                                            @endforeach
-                                        </td>
+                                        <th class="col-2">{{ $field->name }}</th>
                                     @endforeach
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3 + {{ count($customFields) }}">No tasks found</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                    <div class="mt-2">
-                        {{ $tasks->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+                            </thead>
+                            <tbody>
+                                @forelse($tasks as $task)
+                                    <tr>
+                                        <td>
+                                            @canAccess('show','dailytasks')
+                                            <a href="{{ route('dailytask.show', $task->slug) }}" class="btn btn-info badge-light">{{ $task->name }}</a>
+                                            @endcanAccess
+                                        </td>
+                                        <td>{{ $task->user->name }}</td>
+                                        <td>{{ $task->assign ? $task->assign->name : ""}}</td>
+                                        <td>
+                                            <span class="{{ $task->isOverdue() ? 'text-danger' : '' }}">
+                                                {{ $task->dateShow }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                        @switch($task->taskStatus->name)
+                                            @case('todo')
+                                                <i class="fa fa-list-alt"></i> Todo
+                                                @break
+                                            @case('doing')
+                                                <i class="fa fa-hourglass-start"></i> Doing
+                                                @break
+                                            @case('in review')
+                                                <i class="fa fa-eye" style="color: green;"></i> In Review
+                                                @break
+                                            @case('not complete')
+                                                <i class="fa fa-times-circle" style="color: red;"></i> Not Complete
+                                                @break
+                                            @case('complete')
+                                                <i class="fa fa-check" style="color: green;"></i> Complete
+                                                @break
+                                            @default
+                                                {{ $task->taskStatus->name }}
+                                        @endswitch
+                                        </td>
+                                        @foreach($customFields as $field)
+                                            <td>
+                                                @php
+                                                    $value = $task->customFieldValues->where('custom_field_id', $field->id);
+                                                @endphp
+
+                                                @foreach($value as $val)
+                                                    <span class="badge badge-pill badge-info">{{ $val->customFieldValue ? $val->customFieldValue->value : "" }}</span>
+                                                @endforeach
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="3 + {{ count($customFields) }}">No tasks found</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                        <div class="mt-2">
+                            {{ $tasks->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -247,6 +246,18 @@
 <style>
     .table-responsive-sm {
         overflow-x: auto;
+    }
+</style>
+<!-- Improvement CSS -->
+<style>
+    .table-responsive td, .table-responsive th {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .table-responsive p {
+        margin-bottom: 0;
     }
 </style>
 @endsection

@@ -44,7 +44,7 @@
                                         <div class="form-group">
                                             <label for="project_id">Pilih Main Proyek</label>
                                             @canAccess('getcustomfield','daily_task_projects')
-                                            <select class="form-control select2 project-select" name="project_id[]" required>
+                                            <select class="form-control select2 project-select" name="project_id[]">
                                                 <option value="" disabled selected>-- Pilih --</option>
                                                 @foreach($projects as $project)
                                                     <option value="{{ $project->id }}">{{ ucfirst($project->name) }}</option>
@@ -125,7 +125,7 @@
                 </div>
 
                 @canAccess('statuschange','dailytasks')
-                <button type="button" id="add-task-user" class="btn btn-info mb-2 add-button"><i class="fa fa-plus"></i> Tugas</button>
+                {{--<button type="button" id="add-task-user" class="btn btn-info mb-2 add-button"><i class="fa fa-plus"></i> Tugas</button>--}}
                 <button type="submit" class="btn btn-success mb-2"><i class="fa fa-save"></i> Simpan</button>
                 @endcanAccess
             </form>
@@ -230,7 +230,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="project_id">Pilih Main Proyek</label>
-                                    <select class="form-control select3 project-select" name="project_id[]" required>
+                                    <select class="form-control select3 project-select" name="project_id[]">
                                         <option value="" disabled selected>-- Pilih --</option>
                                         @foreach($projects as $project)
                                             <option value="{{ $project->id }}">{{ $project->name }}</option>

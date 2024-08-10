@@ -131,16 +131,19 @@
         </div>
     </form>
     @endcanAccess
-    <div class="table-responsive-md">
+    
+
+    <div class="table-responsive">
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th class="col-3">Tanggal</th>
-                    <th class="col-1">Status</th>
+                    <th class="col-auto">Tanggal</th>
+                    <th class="col-auto">Status</th>
                     <th class="col-auto">Tugas</th>
-                    <th class="col-1">Poin</th>
-                    <th class="col-1">Dibuat</th>
-                    <th class="col-1">Ditugaskan</th>
+                    <th class="col-auto">Proyek</th>
+                    <th class="col-auto">Poin</th>
+                    <th class="col-auto">Dibuat</th>
+                    <th class="col-auto">Ditugaskan</th>
                     <th class="col-2">Actions</th>
                 </tr>
             </thead>
@@ -178,13 +181,15 @@
                                 {{ $dailytask->taskStatus->name }}
                         @endswitch
                         </td>
-                        <td>
-                            <p>{{ $dailytask->nameShow }}</p>
-                            <p>{{ $dailytask->head ? "< ". Str::limit($dailytask->head->name,10) : '' }}</p>    
-                         </td>
+                        <td class="name-cell">
+                            <p>{!! $dailytask->head ? $dailytask->nameShow.'  <i class="fa fa-arrow-left"></i>  '. Str::limit($dailytask->head->name,50) : $dailytask->nameShow !!}</p>
+                        </td>
+                        <td class="name-cell">
+                            {{ $dailytask->dataProject ? $dailytask->dataProject->title : '' }}
+                        </td>
                         <td>{{ $dailytask->point == 0 ? "-" : $dailytask->point }}</td>
-                        <td>{{ $dailytask->user->name ?? '' }}</td>
-                        <td>{{ $dailytask->assign->name ?? '' }}</td>
+                        <td class="name-cell">{{ $dailytask->user->name ?? '' }}</td>
+                        <td class="name-cell">{{ $dailytask->assign->name ?? '' }}</td>
                         <td>
                             @if(!$dailytask->approved)
                             <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
@@ -230,6 +235,7 @@
 
         {{ $dailyTasks->withQueryString()->links('vendor.pagination.bootstrap-4') }}
     </div>
+
 </div>
 @endsection
 
@@ -319,6 +325,18 @@
     }
     .select2-selection__arrow {
         height: 34px !important;
+    }
+</style>
+<!-- Improvement CSS -->
+<style>
+    .table-responsive td, .table-responsive th {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .table-responsive p {
+        margin-bottom: 0;
     }
 </style>
 @endsection
