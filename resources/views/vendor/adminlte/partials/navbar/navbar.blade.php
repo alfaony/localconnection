@@ -29,6 +29,14 @@
         {{-- Configured right links --}}
         @each('adminlte::partials.navbar.menu-item', $adminlte->menu('navbar-right'), 'item')
 
+        {{-- Envelope link with notification count --}}
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('inbox.index') }}">
+                <i class="fas fa-envelope"></i>
+                <span class="badge badge-danger navbar-badge"></span>
+            </a>
+        </li>
+
         {{-- User menu link --}}
         @if(Auth::user())
             @if(config('adminlte.usermenu_enabled'))

@@ -35,7 +35,7 @@ use App\Models\Objective;
 use App\Models\DailyTaskStatusRecord;
 use App\Models\SettingCompany;
 
-
+use App\Helpers\InboxHelper;
 
 class DailyTaskController extends Controller
 {
@@ -550,6 +550,9 @@ class DailyTaskController extends Controller
             $dailytask->report_note = $request->note;
             $dailytask->task_status_id = $inReview->id;
 
+            $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
+            InboxHelper::sent($dailytask->user_id, Auth::user()->id, 'Laporan pada Tugas '.$dailytask->name, $directUrl);
+
             if ($request->hasFile('media')) {
                 foreach ($request->file('media') as $file) {
                     $timestamp = time();
@@ -775,6 +778,18 @@ class DailyTaskController extends Controller
             // Store the file with the new name
             $path = $file->storeAs('comment', $fileName, 'public');
         }
+
+        $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
+
+        // InboxHelper::sent($dailytask->assignment_user_id, Auth::user()->id, 'Memberikan komentar pada Tugas'.$dailytask->name, $directUrl);
+        // Call InboxHelper to send the notification
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $dailytask->assignment_user_id, 
+            Auth::user()->id, 
+            'Memberikan komentar pada Tugas ' . $dailytask->name, 
+            $directUrl
+        );
 
         $this->message($dailytask->id,'comment',$request->message,$path);
 

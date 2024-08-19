@@ -52,7 +52,7 @@ use App\Http\Controllers\ShiftingObController;
 use App\Http\Controllers\ScheduleObController;
 use App\Http\Controllers\DivisionBudgetController;
 use App\Http\Controllers\ProductCategoryController;
-
+use App\Http\Controllers\InboxController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -221,6 +221,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
 });
 // Add this to your routes/web.php
+Route::get('/inbox/unreadcount', [InboxController::class, 'unreadcount'])->name('inbox.unreadcount');
+Route::get('/inbox/{id}', [InboxController::class, 'show'])->name('inbox.show');
+Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
 
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
