@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Inbox;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\InboxHelper;
 
 class InboxController extends Controller
 {
@@ -35,6 +36,9 @@ class InboxController extends Controller
         // Mengambil pesan berdasarkan id
         $message = Inbox::findOrFail($id);
         
+        $inboxNotif = new InboxHelper();
+        $inboxNotif->read(Auth::id(), $id);
+
         $message->update([
             'is_read' => 1 // Menandai pesan telah dibaca
         ]);

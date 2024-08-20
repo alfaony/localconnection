@@ -14,11 +14,11 @@ class InboxHelper
 
     public function __construct()
     {
-        if(config('services.firebase.service_account') && config('services.firebase.service_database_url'))
+        if(config('services.firebase.service_account') && config('services.firebase.service_database_url') && !isset($this->database))
         {
             $factory = (new Factory)
                 ->withServiceAccount(storage_path(config('services.firebase.service_account'))) // Ambil dari konfigurasi
-                ->withDatabaseUri(config('services.firebase.service_database_url') ?? 'https://notifikasi-aca1a-default-rtdb.asia-southeast1.firebasedatabase.app');
+                ->withDatabaseUri(config('services.firebase.service_database_url'));
     
             $this->database = $factory->createDatabase();
             $this->messaging = $factory->createMessaging();
@@ -53,34 +53,13 @@ class InboxHelper
                 $this->database
                     ->getReference('notifications/' . $userToId)
                     ->push([
-                        'message' => $message,
-                        'direct_url' => $directUrl,
+                        // 'message' => $message,
+                        // 'direct_url' => $directUrl,
                         'is_read' => $isRead,
-                        'timestamp' => now()->timestamp,
+                        // 'timestamp' => now()->timestamp,
+                        'inbox_id' => $inboxMessage->id,
                     ]);
-    
-                // Retrieve the FCM token for the user (assuming you store tokens in the database)
-                $userTo = User::find($userToId);
-                $fcmToken = $userTo->fcm_token; // Assume 'fcm_token' is the column where the token is stored
-    
-                if ($fcmToken) {
-                    // Send a push notification using Firebase Cloud Messaging
-                    $notification = CloudMessage::withTarget('token', $fcmToken)
-                        ->withNotification([
-                            'title' => 'New Inbox Message',
-                            'body' => $message,
-                        ])
-                        ->withData(['direct_url' => $directUrl]);
-    
-                    try {
-                        $this->messaging->send($notification);
-                    } catch (\Kreait\Firebase\Exception\MessagingException $e) {
-                        // Log the error or handle the exception
-                        \Log::error("FCM Error: " . $e->getMessage());
-                    }
-                } else {
-                    \Log::warning("FCM token is missing for user_id: $userToId");
-                }
+
             }
 
             return $inboxMessage;
@@ -89,4 +68,36 @@ class InboxHelper
         return true;
     }
 
+    public function read($userToId, $inboxId)
+    {
+        if($this->database)
+        {
+
+            // Cari referensi data dengan inbox_id yang sesuai
+            $notificationRef = $this->database->getReference('notifications/' . $userToId);
+            
+            if($notificationRef->getSnapshot()->exists() === false)
+            {
+                return;
+            }
+
+            $reference = $this->database->getReference('notifications/' . $userToId)
+            ->orderByChild('inbox_id')
+            ->equalTo($inboxId)
+            ->getSnapshot();
+
+            // Periksa apakah data ditemukan
+            if ($reference->exists()) {
+                $updates = [];
+                foreach ($reference->getValue() as $key => $value) {
+                    $updates['notifications/' . $userToId . '/' . $key . '/is_read'] = true;
+                }
+            
+                // Perform the update
+                $this->database->getReference()->update($updates);
+            }
+        }
+
+        return;
+    }
 }

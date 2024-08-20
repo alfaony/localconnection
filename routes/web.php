@@ -220,7 +220,6 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('division-budget', DivisionBudgetController::class);
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
 
-  Route::get('/inbox/unreadcount', [InboxController::class, 'unreadcount'])->name('inbox.unreadcount');
   Route::get('/inbox/{id}', [InboxController::class, 'show'])->name('inbox.show');
   Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
 });

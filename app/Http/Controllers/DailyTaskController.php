@@ -291,6 +291,17 @@ class DailyTaskController extends Controller
                 $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
                 $this->statusrecord($dailyTask, $status);
 
+                $directUrl = route('dailytask.show', ['dailytask' => $dailyTask->slug]);
+        
+                // Call InboxHelper to send the notification
+                $inboxHelper = new InboxHelper();
+                $inboxHelper->sent(
+                    $dailyTask->assignment_user_id, 
+                    Auth::user()->id, 
+                    'Tugas ' . $dailyTask->name, 
+                    $directUrl
+                );
+
             }
 
             DB::commit();
@@ -590,6 +601,17 @@ class DailyTaskController extends Controller
                 $this->projectRecurring($dailytask);
             }
 
+            $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
+        
+            // Call InboxHelper to send the notification
+            $inboxHelper = new InboxHelper();
+            $inboxHelper->sent(
+                $dailytask->user_id, 
+                Auth::user()->id, 
+                'Membuat Laporan pada Tugas ' . $dailytask->name, 
+                $directUrl
+            );
+
             DB::commit();
             return redirect()->route('dailytask.show', $dailytask->slug)->with('report', true);
         } catch (\Throwable $th) {
@@ -696,6 +718,15 @@ class DailyTaskController extends Controller
                 // }
             }
 
+
+            $inboxHelper = new InboxHelper();
+            $inboxHelper->sent(
+                $dailytask->user_id, 
+                Auth::user()->id, 
+                "Tugas ".$dailytask->name." telah di ".$taskStatuss->name,
+                $directUrl
+            );
+            
             $dailytask->save();
 
             DB::commit();
@@ -781,7 +812,6 @@ class DailyTaskController extends Controller
 
         $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
 
-        // InboxHelper::sent($dailytask->assignment_user_id, Auth::user()->id, 'Memberikan komentar pada Tugas'.$dailytask->name, $directUrl);
         // Call InboxHelper to send the notification
         $inboxHelper = new InboxHelper();
         $inboxHelper->sent(

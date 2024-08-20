@@ -49,6 +49,5 @@
 @section('adminlte_js')
     @stack('js')
     @yield('js')
-    @include('firebase')
-    @include('inboxscript')
+    @include('inbox.inboxscript')
 @stop
