@@ -309,6 +309,7 @@ class DivisionBudgetController extends Controller
         );
     }
 
+    // Inbox Notification
     private function sentInbox($to,$message,$directUrl)
     {
         foreach ($to as $key => $value) 
