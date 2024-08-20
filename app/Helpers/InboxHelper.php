@@ -80,21 +80,26 @@ class InboxHelper
             {
                 return;
             }
-
-            $reference = $this->database->getReference('notifications/' . $userToId)
-            ->orderByChild('inbox_id')
-            ->equalTo($inboxId)
-            ->getSnapshot();
-
-            // Periksa apakah data ditemukan
-            if ($reference->exists()) {
-                $updates = [];
-                foreach ($reference->getValue() as $key => $value) {
-                    $updates['notifications/' . $userToId . '/' . $key . '/is_read'] = true;
+            try {
+                //code...
+                $reference = $this->database->getReference('notifications/' . $userToId)
+                ->orderByChild('inbox_id')
+                ->equalTo($inboxId)
+                ->getSnapshot();
+    
+                // Periksa apakah data ditemukan
+                if ($reference->exists()) {
+                    $updates = [];
+                    foreach ($reference->getValue() as $key => $value) {
+                        $updates['notifications/' . $userToId . '/' . $key . '/is_read'] = true;
+                    }
+                
+                    // Perform the update
+                    $this->database->getReference()->update($updates);
                 }
-            
-                // Perform the update
-                $this->database->getReference()->update($updates);
+            } catch (\Throwable $th) {
+                //throw $th;
+                return;
             }
         }
 
