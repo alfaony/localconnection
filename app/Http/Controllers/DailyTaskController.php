@@ -561,9 +561,6 @@ class DailyTaskController extends Controller
             $dailytask->report_note = $request->note;
             $dailytask->task_status_id = $inReview->id;
 
-            $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
-            InboxHelper::sent($dailytask->user_id, Auth::user()->id, 'Laporan pada Tugas '.$dailytask->name, $directUrl);
-
             if ($request->hasFile('media')) {
                 foreach ($request->file('media') as $file) {
                     $timestamp = time();
@@ -604,13 +601,7 @@ class DailyTaskController extends Controller
             $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
         
             // Call InboxHelper to send the notification
-            $inboxHelper = new InboxHelper();
-            $inboxHelper->sent(
-                $dailytask->user_id, 
-                Auth::user()->id, 
-                'Membuat Laporan pada Tugas ' . $dailytask->name, 
-                $directUrl
-            );
+            $this->sentInbox($dailytask->user_id,'Membuat Laporan pada Tugas ' . $dailytask->name, $directUrl);
 
             DB::commit();
             return redirect()->route('dailytask.show', $dailytask->slug)->with('report', true);
@@ -718,14 +709,23 @@ class DailyTaskController extends Controller
                 // }
             }
 
+            // Call InboxHelper to send the notification
+            $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
 
-            $inboxHelper = new InboxHelper();
-            $inboxHelper->sent(
-                $dailytask->user_id, 
-                Auth::user()->id, 
-                "Tugas ".$dailytask->name." telah di ".$taskStatuss->name,
-                $directUrl
-            );
+            if(Auth::user()->id == $dailytask->assignment_user_id)
+            {
+                $userTo = $dailytask->user_id;
+            }
+            elseif(Auth::user()->id == $dailytask->user_id)
+            {
+                $userTo = $dailytask->assignment_user_id;
+            }else
+            {
+                $userTo = $dailytask->assignment_user_id;
+                $this->sentInbox($dailytask->user_id,"Tugas ".$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
+            }
+
+            $this->sentInbox($userTo,"Tugas ".$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
             
             $dailytask->save();
 
@@ -813,13 +813,20 @@ class DailyTaskController extends Controller
         $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
 
         // Call InboxHelper to send the notification
-        $inboxHelper = new InboxHelper();
-        $inboxHelper->sent(
-            $dailytask->assignment_user_id, 
-            Auth::user()->id, 
-            'Memberikan komentar pada Tugas ' . $dailytask->name, 
-            $directUrl
-        );
+        if(Auth::user()->id == $dailytask->assignment_user_id)
+        {
+            $userTo = $dailytask->user_id;
+        }
+        elseif(Auth::user()->id == $dailytask->user_id)
+        {
+            $userTo = $dailytask->assignment_user_id;
+        }else
+        {
+            $userTo = $dailytask->assignment_user_id;
+            $this->sentInbox($dailytask->user_id, 'Memberikan komentar pada Tugas ' . $dailytask->name, $directUrl);
+        }
+
+        $this->sentInbox($userTo, 'Memberikan komentar pada Tugas ' . $dailytask->name, $directUrl);
 
         $this->message($dailytask->id,'comment',$request->message,$path);
 
@@ -1111,6 +1118,19 @@ class DailyTaskController extends Controller
 
         $this->message($newTask->id,'create',' System Recurring Tugas '.$newTask->name,null);
         return true;
+    }
+
+    public function sentInbox($to,$message,$directUrl)
+    {
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $to, 
+            Auth::user()->id, 
+            $message, 
+            $directUrl
+        );
+
+        return;
     }
 }
 
