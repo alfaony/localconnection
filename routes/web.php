@@ -74,8 +74,6 @@ Auth::routes([
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-
-
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
   Route::resource('project', ProjectController::class);
@@ -176,6 +174,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   
   Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
 
+  Route::get('/dailytask/export', [DailyTaskController::class, 'export'])->name('dailytask.export');
   Route::get('dailytask/template', [DailyTaskController::class, 'template'])->name('dailytask.template');
   Route::get('dailytask/downloadtemplate', [DailyTaskController::class, 'downloadtemplate'])->name('dailytask.downloadtemplate');
   Route::post('dailytask/import', [DailyTaskController::class, 'import'])->name('dailytask.import');
@@ -223,7 +222,6 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('/inbox/{id}', [InboxController::class, 'show'])->name('inbox.show');
   Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
 });
-
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

@@ -78,6 +78,18 @@
 
             <div class="col-12 col-md-3">
                 <div class="form-group">
+                    <label for="division">Main Proyek</label>
+                    <select class="form-control select2mainProject" id="user" name="daily_task_project">
+                        <option value="">-- Main Proyek --</option>
+                        @foreach ($dailyTaskProjects as $dailyTaskProject)
+                            <option value="{{ $dailyTaskProject->name }}" {{ request('daily_task_project') == $dailyTaskProject->name ? 'selected' : '' }}>{{ $dailyTaskProject->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
                     <label for="status">Status</label>
                     <select class="form-control select2" id="status" name="status">
                         <option value="">Select Status</option>
@@ -124,7 +136,15 @@
                     <label>&nbsp;</label>
                     <div>
                         <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Search</button>
-                        <button type="button" onclick="window.location.href='{{ route('dailytask.index') }}?task=all&user=all'" class="btn btn-secondary"><i class="fa fa-times"></i> Show All</button>
+                        <button type="button" onclick="window.location.href='{{ route('dailytask.index') }}?task=all'" class="btn btn-secondary"><i class="fa fa-times"></i> Show All</button>
+                        @canAccess('export','dailytasks')
+                        <button type="button" class="btn btn-success" onclick="exportFilteredData('xlsx')">
+                            <i class="fa fa-file-excel"></i> Export Excel
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="exportFilteredData('csv')">
+                            <i class="fa fa-file-excel"></i> Export CSV
+                        </button>
+                        @endcanAccess
                     </div>
                 </div>
             </div>
@@ -251,6 +271,7 @@
         // Initialize Select2
         $('.select2').select2();
         $('.UserSelect2').select2();
+        $('.select2mainProject').select2();
 
         // Initialize Daterangepicker
         $('#date_range').daterangepicker({
@@ -301,6 +322,17 @@
         });
     });
 </script>
+@canAccess('export','dailytasks')
+<script>
+    function exportFilteredData(format) 
+    {
+        let params = new URLSearchParams(window.location.search); // Get the current query string parameters
+        let url = '{{ route('dailytask.export') }}' + '?format=' + format + '&' + params.toString();
+
+        window.location.href = url;
+    }
+</script>
+@endcanAccess
 @endsection
 
 @section('css')
