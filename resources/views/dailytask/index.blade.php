@@ -43,7 +43,7 @@
             <div class="col-12 col-md-2">
                 <div class="form-group">
                     <label for="task">Task</label>
-                    <select class="form-control" id="task" name="task">
+                    <select class="form-control select2" id="task" name="task">
                         <option value="all">All</option>
                         @foreach ($taskTimeFrame as $status => $value)
                             <option value="{{ $status }}" {{ request('task') == $status ? 'selected' : '' }}>{{ ucfirst($value) }}</option>
@@ -55,9 +55,9 @@
             <div class="col-12 col-md-3">
                 <div class="form-group">
                     <label for="user">User</label>
-                    <select class="form-control UserSelect2" id="user" name="user">
-                        <option value="" selected disabled>-- Select User--</option>
-                        <option value="all">All User</option>
+                    <select class="form-control select2" name="user">
+                        <option value="" disabled selected>-- Select User--</option>
+                        <option value="all">All</option>
                         @foreach ($users as $user)
                             <option value="{{ $user->name }}" {{ request('user') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
                         @endforeach
@@ -67,7 +67,7 @@
             <div class="col-12 col-md-3">
                 <div class="form-group">
                     <label for="division">Division</label>
-                    <select class="form-control select2" id="user" name="division">
+                    <select class="form-control select2"  name="division">
                         <option value="">-- Divisi --</option>
                         @foreach ($divisions as $division)
                             <option value="{{ $division->name }}" {{ request('division') == $division->name ? 'selected' : '' }}>{{ $division->name }}</option>
@@ -79,7 +79,7 @@
             <div class="col-12 col-md-3">
                 <div class="form-group">
                     <label for="division">Main Proyek</label>
-                    <select class="form-control select2mainProject" id="user" name="daily_task_project">
+                    <select class="form-control select2" name="daily_task_project">
                         <option value="">-- Main Proyek --</option>
                         @foreach ($dailyTaskProjects as $dailyTaskProject)
                             <option value="{{ $dailyTaskProject->name }}" {{ request('daily_task_project') == $dailyTaskProject->name ? 'selected' : '' }}>{{ $dailyTaskProject->name }}</option>
@@ -268,11 +268,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function () {
-        // Initialize Select2
-        $('.select2').select2();
-        $('.UserSelect2').select2();
-        $('.select2mainProject').select2();
-
         // Initialize Daterangepicker
         $('#date_range').daterangepicker({
             autoUpdateInput: false, // Prevents the input from being automatically populated
@@ -320,6 +315,14 @@
                 });
             });
         });
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        // Initialize Select2
+        $('.select2').select2();
+        // $('.select2mainProject').select2();
+        // $('.UserSelect2').select2();
     });
 </script>
 @canAccess('export','dailytasks')
