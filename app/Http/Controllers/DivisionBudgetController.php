@@ -15,6 +15,7 @@ use Auth;
 
 use App\Schemas\RoleSchema;
 use App\Helpers\Access;
+use App\Helpers\InboxHelper;
 
 class DivisionBudgetController extends Controller
 {
@@ -228,6 +229,7 @@ class DivisionBudgetController extends Controller
         ];
         
         $toEmails = [];
+        $toUserId = [];
         $toNames = [];
         
         if(!$approval)
@@ -245,11 +247,13 @@ class DivisionBudgetController extends Controller
             foreach ($usersAdmin as $user) 
             {
                 $toEmails[] = $user->email;
+                $toUserId[] = $user->id;
                 $toNames[] = $user->name;
             }
         }else
         {
             $toEmails[] = $budget->user->email;
+            $toUserId[] = $budget->user->id;
             $toNames[] = $budget->user->name;
             $ccEmails = [Auth::user()->email];
         }
@@ -259,26 +263,32 @@ class DivisionBudgetController extends Controller
         $fromEmail = $smtpConfig['username'] ?? '';
         $fromName = $smtpConfig['name'] ?? '';
 
+        $directUrl = route('division-budget.show', $budget->slug);
         switch ($timeNotify) 
         {
             case "store":
                 $subject = 'Pemberitahuan Pengajuan Anggaran '.$budget->name;
                 $tamplate = 'email.notif_budgetting';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
 
             case "update":
                 $subject = 'Pemberitahuan Perubahan Anggaran '.$budget->name;
                 $tamplate = 'email.notif_budgetting';
+                $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
 
             case "approve":
                 $subject = 'Anggaran '.$budget->name.' Disetujui';
                 $tamplate = 'email.notif_budget_approval';
+                $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
 
             case "notapprove":
                 $subject = 'Anggaran '.$budget->name.' Tidak Disetujui';
                 $tamplate = 'email.notif_budget_decline';
+                $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
         }
 
@@ -298,4 +308,22 @@ class DivisionBudgetController extends Controller
             $ccEmails
         );
     }
+
+    // Inbox Notification
+    private function sentInbox($to,$message,$directUrl)
+    {
+        foreach ($to as $key => $value) 
+        {
+            $inboxHelper = new InboxHelper();
+            $inboxHelper->sent(
+                $value, 
+                Auth::user()->id, 
+                $message, 
+                $directUrl
+            );
+        }
+
+        return;
+    }
+
 }

@@ -78,6 +78,7 @@ class RoleController extends Controller
             'division_budgets',
             'shifting_obs',
             'schedule_obs'
+            'inboxes',
         ];
 
         $checked = array_merge($mainMenus);
@@ -185,6 +186,7 @@ class RoleController extends Controller
                 'division_budgets',
                 'shifting_obs',
                 'schedule_obs',
+                'inboxes',
             ];
         $checked = array_merge($mainMenus);
 
@@ -252,6 +254,7 @@ class RoleController extends Controller
                 'division_budgets',
                 'shifting_obs',
                 'schedule_obs',
+                'inboxes',
             ];
         
         $checked = array_merge($mainMenus);
