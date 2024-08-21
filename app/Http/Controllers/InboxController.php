@@ -21,8 +21,15 @@ class InboxController extends Controller
                             ->orderBy('created_at', 'desc') // Mengurutkan berdasarkan created_at secara menurun
                             ->paginate(10); // Melakukan paginasi dengan 10 item per halaman
 
-        // Mengirim data ke view
-        return view('inbox.index', compact('inboxMessages'));
+        $unreadMessage = Inbox::select('id')->where('user_id_to', Auth::user()->id)
+            ->where('is_read', 0)
+            ->orderBy('created_at', 'desc') // Mengurutkan berdasarkan created_at secara menurun
+            ->get();
+        
+        $inboxNotif = new InboxHelper();
+        $inboxNotif->readAll(Auth::id(),$unreadMessage);
+
+        return view('inbox.index', compact('inboxMessages','unreadMessage'));
     }
 
     /**

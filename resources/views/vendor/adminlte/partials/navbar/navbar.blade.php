@@ -34,7 +34,7 @@
         <li class="nav-item">
             <a class="nav-link" href="{{ route('inbox.index') }}">
                 <i class="fas fa-envelope"></i>
-                <span class="badge badge-danger navbar-badge"></span>
+                <span class="badge badge-success navbar-badge"></span>
             </a>
         </li>
         @endcanAccess

@@ -68,6 +68,14 @@ class InboxHelper
         return true;
     }
 
+    public function readAll($userToId, $inboxMessage)
+    {
+        foreach ($inboxMessage as $inbox) 
+        {
+            $this->read($userToId, $inbox->id);
+        }
+    }
+
     public function read($userToId, $inboxId)
     {
         if($this->database)
