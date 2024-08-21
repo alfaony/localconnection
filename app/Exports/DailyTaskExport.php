@@ -35,7 +35,7 @@ class DailyTaskExport implements FromCollection, WithHeadings, WithMapping
             $row->start_date ? Carbon::parse($row->start_date)->format('d-m-Y').' - '.Carbon::parse($row->end_date)->format('d-m-Y') : "",
             $row->taskStatus->name,
             $row->head ? $row->nameShow.' < '.$row->head->name : $row->nameShow,
-            $row->project ? $row->project->title : "-",
+            $row->project ? $row->project->name : "-",
             $row->dataProject ? $row->dataProject->title : "-",
             $row->point == 0 ? "-" : $row->point,
             $row->user->name ?? '',
