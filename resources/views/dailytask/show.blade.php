@@ -101,7 +101,7 @@
                             </p>
                         </div>
                     </div>
-
+            
                     @if($dailytask->submit)
                         <div class="form-group row">
                             <label for="submit_date" class="col-sm-4 col-form-label">Tanggal Submit:</label>

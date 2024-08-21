@@ -251,6 +251,20 @@ class DailyTask extends Model
         }
     }
 
+    public function getLastCompleteDateAttribute()
+    {
+        // Cari status yang bernama 'complete' dan ambil yang terakhir
+        $completeRecord = $this->statusRecords()
+            ->whereHas('taskStatus', function($query) {
+                $query->where('name', ParamSchema::COMPLATE);
+            })
+            ->orderBy('id', 'desc')
+            ->first();
+
+        // Jika ada, kembalikan tanggalnya; jika tidak, kembalikan null
+        return $completeRecord ? $completeRecord->created_at : null;
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)
@@ -262,6 +276,7 @@ class DailyTask extends Model
         }
     }
 
+    
     public function scopeUserTasks($query, $userId)
     {
         return $query->where(function($query) use ($userId) {
