@@ -90,12 +90,21 @@
                                         </div>
                                         <div class="form-group">
                                             <label for="type_id">Jenis</label>
-                                            <select name="type_id[]" class="form-control select2" required>
+                                            <select name="type_id[]" id="type_id" class="form-control" required>
                                                 <option value="" selected disabled>Pilih Tipe</option>
                                                 @foreach($types as $type)
                                                     <option value="{{ $type->id }}">{{ $type->name }}</option>
                                                 @endforeach
                                             </select>
+                                        </div>
+                                        <!-- Checkbox Hari -->
+                                        <div id="day-checkboxes" style="display:none;">
+                                            <label>Pilih Hari:</label>
+                                            <div>
+                                                @foreach($days as $day => $value)
+                                                <input type="checkbox" name="days[]" value="{{ $day }}"> {{ ucfirst($value) }}
+                                                @endforeach
+                                            </div>
                                         </div>
                                         <div class="form-group">
                                             <label for="type_id">File</label>
@@ -377,6 +386,28 @@
             input.files = validFiles.files; // Update input with valid files
         }
 
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var selectType = document.getElementById('type_id');
+    var dayCheckboxes = document.getElementById('day-checkboxes');
+
+    if (selectType) {
+        selectType.addEventListener('change', function() {
+            // Ganti dengan UUID dari tipe recurring yang sesuai
+            var recurringUUID = '{{ $dailyTaskTypeRecurring->id }}';
+            
+            if (this.value === recurringUUID) {
+                dayCheckboxes.style.display = 'block'; // Tampilkan checkbox hari
+            } else {
+                dayCheckboxes.style.display = 'none'; // Sembunyikan checkbox hari
+            }
+        });
+    } else {
+        console.error('Element with id "type_id" not found.');
+    }
+});
 </script>
 @endsection
 
