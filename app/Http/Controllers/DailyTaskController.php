@@ -359,9 +359,11 @@ class DailyTaskController extends Controller
         $subTasks = DailyTask::byCompany(Auth::user()->company_id)->where('child_daily_task_id',$dailytask->id)->orderBy('created_at','desc')->get();
         $types = DailyTaskType::get();
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
+        $daysMap = config('custom.days');
 
 
-        return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement'));
+
+        return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement', 'daysMap'));
     }
 
     public function createdailytask($slug)
@@ -392,6 +394,7 @@ class DailyTaskController extends Controller
         $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
+        $days = config('custom.days');
 
         $child = $dailytask->head ? TRUE : FALSE ;
         
@@ -407,7 +410,7 @@ class DailyTaskController extends Controller
         }
 
 
-        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child'));
+        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child','days'));
 
     }
 
@@ -448,7 +451,7 @@ class DailyTaskController extends Controller
                 }
     
                 $this->sentInbox($userTo,$message, $directUrl);
-            }
+            }   
 
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
@@ -462,6 +465,7 @@ class DailyTaskController extends Controller
             $dailyTask->project_id = $request->data_project_id[0] ?? NULL ;
             $dailyTask->daily_task_category_id = $request->category_id;
             $dailyTask->objective_id = $request->objective;
+            $dailyTask->recurring_days = $request->input('days') ? json_encode($request->input('days')) : NULL;
 
             $dailyTask->save();
     
@@ -512,7 +516,7 @@ class DailyTaskController extends Controller
             DB::commit();
             return redirect()->route('dailytask.index')->with('update', true);
         } catch (\Throwable $th) {
-            // dd($th); 
+            dd($th); 
             DB::rollback();
             Log::error($th->getMessage());
 

@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\DailyTask;
 use App\Models\TaskStatus;
+use App\Models\DailyTaskMessage;
+use App\Models\DailyTaskStatusRecord;
 use App\Schemas\ParamSchema;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
@@ -89,7 +91,7 @@ class CopyRecurringDailyTasks extends Command
             $existingTask = DailyTask::where('slug', Str::slug($task->name . '-' . Carbon::now()->format('dmY')))->first();
 
             if (!$existingTask) {
-                $this->createNewTask($task, true);
+                $this->createNewTask($task, false);
             }
         }
     }
@@ -129,8 +131,115 @@ class CopyRecurringDailyTasks extends Command
             $newTask->keyResults()->attach($keyResult->id);
         }
 
+        $this->message($newTask,'create',' System Membuat Tugas '.$newTask->name);
+        $this->statusrecord($newTask, $todo);
         // Tambahkan log message
         $this->info('Created new task: ' . $newTask->name);
+    }
+
+    protected function message($dailyTask, $template, $message, $filePath = null)
+    {
+        switch ($template) 
+        {
+            case 'create':
+                $message = 
+                '
+                <div class="alert alert-primary d-flex align-items-center" role="alert" style="background-color: #cce5ff; border-color: #004085; color: #004085;">
+                    <i class="fa fa-plus-circle mr-2" style="color: #004085;"></i>
+                    <div>
+                        '.$message.' 
+                    </div>
+                </div>
+                ';
+                break;
+            case 'edit':
+                $message = 
+                '
+                <div class="alert alert-warning d-flex align-items-center" role="alert" style="background-color: #fff3cd; border-color: #856404; color: #856404;">
+                    <i class="fa fa-edit mr-2" style="color: #856404;"></i>
+                    <div>
+                        '.$message.' 
+                    </div>
+                </div>
+                ';
+                break;
+            case 'report':
+                $message = 
+                '
+                <div class="alert alert-primary d-flex align-items-center" role="alert" style="background-color: #cce5ff; border-color: #004085; color: #004085;">
+                    <i class="fa fa-plus-circle mr-2" style="color: #004085;"></i>
+                    <div>
+                        '.$message.'
+                    </div>
+                </div>
+                ';
+                break;
+            case 'approvement':
+                $message = 
+                '
+                <div class="alert alert-success d-flex align-items-center" role="alert" style="background-color: #d4edda; border-color: #155724; color: #155724;">
+                    <i class="fa fa-thumbs-up mr-2" style="color: #155724;"></i>
+                    <div>
+                        '.$message.'
+                    </div>
+                </div>
+                ';
+                break;
+            case 'extend':
+                $message = 
+                '
+                <div class="alert alert-secondary d-flex align-items-center" role="alert" style="background-color: #e2e3e5; border-color: #383d41; color: #383d41;">
+                    <i class="fa fa-clock mr-2" style="color: #383d41;"></i>
+                    <div>
+                        '.$message.'
+                    </div>
+                </div>
+                ';
+                break;
+
+            case 'reject':
+                $message = 
+                '
+                <div class="alert alert-secondary d-flex align-items-center" role="alert" style="background-color: #e2e3e5; border-color: #ae2121; color: #ae2121;">
+                    <i class="fa fa-times-circle mr-2" style="color: #ae2121;"></i>
+                    <div>
+                        '.$message.'
+                    </div>
+                </div>
+                ';
+                break;
+            default:
+                $message = 
+                '
+                <div class="alert alert-secondary d-flex align-items-center" role="alert" style="background-color: #e2e3e5; border-color: #383d41; color: #383d41;">
+                    <i class="fa fa-comment mr-2" style="color: #383d41;"></i>
+                    <div>
+                        '.$message.'
+                    </div>
+                </div>
+                ';
+                break;
+        }
+
+        $dailyTaskMessage = new DailyTaskMessage();
+        $dailyTaskMessage->user_id = $dailyTask->user_id;
+        $dailyTaskMessage->daily_task_id = $dailyTask->id;
+        $dailyTaskMessage->message = $message;
+        $dailyTaskMessage->file_path = $filePath ?? NULL;
+        $dailyTaskMessage->save();
+
+        return true;
+    } 
+
+    protected function statusrecord($dailyTask, $status)
+    {
+        DailyTaskStatusRecord::create([
+            'daily_task_id' => $dailyTask->id,
+            'task_status_id' => $status->id,
+            'date' => now(),
+        ]);
+
+        return true;
     }
 
 }

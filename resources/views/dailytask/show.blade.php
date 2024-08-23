@@ -168,6 +168,27 @@
                         </div>
                     </div>
 
+                    @if(!empty($dailytask->recurring_days))
+                    <div class="form-group row">
+                        <label for="recurring_days" class="col-sm-4 col-form-label">Recurring Days:</label>
+                        <div class="col-sm-8">
+                            <div class="d-flex align-items-center mt-2">
+                                @php
+                                    $recurringDays = json_decode($dailytask->recurring_days, true);
+                                @endphp
+
+                                @foreach($recurringDays as $day)
+                                    <span class="badge badge-info mr-2 mb-2" style="font-size: 14px;">
+                                        {{ $daysMap[$day] ?? ucfirst($day) }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    
+
                     <div class="form-group row">
                         <label for="description" class="col-sm-4 col-form-label">Deskripsi:</label>
                         <div class="col-sm-8" style="max-height: 40vh; overflow-y: auto;">
@@ -679,7 +700,7 @@
                         <div class="tab-pane fade show active" id="comments" role="tabpanel" aria-labelledby="comments-tab">
                             <h6 class="mt-4">Riwayat Aktifitas</h6>
                             <div style="max-height: 50vh; overflow-y: auto;">
-                                @foreach($dailytask->message as $comment)
+                                @foreach($dailytask->message->sortByDesc('created_at') as $comment)
                                     <div class="media mb-3">
                                         {{-- <img src="{{ $comment->user->profile_image_url ?? 'https://via.placeholder.com/50' }}" class="mr-3" alt="User Image"> --}}
                                         <div class="media-body">
