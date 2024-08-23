@@ -25,6 +25,7 @@ class Kernel extends ConsoleKernel
         // Jadwalkan pekerjaan 'project:reccuring' setiap hari pada pukul 00:00
         $schedule->command('project:reccuring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:00');
 
         $company = Company::all();
         foreach ($company as $a) 
