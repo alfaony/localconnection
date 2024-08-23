@@ -645,10 +645,10 @@ class DailyTaskController extends Controller
             $this->statusrecord($dailytask, $inReview);
             $dailytask->save();
 
-            if ($dailytask->type->name == ParamSchema::RECURRING) 
-            {
-                $this->projectRecurring($dailytask);
-            }
+            // if ($dailytask->type->name == ParamSchema::RECURRING) 
+            // {
+            //     $this->projectRecurring($dailytask);
+            // }
 
             $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
         
