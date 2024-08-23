@@ -181,10 +181,15 @@ class DailyTaskController extends Controller
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
         $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
         $types = DailyTaskType::get();
+        $today = strtolower(Carbon::now()->format('l'));
+        $days = config('custom.days');
+
         $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
         $objectives = Objective::byCompany(Auth::user()->company_id)->get();
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
+
+        $dailyTaskTypeRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
 
         if ($divisionIds->isEmpty()) {
             // Handle the case where the user does not belong to any divisions
@@ -198,7 +203,7 @@ class DailyTaskController extends Controller
         }
 
 
-        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks', 'projects', 'objectives'));
+        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks', 'projects', 'objectives', 'dailyTaskTypeRecurring','today','days'));
     }
 
     public function store(DailyTaskStoreRequest $request)
@@ -217,6 +222,7 @@ class DailyTaskController extends Controller
             $descriptions = $request->description ?? [];
 
             $objectives = $request->objective ?? [];
+            $recurring_days = $request->input('days') ? json_encode($request->input('days')) : NULL;
 
             
             
@@ -231,7 +237,8 @@ class DailyTaskController extends Controller
                     $status = TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail();
 
                 }
-                
+
+
                 $dailyTask = new DailyTask();
                 $dailyTask->user_id = Auth::user()->id;
                 $dailyTask->task_status_id = $status->id;
@@ -246,6 +253,7 @@ class DailyTaskController extends Controller
                 $dailyTask->description = $descriptions[$i] ?? null;
                 $dailyTask->point = 0; // Assuming default value is 0
                 $dailyTask->objective_id = $objectives[$i] ?? NULL;
+                $dailyTask->recurring_days = $recurring_days;
                 $dailyTask->save();
 
                 // Menyimpan custom_field
@@ -351,9 +359,11 @@ class DailyTaskController extends Controller
         $subTasks = DailyTask::byCompany(Auth::user()->company_id)->where('child_daily_task_id',$dailytask->id)->orderBy('created_at','desc')->get();
         $types = DailyTaskType::get();
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
+        $daysMap = config('custom.days');
 
 
-        return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement'));
+
+        return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement', 'daysMap'));
     }
 
     public function createdailytask($slug)
@@ -384,6 +394,7 @@ class DailyTaskController extends Controller
         $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
+        $days = config('custom.days');
 
         $child = $dailytask->head ? TRUE : FALSE ;
         
@@ -399,7 +410,7 @@ class DailyTaskController extends Controller
         }
 
 
-        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child'));
+        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child','days'));
 
     }
 
@@ -440,7 +451,7 @@ class DailyTaskController extends Controller
                 }
     
                 $this->sentInbox($userTo,$message, $directUrl);
-            }
+            }   
 
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
@@ -454,6 +465,7 @@ class DailyTaskController extends Controller
             $dailyTask->project_id = $request->data_project_id[0] ?? NULL ;
             $dailyTask->daily_task_category_id = $request->category_id;
             $dailyTask->objective_id = $request->objective;
+            $dailyTask->recurring_days = $request->input('days') ? json_encode($request->input('days')) : NULL;
 
             $dailyTask->save();
     
@@ -504,7 +516,7 @@ class DailyTaskController extends Controller
             DB::commit();
             return redirect()->route('dailytask.index')->with('update', true);
         } catch (\Throwable $th) {
-            // dd($th); 
+            dd($th); 
             DB::rollback();
             Log::error($th->getMessage());
 
