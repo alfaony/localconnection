@@ -311,7 +311,7 @@ class DailyTaskController extends Controller
                 $inboxHelper->sent(
                     $dailyTask->assignment_user_id, 
                     Auth::user()->id, 
-                    'Tugas ' . $dailyTask->name, 
+                    Auth::user()->name.' Menugaskan ' . $dailyTask->name, 
                     $directUrl
                 );
 
@@ -1017,14 +1017,14 @@ class DailyTaskController extends Controller
 
             if($dailyTaskHead->user_id == $dailyTaskHead->assignment_user_id)
             {
-                $this->sentInbox($dailyTaskHead->user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+                $this->sentInbox($dailyTaskHead->user_id,Auth::user()->name.' Membuat Sub Tugas '. $dailyTask->name .' pada tugas '.$dailyTaskHead->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
             }else
             {
-                $this->sentInbox($dailyTaskHead->user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
-                $this->sentInbox($dailyTaskHead->assignment_user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+                $this->sentInbox($dailyTaskHead->user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name .' pada tugas '.$dailyTaskHead->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+                $this->sentInbox($dailyTaskHead->assignment_user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name .' pada tugas '.$dailyTaskHead->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
             }
 
-            $this->sentInbox($dailyTask->assignment_user_id, 'Membuat Tugas ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+            $this->sentInbox($dailyTask->assignment_user_id, Auth::user()->name. ' Menugaskan ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
             $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
             $this->statusrecord($dailyTask, $status);
 
