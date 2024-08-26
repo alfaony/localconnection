@@ -29,13 +29,13 @@
                                 <span class="badge badge-primary mr-2">New</span>
                             @endif
                             <h5 class="mb-1 {{ $message->is_read ? 'font-weight-normal' : 'font-weight-bold' }}">
-                                {{ Str::limit($message->message, 50) }}
+                                {{ $message->message }}
                             </h5>
                         </div>
                         <small>{{ $message->created_at->diffForHumans() }}</small>
                     </div>
 
-                    <p class="mb-1">{{ Str::limit($message->message, 100) }}</p>
+                    <!-- <p class="mb-1">{{ Str::limit($message->message, 100) }}</p> -->
                     <small>Dari: {{ $message->userFrom->name }}</small>
 
                     @if($message->is_read)
