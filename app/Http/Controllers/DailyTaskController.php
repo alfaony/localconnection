@@ -570,6 +570,19 @@ class DailyTaskController extends Controller
     public function destroy(Request $request, $slug)
     {
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+
+        if($dailytask->head)
+        {
+            if($dailytask->head->user_id == $dailytask->head->assignment_user_id)
+            {
+                $this->sentInbox($dailytask->head->user_id,Auth::user()->name.' Menghapus Sub Tugas ' . $dailytask->name, null);
+            }else
+            {
+                $this->sentInbox($dailytask->head->user_id,Auth::user()->name.' Menghapus Sub Tugas ' . $dailytask->name, null);
+                $this->sentInbox($dailytask->head->assignment_user_id,Auth::user()->name.' Menghapus Sub Tugas ' . $dailytask->name, null);
+            }
+        }
+
         $dailytask->delete();
 
         if($request->redirect)
@@ -655,6 +668,18 @@ class DailyTaskController extends Controller
                 $this->sentInbox($dailytask->user_id,'Membuat Laporan pada Tugas ' . $dailytask->name, $directUrl);
             }
             $this->sentInbox($userTo,'Membuat Laporan pada Tugas ' . $dailytask->name, $directUrl);
+
+            if($dailytask->head)
+            {
+                if($dailytask->head->user_id == $dailytask->head->assignment_user_id)
+                {
+                    $this->sentInbox($dailytask->head->user_id,Auth::user()->name.' Membuat Laporan pada Tugas ' . $dailytask->name, $directUrl);
+                }else
+                {
+                    $this->sentInbox($dailytask->head->user_id,Auth::user()->name.' Membuat Laporan pada Sub Tugas ' . $dailytask->name, $directUrl);
+                    $this->sentInbox($dailytask->head->assignment_user_id,Auth::user()->name.' Membuat Laporan pada Sub Tugas ' . $dailytask->name, $directUrl);
+                }
+            }
 
             DB::commit();
             return redirect()->route('dailytask.show', $dailytask->slug)->with('report', true);
@@ -780,6 +805,17 @@ class DailyTaskController extends Controller
 
             $this->sentInbox($userTo,"Tugas ".$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
             
+            if($dailytask->head)
+            {
+                if($dailytask->head->user_id == $dailytask->head->assignment_user_id)
+                {
+                    $this->sentInbox($dailytask->head->user_id,$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
+                }else
+                {
+                    $this->sentInbox($dailytask->head->user_id,$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
+                    $this->sentInbox($dailytask->head->assignment_user_id,$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
+                }
+            }
             $dailytask->save();
 
             DB::commit();
@@ -820,6 +856,18 @@ class DailyTaskController extends Controller
             }
 
             $this->sentInbox($dailytask->user_id, "memperpanjang tugas ".$dailytask->name." Dari ".Carbon::parse($dailytask->end_date)->format('d-m-Y')." menjadi ".Carbon::parse($request->end_date)->format('d-m-Y'), $directUrl);
+
+            if($dailytask->head)
+            {
+                if($dailytask->head->user_id == $dailytask->head->assignment_user_id)
+                {
+                    $this->sentInbox($dailytask->head->user_id,Auth::user()->name." Memperpanjang tugas ".$dailytask->name." Dari ".Carbon::parse($dailytask->end_date)->format('d-m-Y')." menjadi ".Carbon::parse($request->end_date)->format('d-m-Y'), $directUrl);
+                }else
+                {
+                    $this->sentInbox($dailytask->head->user_id,Auth::user()->name." Memperpanjang tugas ".$dailytask->name." Dari ".Carbon::parse($dailytask->end_date)->format('d-m-Y')." menjadi ".Carbon::parse($request->end_date)->format('d-m-Y'), $directUrl);
+                    $this->sentInbox($dailytask->head->assignment_user_id,Auth::user()->name." Memperpanjang tugas ".$dailytask->name." Dari ".Carbon::parse($dailytask->end_date)->format('d-m-Y')." menjadi ".Carbon::parse($request->end_date)->format('d-m-Y'), $directUrl);
+                }
+            }
 
             $dailytask->start_date = $request->start_date;
             $dailytask->end_date = $request->end_date;
@@ -965,6 +1013,15 @@ class DailyTaskController extends Controller
             foreach ($dailyTaskHead->keyResults as $okr) 
             {
                 $dailyTask->keyResults()->attach($okr->id);
+            }
+
+            if($dailyTaskHead->user_id == $dailyTaskHead->assignment_user_id)
+            {
+                $this->sentInbox($dailyTaskHead->user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+            }else
+            {
+                $this->sentInbox($dailyTaskHead->user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+                $this->sentInbox($dailyTaskHead->assignment_user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
             }
 
             $this->sentInbox($dailyTask->assignment_user_id, 'Membuat Tugas ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));

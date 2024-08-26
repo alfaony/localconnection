@@ -679,7 +679,7 @@
                         <div class="tab-pane fade show active" id="comments" role="tabpanel" aria-labelledby="comments-tab">
                             <h6 class="mt-4">Riwayat Aktifitas</h6>
                             <div style="max-height: 50vh; overflow-y: auto;">
-                                @foreach($dailytask->message as $comment)
+                                @foreach($dailytask->message->sortByDesc('created_at') as $comment)
                                     <div class="media mb-3">
                                         {{-- <img src="{{ $comment->user->profile_image_url ?? 'https://via.placeholder.com/50' }}" class="mr-3" alt="User Image"> --}}
                                         <div class="media-body">
