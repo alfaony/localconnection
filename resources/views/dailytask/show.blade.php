@@ -603,7 +603,7 @@
                     <!-- Existing Sub Tasks -->
                     <table class="table mt-3" id="existing-tasks-list">
                         <tbody>
-                            @foreach($subTasks as $subTask)
+                            @foreach($subTasks->sortByDesc('start_date') as $subTask)
                                 @php
                                     $isOverdueSub = $subTask->isOverdue();
                                 @endphp

@@ -397,6 +397,7 @@ class DailyTaskController extends Controller
         $days = config('custom.days');
 
         $child = $dailytask->head ? TRUE : FALSE ;
+        $taskRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
         
         if ($divisionIds->isEmpty()) {
             // Handle the case where the user does not belong to any divisions
@@ -410,7 +411,7 @@ class DailyTaskController extends Controller
         }
 
 
-        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child','days'));
+        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child','days','taskRecurring'));
 
     }
 
@@ -453,6 +454,10 @@ class DailyTaskController extends Controller
                 $this->sentInbox($userTo,$message, $directUrl);
             }   
 
+            // Handle Recurring Task Creation
+            $oldType = $dailyTask->type_id;
+            $newType = $request->type_id;
+            
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
             $dailyTask->assignment_user_id = $request->assignment_user_id;
@@ -511,12 +516,18 @@ class DailyTaskController extends Controller
                 }
             }
 
+            // Reccruing
+            if ($oldType != $newType && DailyTaskType::find($newType)->name  == ParamSchema::RECURRING) 
+            // if (DailyTaskType::find($newType)->name  == ParamSchema::RECURRING) 
+            {
+                $this->handleRecurringTask($dailyTask, $request);
+            }
             $this->message($dailyTask->id,'edit','Mengubah Task '.$dailyTask->name);
 
             DB::commit();
             return redirect()->route('dailytask.index')->with('update', true);
         } catch (\Throwable $th) {
-            dd($th); 
+            // dd($th); 
             DB::rollback();
             Log::error($th->getMessage());
 
@@ -1399,5 +1410,88 @@ class DailyTaskController extends Controller
 
         return;
     }
+
+    protected function handleRecurringTask($dailyTask, $request)
+    {
+        $today = Carbon::now();
+        $recurringDays = $request->input('days');
+
+        // Jika tanggal mulai kurang dari hari ini
+        if (Carbon::parse($dailyTask->start_date)->lessThan($today)) 
+        {
+            // Loop dari start_date hingga hari ini
+            $currentDate = Carbon::parse($dailyTask->start_date);
+
+            while ($currentDate->lessThanOrEqualTo($today)) 
+            {
+                if ($recurringDays && count($recurringDays) > 0) {
+                    // Jika recurringDays ada, buat tugas baru untuk setiap hari di recurringDays
+                    foreach ($recurringDays as $day) {
+                        $nextDate = $currentDate->copy()->next($day);
+
+                        // Periksa apakah nextDate ada dalam rentang waktu saat ini
+                        if ($nextDate->lessThanOrEqualTo($today) && $nextDate->greaterThanOrEqualTo($currentDate)) {
+                            $this->createRecurringTask($dailyTask, $nextDate);
+                        }
+                    }
+                } else {
+                    // Jika recurringDays tidak ada, buat tugas baru satu minggu dari currentDate
+                    $nextWeekStartDate = $currentDate->copy()->addWeek();
+
+                    if ($nextWeekStartDate->lessThanOrEqualTo($today)) {
+                        $this->createRecurringTask($dailyTask, $nextWeekStartDate);
+                    }
+                }
+
+                // Tambahkan 1 minggu pada currentDate jika tidak ada recurringDays
+                if (!$recurringDays || count($recurringDays) == 0) {
+                    $currentDate->addWeek();
+                } else {
+                    // Jika ada recurringDays, tambahkan 1 hari pada currentDate
+                    $currentDate->addDay();
+                }
+            }
+        }
+    }
+
+    protected function createRecurringTask($dailyTask, $newDate)
+    {
+        // Todo
+        $todo = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+
+        // Salin tugas asli
+        $newTask = $dailyTask->replicate();
+
+        // Tentukan tanggal baru berdasarkan newDate
+        $duration = Carbon::parse($dailyTask->end_date)->diffInDays(Carbon::parse($dailyTask->start_date));
+        $newTask->start_date = $newDate;
+        $newTask->end_date = $newDate->copy()->addDays($duration);
+
+        // Generate slug baru
+        if(!DailyTask::where('slug',$dailyTask->slug . '-' . $newDate->format('dmY'))->exists())
+        {
+            $newTask->slug = $dailyTask->slug . '-' . $newDate->format('dmY');
+            $newTask->task_status_id = $todo->id;
+            $newTask->report_note = null;
+            $newTask->submit = null;
+            $newTask->status_submit = null;
+            $newTask->approved = false;
+            $newTask->point = 0;
+            $newTask->created_at = Carbon::now();
+
+            // Simpan tugas baru
+            $newTask->save();
+
+            // Copy semua key results dari tugas asli
+            $keyResults = $dailyTask->keyResults;
+            foreach ($keyResults as $keyResult) {
+                $newTask->keyResults()->attach($keyResult->id);
+            }
+
+            // Tambahkan log message
+            return true;
+        }
+    }
+
 }
 
