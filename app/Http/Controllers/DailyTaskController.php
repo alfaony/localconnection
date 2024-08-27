@@ -15,6 +15,7 @@ use App\Http\Requests\DailyTaskSubTaskRequest;
 
 use App\Exports\DailyTaskTemplateExport;
 use App\Imports\DailyTaskImport;
+use App\Exports\DailyTaskExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 use Carbon\Carbon;
@@ -43,7 +44,7 @@ class DailyTaskController extends Controller
     {
         // Ambil user ID dari autentikasi
         $userId = Auth::user();
-
+        
         // Ambil filter dari request
         $taskFilter = $request->input('task') ?? 'today';
         $userFilter = $request->input('user');
@@ -52,7 +53,7 @@ class DailyTaskController extends Controller
         $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
         $search = $request->input('search');
         $division = $request->input('division');
-        $divisions = $userId->divisions()->get();
+        $dailyTaskProjects = $request->input('daily_task_project');
 
         // Query dasar untuk tugas harian berdasarkan user ID
         $query = DailyTask::orderBy('created_at', $request->input('sort') ?? 'desc');
@@ -97,14 +98,14 @@ class DailyTaskController extends Controller
                     $q->where('name', $userFilter);
                 });
             }
-            else
-            {
-                $query->where(function($query) 
-                {
-                    $query->where('assignment_user_id',Auth::user()->id)->orWhere('user_id',Auth::user()->id);
-                }
-                );
-            }
+            // else
+            // {
+            //     $query->where(function($query) 
+            //     {
+            //         $query->where('assignment_user_id',Auth::user()->id)->orWhere('user_id',Auth::user()->id);
+            //     }
+            //     );
+            // }
         }
         
         else
@@ -146,8 +147,19 @@ class DailyTaskController extends Controller
                 $q->where('name', $division);
             });
         }
+        
+        // Filter berdasarkan project
+        if ($dailyTaskProjects) {
+            $query->whereHas('project', function ($q) use ($dailyTaskProjects) {
+                $q->where('name', $dailyTaskProjects);
+            });
+        }
+
         // Paginate hasil query
         $dailyTasks = $query->byCompany(Auth::user()->company_id)->paginate(10);
+
+        // Division
+        $divisions = $userId->divisions()->get();
 
         // Ambil data lain yang diperlukan untuk form
         $taskTimeFrame = [
@@ -157,9 +169,10 @@ class DailyTaskController extends Controller
         ];
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
         $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
+        $dailyTaskProjects = DailyTaskProject::byCompany(Auth::user()->company_id)->get(); 
 
         // Kembalikan view dengan data
-        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss', 'divisions'));
+        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss', 'divisions','dailyTaskProjects'));
     }
 
     public function create()
@@ -298,7 +311,7 @@ class DailyTaskController extends Controller
                 $inboxHelper->sent(
                     $dailyTask->assignment_user_id, 
                     Auth::user()->id, 
-                    'Tugas ' . $dailyTask->name, 
+                    Auth::user()->name.' Menugaskan ' . $dailyTask->name, 
                     $directUrl
                 );
 
@@ -557,6 +570,19 @@ class DailyTaskController extends Controller
     public function destroy(Request $request, $slug)
     {
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+
+        if($dailytask->head)
+        {
+            if($dailytask->head->user_id == $dailytask->head->assignment_user_id)
+            {
+                $this->sentInbox($dailytask->head->user_id,Auth::user()->name.' Menghapus Sub Tugas ' . $dailytask->name, null);
+            }else
+            {
+                $this->sentInbox($dailytask->head->user_id,Auth::user()->name.' Menghapus Sub Tugas ' . $dailytask->name, null);
+                $this->sentInbox($dailytask->head->assignment_user_id,Auth::user()->name.' Menghapus Sub Tugas ' . $dailytask->name, null);
+            }
+        }
+
         $dailytask->delete();
 
         if($request->redirect)
@@ -642,6 +668,18 @@ class DailyTaskController extends Controller
                 $this->sentInbox($dailytask->user_id,'Membuat Laporan pada Tugas ' . $dailytask->name, $directUrl);
             }
             $this->sentInbox($userTo,'Membuat Laporan pada Tugas ' . $dailytask->name, $directUrl);
+
+            if($dailytask->head)
+            {
+                if($dailytask->head->user_id == $dailytask->head->assignment_user_id)
+                {
+                    $this->sentInbox($dailytask->head->user_id,Auth::user()->name.' Membuat Laporan pada Tugas ' . $dailytask->name, $directUrl);
+                }else
+                {
+                    $this->sentInbox($dailytask->head->user_id,Auth::user()->name.' Membuat Laporan pada Sub Tugas ' . $dailytask->name, $directUrl);
+                    $this->sentInbox($dailytask->head->assignment_user_id,Auth::user()->name.' Membuat Laporan pada Sub Tugas ' . $dailytask->name, $directUrl);
+                }
+            }
 
             DB::commit();
             return redirect()->route('dailytask.show', $dailytask->slug)->with('report', true);
@@ -767,6 +805,17 @@ class DailyTaskController extends Controller
 
             $this->sentInbox($userTo,"Tugas ".$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
             
+            if($dailytask->head)
+            {
+                if($dailytask->head->user_id == $dailytask->head->assignment_user_id)
+                {
+                    $this->sentInbox($dailytask->head->user_id,$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
+                }else
+                {
+                    $this->sentInbox($dailytask->head->user_id,$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
+                    $this->sentInbox($dailytask->head->assignment_user_id,$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
+                }
+            }
             $dailytask->save();
 
             DB::commit();
@@ -807,6 +856,18 @@ class DailyTaskController extends Controller
             }
 
             $this->sentInbox($dailytask->user_id, "memperpanjang tugas ".$dailytask->name." Dari ".Carbon::parse($dailytask->end_date)->format('d-m-Y')." menjadi ".Carbon::parse($request->end_date)->format('d-m-Y'), $directUrl);
+
+            if($dailytask->head)
+            {
+                if($dailytask->head->user_id == $dailytask->head->assignment_user_id)
+                {
+                    $this->sentInbox($dailytask->head->user_id,Auth::user()->name." Memperpanjang tugas ".$dailytask->name." Dari ".Carbon::parse($dailytask->end_date)->format('d-m-Y')." menjadi ".Carbon::parse($request->end_date)->format('d-m-Y'), $directUrl);
+                }else
+                {
+                    $this->sentInbox($dailytask->head->user_id,Auth::user()->name." Memperpanjang tugas ".$dailytask->name." Dari ".Carbon::parse($dailytask->end_date)->format('d-m-Y')." menjadi ".Carbon::parse($request->end_date)->format('d-m-Y'), $directUrl);
+                    $this->sentInbox($dailytask->head->assignment_user_id,Auth::user()->name." Memperpanjang tugas ".$dailytask->name." Dari ".Carbon::parse($dailytask->end_date)->format('d-m-Y')." menjadi ".Carbon::parse($request->end_date)->format('d-m-Y'), $directUrl);
+                }
+            }
 
             $dailytask->start_date = $request->start_date;
             $dailytask->end_date = $request->end_date;
@@ -954,7 +1015,16 @@ class DailyTaskController extends Controller
                 $dailyTask->keyResults()->attach($okr->id);
             }
 
-            $this->sentInbox($dailyTask->assignment_user_id, 'Membuat Tugas ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+            if($dailyTaskHead->user_id == $dailyTaskHead->assignment_user_id)
+            {
+                $this->sentInbox($dailyTaskHead->user_id,Auth::user()->name.' Membuat Sub Tugas '. $dailyTask->name .' pada tugas '.$dailyTaskHead->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+            }else
+            {
+                $this->sentInbox($dailyTaskHead->user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name .' pada tugas '.$dailyTaskHead->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+                $this->sentInbox($dailyTaskHead->assignment_user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name .' pada tugas '.$dailyTaskHead->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+            }
+
+            $this->sentInbox($dailyTask->assignment_user_id, Auth::user()->name. ' Menugaskan ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
             $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
             $this->statusrecord($dailyTask, $status);
 
@@ -1010,6 +1080,131 @@ class DailyTaskController extends Controller
             return redirect()->back()->withErrors($errors)->withInput();
         }
     }
+
+    // Export
+    public function export(Request $request)
+    {
+        $userId = Auth::user();
+
+        // Ambil filter dari request
+        $format = $request->input('format', 'xlsx'); // Default ke 'xlsx' jika tidak ada format yang diberikan
+
+        $taskFilter = $request->input('task') ?? 'today';
+        $userFilter = $request->input('user');
+        $statusFilter = $request->input('status');
+        $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null; // Parse tanggal dari string ke Carbon
+        $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
+        $search = $request->input('search');
+        $division = $request->input('division');
+        $dailyTaskProjects = $request->input('daily_task_project');
+
+        // Query dasar untuk tugas harian berdasarkan user ID
+        $query = DailyTask::orderBy('created_at', $request->input('sort') ?? 'desc');
+
+        if(!$statusFilter && !$search && $taskFilter != 'all')
+        {
+            $query->whereHas('taskStatus', function ($query)
+            {
+                $query->where(function($query) 
+                {
+                    $query->where('name',ParamSchema::DOING)->orWhere('name',ParamSchema::INREVIEW)->orWhere('name',ParamSchema::TODO)->orWhere('name',ParamSchema::NOTCOMPLATE);
+                });
+                    
+            })
+            ;
+        }
+        // Filter berdasarkan task
+        if ($taskFilter) {
+            switch ($taskFilter) 
+            {
+                case 'overdue':
+                    // $query->where('end_date', '<', Carbon::now());
+                    $query->whereDate('start_date', '<', now())->whereDate('end_date', '<', now());
+
+                    break;
+                case 'today':
+                    $query->whereDate('start_date', '<=', now())->whereDate('end_date', '>=', now());
+                    break;
+                case 'upcoming':
+                    $query->where('start_date', '>', now());
+                    break;
+            }
+        }
+
+        // Filter berdasarkan user
+        if ($userFilter) 
+        {   
+            if($userFilter != ParamSchema::ALL)
+            {
+                $query->whereHas('assign', function ($q) use ($userFilter) 
+                {
+                    $q->where('name', $userFilter);
+                });
+            }
+            // else
+            // {
+            //     $query->where(function($query) 
+            //     {
+            //         $query->where('assignment_user_id',Auth::user()->id)->orWhere('user_id',Auth::user()->id);
+            //     }
+            //     );
+            // }
+        }
+        
+        else
+        {
+            $query->UserTasks($userId->id);
+        }
+
+        // Filter berdasarkan status
+        if ($statusFilter) 
+        {
+            $query->whereHas('taskStatus', function ($q) use ($statusFilter) {
+                $q->where('name', $statusFilter);
+            });
+        }else
+        {
+            $query->whereHas('taskStatus', function ($query)
+            {
+                $query->where(function($query) 
+                {
+                    $query->where('name','!=',ParamSchema::BACKLOG);
+                });
+            });
+        }
+
+        // Filter berdasarkan tanggal
+        if ($start_date && $end_date) 
+        {
+            $query->byDateRange($start_date, $end_date);
+        }
+        
+        if ($search) 
+        {
+            $query->where('name', 'like', "%{$search}%"); // Add other fields as necessary
+        }
+
+        // Filter berdasarkan divisi
+        if ($division) {
+            $query->whereHas('user.divisions', function ($q) use ($division) {
+                $q->where('name', $division);
+            });
+        }
+        
+        // Filter berdasarkan project
+        if ($dailyTaskProjects) {
+            $query->whereHas('project', function ($q) use ($dailyTaskProjects) {
+                $q->where('name', $dailyTaskProjects);
+            });
+        }
+
+        $query->byCompany(Auth::user()->company_id);
+
+
+        $dailyTask = $query->get();
+        return Excel::download(new DailyTaskExport($dailyTask), 'dailytasks.' . $format, $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX);
+    }
+
 
     public function template()
     {
