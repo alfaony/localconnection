@@ -418,7 +418,7 @@ class DailyTaskProjectController extends Controller
         $customFields = $project->customFields;
         $redirect = $request->redirect ?? 'daily_task_project.showproject';
         $days = config('custom.days');
-        $minDate = Carbon::now()->subWeek()->addDay()->format('Y-m-d');
+        $minDate = Carbon::now()->format('Y-m-d');
         $taskRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
 
 

@@ -188,7 +188,8 @@ class DailyTaskController extends Controller
         $objectives = Objective::byCompany(Auth::user()->company_id)->get();
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
-        $minDate = Carbon::now()->subWeek()->addDay()->format('Y-m-d');
+        $minDate = Carbon::now()->format('Y-m-d');
+
         $taskRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
 
         $dailyTaskTypeRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();

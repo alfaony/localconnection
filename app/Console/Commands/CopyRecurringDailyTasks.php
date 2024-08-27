@@ -10,6 +10,7 @@ use App\Models\DailyTaskStatusRecord;
 use App\Schemas\ParamSchema;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use App\Helpers\InboxHelper;
 
 class CopyRecurringDailyTasks extends Command
 {
@@ -133,7 +134,16 @@ class CopyRecurringDailyTasks extends Command
 
         $this->message($newTask,'create',' System Membuat Tugas '.$newTask->name);
         $this->statusrecord($newTask, $todo);
-        // Tambahkan log message
+
+        $directUrl = route('dailytask.show', ['dailytask' => $newTask->slug]);
+
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $newTask->assignment_user_id, 
+            $newTask->user_id, 
+            'Tugas ' . $newTask->name .' Dibuat Sistem secara Recurring', 
+            $directUrl
+        );
         $this->info('Created new task: ' . $newTask->name);
     }
 
