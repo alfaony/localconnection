@@ -89,7 +89,7 @@
                                             </select>
                                         </div>
                                         <div class="form-group">
-                                            <label for="type_id">Jenis</label>
+                                            <label for="type_id">Jenis Tugas</label>
                                             <select name="type_id[]" id="type_id" class="form-control" required>
                                                 <option value="" selected disabled>Pilih Tipe</option>
                                                 @foreach($types as $type)
@@ -147,7 +147,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
-
 <script>
     $(document).ready(function() 
     {
@@ -389,25 +388,50 @@
 </script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var selectType = document.getElementById('type_id');
-    var dayCheckboxes = document.getElementById('day-checkboxes');
+    document.addEventListener('DOMContentLoaded', function() {
+        var selectType = document.getElementById('type_id');
+        var dayCheckboxes = document.getElementById('day-checkboxes');
 
-    if (selectType) {
-        selectType.addEventListener('change', function() {
-            // Ganti dengan UUID dari tipe recurring yang sesuai
-            var recurringUUID = '{{ $dailyTaskTypeRecurring->id }}';
-            
-            if (this.value === recurringUUID) {
-                dayCheckboxes.style.display = 'block'; // Tampilkan checkbox hari
+        if (selectType) {
+            selectType.addEventListener('change', function() {
+                // Ganti dengan UUID dari tipe recurring yang sesuai
+                var recurringUUID = '{{ $dailyTaskTypeRecurring->id }}';
+                
+                if (this.value === recurringUUID) {
+                    dayCheckboxes.style.display = 'block'; // Tampilkan checkbox hari
+                } else {
+                    dayCheckboxes.style.display = 'none'; // Sembunyikan checkbox hari
+                }
+            });
+        } else {
+            console.error('Element with id "type_id" not found.');
+        }
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.getElementById('type_id');
+        const startDateInput = document.querySelector('.start-date');
+        const endDateInput = document.querySelector('.end-date');
+        const minDate = "{{ $minDate }}"; // This is the min date from the controller
+
+        typeSelect.addEventListener('change', function () {
+            const selectedType = this.value;
+            const typeIdRecurring = "{{ $taskRecurring->id }}"; // Define your recurring type ID here
+
+            if (selectedType == typeIdRecurring) {
+                startDateInput.setAttribute('min', minDate);
+                endDateInput.setAttribute('min', minDate);
+
+                // Set Value
+                startDateInput.value = minDate;
+                endDateInput.value = minDate;
             } else {
-                dayCheckboxes.style.display = 'none'; // Sembunyikan checkbox hari
+                startDateInput.removeAttribute('min');
+                endDateInput.removeAttribute('min');
             }
         });
-    } else {
-        console.error('Element with id "type_id" not found.');
-    }
-});
+    });
 </script>
 @endsection
 
