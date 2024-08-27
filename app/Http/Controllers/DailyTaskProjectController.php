@@ -417,6 +417,9 @@ class DailyTaskProjectController extends Controller
         $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $customFields = $project->customFields;
         $redirect = $request->redirect ?? 'daily_task_project.showproject';
+        $days = config('custom.days');
+        $minDate = Carbon::now()->subWeek()->addDay()->format('Y-m-d');
+        $taskRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
 
 
         $user = Auth::user(); // Get the current authenticated user
@@ -434,7 +437,7 @@ class DailyTaskProjectController extends Controller
             })->get();
         }
 
-        return view('daily_task_project.create_daily_task', compact('project', 'users', 'taskStatuss', 'objectives', 'projects', 'categories', 'childTasks', 'types', 'customFields', 'redirect'));
+        return view('daily_task_project.create_daily_task', compact('project', 'users', 'taskStatuss', 'objectives', 'projects', 'categories', 'childTasks', 'types', 'customFields', 'redirect', 'days', 'minDate','taskRecurring'));
     }
 
 }

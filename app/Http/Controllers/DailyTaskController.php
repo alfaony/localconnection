@@ -188,6 +188,8 @@ class DailyTaskController extends Controller
         $objectives = Objective::byCompany(Auth::user()->company_id)->get();
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
+        $minDate = Carbon::now()->subWeek()->addDay()->format('Y-m-d');
+        $taskRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
 
         $dailyTaskTypeRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
 
@@ -203,7 +205,7 @@ class DailyTaskController extends Controller
         }
 
 
-        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks', 'projects', 'objectives', 'dailyTaskTypeRecurring','today','days'));
+        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks', 'projects', 'objectives', 'dailyTaskTypeRecurring','today','days','minDate','taskRecurring'));
     }
 
     public function store(DailyTaskStoreRequest $request)
