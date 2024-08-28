@@ -139,7 +139,7 @@
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 
 <script>
@@ -329,9 +329,15 @@
                 // Set Value
                 startDateInput.value = minDate;
                 endDateInput.value = minDate;
+
+                startDateInput.setAttribute('required', 'required');
+                endDateInput.setAttribute('required', 'required');
             } else {
                 startDateInput.removeAttribute('min');
                 endDateInput.removeAttribute('min');
+
+                startDateInput.removeAttribute('required');
+                endDateInput.removeAttribute('required');
             }
         });
     });
