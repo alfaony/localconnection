@@ -1349,6 +1349,17 @@ class DailyTaskController extends Controller
                 </div>
                 ';
                 break;
+            case 'trash':
+                $message = 
+                '
+                <div class="alert alert-secondary d-flex align-items-center" role="alert" style="background-color: #e2e3e5; border-color: #ae2121; color: #ae2121;">
+                    <i class="fa fa-trash mr-2" style="color: #ae2121;"></i>
+                    <div>
+                        '.$message.'
+                    </div>
+                </div>
+                ';
+                break;
             default:
                 $message = 
                 '
@@ -1532,7 +1543,7 @@ class DailyTaskController extends Controller
                 $task->daily_task_type_id = $types->id;
                 $task->save();
 
-                $this->message($task->id,'edit','System Recurring Tugas '.$task->name.' dihapus');
+                $this->message($task->id,'trash','System Recurring Tugas '.$task->name.' dihapus');
             }
         }
     }
