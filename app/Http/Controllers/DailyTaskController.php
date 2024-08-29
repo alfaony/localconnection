@@ -37,6 +37,7 @@ use App\Models\DailyTaskStatusRecord;
 use App\Models\SettingCompany;
 
 use App\Helpers\InboxHelper;
+use Ramsey\Uuid\Uuid;
 
 class DailyTaskController extends Controller
 {
@@ -257,6 +258,12 @@ class DailyTaskController extends Controller
                 $dailyTask->point = 0; // Assuming default value is 0
                 $dailyTask->objective_id = $objectives[$i] ?? NULL;
                 $dailyTask->recurring_days = $recurring_days;
+
+                if (DailyTaskType::find($typeIds[$i])->name  == ParamSchema::RECURRING) 
+                {
+                    $dailyTask->recurring_group_id = Uuid::uuid4()->toString();
+                }
+                
                 $dailyTask->save();
 
                 // Menyimpan custom_field
@@ -458,7 +465,7 @@ class DailyTaskController extends Controller
             }   
 
             // Handle Recurring Task Creation
-            $oldType = $dailyTask->type_id;
+            $oldType = $dailyTask->daily_task_type_id;
             $newType = $request->type_id;
             
             $dailyTask->start_date = $request->start_date;
@@ -519,18 +526,25 @@ class DailyTaskController extends Controller
                 }
             }
 
+            // dd($request->all());
             // Reccruing
-            if ($oldType != $newType && DailyTaskType::find($newType)->name  == ParamSchema::RECURRING) 
-            // if (DailyTaskType::find($newType)->name  == ParamSchema::RECURRING) 
+            // if ($oldType != $newType && DailyTaskType::find($newType)->name  == ParamSchema::RECURRING) 
+            if (DailyTaskType::find($newType)->name  == ParamSchema::RECURRING) 
             {
                 $this->handleRecurringTask($dailyTask, $request);
             }
+            
+            if ($oldType != $newType && DailyTaskType::find($newType)->name  == "Daily")
+            {
+                $this->setrecurringToNull($dailyTask);
+            } 
+
             $this->message($dailyTask->id,'edit','Mengubah Task '.$dailyTask->name);
 
             DB::commit();
             return redirect()->route('dailytask.index')->with('update', true);
         } catch (\Throwable $th) {
-            // dd($th); 
+            dd($th); 
             DB::rollback();
             Log::error($th->getMessage());
 
@@ -1418,6 +1432,7 @@ class DailyTaskController extends Controller
     {
         $today = Carbon::now();
         $recurringDays = $request->input('days');
+        $newGroupId = Uuid::uuid4()->toString();
 
         // Jika tanggal mulai kurang dari hari ini
         if (Carbon::parse($dailyTask->start_date)->lessThan($today)) 
@@ -1434,7 +1449,7 @@ class DailyTaskController extends Controller
 
                         // Periksa apakah nextDate ada dalam rentang waktu saat ini
                         if ($nextDate->lessThanOrEqualTo($today) && $nextDate->greaterThanOrEqualTo($currentDate)) {
-                            $this->createRecurringTask($dailyTask, $nextDate);
+                            $this->createRecurringTask($dailyTask, $nextDate, $newGroupId);
                         }
                     }
                 } else {
@@ -1442,7 +1457,7 @@ class DailyTaskController extends Controller
                     $nextWeekStartDate = $currentDate->copy()->addWeek();
 
                     if ($nextWeekStartDate->lessThanOrEqualTo($today)) {
-                        $this->createRecurringTask($dailyTask, $nextWeekStartDate);
+                        $this->createRecurringTask($dailyTask, $nextWeekStartDate, $newGroupId);
                     }
                 }
 
@@ -1457,8 +1472,13 @@ class DailyTaskController extends Controller
         }
     }
 
-    protected function createRecurringTask($dailyTask, $newDate)
+    protected function createRecurringTask($dailyTask, $newDate, $newGroupId)
     {
+        if($dailyTask->recurring_group_id != $newGroupId)
+        {
+            $dailyTask->recurring_group_id = $newGroupId;
+            $dailyTask->save();
+        }
         // Todo
         $todo = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
 
@@ -1491,10 +1511,30 @@ class DailyTaskController extends Controller
                 $newTask->keyResults()->attach($keyResult->id);
             }
 
-            // Tambahkan log message
+            $this->message($newTask->id,'create',' System Membuat Tugas '.$newTask->name);
+            $this->statusrecord($newTask, $todo);
+            
             return true;
         }
     }
 
+    protected function setrecurringToNull($dailyTask)
+    {
+        $dailyTaskOneGroup = DailyTask::where('recurring_group_id',$dailyTask->recurring_group_id)->get();
+        if($dailyTaskOneGroup->count() != 0)
+        {
+            $types = DailyTaskType::where('name','Daily')->firstOrFail();
+
+            foreach ($dailyTaskOneGroup as $task) 
+            {
+                $task->recurring_group_id = NULL;
+                $task->recurring_days = NULL;
+                $task->daily_task_type_id = $types->id;
+                $task->save();
+
+                $this->message($task->id,'edit','System Recurring Tugas '.$task->name.' dihapus');
+            }
+        }
+    }
 }
 
