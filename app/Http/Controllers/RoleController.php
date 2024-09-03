@@ -77,7 +77,7 @@ class RoleController extends Controller
             'daily_task_categories',
             'division_budgets',
             'shifting_obs',
-            'schedule_obs'
+            'schedule_obs',
             'inboxes',
         ];
 
