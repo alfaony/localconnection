@@ -108,15 +108,32 @@
                                             @endforeach
                                         </select>
                                     </div>
+
                                     <div class="form-group">
                                         <label for="type_id">Jenis</label>
-                                        <select name="type_id" class="form-control select2" required>
-                                            <option selected disabled>Pilih Tipe</option>
+                                        <select name="type_id" id="type_id" class="form-control" required>
+                                            <option value="" selected disabled>Pilih Tipe</option>
                                             @foreach($types as $type)
-                                                <option value="{{ $type->id }}" {{ $dailytask->daily_task_type_id == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                                                <option value="{{ $type->id }}" {{ $dailytask->daily_task_type_id == $type->id ? 'selected' : '' }}>
+                                                    {{ $type->name }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
+                                     <!-- Checkbox Hari -->
+                                     @php
+                                        $recurringDays = json_decode($dailytask->recurring_days, true) ?? [];
+                                    @endphp
+                                    <div id="recurring_days_section" class="form-group" style="display: none;">
+                                        <label>Pilih Hari:</label>
+                                        <div>
+                                            @foreach($days as $day => $value)
+                                                    <input type="checkbox" name="days[]" value="{{ $day }}" {{ in_array($day, $recurringDays) ? 'checked' : '' }}> 
+                                                    {{ ucfirst($value) }}
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -144,7 +161,8 @@
                             </div>
                             
                             <div class="text-right">
-                                <button type="submit" class="btn btn-primary">Simpan</button>
+                                <button type="submit" id="btn-submit" class="btn btn-primary">Simpan</button>
+                                <button type="button" id="btn-confrim" class="btn btn-primary" style="display:none;">Simpan</button>
                             </div>
                         </div>
                     </div>
@@ -158,8 +176,10 @@
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
 <script>
     
     function loadCustomFields(dailyTaskId = null) 
@@ -226,6 +246,62 @@
 
         generateThriveEditor("description_description");
 
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.getElementById('type_id');
+        const recurringDaysSection = document.getElementById('recurring_days_section');
+        const form = document.querySelector('form');
+        const taskRecurring = '{{ $taskRecurring }}'; // Nilai taskRecurring dari server
+        const initialTypeId = typeSelect.value; // Simpan nilai awal dari type_id
+
+        function toggleRecurringDaysSection() {
+            const selectedType = typeSelect.options[typeSelect.selectedIndex].text.toLowerCase();
+            if (selectedType === 'recurring') {
+                recurringDaysSection.style.display = 'block';
+            } else {
+                recurringDaysSection.style.display = 'none';
+            }
+        }
+
+        // Jalankan saat halaman dimuat
+        toggleRecurringDaysSection();
+
+        // Jalankan saat user mengganti pilihan
+        typeSelect.addEventListener('change', toggleRecurringDaysSection);
+    });
+</script>
+<script>
+    $("#type_id").change(function (e) { 
+        e.preventDefault();
+        const typeSelected = $(this).val();
+        const taskRecurring = '{{ $taskRecurring->id }}'; // Nilai taskRecurring dari server
+        if (typeSelected == taskRecurring) 
+        {
+            $('#btn-submit').hide();
+            $('#btn-confrim').show();
+        }
+    });
+
+    $("#btn-confrim").click(function (e) { 
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: "Tindakan ini akan membuat tugas secara berulang sesuai Waktu yang dipilih.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Buat Recurring!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $("#btn-submit").click();
+            }
+        });
+        
     });
 </script>
 @endsection

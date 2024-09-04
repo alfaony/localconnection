@@ -168,10 +168,31 @@
                         </div>
                     </div>
 
+                    @if(!empty($dailytask->recurring_days))
+                    <div class="form-group row">
+                        <label for="recurring_days" class="col-sm-4 col-form-label">Recurring Days:</label>
+                        <div class="col-sm-8">
+                            <div class="d-flex align-items-center mt-2">
+                                @php
+                                    $recurringDays = json_decode($dailytask->recurring_days, true);
+                                @endphp
+
+                                @foreach($recurringDays as $day)
+                                    <span class="badge badge-info mr-2 mb-2" style="font-size: 14px;">
+                                        {{ $daysMap[$day] ?? ucfirst($day) }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    
+
                     <div class="form-group row">
                         <label for="description" class="col-sm-4 col-form-label">Deskripsi:</label>
-                        <div class="col-sm-8" style="max-height: 40vh; overflow-y: auto;">
-                            <p class="form-control-plaintext">{!! $dailytask->description !!}</p>
+                        <div class="col-sm-8 ql-editor mt-2" style="max-height: 40vh; overflow-y: auto; white-space:unset; padding:0px 0px;">
+                            {!! $dailytask->description !!}
                         </div>
                     </div>
                     <div class="form-group">
@@ -362,7 +383,9 @@
                         @if($dailytask->report_note)
                             <div class="form-group">
                                 <label for="notes">Catatan:</label>
-                                {!! $dailytask->report_note !!}
+                                <div class="ql-editor" style="white-space:unset; padding:0px 0px;">
+                                    {!! $dailytask->report_note !!}
+                                </div>
                             </div>
                         @endif
 
@@ -447,7 +470,9 @@
                         @if($dailytask->report_note)
                             <div class="form-group">
                                 <label for="notes">Catatan:</label>
-                                {!! $dailytask->report_note !!}
+                                <div class="ql-editor" style="white-space:unset; padding:0px 0px;">
+                                    {!! $dailytask->report_note !!}
+                                </div>
                             </div>
                         @endif
                         @if($dailytask->media->count())
@@ -582,7 +607,7 @@
                     <!-- Existing Sub Tasks -->
                     <table class="table mt-3" id="existing-tasks-list">
                         <tbody>
-                            @foreach($subTasks as $subTask)
+                            @foreach($subTasks->sortByDesc('start_date') as $subTask)
                                 @php
                                     $isOverdueSub = $subTask->isOverdue();
                                 @endphp
@@ -684,7 +709,9 @@
                                         {{-- <img src="{{ $comment->user->profile_image_url ?? 'https://via.placeholder.com/50' }}" class="mr-3" alt="User Image"> --}}
                                         <div class="media-body">
                                             <h6 class="mt-0"> {{ $comment->user ? $comment->user->name : '-' }}</h6>
-                                            {!! $comment->message !!}
+                                            <div class="ql-editor" style="white-space:unset; padding:0px 0px;">
+                                                {!! $comment->message !!}
+                                            </div>
                                             <small class="text-muted">Posted on: {{ $comment->created_at->format('d-m-Y') }}</small>
                                             @if($comment->file_path)
                                                 <div class="mt-2">
@@ -969,7 +996,7 @@
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1368,6 +1395,28 @@ $(document).ready(function() {
     .task-details > span,
     .task-details > a {
         white-space: nowrap;
+    }
+</style>
+<style>
+    /* Default list styling */
+    .ql-editor ol,
+    .ql-editor ul {
+        padding-left: 1.5em;
+    }
+
+    /* Level 1 indentation */
+    .ql-editor .ql-indent-1 {
+        padding-left: 2em;
+    }
+
+    /* Level 2 indentation */
+    .ql-editor .ql-indent-2 {
+        padding-left: 3em;
+    }
+
+    /* Level 3 indentation */
+    .ql-editor .ql-indent-3 {
+        padding-left: 4em;
     }
 </style>
 
