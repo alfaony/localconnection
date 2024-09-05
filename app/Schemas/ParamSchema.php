@@ -58,5 +58,16 @@ class ParamSchema
     const FILEREPORT = "file_report";
 
     const FILETASK = "file_task";
+
     const CLOCKOUT = "17:00";
+
+    const PERJANJIANKERJA = "Surat Perjanjian Kerja";
+
+    const TEMPLATEMAGANG ="sk_magang_template";
+
+    const STAFF = 1;
+
+    const NONSTAFF = NULL;
+
+    const APPROVE = "approve";
 }

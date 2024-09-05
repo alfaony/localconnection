@@ -66,6 +66,7 @@ class AppServiceProvider extends ServiceProvider
             $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
             $managementCompanyMenu = 
             [
+                'letter_submissions',
                 'employees',
                 'users',
                 'companies',
@@ -326,6 +327,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'product-category.index',
                     'icon' => 'fa fa-list',
                 ],
+
+                'letter_submissions' => [
+                    'text' => 'Pengajuan Surat',
+                    'route' => 'letter-submission.index',
+                    'icon' => 'fa fa-paper-plane',
+                ],
             ];
 
             foreach ($listMenu as $role) 
@@ -343,7 +350,7 @@ class AppServiceProvider extends ServiceProvider
                     array_push($managementSalesArray,$menus[$role]);
                 }
             }
-
+            
             foreach ($managementCompanyMenu as $role) 
             {
                 if(Access::can("index", $role))

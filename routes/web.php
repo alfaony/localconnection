@@ -53,6 +53,8 @@ use App\Http\Controllers\ScheduleObController;
 use App\Http\Controllers\DivisionBudgetController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\InboxController;
+use App\Http\Controllers\LetterSubmissionController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -221,6 +223,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::get('/inbox/{id}', [InboxController::class, 'show'])->name('inbox.show');
   Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
+  
+  Route::patch('letter-submission/approvement', [LetterSubmissionController::class, 'approvement'])->name('letter-submission.approvement');
+  Route::resource('letter-submission', LetterSubmissionController::class);
 });
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');

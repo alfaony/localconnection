@@ -68,12 +68,7 @@
 <script>
     $(document).ready(function () 
     {
-        let amount = document.getElementById("amount").value;
-        if (amount) 
-        {
-            document.getElementById("amount_show").value = amount;
-            formatRupiahFormat(document.getElementById("amount_show"),"amount"); // Format default value
-        }
+        formatRupiahFormat
 
         $('#mediaReport').on('change', function() 
         {
