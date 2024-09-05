@@ -70,4 +70,6 @@ class ParamSchema
     const NONSTAFF = NULL;
 
     const APPROVE = "approve";
+
+    const TEMPLATEPERJANJIANKERJA = "perjanjian_kerja_template";
 }

@@ -28,6 +28,7 @@ class PermissionForMenuLetterSubmission extends Seeder
         $director = Role::where('name',RoleSchema::DIRECTOR)->first();
         $manager = Role::where('name',RoleSchema::MANAGER)->first();
         $staff = Role::where('name',RoleSchema::STAFF)->first();
+        $pm = Role::where('name',RoleSchema::PM)->first();
 
         foreach ($methods as $method) 
         {
@@ -55,6 +56,7 @@ class PermissionForMenuLetterSubmission extends Seeder
                 PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $staff->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $pm->id, 'permission_id' => $permission->id]);
             }
 
         }
