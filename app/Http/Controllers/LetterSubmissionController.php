@@ -16,6 +16,7 @@ use App\Models\Position;
 use App\Models\UserPosition;
 use App\Models\SettingCompany;
 use App\Helpers\InboxHelper;
+use App\Models\User;
 
 class LetterSubmissionController extends Controller
 {
@@ -53,7 +54,6 @@ class LetterSubmissionController extends Controller
      */
     public function store(LetterSubmissionRequest $request)
     {
-        dd($request->all());
         DB::beginTransaction();
         try 
         {
@@ -190,7 +190,7 @@ class LetterSubmissionController extends Controller
                     $letterSubmission->save();
                     if(($status == ParamSchema::APPROVE) && ($letterSubmission->letterType->name == ParamSchema::PERJANJIANKERJA))
                     {
-                        $this->updateStatus(ParamSchema::STAFF);
+                        $this->updateStatus(ParamSchema::STAFF,$letterSubmission->user_id);
                     }
                 }
                 
@@ -231,7 +231,7 @@ class LetterSubmissionController extends Controller
         
         if($letterType->is_ending)
         {
-            $this->updateStatus(ParamSchema::NONSTAFF);
+            $this->updateStatus(ParamSchema::NONSTAFF,$user->id);
         }
         
         if($request->name || $request->address || $request->id_card)
@@ -292,9 +292,9 @@ class LetterSubmissionController extends Controller
         }
     }
 
-    protected function updateStatus($status)
+    protected function updateStatus($status,$user_id)
     {
-        $user = Auth::user();
+        $user = User::findOrFail($user_id);
         $user->status_position = $status;
         $user->save();
     }

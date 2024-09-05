@@ -16,7 +16,7 @@ class PermissionAndSettingMenuLetterTypeSeeder extends Seeder
     {
         $this->call([
             LetterTypeSeeder::class,
-            PermissionForMenuDailyActivity::class,
+            PermissionForMenuLetterSubmission::class,
         ]);
     }
 }
