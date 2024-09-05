@@ -37,6 +37,7 @@ function generateThriveEditor(id,defaultValue = null)
                     ["bold", "italic"],
                     [{ list: "ordered" }, { list: "bullet" }],
                     [{ color: [] }, { background: [] }],
+                    ["link"] // Ensure hyperlink is included
             ]
     },
     });

@@ -37,6 +37,7 @@ use App\Models\DailyTaskStatusRecord;
 use App\Models\SettingCompany;
 
 use App\Helpers\InboxHelper;
+use Ramsey\Uuid\Uuid;
 
 class DailyTaskController extends Controller
 {
@@ -181,10 +182,18 @@ class DailyTaskController extends Controller
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
         $childTasks = DailyTask::byCompany(Auth::user()->company_id)->get();
         $types = DailyTaskType::get();
+        $today = strtolower(Carbon::now()->format('l'));
+        $days = config('custom.days');
+
         $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
         $objectives = Objective::byCompany(Auth::user()->company_id)->get();
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
+        $minDate = Carbon::now()->format('Y-m-d');
+
+        $taskRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
+
+        $dailyTaskTypeRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
 
         if ($divisionIds->isEmpty()) {
             // Handle the case where the user does not belong to any divisions
@@ -198,7 +207,7 @@ class DailyTaskController extends Controller
         }
 
 
-        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks', 'projects', 'objectives'));
+        return view('dailytask.create',compact('categories', 'types', 'users', 'childTasks', 'projects', 'objectives', 'dailyTaskTypeRecurring','today','days','minDate','taskRecurring'));
     }
 
     public function store(DailyTaskStoreRequest $request)
@@ -217,6 +226,7 @@ class DailyTaskController extends Controller
             $descriptions = $request->description ?? [];
 
             $objectives = $request->objective ?? [];
+            $recurring_days = $request->input('days') ? json_encode($request->input('days')) : NULL;
 
             
             
@@ -231,7 +241,8 @@ class DailyTaskController extends Controller
                     $status = TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail();
 
                 }
-                
+
+
                 $dailyTask = new DailyTask();
                 $dailyTask->user_id = Auth::user()->id;
                 $dailyTask->task_status_id = $status->id;
@@ -246,6 +257,13 @@ class DailyTaskController extends Controller
                 $dailyTask->description = $descriptions[$i] ?? null;
                 $dailyTask->point = 0; // Assuming default value is 0
                 $dailyTask->objective_id = $objectives[$i] ?? NULL;
+                $dailyTask->recurring_days = $recurring_days;
+
+                if (DailyTaskType::find($typeIds[$i])->name  == ParamSchema::RECURRING) 
+                {
+                    $dailyTask->recurring_group_id = Uuid::uuid4()->toString();
+                }
+                
                 $dailyTask->save();
 
                 // Menyimpan custom_field
@@ -351,9 +369,11 @@ class DailyTaskController extends Controller
         $subTasks = DailyTask::byCompany(Auth::user()->company_id)->where('child_daily_task_id',$dailytask->id)->orderBy('created_at','desc')->get();
         $types = DailyTaskType::get();
         $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
+        $daysMap = config('custom.days');
 
 
-        return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement'));
+
+        return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement', 'daysMap'));
     }
 
     public function createdailytask($slug)
@@ -384,8 +404,10 @@ class DailyTaskController extends Controller
         $projects = DailyTaskProject::byCompany(Auth::user()->company_id)->get();
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
+        $days = config('custom.days');
 
         $child = $dailytask->head ? TRUE : FALSE ;
+        $taskRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
         
         if ($divisionIds->isEmpty()) {
             // Handle the case where the user does not belong to any divisions
@@ -399,7 +421,7 @@ class DailyTaskController extends Controller
         }
 
 
-        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child'));
+        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child','days','taskRecurring'));
 
     }
 
@@ -440,8 +462,12 @@ class DailyTaskController extends Controller
                 }
     
                 $this->sentInbox($userTo,$message, $directUrl);
-            }
+            }   
 
+            // Handle Recurring Task Creation
+            $oldType = $dailyTask->daily_task_type_id;
+            $newType = $request->type_id;
+            
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
             $dailyTask->assignment_user_id = $request->assignment_user_id;
@@ -454,6 +480,7 @@ class DailyTaskController extends Controller
             $dailyTask->project_id = $request->data_project_id[0] ?? NULL ;
             $dailyTask->daily_task_category_id = $request->category_id;
             $dailyTask->objective_id = $request->objective;
+            $dailyTask->recurring_days = $request->input('days') ? json_encode($request->input('days')) : NULL;
 
             $dailyTask->save();
     
@@ -499,12 +526,25 @@ class DailyTaskController extends Controller
                 }
             }
 
+            // dd($request->all());
+            // Reccruing
+            // if ($oldType != $newType && DailyTaskType::find($newType)->name  == ParamSchema::RECURRING) 
+            if (DailyTaskType::find($newType)->name  == ParamSchema::RECURRING) 
+            {
+                $this->handleRecurringTask($dailyTask, $request);
+            }
+            
+            if ($oldType != $newType && DailyTaskType::find($newType)->name  == "Daily")
+            {
+                $this->setrecurringToNull($dailyTask);
+            } 
+
             $this->message($dailyTask->id,'edit','Mengubah Task '.$dailyTask->name);
 
             DB::commit();
             return redirect()->route('dailytask.index')->with('update', true);
         } catch (\Throwable $th) {
-            // dd($th); 
+            dd($th); 
             DB::rollback();
             Log::error($th->getMessage());
 
@@ -646,10 +686,10 @@ class DailyTaskController extends Controller
             $this->statusrecord($dailytask, $inReview);
             $dailytask->save();
 
-            if ($dailytask->type->name == ParamSchema::RECURRING) 
-            {
-                $this->projectRecurring($dailytask);
-            }
+            // if ($dailytask->type->name == ParamSchema::RECURRING) 
+            // {
+            //     $this->projectRecurring($dailytask);
+            // }
 
             $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
         
@@ -1309,6 +1349,17 @@ class DailyTaskController extends Controller
                 </div>
                 ';
                 break;
+            case 'trash':
+                $message = 
+                '
+                <div class="alert alert-secondary d-flex align-items-center" role="alert" style="background-color: #e2e3e5; border-color: #ae2121; color: #ae2121;">
+                    <i class="fa fa-trash mr-2" style="color: #ae2121;"></i>
+                    <div>
+                        '.$message.'
+                    </div>
+                </div>
+                ';
+                break;
             default:
                 $message = 
                 '
@@ -1386,6 +1437,115 @@ class DailyTaskController extends Controller
         );
 
         return;
+    }
+
+    protected function handleRecurringTask($dailyTask, $request)
+    {
+        $today = Carbon::now();
+        $recurringDays = $request->input('days');
+        $newGroupId = Uuid::uuid4()->toString();
+
+        // Jika tanggal mulai kurang dari hari ini
+        if (Carbon::parse($dailyTask->start_date)->lessThan($today)) 
+        {
+            // Loop dari start_date hingga hari ini
+            $currentDate = Carbon::parse($dailyTask->start_date);
+
+            while ($currentDate->lessThanOrEqualTo($today)) 
+            {
+                if ($recurringDays && count($recurringDays) > 0) {
+                    // Jika recurringDays ada, buat tugas baru untuk setiap hari di recurringDays
+                    foreach ($recurringDays as $day) {
+                        $nextDate = $currentDate->copy()->next($day);
+
+                        // Periksa apakah nextDate ada dalam rentang waktu saat ini
+                        if ($nextDate->lessThanOrEqualTo($today) && $nextDate->greaterThanOrEqualTo($currentDate)) {
+                            $this->createRecurringTask($dailyTask, $nextDate, $newGroupId);
+                        }
+                    }
+                } else {
+                    // Jika recurringDays tidak ada, buat tugas baru satu minggu dari currentDate
+                    $nextWeekStartDate = $currentDate->copy()->addWeek();
+
+                    if ($nextWeekStartDate->lessThanOrEqualTo($today)) {
+                        $this->createRecurringTask($dailyTask, $nextWeekStartDate, $newGroupId);
+                    }
+                }
+
+                // Tambahkan 1 minggu pada currentDate jika tidak ada recurringDays
+                if (!$recurringDays || count($recurringDays) == 0) {
+                    $currentDate->addWeek();
+                } else {
+                    // Jika ada recurringDays, tambahkan 1 hari pada currentDate
+                    $currentDate->addDay();
+                }
+            }
+        }
+    }
+
+    protected function createRecurringTask($dailyTask, $newDate, $newGroupId)
+    {
+        if($dailyTask->recurring_group_id != $newGroupId)
+        {
+            $dailyTask->recurring_group_id = $newGroupId;
+            $dailyTask->save();
+        }
+        // Todo
+        $todo = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+
+        // Salin tugas asli
+        $newTask = $dailyTask->replicate();
+
+        // Tentukan tanggal baru berdasarkan newDate
+        $duration = Carbon::parse($dailyTask->end_date)->diffInDays(Carbon::parse($dailyTask->start_date));
+        $newTask->start_date = $newDate;
+        $newTask->end_date = $newDate->copy()->addDays($duration);
+
+        // Generate slug baru
+        if(!DailyTask::where('slug',$dailyTask->slug . '-' . $newDate->format('dmY'))->exists())
+        {
+            $newTask->slug = $dailyTask->slug . '-' . $newDate->format('dmY');
+            $newTask->task_status_id = $todo->id;
+            $newTask->report_note = null;
+            $newTask->submit = null;
+            $newTask->status_submit = null;
+            $newTask->approved = false;
+            $newTask->point = 0;
+            $newTask->created_at = Carbon::now();
+
+            // Simpan tugas baru
+            $newTask->save();
+
+            // Copy semua key results dari tugas asli
+            $keyResults = $dailyTask->keyResults;
+            foreach ($keyResults as $keyResult) {
+                $newTask->keyResults()->attach($keyResult->id);
+            }
+
+            $this->message($newTask->id,'create',' System Membuat Tugas '.$newTask->name);
+            $this->statusrecord($newTask, $todo);
+            
+            return true;
+        }
+    }
+
+    protected function setrecurringToNull($dailyTask)
+    {
+        $dailyTaskOneGroup = DailyTask::where('recurring_group_id',$dailyTask->recurring_group_id)->get();
+        if($dailyTaskOneGroup->count() != 0)
+        {
+            $types = DailyTaskType::where('name','Daily')->firstOrFail();
+
+            foreach ($dailyTaskOneGroup as $task) 
+            {
+                $task->recurring_group_id = NULL;
+                $task->recurring_days = NULL;
+                $task->daily_task_type_id = $types->id;
+                $task->save();
+
+                $this->message($task->id,'trash','System Recurring Tugas '.$task->name.' dihapus');
+            }
+        }
     }
 }
 
