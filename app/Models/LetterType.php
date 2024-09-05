@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Ramsey\Uuid\Uuid;
-use App\Params\ParamSchema;
+use App\Schemas\ParamSchema;
 
 class LetterType extends Model
 {
