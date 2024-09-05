@@ -18,6 +18,7 @@ use App\Models\SettingCompany;
 use App\Helpers\InboxHelper;
 use App\Models\User;
 
+use Carbon\Carbon;
 class LetterSubmissionController extends Controller
 {
     /**
@@ -132,7 +133,15 @@ class LetterSubmissionController extends Controller
 
     public function show($id)
     {
+        $letterSubmission = LetterSubmission::findOrFail($id);
+        $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $date = Carbon::now()->locale('id')->translatedFormat('d F Y');
 
+        try {
+            return view('letter_submission.template.'.$letterSubmission->letterType->template, compact('letterSubmission','company', 'date'));
+        } catch (\Throwable $th) {
+            return redirect()->to(route('letter-submission.index'))->with('error', 'Template surat tidak ditemukan.');
+        }
     }
 
     public function destroy($id)
