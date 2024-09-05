@@ -119,6 +119,14 @@ class User extends Authenticatable
         return $this->belongsToMany(Division::class);
     }
 
+    public function userPosition()
+    {
+        return $this->hasMany(UserPosition::class);
+    }
+    public function getLastPositionAttribute()
+    {
+        return $this->userPosition() ? $this->userPosition()->orderBy('end_date', 'desc')->first() : null ;
+    }
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)
