@@ -1,300 +1,265 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perjanjian Kerja Magang</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<style>
-    body 
-    {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-    }
-
-
-    .header, .sub-header {
-        text-align: center;
-    }
-
-    .header {
-        font-size: 13px;
-        font-weight: bold;
-    }
-
-    .sub-header {
-        font-size: 13px;
-        font-weight: bold;
-        margin-bottom: 20px;
-    }
-
-    .info-table th, .info-table td {
-        padding: 10px;
-    }
-
-    .detail-table th, .detail-table td {
-        margin-bottom: 0px;
-        margin-top: 0px;
-        padding: 0px;
-    }
-    p {
-        font-size: 12px;
-    }
-
-    li {
-        font-size: 12px;
-    }
-
-    th
-    {
-        font-size: 13px;
-        font-weight: bold;
-    }
-    td
-    {
-        font-size: 12px;
-    }
-    
-    h6{
-        font-size: 13px;
-        font-weight: bold;
-    }
-    .page-break 
-    {
-        page-break-after: always;
-    }
-</style>
+@extends('adminlte::page')
 @php
-    $fieldData = $letterSubmission->convert_field;
+$fieldData = $letterSubmission->convert_field;
 @endphp
-<body>
-    <div class="body-container">
-        <!-- Header -->
-        <div class="header">
-            PERJANJIAN KERJA
-        </div>
-        <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
+@section('content')
+<div class="container">
+    <div class="card scrollable-div" id="printThis">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="col-12 justify-content-center align-items-center">
+                <h6 class="text-center"><strong>PERJANJIAN KERJA</strong></h6>
+                <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
+            </div>
 
-        <p>Pada Hari {{ $date }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+            <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
+                <p>Pada Hari {{ $date }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+            </div>
 
-        <!-- Table to display company and employee information -->
-        <table class="table table-borderless detail-table">
-            <tbody>
-                <tr>
-                    <td><strong>Nama</strong></td>
-                    <td>: {{ $company['name'] ?? "" }} </td>
-                </tr>
-                <tr>
-                    <td><strong>Penanggung Jawab</strong></td>
-                    <td>: {{ $company['director'] ?? "" }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Alamat</strong></td>
-                    <td>: {{ $company['address'] ?? "" }}</td>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <p>Bertindak atas perusahaan yang mempekerjakan, selanjutnya disebut PIHAK PERTAMA.</p>
-                    </td>
-                </tr>
-                <tr>
-                    <td><strong>Nama</strong></td>
-                    <td>: {{ Auth::user()->name }}</td>
-                </tr>
-                <tr>
-                    <td><strong>No KTP</strong></td>
-                    <td>: {{ Auth::user()->id_card }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Alamat</strong></td>
-                    <td>: {{ Auth::user()->address }}</td>
-                </tr>
-                <tr>
-                    <td colspan="2">
+            <div class="col-12 mt-2">
+                <!-- Table to display company and employee information -->
+                <table class="table table-borderless detail-table">
+                    <tbody>
+                        <tr>
+                            <td>Nama</td>
+                            <td>: {{ $company['name'] ?? "" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Penanggung Jawab</td>
+                            <td>: {{ $company['director'] ?? "" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Alamat</td>
+                            <td>: {{ $company['address'] ?? "" }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <p>Bertindak atas perusahaan yang mempekerjakan, selanjutnya disebut PIHAK PERTAMA.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Nama</td>
+                            <td>: {{ Auth::user()->name }}</td>
+                        </tr>
+                        <tr>
+                            <td>No KTP</td>
+                            <td>: {{ Auth::user()->id_card }}</td>
+                        </tr>
+                        <tr>
+                            <td>Alamat</td>
+                            <td>: {{ Auth::user()->address }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <p>Bertindak atas nama pribadi, sebagai pekerja / staff yang dipekerjakan, selanjutnya
+                                    disebut sebagai PIHAK KEDUA.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+
+            <!-- Sections with details -->
+            <div class="col-12">
+                <div class="row">
+                    <div class="col">
+                        <h6><strong>PASAL 1. MAKSUD DAN TUJUAN</strong></h6>
+                        @if($letterSubmission->user->last_position_now)
                         <p>
-                        Bertindak atas nama pribadi, sebagai pekerja / staff yang dipekerjakan selanjutnya disebut sebagai PIHAK KEDUA.
+                            PARA PIHAK sepakat untuk menjalin hubungan kerja bersama, dimana PIHAK PERTAMA memberikan
+                            pekerjaan tetap bulanan kepada PIHAK KEDUA.
                         </p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                        @endif
+                    </div>
+                </div>
 
-        <div class="row">
-            <div class="col">
-                <h6><strong>PASAL 1. MAKSUD DAN TUJUAN</strong></h6>
-                <p>PARA PIHAK sepakat untuk menjalin hubungan kerja bersama, dimana PIHAK PERTAMA memberikan pekerjaan tetap bulanan kepada PIHAK KEDUA. </p>
-            </div>
-        </div>
-        <!-- Section 1 -->
-        <div class="row">
-            <div class="col">
-                <h6><strong>PASAL 2. RUANG LINGKUP</strong></h6>
-                <p>PIHAK PERTAMA menunjuk PIHAK KEDUA untuk melakukan pekerjaan magang sesuai kebutuhan PIHAK PERTAMA dalam melakukan operasional dan fungsi perusahaan terkait desain antarmuka pengguna dan pengalaman pengguna.</p>
-            </div>
-        </div>
+                <div class="row">
+                    <div class="col">
+                        <h6><strong>PASAL 2. RUANG LINGKUP</strong></h6>
+                        <p>
+                            PIHAK PERTAMA menunjuk PIHAK KEDUA untuk melakukan pekerjaan sesuai kebutuhan PIHAK
+                            PERTAMA dalam melakukan operasional dan fungsi perusahaan dalam memberikan memenuhi
+                            kebutuhan pelanggan, pembeli dan pemegang saham perusahaan.
+                        </p>
+                    </div>
+                </div>
 
-        <div class="row">
-            <div class="col">
-                <h6><strong>PASAL 3. HAK & KEWAJIBAN PARA PIHAK</strong></h6>
-                <ul>
-                    <li>PIHAK KEDUA berhak menerima kompensasi atas tunjangan magang sesuai kesepakatan.</li>
-                    <li>PIHAK KEDUA berhak mendapatkan bimbingan dan pelatihan dari PIHAK PERTAMA.</li>
-                    <li>PIHAK KEDUA wajib mentaati seluruh peraturan yang ditetapkan PIHAK PERTAMA.</li>
-                    <li>PIHAK KEDUA wajib menjalankan tugas dan pekerjaan dengan bertanggung jawab, dan memberikan hasil yang maksimal.</li>
-                </ul>
-            </div>
-        </div>
+                <div class="row">
+                    <div class="col">
+                        <h6><strong>PASAL 3. HAK & KEWAJIBAN PARA PIHAK</strong></h6>
+                        <ul>
+                            <li>PIHAK KEDUA berhak menerima gaji dari PIHAK PERTAMA sebagaimana yang telah disepakati
+                                bersama.</li>
+                            <li>PIHAK KEDUA berhak mendapatkan 12 hari cuti dalam setahun.</li>
+                            <li>PIHAK KEDUA wajib mentaati seluruh peraturan yang ditetapkan PIHAK PERTAMA.</li>
+                            <li>PIHAK KEDUA wajib menjalankan tugas dan pekerjaan dengan bertanggung jawab, dan
+                                memberikan hasil yang maksimal.</li>
+                            <li>PIHAK KEDUA wajib merahasiakan seluruh informasi perusahaan yang diterima maupun
+                                diketahui, yang dapat merugikan PIHAK PERTAMA apabila diketahui pihak lain.</li>
+                            <li>PIHAK PERTAMA berhak menetapkan peraturan perusahaan, strategi perusahaan, tugas dan
+                                tanggung jawab yang diberikan kepada PIHAK KEDUA.</li>
+                            <li>PIHAK PERTAMA berhak mendapatkan perlindungan dan jaminan dari tindakan kecurangan,
+                                pencurian, persaingan tidak sehat, dan tindakan melawan hukum yang terjadi akibat
+                                tindakan PIHAK KEDUA.</li>
+                            <li>PIHAK PERTAMA wajib memberikan peringatan minimal 2 kali, dalam kurun waktu 1 bulan
+                                sebelum melakukan pemutusan hubungan kerja sepihak terhadap PIHAK KEDUA.</li>
+                            <li>PIHAK KEDUA wajib memberikan keterangan pengunduran diri minimal 2 bulan sebelum
+                                mengundurkan diri, dan wajib melakukan serah terima, dan pelatihan kepada pekerja
+                                pengganti yang ada.</li>
+                            <li>PIHAK PERTAMA berhak melakukan pemutusan hubungan kerja sepihak apabila ditemukan
+                                tindakan melawan hukum yang berlaku di UU Republik Indonesia kepada PIHAK KEDUA, tanpa
+                                peringatan.</li>
+                            <li>PIHAK PERTAMA mendapatkan jaminan dari PIHAK KEDUA untuk tidak membocorkan informasi
+                                sensitif yang dapat mengganggu aktivitas perusahaan seperti: gaji yang diterima, bonus
+                                yang diterima, insentif dan hal fasilitas lain.</li>
+                        </ul>
+                    </div>
+                </div>
 
-        <div class="row">
-            <div class="col">
-                <h6><strong>PASAL 4. TANGGUNG JAWAB HUKUM</strong></h6>
-                <p>PARA PIHAK sepakat bahwa segala tindakan yang menyebabkan kerugian pada perusahaan harus dipertanggungjawabkan walaupun hubungan magang telah berakhir ataupun diakhiri secara sepihak.</p>
-            </div>
-        </div>
+                <div class="row">
+                    <div class="col">
+                        <h6><strong>PASAL 4. TANGGUNG JAWAB HUKUM</strong></h6>
+                        <p>
+                            PARA PIHAK sepakat bahwa segala tindakan yang menyebabkan kerugian pada perusahaan, harus
+                            dipertanggungjawabkan, walaupun hubungan kerja telah berakhir ataupun diakhiri secara
+                            sepihak, dan menunjuk jalur hukum untuk diselesaikan di Pengadilan Negeri Jakarta Barat.
+                        </p>
+                    </div>
+                </div>
 
-        <div class="row">
-            <div class="col">
-                <h6><strong>PASAL 5. JAM KERJA & CARA BEKERJA</strong></h6>
-                <p>Pekerjaan diselesaikan dan dikerjakan baik di tempat kerja yang ditentukan sesuai kebutuhan perusahaan dengan penjadwalan kerja sesuai kebutuhan dan kondisi. Disepakati penanggalan merah adalah libur. PIHAK KEDUA wajib bekerja di tempat yang ditentukan sesuai kebutuhan perusahaan.</p>
-            </div>
-        </div>
+                <div class="row">
+                    <div class="col">
+                        <h6><strong>PASAL 5. JAM KERJA & CARA BEKERJA</strong></h6>
+                        <ul>
+                            <li>Pekerjaan diselesaikan dan dikerjakan baik di tempat kerja yang ditentukan sesuai
+                                kebutuhan perusahaan dengan penjadwalan kerja sesuai kebutuhan dan kondisi. Disepakati
+                                penanggalan merah adalah libur.</li>
+                            <li>PIHAK KEDUA wajib bekerja di tempat yang ditentukan sesuai kebutuhan perusahaan.</li>
+                            <li>PIHAK KEDUA wajib melakukan absensi secara digital menggunakan aplikasi, dan aktif dalam
+                                komunikasi untuk menjaga fungsi dan tanggung jawab pekerjaan berjalan dengan baik.</li>
+                            <li>PIHAK PERTAMA dan PIHAK KEDUA sepakat untuk melakukan kalkulasi biaya operasional yang
+                                timbul akibat pekerjaan, seperti transportasi, parkir, dan lainnya dalam surat keputusan
+                                yang terpisah sesuai fungsi pekerjaan masing-masing.</li>
+                            <li>Jumlah jam bekerja adalah 5 hari kerja, dari pukul 08.00 – 17.00 wajib dipenuhi.</li>
+                            <li>Pelaporan atas pekerjaan wajib dilakukan dalam bentuk yang dapat ditelusuri,
+                                terdokumentasi, dan dipertanggungjawabkan oleh PIHAK KEDUA.</li>
+                            <li>Keamanan data, peralatan, dokumen, dan informasi yang dimiliki, dibawa pulang,
+                                digunakan, dan diakses PIHAK KEDUA wajib dijaga sebaik-baiknya, dan bertanggung jawab
+                                penuh apabila terjadi kelalaian dalam memastikan keamanan hal disebutkan diatas.</li>
+                        </ul>
+                    </div>
+                </div>
 
-        <div class="row">
-            <div class="col">
-                <h6><strong>PASAL 6. JANGKA WAKTU</strong></h6>
-                <p>PARA PIHAK sepakat perjanjian kerja magang ini berlaku selama 3 bulan dan dapat diperpanjang sesuai kesepakatan kedua belah pihak.</p>
-            </div>
-        </div>
+                <div class="row">
+                    <div class="col">
+                        <h6><strong>PASAL 6. JANGKA WAKTU</strong></h6>
+                        <p>
+                            PARA PIHAK sepakat perjanjian kerja ini bersifat tetap, dan apabila terdapat hal-hal yang
+                            belum dijelaskan akan ditentukan di peraturan perusahaan atau surat keputusan manajemen.
+                            Perjanjian ini berlaku hingga salah satu pihak mengakhirinya.
+                        </p>
+                    </div>
+                </div>
 
-        <div class="row mt-5">
-            <div class="col text-left">
-                <p>Jakarta, {{ $date ?? "" }}</p>
+                <!-- Signature and date -->
+                <div class="row mt-4">
+                    <div class="col-6 text-center">
+                        <p>Jakarta, {{ $date ?? "" }}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 text-center">
+                        <p><strong>PIHAK PERTAMA</strong></p>
+                        @if($letterSubmission->is_approved == 1)
+                        <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
+                        <p>_________________________</p>
+                        <p>{{ $company['director'] ?? "" }}</p>
+                        @endif
+                    </div>
+                    <div class="col-6 text-center">
+                        <p><strong>PIHAK KEDUA</strong></p>
+                        @if($letterSubmission->is_approved == 1)
+                        <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                            alt="Signature" style="height:150px">
+                        <p>_________________________</p>
+                        <p>{{ $letterSubmission->user->name }}</p>
+                        @endif
+                    </div>
+                </div>
             </div>
-        </div>
-        <!-- Signatures Section -->
-        <div class="row mt-4">
-            <div class="col-6 text-center">
-                <p><strong>PIHAK PERTAMA</strong></p>
-                 @if($letterSubmission->is_approved == 1)
-                <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="with:auto; height:150px">
-                <p>_________________________</p>
-                <p>{{ $company['director'] ?? "" }}</p>
-                @endif
-            </div>
-            <div class="col-6 text-center">
-                <p><strong>PIHAK KEDUA</strong></p>
-                @if($letterSubmission->is_approved == 1)
-                <img src="{{ Storage::url($letterSubmission->user->signature) }}" class="img-fluid" alt="Signature" style="with:auto; height:150px">
-                <p>_________________________</p>
-                <p>{{ $letterSubmission->user->name }}</p>
-                @endif
-            </div>
-        </div>
-        <div class="page-break"></div>
-        <div class="header">
-            SURAT KEPUTUSAN MANAJEMEN
-        </div>
-        <div class="sub-header">
-            Perihal: Penerimaan Magang
-        </div>
-        
-        <!-- Information Table -->
-        <table class="info-table">
-            <tr>
-                <th>Nama Lengkap</th>
-                <td>{{ $letterSubmission->user->name ?? "" }}</td>
-            </tr>
-            <tr>
-                <th>Jabatan / Fungsi / Keahlian</th>
-                <td>{{ $letterSubmission->user->last_position ? $letterSubmission->user->last_position->position->name : "" }}</td>
-            </tr>
-            <tr>
-                <th>Tanggal Perhitungan Gaji </th>
-                <td>{{ $fieldData['salary_date'] ?? "" }}</td>
-            </tr>
-            <tr>
-                <th>Jam Kerja</th>
-                <td>{{ $fieldData['working_hours'] ?? ''  }}</td>
-            </tr>
-            <tr>
-                <th>Penempatan</th>
-                <td>{{ $fieldData['work_location'] ?? ''  }}</td>
-            </tr>
-        </table>
-        
-        <p>
-            Perjanjian ini berlaku efektif sejak ditandatangani, dan peserta magang akan menjalankan peran sebagai UI/UX Designer selama masa magang. Peserta magang tunduk pada ketentuan yang berlaku dalam perusahaan serta aturan dan tanggung jawab yang telah ditetapkan.
-        </p>
-        
-        <table class="table table-borderless">
-            <tr>
-                <td>
-                    <p><strong>Fungsi Manajemen: UI/UX Designer</strong></p>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <p><strong>Tanggung Jawab Pekerjaan:</strong></p>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <ol>
-                        <li>Mendesain dan mengembangkan mockup dan prototype UI/UX.</li>
-                        <li>Melakukan uji coba usability dan mengumpulkan feedback pengguna.</li>
-                        <li>Berkolaborasi dengan tim pengembangan untuk mengimplementasikan desain.</li>
-                        <li>Memastikan desain konsisten dengan panduan merek perusahaan.</li>
-                        <li>Membantu membuat asset image di website yang dibangun.</li>
-                    </ol>
-                </td>
-            </tr>
-        </table>
-        <!-- Footer -->
-        <div class="text-left mb-">
-            <p>Jakarta, 12 Agustus 2024</p>
-        </div>
-
-        <!-- KTP and Signature Section -->
-        <div class="row photo-ktp">
-            <div class="col">
-                <p><strong>{{ $company['director'] ?? "" }}</strong></p>
-            </div>
-            <div class="col">
-                <p><strong>{{ $letterSubmission->user->name ?? "" }}</strong></p>
-            </div>
-        </div>
-
-        <!-- No KTP and NPWP -->
-        <div class="mt-3">
-            <table class="table table-bordered info-table">
-                <tr>
-                    <td>
-                        Foto KTP
-                    </td>
-                    <td>
-                        <img src="{{ Storage::url($letterSubmission->user->id_card_image) }}" alt="Foto KTP" class="img-fluid" style="max-width: 150px;">
-                    </td>
-                    </td>
-                </tr>
-                <tr>
-                    <th>No KTP</th>
-                    <td>{{ $letterSubmission->user->id_card ?? '' }}</td>
-                </tr>
-                <tr>
-                    <th>No NPWP</th>
-                    <td>{{ $letterSubmission->user->npwp_number ?? " " }}</td>
-                </tr>
-            </table>
         </div>
     </div>
+</div>
+</div>
 
-    <script>
-        window.onload = function () {
-            window.print();
-        };
-    </script>
+<!-- Download Button -->
+<div class="col-12 text-center mt-3">
+    <button type="button" id="downloadQuote" class="btn btn-success"><i class="fa fa-file-pdf"></i>
+        {{__('Download')}}</button>
+</div>
+@endsection
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+@section('js')
+<script>
+$(document).ready(function() {
+    $("#downloadQuote").click(function(e) {
+        e.preventDefault();
+        printDocument();
+    });
+});
+
+function printDocument() {
+    let name = "Perjanjian Kerja";
+    let printContents = document.getElementById("printThis").innerHTML;
+    let originalContents = document.body.innerHTML;
+
+    document.body.innerHTML = printContents;
+
+    window.addEventListener("beforeprint", (event) => {
+        document.title = name;
+    });
+
+    window.print();
+    document.body.innerHTML = originalContents;
+}
+</script>
+@endsection
+
+@section('css')
+<style>
+.table td {
+    padding: 0rem !important;
+}
+
+@media print {
+    table {
+        page-break-inside: auto;
+    }
+
+    tr {
+        page-break-inside: auto;
+        page-break-after: auto;
+    }
+
+    .strongText {
+        font-weight: bold;
+        color: #000000;
+    }
+}
+
+.signature p {
+    margin: 0;
+}
+
+.strongText {
+    font-weight: bold;
+    color: #000000;
+}
+
+.scrollable-div {
+    max-height: 600px;
+    overflow-y: auto;
+}
+</style>
+@endsection
