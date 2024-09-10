@@ -6,6 +6,10 @@ namespace App\Schemas;
 
 class ParamSchema
 {
+    const TRUE = 1;
+    
+    const FALSE = 0;
+
     const DAILY = "daily";
 
     const MONTHLY = "monthly";
@@ -72,4 +76,8 @@ class ParamSchema
     const APPROVE = "approve";
 
     const TEMPLATEPERJANJIANKERJA = "perjanjian_kerja_template";
+
+    const TEMPLATETUGAS = "sk_tugas_template";
+
+    const TEMPLATEJABATAN = "sk_jabatan_template";
 }

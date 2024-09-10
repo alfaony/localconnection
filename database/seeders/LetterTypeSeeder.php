@@ -78,7 +78,11 @@ class LetterTypeSeeder extends Seeder
         );
 
         // Update head_letter_types_id for all types except 'Surat Keterangan Magang'
-        LetterType::where('name', '!=', 'Surat Keterangan Magang')->update([
+        LetterType::where('head_letter_types_id','!=',null)->update([
+            'head_letter_types_id' => NULL
+        ]);
+        
+        LetterType::where('name', '!=', 'Surat Keterangan Magang')->where('name','!=','Surat Perjanjian Kerja')->update([
             'head_letter_types_id' => $perjanjianKerja->id
         ]);
     }
