@@ -8,6 +8,7 @@ use Illuminate\Validation\Rule;
 use App\Schemas\RoleSchema;
 
 use App\Http\Requests\UserRequest;
+use Illuminate\Support\Facades\Storage;
 
 use App\Models\User;
 use App\Models\Role;
@@ -232,6 +233,23 @@ class UserController extends Controller
         }
         $user->name = $request->post('name');
         $user->phone = $request->post('phone');
+        $user->address = $request->post('address');
+        $user->id_card = $request->post('id_card');
+        $user->npwp_number = $request->post('npwp_number');
+
+        if ($request->hasFile('id_card_image')) 
+        {
+            $file = $request->file('id_card_image');
+            $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
+            $filePath = 'public/id_cards/' . $fileName;
+
+            // Simpan file ke storage
+            Storage::put($filePath, file_get_contents($file));
+
+            // Update kolom id_card_image di tabel users
+            $user = Auth::user();
+            $user->id_card_image = $filePath;
+        }
 
         if($request->post('oldPassword'))
         {
