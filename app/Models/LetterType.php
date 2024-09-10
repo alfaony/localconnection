@@ -78,7 +78,7 @@ class LetterType extends Model
         
         else {
             $perjanjianKerjaTypeId = LetterType::where('name', ParamSchema::PERJANJIANKERJA)->value('id');
-            return $query->where('head_letter_types_id', $perjanjianKerjaTypeId);
+            return $query->where('head_letter_types_id', $perjanjianKerjaTypeId)->where('head_letter_types_id','!=',null);
         }
     }
 }

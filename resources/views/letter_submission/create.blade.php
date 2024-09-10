@@ -44,6 +44,10 @@
                 <input type="file" name="id_card_image" id="id_card_image" class="form-control" accept="image/*">
             </div>
 
+            <div class="col-md-12 mb-3">
+                <label for="npwp_number">No. NPWP</label>
+                <input type="number" name="npwp_number" class="form-control" placeholder="Masukkan nomor NPWP" value="{{ old('npwp_number') ?? Auth::user()->npwp_number }}"/>
+            </div>
             <!-- Formulir -->
             <div class="col-md-12 mb-3">
                 <label for="surat">Surat <span class="text-danger">*</span></label>
@@ -67,159 +71,17 @@
         </div>
     </div>
 
-    <div class="card mb-3">
+    <div class="card mb-3" id="card_form_template" style="display:none;"> 
         <div class="card-header">
             <h3>Formulir</h3>
         </div>
-        <div class="card-body">
-            <div class="letter-template card" id="sk_magang_template" style="display:none;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-center">
-                        <h2>
-                            Surat Keterangan Magang
-                        </h2>
-                    </div>
-                    <div class="col-md-12 mb-3">
-                        <label for="masa_kerja">Masa Kerja <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <input type="date" name="start_date" class="form-control" value="{{ old('start_date') }}">
-                            <span class="input-group-text">hingga</span>
-                            <input type="date" name="end_date" class="form-control" value="{{ old('end_date') }}">
-                        </div>
-                    </div>
-                    <div class="col-md-12 mb-3">
-                        <label for="deskripsi_tugas">Deskripsi Tugas <span class="text-danger">*</span></label>
-                        <input class="thriveEditor form-control" id="description_description_task" data-ids="description_task" name="description_task" />
-                    </div>
-                    <div class="col-md-12 mb-3">
-                        <label for="deskripsi_magang">Deskripsi Magang <span class="text-danger">*</span></label>
-                        <input class="thriveEditor form-control" id="description_description_intern" data-ids="description_intern" name="description_intern" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Perjanjian Kerja Template -->
-            <div class="letter-template" id="perjanjian_kerja_template" style="display:none;">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="text-center"><strong>PERJANJIAN KERJA</strong></h5>
-                        <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
-        
-                        <p>Pada Hari Senin, XX Agustus 2024 bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
-        
-                        <!-- Table to display company and employee information -->
-                        <table class="table table-borderless">
-                            <tbody>
-                                <tr>
-                                    <td><strong>Nama</strong></td>
-                                    <td>: {{ $company['name'] ?? "" }} </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Penanggung Jawab</strong></td>
-                                    <td>: {{ $company['director'] ?? "" }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Alamat</strong></td>
-                                    <td>: {{ $company['address'] ?? "" }}</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2">
-                                        <p>Bertindak atas perusahaan yang mempekerjakan, selanjutnya disebut PIHAK PERTAMA.</p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Nama</strong></td>
-                                    <td>: {{ Auth::user()->name }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>No KTP</strong></td>
-                                    <td>: {{ Auth::user()->id_card }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Alamat</strong></td>
-                                    <td>: {{ Auth::user()->address }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="card">
-                    <!-- Bagian Surat Keputusan -->
-                    <div class="card-header">
-                        <div class="col-md-12 mb-3">
-                            <h5 class="mb-2 text-center"><strong>SURAT KEPUTUSAN MANAGEMENT</strong></h5>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="col-md-12 mb-3">
-                            <label for="salary_date">Nama Lengkap</label>
-                            <input type="string" class="form-control" value="{{ Auth::user()->name }}" readonly>
-                        </div>
-                        <!-- Jabatan -->
-                        <div class="col-md-12 mb-3">
-                            <label for="jabatan">Jabatan</label>
-                            <select class="form-control selectOrCreate2" name="position_id" id="position_id">
-                                <option value="" selected disabled>Pilih </option>
-                                @foreach($positions as $position)
-                                    <option value="{{ $position->name }}" >{{ $position->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-        
-                        <div class="col-md-12 mb-3">
-                            <label for="monthly_salary">Gaji Bulanan</label>
-                            <input type="text" class="form-control"  id="amount_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'amount')"/>
-                            <input type="hidden" id="amount" name="salary" name="name"  value="{{ old('salary') }}">
-                        </div>
-        
-                        <div class="col-md-12 mb-3">
-                            <label for="salary_date">Tanggal Perhitungan Gaji</label>
-                            <input type="date" name="salary_date" class="form-control" placeholder="Masukkan tanggal perhitungan gaji" value="{{ old('salary_date') }}" >
-                        </div>
-        
-                        <div class="col-md-12 mb-3">
-                            <label for="working_hours">Jam Kerja</label>
-                            <input type="text" name="working_hours" class="form-control" placeholder="Masukkan jam kerja" value="{{ old('working_hours') }}">
-                        </div>
-        
-                        <div class="col-md-12 mb-3">
-                            <label for="work_location">Penempatan</label>
-                            <input type="text" name="work_location" class="form-control" placeholder="Masukkan penempatan kerja"  value="{{ old('work_location') }}">
-                        </div>
-        
-                        <div class="col-md-12 mb-3">
-                            <label for="job_responsibilities">Tanggung Jawab Pekerjaan</label>
-                            <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" name="job_responsibilities" />
-                        </div>
-        
-                        <div class="col-md-12 mb-3">
-                            <label for="npwp_number">No. NPWP</label>
-                            <input type="number" name="npwp_number" class="form-control" placeholder="Masukkan nomor NPWP" value="{{ old('npwp_number') }}" >
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SK Jabatan Template -->
-            <div class="form-row letter-template" id="sk_jabatan_template" style="display:none;">
-                <!-- You can add fields related to "SK Jabatan" here -->
-            </div>
-
-            <!-- SK Pengantar Kerja Template -->
-            <div class="form-row letter-template" id="sk_pengantar_kerja_template" style="display:none;">
-                <!-- You can add fields related to "SK Pengantar Kerja" here -->
-            </div>
-
-            <!-- SK Bekerja Resign Template -->
-            <div class="form-row letter-template" id="sk_bekerja_resign_template" style="display:none;">
-                <!-- You can add fields related to "SK Bekerja (Resign)" here -->
-            </div>
+        <div class="card-body" id="form_template">
+            
         </div>
 
-        <div class="d-flex justify-content-end p-3">
-            <button type="button" id="submit-button" class="btn btn-primary">Simpan</button>
-            <button type="submit" id="hidden-submit-button" class="btn btn-primary" style="display:none"></button>
-        </div>
+    </div>
+    <div class="d-flex justify-content-end p-3">
+        <button type="submit" id="submit-button" class="btn btn-primary">Simpan</button>
     </div>
 </form>
 
@@ -232,27 +94,13 @@
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    document.getElementById('submit-button').addEventListener('click', function () {
-        // Tampilkan alert SweetAlert2
-        Swal.fire({
-            title: 'Apakah data yang diajukan sudah sesuai?',
-            text: "Pastikan semua data sudah benar sebelum mengirim!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Ya, sudah sesuai',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Jika pengguna mengonfirmasi, submit form melalui tombol submit tersembunyi
-                document.getElementById('hidden-submit-button').click();
-            }
-        });
-    });
-</script>
-<script>
     $(document).ready(function() {
+         // Initialize Select2
+         $('.select2').select2({
+            placeholder: 'Pilih',
+            allowClear: true
+        });
+
         // Setup Signature Pad
         var canvas = document.getElementById('signature-pad');
         var signaturePad = new SignaturePad(canvas, {
@@ -266,11 +114,20 @@
 
         // Handle form submission and ensure signature image is passed
         $('form').on('submit', function(e) {
-            if (!signaturePad.isEmpty()) {
+            if (signaturePad.isEmpty()) {
+                // Prevent form submission
+                e.preventDefault();
+                // Display an alert using SweetAlert2
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Tanda Tangan Diperlukan',
+                    text: 'Harap tanda tangan sebelum mengajukan surat!',
+                });
+            } else {
                 // Convert signature to base64 and set it in the hidden input field
                 var signatureDataUrl = signaturePad.toDataURL(); // Get image as base64
                 $('#signature_image').val(signatureDataUrl); // Set hidden input value
-            } 
+            }
         });
     });
 </script>
@@ -278,33 +135,332 @@
 
 <script>
     $(document).ready(function() {
-        // Initialize Select2
-        $('.select2').select2({
-            placeholder: 'Pilih',
-            allowClear: true
-        });
-
         // Handle letter type selection
         $('#letter_type_id').on('change', function() {
             var selectedTemplate = $(this).find('option:selected').data('template');
+            console.log(selectedTemplate);
+            
+            let form = ``;
+            $("#card_form_template").show();
+            $("#form_template").empty();
+            switch (selectedTemplate) 
+            {
+                case 'sk_magang_template':
+                    form = `
+                    <div class="letter-template card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-center">
+                                <h2>
+                                    Surat Keterangan Magang
+                                </h2>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="masa_kerja">Masa Kerja <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="date" name="start_date" class="form-control" value="{{ old('start_date') }}" required>
+                                    <span class="input-group-text">hingga</span>
+                                    <input type="date" name="end_date" class="form-control" value="{{ old('end_date') }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="deskripsi_tugas">Deskripsi Tugas <span class="text-danger">*</span></label>
+                                <input class="thriveEditor form-control" id="description_description_task" data-ids="description_task" name="description_task" required/>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="deskripsi_magang">Deskripsi Magang <span class="text-danger">*</span></label>
+                                <input class="thriveEditor form-control" id="description_description_intern" data-ids="description_intern" name="description_intern" required/>
+                            </div>
+                        </div>
+                    </div>
+                    `
+                    $("#form_template").html(form);
 
-            // Hide all letter templates
-            $('.letter-template').hide();
+                    generateThriveEditor("description_task");
+                    generateThriveEditor("description_intern");
+                    break;
+                case 'perjanjian_kerja_template':
+                    form = `
+                    <!-- Perjanjian Kerja Template -->
+                    <div class="letter-template" id="perjanjian_kerja_template" >
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="text-center"><strong>PERJANJIAN KERJA</strong></h5>
+                                <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
+                
+                                <p>Pada Hari Senin, XX Agustus 2024 bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+                
+                                <!-- Table to display company and employee information -->
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Nama</strong></td>
+                                            <td>: {{ $company['name'] ?? "" }} </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Penanggung Jawab</strong></td>
+                                            <td>: {{ $company['director'] ?? "" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Alamat</strong></td>
+                                            <td>: {{ $company['address'] ?? "" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2">
+                                                <p>Bertindak atas perusahaan yang mempekerjakan, selanjutnya disebut PIHAK PERTAMA.</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Nama</strong></td>
+                                            <td>: {{ Auth::user()->name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>No KTP</strong></td>
+                                            <td>: {{ Auth::user()->id_card }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Alamat</strong></td>
+                                            <td>: {{ Auth::user()->address }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <!-- Bagian Surat Keputusan -->
+                            <div class="card-header">
+                                <div class="col-md-12 mb-3">
+                                    <h5 class="mb-2 text-center"><strong>SURAT KEPUTUSAN MANAGEMENT</strong></h5>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Nama Lengkap</label>
+                                    <input type="string" class="form-control" value="{{ Auth::user()->name }}" readonly>
+                                </div>
+                                <!-- Jabatan -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="jabatan">Jabatan <span class="text-danger">*</span></label>
+                                    <select class="form-control selectOrCreate2" name="position_new_id" id="position_id" required>
+                                        <option value="" selected disabled>Pilih </option>
+                                        @foreach($positions as $position)
+                                            <option value="{{ $position->name }}" >{{ $position->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                
+                                <div class="col-md-12 mb-3">
+                                    <label for="monthly_salary">Gaji Bulanan <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control"  id="amount_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'amount')" required/>
+                                    <input type="hidden" id="amount" name="salary" name="name"  value="{{ old('salary') }}">
+                                </div>
+                
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Tanggal Perhitungan Gaji <span class="text-danger">*</span></label>
+                                    <input type="date" name="salary_date" class="form-control" placeholder="Masukkan tanggal perhitungan gaji" value="{{ old('salary_date') }}" required>
+                                </div>
+                
+                                <div class="col-md-12 mb-3">
+                                    <label for="working_hours">Jam Kerja <span class="text-danger">*</span></label>
+                                    <input type="text" name="working_hours" class="form-control" placeholder="Masukkan jam kerja" value="{{ old('working_hours') }}" required>
+                                </div>
+                
+                                <div class="col-md-12 mb-3">
+                                    <label for="work_location">Penempatan <span class="text-danger">*</span></label>
+                                    <input type="text" name="work_location" class="form-control" placeholder="Masukkan penempatan kerja"  value="{{ old('work_location') }}" required>
+                                </div>
+                
+                                <div class="col-md-12 mb-3">
+                                    <label for="job_responsibilities">Tanggung Jawab Pekerjaan <span class="text-danger">*</span></label>
+                                    <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" name="job_responsibilities" required />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `
+                    $("#form_template").html(form);
 
-            // Show the selected template
-            if (selectedTemplate) {
-                $('#' + selectedTemplate).show();
+                    // Install
+                    generateThriveEditor("job_responsibilities");
+
+                    $('.selectOrCreate2').select2({
+                        placeholder: 'Pilih',
+                        allowClear: true,
+                        tags: true
+                    });
+
+                    break;
+                case 'sk_jabatan_template':
+                    form = `
+                        <div class="letter-template">
+                            <div class="card">
+                                <div class="card-body">
+                                    <!-- Nama PT (Picklist) -->
+                                    <div class="col-md-12 mb-3">
+                                        <label for="company_name">Nama PT <span class="text-danger">*</span></label>
+                                        <input type="text" value="{{ $company['name'] ?? '' }}" class="form-control" readonly>
+                                    </div>
+
+                                    <!-- Nama Lengkap -->
+                                    <div class="col-md-12 mb-3">
+                                        <label for="full_name">Nama Lengkap <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" value="{{ Auth::user()->name }}" placeholder="Masukkan Nama Lengkap" readonly>
+                                    </div>
+
+                                    @if(Auth::user()->last_position)
+                                    <!-- Jabatan -->
+                                    <div class="col-md-12 mb-3">
+                                        <label for="jabatan">Jabatan <span class="text-danger">*</span></label>
+                                        <select class="form-control" name="position_id" id="position_id" readonly>
+                                            <option value="" selected disabled>Pilih </option>
+                                            @foreach($lastPositon as $position)
+                                                <option value="{{ $position->name }}" {{ Auth::user()->last_position->position_id == $position->id ? 'selected' : '' }}>{{ $position->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @endif
+
+                                    <!-- Gaji Bulanan -->
+                                    <div class="col-md-12 mb-3">
+                                        <label for="monthly_salary">Gaji Bulanan <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control"  id="amount_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'amount')" required/>
+                                        <input type="hidden" id="amount" name="salary" name="name"  value="{{ old('salary') }}">
+                                    </div>
+                    
+                                    <div class="col-md-12 mb-3">
+                                        <label for="salary_date">Tanggal Perhitungan Gaji <span class="text-danger">*</span></label>
+                                        <input type="date" name="salary_date" class="form-control" placeholder="Masukkan tanggal perhitungan gaji" value="{{ old('salary_date') }}" required>
+                                    </div>
+
+                                    <!-- Jam Kerja -->
+                                    <div class="col-md-12 mb-3">
+                                        <label for="working_hours">Jam Kerja <span class="text-danger">*</span></label>
+                                        <input type="text" name="working_hours" class="form-control" placeholder="Masukkan Jam Kerja" required>
+                                    </div>
+
+                                    <!-- Penempatan -->
+                                    <div class="col-md-12 mb-3">
+                                        <label for="work_location">Penempatan <span class="text-danger">*</span></label>
+                                        <input type="text" name="work_location" class="form-control" placeholder="Masukkan Penempatan Kerja" required>
+                                    </div>
+
+                                    <!-- Tanggung Jawab Pekerjaan (Text Area) -->
+                                    <div class="col-md-12 mb-3">
+                                        <label for="job_responsibilities">Tanggung Jawab Pekerjaan <span class="text-danger">*</span></label>
+                                        <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" name="job_responsibilities" required />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>  
+                    `;
+
+                    $("#form_template").html(form);
+
+
+                    // Install
+                    generateThriveEditor("job_responsibilities");
+
+                    $('.selectOrCreate2').select2({
+                        placeholder: 'Pilih',
+                        allowClear: true,
+                        tags: true
+                    });
+                    break;
+                case 'sk_tugas_template':
+                    form = `
+                        <div class="letter-template card">
+                            <div class="card-body">
+                                <!-- Nama PT (Picklist) -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="company_name">Nama PT <span class="text-danger">*</span></label>
+                                    <input type="text" value="{{ $company['name'] ?? '' }}" class="form-control" readonly>
+                                </div>
+
+                                <!-- Nama Lengkap -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="full_name">Nama Lengkap <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" value="{{ Auth::user()->name }}" placeholder="Masukkan Nama Lengkap" readonly>
+                                </div>
+                                
+                                @if(isset(Auth::user()->last_position))
+                                <!-- Jabatan Terakhir-->
+                                <div class="col-md-12 mb-3">
+                                    <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="position_old_id" id="position_old_id" disabled>
+                                        <option value="" selected disabled>Pilih </option>
+                                        @foreach($lastPositon as $positionlast)
+                                            <option value="{{ $positionlast->name }}" {{ $positionlast->id == Auth::user()->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
+
+                                <!-- Jabatan Terbaru (Picklist) -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="jabatan">Jabatan Terbaru<span class="text-danger">*</span></label>
+                                    <select class="form-control selectOrCreate2" name="position_new_id" id="position_id" required>
+                                        <option value="" selected disabled>Pilih </option>
+                                        @foreach($positions as $position)
+                                            <option value="{{ $position->name }}" >{{ $position->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Gaji Bulanan -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="monthly_salary">Gaji Bulanan <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control"  id="amount_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'amount')" required/>
+                                    <input type="hidden" id="amount" name="salary" name="name"  value="{{ old('salary') }}">
+                                </div>
+                
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Tanggal Perhitungan Gaji <span class="text-danger">*</span></label>
+                                    <input type="date" name="salary_date" class="form-control" placeholder="Masukkan tanggal perhitungan gaji" value="{{ old('salary_date') }}" required>
+                                </div>
+
+                                <!-- Jam Kerja -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="working_hours">Jam Kerja <span class="text-danger">*</span></label>
+                                    <input type="text" name="working_hours" class="form-control" placeholder="Masukkan Jam Kerja" required>
+                                </div>
+
+                                <!-- Penempatan -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="work_location">Penempatan <span class="text-danger">*</span></label>
+                                    <input type="text" name="work_location" class="form-control" placeholder="Masukkan Penempatan Kerja" required>
+                                </div>
+
+                                <!-- Tanggung Jawab Pekerjaan (Text Area) -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="job_responsibilities">Tanggung Jawab Pekerjaan <span class="text-danger">*</span></label>
+                                    <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" name="job_responsibilities" required />
+                                </div>
+                            </div>
+                        </div>
+                    `
+                    $("#form_template").html(form);
+
+
+                    // Install
+                    generateThriveEditor("job_responsibilities");
+
+                    $('.selectOrCreate2').select2({
+                        placeholder: 'Pilih',
+                        allowClear: true,
+                        tags: true
+                    });
+
+                    break;
+                case 'sk_bekerja_resign_template':
+                    $("#card_form_template").hide();
+                    break;
+                case 'sk_perjanjian':
+                    $("#card_form_template").hide();
+                    break;
+                default:
+                    break;
             }
-
-            $('.selectOrCreate2').select2({
-                placeholder: 'Pilih',
-                allowClear: true,
-                tags: true
-            });
         });
 
-        // Trigger change event if a letter type is already selected (for edit mode)
-        $('#letter_type_id').trigger('change');
         
     });
 

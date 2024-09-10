@@ -125,7 +125,9 @@ class User extends Authenticatable
     }
     public function getLastPositionAttribute()
     {
-        return $this->userPosition() ? $this->userPosition()->orderBy('end_date', 'desc')->first() : null ;
+        return $this->userPosition()
+        ? $this->userPosition()->whereNull('end_date')->orderBy('created_at', 'desc')->first()
+        : null;
     }
     public function scopeByCompany($query,$companyId)
     {

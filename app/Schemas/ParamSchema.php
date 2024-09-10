@@ -72,4 +72,8 @@ class ParamSchema
     const APPROVE = "approve";
 
     const TEMPLATEPERJANJIANKERJA = "perjanjian_kerja_template";
+
+    const TEMPLATETUGAS = "sk_tugas_template";
+
+    const TEMPLATEJABATAN = "sk_jabatan_template";
 }

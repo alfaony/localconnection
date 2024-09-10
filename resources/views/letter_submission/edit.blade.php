@@ -17,32 +17,36 @@
             <!-- Nama Lengkap -->
             <div class="col-md-12 mb-3">
                 <label for="nama_lengkap">Nama Lengkap <span class="text-danger">*</span></label>
-                <input type="text" name="name" class="form-control" placeholder="Masukkan Nama Lengkap" value="{{ Auth::user()->name }}" required>
+                <input type="text" name="name" class="form-control" placeholder="Masukkan Nama Lengkap" value="{{ $user->name }}" required>
             </div>
 
             <!-- Alamat -->
             <div class="col-md-12 mb-3">
                 <label for="alamat">Alamat <span class="text-danger">*</span></label>
-                <input type="text" name="address" class="form-control" placeholder="Masukkan Alamat Lengkap" value="{{ Auth::user()->address }}" required>
+                <input type="text" name="address" class="form-control" placeholder="Masukkan Alamat Lengkap" value="{{ $user->address }}" required>
             </div>
 
             <!-- Nomor KTP -->
             <div class="col-md-12 mb-3">
-                <label for="ktp">Nomor KTP <span class="text-danger">*</span></label>
-                <input type="text" name="id_card" class="form-control" placeholder="Masukkan Nomor KTP" value="{{ Auth::user()->id_card }}"  required>
+                <label for="ktp">Nomor KTP</label>
+                <input type="text" name="id_card" class="form-control" placeholder="Masukkan Nomor KTP" value="{{ $user->id_card }}">
             </div>
 
+            <div class="col-md-12 mb-3">
+                <label for="npwp_number">No. NPWP</label>
+                <input type="number" name="npwp_number" class="form-control" placeholder="Masukkan nomor NPWP" value="{{ old('npwp_number') ?? Auth::user()->npwp_number }}"/>
+            </div>
             <!-- Tanda Tangan -->
-                <div class="col-md-12">
-                    <label for="signature">Tanda Tangan <span class="text-danger">*</span></label>
-                    @if (Auth::user()->signature)
-                        <div class="signature-container mt-2">
-                            <img src="{{ Storage::url(Auth::user()->signature) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
-                        </div>
-                    @else
-                        <p class="text-muted">Tanda tangan belum tersedia.</p>
-                    @endif
-                </div>
+            <div class="col-md-12">
+                <label for="signature">Tanda Tangan <span class="text-danger">*</span></label>
+                @if ($user->signature)
+                    <div class="signature-container mt-2">
+                        <img src="{{ Storage::url($user->signature) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+                    </div>
+                @else
+                    <p class="text-muted">Tanda tangan belum tersedia.</p>
+                @endif
+            </div>
             <!-- Formulir -->
             <div class="col-md-12 mb-3">
                 <label for="surat">Surat <span class="text-danger">*</span></label>
@@ -59,6 +63,7 @@
         $template = $letterSubmission->letterType->template;
         $fieldData = $letterSubmission->convert_field;
     @endphp
+
     <div class="card mb-3">
         <div class="card-header">
             <h3>Formulir</h3>
@@ -118,15 +123,15 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Nama</strong></td>
-                                    <td>: {{ Auth::user()->name }}</td>
+                                    <td>: {{ $user->name }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>No KTP</strong></td>
-                                    <td>: {{ Auth::user()->id_card }}</td>
+                                    <td>: {{ $user->id_card }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Alamat</strong></td>
-                                    <td>: {{ Auth::user()->address }}</td>
+                                    <td>: {{ $user->address }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -137,16 +142,18 @@
                     <div class="card-body">
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Nama Lengkap</label>
-                            <input type="string" class="form-control" value="{{ Auth::user()->name }}" readonly>
+                            <input type="string" class="form-control" value="{{ $user->name }}" readonly>
                         </div>
-                        @if(isset(Auth::user()->last_position))
+                        @if(isset($fieldData['position_new_id']))
                         <!-- Jabatan -->
                         <div class="col-md-12 mb-3">
                             <label for="jabatan">Jabatan</label>
-                            <select class="form-control selectOrCreate2" name="position_id" >
+                            <select class="form-control selectOrCreate2" name="position_new_id">
                                 <option value="" selected disabled>Pilih </option>
                                 @foreach($positions as $position)
-                                    <option value="{{ $position->name }}" {{ Auth::user()->last_position->position_id == $position->id ? 'selected' : '' }}>{{ $position->name }}</option>
+                                    <option value="{{ $position->name }}" {{ (isset($fieldData['position_new_id']) && $fieldData['position_new_id'] == $position->name) ? 'selected' : '' }} >
+                                        {{ $position->name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -177,20 +184,138 @@
                             <label for="job_responsibilities">Tanggung Jawab Pekerjaan</label>
                             <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" name="job_responsibilities" value="{{ $fieldData['job_responsibilities'] ?? ''  }}" />
                         </div>
-        
-                        <div class="col-md-12 mb-3">
-                            <label for="npwp_number">No. NPWP</label>
-                            <input type="number" name="npwp_number" class="form-control" value="{{ Auth::user()->npwp_number }}" placeholder="Masukkan nomor NPWP">
-                        </div>
                     </div>
                 </div>
             </div>
             @endif
 
+            @if($template == \App\Schemas\ParamSchema::TEMPLATEJABATAN)
             <!-- SK Jabatan Template -->
-            <div class="form-row letter-template" id="sk_jabatan_template" style="display:none;">
-                <!-- You can add fields related to "SK Jabatan" here -->
+            <div class="form-row letter-template card" id="sk_jabatan_template" style="display:none;">
+                <div class="card-body">
+                    <!-- Nama PT (Picklist) -->
+                    <div class="col-md-12 mb-3">
+                        <label for="company_name">Nama PT <span class="text-danger">*</span></label>
+                        <input type="text" value="{{ $company['name'] ?? '' }}" class="form-control" readonly>
+                    </div>
+
+                    <!-- Nama Lengkap -->
+                    <div class="col-md-12 mb-3">
+                        <label for="full_name">Nama Lengkap <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" value="{{ $user->name }}" placeholder="Masukkan Nama Lengkap" readonly>
+                    </div>
+
+                    <!-- Jabatan -->
+                    @if(isset($user->last_position))
+                    <!-- Jabatan -->
+                    <div class="col-md-12 mb-3">
+                        <label for="jabatan">Jabatan</label>
+                        <select class="form-control" name="position_id" readonly>
+                            <option value="" selected disabled>Pilih </option>
+                            @foreach($positions as $position)
+                                <option value="{{ $position->name }}" {{ $user->last_position->position_id == $position->id ? 'selected' : '' }}>{{ $position->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+
+                    <div class="col-md-12 mb-3">
+                        <label for="monthly_salary">Gaji Bulanan</label>
+                        <input type="text" class="form-control" id="amount_show" placeholder="Rp {{ number_format($letterSubmission->salary ?? 0, 0, ',', '.') }}" oninput="formatRupiahFormat(this,'amount')"/>
+                        <input type="hidden" id="amount" name="salary" value="{{ $fieldData['salary'] ?? '' }}">
+                    </div>
+    
+                    <div class="col-md-12 mb-3">
+                        <label for="salary_date">Tanggal Perhitungan Gaji</label>
+                        <input type="date" name="salary_date" class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
+                    </div>
+    
+                    <div class="col-md-12 mb-3">
+                        <label for="working_hours">Jam Kerja</label>
+                        <input type="text" name="working_hours" class="form-control" value="{{ $fieldData['working_hours'] ?? ''  }}" placeholder="Masukkan jam kerja">
+                    </div>
+    
+                    <div class="col-md-12 mb-3">
+                        <label for="work_location">Penempatan</label>
+                        <input type="text" name="work_location" class="form-control" value="{{ $fieldData['work_location'] ?? ''  }}" placeholder="Masukkan penempatan kerja">
+                    </div>
+    
+                    <div class="col-md-12 mb-3">
+                        <label for="job_responsibilities">Tanggung Jawab Pekerjaan</label>
+                        <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" name="job_responsibilities" value="{{ $fieldData['job_responsibilities'] ?? ''  }}" />
+                    </div>
+                </div>
             </div>
+            @endif
+
+            @if($template == \App\Schemas\ParamSchema::TEMPLATETUGAS)
+            <div class="form-row letter-template card" id="sk_tugas_template" style="display:none;">
+                <div class="card-body">
+                    <!-- Nama PT (Picklist) -->
+                    <div class="col-md-12 mb-3">
+                        <label for="company_name">Nama PT <span class="text-danger">*</span></label>
+                        <input type="text" value="{{ $company['name'] ?? '' }}" class="form-control" readonly>
+                    </div>
+
+                    <!-- Nama Lengkap -->
+                    <div class="col-md-12 mb-3">
+                        <label for="full_name">Nama Lengkap <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" value="{{ $user->name }}" placeholder="Masukkan Nama Lengkap" readonly>
+                    </div>
+                    
+                    @if(isset($user->last_position))
+                    <!-- Jabatan Terakhir-->
+                    <div class="col-md-12 mb-3">
+                        <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
+                        <select class="form-control" name="position_old_id" id="position_old_id" disabled>
+                            <option value="" selected disabled>Pilih </option>
+                            @foreach($lastPositon as $positionlast)
+                                <option value="{{ $positionlast->name }}" {{ $positionlast->id == $user->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+
+                    <!-- Jabatan Terbaru (Picklist) -->
+                    <div class="col-md-12 mb-3">
+                        <label for="jabatan">Jabatan Terbaru <span class="text-danger">*</span></label>
+                        <select class="form-control selectOrCreate2" name="position_new_id" id="position_id" required>
+                            <option value="" selected disabled>Pilih </option>
+                            @foreach($positions as $position)
+                                <option value="{{ $position->name }}" {{ (isset($fieldData['position_new_id']) && $fieldData['position_new_id'] == $position->name) ? 'selected' : '' }} >{{ $position->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Gaji Bulanan -->
+                    <div class="col-md-12 mb-3">
+                        <label for="monthly_salary">Gaji Bulanan</label>
+                        <input type="text" class="form-control" id="amount_show" placeholder="Rp {{ number_format($letterSubmission->salary ?? 0, 0, ',', '.') }}" oninput="formatRupiahFormat(this,'amount')"/>
+                        <input type="hidden" id="amount" name="salary" value="{{ $fieldData['salary'] ?? '' }}">
+                    </div>
+    
+                    <div class="col-md-12 mb-3">
+                        <label for="salary_date">Tanggal Perhitungan Gaji</label>
+                        <input type="date" name="salary_date" class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
+                    </div>
+    
+                    <div class="col-md-12 mb-3">
+                        <label for="working_hours">Jam Kerja</label>
+                        <input type="text" name="working_hours" class="form-control" value="{{ $fieldData['working_hours'] ?? ''  }}" placeholder="Masukkan jam kerja">
+                    </div>
+    
+                    <div class="col-md-12 mb-3">
+                        <label for="work_location">Penempatan</label>
+                        <input type="text" name="work_location" class="form-control" value="{{ $fieldData['work_location'] ?? ''  }}" placeholder="Masukkan penempatan kerja">
+                    </div>
+    
+                    <div class="col-md-12 mb-3">
+                        <label for="job_responsibilities">Tanggung Jawab Pekerjaan</label>
+                        <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" name="job_responsibilities" value="{{ $fieldData['job_responsibilities'] ?? ''  }}" />
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <!-- SK Pengantar Kerja Template -->
             <div class="form-row letter-template" id="sk_pengantar_kerja_template" style="display:none;">
@@ -215,7 +340,7 @@
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         // Initialize Select2
         let amount = document.getElementById("amount").value;
         if (amount) 
@@ -223,16 +348,21 @@
             document.getElementById("amount_show").value = amount;
             formatRupiahFormat(document.getElementById("amount_show"),"amount"); // Format default value
         }
-
-        $('.select2').select2({
-            placeholder: 'Pilih',
-            allowClear: true
-        });
-
+    });
+</script>
+<script>
+    $(document).ready(function() {
         // Handle letter type selection
+        var selectedTemplate = $(this).find('option:selected').data('template');
+        
+        if(selectedTemplate) 
+        {
+            $('#' + selectedTemplate).show();
+        }
+        
         $('#letter_type_id').on('change', function() {
             var selectedTemplate = $(this).find('option:selected').data('template');
-
+            
             // Hide all letter templates
             $('.letter-template').hide();
 
@@ -247,9 +377,9 @@
             });
         });
 
-        // Trigger change event if a letter type is already selected (for edit mode)
-        $('#letter_type_id').trigger('change');
+        $("#letter_type_id").trigger("change");
     });
+
     function formatRupiahFormat(input, inputNonFormat) 
     {
         let numStr = input.value.toString().replace(/[^,\d]/g, '');
