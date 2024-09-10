@@ -368,6 +368,11 @@
                                 <div class="card-body">
                                     <!-- Nama PT (Picklist) -->
                                     <div class="col-md-12 mb-3">
+                                        <label for="company_name">Perihal <span class="text-danger">*</span></label>
+                                        <input type="text" name="perihal" value="{{ old('perihal') ?? '' }}" class="form-control" required>
+                                    </div>
+                                    <!-- Nama PT (Picklist) -->
+                                    <div class="col-md-12 mb-3">
                                         <label for="company_name">Nama PT <span class="text-danger">*</span></label>
                                         <input type="text" value="{{ $company['name'] ?? '' }}" class="form-control" readonly>
                                     </div>
@@ -441,6 +446,10 @@
                     form = `
                         <div class="letter-template card">
                             <div class="card-body">
+                                <div class="col-md-12 mb-3">
+                                    <label for="company_name">Perihal <span class="text-danger">*</span></label>
+                                    <input type="text" name="perihal" value="{{ old('perihal') ?? '' }}" class="form-control" required>
+                                </div>
                                 <!-- Nama PT (Picklist) -->
                                 <div class="col-md-12 mb-3">
                                     <label for="company_name">Nama PT <span class="text-danger">*</span></label>
@@ -457,7 +466,7 @@
                                 <!-- Jabatan Terakhir-->
                                 <div class="col-md-12 mb-3">
                                     <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
-                                    <select class="form-control" name="position_old_id" id="position_old_id" disabled>
+                                    <select class="form-control" name="position_old_id" id="position_old_id" required>
                                         <option value="" selected disabled>Pilih </option>
                                         @foreach($lastPositon as $positionlast)
                                             <option value="{{ $positionlast->name }}" {{ $positionlast->id == Auth::user()->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
@@ -523,11 +532,130 @@
 
                     break;
                 case 'sk_bekerja_resign_template':
-                    $("#card_form_template").hide();
+                    form = `
+                        <div class="card scrollable-div" id="printThis">
+                            <div class="card-body">
+                                <div class="text-center mb-4">
+                                    <h3><strong>SURAT PENGUNDURAN DIRI</strong></h3>
+                                </div>
+                                
+                                <p>Kepada Yth,<br>
+                                HRD/Director<br>
+                                {{ $company['name'] }}</p>
+                        
+                                <p>Saya yang bertanda tangan di bawah ini :</p>
+                        
+                                <div class="table-responsive">
+                                    <table class="table table-borderless">
+                                        <tbody>
+                                            <tr>
+                                                <td style="width: 150px;"><strong>Nama</strong></td>
+                                                <td>: {{ Auth::user()->name ?? "" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>NIK</strong></td>
+                                                <td>: {{ Auth::user()->id_card ?? "" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Jabatan</strong></td>
+                                                <td>: {{ Auth::user()->last_position_now ? Auth::user()->last_position_now->position->name : "" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Perusahaan</strong></td>
+                                                <td>
+                                                    {{ $company['address'] }}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                        
+                                <p>Menyatakan dengan sesungguhnya bahwa mulai tanggal  saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan P{{ $company['name'] ?? "" }}</p>
+                        
+                                <p>Ucapan terima kasih yang sebesar-besarnya saya sampaikan atas kesempatan yang diberikan untuk bekerja di {{ $company['name'] ?? "" }}</p>
+                        
+                                <p>Melalui surat ini saya memohon maaf kepada segenap manajemen dan karyawan {{ $company['name'] ?? "" }} jika terdapat kesalahan yang saya perbuat selama bekerja. Besar harapan saya {{ $company['name'] ?? "" }} akan terus berkembang dan maju.</p>
+                            </div>
+                        </div>
+                    `;
+
+                    $("#form_template").html(form);
                     break;
                 case 'sk_perjanjian':
                     $("#card_form_template").hide();
                     break;
+                case 'sk_pengantar_kerja_template':
+                    form = `
+                    <!-- sk_pengantar_kerja_template -->
+                    <div class="letter-template" >
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="col-12 justify-content-center align-items-center">
+                                    <h6 class="text-center"><strong>SURAT KETERANGAN</strong></h6>
+                                    <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
+                                </div>
+
+                                <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
+                                    <p>Saya yang bertandatangan di bawah ini :</p>
+                                </div>
+
+                                <div class="col-12 mt-2">
+                                    <!-- Table to display company and employee information -->
+                                    <table class="table table-borderless detail-table">
+                                        <tbody>
+                                            <tr>
+                                                <td>Nama</td>
+                                                <td>: {{ $company['name'] ?? "" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Penanggung Jawab</td>
+                                                <td>: {{ $company['director'] ?? "" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Alamat</td>
+                                                <td>: {{ $company['address'] ?? "" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    Dengan ini menerangkan bahwa :
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Nama</td>
+                                                <td>: {{ Auth::user()->name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>No KTP</td>
+                                                <td>: {{ Auth::user()->id_card }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Alamat</td>
+                                                <td>: {{ Auth::user()->address }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <p>Bertindak atas nama pribadi, sebagai pekerja / staff yang dipekerjakan, selanjutnya
+                                                        disebut sebagai PIHAK KEDUA.</p>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <p class="text-justify"> 
+                                        Telah bekerja di perusahaan kami, {{ $company['name'] ?? "" }}, sejak tgl {{ Auth::user()->first_position ? \Carbon\Carbon::parse(Auth::user()->first_position->start_date)->locale('id')->translatedFormat('d F Y') : "" }} 
+                                        s/d {{ Auth::user()->last_position_now->end_date ? \Carbon\Carbon::parse(Auth::user()->last_position_now->end_date)->locale('id')->translatedFormat('d F Y') : \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ Auth::user()->last_position_now ? Auth::user()->last_position_now->position->name : '' }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `
+                    $("#form_template").html(form);
+                    break;
+
+                    
                 default:
                     break;
             }

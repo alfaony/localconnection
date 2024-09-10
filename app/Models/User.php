@@ -130,11 +130,18 @@ class User extends Authenticatable
         ? $this->userPosition()->whereNull('end_date')->orderBy('created_at', 'desc')->first()
         : null;
     }
-
+    
     public function getLastPositionNowAttribute()
     {
         return $this->userPosition()
         ? $this->userPosition()->orderBy('created_at', 'desc')->first()
+        : null;
+    }
+
+    public function getFirstPositionAttribute()
+    {
+        return $this->userPosition()
+        ? $this->userPosition()->first()
         : null;
     }
 

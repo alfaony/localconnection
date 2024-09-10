@@ -191,7 +191,6 @@ $fieldData = $letterSubmission->convert_field;
         </div>
     </div>
 </div>
-</div>
 
 <!-- Download Button -->
 <div class="col-12 text-center mt-3">
