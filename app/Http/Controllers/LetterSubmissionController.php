@@ -278,6 +278,12 @@ class LetterSubmissionController extends Controller
         if($letterType->is_ending)
         {
             $this->updateStatus(ParamSchema::NONSTAFF,$user->id);
+            $lastPosition = $user->last_position;
+            if($lastPosition)
+            {
+                $lastPosition->end_date = Carbon::now();
+                $lastPosition->save();
+            }
         }
 
         if($request->name || $request->address || $request->id_card)
