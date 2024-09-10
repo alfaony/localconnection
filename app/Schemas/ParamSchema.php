@@ -6,6 +6,10 @@ namespace App\Schemas;
 
 class ParamSchema
 {
+    const TRUE = 1;
+    
+    const FALSE = 0;
+
     const DAILY = "daily";
 
     const MONTHLY = "monthly";

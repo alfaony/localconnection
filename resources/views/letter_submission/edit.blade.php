@@ -29,12 +29,17 @@
             <!-- Nomor KTP -->
             <div class="col-md-12 mb-3">
                 <label for="ktp">Nomor KTP</label>
+                @if($user->id_card_image)
+                <div class="mt-1 mb-2">
+                    <img src="{{ Storage::url($user->id_card_image) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+                </div>
+                @endif
                 <input type="text" name="id_card" class="form-control" placeholder="Masukkan Nomor KTP" value="{{ $user->id_card }}">
             </div>
 
             <div class="col-md-12 mb-3">
                 <label for="npwp_number">No. NPWP</label>
-                <input type="number" name="npwp_number" class="form-control" placeholder="Masukkan nomor NPWP" value="{{ old('npwp_number') ?? Auth::user()->npwp_number }}"/>
+                <input type="number" name="npwp_number" class="form-control" placeholder="Masukkan nomor NPWP" value="{{ old('npwp_number') ?? $user->npwp_number }}"/>
             </div>
             <!-- Tanda Tangan -->
             <div class="col-md-12">

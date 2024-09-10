@@ -87,9 +87,10 @@ class LetterSubmissionController extends Controller
             $letterSubmission->field = json_encode($fieldData);
             
             $letterType = LetterType::findOrFail($request->letter_type_id);
-            if($letterType->auto_approve == true)
+            
+            if($letterType->auto_approve == ParamSchema::TRUE)
             {
-                $letterSubmission->is_approved = true;
+                $letterSubmission->is_approved = ParamSchema::TRUE;
             }
             $letterSubmission->save();
 
