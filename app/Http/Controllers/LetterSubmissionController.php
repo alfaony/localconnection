@@ -9,6 +9,7 @@ use App\Http\Requests\LetterSubmissionRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
 
 use App\Models\LetterSubmission;
 use App\Models\LetterType;
@@ -16,6 +17,7 @@ use App\Models\Position;
 use App\Models\UserPosition;
 use App\Models\SettingCompany;
 use App\Helpers\InboxHelper;
+use App\Helpers\EmailNotifHelper;
 use App\Models\User;
 
 use Carbon\Carbon;
@@ -96,6 +98,8 @@ class LetterSubmissionController extends Controller
 
             $this->updateProfile($request, $letterSubmission->user);
 
+            $this->sendNotification($letterSubmission, 'store', Auth::user()->company_id);
+
             DB::commit();
             return redirect()->route('letter-submission.index')->with('success', 'Pengajuan surat berhasil dibuat.');
         } catch (\Throwable $th) {
@@ -162,6 +166,11 @@ class LetterSubmissionController extends Controller
 
             // Simpan perubahan
             $letterSubmission->save();
+
+            if(Auth::user()->id == $letterSubmission->user_id)
+            {
+                $this->sendNotification($letterSubmission, 'update', Auth::user()->company_id);
+            }
 
             DB::commit();
             return redirect()->route('letter-submission.index')->with('success', 'Pengajuan surat berhasil diperbarui.');
@@ -256,7 +265,9 @@ class LetterSubmissionController extends Controller
                 DB::commit();
                 return redirect()->route('letter-submission.index')->with('success', 'Pengajuan surat berhasil diupdate.');
             }
-    
+            
+            $this->sendNotification($letterSubmission, $action, Auth::user()->company_id, true);
+
             return redirect()->back()->with('error', 'Aksi tidak valid.');
         } catch (\Throwable $th) {
             //throw $th;
@@ -357,15 +368,116 @@ class LetterSubmissionController extends Controller
         }
     }
 
-    public function sentInbox($to,$message,$directUrl)
+    protected function sendNotification($letterSubmission, $timeNotify, $companyId, $approval = null,  $notes = null)
     {
-        $inboxHelper = new InboxHelper();
-        $inboxHelper->sent(
-            $to, 
-            Auth::user()->id, 
-            $message, 
-            $directUrl
+
+        $letterType = LetterType::findOrFail($letterSubmission->letter_type_id);
+        $directUrl = route('letter-submission.show', $letterSubmission->id);
+        
+        $data = 
+        [
+            'name' => $letterSubmission->user->name,
+            'letter_type' => $letterType->name,
+            'letter_date' => Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y'),
+            'url' => $directUrl
+        ];
+        
+        $toEmails = [];
+        $toUserId = [];
+        $toNames = [];
+        
+        if(!$approval)
+        {
+            $ccEmails = [Auth::user()->email];
+            $usersAdmin = User::where('company_id',Auth::user()->company_id)->whereHas('role', function($q){
+                $q->where('name',RoleSchema::ADMIN)->orWhere('name',RoleSchema::DIRECTOR);
+            })->get();
+
+            if($usersAdmin->isEmpty())
+            {
+                return false;
+            }
+
+            foreach ($usersAdmin as $user) 
+            {
+                $toEmails[] = $user->email;
+                $toUserId[] = $user->id;
+                $toNames[] = $user->name;
+            }
+        }else
+        {
+            $toEmails[] = $letterSubmission->user->email;
+            $toUserId[] = $letterSubmission->user->id;
+            $toNames[] = $letterSubmission->user->name;
+            $ccEmails = [Auth::user()->email];
+        }
+
+
+        $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $fromEmail = $smtpConfig['username'] ?? '';
+        $fromName = $smtpConfig['name'] ?? '';
+
+        switch ($timeNotify) 
+        {
+            case "store":
+                $subject = 'Pengajuan '.$letterType->name;
+                $tamplate = $letterType->auto_approve == ParamSchema::TRUE ?  'email.notif_letter_with_approval' : 'email.notif_letter_no_approval';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "update":
+                $subject = 'Perubahan Pengajuan '.$letterType->name;
+                $tamplate = $letterType->auto_approve == ParamSchema::TRUE ?  'email.notif_letter_with_approval' : 'email.notif_letter_no_approval';
+                
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "approve":
+                $subject = 'Pengajuan '.$letterType->name. ' Disetujui';
+                $tamplate = $letterType->auto_approve == ParamSchema::TRUE ?  'email.notif_letter_with_approval' : 'email.notif_letter_no_approval';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "declined":
+                $subject = 'Pengajuan '.$letterType->name.' Tidak Disetujui';
+                $tamplate = $letterType->auto_approve == ParamSchema::TRUE ?  'email.notif_letter_with_approval' : 'email.notif_letter_no_approval';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+        }
+
+        $data['title'] = $subject;
+        
+        // Email Helper Notification
+        return EmailNotifHelper::sentEmail(
+            $fromEmail,
+            $fromName,
+            $toEmails, 
+            $toNames, 
+            $subject,
+            $tamplate,
+            $data, 
+            $smtpConfig, 
+            $companyId, 
+            $ccEmails
         );
+    }
+
+    // Inbox Notification
+    private function sentInbox($to,$message,$directUrl)
+    {
+        foreach ($to as $key => $value) 
+        {
+            $inboxHelper = new InboxHelper();
+            $inboxHelper->sent(
+                $value, 
+                Auth::user()->id, 
+                $message, 
+                $directUrl
+            );
+        }
 
         return;
     }
