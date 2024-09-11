@@ -9,7 +9,7 @@
         <div class="card scrollable-div" id="printThis">
             <div class="card-body">
                 <div class="text-center mb-4">
-                    <h3><strong>SURAT PENGUNDURAN DIRI</strong></h3>
+                    <h4><strong>SURAT PENGUNDURAN DIRI</strong></h4>
                 </div>
                 
                 <p>Kepada Yth,<br>
@@ -35,19 +35,17 @@
                             </tr>
                             <tr>
                                 <td><strong>Perusahaan</strong></td>
-                                <td>
-                                    {{ $company['address'] }}
-                                </td>
+                                <td>: {{ $company['address'] }}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
         
-                <p>Menyatakan dengan sesungguhnya bahwa mulai tanggal  saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan P{{ $company['name'] ?? "" }}</p>
+                <p class="text-justify">Menyatakan dengan sesungguhnya bahwa mulai tanggal  saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan P{{ $company['name'] ?? "" }}</p>
         
-                <p>Ucapan terima kasih yang sebesar-besarnya saya sampaikan atas kesempatan yang diberikan untuk bekerja di {{ $company['name'] ?? "" }}</p>
+                <p class="text-justify">Ucapan terima kasih yang sebesar-besarnya saya sampaikan atas kesempatan yang diberikan untuk bekerja di {{ $company['name'] ?? "" }}</p>
         
-                <p>Melalui surat ini saya memohon maaf kepada segenap manajemen dan karyawan {{ $company['name'] ?? "" }} jika terdapat kesalahan yang saya perbuat selama bekerja. Besar harapan saya {{ $company['name'] ?? "" }} akan terus berkembang dan maju.</p>
+                <p class="text-justify">Melalui surat ini saya memohon maaf kepada segenap manajemen dan karyawan {{ $company['name'] ?? "" }} jika terdapat kesalahan yang saya perbuat selama bekerja. Besar harapan saya {{ $company['name'] ?? "" }} akan terus berkembang dan maju.</p>
         
                 <div class="offset-md-7">
                     <p>Jakarta, {{ $date ?? "" }}</p>
@@ -129,6 +127,9 @@ function printDocument() {
     {
         max-height: 600px;
         overflow-y: auto;
+    }
+    .text-justify {
+        text-align: justify;
     }
 </style>
 @endsection
