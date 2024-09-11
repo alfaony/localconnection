@@ -94,6 +94,7 @@ class LetterSubmissionController extends Controller
             {
                 $letterSubmission->is_approved = ParamSchema::TRUE;
             }
+
             $letterSubmission->save();
 
             $this->updateProfile($request, $letterSubmission->user);
@@ -143,7 +144,16 @@ class LetterSubmissionController extends Controller
 
             // Update kolom sederhana
             $letterSubmission->letter_type_id = $request->letter_type_id;
-            $letterSubmission->is_approved = NULL;
+
+            $letterType = LetterType::findOrFail($request->letter_type_id);
+            
+            if($letterType->auto_approve == ParamSchema::TRUE)
+            {
+                $letterSubmission->is_approved = ParamSchema::TRUE;
+            }else
+            {
+                $letterSubmission->is_approved = NULL;
+            }
 
             // Data yang akan disimpan sebagai JSON di kolom 'field'
             $fieldData = $request->except([
@@ -166,7 +176,7 @@ class LetterSubmissionController extends Controller
 
             // Simpan perubahan
             $letterSubmission->save();
-
+            
             if(Auth::user()->id == $letterSubmission->user_id)
             {
                 $this->sendNotification($letterSubmission, 'update', Auth::user()->company_id);
@@ -348,23 +358,37 @@ class LetterSubmissionController extends Controller
 
     protected function updatePosition($position_id, $letterSubmission)
     {
-        $lastPositon = $letterSubmission->user->last_position;
-        if($lastPositon)
-        {
-            $lastPositon->end_date = Carbon::now();
-            $lastPositon->save();
-        }
+        $findUserPosition = UserPosition::where('letter_submission_id',$letterSubmission->id)->first();
 
-        if($position_id)
+        if(!$findUserPosition)
+        {
+            $lastPositon = $letterSubmission->user->last_position;
+            if($lastPositon)
+            {
+                $lastPositon->end_date = Carbon::now();
+                $lastPositon->save();
+            }
+
+            if($position_id)
+            {
+                $position_id = $this->findPosition($position_id);
+
+                $userPosition = new UserPosition();
+                $userPosition->user_id = $letterSubmission->user->id;
+                $userPosition->letter_submission_id = $letterSubmission->id;
+                $userPosition->position_id = $position_id->id;
+                $userPosition->start_date = $letterSubmission->convert_field['start_date'] ?? Carbon::now();
+                $userPosition->end_date = $letterSubmission->convert_field['end_date'] ?? null;
+                $userPosition->save();
+            }
+        }else
         {
             $position_id = $this->findPosition($position_id);
 
-            $userPosition = new UserPosition();
-            $userPosition->user_id = $letterSubmission->user->id;
-            $userPosition->position_id = $position_id->id;
-            $userPosition->start_date = $letterSubmission->convert_field['start_date'] ?? Carbon::now();
-            $userPosition->end_date = $letterSubmission->convert_field['end_date'] ?? null;
-            $userPosition->save();
+            $findUserPosition->position_id = $position_id->id;
+            $findUserPosition->start_date = $letterSubmission->convert_field['start_date'] ?? Carbon::now();
+            $findUserPosition->end_date = $letterSubmission->convert_field['end_date'] ?? null;
+            $findUserPosition->save();
         }
     }
 

@@ -13,7 +13,7 @@ $fieldData = $letterSubmission->convert_field;
             </div>
 
             <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
-                <p>Pada Hari {{ $date }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+                <p class="text-justify">Pada Hari {{ $date }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
             </div>
 
             <div class="col-12 mt-2">
@@ -66,7 +66,7 @@ $fieldData = $letterSubmission->convert_field;
                     <div class="col">
                         <h6><strong>PASAL 1. MAKSUD DAN TUJUAN</strong></h6>
                         @if($letterSubmission->user->last_position_now)
-                        <p>
+                        <p class="text-justify">
                             PARA PIHAK sepakat untuk menjalin hubungan kerja bersama, dimana PIHAK PERTAMA memberikan
                             pekerjaan tetap bulanan kepada PIHAK KEDUA.
                         </p>
@@ -77,7 +77,7 @@ $fieldData = $letterSubmission->convert_field;
                 <div class="row">
                     <div class="col">
                         <h6><strong>PASAL 2. RUANG LINGKUP</strong></h6>
-                        <p>
+                        <p class="text-justify">
                             PIHAK PERTAMA menunjuk PIHAK KEDUA untuk melakukan pekerjaan sesuai kebutuhan PIHAK
                             PERTAMA dalam melakukan operasional dan fungsi perusahaan dalam memberikan memenuhi
                             kebutuhan pelanggan, pembeli dan pemegang saham perusahaan.
@@ -88,7 +88,7 @@ $fieldData = $letterSubmission->convert_field;
                 <div class="row">
                     <div class="col">
                         <h6><strong>PASAL 3. HAK & KEWAJIBAN PARA PIHAK</strong></h6>
-                        <ul>
+                        <ul class="text-justify">
                             <li>PIHAK KEDUA berhak menerima gaji dari PIHAK PERTAMA sebagaimana yang telah disepakati
                                 bersama.</li>
                             <li>PIHAK KEDUA berhak mendapatkan 12 hari cuti dalam setahun.</li>
@@ -120,7 +120,7 @@ $fieldData = $letterSubmission->convert_field;
                 <div class="row">
                     <div class="col">
                         <h6><strong>PASAL 4. TANGGUNG JAWAB HUKUM</strong></h6>
-                        <p>
+                        <p class="text-justify">
                             PARA PIHAK sepakat bahwa segala tindakan yang menyebabkan kerugian pada perusahaan, harus
                             dipertanggungjawabkan, walaupun hubungan kerja telah berakhir ataupun diakhiri secara
                             sepihak, dan menunjuk jalur hukum untuk diselesaikan di Pengadilan Negeri Jakarta Barat.
@@ -131,7 +131,7 @@ $fieldData = $letterSubmission->convert_field;
                 <div class="row">
                     <div class="col">
                         <h6><strong>PASAL 5. JAM KERJA & CARA BEKERJA</strong></h6>
-                        <ul>
+                        <ul class="text-justify">
                             <li>Pekerjaan diselesaikan dan dikerjakan baik di tempat kerja yang ditentukan sesuai
                                 kebutuhan perusahaan dengan penjadwalan kerja sesuai kebutuhan dan kondisi. Disepakati
                                 penanggalan merah adalah libur.</li>
@@ -154,7 +154,7 @@ $fieldData = $letterSubmission->convert_field;
                 <div class="row">
                     <div class="col">
                         <h6><strong>PASAL 6. JANGKA WAKTU</strong></h6>
-                        <p>
+                        <p class="text-justify">
                             PARA PIHAK sepakat perjanjian kerja ini bersifat tetap, dan apabila terdapat hal-hal yang
                             belum dijelaskan akan ditentukan di peraturan perusahaan atau surat keputusan manajemen.
                             Perjanjian ini berlaku hingga salah satu pihak mengakhirinya.
@@ -173,18 +173,22 @@ $fieldData = $letterSubmission->convert_field;
                         <p><strong>PIHAK PERTAMA</strong></p>
                         @if($letterSubmission->is_approved == 1)
                         <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
+                        @else
+                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                        @endif
                         <p>_________________________</p>
                         <p>{{ $company['director'] ?? "" }}</p>
-                        @endif
                     </div>
                     <div class="col-6 text-center">
                         <p><strong>PIHAK KEDUA</strong></p>
                         @if($letterSubmission->is_approved == 1)
                         <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
                             alt="Signature" style="height:150px">
+                        @else
+                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                        @endif
                         <p>_________________________</p>
                         <p>{{ $letterSubmission->user->name }}</p>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -194,8 +198,32 @@ $fieldData = $letterSubmission->convert_field;
 
 <!-- Download Button -->
 <div class="col-12 text-center mt-3">
-    <button type="button" id="downloadQuote" class="btn btn-success"><i class="fa fa-file-pdf"></i>
-        {{__('Download')}}</button>
+    <!-- Download Button -->
+    <button type="button" id="downloadQuote" class="btn btn-success mb-3">
+        <i class="fa fa-file-pdf"></i> {{ __('Download') }}
+    </button>
+
+    <!-- Approve/Decline Form -->
+    @if(!isset($letterSubmission->is_approved))
+    @canAccess('approvement', 'letter_submissions')
+    <form action="{{ route('letter-submission.approvement') }}" method="POST" id="bulk-action-form" class="d-inline">
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="selected_ids[]" value="{{ $letterSubmission->id }}">
+
+        <div class="d-flex justify-content-center">
+            <!-- Approve Button -->
+            <button type="submit" class="btn btn-success mx-2" name="action" value="approve">
+                <i class="fa fa-check"></i> Approve
+            </button>
+            <!-- Decline Button -->
+            <button type="submit" class="btn btn-danger mx-2" name="action" value="decline">
+                <i class="fa fa-times"></i> Decline
+            </button>
+        </div>
+    </form>
+    @endcanAccess
+    @endif
 </div>
 @endsection
 
@@ -259,6 +287,9 @@ function printDocument() {
 .scrollable-div {
     max-height: 600px;
     overflow-y: auto;
+}
+.text-justify {
+    text-align: justify;
 }
 </style>
 @endsection

@@ -69,9 +69,7 @@
                             <a href="{{ route('letter-submission.show', $submission) }}" target="_blank" class="btn btn-info btn-sm"><i class="fa fa-file-pdf"></i></a>
                             @endcanAccess
                             @canAccess('edit','letter_submissions')
-                            @if($submission->is_approved != 1)
                             <a href="{{ route('letter-submission.edit', $submission) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
-                            @endif
                             @endcanAccess
                             
                             @canAccess('destroy','letter_submissions')

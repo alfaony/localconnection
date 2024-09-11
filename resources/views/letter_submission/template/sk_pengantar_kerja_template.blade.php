@@ -14,7 +14,7 @@
             </div>
 
             <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
-                <p>Saya yang bertandatangan di bawah ini :</p>
+                <p class="text-justify">Saya yang bertandatangan di bawah ini :</p>
             </div>
 
             <div class="col-12 mt-2">
@@ -87,9 +87,34 @@
 </div>
 
 <!-- Download Button -->
+<!-- Download Button -->
 <div class="col-12 text-center mt-3">
-    <button type="button" id="downloadQuote" class="btn btn-success"><i class="fa fa-file-pdf"></i>
-        {{__('Download')}}</button>
+    <!-- Download Button -->
+    <button type="button" id="downloadQuote" class="btn btn-success mb-3">
+        <i class="fa fa-file-pdf"></i> {{ __('Download') }}
+    </button>
+
+    <!-- Approve/Decline Form -->
+    @if(!isset($letterSubmission->is_approved))
+    @canAccess('approvement', 'letter_submissions')
+    <form action="{{ route('letter-submission.approvement') }}" method="POST" id="bulk-action-form" class="d-inline">
+        @csrf
+        @method('PATCH')
+        <input type="hidden" name="selected_ids[]" value="{{ $letterSubmission->id }}">
+
+        <div class="d-flex justify-content-center">
+            <!-- Approve Button -->
+            <button type="submit" class="btn btn-success mx-2" name="action" value="approve">
+                <i class="fa fa-check"></i> Approve
+            </button>
+            <!-- Decline Button -->
+            <button type="submit" class="btn btn-danger mx-2" name="action" value="decline">
+                <i class="fa fa-times"></i> Decline
+            </button>
+        </div>
+    </form>
+    @endcanAccess
+    @endif
 </div>
 @endsection
 @section('js')
@@ -173,6 +198,9 @@ function printDocument() {
 .scrollable-div {
     max-height: 600px;
     overflow-y: auto;
+}
+.text-justify {
+    text-align: justify;
 }
 </style>
 @endsection
