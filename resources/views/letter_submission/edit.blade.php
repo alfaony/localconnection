@@ -4,54 +4,18 @@
     <h2 class="text-center">Pengajuan Surat</h2>
 @stop
 
+@php 
+    $template = $letterSubmission->letterType->template;
+    $fieldData = $letterSubmission->convert_field;
+@endphp
+
 @section('content')
 <form action="{{ route('letter-submission.update',$letterSubmission) }}" method="POST">
     @csrf
     @method('put')
     
     <div class="card">
-        <div class="card-header">
-            <h3>Profile</h3>
-        </div>
         <div class="card-body">
-            <!-- Nama Lengkap -->
-            <div class="col-md-12 mb-3">
-                <label for="nama_lengkap">Nama Lengkap <span class="text-danger">*</span></label>
-                <input type="text" name="name" class="form-control" placeholder="Masukkan Nama Lengkap" value="{{ $user->name }}" required>
-            </div>
-
-            <!-- Alamat -->
-            <div class="col-md-12 mb-3">
-                <label for="alamat">Alamat <span class="text-danger">*</span></label>
-                <input type="text" name="address" class="form-control" placeholder="Masukkan Alamat Lengkap" value="{{ $user->address }}" required>
-            </div>
-
-            <!-- Nomor KTP -->
-            <div class="col-md-12 mb-3">
-                <label for="ktp">Nomor KTP</label>
-                @if($user->id_card_image)
-                <div class="mt-1 mb-2">
-                    <img src="{{ Storage::url($user->id_card_image) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
-                </div>
-                @endif
-                <input type="text" name="id_card" class="form-control" placeholder="Masukkan Nomor KTP" value="{{ $user->id_card }}">
-            </div>
-
-            <div class="col-md-12 mb-3">
-                <label for="npwp_number">No. NPWP</label>
-                <input type="number" name="npwp_number" class="form-control" placeholder="Masukkan nomor NPWP" value="{{ old('npwp_number') ?? $user->npwp_number }}"/>
-            </div>
-            <!-- Tanda Tangan -->
-            <div class="col-md-12">
-                <label for="signature">Tanda Tangan <span class="text-danger">*</span></label>
-                @if ($user->signature)
-                    <div class="signature-container mt-2">
-                        <img src="{{ Storage::url($user->signature) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
-                    </div>
-                @else
-                    <p class="text-muted">Tanda tangan belum tersedia.</p>
-                @endif
-            </div>
             <!-- Formulir -->
             <div class="col-md-12 mb-3">
                 <label for="surat">Surat <span class="text-danger">*</span></label>
@@ -64,10 +28,6 @@
             </div>
         </div>
     </div>
-    @php 
-        $template = $letterSubmission->letterType->template;
-        $fieldData = $letterSubmission->convert_field;
-    @endphp
 
     <div class="card mb-3">
         <div class="card-header">
@@ -76,22 +36,110 @@
         <div class="card-body">
             <!-- SK Magang Template -->
             @if($template == \App\Schemas\ParamSchema::TEMPLATEMAGANG)
-            <div class="form-row letter-template" id="sk_magang_template" style="display:none;">
-                <div class="col-md-12 mb-3">
-                    <label for="masa_kerja">Masa Kerja <span class="text-danger">*</span></label>
-                    <div class="input-group">
-                        <input type="date" name="start_date" class="form-control" value="{{ $fieldData['start_date'] ?? ''  }}" >
-                        <span class="input-group-text">hingga</span>
-                        <input type="date" name="end_date" class="form-control" value="{{ $fieldData['end_date'] ?? ''  }}" >
+            <div class="letter-template" id="sk_magang_template" style="display:none;">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="text-center"><strong>PERJANJIAN KERJA</strong></h5>
+                        <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
+        
+                        <p>Pada Hari Senin, XX Agustus 2024 bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+        
+                        <!-- Table to display company and employee information -->
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Nama</strong></td>
+                                    <td>: {{ $company['name'] ?? "" }} </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Penanggung Jawab</strong></td>
+                                    <td>: {{ $company['director'] ?? "" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Alamat</strong></td>
+                                    <td>: {{ $company['address'] ?? "" }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <p>Bertindak atas perusahaan yang mempekerjakan, selanjutnya disebut PIHAK PERTAMA.</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Nama</strong></td>
+                                    <td>: {{ $user->name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>No KTP</strong></td>
+                                    <td>: {{ $user->id_card }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Alamat</strong></td>
+                                    <td>: {{ $user->address }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="col-md-12 mb-3">
-                    <label for="deskripsi_tugas">Deskripsi Tugas <span class="text-danger">*</span></label>
-                    <input class="thriveEditor form-control" id="description_description_task" data-ids="description_task" name="description_task" value="{{ $fieldData['description_task'] ?? ''  }}"/>
-                </div>
-                <div class="col-md-12 mb-3">
-                    <label for="deskripsi_magang">Deskripsi Magang <span class="text-danger">*</span></label>
-                    <input class="thriveEditor form-control" id="description_description_intern" data-ids="description_intern" name="description_intern" value="{{ $fieldData['description_intern'] ?? ''  }}"/>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-center">
+                            <h2>
+                                Surat Keterangan Magang
+                            </h2>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="salary_date">Nama Lengkap</label>
+                            <input type="text" class="form-control" value="{{ $user->name }}" readonly>
+                        </div>
+                        <!-- Jabatan -->
+                        @if(isset($fieldData['position_new_id']))
+                        <!-- Jabatan -->
+                        <div class="col-md-12 mb-3">
+                            <label for="jabatan">Jabatan</label>
+                            <select class="form-control selectOrCreate2" name="position_new_id">
+                                <option value="" selected disabled>Pilih </option>
+                                @foreach($positions as $position)
+                                    <option value="{{ $position->name }}" {{ (isset($fieldData['position_new_id']) && $fieldData['position_new_id'] == $position->name) ? 'selected' : '' }} >
+                                        {{ $position->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
+        
+                        <div class="col-md-12 mb-3">
+                            <label for="monthly_salary">Kompensasi Magang <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control"  id="amount_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'amount')" required/>
+                            <input type="hidden" id="amount" name="salary" name="name" value="{{ $fieldData['salary'] ?? '' }}">
+                        </div>
+        
+                        <div class="col-md-12 mb-3">
+                            <label for="salary_date">Tanggal Pembayaran Kompensasi Magang <span class="text-danger">*</span></label>
+                            <input type="text" name="salary_date" class="form-control" placeholder="Masukkan tanggal perhitungan gaji" value="{{ $fieldData['salary_date'] ?? '' }}"required>
+                        </div>
+        
+                        <div class="col-md-12 mb-3">
+                            <label for="working_hours">Jam Kerja <span class="text-danger">*</span></label>
+                            <input type="text" name="working_hours" class="form-control" placeholder="Masukkan jam kerja" value="{{ $fieldData['working_hours'] ?? '' }}" required>
+                        </div>
+        
+                        <div class="col-md-12 mb-3">
+                            <label for="masa_kerja">Masa Kerja <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="date" name="start_date" class="form-control" value="{{ $fieldData['start_date'] ?? '' }}" required>
+                                <span class="input-group-text">hingga</span>
+                                <input type="date" name="end_date" class="form-control" value="{{ $fieldData['end_date'] ?? '' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="deskripsi_tugas">Deskripsi Tugas <span class="text-danger">*</span></label>
+                            <input class="thriveEditor form-control" id="description_description_task" data-ids="description_task" name="description_task" value="{{ $fieldData['description_task'] ?? '' }}" required/>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="deskripsi_magang">Deskripsi Magang <span class="text-danger">*</span></label>
+                            <input class="thriveEditor form-control" id="description_description_intern" data-ids="description_intern" name="description_intern" value="{{ $fieldData['description_intern'] ?? '' }}" required/>
+                        </div>
+                    </div>
                 </div>
             </div>
             @endif
@@ -147,7 +195,7 @@
                     <div class="card-body">
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Nama Lengkap</label>
-                            <input type="string" class="form-control" value="{{ $user->name }}" readonly>
+                            <input type="text" class="form-control" value="{{ $user->name }}" readonly>
                         </div>
                         @if(isset($fieldData['position_new_id']))
                         <!-- Jabatan -->
@@ -172,7 +220,7 @@
         
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Tanggal Perhitungan Gaji</label>
-                            <input type="date" name="salary_date" class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
+                            <input type="text" name="salary_date" class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
                         </div>
         
                         <div class="col-md-12 mb-3">
@@ -199,6 +247,11 @@
             <div class="form-row letter-template card" id="sk_jabatan_template" style="display:none;">
                 <div class="card-body">
                     <!-- Nama PT (Picklist) -->
+                    <div class="col-md-12 mb-3">
+                        <label for="company_name">Perihal <span class="text-danger">*</span></label>
+                        <input type="text" name="perihal" value="{{ $fieldData['perihal'] ?? '' }}" class="form-control" required>
+                    </div>
+
                     <div class="col-md-12 mb-3">
                         <label for="company_name">Nama PT <span class="text-danger">*</span></label>
                         <input type="text" value="{{ $company['name'] ?? '' }}" class="form-control" readonly>
@@ -232,7 +285,7 @@
     
                     <div class="col-md-12 mb-3">
                         <label for="salary_date">Tanggal Perhitungan Gaji</label>
-                        <input type="date" name="salary_date" class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
+                        <input type="text" name="salary_date" class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
                     </div>
     
                     <div class="col-md-12 mb-3">
@@ -256,6 +309,10 @@
             @if($template == \App\Schemas\ParamSchema::TEMPLATETUGAS)
             <div class="form-row letter-template card" id="sk_tugas_template" style="display:none;">
                 <div class="card-body">
+                    <div class="col-md-12 mb-3">
+                        <label for="company_name">Perihal <span class="text-danger">*</span></label>
+                        <input type="text" name="perihal" value="{{ $fieldData['perihal'] ?? '' }}" class="form-control" required>
+                    </div>
                     <!-- Nama PT (Picklist) -->
                     <div class="col-md-12 mb-3">
                         <label for="company_name">Nama PT <span class="text-danger">*</span></label>
@@ -272,7 +329,7 @@
                     <!-- Jabatan Terakhir-->
                     <div class="col-md-12 mb-3">
                         <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
-                        <select class="form-control" name="position_old_id" id="position_old_id" disabled>
+                        <select class="form-control" name="position_old_id" id="position_old_id" required>
                             <option value="" selected disabled>Pilih </option>
                             @foreach($lastPositon as $positionlast)
                                 <option value="{{ $positionlast->name }}" {{ $positionlast->id == $user->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
@@ -301,7 +358,7 @@
     
                     <div class="col-md-12 mb-3">
                         <label for="salary_date">Tanggal Perhitungan Gaji</label>
-                        <input type="date" name="salary_date" class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
+                        <input type="text" name="salary_date" class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
                     </div>
     
                     <div class="col-md-12 mb-3">
@@ -324,19 +381,155 @@
 
             <!-- SK Pengantar Kerja Template -->
             <div class="form-row letter-template" id="sk_pengantar_kerja_template" style="display:none;">
-                <!-- You can add fields related to "SK Pengantar Kerja" here -->
+                <div class="letter-template" >
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="col-12 justify-content-center align-items-center">
+                                <h6 class="text-center"><strong>SURAT KETERANGAN</strong></h6>
+                                <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
+                            </div>
+
+                            <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
+                                <p>Saya yang bertandatangan di bawah ini :</p>
+                            </div>
+
+                            <div class="col-12 mt-2">
+                                <!-- Table to display company and employee information -->
+                                <table class="table table-borderless detail-table">
+                                    <tbody>
+                                        <tr>
+                                            <td>Nama</td>
+                                            <td>: {{ $company['name'] ?? "" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Penanggung Jawab</td>
+                                            <td>: {{ $company['director'] ?? "" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Alamat</td>
+                                            <td>: {{ $company['address'] ?? "" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2">
+                                                Dengan ini menerangkan bahwa :
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Nama</td>
+                                            <td>: {{ $user->name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>No KTP</td>
+                                            <td>: {{ $user->id_card }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Alamat</td>
+                                            <td>: {{ $user->address }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2">
+                                                <p>Bertindak atas nama pribadi, sebagai pekerja / staff yang dipekerjakan, selanjutnya
+                                                    disebut sebagai PIHAK KEDUA.</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="col-12">
+                                <p class="text-justify"> 
+                                    Telah bekerja di perusahaan kami, {{ $company['name'] ?? "" }}, sejak tgl {{ $user->first_position ? \Carbon\Carbon::parse($user->first_position->start_date)->locale('id')->translatedFormat('d F Y') : "" }} 
+                                    s/d {{ $user->last_position_now->end_date ? \Carbon\Carbon::parse($user->last_position_now->end_date)->locale('id')->translatedFormat('d F Y') : \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ $user->last_position_now ? $user->last_position_now->position->name : '' }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- SK Bekerja Resign Template -->
             <div class="form-row letter-template" id="sk_bekerja_resign_template" style="display:none;">
-                <!-- You can add fields related to "SK Bekerja (Resign)" here -->
+                <div class="card scrollable-div" id="printThis">
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <h3><strong>SURAT PENGUNDURAN DIRI</strong></h3>
+                        </div>
+                        
+                        <p>Kepada Yth,<br>
+                        HRD/Director<br>
+                        {{ $company['name'] }}</p>
+                
+                        <p>Saya yang bertanda tangan di bawah ini :</p>
+                
+                        <div class="table-responsive">
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td style="width: 150px;"><strong>Nama</strong></td>
+                                        <td>: {{ $user->name ?? "" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>NIK</strong></td>
+                                        <td>: {{ $user->id_card ?? "" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Jabatan</strong></td>
+                                        <td>: {{ $user->last_position_now ? $user->last_position_now->position->name : "" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Perusahaan</strong></td>
+                                        <td>
+                                            {{ $company['address'] }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                
+                        <p>Menyatakan dengan sesungguhnya bahwa mulai tanggal  saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan P{{ $company['name'] ?? "" }}</p>
+                
+                        <p>Ucapan terima kasih yang sebesar-besarnya saya sampaikan atas kesempatan yang diberikan untuk bekerja di {{ $company['name'] ?? "" }}</p>
+                
+                        <p>Melalui surat ini saya memohon maaf kepada segenap manajemen dan karyawan {{ $company['name'] ?? "" }} jika terdapat kesalahan yang saya perbuat selama bekerja. Besar harapan saya {{ $company['name'] ?? "" }} akan terus berkembang dan maju.</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="d-flex justify-content-end p-3">
-            <button type="submit" class="btn btn-primary">Simpan</button>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <!-- Nomor KTP -->
+             <div class="row">
+                 <div class="col-md-6">
+                     <label for="ktp">Nomor KTP</label>
+                     @if($user->id_card_image)
+                     <div class="mt-1 mb-2">
+                         <img src="{{ Storage::url($user->id_card_image) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+                     </div>
+                     @endif
+                 </div>
+     
+                 <!-- Tanda Tangan -->
+                 <div class="col-md-6">
+                     <label for="signature">Tanda Tangan <span class="text-danger">*</span></label>
+                     @if ($fieldData['signature_image'])
+                         <div class="signature-container mt-2">
+                             <img src="{{ Storage::url($fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+                         </div>
+                     @else
+                         <p class="text-muted">Tanda tangan belum tersedia.</p>
+                     @endif
+                 </div>
+             </div>
         </div>
     </div>
+
+    <div class="d-flex justify-content-end p-3">
+        <button type="submit" class="btn btn-primary">Simpan</button>
+    </div>
+
 </form>
 @endsection
 
@@ -348,6 +541,9 @@
     $(document).ready(function () {
         // Initialize Select2
         let amount = document.getElementById("amount").value;
+
+        console.log(amount);
+        
         if (amount) 
         {
             document.getElementById("amount_show").value = amount;
