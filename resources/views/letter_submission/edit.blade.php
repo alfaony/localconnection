@@ -439,7 +439,7 @@
                             <div class="col-12">
                                 <p class="text-justify"> 
                                     Telah bekerja di perusahaan kami, {{ $company['name'] ?? "" }}, sejak tgl {{ $user->first_position ? \Carbon\Carbon::parse($user->first_position->start_date)->locale('id')->translatedFormat('d F Y') : "" }} 
-                                    s/d {{ $user->last_position_now->end_date ? \Carbon\Carbon::parse($user->last_position_now->end_date)->locale('id')->translatedFormat('d F Y') : \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ $user->last_position_now ? $user->last_position_now->position->name : '' }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
+                                    s/d {{ isset($user->last_position_now) && isset($user->last_position_now->end_date) ? \Carbon\Carbon::parse($user->last_position_now->end_date)->locale('id')->translatedFormat('d F Y') : \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ isset($user->last_position_now) && isset($user->last_position_now->position) ? $user->last_position_now->position->name : '' }} dengan posisi sebagai {{ $user->last_position_now ? $user->last_position_now->position->name : '' }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
                                 </p>
                             </div>
                         </div>
