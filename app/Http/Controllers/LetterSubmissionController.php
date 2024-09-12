@@ -93,6 +93,7 @@ class LetterSubmissionController extends Controller
             if($letterType->auto_approve == ParamSchema::TRUE)
             {
                 $letterSubmission->is_approved = ParamSchema::TRUE;
+                $letterSubmission->status = true;
 
                 if(isset($letterSubmission->convert_field['position_new_id']))
                 {
