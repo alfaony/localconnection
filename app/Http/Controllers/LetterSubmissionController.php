@@ -270,8 +270,11 @@ class LetterSubmissionController extends Controller
                     {
                         $this->updatePosition($letterSubmission->convert_field['position_new_id'],$letterSubmission);
                     }
+                    
+                    $this->sendNotification($letterSubmission, $action, Auth::user()->company_id, true);
                 }
                 
+
                 DB::commit();
                 return redirect()->route('letter-submission.index')->with('success', 'Pengajuan surat berhasil diupdate.');
             }
@@ -281,6 +284,7 @@ class LetterSubmissionController extends Controller
             return redirect()->back()->with('error', 'Aksi tidak valid.');
         } catch (\Throwable $th) {
             //throw $th;
+            // dd($th);
             DB::rollBack();
             Log::error($th->getMessage());
             return redirect()->back()->with('error', 'Aksi tidak valid.');
@@ -464,7 +468,7 @@ class LetterSubmissionController extends Controller
                 $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
 
-            case "declined":
+            case "decline":
                 $subject = 'Pengajuan '.$letterType->name.' Tidak Disetujui';
                 $tamplate = 'email.notif_declined_letter';
 

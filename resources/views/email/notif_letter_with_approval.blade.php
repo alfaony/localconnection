@@ -79,7 +79,7 @@
 <body>
     <div class="container">
         <p>Yth, Bapak/Ibu,</p>
-        <p>Kami ingin memberitahukan bahwa ada pengajuan surat baru dari <span class="highlight">{{ $date['name'] }}</span> melalui sistem BOS.</p>
+        <p>Kami ingin memberitahukan bahwa ada pengajuan surat baru dari <span class="highlight">{{ $data['name'] }}</span> melalui sistem BOS.</p>
 
         <p>Detail Pengajuan:</p>
         <table>

@@ -99,7 +99,7 @@
 
         <p>Surat tersebut sudah tersedia dan dapat diakses di sistem BOS untuk kebutuhan lebih lanjut.</p>
 
-        <a href="#" class="button">Lihat Surat</a>
+        <a href="{{ $data['url'] }}" class="button">Lihat Surat</a>
 
         <div class="footer">
             <p>Terima kasih atas perhatian dan kerjasamanya.</p>
