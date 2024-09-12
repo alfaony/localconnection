@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 @php
-$fieldData = $letterSubmission->convert_field;
+    $fieldData = $letterSubmission->convert_field;
+    $user = $letterSubmission->user;
 @endphp
 @section('content')
 <div class="container">
@@ -8,7 +9,7 @@ $fieldData = $letterSubmission->convert_field;
         <div class="card-body">
             <!-- Header -->
             <div class="col-12 justify-content-center align-items-center">
-                <h6 class="text-center"><strong>PERJANJIAN KERJA MAGANG</strong></h6>
+                <h6 class="text-center"><strong><h3>PERJANJIAN KERJA MAGANG</h3></strong></h6>
                 <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
             </div>
 
@@ -138,9 +139,7 @@ $fieldData = $letterSubmission->convert_field;
                     <div class="col">
                         <h6><strong>PASAL 6. JANGKA WAKTU</strong></h6>
                         <p class="text-justify">
-                            PARA PIHAK sepakat perjanjian kerja magang ini berlaku selama 3 bulan dan dapat diperpanjang
-                            sesuai kesepakatan kedua belah pihak. Perjanjian ini berlaku hingga salah satu pihak
-                            mengakhirinya.
+                            Perjanjian ini berlaku efektif sejak ditandatangani, dan peserta magang akan menjalankan peran sebagai {{ isset($positionNew)? $positionNew->name : "" }} selama masa magang. Peserta magang tunduk pada ketentuan yang berlaku dalam perusahaan serta aturan dan tanggung jawab yang telah ditetapkan.
                         </p>
                     </div>
                 </div>
@@ -173,6 +172,114 @@ $fieldData = $letterSubmission->convert_field;
                         <p>{{ $letterSubmission->user->name }}</p>
                     </div>
                 </div>
+            </div>
+            <div class="page-break"></div>
+    
+            <div class="col-12 justify-content-center align-items-center header">
+                <div class="header">
+                    <h3>
+                        SURAT KEPUTUSAN MANAJEMEN
+                    </h3>
+                </div>
+                <div class="sub-header">
+                    Perihal: {{ "Penerimaan Magang" }}
+                </div>
+            </div>
+            
+            <!-- Information Table -->
+            <table class="table table-bordered">
+                <tr>
+                    <th>Nama Lengkap</th>
+                    <td>{{ $letterSubmission->user->name ?? "" }}</td>
+                </tr>
+                <tr>
+                    <th>Jabatan / Fungsi / Keahlian</th>
+                    <td>{{ isset($positionNew)? $positionNew->name : "" }}</td>
+                </tr>
+                <tr>
+                    <th>Kompensasi Magang</th>
+                    <td>{{ 'Rp. '.number_format($fieldData['salary'],0,',','.') ?? "" }}</td>
+                </tr>
+                <tr>
+                    <th>Tanggal Pembayaran Kompensasi Magang</th>
+                    <td>{{ $fieldData['salary_date'] ?? "" }}</td>
+                </tr>
+                <tr>
+                    <th>Jam Kerja</th>
+                    <td>{{ $fieldData['working_hours'] ?? ''  }}</td>
+                </tr>
+                <tr>
+                    <th>Penempatan</th>
+                    <td>{{ $fieldData['work_location'] ?? ''  }}</td>
+                </tr>
+            </table>
+            
+            <div class="col-12 mt-3">
+                <div class="row">
+                    <p>
+                        Perjanjian ini berlaku efektif sejak ditandatangani, dan peserta magang akan menjalankan peran sebagai {{ $user->last_position_now ? $user->last_position_now->position->name : "" }} selama masa magang. Peserta magang tunduk pada ketentuan yang berlaku dalam perusahaan serta aturan dan tanggung jawab yang telah ditetapkan.
+                    </p>
+                </div>
+            </div>
+            
+            <table class="table table-bordered">
+                <tr>
+                    <td>
+                        <p><strong>Fungsi Manajemen: {{ $user->last_position_now ? $user->last_position_now->position->name : "" }}</strong></p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p><strong>Tanggung Jawab Pekerjaan:</strong></p>
+                        {!! $fieldData['job_responsibilities'] ?? "" !!}
+                    </td>
+                </tr>
+            </table>
+            <!-- Footer -->
+            <div class="text-left mt-4">
+                <p><strong>Jakarta, {{ $date ?? "" }}</strong></p>
+            </div>
+    
+            <!-- KTP and Signature Section -->
+            <div class="row photo-ktp">
+                <div class="col">
+                        @if($letterSubmission->is_approved == 1)
+                        <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
+                        @else
+                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                        @endif
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <p><strong>{{ $company['director'] ?? "" }}</strong></p>
+                </div>
+                <div class="col">
+                    <p><strong>{{ $letterSubmission->user->name ?? "" }}</strong></p>
+                </div>
+            </div>
+    
+            <!-- No KTP and NPWP -->
+            <div class="mt-3">
+                <table class="table table-bordered">
+                    <tr>
+                        <th>
+                            Foto KTP
+                        </th>
+                        <td>
+                            <img src="{{ Storage::url($letterSubmission->user->id_card_image) }}" alt="Foto KTP" class="img-fluid" style="max-width: 150px;">
+                        </td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>No KTP</th>
+                        <td>{{ $letterSubmission->user->id_card ?? '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>No NPWP</th>
+                        <td>{{ $letterSubmission->user->npwp_number ?? " " }}</td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div>
@@ -238,7 +345,10 @@ $fieldData = $letterSubmission->convert_field;
 @section('css')
 <style>
 .table td {
-    padding: 0rem !important;
+    width: 50%;
+}
+.table th {
+    width: 50%;
 }
 
 @media print {
@@ -254,6 +364,10 @@ $fieldData = $letterSubmission->convert_field;
     .strongText {
         font-weight: bold;
         color: #000000;
+    }
+    .page-break 
+    {
+        page-break-before: always; /* forces the next element to start on a new page */
     }
 }
 
@@ -274,5 +388,53 @@ $fieldData = $letterSubmission->convert_field;
 .text-justify {
     text-align: justify;
 }
+</style>
+<style>
+    .table-bordered td, .table-bordered th {
+        border: 1px solid black !important;
+    }
+    .table td {
+        /* padding: 0rem !important; */
+        /* padding-top: 1rem !important; */
+        /* padding-left: 0.2rem !important; */
+    }
+
+    .table th {
+        /* padding: 0rem !important; */
+        /* padding-top: 1rem !important; */
+        /* padding-left: 0.2rem !important; */
+
+    }
+
+    .header, .sub-header {
+        text-align: center;
+    }
+
+    .header {
+        font-weight: bold;
+    }
+
+    .sub-header {
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .info-table th, .info-table td {
+        padding: 10px;
+    }
+
+
+    th
+    {
+        font-weight: bold;
+    }
+    
+    h6{
+        font-weight: bold;
+    }
+    .card-body {
+        padding-left: 10rem;
+        padding-right: 10rem;
+    }
 </style>
 @endsection

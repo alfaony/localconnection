@@ -202,5 +202,9 @@ function printDocument() {
 .text-justify {
     text-align: justify;
 }
+.card-body {
+    padding-left: 10rem;
+    padding-right: 10rem;
+}
 </style>
 @endsection

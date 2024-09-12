@@ -42,6 +42,20 @@
             font-weight: bold;
             color: #007BFF;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table td, table th {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
         .button {
             display: inline-block;
             background-color: #dc3545;
@@ -64,17 +78,24 @@
 </head>
 <body>
     <div class="container">
-        <h2>Subject: Notifikasi Pengajuan Surat Baru</h2>
-
         <p>Yth, Bapak/Ibu,</p>
         <p>Kami ingin memberitahukan bahwa ada pengajuan surat baru dari <span class="highlight">{{ $date['name'] }}</span> melalui sistem BOS.</p>
 
         <p>Detail Pengajuan:</p>
-        <ul>
-            <li><strong>Jenis Surat:</strong> {{ $data['letter_type'] }}</li>
-            <li><strong>Tanggal Pengajuan:</strong> {{ $data['letter_date'] }}</li>
-            <li><strong>Status:</strong> Perlu Persetujuan</li>
-        </ul>
+        <table>
+            <tr>
+                <th>Jenis Surat</th>
+                <td>{{ $data['letter_type'] }}</td>
+            </tr>
+            <tr>
+                <th>Tanggal Pengajuan</th>
+                <td>{{ $data['letter_date'] }}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>Disetujui</td>
+            </tr>
+        </table>
 
         <p>Surat pengajuan ini memerlukan persetujuan dari Bapak/Ibu. Mohon untuk dapat melakukan tinjauan dan memberikan tanggapan.</p>
         <p>Untuk melihat detail suratnya dan memberikan persetujuan, silakan klik pada tautan di bawah ini:</p>
