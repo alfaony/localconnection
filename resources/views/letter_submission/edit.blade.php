@@ -135,10 +135,6 @@
                             <label for="deskripsi_tugas">Deskripsi Tugas <span class="text-danger">*</span></label>
                             <input class="thriveEditor form-control" id="description_description_task" data-ids="description_task" name="description_task" value="{{ $fieldData['description_task'] ?? '' }}" required/>
                         </div>
-                        <div class="col-md-12 mb-3">
-                            <label for="deskripsi_magang">Deskripsi Magang <span class="text-danger">*</span></label>
-                            <input class="thriveEditor form-control" id="description_description_intern" data-ids="description_intern" name="description_intern" value="{{ $fieldData['description_intern'] ?? '' }}" required/>
-                        </div>
                     </div>
                 </div>
             </div>

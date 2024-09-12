@@ -65,12 +65,10 @@
                 <div class="row">
                     <div class="col">
                         <h6><strong>PASAL 1. MAKSUD DAN TUJUAN</strong></h6>
-                        @if($letterSubmission->user->last_position_now)
                         <p class="text-justify">
                             PARA PIHAK sepakat untuk menjalin hubungan kerja bersama, dimana PIHAK PERTAMA memberikan
                             pekerjaan tetap bulanan kepada PIHAK KEDUA.
                         </p>
-                        @endif
                     </div>
                 </div>
 
@@ -263,6 +261,14 @@
                         <div style="height: 150px;"></div> <!-- Empty space if no signature -->
                         @endif
                 </div>
+                <div class="col">
+                        @if($letterSubmission->is_approved == 1)
+                        <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                        alt="Signature" style="height:150px">
+                        @else
+                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                        @endif
+                </div>
             </div>
             <div class="row">
                 <div class="col">
@@ -360,9 +366,12 @@ function printDocument() {
 <style>
 .table td {
     width: 50%;
+    padding-top: 0rem !important;
+    
 }
 .table th {
     width: 50%;
+    padding-top: 0rem !important;
 }
 
 @media print {

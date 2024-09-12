@@ -93,7 +93,7 @@
             </tr>
             <tr>
                 <th>Status</th>
-                <td>Disetujui</td>
+                <td>Disetujui Otomatis</td>
             </tr>
         </table>
 
