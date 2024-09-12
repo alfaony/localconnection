@@ -73,7 +73,7 @@
                             @endcanAccess
                             
                             @canAccess('destroy','letter_submissions')
-                            @if($submission->is_approved === null)
+                            @if($submission->status === 0)
                             <button type="button" class="btn btn-danger btn-sm delete-submission" data-id="{{ $submission->id }}"><i class="fa fa-trash"></i></button>
                             @endif
                             @endcanAccess

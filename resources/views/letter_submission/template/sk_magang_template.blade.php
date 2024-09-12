@@ -249,6 +249,14 @@
                         <div style="height: 150px;"></div> <!-- Empty space if no signature -->
                         @endif
                 </div>
+                <div class="col">
+                        @if($letterSubmission->is_approved == 1)
+                        <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                        alt="Signature" style="height:150px">
+                        @else
+                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                        @endif
+                </div>
             </div>
             <div class="row">
                 <div class="col">
@@ -395,13 +403,13 @@
     }
     .table td {
         /* padding: 0rem !important; */
-        /* padding-top: 1rem !important; */
+        padding-top: 0rem !important;
         /* padding-left: 0.2rem !important; */
     }
 
     .table th {
         /* padding: 0rem !important; */
-        /* padding-top: 1rem !important; */
+        padding-top: 0rem !important;
         /* padding-left: 0.2rem !important; */
 
     }

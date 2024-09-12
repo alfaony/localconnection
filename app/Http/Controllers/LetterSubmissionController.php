@@ -93,6 +93,11 @@ class LetterSubmissionController extends Controller
             if($letterType->auto_approve == ParamSchema::TRUE)
             {
                 $letterSubmission->is_approved = ParamSchema::TRUE;
+
+                if(isset($letterSubmission->convert_field['position_new_id']))
+                {
+                    $this->updatePosition($letterSubmission->convert_field['position_new_id'],$letterSubmission);
+                }
             }
 
             $letterSubmission->save();
@@ -260,6 +265,7 @@ class LetterSubmissionController extends Controller
                     # code...
                     $letterSubmission = LetterSubmission::findOrFail($selected);
                     $letterSubmission->is_approved = $status;
+                    $letterSubmission->status = true;
                     $letterSubmission->save();
                     if(($status == ParamSchema::APPROVE) && ($letterSubmission->letterType->name == ParamSchema::PERJANJIANKERJA))
                     {

@@ -93,7 +93,9 @@
             </tr>
             <tr>
                 <th>Status</th>
-                <td>Disetujui</td>
+                <td>
+                    Perlu Persetujuan
+                </td>
             </tr>
         </table>
 
