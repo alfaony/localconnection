@@ -61,7 +61,7 @@ class LetterTypeSeeder extends Seeder
                 'template' => 'sk_tugas_template',
                 'is_required' => false,
                 'is_duplicate' => true,
-                'auto_approve' => false,
+                'auto_approve' => true,
                 'is_ending' => false,
             ]
         );
