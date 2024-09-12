@@ -79,7 +79,9 @@
 <body>
     <div class="container">
         <p>Yth, Bapak/Ibu,</p>
-        <p>Kami ingin memberitahukan bahwa ada pengajuan surat baru dari <span class="highlight">{{ $data['name'] }}</span> melalui sistem BOS.</p>
+        <p>
+            Kami ingin menginformasikan bahwa pengajuan surat dari {{ $data['name'] }} telah diperbarui dalam sistem BOS.
+        </p>
 
         <p>Detail Pengajuan:</p>
         <table>
@@ -97,7 +99,9 @@
             </tr>
         </table>
 
-        <p>Surat tersebut sudah tersedia dan dapat diakses di sistem BOS untuk kebutuhan lebih lanjut.</p>
+        <p>
+            Mohon untuk memeriksa kembali pengajuan Anda atau menghubungi pihak manajemen untuk informasi lebih lanjut.
+        </p>
 
         <a href="#" class="button">Lihat Surat</a>
 

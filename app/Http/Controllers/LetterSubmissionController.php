@@ -445,28 +445,28 @@ class LetterSubmissionController extends Controller
         {
             case "store":
                 $subject = 'Pengajuan '.$letterType->name;
-                $tamplate = $letterType->auto_approve == ParamSchema::TRUE ?  'email.notif_letter_with_approval' : 'email.notif_letter_no_approval';
+                $tamplate = $letterType->auto_approve == ParamSchema::FALSE ?  'email.notif_letter_with_approval' : 'email.notif_letter_no_approval';
 
                 $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
 
             case "update":
                 $subject = 'Perubahan Pengajuan '.$letterType->name;
-                $tamplate = $letterType->auto_approve == ParamSchema::TRUE ?  'email.notif_letter_with_approval' : 'email.notif_letter_no_approval';
+                $tamplate = 'email.notif_update_letter';
                 
                 $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
 
             case "approve":
                 $subject = 'Pengajuan '.$letterType->name. ' Disetujui';
-                $tamplate = $letterType->auto_approve == ParamSchema::TRUE ?  'email.notif_letter_with_approval' : 'email.notif_letter_no_approval';
+                $tamplate = 'email.notif_approve_letter';
 
                 $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
 
             case "declined":
                 $subject = 'Pengajuan '.$letterType->name.' Tidak Disetujui';
-                $tamplate = $letterType->auto_approve == ParamSchema::TRUE ?  'email.notif_letter_with_approval' : 'email.notif_letter_no_approval';
+                $tamplate = 'email.notif_declined_letter';
 
                 $this->sentInbox($toUserId,$subject, $directUrl);
                 break;

@@ -10,7 +10,9 @@
         <div class="card-body">
             <div class="col-12 justify-content-center align-items-center header">
                 <div class="header">
-                    SURAT KEPUTUSAN MANAJEMEN
+                    <h3>
+                        SURAT KEPUTUSAN MANAJEMEN
+                    </h3>
                 </div>
                 <div class="sub-header">
                     Perihal: {{ $fieldData['perihal'] ?? "" }}
@@ -171,16 +173,10 @@ function printDocument() {
         border: 1px solid black !important;
     }
     .table td {
-        padding: 0rem !important;
-        padding-top: 1rem !important;
-        padding-left: 0.2rem !important;
+        width: 50%;
     }
-
     .table th {
-        padding: 0rem !important;
-        padding-top: 1rem !important;
-        padding-left: 0.2rem !important;
-
+        width: 50%;
     }
 
     .header, .sub-header {
@@ -208,6 +204,10 @@ function printDocument() {
     
     h6{
         font-weight: bold;
+    }
+    .card-body {
+        padding-left: 10rem;
+        padding-right: 10rem;
     }
 </style>
 @endsection

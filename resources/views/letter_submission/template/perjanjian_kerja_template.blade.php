@@ -1,6 +1,7 @@
 @extends('adminlte::page')
 @php
-$fieldData = $letterSubmission->convert_field;
+    $fieldData = $letterSubmission->convert_field;
+    $user = $letterSubmission->user;
 @endphp
 @section('content')
 <div class="container">
@@ -8,7 +9,7 @@ $fieldData = $letterSubmission->convert_field;
         <div class="card-body">
             <!-- Header -->
             <div class="col-12 justify-content-center align-items-center">
-                <h6 class="text-center"><strong>PERJANJIAN KERJA</strong></h6>
+                <h6 class="text-center"><strong><h3>PERJANJIAN KERJA</h3></strong></h6>
                 <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
             </div>
 
@@ -39,15 +40,15 @@ $fieldData = $letterSubmission->convert_field;
                         </tr>
                         <tr>
                             <td>Nama</td>
-                            <td>: {{ Auth::user()->name }}</td>
+                            <td>: {{ $user->name }}</td>
                         </tr>
                         <tr>
                             <td>No KTP</td>
-                            <td>: {{ Auth::user()->id_card }}</td>
+                            <td>: {{ $user->id_card }}</td>
                         </tr>
                         <tr>
                             <td>Alamat</td>
-                            <td>: {{ Auth::user()->address }}</td>
+                            <td>: {{ $user->address }}</td>
                         </tr>
                         <tr>
                             <td colspan="2">
@@ -58,7 +59,6 @@ $fieldData = $letterSubmission->convert_field;
                     </tbody>
                 </table>
             </div>
-
 
             <!-- Sections with details -->
             <div class="col-12">
@@ -192,6 +192,109 @@ $fieldData = $letterSubmission->convert_field;
                     </div>
                 </div>
             </div>
+
+            <div class="page-break"></div>
+
+            <div class="col-12 justify-content-center align-items-center header">
+                <div class="header">
+                    <h3>SURAT KEPUTUSAN MANAJEMEN</h3>
+                </div>
+                <div class="sub-header">
+                    Perihal: {{ "Pengangkatan Pegawai" }}
+                </div>
+            </div>
+            
+            <!-- Information Table -->
+            <table class="table table-bordered">
+                <tr>
+                    <th>Nama Lengkap</th>
+                    <td>{{ $letterSubmission->user->name ?? "" }}</td>
+                </tr>
+                <tr>
+                    <th>Jabatan / Fungsi / Keahlian</th>
+                    <td>{{ isset($positionNew)? $positionNew->name : "" }}</td>
+                </tr>
+                <tr>
+                    <th>Tanggal Perhitungan Gaji </th>
+                    <td>{{ $fieldData['salary_date'] ?? "" }}</td>
+                </tr>
+                <tr>
+                    <th>Jam Kerja</th>
+                    <td>{{ $fieldData['working_hours'] ?? ''  }}</td>
+                </tr>
+                <tr>
+                    <th>Penempatan</th>
+                    <td>{{ $fieldData['work_location'] ?? ''  }}</td>
+                </tr>
+            </table>
+            
+            <div class="col-12 mt-3">
+                <div class="row">
+                    <p>
+                        Pengangkatan ini berlaku efektif sejak di tanda-tangani, pegawai yang dipromosikan akan menduduki posisi Personal Assistant dalam perusahaan. Dan tunduk pada Undang - Undang Perusahaan Terbatas, Nomor 40 tahun 2007 yang mengikatkan kewenangan dan tanggung jawabnya.
+                    </p>
+                </div>
+            </div>
+            
+            <table class="table table-bordered">
+                <tr>
+                    <td>
+                        <p><strong>Fungsi Manajemen: {{ $user->last_position_now ? $user->last_position_now->position->name : "" }}</strong></p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p><strong>Tanggung Jawab Pekerjaan:</strong></p>
+                        {!! $fieldData['job_responsibilities'] ?? "" !!}
+                    </td>
+                </tr>
+            </table>
+            <!-- Footer -->
+            <div class="text-left mt-4">
+                <p><strong>Jakarta, {{ $date ?? "" }}</strong></p>
+            </div>
+
+            <!-- KTP and Signature Section -->
+            <div class="row photo-ktp">
+                <div class="col">
+                        @if($letterSubmission->is_approved == 1)
+                        <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
+                        @else
+                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                        @endif
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <p><strong>{{ $company['director'] ?? "" }}</strong></p>
+                </div>
+                <div class="col">
+                    <p><strong>{{ $letterSubmission->user->name ?? "" }}</strong></p>
+                </div>
+            </div>
+
+            <!-- No KTP and NPWP -->
+            <div class="mt-3">
+                <table class="table table-bordered">
+                    <tr>
+                        <th>
+                            Foto KTP
+                        </th>
+                        <td>
+                            <img src="{{ Storage::url($letterSubmission->user->id_card_image) }}" alt="Foto KTP" class="img-fluid" style="max-width: 150px;">
+                        </td>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>No KTP</th>
+                        <td>{{ $letterSubmission->user->id_card ?? '' }}</td>
+                    </tr>
+                    <tr>
+                        <th>No NPWP</th>
+                        <td>{{ $letterSubmission->user->npwp_number ?? " " }}</td>
+                    </tr>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -256,7 +359,10 @@ function printDocument() {
 @section('css')
 <style>
 .table td {
-    padding: 0rem !important;
+    width: 50%;
+}
+.table th {
+    width: 50%;
 }
 
 @media print {
@@ -291,5 +397,62 @@ function printDocument() {
 .text-justify {
     text-align: justify;
 }
+.page-break {
+    page-break-inside: always;
+}
+/* Page break styles */
+@media print {
+    .page-break {
+        page-break-before: always; /* forces the next element to start on a new page */
+    }
+}
+.card-body {
+    padding-left: 10rem;
+    padding-right: 10rem;
+}
+</style>
+<style>
+    .table-bordered td, .table-bordered th {
+        border: 1px solid black !important;
+    }
+    .table td {
+        /* padding: 0rem !important; */
+        /* padding-top: 1rem !important; */
+        /* padding-left: 0.2rem !important; */
+    }
+
+    .table th {
+        /* padding: 0rem !important; */
+        /* padding-top: 1rem !important; */
+        /* padding-left: 0.2rem !important; */
+
+    }
+
+    .header, .sub-header {
+        text-align: center;
+    }
+
+    .header {
+        font-weight: bold;
+    }
+
+    .sub-header {
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .info-table th, .info-table td {
+        padding: 10px;
+    }
+
+
+    th
+    {
+        font-weight: bold;
+    }
+    
+    h6{
+        font-weight: bold;
+    }
 </style>
 @endsection

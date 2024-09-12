@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notifikasi Pengajuan Surat Baru</title>
+    <title>Notifikasi Persetujuan Pengajuan Surat</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -29,18 +28,6 @@
             color: #555;
             font-size: 16px;
             line-height: 1.6;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        ul li {
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-        .highlight {
-            font-weight: bold;
-            color: #007BFF;
         }
         table {
             width: 100%;
@@ -67,7 +54,7 @@
             font-size: 16px;
         }
         .button:hover {
-            background-color: #c82333;
+            background-color: #dc3545;
         }
         .footer {
             margin-top: 20px;
@@ -78,10 +65,10 @@
 </head>
 <body>
     <div class="container">
+        <h2>Notifikasi Persetujuan Pengajuan Surat</h2>
         <p>Yth, Bapak/Ibu,</p>
-        <p>Kami ingin memberitahukan bahwa ada pengajuan surat baru dari <span class="highlight">{{ $data['name'] }}</span> melalui sistem BOS.</p>
+        <p>Kami dengan senang hati menginformasikan bahwa pengajuan surat Anda dengan detail berikut telah disetujui:</p>
 
-        <p>Detail Pengajuan:</p>
         <table>
             <tr>
                 <th>Jenis Surat</th>
@@ -97,9 +84,9 @@
             </tr>
         </table>
 
-        <p>Surat tersebut sudah tersedia dan dapat diakses di sistem BOS untuk kebutuhan lebih lanjut.</p>
+        <p>Anda dapat memeriksa dokumen tersebut melalui sistem, atau hubungi pihak manajemen jika memerlukan informasi lebih lanjut.</p>
 
-        <a href="#" class="button">Lihat Surat</a>
+        <a href="{{ $data['url'] }}" class="button">Lihat Surat</a>
 
         <div class="footer">
             <p>Terima kasih atas perhatian dan kerjasamanya.</p>

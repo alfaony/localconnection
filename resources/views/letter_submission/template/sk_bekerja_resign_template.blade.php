@@ -41,13 +41,13 @@
                     </table>
                 </div>
         
-                <p class="text-justify">Menyatakan dengan sesungguhnya bahwa mulai tanggal  saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan P{{ $company['name'] ?? "" }}</p>
+                <p class="text-justify">Menyatakan dengan sesungguhnya bahwa mulai tanggal  saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan {{ $company['name'] ?? "" }}</p>
         
                 <p class="text-justify">Ucapan terima kasih yang sebesar-besarnya saya sampaikan atas kesempatan yang diberikan untuk bekerja di {{ $company['name'] ?? "" }}</p>
         
                 <p class="text-justify">Melalui surat ini saya memohon maaf kepada segenap manajemen dan karyawan {{ $company['name'] ?? "" }} jika terdapat kesalahan yang saya perbuat selama bekerja. Besar harapan saya {{ $company['name'] ?? "" }} akan terus berkembang dan maju.</p>
         
-                <div class="offset-md-7">
+                <div class="col-4 offset-8 mt-4">
                     <p>Jakarta, {{ $date ?? "" }}</p>
                     <p>Hormat Saya,</p>
                     @if(isset($fieldData['signature_image'])    )
@@ -102,7 +102,7 @@ function printDocument() {
         line-height: 1.6;
     }
     .container {
-        max-width: 600px;
+        /* max-width: 600px; */
         margin: 0 auto;
     }
     .text-center {
@@ -130,6 +130,10 @@ function printDocument() {
     }
     .text-justify {
         text-align: justify;
+    }
+    .card-body {
+        padding-left: 10rem;
+        padding-right: 10rem;
     }
 </style>
 @endsection

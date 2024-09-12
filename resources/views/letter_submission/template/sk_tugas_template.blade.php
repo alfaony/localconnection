@@ -178,15 +178,15 @@ function printDocument() {
         border: 1px solid black !important;
     }
     .table td {
-        padding: 0rem !important;
-        padding-top: 1rem !important;
-        padding-left: 0.2rem !important;
+        /* padding: 0rem !important; */
+        /* padding-top: 1rem !important; */
+        /* padding-left: 0.2rem !important; */
     }
 
     .table th {
-        padding: 0rem !important;
-        padding-top: 1rem !important;
-        padding-left: 0.2rem !important;
+        /* padding: 0rem !important; */
+        /* padding-top: 1rem !important; */
+        /* padding-left: 0.2rem !important; */
 
     }
 
