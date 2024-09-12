@@ -100,12 +100,13 @@
         </table>
 
         <p>Mohon untuk memeriksa kembali pengajuan Anda atau menghubungi pihak manajemen untuk informasi lebih lanjut.</p>
-
+                
         <a href="{{ $data['url'] }}" class="button">Lihat Surat</a>
 
         <div class="footer">
             <p>Terima kasih atas perhatian dan kerjasamanya.</p>
         </div>
+
     </div>
 </body>
 </html>
