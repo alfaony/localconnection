@@ -247,7 +247,7 @@ class UserController extends Controller
             Storage::put($filePath, file_get_contents($file));
 
             // Update kolom id_card_image di tabel users
-            $user = Auth::user();
+            // $user = Auth::user();
             $user->id_card_image = $filePath;
         }
 

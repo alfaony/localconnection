@@ -94,14 +94,14 @@ class LetterSubmissionController extends Controller
             {
                 $letterSubmission->is_approved = ParamSchema::TRUE;
                 $letterSubmission->status = true;
-
-                if(isset($letterSubmission->convert_field['position_new_id']))
-                {
-                    $this->updatePosition($letterSubmission->convert_field['position_new_id'],$letterSubmission);
-                }
             }
-
+            
             $letterSubmission->save();
+
+            if(isset($letterSubmission->convert_field['position_new_id']) && $letterType->auto_approve == ParamSchema::TRUE)
+            {
+                $this->updatePosition($letterSubmission->convert_field['position_new_id'],$letterSubmission);
+            }
 
             $this->updateProfile($request, $letterSubmission->user);
 
@@ -134,7 +134,7 @@ class LetterSubmissionController extends Controller
             $positions = Position::byCompany($user->company_id)->get();
         }
 
-        $lastPositon = $user->last_position ? Position::where('id',$user->last_position->position_id)->get() : null;
+        $lastPositon = $user->last_position ? Position::where('id',$this->findPosition($letterSubmission->convert_field['position_old_id'])->id )->get() : null;
 
         $company = SettingCompany::byCompany($user->company_id)->get()->pluck('field_value','field_title');
 
@@ -401,6 +401,7 @@ class LetterSubmissionController extends Controller
             $findUserPosition->end_date = $letterSubmission->convert_field['end_date'] ?? null;
             $findUserPosition->save();
         }
+
     }
 
     protected function sendNotification($letterSubmission, $timeNotify, $companyId, $approval = null,  $notes = null)

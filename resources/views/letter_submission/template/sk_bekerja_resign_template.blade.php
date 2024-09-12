@@ -41,7 +41,7 @@
                     </table>
                 </div>
         
-                <p class="text-justify">Menyatakan dengan sesungguhnya bahwa mulai tanggal  saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan {{ $company['name'] ?? "" }}</p>
+                <p class="text-justify">Menyatakan dengan sesungguhnya bahwa mulai tanggal {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y') }}  saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan {{ $company['name'] ?? "" }}</p>
         
                 <p class="text-justify">Ucapan terima kasih yang sebesar-besarnya saya sampaikan atas kesempatan yang diberikan untuk bekerja di {{ $company['name'] ?? "" }}</p>
         

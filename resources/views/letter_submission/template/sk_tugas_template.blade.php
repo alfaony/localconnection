@@ -60,7 +60,7 @@
             <table class="table table-bordered">
                 <tr>
                     <td>
-                        <p><strong>Fungsi Manajemen: {{ $user->last_position_now ? $user->last_position_now->position->name : "" }}</strong></p>
+                        <p><strong>Fungsi Manajemen: {{ $positionNew->name ?? "" }}</strong></p>
                     </td>
                 </tr>
                 <tr>
@@ -181,12 +181,14 @@ function printDocument() {
         /* padding: 0rem !important; */
         /* padding-top: 1rem !important; */
         /* padding-left: 0.2rem !important; */
+        width: 50%;
     }
 
     .table th {
         /* padding: 0rem !important; */
         /* padding-top: 1rem !important; */
         /* padding-left: 0.2rem !important; */
+        width: 50%;
 
     }
 
@@ -215,6 +217,10 @@ function printDocument() {
     
     h6{
         font-weight: bold;
+    }
+    .card-body {
+        padding-left: 10rem;
+        padding-right: 10rem;
     }
 </style>
 @endsection

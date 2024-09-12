@@ -9,7 +9,7 @@
     <div class="card scrollable-div" id="printThis">
         <div class="card-body">
             <div class="col-12 justify-content-center align-items-center">
-                <h6 class="text-center"><strong>SURAT KETERANGAN</strong></h6>
+                <h4 class="text-center"><strong>SURAT KETERANGAN KERJA</strong></h4>
                 <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
             </div>
 
@@ -63,7 +63,7 @@
             <div class="col-12">
                 <p class="text-justify"> 
                     Telah bekerja di perusahaan kami, {{ $company['name'] ?? "" }}, sejak tgl {{ $user->first_position ? \Carbon\Carbon::parse($user->first_position->start_date)->locale('id')->translatedFormat('d F Y') : "" }} 
-                    s/d {{ $user->last_position_now->end_date ? \Carbon\Carbon::parse($user->last_position_now->end_date)->locale('id')->translatedFormat('d F Y') : \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ $user->last_position_now ? $user->last_position_now->position->name : '' }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
+                    s/d {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ isset($positionOld)? $positionOld->name : "" }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
                 </p>
                 <p>Demikian surat keterangan ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.</p>
             </div>

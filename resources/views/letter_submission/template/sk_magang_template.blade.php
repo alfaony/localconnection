@@ -64,13 +64,11 @@
                 <div class="row">
                     <div class="col">
                         <h6><strong>PASAL 1. MAKSUD DAN TUJUAN</strong></h6>
-                        @if($letterSubmission->user->last_position_now)
                         <p class="text-justify">
                             PARA PIHAK sepakat untuk menjalin hubungan kerja magang, dimana PIHAK PERTAMA memberikan
                             kesempatan magang kepada PIHAK KEDUA sebagai
                             {{ $letterSubmission->user->last_position_now->position->name }}.
                         </p>
-                        @endif
                     </div>
                 </div>
 
@@ -225,13 +223,13 @@
             <table class="table table-bordered">
                 <tr>
                     <td>
-                        <p><strong>Fungsi Manajemen: {{ $user->last_position_now ? $user->last_position_now->position->name : "" }}</strong></p>
+                        <p><strong>Fungsi Manajemen: {{ isset($positionNew)? $positionNew->name : "" }}</strong></p>
                     </td>
                 </tr>
                 <tr>
                     <td>
                         <p><strong>Tanggung Jawab Pekerjaan:</strong></p>
-                        {!! $fieldData['job_responsibilities'] ?? "" !!}
+                        {!! $fieldData['description_task'] ?? "" !!}
                     </td>
                 </tr>
             </table>

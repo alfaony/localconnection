@@ -218,7 +218,12 @@
                                     <label for="working_hours">Jam Kerja <span class="text-danger">*</span></label>
                                     <input type="text" name="working_hours" class="form-control" placeholder="Masukkan jam kerja" value="{{ old('working_hours') }}" required>
                                 </div>
-                
+
+                                <div class="col-md-12 mb-3">
+                                    <label for="working_hours">Jam Kerja <span class="text-danger">*</span></label>
+                                    <input type="text" name="working_hours" class="form-control" placeholder="Masukkan jam kerja" value="{{ old('working_hours') }}" required>
+                                </div>
+
                                 <div class="col-md-12 mb-3">
                                     <label for="masa_kerja">Masa Kerja <span class="text-danger">*</span></label>
                                     <div class="input-group">
@@ -238,12 +243,11 @@
                     $("#form_template").html(form);
 
                     generateThriveEditor("description_task");
-                    generateThriveEditor("description_intern");
 
                     $('.selectOrCreate2').select2({
                         placeholder: 'Pilih',
                         allowClear: true,
-                        tags: true
+                        // tags: true
                     });
                     break;
                 case 'perjanjian_kerja_template':
@@ -566,7 +570,7 @@
                                     </table>
                                 </div>
                         
-                                <p>Menyatakan dengan sesungguhnya bahwa mulai tanggal  saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan P{{ $company['name'] ?? "" }}</p>
+                                <p>Menyatakan dengan sesungguhnya bahwa mulai tanggal {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan {{ $company['name'] ?? "" }}</p>
                         
                                 <p>Ucapan terima kasih yang sebesar-besarnya saya sampaikan atas kesempatan yang diberikan untuk bekerja di {{ $company['name'] ?? "" }}</p>
                         
@@ -587,7 +591,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="col-12 justify-content-center align-items-center">
-                                    <h6 class="text-center"><strong>SURAT KETERANGAN</strong></h6>
+                                    <h6 class="text-center"><strong>SURAT KETERANGAN KERJA</strong></h6>
                                     <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
                                 </div>
 
@@ -641,9 +645,21 @@
                                 <div class="col-12">
                                     <p class="text-justify"> 
                                         Telah bekerja di perusahaan kami, {{ $company['name'] ?? "" }}, sejak tgl {{ Auth::user()->first_position ? \Carbon\Carbon::parse(Auth::user()->first_position->start_date)->locale('id')->translatedFormat('d F Y') : "" }} 
-                                        s/d {{ isset(Auth::user()->last_position_now) && isset(Auth::user()->last_position_now->end_date) ? \Carbon\Carbon::parse(Auth::user()->last_position_now->end_date)->locale('id')->translatedFormat('d F Y') : \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ isset(Auth::user()->last_position_now) && isset(Auth::user()->last_position_now->position) ? Auth::user()->last_position_now->position->name : '' }} dengan posisi sebagai {{ Auth::user()->last_position_now ? Auth::user()->last_position_now->position->name : '' }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
+                                        s/d {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ Auth::user()->last_position_now ? Auth::user()->last_position_now->position->name : '' }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
                                     </p>
                                 </div>
+                                @if(isset(Auth::user()->last_position))
+                                <!-- Jabatan Terakhir-->
+                                <div class="col-md-12 mb-3">
+                                    <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="position_old_id" id="position_old_id" required>
+                                        <option value="" selected disabled>Pilih </option>
+                                        @foreach($lastPositon as $positionlast)
+                                            <option value="{{ $positionlast->name }}" {{ $positionlast->id == Auth::user()->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
