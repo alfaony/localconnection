@@ -14,12 +14,12 @@
             </div>
 
             <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
-                <p class="text-justify">Pada Hari {{ $date }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+                <p class="text-justify">Pada Hari {{ $dateWithDay }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
             </div>
 
             <div class="col-12 mt-2">
                 <!-- Table to display company and employee information -->
-                <table class="table table-borderless detail-table">
+                <table class="table table-top table-borderless detail-table">
                     <tbody>
                         <tr>
                             <td>Nama</td>
@@ -86,7 +86,7 @@
                 <div class="row">
                     <div class="col">
                         <h6><strong>PASAL 3. HAK & KEWAJIBAN PARA PIHAK</strong></h6>
-                        <ul class="text-justify">
+                        <ul class="text-justify custom-alphabet-list">
                             <li>PIHAK KEDUA berhak menerima gaji dari PIHAK PERTAMA sebagaimana yang telah disepakati
                                 bersama.</li>
                             <li>PIHAK KEDUA berhak mendapatkan 12 hari cuti dalam setahun.</li>
@@ -129,7 +129,7 @@
                 <div class="row">
                     <div class="col">
                         <h6><strong>PASAL 5. JAM KERJA & CARA BEKERJA</strong></h6>
-                        <ul class="text-justify">
+                        <ul class="text-justify custom-alphabet-list">
                             <li>Pekerjaan diselesaikan dan dikerjakan baik di tempat kerja yang ditentukan sesuai
                                 kebutuhan perusahaan dengan penjadwalan kerja sesuai kebutuhan dan kondisi. Disepakati
                                 penanggalan merah adalah libur.</li>
@@ -153,9 +153,9 @@
                     <div class="col">
                         <h6><strong>PASAL 6. JANGKA WAKTU</strong></h6>
                         <p class="text-justify">
-                            PARA PIHAK sepakat perjanjian kerja ini bersifat tetap, dan apabila terdapat hal-hal yang
-                            belum dijelaskan akan ditentukan di peraturan perusahaan atau surat keputusan manajemen.
-                            Perjanjian ini berlaku hingga salah satu pihak mengakhirinya.
+                            PARA PIHAK sepakat perjanjian kerja ini bersifat tetap, dan apabila terdapat hal-hal yang belum dijelaskan akan
+                            ditentukan di peraturan perusahaan atau surat keputusan manajemen. Perjanjian ini berlaku hingga salah satu
+                            pihak mengakhirinya.
                         </p>
                     </div>
                 </div>
@@ -174,18 +174,18 @@
                         @else
                         <div style="height: 150px;"></div> <!-- Empty space if no signature -->
                         @endif
-                        <p>_________________________</p>
+                        <p class="sparator">_________________________</p>
                         <p>{{ $company['director'] ?? "" }}</p>
                     </div>
                     <div class="col-6 text-center">
                         <p><strong>PIHAK KEDUA</strong></p>
-                        @if($letterSubmission->is_approved == 1)
+                        @if($letterSubmission->status !== 0)
                         <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
                             alt="Signature" style="height:150px">
                         @else
                         <div style="height: 150px;"></div> <!-- Empty space if no signature -->
                         @endif
-                        <p>_________________________</p>
+                        <p class="sparator">_________________________</p>
                         <p>{{ $letterSubmission->user->name }}</p>
                     </div>
                 </div>
@@ -213,6 +213,10 @@
                     <td>{{ isset($positionNew)? $positionNew->name : "" }}</td>
                 </tr>
                 <tr>
+                    <th>Gaji Bulanan </th>
+                    <td>{{'Rp. '.number_format($fieldData['salary'],0,',','.') ?? "" }}</td>
+                </tr>
+                <tr>
                     <th>Tanggal Perhitungan Gaji </th>
                     <td>{{ $fieldData['salary_date'] ?? "" }}</td>
                 </tr>
@@ -228,7 +232,7 @@
             
             <div class="col-12 mt-3">
                 <div class="row">
-                    <p>
+                    <p class="text-justify">
                         Pengangkatan ini berlaku efektif sejak di tanda-tangani, pegawai yang dipromosikan akan menduduki posisi Personal Assistant dalam perusahaan. Dan tunduk pada Undang - Undang Perusahaan Terbatas, Nomor 40 tahun 2007 yang mengikatkan kewenangan dan tanggung jawabnya.
                     </p>
                 </div>
@@ -253,21 +257,25 @@
             </div>
 
             <!-- KTP and Signature Section -->
-            <div class="row photo-ktp">
-                <div class="col">
-                        @if($letterSubmission->is_approved == 1)
-                        <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
-                        @else
-                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
-                        @endif
+            <div class="row">
+                <div class="col-6 text-center">
+                    @if($letterSubmission->is_approved == 1)
+                    <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
+                    @else
+                    <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                    @endif
+                    <p class="sparator">_________________________</p>
+                    <p>{{ $company['director'] ?? "" }}</p>
                 </div>
-                <div class="col">
-                        @if($letterSubmission->is_approved == 1)
-                        <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                <div class="col-6 text-center">
+                    @if($letterSubmission->status !== 0)
+                    <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
                         alt="Signature" style="height:150px">
-                        @else
-                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
-                        @endif
+                    @else
+                    <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                    @endif
+                    <p class="sparator">_________________________</p>
+                    <p>{{ $letterSubmission->user->name }}</p>
                 </div>
             </div>
             <div class="row">
@@ -314,6 +322,7 @@
 
     <!-- Approve/Decline Form -->
     @if(!isset($letterSubmission->is_approved))
+    @if(is_null($letterSubmission->status) || $letterSubmission->status == 1)
     @canAccess('approvement', 'letter_submissions')
     <form action="{{ route('letter-submission.approvement') }}" method="POST" id="bulk-action-form" class="d-inline">
         @csrf
@@ -332,6 +341,7 @@
         </div>
     </form>
     @endcanAccess
+    @endif
     @endif
 </div>
 @endsection
@@ -364,14 +374,44 @@ function printDocument() {
 
 @section('css')
 <style>
+.custom-alphabet-list {
+    list-style: none; /* Remove default bullet points */
+    counter-reset: alphabet-counter; /* Initialize the counter */
+}
+
+.custom-alphabet-list li {
+    counter-increment: alphabet-counter; /* Increment the counter for each list item */
+}
+
+.custom-alphabet-list li::before {
+    content: counter(alphabet-counter, lower-alpha) ") "; /* Add alphabetic counter followed by a closing parenthesis */
+    font-weight: bold; /* Make the alphabet bold if needed */
+}
+
+.sparator 
+{
+    margin-bottom: 0px;
+}
 .table td {
-    width: 50%;
+    /* width: 50%; */
     padding-top: 0rem !important;
     
 }
 .table th {
     width: 50%;
     padding-top: 0rem !important;
+}
+
+.table-top td
+{
+    padding-left:0rem !important;
+    /* max-width: 30% !important; */
+}
+
+.table-top th
+{
+    padding-left:0rem !important;
+    /* max-width: 30%; */
 }
 
 @media print {

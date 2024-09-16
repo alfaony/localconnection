@@ -38,87 +38,90 @@ class SendProjectExpirationNotifications extends Command
             $profile = $settingCompany->pluck('field_value','field_title');
             $time = Carbon::now()->tz('Asia/Jakarta')->format('H:i');
 
-            $sentTime = $profile['sent_time'];
-            $sentTimeStatus = $profile['sent_time_status'];
-
-            if(($sentTime == $time) && ($sentTimeStatus != "sent"))
-            // if ($user)  
+            if(isset($profile['sent_time']) && isset($profile['sent_time_status']))
             {
-                try {
-                    //code...
-                    $this->info('========= DO EXCUTE ============');
+                $sentTime = $profile['sent_time'];
+                $sentTimeStatus = $profile['sent_time_status'];
+    
+                if(($sentTime == $time) && ($sentTimeStatus != "sent"))
+                // if ($user)  
+                {
+                    try {
+                        //code...
+                        $this->info('========= DO EXCUTE ============');
+            
         
+                        $currentDate = Carbon::today();
+                
+                        // Add 1 week to the current date
+                        $oneWeekLater = $currentDate->copy()->addWeek();
+                        
+                        // Add 2 week to the current date
+                        $twoMonthsLater = $currentDate->copy()->addWeek(2);
+                
+                        // Add 1 month to the current date
+                        $oneMonthLater = $currentDate->copy()->addMonth();
+                
+                
+                        // today
+                        $projectsToday = Project::byCompany($user->company_id)->where('alert_expired',NoticeSchema::ACTIVED)->whereDate('end_date', $currentDate)->get();
+                
+                        // 1 week
+                        $projectsOneWeek = Project::byCompany($user->company_id)->where('alert_one_week',NoticeSchema::ACTIVED)->whereDate('end_date', $oneWeekLater)->get();
+                
+                        // 2 week
+                        $projectsTwoMonth = Project::byCompany($user->company_id)->where('alert_two_week',NoticeSchema::ACTIVED)->whereDate('end_date', $twoMonthsLater)->get();
+                
+                        // 1 month
+                        $projectsOneMonth = Project::byCompany($user->company_id)->where('alert_one_month',NoticeSchema::ACTIVED)->whereDate('end_date', $oneMonthLater)->get();
+        
+                        // today
+                        foreach ($projectsToday as $expired) 
+                        {
+                            $this->sendNotification($expired,NoticeSchema::EXPIRED,$a->id);
+                            $this->info('DONE Sent');
+                        }
+                
+                        foreach ($projectsOneWeek as $expired) 
+                        {
+                            $this->sendNotification($expired,NoticeSchema::ONEWEEK,$a->id);
+                            $this->info('DONE Sent');
+        
+                        }
+                
+                        foreach ($projectsTwoMonth as $expired) 
+                        {
+                            $this->sendNotification($expired,NoticeSchema::TWOWEEK,$a->id);
+                            $this->info('DONE Sent');
+        
+                        }
+                
+                        foreach ($projectsOneMonth as $expired) 
+                        {
+                            $this->sendNotification($expired,NoticeSchema::ONEMONTH,$a->id);
+                            $this->info('DONE Sent');
+                        }
+                        
+                            // update status sent time
+                            $sentTime = SettingCompany::byCompany($a->id)
+                                ->where('field_title','sent_time_status')
+                                ->first();
+                            $sentTime->field_value = "sent";
+                            $sentTime->save();
     
-                    $currentDate = Carbon::today();
-            
-                    // Add 1 week to the current date
-                    $oneWeekLater = $currentDate->copy()->addWeek();
-                    
-                    // Add 2 week to the current date
-                    $twoMonthsLater = $currentDate->copy()->addWeek(2);
-            
-                    // Add 1 month to the current date
-                    $oneMonthLater = $currentDate->copy()->addMonth();
-            
-            
-                    // today
-                    $projectsToday = Project::byCompany($user->company_id)->where('alert_expired',NoticeSchema::ACTIVED)->whereDate('end_date', $currentDate)->get();
-            
-                    // 1 week
-                    $projectsOneWeek = Project::byCompany($user->company_id)->where('alert_one_week',NoticeSchema::ACTIVED)->whereDate('end_date', $oneWeekLater)->get();
-            
-                    // 2 week
-                    $projectsTwoMonth = Project::byCompany($user->company_id)->where('alert_two_week',NoticeSchema::ACTIVED)->whereDate('end_date', $twoMonthsLater)->get();
-            
-                    // 1 month
-                    $projectsOneMonth = Project::byCompany($user->company_id)->where('alert_one_month',NoticeSchema::ACTIVED)->whereDate('end_date', $oneMonthLater)->get();
-    
-                    // today
-                    foreach ($projectsToday as $expired) 
-                    {
-                        $this->sendNotification($expired,NoticeSchema::EXPIRED,$a->id);
-                        $this->info('DONE Sent');
+                        $this->info('Next Excute.');
+                    } catch (\Throwable $th) {
+                        //throw $th;
+                        // dd($th);
+                        ErrorLogHelper::log($th);
+                        Log::error($th->getMessage());
                     }
-            
-                    foreach ($projectsOneWeek as $expired) 
-                    {
-                        $this->sendNotification($expired,NoticeSchema::ONEWEEK,$a->id);
-                        $this->info('DONE Sent');
-    
-                    }
-            
-                    foreach ($projectsTwoMonth as $expired) 
-                    {
-                        $this->sendNotification($expired,NoticeSchema::TWOWEEK,$a->id);
-                        $this->info('DONE Sent');
-    
-                    }
-            
-                    foreach ($projectsOneMonth as $expired) 
-                    {
-                        $this->sendNotification($expired,NoticeSchema::ONEMONTH,$a->id);
-                        $this->info('DONE Sent');
-                    }
-                    
-                        // update status sent time
-                        $sentTime = SettingCompany::byCompany($a->id)
-                            ->where('field_title','sent_time_status')
-                            ->first();
-                        $sentTime->field_value = "sent";
-                        $sentTime->save();
-
-                    $this->info('Next Excute.');
-                } catch (\Throwable $th) {
-                    //throw $th;
-                    // dd($th);
-                    ErrorLogHelper::log($th);
-                    Log::error($th->getMessage());
                 }
-            }
-            else
-            {
-                $this->info('No Excute.');
-                $this->info($sentTime);
+                else
+                {
+                    $this->info('No Excute.');
+                    $this->info($sentTime);
+                }
             }
 
         }

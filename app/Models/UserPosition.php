@@ -44,4 +44,9 @@ class UserPosition extends Model
     {
         return $this->belongsTo(Position::class);
     }
+
+    public function letterSubmission()
+    {
+        return $this->belongsTo(LetterSubmission::class);
+    }
 }

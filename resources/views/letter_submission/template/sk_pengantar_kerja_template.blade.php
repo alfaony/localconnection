@@ -63,19 +63,19 @@
             <div class="col-12">
                 <p class="text-justify"> 
                     Telah bekerja di perusahaan kami, {{ $company['name'] ?? "" }}, sejak tgl {{ $user->first_position ? \Carbon\Carbon::parse($user->first_position->start_date)->locale('id')->translatedFormat('d F Y') : "" }} 
-                    s/d {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ isset($positionOld)? $positionOld->name : "" }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
+                    s/d {{ isset($fieldData['end_date']) ? \Carbon\Carbon::parse($fieldData['end_date'])->locale('id')->translatedFormat('d F Y') : "saat ini" }} dengan posisi sebagai {{ isset($positionOld)? $positionOld->name : "" }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
                 </p>
                 <p>Demikian surat keterangan ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.</p>
             </div>
 
             <div class="col-12">
                 <div class="d-flex justify-content-start">
-                    <p>Jakarta, {{ $date ?? "" }}, </p>
+                    <p>Jakarta, {{ $date ?? "" }} </p>
                 </div>
             </div>
             <div class="col-12">
+                <p>Tertanda,</p>
                 <div class="col-6 text-left">
-                    <p>Tertanda,</p>
                     @if($letterSubmission->is_approved == 1)
                     <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
                     <p>{{ $company['director'] ?? "" }}</p>

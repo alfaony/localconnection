@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notifikasi Persetujuan Pengajuan Surat</title>
+    <title>Notifikasi Perubahan Pengajuan Surat</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -29,6 +29,18 @@
             font-size: 16px;
             line-height: 1.6;
         }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #007BFF;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -45,7 +57,7 @@
         }
         .button {
             display: inline-block;
-            background-color: #dc3545;
+            background-color: #28a745;
             color: white !important;
             text-decoration: none;
             padding: 10px 20px;
@@ -54,7 +66,7 @@
             font-size: 16px;
         }
         .button:hover {
-            background-color: #dc3545;
+            background-color: #218838;
         }
         .footer {
             margin-top: 20px;
@@ -66,8 +78,12 @@
 <body>
     <div class="container">
         <p>Yth, Bapak/Ibu,</p>
-        <p>Kami dengan senang hati menginformasikan bahwa pengajuan surat Anda dengan detail berikut telah disetujui:</p>
+        <p>
+            Kami ingin menginformasikan bahwa pengajuan surat dari <strong>{{ $data['name'] }}</strong> telah mengalami perubahan oleh admin.
+            Mohon untuk memeriksa kembali pengajuan tersebut dan melakukan tanda tangan ulang.
+        </p>
 
+        <p>Detail Pengajuan:</p>
         <table>
             <tr>
                 <th>Jenis Surat</th>
@@ -79,13 +95,15 @@
             </tr>
             <tr>
                 <th>Status</th>
-                <td>Disetujui</td>
+                <td>Memerlukan Tanda Tangan Ulang</td>
             </tr>
         </table>
 
-        <p>Anda dapat memeriksa dokumen tersebut melalui sistem, atau hubungi pihak manajemen jika memerlukan informasi lebih lanjut.</p>
+        <p>
+            Silakan klik tautan di bawah ini untuk meninjau dan menandatangani ulang dokumen tersebut.
+        </p>
 
-        <a href="{{ $data['url'] }}" class="button">Lihat Surat</a>
+        <a href="{{ $data['url'] }}" class="button">Lihat dan Tanda Tangan Ulang</a>
 
         <div class="footer">
             <p>Terima kasih atas perhatian dan kerjasamanya.</p>

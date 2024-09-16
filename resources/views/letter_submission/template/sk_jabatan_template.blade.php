@@ -30,6 +30,10 @@
                     <td>{{ $letterSubmission->user->last_position ? $letterSubmission->user->last_position->position->name : "" }}</td>
                 </tr>
                 <tr>
+                    <th>Gaji Bulanan </th>
+                    <td>{{'Rp. '.number_format($fieldData['salary'],0,',','.') ?? "" }}</td>
+                </tr>
+                <tr>
                     <th>Tanggal Perhitungan Gaji </th>
                     <td>{{ $fieldData['salary_date'] ?? "" }}</td>
                 </tr>
@@ -65,22 +69,30 @@
                 </tr>
             </table>
             <!-- Footer -->
-            <div class="text-left mb-">
+            <div class="text-left mt-4">
                 <p><strong>Jakarta, {{ $date ?? "" }}</strong></p>
             </div>
 
             <!-- KTP and Signature Section -->
-            <div class="row photo-ktp">
-                <div class="col">
-                    <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
-                </div>
-            </div>
             <div class="row">
-                <div class="col">
-                    <p><strong>{{ $company['director'] ?? "" }}</strong></p>
+                <div class="col-6 text-center">
+                    @if($letterSubmission->is_approved == 1)
+                    <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
+                    @else
+                    <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                    @endif
+                    <p class="sparator">_________________________</p>
+                    <p>{{ $company['director'] ?? "" }}</p>
                 </div>
-                <div class="col">
-                    <p><strong>{{ $letterSubmission->user->name ?? "" }}</strong></p>
+                <div class="col-6 text-center">
+                    @if($letterSubmission->status !== 0)
+                    <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                        alt="Signature" style="height:150px">
+                    @else
+                    <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                    @endif
+                    <p class="sparator">_________________________</p>
+                    <p>{{ $letterSubmission->user->name }}</p>
                 </div>
             </div>
 
@@ -208,6 +220,10 @@ function printDocument() {
     .card-body {
         padding-left: 10rem;
         padding-right: 10rem;
+    }
+    .sparator 
+    {
+        margin-bottom: 0px;
     }
 </style>
 @endsection

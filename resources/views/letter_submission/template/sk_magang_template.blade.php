@@ -14,12 +14,12 @@
             </div>
 
             <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
-                <p class="text-justify">Pada Hari {{ $date }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+                <p class="text-justify">Pada Hari {{ $dateWithDay }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
             </div>
 
             <div class="col-12 mt-2">
                 <!-- Table to display company and employee information -->
-                <table class="table table-borderless detail-table">
+                <table class="table table-top table-borderless detail-table">
                     <tbody>
                         <tr>
                             <td>Nama</td>
@@ -40,15 +40,15 @@
                         </tr>
                         <tr>
                             <td>Nama</td>
-                            <td>: {{ Auth::user()->name }}</td>
+                            <td>: {{ $user->name }}</td>
                         </tr>
                         <tr>
                             <td>No KTP</td>
-                            <td>: {{ Auth::user()->id_card }}</td>
+                            <td>: {{ $user->id_card }}</td>
                         </tr>
                         <tr>
                             <td>Alamat</td>
-                            <td>: {{ Auth::user()->address }}</td>
+                            <td>: {{ $user->address }}</td>
                         </tr>
                         <tr>
                             <td colspan="2">
@@ -67,7 +67,7 @@
                         <p class="text-justify">
                             PARA PIHAK sepakat untuk menjalin hubungan kerja magang, dimana PIHAK PERTAMA memberikan
                             kesempatan magang kepada PIHAK KEDUA sebagai
-                            {{ $letterSubmission->user->last_position_now->position->name }}.
+                            {{ isset($positionNew) ? $positionNew->name : "" }}.
                         </p>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
                 <div class="row">
                     <div class="col">
                         <h6><strong>PASAL 3. HAK & KEWAJIBAN PARA PIHAK</strong></h6>
-                        <ul class="text-justify">
+                        <ul class="text-justify custom-alphabet-list">
                             <li>PIHAK KEDUA berhak menerima kompensasi atas tunjangan magang sesuai kesepakatan.</li>
                             <li>PIHAK KEDUA berhak mendapatkan bimbingan dan pelatihan dari PIHAK PERTAMA.</li>
                             <li>PIHAK KEDUA wajib mentaati seluruh peraturan yang ditetapkan PIHAK PERTAMA.</li>
@@ -121,7 +121,7 @@
                 <div class="row">
                     <div class="col">
                         <h6><strong>PASAL 5. JAM KERJA & CARA BEKERJA</strong></h6>
-                        <ul class="text-justify">
+                        <ul class="text-justify custom-alphabet-list">
                             <li>Pekerjaan diselesaikan dan dikerjakan baik di tempat kerja yang ditentukan sesuai kebutuhan perusahaan dengan penjadwalan kerja sesuai kebutuhan dan kondisi. Disepakati penanggalan merah adalah libur.</li>
                             <li>PIHAK KEDUA wajib bekerja di tempat yang ditentukan sesuai kebutuhan perusahaan.</li>
                             <li>PIHAK KEDUA wajib melakukan absensi secara digital menggunakan aplikasi, dan aktif dalam komunikasi untuk menjaga fungsi dan tanggung jawab pekerjaan berjalan dengan baik.</li>
@@ -137,7 +137,7 @@
                     <div class="col">
                         <h6><strong>PASAL 6. JANGKA WAKTU</strong></h6>
                         <p class="text-justify">
-                            Perjanjian ini berlaku efektif sejak ditandatangani, dan peserta magang akan menjalankan peran sebagai {{ isset($positionNew)? $positionNew->name : "" }} selama masa magang. Peserta magang tunduk pada ketentuan yang berlaku dalam perusahaan serta aturan dan tanggung jawab yang telah ditetapkan.
+                            PARA PIHAK sepakat perjanjian kerja magang ni berlaku selama 3 bulan dan dapat diperpanjang sesuai kesepakatan kedua belah pihak. Perjanjian ini berlaku hingga salah satu pihak mengakhirinya.
                         </p>
                     </div>
                 </div>
@@ -151,22 +151,22 @@
                 <div class="row">
                     <div class="col-6 text-center">
                         <p><strong>PIHAK PERTAMA</strong></p>
-                        @if($letterSubmission->is_approved == 213)
+                        @if($letterSubmission->is_approved == 1)
                         <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
                         @else
                         <div style="height: 150px;"></div> <!-- Empty space if no signature -->
                         @endif
-                        <p>_________________________</p>
+                        <p class="sparator">_________________________</p>
                         <p>{{ $company['director'] ?? "" }}</p>
                     </div>
                     <div class="col-6 text-center">
                         <p><strong>PIHAK KEDUA</strong></p>
-                        @if($letterSubmission->is_approved == 1)
+                        @if($letterSubmission->status !== 0)
                         <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid" alt="Signature" style="height:150px">
                         @else
                         <div style="height: 150px;"></div> <!-- Empty space if no signature -->
                         @endif
-                        <p>_________________________</p>
+                        <p class="sparator">_________________________</p>
                         <p>{{ $letterSubmission->user->name }}</p>
                     </div>
                 </div>
@@ -214,8 +214,8 @@
             
             <div class="col-12 mt-3">
                 <div class="row">
-                    <p>
-                        Perjanjian ini berlaku efektif sejak ditandatangani, dan peserta magang akan menjalankan peran sebagai {{ $user->last_position_now ? $user->last_position_now->position->name : "" }} selama masa magang. Peserta magang tunduk pada ketentuan yang berlaku dalam perusahaan serta aturan dan tanggung jawab yang telah ditetapkan.
+                    <p class="text-justify">
+                        Perjanjian ini berlaku efektif sejak ditandatangani, dan peserta magang akan menjalankan peran sebagai {{ isset($positionNew)? $positionNew->name : "" }} selama masa magang. Peserta magang tunduk pada ketentuan yang berlaku dalam perusahaan serta aturan dan tanggung jawab yang telah ditetapkan.
                     </p>
                 </div>
             </div>
@@ -239,29 +239,24 @@
             </div>
     
             <!-- KTP and Signature Section -->
-            <div class="row photo-ktp">
-                <div class="col">
-                        @if($letterSubmission->is_approved == 1)
-                        <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
-                        @else
-                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
-                        @endif
-                </div>
-                <div class="col">
-                        @if($letterSubmission->is_approved == 1)
-                        <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
-                        alt="Signature" style="height:150px">
-                        @else
-                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
-                        @endif
-                </div>
-            </div>
             <div class="row">
-                <div class="col">
-                    <p><strong>{{ $company['director'] ?? "" }}</strong></p>
+                <div class="col-6 text-center">
+                    @if($letterSubmission->is_approved == 1)
+                    <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
+                    @else
+                    <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                    @endif
+                    <p class="sparator">_________________________</p>
+                    <p>{{ $company['director'] ?? "" }}</p>
                 </div>
-                <div class="col">
-                    <p><strong>{{ $letterSubmission->user->name ?? "" }}</strong></p>
+                <div class="col-6 text-center">
+                    @if($letterSubmission->status !== 0)
+                    <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid" alt="Signature" style="height:150px">
+                    @else
+                    <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                    @endif
+                    <p class="sparator">_________________________</p>
+                    <p>{{ $letterSubmission->user->name }}</p>
                 </div>
             </div>
     
@@ -300,6 +295,7 @@
 
     <!-- Approve/Decline Form -->
     @if(!isset($letterSubmission->is_approved))
+    @if(is_null($letterSubmission->status) || $letterSubmission->status == 1)
     @canAccess('approvement', 'letter_submissions')
     <form action="{{ route('letter-submission.approvement') }}" method="POST" id="bulk-action-form" class="d-inline">
         @csrf
@@ -318,6 +314,7 @@
         </div>
     </form>
     @endcanAccess
+    @endif
     @endif
 </div>
 @endsection
@@ -350,11 +347,38 @@
 
 @section('css')
 <style>
-.table td {
-    width: 50%;
+.custom-alphabet-list {
+    list-style: none; /* Remove default bullet points */
+    counter-reset: alphabet-counter; /* Initialize the counter */
+}
+
+.custom-alphabet-list li {
+    counter-increment: alphabet-counter; /* Increment the counter for each list item */
+}
+
+.custom-alphabet-list li::before {
+    content: counter(alphabet-counter, lower-alpha) ") "; /* Add alphabetic counter followed by a closing parenthesis */
+    font-weight: bold; /* Make the alphabet bold if needed */
+}
+
+.sparator 
+{
+    margin-bottom: 0px;
 }
 .table th {
     width: 50%;
+}
+
+.table-top td
+{
+    padding-left:0rem !important;
+    max-width: 30%;
+}
+
+.table-top th
+{
+    padding-left:0rem !important;
+    max-width: 30%;
 }
 
 @media print {

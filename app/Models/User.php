@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,6 +9,7 @@ use Laravel\Passport\HasApiTokens;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Ramsey\Uuid\Uuid;
+use App\Schemas\ParamSchema;
 
 class User extends Authenticatable
 {
@@ -140,10 +140,16 @@ class User extends Authenticatable
 
     public function getFirstPositionAttribute()
     {
-        return $this->userPosition()
-        ? $this->userPosition()->first()
-        : null;
+        return $this->userPosition() ? $this->userPosition()
+            ->whereHas('letterSubmission', function ($query) {
+                $query->whereHas('letterType', function ($query) {
+                    $query->where('template', ParamSchema::TEMPLATEPERJANJIANKERJA);
+                });
+            })
+            ->latest('created_at')  // Assuming you want the latest based on 'created_at'/
+            ->first() : "";
     }
+
 
     public function scopeByCompany($query,$companyId)
     {

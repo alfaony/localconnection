@@ -10,7 +10,11 @@
         <div class="card-body">
             <div class="col-12 justify-content-center align-items-center header">
                 <div class="header">
-                    SURAT KEPUTUSAN MANAJEMEN
+                    <h3>
+                        <strong>
+                            SURAT KEPUTUSAN MANAJEMEN
+                        </strong>
+                        </h3>
                 </div>
                 <div class="sub-header">
                     Perihal: {{ $fieldData['perihal'] ?? "" }}
@@ -36,6 +40,10 @@
                     </td>
                 </tr>
                 <tr>
+                    <th>Gaji Bulanan </th>
+                    <td>{{'Rp. '.number_format($fieldData['salary'],0,',','.') ?? "" }}</td>
+                </tr>
+                <tr>
                     <th>Tanggal Perhitungan Gaji </th>
                     <td>{{ $fieldData['salary_date'] ?? "" }}</td>
                 </tr>
@@ -51,8 +59,8 @@
             
             <div class="col-12 mt-3">
                 <div class="row">
-                    <p>
-                        <p>Surat Keputusan ini berlaku efektif sejak ditanda-tangani, pegawai yang dipromosikan akan menduduki posisi baru {{ $positionNew->name }} dalam perusahaan. Dan tunduk pada Undang-Undang Perusahaan Terbatas, Nomor 40 tahun 2007 yang mengikatkan kewenangan dan tanggung jawabnya.</p>
+                    <p class="text-justify">
+                        Surat Keputusan ini berlaku efektif sejak ditanda-tangani, pegawai yang dipromosikan akan menduduki posisi baru {{ $positionNew->name }} dalam perusahaan. Dan tunduk pada Undang-Undang Perusahaan Terbatas, Nomor 40 tahun 2007 yang mengikatkan kewenangan dan tanggung jawabnya.
                     </p>
                 </div>
             </div>
@@ -71,7 +79,7 @@
                 </tr>
             </table>
             <!-- Footer -->
-            <div class="text-left mb-">
+            <div class="text-left mt-4">
                 <p><strong>Jakarta, {{ $date ?? "" }}</strong></p>
             </div>
 
