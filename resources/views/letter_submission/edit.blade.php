@@ -10,6 +10,23 @@
 @endphp
 
 @section('content')
+<div class="col-md-12 p-3">
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+    
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+</div>
 <form action="{{ route('letter-submission.update',$letterSubmission) }}" method="POST">
     @csrf
     @method('put')
@@ -19,7 +36,7 @@
             <!-- Formulir -->
             <div class="col-md-12 mb-3">
                 <label for="surat">Surat <span class="text-danger">*</span></label>
-                <select class="form-control select2" name="letter_type_id" id="letter_type_id">
+                <select class="form-control select2" name="letter_type_id" id="letter_type_id" required>
                     <option value="" selected disabled>Pilih Surat</option>
                     @foreach($letterTypes as $letterType)
                         <option value="{{ $letterType->id }}" {{ @$letterSubmission->letter_type_id == $letterType->id ? 'selected' : '' }} data-template="{{ $letterType->template }}">{{ $letterType->name }}</option>
@@ -42,7 +59,7 @@
                         <h5 class="text-center"><strong>PERJANJIAN MAGANG</strong></h5>
                         <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
         
-                        <p>Pada Hari Senin, XX Agustus 2024 bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+                        <p>Pada Hari {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('l, d F Y') }}  bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
         
                         <!-- Table to display company and employee information -->
                         <table class="table table-borderless">
@@ -99,7 +116,7 @@
                             <select class="form-control selectOrCreate2" name="position_new_id">
                                 <option value="" selected disabled>Pilih </option>
                                 @foreach($positions as $position)
-                                    <option value="{{ $position->name }}" {{ (isset($fieldData['position_new_id']) && $fieldData['position_new_id'] == $position->name) ? 'selected' : '' }} >
+                                    <option value="{{ $position->id }}" {{ (isset($fieldData['position_new_id']) && $fieldData['position_new_id'] == $position->id) ? 'selected' : '' }} >
                                         {{ $position->name }}
                                     </option>
                                 @endforeach
@@ -205,7 +222,7 @@
                             <select class="form-control selectOrCreate2" name="position_new_id">
                                 <option value="" selected disabled>Pilih </option>
                                 @foreach($positions as $position)
-                                    <option value="{{ $position->name }}" {{ (isset($fieldData['position_new_id']) && $fieldData['position_new_id'] == $position->name) ? 'selected' : '' }} >
+                                    <option value="{{ $position->id }}" {{ (isset($fieldData['position_new_id']) && $fieldData['position_new_id'] == $position->id) ? 'selected' : '' }} >
                                         {{ $position->name }}
                                     </option>
                                 @endforeach
@@ -272,7 +289,7 @@
                         <select class="form-control" name="position_id" readonly>
                             <option value="" selected disabled>Pilih </option>
                             @foreach($positions as $position)
-                                <option value="{{ $position->name }}" {{ $user->last_position->position_id == $position->id ? 'selected' : '' }}>{{ $position->name }}</option>
+                                <option value="{{ $position->id }}" {{ $user->last_position->position_id == $position->id ? 'selected' : '' }}>{{ $position->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -333,7 +350,7 @@
                         <select class="form-control" name="position_old_id" id="position_old_id" required>
                             <option value="" selected disabled>Pilih </option>
                             @foreach($lastPositon as $position)
-                                <option value="{{ $position->name }}" {{ (isset($fieldData['position_old_id']) && $fieldData['position_old_id'] == $position->name) ? 'selected' : '' }} >{{ $position->name }}</option>
+                                <option value="{{ $position->id }}" {{ (isset($fieldData['position_old_id']) && $fieldData['position_old_id'] == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -345,7 +362,7 @@
                         <select class="form-control selectOrCreate2" name="position_new_id" id="position_id" required>
                             <option value="" selected disabled>Pilih </option>
                             @foreach($positions as $position)
-                                <option value="{{ $position->name }}" {{ (isset($fieldData['position_new_id']) && $fieldData['position_new_id'] == $position->name) ? 'selected' : '' }} >{{ $position->name }}</option>
+                                <option value="{{ $position->id }}" {{ (isset($fieldData['position_new_id']) && $fieldData['position_new_id'] == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -380,13 +397,14 @@
             </div>
             @endif
 
+            @if($template == "sk_pengantar_kerja_template")
             <!-- SK Pengantar Kerja Template -->
             <div class="form-row" id="sk_pengantar_kerja_template">
                 <div class="" >
                     <div class="card">
                         <div class="card-body">
                             <div class="col-12 justify-content-center align-items-center">
-                                <h6 class="text-center"><strong>SURAT KETERANGAN</strong></h6>
+                                <h4 class="text-center"><strong>SURAT KETERANGAN</strong></h4>
                                 <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
                             </div>
 
@@ -440,26 +458,50 @@
                             <div class="col-12">
                                 <p class="text-justify"> 
                                     Telah bekerja di perusahaan kami, {{ $company['name'] ?? "" }}, sejak tgl {{ $user->first_position ? \Carbon\Carbon::parse($user->first_position->start_date)->locale('id')->translatedFormat('d F Y') : "" }} 
-                                    s/d {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ $fieldData['position_old_id'] }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
+                                    s/d {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ $lastestPosition ? $lastestPosition->name : "" }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
                                 </p>
                             </div>
                             <!-- Jabatan Terakhir-->
+                            <div class="col-md-12 mb-3">
+                                <label for="salary_date">Nama Lengkap</label>
+                                <input type="text" class="form-control" value="{{ $user->name }}" readonly>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="salary_date">Alamat</label>
+                                <input type="text" class="form-control" value="{{ $user->address }}" readonly>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="salary_date">NIK</label>
+                                <input type="text" class="form-control" value="{{ $user->id_card }}" readonly>
+                            </div>
                             <div class="col-md-12 mb-3">
                                 <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
                                 <select class="form-control" name="position_old_id" id="position_old_id" required>
                                     <option value="" selected disabled>Pilih </option>
                                     @foreach($lastPositon as $position)
-                                        <option value="{{ $position->name }}" {{ (isset($fieldData['position_old_id']) && $fieldData['position_old_id'] == $position->name) ? 'selected' : '' }} >{{ $position->name }}</option>
+                                        <option value="{{ $position->id }}" {{ (isset($fieldData['position_old_id']) && $fieldData['position_old_id'] == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
                                     @endforeach
                                 </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="salary_date">Tanggal Mulai Kerja</label>
+                                <input type="date" name="start_date" class="form-control" value="{{ $user->first_position ? $user->first_position->start_date : '' }}" readonly>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="salary_date">Tanggal Terakhir Kerja</label>
+                                <input type="date" name="end_date"  class="form-control" value="{{ (isset($fieldData['end_date']) ) ? $fieldData['end_date'] : '' }}">
+                                <span class="text-danger">Kosongkan jika saat ini masih bekerja</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            @endif
 
+
+            @if($template == "sk_bekerja_resign_template")
             <!-- SK Bekerja Resign Template -->
-            <div class="form-row letter-template" id="sk_bekerja_resign_template" style="display:none;">
+            <div class="form-row" id="sk_bekerja_resign_template" style="display:none;">
                 <div class="card scrollable-div" id="printThis">
                     <div class="card-body">
                         <div class="text-center mb-4">
@@ -497,14 +539,47 @@
                             </table>
                         </div>
                 
-                        <p>Menyatakan dengan sesungguhnya bahwa mulai tanggal {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y') }} saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan P{{ $company['name'] ?? "" }}</p>
+                        <p>Menyatakan dengan sesungguhnya bahwa mulai tanggal {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y') }} saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan  {{ $company['name'] ?? "" }}</p>
                 
                         <p>Ucapan terima kasih yang sebesar-besarnya saya sampaikan atas kesempatan yang diberikan untuk bekerja di {{ $company['name'] ?? "" }}</p>
                 
                         <p>Melalui surat ini saya memohon maaf kepada segenap manajemen dan karyawan {{ $company['name'] ?? "" }} jika terdapat kesalahan yang saya perbuat selama bekerja. Besar harapan saya {{ $company['name'] ?? "" }} akan terus berkembang dan maju.</p>
                     </div>
                 </div>
+                <div class="card col-md-12" id="printThis">
+                    <div class="card-body col-md-12">
+                        <div class="col-md-12 mb-3">
+                            <label for="salary_date">Nama Lengkap</label>
+                            <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="salary_date">Alamat</label>
+                            <input type="text" class="form-control" value="{{ Auth::user()->address }}" readonly>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="salary_date">NIK</label>
+                            <input type="text" class="form-control" value="{{ Auth::user()->id_card }}" readonly>
+                        </div>
+                        @if(isset($user->last_position))
+                        <!-- Jabatan Terakhir-->
+                        <div class="col-md-12 mb-3">
+                            <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
+                            <select class="form-control" name="position_old_id" id="position_old_id" required>
+                                <option value="" selected disabled>Pilih </option>
+                                @foreach($lastPositon as $position)
+                                    <option value="{{ $position->id }}" {{ (isset($fieldData['position_old_id']) && $fieldData['position_old_id'] == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endif
+                        <div class="col-md-12 mb-3">
+                            <label for="salary_date">Tanggal Terakhir Bekerja <span class="text-danger">*</span></label>
+                            <input type="date" name="end_date" class="form-control" value="{{ (isset($fieldData['end_date'])) ? $fieldData['end_date'] : '' }}" required>
+                        </div>
+                    </div>
+                </div>
             </div>
+            @endif
         </div>
 
     </div>
@@ -521,16 +596,22 @@
                      </div>
                      @endif
                  </div>
-     
+
                  <!-- Tanda Tangan -->
                  <div class="col-md-6">
                      <label for="signature">Tanda Tangan <span class="text-danger">*</span></label>
-                     @if ($fieldData['signature_image'])
+                     @if ($fieldData['signature_image'] && $letterSubmission->status !== 0)
                          <div class="signature-container mt-2">
-                             <img src="{{ Storage::url($fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+                             <img src="{{ Storage::url($fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid">
                          </div>
                      @else
-                         <p class="text-muted">Tanda tangan belum tersedia.</p>
+                        <div class="col-md-6 mb-3">
+                            <div class="signature-container">
+                                <canvas id="signature-pad" class="signature-pad" width=400 height=200></canvas>
+                            </div>
+                            <button type="button" id="clear-signature" class="btn btn-warning mt-2">Hapus Tanda Tangan</button>
+                            <input type="hidden" name="signature_image" id="signature_image">
+                        </div>
                      @endif
                  </div>
              </div>
@@ -548,6 +629,46 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function() {
+         // Initialize Select2
+         $('.select2').select2({
+            placeholder: 'Pilih',
+            allowClear: true
+        });
+
+        // Setup Signature Pad
+        var canvas = document.getElementById('signature-pad');
+        var signaturePad = new SignaturePad(canvas, {
+            backgroundColor: 'rgba(0, 0, 0, 0)', // Transparent background
+        });
+
+        // Clear the signature
+        $('#clear-signature').click(function() {
+            signaturePad.clear();
+        });
+
+        // Handle form submission and ensure signature image is passed
+        $('form').on('submit', function(e) {
+            if (signaturePad.isEmpty()) {
+                // Prevent form submission
+                e.preventDefault();
+                // Display an alert using SweetAlert2
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Tanda Tangan Diperlukan',
+                    text: 'Harap tanda tangan sebelum mengajukan surat!',
+                });
+            } else {
+                // Convert signature to base64 and set it in the hidden input field
+                var signatureDataUrl = signaturePad.toDataURL(); // Get image as base64
+                $('#signature_image').val(signatureDataUrl); // Set hidden input value
+            }
+        });
+    });
+</script>
 <script>
     $(document).ready(function () {
         // Initialize Select2
@@ -639,6 +760,17 @@
     {
         min-height: 150px;
         height: auto;
+    }
+    .signature-container {
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        width: 400px;
+        height: 200px;
+    }
+
+    .signature-pad {
+        width: 100%;
+        height: 100%;
     }
 </style>
 @endsection

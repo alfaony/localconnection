@@ -140,10 +140,10 @@
                     <div class="letter-template">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="text-center"><strong>PERJANJIAN KERJA</strong></h5>
+                                <h5 class="text-center"><strong>PERJANJIAN MAGANG</strong></h5>
                                 <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
                 
-                                <p>Pada Hari Senin, XX Agustus 2024 bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+                                <p>Pada Hari {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, d F Y') }} bertempat di Jakarta, telah ditanda tangani perjanjian magang sama antara:</p>
                 
                                 <!-- Table to display company and employee information -->
                                 <table class="table table-borderless">
@@ -198,7 +198,7 @@
                                     <select class="form-control selectOrCreate2" name="position_new_id" id="position_id" required>
                                         <option value="" selected disabled>Pilih </option>
                                         @foreach($positions as $position)
-                                            <option value="{{ $position->name }}" >{{ $position->name }}</option>
+                                            <option value="{{ $position->id }}" >{{ $position->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -220,8 +220,8 @@
                                 </div>
 
                                 <div class="col-md-12 mb-3">
-                                    <label for="working_hours">Jam Kerja <span class="text-danger">*</span></label>
-                                    <input type="text" name="working_hours" class="form-control" placeholder="Masukkan jam kerja" value="{{ old('working_hours') }}" required>
+                                    <label for="work_location">Penempatan</label>
+                                    <input type="text" name="work_location" class="form-control" value="{{ old('work_location') ?? ''  }}" placeholder="Masukkan penempatan kerja">
                                 </div>
 
                                 <div class="col-md-12 mb-3">
@@ -259,7 +259,7 @@
                                 <h5 class="text-center"><strong>PERJANJIAN KERJA</strong></h5>
                                 <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
                 
-                                <p>Pada Hari Senin, XX Agustus 2024 bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+                                <p>Pada Hari {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, d F Y') }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
                 
                                 <!-- Table to display company and employee information -->
                                 <table class="table table-borderless">
@@ -309,13 +309,17 @@
                                     <label for="salary_date">Nama Lengkap</label>
                                     <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly>
                                 </div>
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Tanggal Bergabung di Perusahaan <span class="text-danger">*</span></label>
+                                    <input type="date" name="start_date" class="form-control" placeholder="Masukkan tanggal perhitungan gaji" value="{{ old('start_date') }}" required>
+                                </div>
                                 <!-- Jabatan -->
                                 <div class="col-md-12 mb-3">
                                     <label for="jabatan">Jabatan <span class="text-danger">*</span></label>
                                     <select class="form-control selectOrCreate2" name="position_new_id" id="position_id" required>
                                         <option value="" selected disabled>Pilih </option>
                                         @foreach($positions as $position)
-                                            <option value="{{ $position->name }}" >{{ $position->name }}</option>
+                                            <option value="{{ $position->id }}" >{{ $position->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -357,7 +361,7 @@
                     $('.selectOrCreate2').select2({
                         placeholder: 'Pilih',
                         allowClear: true,
-                        tags: true
+                        // tags: true
                     });
 
                     break;
@@ -390,7 +394,7 @@
                                         <select class="form-control" name="position_id" id="position_id" readonly>
                                             <option value="" selected disabled>Pilih </option>
                                             @foreach($lastPositon as $position)
-                                                <option value="{{ $position->name }}" {{ Auth::user()->last_position->position_id == $position->id ? 'selected' : '' }}>{{ $position->name }}</option>
+                                                <option value="{{ $position->id }}" {{ Auth::user()->last_position->position_id == $position->id ? 'selected' : '' }}>{{ $position->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -439,7 +443,7 @@
                     $('.selectOrCreate2').select2({
                         placeholder: 'Pilih',
                         allowClear: true,
-                        tags: true
+                        // tags: true
                     });
                     break;
                 case 'sk_tugas_template':
@@ -469,7 +473,7 @@
                                     <select class="form-control" name="position_old_id" id="position_old_id" required>
                                         <option value="" selected disabled>Pilih </option>
                                         @foreach($lastPositon as $positionlast)
-                                            <option value="{{ $positionlast->name }}" {{ $positionlast->id == Auth::user()->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
+                                            <option value="{{ $positionlast->id }}" {{ $positionlast->id == Auth::user()->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -481,7 +485,7 @@
                                     <select class="form-control selectOrCreate2" name="position_new_id" id="position_id" required>
                                         <option value="" selected disabled>Pilih </option>
                                         @foreach($positions as $position)
-                                            <option value="{{ $position->name }}" >{{ $position->name }}</option>
+                                            <option value="{{ $position->id }}" >{{ $position->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -527,7 +531,7 @@
                     $('.selectOrCreate2').select2({
                         placeholder: 'Pilih',
                         allowClear: true,
-                        tags: true
+                        // tags: true
                     });
 
                     break;
@@ -577,6 +581,38 @@
                                 <p>Melalui surat ini saya memohon maaf kepada segenap manajemen dan karyawan {{ $company['name'] ?? "" }} jika terdapat kesalahan yang saya perbuat selama bekerja. Besar harapan saya {{ $company['name'] ?? "" }} akan terus berkembang dan maju.</p>
                             </div>
                         </div>
+                        <div class="card" id="printThis">
+                            <div class="card-body">
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Nama Lengkap</label>
+                                    <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Alamat</label>
+                                    <input type="text" class="form-control" value="{{ Auth::user()->address }}" readonly>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">NIK</label>
+                                    <input type="text" class="form-control" value="{{ Auth::user()->id_card }}" readonly>
+                                </div>
+                                @if(isset(Auth::user()->last_position))
+                                <!-- Jabatan Terakhir-->
+                                <div class="col-md-12 mb-3">
+                                    <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="position_old_id" id="position_old_id" required>
+                                        <option value="" selected disabled>Pilih </option>
+                                        @foreach($lastPositon as $positionlast)
+                                            <option value="{{ $positionlast->id }}" {{ $positionlast->id == Auth::user()->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Tanggal Terakhir Bekerja <span class="text-danger">*</span></label>
+                                    <input type="date" name="end_date" class="form-control" value="{{ Auth::user()->last_position ? Auth::user()->last_position->end_date : '' }}" required>
+                                </div>
+                            </div>
+                        </div>
                     `;
 
                     $("#form_template").html(form);
@@ -591,7 +627,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="col-12 justify-content-center align-items-center">
-                                    <h6 class="text-center"><strong>SURAT KETERANGAN KERJA</strong></h6>
+                                    <h4 class="text-center"><strong>SURAT KETERANGAN KERJA</strong></h4>
                                     <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
                                 </div>
 
@@ -648,6 +684,18 @@
                                         s/d {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ Auth::user()->last_position_now ? Auth::user()->last_position_now->position->name : '' }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
                                     </p>
                                 </div>
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Nama Lengkap</label>
+                                    <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Alamat</label>
+                                    <input type="text" class="form-control" value="{{ Auth::user()->address }}" readonly>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">NIK</label>
+                                    <input type="text" class="form-control" value="{{ Auth::user()->id_card }}" readonly>
+                                </div>
                                 @if(isset(Auth::user()->last_position))
                                 <!-- Jabatan Terakhir-->
                                 <div class="col-md-12 mb-3">
@@ -655,9 +703,17 @@
                                     <select class="form-control" name="position_old_id" id="position_old_id" required>
                                         <option value="" selected disabled>Pilih </option>
                                         @foreach($lastPositon as $positionlast)
-                                            <option value="{{ $positionlast->name }}" {{ $positionlast->id == Auth::user()->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
+                                            <option value="{{ $positionlast->id }}" {{ $positionlast->id == Auth::user()->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
                                         @endforeach
                                     </select>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Tanggal Mulai Kerja</label>
+                                    <input type="date" name="start_date" class="form-control" value="{{ Auth::user()->first_position ? Auth::user()->first_position->start_date : '' }}" readonly>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Tanggal Terakhir Kerja</label>
+                                    <input type="date" name="end_date" class="form-control" value="{{ (isset($fieldData['end_date']) ) ? $fieldData['end_date'] : '' }}">
                                 </div>
                                 @endif
                             </div>

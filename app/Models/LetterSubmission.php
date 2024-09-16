@@ -45,6 +45,20 @@ class LetterSubmission extends Model
         });
     }
 
+    public function getIsEditableAttribute()
+    {
+        if (is_null($this->status) || $this->status == true) {
+            return true;
+        }
+        
+        // Check if status is 0/false and the user_id matches the current authenticated user
+        if ($this->status == 0 && $this->user_id == Auth::user()->id) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function getConvertFieldAttribute()
     {
         return json_decode($this->field, true);

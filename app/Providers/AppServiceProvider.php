@@ -67,6 +67,7 @@ class AppServiceProvider extends ServiceProvider
             $managementCompanyMenu = 
             [
                 'letter_submissions',
+                'positions',
                 'employees',
                 'users',
                 'companies',
@@ -332,6 +333,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Pengajuan Surat',
                     'route' => 'letter-submission.index',
                     'icon' => 'fa fa-paper-plane',
+                ],
+
+                'positions' => [
+                    'text' => 'Daftar Posisi',
+                    'route' => 'position.index',
+                    'icon' => 'fa fa-list',
                 ],
             ];
 
