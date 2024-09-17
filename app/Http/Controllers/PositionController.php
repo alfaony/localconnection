@@ -11,7 +11,7 @@ class PositionController extends Controller
 {
     public function index()
     {
-        $positions = Position::where('company_id',Auth::user()->company_id)->paginate(10);
+        $positions = Position::where('company_id',Auth::user()->company_id)->orderBy('created_at','desc')->paginate(10);
         return view('position.index', compact('positions'));
     }
 
@@ -19,10 +19,13 @@ class PositionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'company_id' => 'required|uuid|exists:companies,id',
         ]);
 
-        Position::create($request->all());
+        $position = new Position();
+        $position->name = $request->name;
+        $position->company_id = Auth::user()->company_id;
+        $position->save();
+
         return redirect()->route('position.index')->with('success', 'Position created successfully.');
     }
 
