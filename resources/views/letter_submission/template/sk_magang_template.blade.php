@@ -14,7 +14,7 @@
             </div>
 
             <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
-                <p class="text-justify">Pada Hari {{ $dateWithDay }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+                <p class="text-justify">Pada Hari {{ $dateWithDay }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja magang antara:</p>
             </div>
 
             <div class="col-12 mt-2">
