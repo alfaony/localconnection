@@ -28,15 +28,23 @@ class UpdateProductPrice extends Command
             foreach ($data as $row) {
                 $productName = $row[0];
                 $companyName = $row[1];
-                $priceBuy = $row[2];
-                $priceSell = $row[3];
-
+                $priceBuy = $row[3];
+                $priceSell = $row[4];
+                
                 $company = Company::where('name',$companyName)->first();
 
-                $product = Product::byCompany($company->id)->where('name', 'LIKE', "%{$productName}%")->first();
-                $product->price_buy = $priceBuy;
-                $product->price_sell = $priceSell;
-                $product->save();
+                if ($company) 
+                {
+                    $product = Product::byCompany($company->id)->where('name', 'LIKE', "%{$productName}%")->first();
+                    if ($product) {
+                        $product->price_buy = $priceBuy;
+                        $product->price_sell = $priceSell;
+                        $product->save();
+                    }else
+                    {
+                        $this->error("Product {$productName} not found.");
+                    }
+                }
             }
         });
 
