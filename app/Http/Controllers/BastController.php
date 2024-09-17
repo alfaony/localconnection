@@ -35,7 +35,8 @@ class BastController extends Controller
         $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $nomorBast = $this->bastNumber()['result'];
-        return view('bast.createOrEdit',compact('nomorBast','userCreate','project'));
+        $signature = config('custom.customerSignature');
+        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','signature'));
     }
 
     /**
@@ -57,6 +58,7 @@ class BastController extends Controller
         $bast->project_id = $request->input('project');
         $bast->number_purchase = $request->input('number_purchase');
         $bast->pic = $request->input('pic');
+        $bast->customer_signature = $request->input('customer_signature');
 
         $bast->user_created_id = Auth::user()->id;
         $bast->user_updated_id = Auth::user()->id;
@@ -82,8 +84,9 @@ class BastController extends Controller
         $bast = Bast::where('slug',$slug)->first();
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
         $nomorBast = $bast->number_result ?? '';
+        $signature = config('custom.customerSignature');
 
-        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','bast'));
+        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','bast','signature'));
     }
 
     /**
@@ -121,6 +124,7 @@ class BastController extends Controller
         $bast->project_id = $request->input('project');
         $bast->number_purchase = $request->input('number_purchase');
         $bast->pic = $request->input('pic');
+        $bast->customer_signature = $request->input('customer_signature');
 
         $bast->user_updated_id = Auth::user()->id;
 
