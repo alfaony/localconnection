@@ -600,7 +600,8 @@
                  <!-- Tanda Tangan -->
                  <div class="col-md-6">
                      <label for="signature">Tanda Tangan <span class="text-danger">*</span></label>
-                     @if ($fieldData['signature_image'] && $letterSubmission->status !== 0)
+                     {{--
+                     @if (($fieldData['signature_image'] && $letterSubmission->status !== 0) || $letterSubmission->is_approve !== 0)
                          <div class="signature-container mt-2">
                              <img src="{{ Storage::url($fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid">
                          </div>
@@ -613,6 +614,41 @@
                             <input type="hidden" name="signature_image" id="signature_image">
                         </div>
                      @endif
+                     --}}
+                     @if($letterSubmission->is_approved === null)
+                        @if(isset($letterSubmission->status) && $letterSubmission->status == 0)
+                            <!-- Display signature form when status is "Need Signature" -->
+                            <div class="col-md-6 mb-3">
+                                <div class="signature-container">
+                                    <canvas id="signature-pad" class="signature-pad" width=400 height=200></canvas>
+                                </div>
+                                <button type="button" id="clear-signature" class="btn btn-warning mt-2">Hapus Tanda Tangan</button>
+                                <input type="hidden" name="signature_image" id="signature_image">
+                            </div>
+                        @else
+                            <!-- Pending Status -->
+                            <div class="signature-container mt-2">
+                                <img src="{{ Storage::url($fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid">
+                            </div>
+                        @endif
+                    @elseif(isset($letterSubmission->is_approved) && $letterSubmission->is_approved)
+                        <!-- Display Approved and previous signature -->
+                        @if(isset($fieldData['signature_image']))
+                            <div class="signature-container mt-2">
+                                <img src="{{ Storage::url($fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid">
+                            </div>
+                        @endif
+                    @else
+                        <!-- Display Rejected and show signature form again -->
+                        <div class="col-md-6 mb-3">
+                            <div class="signature-container">
+                                <canvas id="signature-pad" class="signature-pad" width=400 height=200></canvas>
+                            </div>
+                            <button type="button" id="clear-signature" class="btn btn-warning mt-2">Hapus Tanda Tangan</button>
+                            <input type="hidden" name="signature_image" id="signature_image">
+                        </div>
+                    @endif
+
                  </div>
              </div>
         </div>
