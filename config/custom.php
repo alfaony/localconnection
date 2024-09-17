@@ -71,4 +71,9 @@ return
          'sunday' => 'Minggu',
        ],
 
+       'customerSignature'=>[
+        'pic' => 'PIC',
+        'director' => 'Direktur',
+       ],
+
 ];

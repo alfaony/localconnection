@@ -66,6 +66,16 @@
                     <label for="penanggungJawab" class="form-label">Penanggung Jawab</label>
                     <input type="text" class="form-control" name="pic" id="penanggungJawab" placeholder="Susi Susanti"  value="{{ old('pic') ?? @$bast->pic  }}" required>
                 </div>
+                <div class="form-group">
+                    <label for="signature">Bertanda Tangan</label>
+                    <select class="form-control select2" name="customer_signature" id="signature" required>
+                        <option value="" disabled selected>Pilih</option>
+                        @foreach($signature as $a => $value)
+                        <option value="{{ $a }}" {{ @$bast->customer_signature == $a ? 'selected' : '' }}>{{ $value }}</option>
+                        @endforeach
+                        <!-- Other options can be added here -->
+                    </select>
+                </div>
                 <hr>
                 <div class="form-group mt-4">
                     <button type="submit" id="saveButtonId" class="btn btn-primary">Simpan</button>
