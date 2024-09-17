@@ -714,6 +714,7 @@
                                 <div class="col-md-12 mb-3">
                                     <label for="salary_date">Tanggal Terakhir Kerja</label>
                                     <input type="date" name="end_date" class="form-control" value="{{ (isset($fieldData['end_date']) ) ? $fieldData['end_date'] : '' }}">
+                                    <span class="text-danger">Kosongkan jika saat ini masih bekerja</span>
                                 </div>
                                 @endif
                             </div>
