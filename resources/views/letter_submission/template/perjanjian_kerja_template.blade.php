@@ -163,7 +163,7 @@
                 <!-- Signature and date -->
                 <div class="row mt-4">
                     <div class="col-6 text-center">
-                        <p>Jakarta, {{ $date ?? "" }}</p>
+                        <p>Jakarta, {{ isset($fieldData['start_date']) ? \Carbon\Carbon::parse($fieldData['start_date'])->locale('id')->translatedFormat('d F Y') : $date }}</p>
                     </div>
                 </div>
                 <div class="row">
@@ -253,7 +253,7 @@
             </table>
             <!-- Footer -->
             <div class="text-left mt-4">
-                <p><strong>Jakarta, {{ $date ?? "" }}</strong></p>
+                <p><strong>Jakarta, {{ isset($fieldData['start_date']) ? \Carbon\Carbon::parse($fieldData['start_date'])->locale('id')->translatedFormat('l, d F Y') : $date }}</strong></p>
             </div>
 
             <!-- KTP and Signature Section -->
