@@ -48,6 +48,17 @@
                 </div>
                 <div class="col-12 col-md-auto">
                     <div class="form-group">
+                        @php
+                            $order = request('sort', 'desc');
+                        @endphp
+                            <select name="sort" class="form-control">
+                                <option value="asc" {{ $order == 'asc' ? 'selected' : '' }} >A - Z Created By</option>
+                                <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
+                            </select>
+                    </div>
+                </div>
+                <div class="col-12 col-md-auto">
+                    <div class="form-group">
                         <label>&nbsp;</label>
                         <div>
                             <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Search</button>

@@ -41,6 +41,7 @@ class LetterSubmissionController extends Controller
         $letterTypes = LetterType::get();
         $user = $request->input('user');
         $letterType = $request->input('letterType');
+        $sort = $request->input('sort');
 
 
         $query = LetterSubmission::query();
@@ -55,7 +56,7 @@ class LetterSubmissionController extends Controller
             $query->where('letter_type_id',$letterType);
         }
         
-        $letterSubmissions = $query->byRole()->orderBy('created_at','desc')->paginate(10);
+        $letterSubmissions = $query->byRole()->orderBy('updated_at',$sort ?? 'desc')->paginate(10);
         return view('letter_submission.index', compact('letterSubmissions','users','letterTypes'));
     }
     /**
