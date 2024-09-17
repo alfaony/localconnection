@@ -57,7 +57,7 @@
         }
         .button {
             display: inline-block;
-            background-color: #28a745;
+            background-color: #dc3545;
             color: white !important;
             text-decoration: none;
             padding: 10px 20px;
