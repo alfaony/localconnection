@@ -170,7 +170,7 @@
                         <h5 class="text-center"><strong>PERJANJIAN KERJA</strong></h5>
                         <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
         
-                        <p>Pada Hari Senin, XX Agustus 2024 bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+                        <p>Pada Hari {{ isset($fieldData['start_date']) ? \Carbon\Carbon::parse($fieldData['start_date'])->locale('id')->translatedFormat('l, d F Y') : $dateWithDay }} bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
         
                         <!-- Table to display company and employee information -->
                         <table class="table table-borderless">
@@ -214,6 +214,10 @@
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Nama Lengkap</label>
                             <input type="text" class="form-control" value="{{ $user->name }}" readonly>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="salary_date">Tanggal Bergabung di Perusahaan <span class="text-danger">*</span></label>
+                            <input type="date" name="start_date" class="form-control" placeholder="Masukkan tanggal perhitungan gaji" value="{{ isset($fieldData['start_date']) ? $fieldData['start_date'] : '' }}" required>
                         </div>
                         @if(isset($fieldData['position_new_id']))
                         <!-- Jabatan -->
@@ -404,7 +408,7 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="col-12 justify-content-center align-items-center">
-                                <h4 class="text-center"><strong>SURAT KETERANGAN</strong></h4>
+                                <h4 class="text-center"><strong>SURAT KETERANGAN KERJA</strong></h4>
                                 <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
                             </div>
 
