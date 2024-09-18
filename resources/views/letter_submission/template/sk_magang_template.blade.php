@@ -137,7 +137,7 @@
                     <div class="col">
                         <h6><strong>PASAL 6. JANGKA WAKTU</strong></h6>
                         <p class="text-justify">
-                            PARA PIHAK sepakat perjanjian kerja magang ni berlaku selama 3 bulan dan dapat diperpanjang sesuai kesepakatan kedua belah pihak. Perjanjian ini berlaku hingga salah satu pihak mengakhirinya.
+                            PARA PIHAK sepakat perjanjian kerja magang ini berlaku selama 3 bulan dan dapat diperpanjang sesuai kesepakatan kedua belah pihak. Perjanjian ini berlaku hingga salah satu pihak mengakhirinya.
                         </p>
                     </div>
                 </div>

@@ -84,16 +84,22 @@
             </div>
 
             <!-- KTP and Signature Section -->
-            <div class="row photo-ktp">
-                <div class="col">
+            <div class="d-flex justify-content-start">
+                <div class="coltext-center">
+                    @if($letterSubmission->is_approved == 1)
                     <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
-                </div>
-            </div>
-            <div class="row">
-                <div class="col">
+                    @else
+                    <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                    @endif
                     <p><strong>{{ $company['director'] ?? "" }}</strong></p>
                 </div>
-                <div class="col">
+                <div class="col text-center">
+                    @if($letterSubmission->status !== 0)
+                    <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                        alt="Signature" style="height:150px">
+                    @else
+                    <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                    @endif
                     <p><strong>{{ $letterSubmission->user->name ?? "" }}</strong></p>
                 </div>
             </div>
