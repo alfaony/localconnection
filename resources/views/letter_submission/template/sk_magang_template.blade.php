@@ -137,7 +137,7 @@
                     <div class="col">
                         <h6><strong>PASAL 6. JANGKA WAKTU</strong></h6>
                         <p class="text-justify">
-                            PARA PIHAK sepakat perjanjian kerja magang ni berlaku selama 3 bulan dan dapat diperpanjang sesuai kesepakatan kedua belah pihak. Perjanjian ini berlaku hingga salah satu pihak mengakhirinya.
+                            PARA PIHAK sepakat perjanjian kerja magang ini berlaku selama 3 bulan dan dapat diperpanjang sesuai kesepakatan kedua belah pihak. Perjanjian ini berlaku hingga salah satu pihak mengakhirinya.
                         </p>
                     </div>
                 </div>
@@ -239,24 +239,23 @@
             </div>
     
             <!-- KTP and Signature Section -->
-            <div class="row">
-                <div class="col-6 text-center">
+            <div class="d-flex justify-content-start">
+                <div class="coltext-center">
                     @if($letterSubmission->is_approved == 1)
                     <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
                     @else
                     <div style="height: 150px;"></div> <!-- Empty space if no signature -->
                     @endif
-                    <p class="sparator">_________________________</p>
-                    <p>{{ $company['director'] ?? "" }}</p>
+                    <p><strong>{{ $company['director'] ?? "" }}</strong></p>
                 </div>
-                <div class="col-6 text-center">
+                <div class="col text-center">
                     @if($letterSubmission->status !== 0)
-                    <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid" alt="Signature" style="height:150px">
+                    <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                        alt="Signature" style="height:150px">
                     @else
                     <div style="height: 150px;"></div> <!-- Empty space if no signature -->
                     @endif
-                    <p class="sparator">_________________________</p>
-                    <p>{{ $letterSubmission->user->name }}</p>
+                    <p><strong>{{ $letterSubmission->user->name ?? "" }}</strong></p>
                 </div>
             </div>
     
