@@ -124,13 +124,13 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('agreement-letter', AgreementLetterController::class)->except(['show']);
 
   Route::get('bast/createsuggest/{slug}', [BastController::class, 'createsuggest'])->name('bast.createsuggest');
-  Route::get('bast/dataTableJsonWorkOrderWithoutReportProject', [BastController::class, 'dataTableJsonWorkOrderWithoutReportProject'])->name('bast.dataTableJsonWorkOrderWithoutReportProject');
   Route::get('bast/dataTableJsonWorkOrderWithoutBast', [BastController::class, 'dataTableJsonWorkOrderWithoutBast'])->name('bast.dataTableJsonWorkOrderWithoutBast');
   Route::get('bast/downloadPdf/pdf/{slug}',[BastController::class,'downloadPdf'])->name('bast.download.pdf');
   Route::get('bast/dataTableJson', [BastController::class, 'dataTableJson'])->name('bast.datatable');
   Route::resource('bast', BastController::class)->except(['show']);
 
   Route::get('report-project/createsuggest/{slug}', [ReportProjectController::class, 'createsuggest'])->name('report-project.createsuggest');
+  Route::get('report-project/dataTableJsonWorkOrderWithoutReportProject', [ReportProjectController::class, 'dataTableJsonWorkOrderWithoutReportProject'])->name('report-project.dataTableJsonWorkOrderWithoutReportProject');
   Route::delete('report-project/destroyDetail/{ReportProjectDetail}',[ReportProjectController::class,'destroyDetail'])->name('report-project.destroy.detail');
   Route::get('report-project/datatable', [ReportProjectController::class, 'dataTableJson'])->name('report-project.datatable');
   Route::resource('report-project', ReportProjectController::class)->except(['show']);

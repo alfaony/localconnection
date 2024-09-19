@@ -16,8 +16,12 @@
         <div class="alert alert-success mt-3">BAST Berhasil Terhapus</div>
     @endif
     @if(Session::get('datanotfound'))
-        <div class="alert alert-danger mt-3">Data Tidak Ditemukan</div>
+        <div class="alert alert-danger mt-3">SPK Tidak Ditemukan</div>
     @endif
+    @if(Session::get('dataprojectnotfound'))
+        <div class="alert alert-danger mt-3">Proyek Tidak Ditemukan</div>
+    @endif
+    
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -46,13 +50,6 @@
             </a>
         </li>
         @endcanAccess
-        @canAccess('dataTableJsonWorkOrderWithoutReportProject','basts')
-        <li class="nav-item">
-            <a class="nav-link" id="spk-tab" data-toggle="tab" href="#spk_report" role="tab" aria-controls="spk" aria-selected="false">
-                <i class="fa fa-clipboard-list"></i> SPK ( Belum Terbuat Laporan )
-            </a>
-        </li>
-        @endcanAccess
     </ul>
 
     <!-- Tab panes -->
@@ -76,6 +73,7 @@
                                 <tr>
                                     <th>Nomor BAST</th>
                                     <th>Tanggal</th>
+                                    <th>Nomor SPK</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -115,33 +113,6 @@
             </div>
         </div>
         @endcanAccess
-
-        @canAccess('dataTableJsonWorkOrderWithoutReportProject','basts')
-        <!-- SPK Tab -->
-        <div class="tab-pane fade" id="spk_report" role="tabpanel" aria-labelledby="spk-tab">
-            <div class="card mt-3 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title">List SPK</h3>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                    <table class="table table-bordered" id="dataTableJsonWorkOrderWithoutReportProject" style="width:100%">
-                            <thead>
-                                <tr>
-                                    <th>Nomor SPK</th>
-                                    <th>Total Anggaran</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            </tbody>
-                                <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endcanAccess
     </div>
 </div>
 
@@ -165,8 +136,9 @@
                 dataSrc: 'data'
             },
             columns: [
-                {data: 'number_result', name: 'number_result', orderable: true},
+                {data: 'number_result', name: 'basts.number_result', orderable: true},
                 {data: 'date', name: 'date', orderable: true},
+                {data: 'work_order.number_result', name: 'work_order', orderable: false, searchable: false}, // Fetch work_order number_result as work_order_number
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
             order: [[0, 'desc']],
@@ -188,26 +160,6 @@
             serverSide: true,
             ajax: {
                 url: '{{ route("bast.dataTableJsonWorkOrderWithoutBast")}}',
-                type: 'GET',
-                dataSrc: 'data'
-            },
-            columns: [
-                {data: 'number_result', name: 'number_result', orderable: false},
-                {data: 'total', name: 'total', orderable: false},
-                {data: 'action', name: 'action', orderable: false, searchable: false},
-            ],
-        });
-    });
-</script>
-
-<script type="text/javascript">
-    $(document).ready(function() {
-        var table = $('#dataTableJsonWorkOrderWithoutReportProject').DataTable({
-            responsive: true,
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: '{{ route("bast.dataTableJsonWorkOrderWithoutReportProject")}}',
                 type: 'GET',
                 dataSrc: 'data'
             },

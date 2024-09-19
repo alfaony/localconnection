@@ -21,8 +21,8 @@ class PermissionForMenuMonitoringBast extends Seeder
     public function run()
     {   
 
-        $methodBast = ['createsuggest','dataTableJsonWorkOrderWithoutReportProject','dataTableJsonWorkOrderWithoutBast'];
-        $methodReportProject = ['createsuggest'];
+        $methodBast = ['createsuggest','dataTableJsonWorkOrderWithoutBast'];
+        $methodReportProject = ['createsuggest','dataTableJsonWorkOrderWithoutReportProject'];
        
         $roles = Role::all();
 
