@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 use App\Http\Requests\ReportProjectRequest;
 
@@ -41,6 +42,11 @@ class ReportProjectController extends Controller
         if(!$selectedWorkOrder)
         {
             return redirect()->to(route('report-project.index'))->with('datanotfound',true);
+        }
+
+        if(!$selectedWorkOrder->project)
+        {
+            return redirect()->to(route('bast.index'))->with('dataprojectnotfound',true);
         }
 
 
@@ -283,7 +289,7 @@ class ReportProjectController extends Controller
     {
         // Fetch data for the DataTable
         $query = ReportProject::query();
-        $query->byCompany(Auth::user()->company_id);
+        $query->byCompany(Auth::user()->company_id)->with('workOrder');
 
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['date','number_result', 'slug'];
@@ -328,6 +334,45 @@ class ReportProjectController extends Controller
         }
 
         return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+    }
+
+    public function dataTableJsonWorkOrderWithoutReportProject()
+    {
+        // Fetch data for the DataTable
+        $query = WorkOrder::query();
+        $query->byCompany(Auth::user()->company_id); // Filter by the company of the logged-in user
+        $query->whereHas('project'); // Only fetch WorkOrders with an associated ReportProject
+        $query->doesntHave('reportProject'); // Only fetch WorkOrders without an associated ReportProject
+
+        // Map column indexes to column names (modify these based on your actual database structure)
+        $columnNames = ['date', 'work_order_number', 'description'];
+
+        // Define searchable columns
+        $searchable = [
+            0 => 'work_order_number',
+            1 => 'date',
+        ];
+
+        // Define action buttons
+        $actionButtons = [];
+        // Conditionally add buttons based on permissions
+        if (Access::can('createsuggest', 'report_projects')) {
+            $actionButtons[] = [
+                'name' => 'Membuat Laporan Proyek',
+                'route' => 'report-project.createsuggest',
+                'id' => true,
+            ];
+        }
+
+        $response = datatablesFormater($query, $columnNames, $actionButtons, $searchable, 4); // assuming bootstrap version 4
+
+        $data = $response->getData();
+        foreach ($data->data as $index => $item) 
+        {
+            $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
+        }
+
+        return response()->json($data);
     }
 
     private function reportProjectNumber()

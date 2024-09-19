@@ -36,6 +36,12 @@ class BastController extends Controller
         {
             return redirect()->to(route('bast.index'))->with('datanotfound',true);
         }
+
+        if(!$selectedWorkOrder->project)
+        {
+            return redirect()->to(route('bast.index'))->with('dataprojectnotfound',true);
+        }
+
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')->where('id',$selectedWorkOrder->id)->orderBy('created_at','desc')->get();
         $project = Project::byCompany(Auth::user()->company_id)->where('id',$selectedWorkOrder->project->id)->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
@@ -171,11 +177,11 @@ class BastController extends Controller
     public function dataTableJson()
     {
         // Fetch data for the DataTable
-        $query = Bast::query();
-        $query->byCompany(Auth::user()->company_id);
+        $query = Bast::with('workOrder')->byCompany(Auth::user()->company_id);
+
 
         // Map column indexes to column names (this may vary based on your table structure)
-        $columnNames = ['date','number_result', 'slug'];
+        $columnNames = ['date', 'number_result', 'slug'];
 
         // Define searchable columns
         $searchable = 
@@ -228,45 +234,6 @@ class BastController extends Controller
         }
 
         return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
-    }
-
-    public function dataTableJsonWorkOrderWithoutReportProject()
-    {
-        // Fetch data for the DataTable
-        $query = WorkOrder::query();
-        $query->byCompany(Auth::user()->company_id); // Filter by the company of the logged-in user
-        $query->whereHas('project'); // Only fetch WorkOrders with an associated ReportProject
-        $query->doesntHave('reportProject'); // Only fetch WorkOrders without an associated ReportProject
-
-        // Map column indexes to column names (modify these based on your actual database structure)
-        $columnNames = ['date', 'work_order_number', 'description'];
-
-        // Define searchable columns
-        $searchable = [
-            0 => 'work_order_number',
-            1 => 'date',
-        ];
-
-        // Define action buttons
-        $actionButtons = [];
-        // Conditionally add buttons based on permissions
-        if (Access::can('createsuggest', 'report_projects')) {
-            $actionButtons[] = [
-                'name' => 'Membuat Laporan Proyek',
-                'route' => 'report-project.createsuggest',
-                'id' => true,
-            ];
-        }
-
-        $response = datatablesFormater($query, $columnNames, $actionButtons, $searchable, 4); // assuming bootstrap version 4
-
-        $data = $response->getData();
-        foreach ($data->data as $index => $item) 
-        {
-            $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
-        }
-
-        return response()->json($data);
     }
 
     public function dataTableJsonWorkOrderWithoutBast()
