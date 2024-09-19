@@ -247,11 +247,11 @@ class BastController extends Controller
         // $query->doesntHave('bast'); // Only fetch SPKs without an associated Bast
 
         // Map column indexes to column names (modify these based on your actual database structure)
-        $columnNames = ['date', 'spk_number', 'project_name'];
+        $columnNames = ['date', 'number_result', 'project_name'];
 
         // Define searchable columns
         $searchable = [
-            0 => 'spk_number',
+            0 => 'number_result',
             1 => 'date',
         ];
 

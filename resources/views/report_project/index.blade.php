@@ -31,90 +31,90 @@
         </div>
     @endif
 </div>
-<div class="container">    
-    <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
-        @canAccess('dataTableJson','report_projects')
-        <li class="nav-item">
-            <a class="nav-link active" id="bast-tab" data-toggle="tab" href="#bast" role="tab" aria-controls="bast" aria-selected="true">
-                <i class="fas fa-file-alt"></i> Laporan Proyek
-            </a>
-        </li>
-        @endcanAccess
 
-        @canAccess('dataTableJsonWorkOrderWithoutReportProject','report_projects')
-        <li class="nav-item">
-            <a class="nav-link" id="spk-tab" data-toggle="tab" href="#spk_report" role="tab" aria-controls="spk_report" aria-selected="false">
-                <i class="fa fa-clipboard-list"></i> SPK (Belum Terbuat Laporan)
-            </a>
-        </li>
-        @endcanAccess
-    </ul>
+<ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+    @canAccess('dataTableJson','report_projects')
+    <li class="nav-item">
+        <a class="nav-link active" id="bast-tab" data-toggle="tab" href="#bast" role="tab" aria-controls="bast" aria-selected="true">
+            <i class="fas fa-file-alt"></i> Laporan Proyek
+        </a>
+    </li>
+    @endcanAccess
 
-     <!-- Tab panes -->
-     <div class="tab-content">
-        <!-- BAST Tab -->
-        @canAccess('dataTableJson','basts')
-        <div class="tab-pane fade show active" id="bast" role="tabpanel" aria-labelledby="bast-tab">
-            <div class="card mt-3 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title">Laporan Proyek</h3>
-                    @canAccess('create','report_projects')
-                    <button class="btn btn-light float-right" id="btnCreateReportProject">
-                        <i class="fas fa-plus-circle"></i>
-                        Tambah Laporan Proyek
-                    </button>
-                    @endcanAccess
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                         <!-- Tabel Pembelian -->
-                        <table class="table table-bordered" id="datatableLaporanProject">
-                            <thead>
-                                <tr>
-                                    <th>Nomor Laporan Proyek</th>
-                                    <th>Tanggal</th>
-                                    <th>SPK</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
-                            </tbody>
-                        </table>
-                    </div>
+    @canAccess('dataTableJsonWorkOrderWithoutReportProject','report_projects')
+    <li class="nav-item">
+        <a class="nav-link" id="spk-tab" data-toggle="tab" href="#spk_report" role="tab" aria-controls="spk_report" aria-selected="false">
+            <i class="fa fa-clipboard-list"></i> SPK (Belum Terbuat Laporan)
+        </a>
+    </li>
+    @endcanAccess
+</ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+    <!-- BAST Tab -->
+    @canAccess('dataTableJson','basts')
+    <div class="tab-pane fade show active" id="bast" role="tabpanel" aria-labelledby="bast-tab">
+        <div class="card mt-3 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title">Laporan Proyek</h3>
+                @canAccess('create','report_projects')
+                <button class="btn btn-light float-right" id="btnCreateReportProject">
+                    <i class="fas fa-plus-circle"></i>
+                    Tambah Laporan Proyek
+                </button>
+                @endcanAccess
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                        <!-- Tabel Pembelian -->
+                    <table class="table table-bordered" id="datatableLaporanProject">
+                        <thead>
+                            <tr>
+                                <th>Nomor Laporan Proyek</th>
+                                <th>Tanggal</th>
+                                <th>SPK</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        @endcanAccess
-
-        @canAccess('dataTableJsonWorkOrderWithoutReportProject','report_projects')
-        <!-- SPK Tab -->
-        <div class="tab-pane fade" id="spk_report" role="tabpanel" aria-labelledby="spk-tab">
-            <div class="card mt-3 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title">List SPK</h3>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                    <table class="table table-bordered" id="dataTableJsonWorkOrderWithoutReportProject" style="width:100%">
-                            <thead>
-                                <tr>
-                                    <th>Nomor SPK</th>
-                                    <th>Total Anggaran</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endcanAccess
     </div>
+    @endcanAccess
+
+    @canAccess('dataTableJsonWorkOrderWithoutReportProject','report_projects')
+    <!-- SPK Tab -->
+    <div class="tab-pane fade" id="spk_report" role="tabpanel" aria-labelledby="spk-tab">
+        <div class="card mt-3 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title">List SPK</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                <table class="table table-bordered" id="dataTableJsonWorkOrderWithoutReportProject" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Nomor SPK</th>
+                                <th>Total Anggaran</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcanAccess
 </div>
+
 
 @stop
 @section('js')
