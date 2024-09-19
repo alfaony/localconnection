@@ -9,6 +9,7 @@ use App\Schemas\ParamSchema;
 use Illuminate\Support\Facades\DB;
 use App\Models\DailyTaskStatusRecord;
 use App\Models\DailyTaskMessage;
+use Illuminate\Support\Facades\Log;
 
 use Carbon\Carbon;
 
@@ -55,10 +56,13 @@ class UpdateDailyTasks extends Command
                 }
             });
             
-            return "Points updated and tasks marked as complete successfully!";
+            return $this->info("Points updated and tasks marked as complete successfully!");
         } catch (\Exception $e) {
             // Jika ada error, lakukan rollback otomatis
-            return "Failed to update points: " . $e->getMessage();
+            DB::rollBack();
+            Log::error($e->getMessage());
+
+            return $this->error("An error occured while updating points and tasks status");
         }
     }
 
