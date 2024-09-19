@@ -53,7 +53,7 @@ class BastController extends Controller
 
     public function create(Request $request)
     {
-        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')->orderBy('created_at','desc')->get();
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')->whereHas('reportProject')->orderBy('created_at','desc')->get();
         $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $nomorBast = $this->bastNumber()['result'];
@@ -107,6 +107,7 @@ class BastController extends Controller
         $nomorBast = $bast->number_result ?? '';
         $signature = config('custom.customerSignature');
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')
+        ->whereHas('reportProject')
         ->orWhere('id', $bast->work_order_id)
         ->orderBy('created_at','desc')->get();
 
