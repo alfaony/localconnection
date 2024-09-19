@@ -45,23 +45,21 @@
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label>Pilih SPK</label>
-                        {{-- 
-                        <select class="form-control select2" name="work_order" required>
+                        <select class="form-control select2" name="work_order" id="chooseSpk" required>
                             <option value="" disabled selected>Pilih SPK</option>
                             @foreach($workOrder as $a)
                             <option value="{{ $a->id }}" {{  @$reportProject->work_order_id == $a->id ? 'selected'  : ''}} >{{ $a->number_result }}</option>
                             @endforeach
                         </select>
-                        --}}
                         <input type="hidden" id="work_order_id" value="{{ @$reportProject->work_order_id }}">
-                        <select class="form-control" id="work_order" name="work_order" required></select>
+                        <!-- <select class="form-control" id="work_order" name="work_order" required></select> -->
                     </div>
                 </div>
         
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label>Pilih Data Proyek</label>
-                        <select class="form-control select2" name="project" required>
+                        <select class="form-control select2" name="project" id="chooseProject" required>
                         <option value="" disabled selected>Pilih Proyek</option>
                             @foreach($project as $a)
                             <option value="{{ $a->id }}" {{  @$reportProject->project_id == $a->id ? 'selected'  : ''}} >{{ $a->title }}</option>
@@ -156,6 +154,8 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
     $(document).ready(function () {
+        suggestSelect();
+
         $("#addRowFileUpload").click(function (e) 
         { 
             e.preventDefault();
@@ -287,6 +287,20 @@
         $('#tableReport tbody tr').each(function(index) {
             $(this).find('td:first').text(index + 1);
         });
+    }
+
+    function suggestSelect()
+    {        
+        var selectWorkOrder ="{{ @$selectedWorkOrder->id ?? ''}}"
+        var selectProject ="{{ @$selectedWorkOrder->project->id ?? ''}}"
+        var selectProjectName ="{{ @$selectedWorkOrder->project->title ?? ''}}"
+
+        if(selectWorkOrder && selectProject)
+        {
+            $('#chooseSpk').val(selectWorkOrder).trigger('change');
+            $('#chooseProject').val(selectProject).trigger('change');
+        }
+        
     }
 </script>
 @stop

@@ -74,6 +74,16 @@ class WorkOrder extends Model
     {
         return $this->hasOne(Project::class)->withoutGlobalScopes();
     }
+
+    public function reportProject()
+    {
+        return $this->hasOne(ReportProject::class);
+    }
+
+    public function bast()
+    {
+        return $this->hasOne(Bast::class);
+    }
     
     public function scopeByNumberResult($query,$number_result)
     {

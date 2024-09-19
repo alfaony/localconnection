@@ -35,15 +35,33 @@ class ReportProjectController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function createsuggest($slug)
+    {
+        $selectedWorkOrder = WorkOrder::select('id')->with('reportProject')->byCompany(Auth::user()->company_id)->with('project')->where('slug',$slug)->first();
+        if(!$selectedWorkOrder)
+        {
+            return redirect()->to(route('report-project.index'))->with('datanotfound',true);
+        }
+
+
+        $nomorReportProject = $this->reportProjectNumber()['result'];
+        $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('reportProject')->where('id',$selectedWorkOrder->project->id ?? null)->orderBy('created_at', 'desc')->get();
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('reportProject')->where('id',$selectedWorkOrder->id)->orderBy('created_at','desc')->get();
+
+        $userCreate = Auth::user()->name;
+
+        return view('report_project.createOrEdit',compact('project','nomorReportProject','userCreate','workOrder','selectedWorkOrder'));
+    }
+
     public function create()
     {
         $nomorReportProject = $this->reportProjectNumber()['result'];
         $project = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('reportProject')->orderBy('created_at', 'desc')->get();
 
-        // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('reportProject')->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
 
-        return view('report_project.createOrEdit',compact('project','nomorReportProject','userCreate'));
+        return view('report_project.createOrEdit',compact('project','nomorReportProject','userCreate','workOrder'));
     }
 
     /**
@@ -133,10 +151,10 @@ class ReportProjectController extends Controller
         ->byCompany(Auth::user()->company_id)
         ->orWhere('id', $reportProject->project_id)
         ->orderBy('created_at', 'desc')->get();
-        // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('reportProject')->orWhere('id',$reportProject->work_order_id)->orderBy('created_at','desc')->get();
         $userCreate = $reportProject->userCreate ? $reportProject->userCreate->name : '';
 
-        return view('report_project.createOrEdit',compact('project','nomorReportProject','userCreate','reportProject'));
+        return view('report_project.createOrEdit',compact('project','nomorReportProject','userCreate','reportProject','workOrder'));
     }
 
     /**
