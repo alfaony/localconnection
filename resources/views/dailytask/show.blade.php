@@ -164,7 +164,7 @@
                     <div class="form-group row">
                         <label for="name" class="col-sm-4 col-form-label">Tipe:</label>
                         <div class="col-sm-8">
-                            <p class="form-control-plaintext">{{ $dailytask->type->name ?? "" }}</p>
+                            <p class="form-control-plaintext">{{ $dailytask->type ? $dailytask->type->name : "" }}</p>
                         </div>
                     </div>
 
