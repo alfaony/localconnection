@@ -15,6 +15,9 @@
     @if(Session::get('delete'))
         <div class="alert alert-success mt-3">BAST Berhasil Terhapus</div>
     @endif
+    @if(Session::get('datanotfound'))
+        <div class="alert alert-danger mt-3">Data Tidak Ditemukan</div>
+    @endif
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -29,21 +32,33 @@
 <div class="container">
     <!-- Nav tabs -->
     <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+        @canAccess('dataTableJson','basts')
         <li class="nav-item">
             <a class="nav-link active" id="bast-tab" data-toggle="tab" href="#bast" role="tab" aria-controls="bast" aria-selected="true">
                 <i class="fas fa-file-alt"></i> BAST
             </a>
         </li>
+        @endcanAccess
+        @canAccess('dataTableJsonWorkOrderWithoutBast','basts')
         <li class="nav-item">
-            <a class="nav-link" id="spk-tab" data-toggle="tab" href="#spk" role="tab" aria-controls="spk" aria-selected="false">
-                <i class="fas fa-project-diagram"></i> SPK
+            <a class="nav-link" id="spk-tab" data-toggle="tab" href="#spk_bast" role="tab" aria-controls="spk" aria-selected="false">
+                <i class="fa fa-clipboard-list"></i> SPK ( Belum Terbuat BAST )
             </a>
         </li>
+        @endcanAccess
+        @canAccess('dataTableJsonWorkOrderWithoutReportProject','basts')
+        <li class="nav-item">
+            <a class="nav-link" id="spk-tab" data-toggle="tab" href="#spk_report" role="tab" aria-controls="spk" aria-selected="false">
+                <i class="fa fa-clipboard-list"></i> SPK ( Belum Terbuat Laporan )
+            </a>
+        </li>
+        @endcanAccess
     </ul>
 
     <!-- Tab panes -->
     <div class="tab-content">
         <!-- BAST Tab -->
+        @canAccess('dataTableJson','basts')
         <div class="tab-pane fade show active" id="bast" role="tabpanel" aria-labelledby="bast-tab">
             <div class="card mt-3 shadow-sm">
                 <div class="card-header bg-primary text-white">
@@ -72,44 +87,61 @@
                 </div>
             </div>
         </div>
+        @endcanAccess
 
+        @canAccess('dataTableJsonWorkOrderWithoutBast','basts')
         <!-- SPK Tab -->
-        <div class="tab-pane fade" id="spk" role="tabpanel" aria-labelledby="spk-tab">
+        <div class="tab-pane fade" id="spk_bast" role="tabpanel" aria-labelledby="spk-tab">
             <div class="card mt-3 shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h3 class="card-title">List SPK</h3>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover table-striped">
-                            <thead class="bg-light">
+                        <table class="table table-bordered" id="dataTableJsonWorkOrderWithoutBast" style="width:100%">
+                            <thead>
                                 <tr>
                                     <th>Nomor SPK</th>
-                                    <th>Nama Proyek</th>
-                                    <th>Tanggal Mulai</th>
-                                    <th>Tanggal Selesai</th>
+                                    <th>Total Anggaran</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td>SPK-001</td>
-                                    <td>Proyek A</td>
-                                    <td>2024-01-10</td>
-                                    <td>2024-02-15</td>
-                                </tr>
-                                <tr>
-                                    <td>SPK-002</td>
-                                    <td>Proyek B</td>
-                                    <td>2024-01-20</td>
-                                    <td>2024-03-01</td>
-                                </tr>
-                                <!-- Tambahkan baris data SPK sesuai kebutuhan -->
+                            </tbody>
+                                <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
+        @endcanAccess
+
+        @canAccess('dataTableJsonWorkOrderWithoutReportProject','basts')
+        <!-- SPK Tab -->
+        <div class="tab-pane fade" id="spk_report" role="tabpanel" aria-labelledby="spk-tab">
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">List SPK</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTableJsonWorkOrderWithoutReportProject" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Nomor SPK</th>
+                                    <th>Total Anggaran</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            </tbody>
+                                <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endcanAccess
     </div>
 </div>
 
@@ -145,6 +177,46 @@
         e.preventDefault();
         let url = "{{ route('bast.create') }}";
         window.location.href = url;
+    });
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var table = $('#dataTableJsonWorkOrderWithoutBast').DataTable({
+            responsive: true,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{{ route("bast.dataTableJsonWorkOrderWithoutBast")}}',
+                type: 'GET',
+                dataSrc: 'data'
+            },
+            columns: [
+                {data: 'number_result', name: 'number_result', orderable: false},
+                {data: 'total', name: 'total', orderable: false},
+                {data: 'action', name: 'action', orderable: false, searchable: false},
+            ],
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var table = $('#dataTableJsonWorkOrderWithoutReportProject').DataTable({
+            responsive: true,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{{ route("bast.dataTableJsonWorkOrderWithoutReportProject")}}',
+                type: 'GET',
+                dataSrc: 'data'
+            },
+            columns: [
+                {data: 'number_result', name: 'number_result', orderable: false},
+                {data: 'total', name: 'total', orderable: false},
+                {data: 'action', name: 'action', orderable: false, searchable: false},
+            ],
+        });
     });
 </script>
 @stop

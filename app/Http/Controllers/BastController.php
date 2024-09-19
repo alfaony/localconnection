@@ -29,14 +29,30 @@ class BastController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function createsuggest($slug)
     {
-        // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
+        $selectedWorkOrder = WorkOrder::select('id')->with('reportProject')->byCompany(Auth::user()->company_id)->with('project')->where('slug',$slug)->first();
+        if(!$selectedWorkOrder)
+        {
+            return redirect()->to(route('bast.index'))->with('datanotfound',true);
+        }
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')->where('id',$selectedWorkOrder->id)->orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)->where('id',$selectedWorkOrder->project->id)->orderBy('created_at','desc')->get();
+        $userCreate = Auth::user()->name;
+        $nomorBast = $this->bastNumber()['result'];
+        $signature = config('custom.customerSignature');
+
+        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','signature','workOrder','selectedWorkOrder'));
+    }
+
+    public function create(Request $request)
+    {
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')->orderBy('created_at','desc')->get();
         $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $nomorBast = $this->bastNumber()['result'];
         $signature = config('custom.customerSignature');
-        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','signature'));
+        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','signature','workOrder'));
     }
 
     /**
@@ -78,15 +94,17 @@ class BastController extends Controller
      */
     public function edit($slug)
     {
-        // $workOrder = WorkOrder::orderBy('created_at','desc')->get();
         $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
-
+        
         $bast = Bast::where('slug',$slug)->first();
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
         $nomorBast = $bast->number_result ?? '';
         $signature = config('custom.customerSignature');
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')
+        ->orWhere('id', $bast->work_order_id)
+        ->orderBy('created_at','desc')->get();
 
-        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','bast','signature'));
+        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','bast','signature','workOrder'));
     }
 
     /**
@@ -210,6 +228,85 @@ class BastController extends Controller
         }
 
         return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+    }
+
+    public function dataTableJsonWorkOrderWithoutReportProject()
+    {
+        // Fetch data for the DataTable
+        $query = WorkOrder::query();
+        $query->byCompany(Auth::user()->company_id); // Filter by the company of the logged-in user
+        $query->whereHas('project'); // Only fetch WorkOrders with an associated ReportProject
+        $query->doesntHave('reportProject'); // Only fetch WorkOrders without an associated ReportProject
+
+        // Map column indexes to column names (modify these based on your actual database structure)
+        $columnNames = ['date', 'work_order_number', 'description'];
+
+        // Define searchable columns
+        $searchable = [
+            0 => 'work_order_number',
+            1 => 'date',
+        ];
+
+        // Define action buttons
+        $actionButtons = [];
+        // Conditionally add buttons based on permissions
+        if (Access::can('createsuggest', 'report_projects')) {
+            $actionButtons[] = [
+                'name' => 'Membuat Laporan Proyek',
+                'route' => 'report-project.createsuggest',
+                'id' => true,
+            ];
+        }
+
+        $response = datatablesFormater($query, $columnNames, $actionButtons, $searchable, 4); // assuming bootstrap version 4
+
+        $data = $response->getData();
+        foreach ($data->data as $index => $item) 
+        {
+            $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
+        }
+
+        return response()->json($data);
+    }
+
+    public function dataTableJsonWorkOrderWithoutBast()
+    {
+        // Fetch data for the DataTable
+        $query = WorkOrder::query();
+        $query->byCompany(Auth::user()->company_id); // Filter by the company of the logged-in user
+        $query->whereHas('reportProject'); // Only fetch WorkOrders with an associated ReportProject
+        $query->whereDoesntHave('bast'); // Only fetch WorkOrders with an associated ReportProject
+        // $query->doesntHave('bast'); // Only fetch SPKs without an associated Bast
+
+        // Map column indexes to column names (modify these based on your actual database structure)
+        $columnNames = ['date', 'spk_number', 'project_name'];
+
+        // Define searchable columns
+        $searchable = [
+            0 => 'spk_number',
+            1 => 'date',
+        ];
+
+        // Define action buttons
+        $actionButtons = [];
+        // Conditionally add buttons based on permissions
+        if (Access::can('createsuggest', 'basts')) {
+            $actionButtons[] = [
+                'name' => 'Membuat Bast',
+                'route' => 'bast.createsuggest',
+                'id' => true,
+            ];
+        }
+
+        $response = datatablesFormater($query, $columnNames, $actionButtons, $searchable, 4); // assuming bootstrap version 4
+
+        $data = $response->getData();
+        foreach ($data->data as $index => $item) 
+        {
+            $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
+        }
+
+        return response()->json($data);
     }
 
     private function bastNumber()

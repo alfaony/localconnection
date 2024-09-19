@@ -15,6 +15,9 @@
     @if(Session::get('delete'))
     <div class="alert alert-success mt-3">Laporan Proyek Berhasil Terhapus</div>
     @endif
+    @if(Session::get('datanotfound'))
+        <div class="alert alert-danger mt-3">Data Tidak Ditemukan</div>
+    @endif
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>

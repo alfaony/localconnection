@@ -32,7 +32,6 @@
                 </div>
                 <div class="form-group">
                     <label for="pilihSPK" class="form-label">Pilih SPK</label>
-                    {{--
                     <select class="form-control select2" name="work_order" id="pilihSPK" required>
                         <option value="" selected disabled>Pilih</option>
                         @foreach($workOrder as $a)
@@ -40,8 +39,7 @@
                         @endforeach
                         <!-- Other options can be added here -->
                     </select>
-                    --}}
-                    <select class="form-control" id="work_order" name="work_order" required></select>
+                    <!-- <select class="form-control" id="work_order" name="work_order" required></select> -->
                 </div>
                 <div class="form-group">
                     <label for="pilihDataProyek" class="form-label">Pilih Data Proyek</label>
@@ -95,6 +93,8 @@
 <script>
     $(document).ready(function () 
     {
+        suggestSelect();
+
         $('.select2').select2({
             width: '100%',
             // placeholder: 'Pilih Quote'
@@ -154,6 +154,22 @@
     // Jika Anda ingin memeriksa kondisi saat pertama kali halaman dimuat (misalnya jika select sudah memiliki option yang dipilih),
     // Anda bisa memicu event change pada select saat halaman selesai dimuat
     });
+
+    function suggestSelect()
+    {
+        var selectWorkOrder ="{{ @$selectedWorkOrder->id ?? ''}}"
+        var selectProject ="{{ @$selectedWorkOrder->project->id ?? ''}}"
+        var selectProjectName ="{{ @$selectedWorkOrder->project->title ?? ''}}"
+
+        if(selectWorkOrder && selectProject)
+        {
+            $('#pilihSPK').val(selectWorkOrder).trigger('change');
+            $('#pilihDataProyek').val(selectProject).trigger('change');
+            console.log(selectProjectName);
+            
+        }
+        
+    }
 </script>
 @stop
 @section('css')
