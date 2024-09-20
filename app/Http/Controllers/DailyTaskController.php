@@ -1005,6 +1005,8 @@ class DailyTaskController extends Controller
             $status = TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail();
         }
 
+        $dailyId = DailyTaskType::where('name',ParamSchema::DAILY)->firstOrFail();
+
         DB::beginTransaction();
         try {
 
@@ -1012,11 +1014,12 @@ class DailyTaskController extends Controller
             $dailyTask->user_id = Auth::user()->id;
             $dailyTask->task_status_id = $status->id;
             $dailyTask->child_daily_task_id = $dailyTaskHead->id;
+            $dailyTask->recurring_days = NULL;
             $dailyTask->start_date = $request->start_date;
             $dailyTask->end_date = $request->end_date;
             $dailyTask->assignment_user_id = $request->user_id;
             $dailyTask->daily_task_category_id = $dailyTaskHead->daily_task_category_id;
-            $dailyTask->daily_task_type_id = $dailyTaskHead->daily_task_type_id;
+            $dailyTask->daily_task_type_id = $dailyId->id;
             $dailyTask->daily_task_project_id = $dailyTaskHead->daily_task_project_id;
             $dailyTask->objective_id = $dailyTaskHead->objective_id;
             $dailyTask->name = $request->name;
