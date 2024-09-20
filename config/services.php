@@ -46,4 +46,9 @@ return [
         'service_database_url' => env('FIREBASE_SERVICE_DATABASE_URL'),
     ],
 
+    'device_iot_api' => [
+        'url' => env('DEVICE_API_URL', 'https://iot.keloola.com/api/bos-device-list'),
+        'Authorization' => env('API_BEARER_TOKEN', 'b529bcec09e57938354fc5ceb881bb18e5f97bf6104968ce89894a6cbea4b034'),
+    ],
+    
 ];

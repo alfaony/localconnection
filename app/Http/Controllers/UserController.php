@@ -40,7 +40,7 @@ class UserController extends Controller
             $user = User::where('delete_able',1)
             ->byCompany(Auth::user()->company_id)
             ->where('email','like', '%' . $request->get('email') . '%')
-            ->OrderBy('name','asc')->paginate(10);
+            ->OrderBy('name','asc')->paginate(6);
             $users = User::byCompany(Auth::user()->company_id)->get();
 
             $totalUser = User::byCompany(Auth::user()->company_id)->where('delete_able',1)->count();

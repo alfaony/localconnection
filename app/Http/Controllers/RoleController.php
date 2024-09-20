@@ -80,6 +80,7 @@ class RoleController extends Controller
             'schedule_obs',
             'inboxes',
             'letter_submissions',
+            'devices',
         ];
 
         $checked = array_merge($mainMenus);
@@ -189,6 +190,7 @@ class RoleController extends Controller
                 'schedule_obs',
                 'inboxes',
                 'letter_submissions',
+                'devices',
             ];
         $checked = array_merge($mainMenus);
 
@@ -258,6 +260,7 @@ class RoleController extends Controller
                 'schedule_obs',
                 'inboxes',
                 'letter_submissions',
+                'devices',
             ];
         
         $checked = array_merge($mainMenus);

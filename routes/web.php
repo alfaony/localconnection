@@ -55,6 +55,7 @@ use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\LetterSubmissionController;
 use App\Http\Controllers\PositionController;
+use App\Http\Controllers\DeviceController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -232,6 +233,8 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('letter-submission', LetterSubmissionController::class);
   
   Route::resource('position', PositionController::class);
+  Route::get('device', [DeviceController::class,'index'])->name('device.index');
+  Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
 });
 
 
