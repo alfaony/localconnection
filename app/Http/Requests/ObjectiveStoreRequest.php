@@ -15,7 +15,7 @@ class ObjectiveStoreRequest extends FormRequest
     {
         return [
             'objective_name' => 'required|array',
-            'objective_name.*' => 'required|string|max:255',
+            'objective_name.*' => 'required|string|max:191',
             'division_id' => 'required|array',
             'division_id.*' => 'required|uuid|exists:divisions,id',
             'mission_id' => 'required|array',
@@ -42,7 +42,7 @@ class ObjectiveStoreRequest extends FormRequest
             'objective_name.required' => 'Nama objective harus diisi.',
             'objective_name.*.required' => 'Setiap nama objective harus diisi.',
             'objective_name.*.string' => 'Nama objective harus berupa string.',
-            'objective_name.*.max' => 'Nama objective maksimal 255 karakter.',
+            'objective_name.*.max' => 'Nama objective maksimal 191 karakter.',
             'division_id.required' => 'Divisi harus diisi.',
             'division_id.*.required' => 'Setiap divisi harus diisi.',
             'division_id.*.uuid' => 'ID divisi harus berupa UUID.',
