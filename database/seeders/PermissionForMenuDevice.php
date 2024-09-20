@@ -22,6 +22,7 @@ class PermissionForMenuDevice extends Seeder
     {
         $assets = ['index','dataJson'];
         $root = Role::where('name',RoleSchema::ROOT)->first();
+        $admin = Role::where('name',RoleSchema::ADMIN)->first();
         $bm = Role::where('name',RoleSchema::BM)->first();
         $ob = Role::where('name',RoleSchema::OB)->first();
 
@@ -39,6 +40,7 @@ class PermissionForMenuDevice extends Seeder
 
             //assign role & permission
             PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
             PermissionRole::create(['role_id' => $bm->id, 'permission_id' => $permission->id]);
             PermissionRole::create(['role_id' => $ob->id, 'permission_id' => $permission->id]);
         }

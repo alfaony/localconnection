@@ -39,7 +39,7 @@
                     <th>Location</th>
                     <th>Status (ON/OFF)</th>
                     <th>Availability</th>
-                    <th>Last Connected</th>
+                    <th>Connectivity</th>
                 </tr>
             </thead>
             <tbody id="deviceTableBody">
@@ -58,9 +58,32 @@
 @stop
 
 @section('css')
-<!-- Add Bootstrap Toggle Switches -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap4-toggle/css/bootstrap4-toggle.min.css" rel="stylesheet">
+<!-- Add CSS for badges -->
 <style>
+    .badge-on {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-off {
+        background-color: #dc3545;
+        color: white;
+    }
+    .badge-available {
+        background-color: #007bff;
+        color: white;
+    }
+    .badge-unavailable {
+        background-color: #6c757d;
+        color: white;
+    }
+    .badge-connected {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-not-connected {
+        background-color: #dc3545;
+        color: white;
+    }
     .pagination {
         justify-content: center;
         padding: 15px 0;
@@ -98,9 +121,7 @@
 @stop
 
 @section('js')
-<!-- Add Bootstrap Toggle JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap4-toggle/js/bootstrap4-toggle.min.js"></script>
-@canAccess('dataJson','devices')
+<!-- Replace Toggle JS with Badge logic -->
 <script>
     function fetchDevices(page = 1) {
         let searchQuery = $('#deviceSearch').val();
@@ -125,7 +146,7 @@
                     return;
                 }
 
-                // Append each device row with toggle switches
+                // Append each device row with badges
                 response.devices.forEach(function(device) {
                     $('#deviceTableBody').append(`
                         <tr>
@@ -133,18 +154,23 @@
                             <td>${device.type}</td>
                             <td>${device.location}</td>
                             <td>
-                                <input type="checkbox" ${device.status ? 'checked' : ''} data-toggle="toggle" data-on="ON" data-off="OFF" data-onstyle="success" data-offstyle="danger">
+                                <span class="badge ${device.status ? 'badge-on' : 'badge-off'}">
+                                    ${device.status ? 'ON' : 'OFF'}
+                                </span>
                             </td>
                             <td>
-                                <input type="checkbox" ${device.active ? 'checked' : ''} data-toggle="toggle" data-on="Active" data-off="Inactive" data-onstyle="primary" data-offstyle="secondary">
+                                <span class="badge ${device.active ? 'badge-available' : 'badge-unavailable'}">
+                                    ${device.active ? 'Active' : 'Inactive'}
+                                </span>
                             </td>
-                            <td>${formatTimestampWIB(device.last_connected)}</td>
+                            <td>
+                                <span class="badge ${device.last_connected ? 'badge-connected' : 'badge-not-connected'}">
+                                    ${device.last_connected ? 'Connected' : 'Offline'}
+                                </span>
+                            </td>
                         </tr>
                     `);
                 });
-
-                // Initialize Bootstrap Toggle Switches
-                $('input[data-toggle="toggle"]').bootstrapToggle();
 
                 // Update pagination links
                 updatePagination(response.pagination);
@@ -186,45 +212,6 @@
         $('#paginationLinks').html(`<ul class="pagination">${paginationHtml}</ul>`);
     }
 
-    function formatTimestampWIB(timestamp) 
-    {
-        if (!timestamp) return ''; // Return empty if there's no timestamp
-
-        // If the timestamp is in seconds (10 digits), convert it to milliseconds
-        if (String(timestamp).length === 10) {
-            timestamp = parseInt(timestamp) * 1000;
-        }
-
-        // Create a new Date object from the timestamp (milliseconds)
-        let date = new Date(timestamp);
-
-        // Check if the timestamp is valid
-        if (isNaN(date.getTime())) {
-            return ''; // Invalid timestamp
-        }
-
-        // Adjust the time for WIB (UTC+7)
-        let wibOffset = 7 * 60 * 60 * 1000; // 7 hours in milliseconds
-        let wibDate = new Date(date.getTime() + wibOffset);
-
-        // Get the individual date components
-        let day = ("0" + wibDate.getDate()).slice(-2);
-        let month = ("0" + (wibDate.getMonth() + 1)).slice(-2); // Months are zero-indexed
-        let year = wibDate.getFullYear();
-
-        // Get the time components
-        let hours = ("0" + wibDate.getHours()).slice(-2);
-        let minutes = ("0" + wibDate.getMinutes()).slice(-2);
-        let seconds = ("0" + wibDate.getSeconds()).slice(-2);
-
-        // Return the formatted date and time in MM/DD/YYYY HH:MM:SS WIB format
-        return `${month}/${day}/${year} ${hours}:${minutes}:${seconds} WIB`;
-    }
-
-
-
-
-
     // Handle pagination link clicks
     $(document).on('click', '#paginationLinks a', function(e) {
         e.preventDefault();
@@ -242,5 +229,4 @@
         fetchDevices();
     });
 </script>
-@endcanAccess
 @stop
