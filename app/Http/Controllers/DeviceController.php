@@ -4,34 +4,69 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
 
 class DeviceController extends Controller
 {
+    /**
+     * Display the initial page.
+     */
     public function index()
     {
+        return view('device.index');
+    }
 
+    /**
+     * Fetch device data from the API and return it for the frontend.
+     */
+    public function dataJson(Request $request)
+    {
         $url = config('services.device_iot_api.url');
         $token = config('services.device_iot_api.Authorization');
-
+    
+        // Retrieve 'company_id', 'search', and pagination parameters from the request
+        $search = $request->input('search', ''); // Default to empty if not provided
+        $page = $request->input('page', 1);      // Default to page 1
+        
         try {
+            // Make the API request with pagination and search filters
             $response = Http::withHeaders([
-                'Authorization' =>  $token,
+                'Authorization' => "Bearer {$token}",
                 'Accept'        => 'application/json',
-            ])->get($url);
+            ])->get($url, [
+                'company_id' => Auth::user()->company_id,
+                'page'       => $page,
+                'search'     => $search,
+            ]);
 
+    
             if ($response->successful()) {
-                
+                // Assuming 'data' holds the devices and 'pagination' holds pagination info
                 $devices = $response->json('data');
-
-                dd($devices);
-                return view('device.index', ['devices' => $devices]);
+                $pagination = $response->json('pagination');
+    
+                return response()->json([
+                    'success'    => true,
+                    'devices'    => $devices,
+                    'pagination' => $pagination,
+                    'search'     => $search,
+                    'page'       => $page,
+                ]);
             } else {
-                // Handle errors
-                return back()->withErrors('Failed to fetch devices from API.');
+                // Handle API errors
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Failed to fetch devices from API.'], 
+                    $response->status() // Return API response status
+                );
             }
         } catch (\Exception $e) {
-            // Handle the error appropriately
-            abort(500, 'API Request Failed: ' . $e->getMessage());
+            // Catch and return API call errors
+            return response()->json([
+                'success' => false, 
+                'message' => 'API Request Failed: ' . $e->getMessage()
+            ], 500);
         }
     }
+    
 }

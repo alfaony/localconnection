@@ -222,9 +222,11 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::get('/inbox/{id}', [InboxController::class, 'show'])->name('inbox.show');
   Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
+  
+  Route::get('device', [DeviceController::class,'index'])->name('device.index');
+  Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
 });
 
-Route::get('device', [DeviceController::class,'index'])->name('device.index');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
