@@ -610,9 +610,10 @@ class DailyTaskController extends Controller
     public function destroy(Request $request, $slug)
     {
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
-
+        $redirectTo = "";
         if($dailytask->head)
         {
+            $redirectTo = $dailytask->head->slug;
             if($dailytask->head->user_id == $dailytask->head->assignment_user_id)
             {
                 $this->sentInbox($dailytask->head->user_id,Auth::user()->name.' Menghapus Sub Tugas ' . $dailytask->name, null);
@@ -630,7 +631,13 @@ class DailyTaskController extends Controller
             return redirect()->route('dailytask.index')->with('delete',true);
         }else
         {
-            return redirect()->back()->with('delete',true);
+            if($redirectTo)
+            {
+                return redirect()->to(route('dailytask.show',$redirectTo))->with('delete',true);
+            }else
+            {
+                return redirect()->route('dailytask.index')->with('delete',true);
+            }
         }
     }
 
