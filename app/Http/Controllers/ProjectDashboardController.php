@@ -21,6 +21,41 @@ class ProjectDashboardController extends Controller
         $today = \Carbon\Carbon::today();
         $divisionId = $request->get('division_id'); // Get the division filter from the request
 
+        // ================= OVERDUE ===============//
+        // Fetch overdue tasks and group by status
+        $tasksByStatus = DailyTask::byCompany(Auth::user()->company_id)->where('end_date', '<', $today)->get();
+
+        // Prepare the data to pass to the view
+        $taskStatusOverdueCounts = [
+            'todo' => 0,
+            'doing' => 0,
+            'in_review' => 0,
+            'not_complete' => 0,
+        ];
+
+        // Loop through the tasks by status and assign counts
+        // dd($tasksByStatus);
+        foreach ($tasksByStatus as $task) {
+            switch ($task->task_status) {
+                case ParamSchema::TODO:
+                    $taskStatusOverdueCounts['todo'] = $task->total;
+                    break;
+                case ParamSchema::DOING:
+                    $taskStatusOverdueCounts['doing'] = $task->total;
+                    break;
+                case ParamSchema::INREVIEW:
+                    $taskStatusOverdueCounts['in_review'] = $task->total;
+                    break;
+                case ParamSchema::NOTCOMPLATE:
+                    $taskStatusOverdueCounts['not_complete'] = $task->total;
+                    break;
+                case ParamSchema::COMPLATE:
+                    $taskStatusOverdueCounts['complete'] = $task->total;
+                    break;
+            }
+        }
+
+        // dd($taskStatusOverdueCounts);
         // Get users with their overdue tasks
         $overdueTasksQuery = User::where('company_id', Auth::user()->company_id)
             ->withCount(['dailyTaskAssigns' => function ($query) use ($today) {
@@ -33,6 +68,8 @@ class ProjectDashboardController extends Controller
                 });
             }])
             ->orderBy('daily_task_assigns_count', 'desc');
+
+        
 
         // Apply division filter if provided
         if ($divisionId) {
