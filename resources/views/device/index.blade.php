@@ -34,12 +34,12 @@
         <table class="table table-bordered table-hover table-striped mb-0">
             <thead class="thead-light">
                 <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Location</th>
-                    <th>Status (ON/OFF)</th>
-                    <th>Availability</th>
-                    <th>Connectivity</th>
+                    <th>NAME</th>
+                    <th>TYPE</th>
+                    <th>LOCATION / TYPE</th>
+                    <th>CONNECTIVITY</th>
+                    <th>STATUS (ON/OFF)</th>
+                    <th>AVAILABILITY</th>
                 </tr>
             </thead>
             <tbody id="deviceTableBody">
@@ -57,71 +57,8 @@
 </div>
 @stop
 
-@section('css')
-<!-- Add CSS for badges -->
-<style>
-    .badge-on {
-        background-color: #28a745;
-        color: white;
-    }
-    .badge-off {
-        background-color: #dc3545;
-        color: white;
-    }
-    .badge-available {
-        background-color: #007bff;
-        color: white;
-    }
-    .badge-unavailable {
-        background-color: #6c757d;
-        color: white;
-    }
-    .badge-connected {
-        background-color: #28a745;
-        color: white;
-    }
-    .badge-not-connected {
-        background-color: #dc3545;
-        color: white;
-    }
-    .pagination {
-        justify-content: center;
-        padding: 15px 0;
-    }
-    .pagination .page-item .page-link {
-        color: #007bff;
-    }
-    .pagination .page-item.disabled .page-link {
-        color: #6c757d;
-    }
-    .pagination .page-item.active .page-link {
-        background-color: #007bff;
-        border-color: #007bff;
-        color: white;
-    }
-    #loadingSpinner {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    .spinner-border {
-        width: 3rem;
-        height: 3rem;
-    }
-    /* Styling for table hover effects */
-    table.table-hover tbody tr:hover {
-        background-color: #f8f9fa;
-    }
-    /* No devices message in the center of the table */
-    #noDevicesMessage {
-        display: none;
-    }
-</style>
-@stop
-
 @section('js')
-<!-- Replace Toggle JS with Badge logic -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
 <script>
     function fetchDevices(page = 1) {
         let searchQuery = $('#deviceSearch').val();
@@ -148,11 +85,27 @@
 
                 // Append each device row with badges
                 response.devices.forEach(function(device) {
+                    let typeBadge = getTypeBadge(device.type);
+                    let locationBadge = getLocationBadge(device.location_type);
+
                     $('#deviceTableBody').append(`
                         <tr>
                             <td>${device.name}</td>
-                            <td>${device.type}</td>
-                            <td>${device.location}</td>
+                            <td>${typeBadge}</td>
+                            <td>
+                                <p class="mt-0 mb-0">
+                                    ${device.location}
+                                </p>
+                                <p class="mt-0 mb-0">
+                                    ${locationBadge}
+                                </p>
+                            </td>
+                            <td>
+                                <span class="badge ${device.connected ? 'badge-connected' : 'badge-not-connected'}">
+                                    ${device.connected ? 'Connected' : 'Offline'}
+                                </span>
+                                <p class="text-sm-start">${device.connected ? '' : formatTimestampWIB(device.last_connected)}</p>
+                            </td>
                             <td>
                                 <span class="badge ${device.status ? 'badge-on' : 'badge-off'}">
                                     ${device.status ? 'ON' : 'OFF'}
@@ -161,11 +114,6 @@
                             <td>
                                 <span class="badge ${device.active ? 'badge-available' : 'badge-unavailable'}">
                                     ${device.active ? 'Active' : 'Inactive'}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge ${device.last_connected ? 'badge-connected' : 'badge-not-connected'}">
-                                    ${device.last_connected ? 'Connected' : 'Offline'}
                                 </span>
                             </td>
                         </tr>
@@ -228,5 +176,138 @@
     $(document).ready(function() {
         fetchDevices();
     });
+
+    function getTypeBadge(type) {
+        switch (type) {
+            case 'LOCK-REVERSE':
+                return `<span class="badge badge-pill badge-danger">
+                            <i class="fa-solid fa-lock mr-1" aria-hidden="true"></i>LOCK-REVERSE
+                        </span>`;
+            case 'LIGHT':
+                return `<span class="badge badge-pill badge-warning">
+                            <i class="fa-solid fa-lightbulb mr-1" aria-hidden="true"></i>LIGHT
+                        </span>`;
+            default:
+                return `<span class="badge badge-pill badge-info">
+                            ${type}
+                        </span>`;
+        }
+    }
+
+    function getLocationBadge(location_type) {
+        switch (location_type) {
+            case 'ROOM':
+                return `<span class="badge badge-pill badge-primary">
+                            <i class="fa-solid fa-shop mr-1" aria-hidden="true"></i>ROOM
+                        </span>`;
+            case 'STORAGE':
+                return `<span class="badge badge-pill badge-warning">
+                            <i class="fa-solid fa-lock mr-1" aria-hidden="true"></i>STORAGE
+                        </span>`;
+            default:
+                return `<span class="badge badge-pill badge-info">
+                            ${location_type}
+                        </span>`;
+        }
+    }
+
+    function formatTimestampWIB(timestamp) 
+    {
+        if (!timestamp) return ''; // Return empty if there's no timestamp
+
+        // If the timestamp is in seconds (10 digits), convert it to milliseconds
+        if (String(timestamp).length === 10) {
+            timestamp = parseInt(timestamp) * 1000;
+        }
+
+        // Create a new Date object from the timestamp (milliseconds)
+        let date = new Date(timestamp);
+
+        // Check if the timestamp is valid
+        if (isNaN(date.getTime())) {
+            return ''; // Invalid timestamp
+        }
+
+        // Adjust the time for WIB (UTC+7)
+        let wibOffset = 7 * 60 * 60 * 1000; // 7 hours in milliseconds
+        let wibDate = new Date(date.getTime() + wibOffset);
+
+        // Get the individual date components
+        let day = ("0" + wibDate.getDate()).slice(-2);
+        let month = ("0" + (wibDate.getMonth() + 1)).slice(-2); // Months are zero-indexed
+        let year = wibDate.getFullYear();
+
+        // Get the time components
+        let hours = ("0" + wibDate.getHours()).slice(-2);
+        let minutes = ("0" + wibDate.getMinutes()).slice(-2);
+        let seconds = ("0" + wibDate.getSeconds()).slice(-2);
+
+        // Return the formatted date and time in MM/DD/YYYY HH:MM:SS WIB format
+        return `${month}/${day}/${year} ${hours}:${minutes}:${seconds} WIB`;
+    }
+
 </script>
+@stop
+
+@section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .badge-on {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-off {
+        background-color: #dc3545;
+        color: white;
+    }
+    .badge-available {
+        background-color: #007bff;
+        color: white;
+    }
+    .badge-unavailable {
+        background-color: #6c757d;
+        color: white;
+    }
+    .badge-connected {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-not-connected {
+        background-color: #dc3545;
+        color: white;
+    }
+    .pagination {
+        justify-content: center;
+        padding: 15px 0;
+    }
+    .pagination .page-item .page-link {
+        color: #007bff;
+    }
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+    #loadingSpinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+    /* Styling for table hover effects */
+    table.table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    /* No devices message in the center of the table */
+    #noDevicesMessage {
+        display: none;
+    }
+</style>
 @stop

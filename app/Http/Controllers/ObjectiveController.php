@@ -65,7 +65,6 @@ class ObjectiveController extends Controller
     {
         DB::beginTransaction();
         try {
-            // dd($request->all());
             foreach ($request->objective_name as $index => $fieldName) 
             {
                 // Create custom field
@@ -95,6 +94,7 @@ class ObjectiveController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
 
+            // dd($th);
             DB::rollback();
             Log::error($th->getMessage());
             return redirect()->route('objective.index')->with('store',false);
