@@ -46,16 +46,7 @@ class DeviceService
                     'devices'    => $response->json('data'),
                     'pagination' => $response->json('pagination'),
                 ];
-            } else {
-                ApiLog::create([
-                    'user_id' => Auth::id(),
-                    'endpoint' => $url,
-                    'method' => 'GET',
-                    'request_payload' => json_encode($queryParams),
-                    'response_payload' => json_encode($response->json()),
-                    'status_code' => $response->status(),
-                ]);
-    
+            } else {    
                 return [
                     'success' => false,
                     'message' => 'Failed to fetch devices from API.',
