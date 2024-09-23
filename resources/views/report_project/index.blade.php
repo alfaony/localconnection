@@ -38,6 +38,8 @@
             <tr>
                 <th>Nomor Laporan Proyek</th>
                 <th>Date</th>
+                <th>SPK</th>
+                <th>Proyek</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -71,6 +73,8 @@
             columns: [
                 {data: 'number_result', name: 'number_result', orderable: true},
                 {data: 'date', name: 'date', orderable: true},
+                {data: 'work_order.number_result', name: 'work_order_number_result', orderable: false, searchable: false},
+                {data: 'project.title', name: 'project_name', orderable: false, searchable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
             order: [[1, 'desc']],
