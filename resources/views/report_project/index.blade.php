@@ -74,6 +74,7 @@
                                 <th>Nomor Laporan Proyek</th>
                                 <th>Tanggal</th>
                                 <th>SPK</th>
+                                <th>Project</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -140,6 +141,7 @@
                 {data: 'number_result', name: 'number_result', orderable: true},
                 {data: 'date', name: 'date', orderable: true},
                 {data: 'work_order.number_result', name: 'number_result', orderable: false, searchable: false},
+                {data: 'project.title', name: 'project_title', orderable: false, searchable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
             order: [[1, 'desc']],

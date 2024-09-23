@@ -6,8 +6,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 
+use App\Services\DeviceService;
+
 class DeviceController extends Controller
 {
+
+    protected $deviceService;
+
+    public function __construct(DeviceService $deviceService)
+    {
+        $this->deviceService = $deviceService;
+    }
+    
     /**
      * Display the initial page.
      */
@@ -21,52 +31,12 @@ class DeviceController extends Controller
      */
     public function dataJson(Request $request)
     {
-        $url = config('services.device_iot_api.url');
-        $token = config('services.device_iot_api.Authorization');
-    
-        // Retrieve 'company_id', 'search', and pagination parameters from the request
-        $search = $request->input('search', ''); // Default to empty if not provided
-        $page = $request->input('page', 1);      // Default to page 1
-        
-        try {
-            // Make the API request with pagination and search filters
-            $response = Http::withHeaders([
-                'Authorization' => "Bearer {$token}",
-                'Accept'        => 'application/json',
-            ])->get($url, [
-                'company_id' => Auth::user()->company_id,
-                'page'       => $page,
-                'search'     => $search,
-            ]);
+        $search = $request->input('search', '');
+        $page = $request->input('page', 1);
 
-    
-            if ($response->successful()) {
-                // Assuming 'data' holds the devices and 'pagination' holds pagination info
-                $devices = $response->json('data');
-                $pagination = $response->json('pagination');
-    
-                return response()->json([
-                    'success'    => true,
-                    'devices'    => $devices,
-                    'pagination' => $pagination,
-                    'search'     => $search,
-                    'page'       => $page,
-                ]);
-            } else {
-                // Handle API errors
-                return response()->json([
-                    'success' => false, 
-                    'message' => 'Failed to fetch devices from API.'], 
-                    $response->status() // Return API response status
-                );
-            }
-        } catch (\Exception $e) {
-            // Catch and return API call errors
-            return response()->json([
-                'success' => false, 
-                'message' => 'API Request Failed: ' . $e->getMessage()
-            ], 500);
-        }
+        $response = $this->deviceService->fetchDevices($page, $search);
+
+        return response()->json($response, $response['status'] ?? 200);
     }
     
 }

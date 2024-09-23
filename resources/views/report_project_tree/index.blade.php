@@ -20,6 +20,7 @@
                 <form method="GET" action="{{ route('projectdashboard.index') }}" class="mb-3">
                     <div class="row mb-3">
                         <div class="col-md-3">
+                            <label for="date_range">Divisi</label>
                             <select class="form-control select2" name="division_id">
                                 <option value="" selected>-- Divisi --</option>
                                 @foreach($divisions as $division)
@@ -29,6 +30,16 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div class="col-md-4">
+                            <label for="date_range">Select Date Range</label>
+                            <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="{{ request('start_date') && request('end_date') ? request('start_date').' - '.request('end_date') : '' }}">
+                            <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
+                            <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                    </div>
+                    <div class="row mb-4">
                         <div class="col-md-3">
                             <button type="submit" class="btn btn-primary">Filter</button>
                         </div>
@@ -38,12 +49,45 @@
                     <div class="card-header" id="headingOverdue">
                         <h5 class="mb-0">
                             <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOverdue" aria-expanded="true" aria-controls="collapseOverdue">
-                                Overdue Tasks
+                                Overdue Tasks {{ $startDate && $endDate ? "(".$startDate->format('d-m-Y')." - ".$endDate->format('d-m-Y').")" : '' }}
                             </button>
                         </h5>
                     </div>
                     <div id="collapseOverdue" class="collapse show" aria-labelledby="headingOverdue" data-parent="#taskAccordion">
                         <div class="card-body">
+                            <!-- Task Status Overview Section -->
+                            <div class="row mb-4">
+                                <div class="col-md-2 text-center">
+                                    <div class="status-box bg-primary text-white p-2 rounded">
+                                        <i class="fas fa-list-alt fa-1x"></i>
+                                        <h6 class="mt-1">{{ $totalCounts['todo'] }}</h6>
+                                        <p class="small m-0">To Do</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="status-box bg-warning text-white p-2 rounded">
+                                        <i class="fas fa-hourglass-start fa-1x"></i>
+                                        <h6 class="mt-1">{{ $totalCounts['doing'] }}</h6>
+                                        <p class="small m-0">Doing</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="status-box bg-info text-white p-2 rounded">
+                                        <i class="fas fa-eye fa-1x"></i>
+                                        <h6 class="mt-1">{{ $totalCounts['in_review'] }}</h6>
+                                        <p class="small m-0">In Review</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <div class="status-box bg-danger text-white p-2 rounded">
+                                        <i class="fas fa-times-circle fa-1x"></i>
+                                        <h6 class="mt-1">{{ $totalCounts['not_complate'] }}</h6>
+                                        <p class="small m-0">Not Complete</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chart Section -->
                             <canvas id="overdueTasksChart"></canvas>
                         </div>
                     </div>
@@ -157,6 +201,9 @@
                                                                                         <table class="table table-striped table-bordered">
                                                                                             <thead class="thead-light">
                                                                                                 <tr>
+                                                                                                    <th>
+                                                                                                        #
+                                                                                                    </th>
                                                                                                     <th>Tugas</th>
                                                                                                     <th>Tanggal</th>
                                                                                                     <th>Status</th>
@@ -237,10 +284,41 @@
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
 <script>
     $(document).ready(function() {
         $('.select2').select2();
+    });
+
+    // Initialize Daterangepicker
+    $('#date_range').daterangepicker({
+        autoUpdateInput: false, // Prevents the input from being automatically populated
+        locale: {
+            format: 'DD-MM-YYYY',
+            cancelLabel: 'Clear', // Adds a clear button to the picker
+        },
+        maxDate:"{{ $beforeAday }}"
+    });
+
+    $('#date_range').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('DD-MM-YYYY') + ' - ' + picker.endDate.format('DD-MM-YYYY'));
+    });
+
+    // Clear the date range when the user clicks on 'Clear'
+    $('#date_range').on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+        $('#start_date').val(null); // Set start_date to null
+        $('#end_date').val(null); // Set end_date to null
+    });
+
+
+    // Capture the date range selection
+    $('#date_range').on('apply.daterangepicker', function(ev, picker) {
+        $('#start_date').val(picker.startDate.format('DD-MM-YYYY'));
+        $('#end_date').val(picker.endDate.format('DD-MM-YYYY'));
     });
 </script>
 <script>
@@ -331,6 +409,13 @@ document.addEventListener('DOMContentLoaded', function () {
         url = url.replace(':userId', userId);
         url = url.replace(':filter', filter);
 
+        let startDate = "{{ $startDate }}";
+        let endDate = "{{ $endDate }}";
+
+        if (startDate && endDate) {
+            url += `?start_date=${startDate}&end_date=${endDate}`;
+        }
+        let no = 1;
         fetch(url.replace(':userId', userId))
             .then(response => response.json())
             .then(tasks => {
@@ -376,6 +461,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
                     tasksHtml += `<tr>
+                                    <td>${no++}</td>
                                     <td>${task.name_show}</td>
                                     <td>${statusIcon} ${task.task_status}</td>
                                     <td>${date_show}</td>
@@ -410,6 +496,7 @@ document.addEventListener('DOMContentLoaded', function () {
 @endsection
 @section('css')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <style>
 .card-header .btn-link {
     color: #007bff;
