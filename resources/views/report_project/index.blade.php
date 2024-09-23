@@ -41,21 +41,79 @@
     </li>
     @endcanAccess
 
-    <!-- Tabel Pembelian -->
-    <table class="table table-bordered" id="datatableLaporanProject">
-        <thead>
-            <tr>
-                <th>Nomor Laporan Proyek</th>
-                <th>Date</th>
-                <th>SPK</th>
-                <th>Proyek</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        </tbody>
-            <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
-        </tbody>
-    </table>
+    @canAccess('dataTableJsonWorkOrderWithoutReportProject','report_projects')
+    <li class="nav-item">
+        <a class="nav-link" id="spk-tab" data-toggle="tab" href="#spk_report" role="tab" aria-controls="spk_report" aria-selected="false">
+            <i class="fa fa-clipboard-list"></i> SPK (Belum Terbuat Laporan)
+        </a>
+    </li>
+    @endcanAccess
+</ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+    <!-- BAST Tab -->
+    @canAccess('dataTableJson','basts')
+    <div class="tab-pane fade show active" id="bast" role="tabpanel" aria-labelledby="bast-tab">
+        <div class="card mt-3 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title">Laporan Proyek</h3>
+                @canAccess('create','report_projects')
+                <button class="btn btn-light float-right" id="btnCreateReportProject">
+                    <i class="fas fa-plus-circle"></i>
+                    Tambah Laporan Proyek
+                </button>
+                @endcanAccess
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                        <!-- Tabel Pembelian -->
+                    <table class="table table-bordered" id="datatableLaporanProject">
+                        <thead>
+                            <tr>
+                                <th>Nomor Laporan Proyek</th>
+                                <th>Tanggal</th>
+                                <th>SPK</th>
+                                <th>Project</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcanAccess
+
+    @canAccess('dataTableJsonWorkOrderWithoutReportProject','report_projects')
+    <!-- SPK Tab -->
+    <div class="tab-pane fade" id="spk_report" role="tabpanel" aria-labelledby="spk-tab">
+        <div class="card mt-3 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title">List SPK</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                <table class="table table-bordered" id="dataTableJsonWorkOrderWithoutReportProject" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Nomor SPK</th>
+                                <th>Total Anggaran</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcanAccess
 </div>
 
 
@@ -82,8 +140,8 @@
             columns: [
                 {data: 'number_result', name: 'number_result', orderable: true},
                 {data: 'date', name: 'date', orderable: true},
-                {data: 'work_order.number_result', name: 'work_order_number_result', orderable: false, searchable: false},
-                {data: 'project.title', name: 'project_name', orderable: false, searchable: false},
+                {data: 'work_order.number_result', name: 'number_result', orderable: false, searchable: false},
+                {data: 'project.title', name: 'project_title', orderable: false, searchable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
             order: [[1, 'desc']],
