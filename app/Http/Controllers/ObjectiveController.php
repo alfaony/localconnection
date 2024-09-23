@@ -65,7 +65,6 @@ class ObjectiveController extends Controller
     {
         DB::beginTransaction();
         try {
-            // dd($request->all());
             foreach ($request->objective_name as $index => $fieldName) 
             {
                 // Create custom field
@@ -95,6 +94,7 @@ class ObjectiveController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
 
+            // dd($th);
             DB::rollback();
             Log::error($th->getMessage());
             return redirect()->route('objective.index')->with('store',false);
@@ -143,9 +143,9 @@ class ObjectiveController extends Controller
             'mission_id' => 'required|exists:missions,id',
             'start_date_objective' => 'nullable|date',
             'end_date_objective' => 'nullable|date|after_or_equal:start_date_objective',
-            'objective_name' => 'required|string|max:255',
+            'objective_name' => 'required|string|max:190',
             'key_result' => 'nullable|array',
-            'key_result.*' => 'required|string|max:255',
+            'key_result.*' => 'required|string|max:190',
             'start_date' => 'nullable|array',
             'start_date.*' => 'nullable|date',
             'end_date' => 'nullable|array',

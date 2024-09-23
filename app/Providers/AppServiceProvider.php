@@ -60,7 +60,7 @@ class AppServiceProvider extends ServiceProvider
             $securityMenuArray = array();
             $productivityMenuArray = array();
 
-            $equipmentMenu = ['equipment','equipment_reductions'];
+            $equipmentMenu = ['devices','equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
             $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
@@ -325,6 +325,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Kategori Product',
                     'route' => 'product-category.index',
                     'icon' => 'fa fa-list',
+                ],
+                'devices' => 
+                [
+                    'text' => 'Device',
+                    'route' => 'device.index',
+                    'icon' => 'fa fa-mobile-alt',
                 ],
             ];
 

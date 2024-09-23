@@ -38,7 +38,7 @@
                         </div>
                         <div class="col-md-8 mb-3">
                             <label for="custom_field_name">Objective</label>
-                            <input type="text" class="form-control custom-field-name" name="objective_name" value="{{ $objective->name }}" required>
+                            <input type="text" class="form-control custom-field-name" name="objective_name" value="{{ $objective->name }}" maxlength="190" required>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="custom_field_type">Divisi</label>
