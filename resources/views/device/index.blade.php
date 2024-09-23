@@ -34,12 +34,12 @@
         <table class="table table-bordered table-hover table-striped mb-0">
             <thead class="thead-light">
                 <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Location</th>
-                    <th>Status (ON/OFF)</th>
-                    <th>Availability</th>
-                    <th>Last Connected</th>
+                    <th>NAME</th>
+                    <th>TYPE</th>
+                    <th>LOCATION / TYPE</th>
+                    <th>CONNECTIVITY</th>
+                    <th>STATUS (ON/OFF)</th>
+                    <th>AVAILABILITY</th>
                 </tr>
             </thead>
             <tbody id="deviceTableBody">
@@ -57,50 +57,8 @@
 </div>
 @stop
 
-@section('css')
-<!-- Add Bootstrap Toggle Switches -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap4-toggle/css/bootstrap4-toggle.min.css" rel="stylesheet">
-<style>
-    .pagination {
-        justify-content: center;
-        padding: 15px 0;
-    }
-    .pagination .page-item .page-link {
-        color: #007bff;
-    }
-    .pagination .page-item.disabled .page-link {
-        color: #6c757d;
-    }
-    .pagination .page-item.active .page-link {
-        background-color: #007bff;
-        border-color: #007bff;
-        color: white;
-    }
-    #loadingSpinner {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    .spinner-border {
-        width: 3rem;
-        height: 3rem;
-    }
-    /* Styling for table hover effects */
-    table.table-hover tbody tr:hover {
-        background-color: #f8f9fa;
-    }
-    /* No devices message in the center of the table */
-    #noDevicesMessage {
-        display: none;
-    }
-</style>
-@stop
-
 @section('js')
-<!-- Add Bootstrap Toggle JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap4-toggle/js/bootstrap4-toggle.min.js"></script>
-@canAccess('dataJson','devices')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
 <script>
     function fetchDevices(page = 1) {
         let searchQuery = $('#deviceSearch').val();
@@ -125,26 +83,42 @@
                     return;
                 }
 
-                // Append each device row with toggle switches
+                // Append each device row with badges
                 response.devices.forEach(function(device) {
+                    let typeBadge = getTypeBadge(device.type);
+                    let locationBadge = getLocationBadge(device.location_type);
+
                     $('#deviceTableBody').append(`
                         <tr>
                             <td>${device.name}</td>
-                            <td>${device.type}</td>
-                            <td>${device.location}</td>
+                            <td>${typeBadge}</td>
                             <td>
-                                <input type="checkbox" ${device.status ? 'checked' : ''} data-toggle="toggle" data-on="ON" data-off="OFF" data-onstyle="success" data-offstyle="danger">
+                                <p class="mt-0 mb-0">
+                                    ${device.location}
+                                </p>
+                                <p class="mt-0 mb-0">
+                                    ${locationBadge}
+                                </p>
                             </td>
                             <td>
-                                <input type="checkbox" ${device.active ? 'checked' : ''} data-toggle="toggle" data-on="Active" data-off="Inactive" data-onstyle="primary" data-offstyle="secondary">
+                                <span class="badge ${device.connected ? 'badge-connected' : 'badge-not-connected'}">
+                                    ${device.connected ? 'Connected' : 'Offline'}
+                                </span>
+                                <p class="text-sm-start">${device.connected ? '' : formatTimestampWIB(device.last_connected)}</p>
                             </td>
-                            <td>${formatTimestampWIB(device.last_connected)}</td>
+                            <td>
+                                <span class="badge ${device.status ? 'badge-on' : 'badge-off'}">
+                                    ${device.status ? 'ON' : 'OFF'}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge ${device.active ? 'badge-available' : 'badge-unavailable'}">
+                                    ${device.active ? 'Active' : 'Inactive'}
+                                </span>
+                            </td>
                         </tr>
                     `);
                 });
-
-                // Initialize Bootstrap Toggle Switches
-                $('input[data-toggle="toggle"]').bootstrapToggle();
 
                 // Update pagination links
                 updatePagination(response.pagination);
@@ -186,6 +160,57 @@
         $('#paginationLinks').html(`<ul class="pagination">${paginationHtml}</ul>`);
     }
 
+    // Handle pagination link clicks
+    $(document).on('click', '#paginationLinks a', function(e) {
+        e.preventDefault();
+        let page = $(this).data('page');
+        fetchDevices(page);
+    });
+
+    // Trigger search on button click
+    function searchDevices() {
+        fetchDevices(1); // Always go to page 1 when searching
+    }
+
+    // Fetch devices when the page is first loaded
+    $(document).ready(function() {
+        fetchDevices();
+    });
+
+    function getTypeBadge(type) {
+        switch (type) {
+            case 'LOCK-REVERSE':
+                return `<span class="badge badge-pill badge-danger">
+                            <i class="fa-solid fa-lock mr-1" aria-hidden="true"></i>LOCK-REVERSE
+                        </span>`;
+            case 'LIGHT':
+                return `<span class="badge badge-pill badge-warning">
+                            <i class="fa-solid fa-lightbulb mr-1" aria-hidden="true"></i>LIGHT
+                        </span>`;
+            default:
+                return `<span class="badge badge-pill badge-info">
+                            ${type}
+                        </span>`;
+        }
+    }
+
+    function getLocationBadge(location_type) {
+        switch (location_type) {
+            case 'ROOM':
+                return `<span class="badge badge-pill badge-primary">
+                            <i class="fa-solid fa-shop mr-1" aria-hidden="true"></i>ROOM
+                        </span>`;
+            case 'STORAGE':
+                return `<span class="badge badge-pill badge-warning">
+                            <i class="fa-solid fa-lock mr-1" aria-hidden="true"></i>STORAGE
+                        </span>`;
+            default:
+                return `<span class="badge badge-pill badge-info">
+                            ${location_type}
+                        </span>`;
+        }
+    }
+
     function formatTimestampWIB(timestamp) 
     {
         if (!timestamp) return ''; // Return empty if there's no timestamp
@@ -221,26 +246,68 @@
         return `${month}/${day}/${year} ${hours}:${minutes}:${seconds} WIB`;
     }
 
-
-
-
-
-    // Handle pagination link clicks
-    $(document).on('click', '#paginationLinks a', function(e) {
-        e.preventDefault();
-        let page = $(this).data('page');
-        fetchDevices(page);
-    });
-
-    // Trigger search on button click
-    function searchDevices() {
-        fetchDevices(1); // Always go to page 1 when searching
-    }
-
-    // Fetch devices when the page is first loaded
-    $(document).ready(function() {
-        fetchDevices();
-    });
 </script>
-@endcanAccess
+@stop
+
+@section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .badge-on {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-off {
+        background-color: #dc3545;
+        color: white;
+    }
+    .badge-available {
+        background-color: #007bff;
+        color: white;
+    }
+    .badge-unavailable {
+        background-color: #6c757d;
+        color: white;
+    }
+    .badge-connected {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-not-connected {
+        background-color: #dc3545;
+        color: white;
+    }
+    .pagination {
+        justify-content: center;
+        padding: 15px 0;
+    }
+    .pagination .page-item .page-link {
+        color: #007bff;
+    }
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+    #loadingSpinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+    /* Styling for table hover effects */
+    table.table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    /* No devices message in the center of the table */
+    #noDevicesMessage {
+        display: none;
+    }
+</style>
 @stop
