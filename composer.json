@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.0.2",
         "anhskohbo/no-captcha": "^3.6",
+        "dcblogdev/laravel-xero": "^1.1",
         "doctrine/dbal": "^3.7",
         "guzzlehttp/guzzle": "^7.2",
         "jeroennoten/laravel-adminlte": "^3.9",

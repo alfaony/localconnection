@@ -56,6 +56,8 @@ use App\Http\Controllers\InboxController;
 use App\Http\Controllers\LetterSubmissionController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\DeviceController;
+use Dcblogdev\Xero\Models\XeroToken;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -66,6 +68,16 @@ use App\Http\Controllers\DeviceController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::group(['middleware' => ['web', 'XeroAuthenticated']], function(){
+  Route::get('xero', function(){
+      dd("here");
+  });
+
+  Route::get('xero/connect', function(){
+    return dd(Xero::connect());
+  });
+});
+
 
 Route::get('/', function () {
     return redirect()->to('/home');
