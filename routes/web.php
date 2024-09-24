@@ -56,7 +56,8 @@ use App\Http\Controllers\InboxController;
 use App\Http\Controllers\LetterSubmissionController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\DeviceController;
-use Dcblogdev\Xero\Models\XeroToken;
+use App\Http\Controllers\XeroController;
+use App\Http\Controllers\InvoiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,29 +69,26 @@ use Dcblogdev\Xero\Models\XeroToken;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+// ** Menu Yang mengakses XERO
 Route::group(['middleware' => ['web', 'XeroAuthenticated']], function(){
-  Route::get('xero', function(){
-      dd("here");
-  });
-
-  Route::get('xero/connect', function(){
-    return dd(Xero::connect());
-  });
+  Route::resource('invoice',InvoiceController::class);
 });
 
-
-Route::get('/', function () {
-    return redirect()->to('/home');
-});
 
 Auth::routes([
     'register' => false, // Registration Routes...
   ]);
 
+Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
+  // Xero Setting
+  Route::get('xero/connect', [XeroController::class,'connect']);
+  Route::get('xero/disconnect', [XeroController::class,'disconnect']);
+  
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
   
