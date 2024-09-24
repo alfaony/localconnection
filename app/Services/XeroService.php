@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use Dcblogdev\Xero\Models\XeroToken;
+use LangleyFoxall\XeroLaravel\XeroApp;
+use League\OAuth2\Client\Token\AccessToken;
+use Dcblogdev\Xero\Facades\Xero;
 use Illuminate\Support\Facades\Log;
 use App\Models\ApiLog;
 use Illuminate\Support\Facades\Auth;
 
-use Xero;
 
 class XeroService
 {
@@ -16,6 +18,24 @@ class XeroService
      *
      * @return \Illuminate\Http\RedirectResponse
      */
+    protected $xero;
+
+    /**
+     * Constructor to initialize the XeroApp instance.
+     */
+    public function __construct()
+    {
+        $token = XeroToken::first();
+
+        if ($token) 
+        {
+            $this->xero = new XeroApp(
+                new AccessToken(['access_token' => $token->access_token]),
+                $token->tenant_id
+            );
+        }
+    }
+
     public function connect()
     {
         try {
@@ -53,42 +73,31 @@ class XeroService
     }
 
     public function checkOrCreateContact(array $contactData)
-    {
-        try {
-            $queryParams = [
-                'where' => 'EmailAddress=="' . $contactData['EmailAddress'] . '" || Name=="' . $contactData['Name'] . '"'
+    {   
+        $existingContacts = $this->xero->contacts()->where('EmailAddress', $contactData['EmailAddress'])
+                                                 ->where('Name', $contactData['Name'])
+                                                 ->first();
+        if(!$existingContacts)
+        {
+            $data = [
+                'Name' => "testing",
+                'EmailAddress' => "testing@gmail.com",
+                'FirstName' => "",
+                'LastName' => "",
+                'Addresses' => [
+                    [
+                        'AddressType' => 'POBOX',
+                        'City' => "asdad",
+                        'Region' => "asd"
+                    ]
+                ]
             ];
 
-            $contactExists = Xero::contacts()->where('name',)->get();
-            dd($contactExists);
-
-
-            // Log the successful creation of the contact
-            ApiLog::create([
-                'user_id' => Auth::id(),
-                'endpoint' => 'Accounting\\Contact (POST)',
-                'method' => 'POST',
-                'request_payload' => json_encode($contactData),
-                'response_payload' => json_encode($newContact->toArray()),
-                'status_code' => 201,
-            ]);
+            $newContact = Xero::contacts()->store($data);
 
             return $newContact;
-        } catch (\Exception $e) {
-            // Log the error
-            dd($e);
-            Log::error('Failed to check or create contact in Xero: ' . $e->getMessage());
-
-            ApiLog::create([
-                'user_id' => Auth::id(),
-                'endpoint' => 'Accounting\\Contact',
-                'method' => 'GET/POST',
-                'request_payload' => json_encode($contactData),
-                'response_payload' => json_encode(['error' => $e->getMessage()]),
-                'status_code' => 500,
-            ]);
-
-            throw new \Exception('Failed to check or create contact in Xero.');
         }
+
+        return $existingContacts;
     }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5455568b929981e8bd7147d3cbeabe7d",
+    "content-hash": "04361394e6705c45e0ff7df24ccaf3b8",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -369,6 +369,107 @@
                 }
             ],
             "time": "2023-01-15T23:15:59+00:00"
+        },
+        {
+            "name": "calcinai/oauth2-xero",
+            "version": "v1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/calcinai/oauth2-xero.git",
+                "reference": "4354c2dd4956b6fbe9fc7dd4f51ff4bb7807b7ef"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/calcinai/oauth2-xero/zipball/4354c2dd4956b6fbe9fc7dd4f51ff4bb7807b7ef",
+                "reference": "4354c2dd4956b6fbe9fc7dd4f51ff4bb7807b7ef",
+                "shasum": ""
+            },
+            "require": {
+                "firebase/php-jwt": "^5.0|^6.0",
+                "league/oauth2-client": "1.*|2.*",
+                "php": ">=7.1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Calcinai\\OAuth2\\Client\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Calcinai",
+                    "email": "michael@calcin.ai"
+                }
+            ],
+            "description": "Xero OAuth 2.0 Client Provider for The PHP League OAuth2-Client",
+            "keywords": [
+                "Authentication",
+                "SSO",
+                "authorization",
+                "identity",
+                "idp",
+                "oauth",
+                "oauth2",
+                "single sign on",
+                "xero",
+                "xero api"
+            ],
+            "support": {
+                "issues": "https://github.com/calcinai/oauth2-xero/issues",
+                "source": "https://github.com/calcinai/oauth2-xero/tree/v1.3.0"
+            },
+            "time": "2022-10-10T20:42:17+00:00"
+        },
+        {
+            "name": "calcinai/xero-php",
+            "version": "v2.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/calcinai/xero-php.git",
+                "reference": "ad81088bf5cbc1bc0a7532d47a08aa66846475e4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/calcinai/xero-php/zipball/ad81088bf5cbc1bc0a7532d47a08aa66846475e4",
+                "reference": "ad81088bf5cbc1bc0a7532d47a08aa66846475e4",
+                "shasum": ""
+            },
+            "require": {
+                "calcinai/oauth2-xero": "^1.0",
+                "ext-json": "*",
+                "ext-simplexml": "*",
+                "guzzlehttp/guzzle": "^6.5|^7.0",
+                "guzzlehttp/psr7": "^1.5|^1.6|^2.1.1",
+                "php": ">=5.5.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^5"
+            },
+            "suggest": {
+                "ext-fileinfo": "*",
+                "ext-mbstring": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "XeroPHP\\": "src/XeroPHP/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A client implementation of the Xero API, with a cleaner OAuth interface and ORM-like abstraction.",
+            "homepage": "https://github.com/calcinai/xero-php",
+            "support": {
+                "issues": "https://github.com/calcinai/xero-php/issues",
+                "source": "https://github.com/calcinai/xero-php/tree/v2.7.0"
+            },
+            "time": "2024-07-19T03:30:07+00:00"
         },
         {
             "name": "composer/semver",
@@ -2805,6 +2906,63 @@
                 }
             ],
             "time": "2024-06-23T20:49:35+00:00"
+        },
+        {
+            "name": "langleyfoxall/xero-laravel",
+            "version": "v3.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/langleyfoxall/xero-laravel.git",
+                "reference": "f407dd6d8927491f7792da5f0172c3ca2f1a4baf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/langleyfoxall/xero-laravel/zipball/f407dd6d8927491f7792da5f0172c3ca2f1a4baf",
+                "reference": "f407dd6d8927491f7792da5f0172c3ca2f1a4baf",
+                "shasum": ""
+            },
+            "require": {
+                "calcinai/xero-php": "^2.2.2",
+                "laravel/framework": "^5.1||^6.0||^7.0||^8.0||^9.0||^10.0||^11.0",
+                "php": ">=7.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "LangleyFoxall\\XeroLaravel\\Providers\\XeroLaravelServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LangleyFoxall\\XeroLaravel\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-3.0-only"
+            ],
+            "authors": [
+                {
+                    "name": "Jordan Hall",
+                    "email": "jordan@langleyfoxall.co.uk",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "💸 Access the Xero accounting system using an Eloquent-like syntax",
+            "keywords": [
+                "Accounting",
+                "eloquent",
+                "laravel",
+                "php",
+                "xero"
+            ],
+            "support": {
+                "issues": "https://github.com/langleyfoxall/xero-laravel/issues",
+                "source": "https://github.com/langleyfoxall/xero-laravel/tree/v3.4.0"
+            },
+            "time": "2024-07-01T14:41:42+00:00"
         },
         {
             "name": "laravel/framework",
