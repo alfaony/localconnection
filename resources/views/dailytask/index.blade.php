@@ -211,6 +211,14 @@
                         <td class="name-cell">{{ $dailytask->user->name ?? '' }}</td>
                         <td class="name-cell">{{ $dailytask->assign->name ?? '' }}</td>
                         <td>
+                            <button class="btn btn-info btn-sm show-popup-btn" data-task-id="{{ $dailytask->id }}" 
+                                    data-task-name="{{ $dailytask->name }}" 
+                                    data-task-status="{{ $dailytask->taskStatus->name }}"
+                                    data-task-date="{{ $dailytask->dateShow }}">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </td>
+                        <td>
                             @if(!$dailytask->approved)
                             <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
                                 @canAccess('show','dailytasks')
@@ -257,15 +265,159 @@
     </div>
 
 </div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="sidePopup" aria-labelledby="sidePopupLabel">
+  <div class="offcanvas-header d-flex justify-content-end">
+
+    <div class="p-2">
+        <button class="btn btn-info btn-sm">Edit</button>
+    </div>
+    <div class="p-2">
+        <button class="btn btn-danger btn-sm">Delete</button>
+    </div>
+    <div class="p-2">
+        <button class="btn btn-info btn-sm">Detail</button>
+    </div>
+
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+        <div class="row p-1">
+            <div class="col-md-9">
+                <strong>Improvement BOS > Development BAST</strong>
+            </div>
+            <div class="form-group row mb-0">
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                        Ditugaskan
+                    </p> 
+                </div>
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
+                    </p> 
+                </div>
+            </div>
+            <div class="form-group row mb-0">
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                        Tanggal
+                    </p> 
+                </div>
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
+                    </p> 
+                </div>
+            </div>
+            <div class="form-group row mb-0">
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                    Status Submit
+                    </p> 
+                </div>
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
+                    </p> 
+                </div>
+            </div>
+            <div class="form-group row mb-0">
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                        Status Tugas
+                    </p> 
+                </div>
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
+                    </p> 
+                </div>
+            </div>
+            <div class="form-group row mb-0">
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                        Tipe
+                    </p> 
+                </div>
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
+                    </p> 
+                </div>
+            </div>
+            <div class="form-group row mb-0">
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                    Recurring Days
+                    </p> 
+                </div>
+                <div class="col-md-5">
+                    <p class="form-control-plaintext">
+                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
+                    </p> 
+                </div>
+            </div>
+            <div class="form-group row mb-0">
+                <div class="col-md-12">
+                    <p class="form-control-plaintext">
+                        Deskripsi :
+                    </p> 
+                </div>
+                <div class="col-md-12 card">
+                    <div class="card-body">
+                        The extracted folder contains a large number of PNG files, each representing QR codes for various Toyota service centers or locations. :
+                        Tunas Toyota Balaraja_EVDL-JXK7XS
+                        Setiajaya Toyota Parung_EVDL-E6SYZM
+                        AUTO2000 Pramuka_EVDL-RFP2V0
+                        Astrido Toyota Tangerang_EVDL-SMARHH
+                    </div>
+                </div>
+            </div>
+        </div>
+  </div>
+</div>
+
 @endsection
 
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const sidePopup = document.getElementById('sidePopup');
+    const popupContent = document.getElementById('popupContent');
+
+    // Bootstrap Offcanvas instance
+    const bsOffcanvas = new bootstrap.Offcanvas(sidePopup);
+
+    // Show the popup when a "Show" button is clicked
+    document.querySelectorAll('.show-popup-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const taskName = this.getAttribute('data-task-name');
+            const taskStatus = this.getAttribute('data-task-status');
+            const taskDate = this.getAttribute('data-task-date');
+
+            // Populate the popup content with task details
+            // popupContent.innerHTML = `
+            //     <h3>${taskName}</h3>
+            //     <p>Status: ${taskStatus}</p>
+            //     <p>Date: ${taskDate}</p>
+            // `;
+
+            // Show the Bootstrap Offcanvas popup
+            bsOffcanvas.show();
+        });
+    });
+});
+
+
+</script>
 <script>
     $(document).ready(function () {
         // Initialize Daterangepicker
@@ -341,8 +493,39 @@
 @section('css')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<style>
+.form-control-plaintext {
+    white-space: normal; /* Allows text to wrap */
+}
+.side-popup {
+    position: fixed;
+    top: 0;
+    right: -400px; /* Keep this hidden offscreen by default */
+    width: 400px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+    z-index: 1000;
+    transition: right 0.5s ease-in-out; /* Make the transition smoother */
+    overflow-y: auto;
+}
+
+.side-popup-content {
+    padding: 20px;
+}
+
+.close-btn {
+    font-size: 24px;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    cursor: pointer;
+}
+
+</style>
 <style>
     body {
         font-family: Arial, sans-serif;

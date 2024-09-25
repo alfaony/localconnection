@@ -77,6 +77,8 @@ Auth::routes([
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+Route::get('/dailytask/showJson/{slug}', [DailyTaskController::class,'showJson'])->name('dailytask.showJson');
+
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
   Route::resource('project', ProjectController::class);

@@ -355,6 +355,27 @@ class DailyTaskController extends Controller
 
         
     }
+    public function showJson($slug)
+    {
+        try {
+            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+            $daysMap = config('custom.days');
+            $isOverdue = $dailytask->isOverdue();
+
+            $htmlContent = view('dailytask.sidebar', compact('dailytask','daysMap','isOverdue'))->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $htmlContent
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Task not found.'
+            ], 404);
+        }
+    }
 
     public function show($slug)
     {
