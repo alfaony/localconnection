@@ -381,10 +381,6 @@
 @endcanAccess
 @canAccess('statuschange','dailytasks')
 <script>
-    $(document).ready(function () {
-        $('.select2').select2();
-    });
-
     $(document).on('click', '#start-task-btn', function() {
         var taskSlug = $(this).data('slug-task'); // Get the slug from the data attribute
 
@@ -489,92 +485,107 @@
 </script>
 @canAccess('approvement','dailytasks')
 <script>
-$(document).on('click', '#submitApprovement, #submitAndContinue', function(e) {
-    e.preventDefault();
+    $(document).on('click', '#submitApprovement, #submitAndContinue', function(e) {
+        e.preventDefault();
 
-    // Show confirmation alert
-    Swal.fire({
-        title: 'Anda yakin?',
-        text: "Anda tidak dapat membatalkan ini!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, setujui!',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Proceed with form submission
-            let isContinue = $(this).attr('id') === 'submitAndContinue';
-            let nextTaskId = $('#submitAndContinue').data('next-id'); // Assuming you have the next task slug in a data attribute
+        // Show confirmation alert
+        Swal.fire({
+            title: 'Anda yakin?',
+            text: "Anda tidak dapat membatalkan ini!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, setujui!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Proceed with form submission
+                let isContinue = $(this).attr('id') === 'submitAndContinue';
+                let nextTaskId = $('#submitAndContinue').data('next-id'); // Assuming you have the next task slug in a data attribute
 
-            var formData = $('#approvementForm').serialize(); // Get all form data
-            var slug = $('#submitApprovementSlug').val(); 
-            let url = "{{ route('dailytask.approvement', ':id') }}";
-            url = url.replace(':id', slug);
-            
-            $.ajax({
-                url: url,
-                method: 'PUT',
-                data: formData + '&_token=' + '{{ csrf_token() }}', // Include CSRF token in the data
-                beforeSend: function() {
-                    // Show a loading spinner or disable the button during submission
-                    $('#submitApprovement').attr('disabled', true).text('Processing...');
-                },
-                success: function(response) {
-                    if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Task approved successfully!',
-                            timer: 1000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            console.log(isContinue, nextTaskId);
-                            
-
-                            if (isContinue && nextTaskId) 
-                            {
-                                reloadPopupContent(slug); // Function to reload the popup content
-                                let bsOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('sidePopup'));
-                                bsOffcanvas.hide();
-
-                                // After closing, trigger the click on the next task button
-                                setTimeout(function() {
-                                    $("#btn-show-" + nextTaskId).click();
-                                }, 400); // Delay to ensure the popup closes before opening the next one
+                var formData = $('#approvementForm').serialize(); // Get all form data
+                var slug = $('#submitApprovementSlug').val(); 
+                let url = "{{ route('dailytask.approvement', ':id') }}";
+                url = url.replace(':id', slug);
+                
+                $.ajax({
+                    url: url,
+                    method: 'PUT',
+                    data: formData + '&_token=' + '{{ csrf_token() }}', // Include CSRF token in the data
+                    beforeSend: function() {
+                        // Show a loading spinner or disable the button during submission
+                        $('#submitApprovement').attr('disabled', true).text('Processing...');
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Task approved successfully!',
+                                timer: 1000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                console.log(isContinue, nextTaskId);
                                 
-                            } else 
-                            {
-                                reloadPopupContent(slug); // Function to reload the popup content
-                            }
-                        });
-                    } else {
+
+                                if (isContinue && nextTaskId) 
+                                {
+                                    reloadPopupContent(slug); // Function to reload the popup content
+                                    let bsOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('sidePopup'));
+                                    bsOffcanvas.hide();
+
+                                    // After closing, trigger the click on the next task button
+                                    setTimeout(function() {
+                                        $("#btn-show-" + nextTaskId).click();
+                                    }, 400); // Delay to ensure the popup closes before opening the next one
+                                    
+                                } else 
+                                {
+                                    reloadPopupContent(slug); // Function to reload the popup content
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to approve the task. Please try again.'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Failed to approve the task. Please try again.'
+                            text: 'An error occurred. Please try again.'
                         });
+                    },
+                    complete: function() {
+                        // Re-enable the button and reset the text after submission
+                        $('#submitApprovement').attr('disabled', false).text('Simpan Tugas');
                     }
-                },
-                error: function(xhr, status, error) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'An error occurred. Please try again.'
-                    });
-                },
-                complete: function() {
-                    // Re-enable the button and reset the text after submission
-                    $('#submitApprovement').attr('disabled', false).text('Simpan Tugas');
-                }
-            });
-        }
+                });
+            }
+        });
     });
-});
+</script>
+@endcanAccess
+@canAccess('export','dailytasks')
+<script>
+    function exportFilteredData(format) 
+    {
+        let params = new URLSearchParams(window.location.search); // Get the current query string parameters
+        let url = '{{ route('dailytask.export') }}' + '?format=' + format + '&' + params.toString();
+
+        window.location.href = url;
+    }
 </script>
 @endcanAccess
 <script>
+    $(document).ready(function () {
+        $('.select2').select2();
+    });
+    
     $(document).ready(function () {
         // Initialize Daterangepicker
         $('#date_range').daterangepicker({
@@ -625,17 +636,6 @@ $(document).on('click', '#submitApprovement, #submitAndContinue', function(e) {
         });
     });
 </script>
-@canAccess('export','dailytasks')
-<script>
-    function exportFilteredData(format) 
-    {
-        let params = new URLSearchParams(window.location.search); // Get the current query string parameters
-        let url = '{{ route('dailytask.export') }}' + '?format=' + format + '&' + params.toString();
-
-        window.location.href = url;
-    }
-</script>
-@endcanAccess
 @endsection
 
 @section('css')
