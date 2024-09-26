@@ -295,6 +295,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script>
 @canAccess('show','dailytasks')
 <script>
     $(document).on('click', '.show-popup-btn', function() {
@@ -323,6 +324,10 @@
                     // Re-initialize any necessary plugins (like tooltips or editors)
                     if ($('#sidePopup .offcanvas-body').find('#description_note').length > 0) {
                         generateThriveEditor("note");
+                    }
+
+                    if ($('#sidePopup .offcanvas-body').find('#dropzone').length > 0) {
+                        initializeDropzone()
                     }
                 } else {
                     Swal.fire({
@@ -367,6 +372,7 @@
                         generateThriveEditor("note");
                     }
 
+                    let bsOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('sidePopup'));
                     bsOffcanvas.show(); // Keep the popup open
                 } else {
                     alert('Task not found.');
@@ -374,6 +380,92 @@
             },
             error: function() {
                 alert('Error fetching task details.');
+            }
+        });
+    }
+
+    function initializeDropzone() 
+    {
+        Dropzone.autoDiscover = false; // Prevent automatic Dropzone initialization
+
+        var taskSlug = $('#task_slug').val(); // Get task slug from the hidden input
+        var myDropzone = new Dropzone("#dropzone", {
+            url: "{{ route('dailytask.report', ':slug') }}".replace(':slug', taskSlug),
+            paramName: "media", // Name of the file input field
+            maxFilesize: 1, // Maximum file size in MB
+            addRemoveLinks: true,
+            autoProcessQueue: false, // Prevent automatic processing of files
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Pass CSRF token
+            },
+            acceptedFiles: "image/*,application/pdf,.doc,.docx", // Accept certain file types
+            init: function () {
+                var dropzoneInstance = this; // Store Dropzone instance for later use
+
+                // Handle the form submission
+                $('#submitReport').on('click', function (e) {
+                    e.preventDefault();
+
+                    // Validate the note field
+                    if ($('#description_note').val().trim() === "") {
+                        alert("Please provide a note.");
+                        return;
+                    }
+
+                    // If there are files to upload, process Dropzone queue
+                    if (dropzoneInstance.getQueuedFiles().length > 0) {
+                        dropzoneInstance.processQueue();
+                    } else {
+                        // If no files, submit the form manually
+                        submitFormWithoutFiles();
+                    }
+                });
+
+                // Append additional data to the file upload request
+                this.on("sending", function (file, xhr, formData) {
+                    formData.append("_method", "PUT");
+                    formData.append("note", $('#description_note').val());
+                    formData.append("request", "index");
+                });
+
+                // Handle the completion of the queue
+                this.on("queuecomplete", function () {
+                    alert("Task report submitted successfully.");
+                    window.location.reload(); // Reload the page on completion
+                });
+
+                // Handle errors
+                this.on("error", function (file, response) {
+                    alert("Error uploading file: " + response);
+                });
+            }
+        });
+    }
+
+    // Function to handle form submission without file uploads
+    function submitFormWithoutFiles() {
+        var taskSlug = $('#task_slug').val(); // Get task slug
+        var note = $('#description_note').val(); // Get the note
+        var formData = new FormData();
+        formData.append("_method", "PUT");
+        formData.append("note", note);
+        formData.append("request", "index");
+
+        $.ajax({
+            url: "{{ route('dailytask.report', ':slug') }}".replace(':slug', taskSlug),
+            method: "POST",
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Pass CSRF token
+            },
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                alert("Task report submitted successfully.");
+                window.location.reload(); // Reload the page on success
+            },
+            error: function (response) {
+                alert("Error submitting the report.");
             }
         });
     }
@@ -581,6 +673,7 @@
     }
 </script>
 @endcanAccess
+
 <script>
     $(document).ready(function () {
         $('.select2').select2();
@@ -646,6 +739,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.css" rel="stylesheet">
 <style>
     .loading-overlay {
     position: fixed;
