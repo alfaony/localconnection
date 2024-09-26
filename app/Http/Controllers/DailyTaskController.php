@@ -712,7 +712,7 @@ class DailyTaskController extends Controller
     {
         $request->validate([
             'note' => 'required|string',
-            'media.*' => 'nullable|file|max:1024'
+            'media.*' => 'required|file|max:1024'
         ], [
             'note.required' => 'Catatan wajib diisi.',
             'note.string' => 'Catatan harus berupa teks.',
@@ -799,11 +799,12 @@ class DailyTaskController extends Controller
 
             if($request->request)
             {
-                return redirect()->route('dailytask.index')->with('report', true);
+                return redirect()->back()->with('report', true);
             }
 
             return redirect()->route('dailytask.show', $dailytask->slug)->with('report', true);
         } catch (\Throwable $th) {
+            // dd($th);
             DB::rollback();
             Log::error($th->getMessage());
             return redirect()->route('dailytask.show', $dailytask->slug);
