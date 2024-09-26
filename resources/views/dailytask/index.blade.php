@@ -17,7 +17,7 @@
         <div class="alert alert-success mt-3">Tugas Berhasil Diperbarui</div>
         @endif
         @if(Session::get('report'))
-        <div class="alert alert-success mt-3">Tugas Berhasil Ditambahkan</div>
+        <div class="alert alert-success mt-3">Tugas Berhasil Ditambahkan Laporan</div>
         @endif
         @if(Session::get('delete'))
         <div class="alert alert-success mt-3">Tugas Berhasil Terhapus</div>
@@ -168,13 +168,14 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($dailyTasks as $dailytask)
+                @foreach ($dailyTasks as $index => $dailytask)
                     @php
                         $startDate = \Carbon\Carbon::parse($dailytask->start_date);
                         $endDate = \Carbon\Carbon::parse($dailytask->end_date);
                         $isOverdue = $dailytask->isOverdue();
+                        $nextTask = $dailyTasks->get($index + 1); // Get the next task in the list
                     @endphp
-                    <tr>
+                    <tr id="task-row-{{ $dailytask->id }}"> <!-- Added ID for each row -->
                         <td>
                             <span class="{{ $isOverdue ? 'text-danger' : '' }}">
                                 {{ $dailytask->dateShow }}
@@ -211,19 +212,13 @@
                         <td class="name-cell">{{ $dailytask->user->name ?? '' }}</td>
                         <td class="name-cell">{{ $dailytask->assign->name ?? '' }}</td>
                         <td>
-                            <button class="btn btn-info btn-sm show-popup-btn" data-task-id="{{ $dailytask->id }}" 
-                                    data-task-name="{{ $dailytask->name }}" 
-                                    data-task-status="{{ $dailytask->taskStatus->name }}"
-                                    data-task-date="{{ $dailytask->dateShow }}">
+                            @if(!$dailytask->approved)
+                            @canAccess('show','dailytasks')
+                            <button class="btn btn-info btn-sm show-popup-btn" id="btn-show-{{ $dailytask->id }}" data-task-id="{{ $dailytask->id }}" data-task-slug="{{ $dailytask->slug }}">
                                 <i class="fa fa-eye"></i>
                             </button>
-                        </td>
-                        <td>
-                            @if(!$dailytask->approved)
+                            @endcanAccess
                             <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
-                                @canAccess('show','dailytasks')
-                                <a href="{{ route('dailytask.show', $dailytask->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
-                                @endcanAccess
                                 @if(($dailytask->user_id == Auth::user()->id) || (Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER && $dailytask->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE))
                                 @canAccess('edit','dailytasks')
                                 <a href="{{ route('dailytask.edit', $dailytask->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
@@ -237,7 +232,9 @@
                             </form>
                             @else
                             @canAccess('show','dailytasks')
-                            <a href="{{ route('dailytask.show', $dailytask->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
+                            <button class="btn btn-info btn-sm show-popup-btn" id="btn-show-{{ $dailytask->id }}" data-task-id="{{ $dailytask->id }}" data-task-slug="{{ $dailytask->slug }}">
+                                <i class="fa fa-eye"></i>
+                            </button>
                             @endcanAccess
                             @canAccess('edit','dailytasks')
                             @canAccess('approvement','dailytasks')
@@ -260,124 +257,32 @@
                 @endforeach
             </tbody>
         </table>
-
-        {{ $dailyTasks->withQueryString()->links('vendor.pagination.bootstrap-4') }}
     </div>
+    {{ $dailyTasks->withQueryString()->links('vendor.pagination.bootstrap-4') }}
 
 </div>
 
 <div class="offcanvas offcanvas-end" tabindex="-1" id="sidePopup" aria-labelledby="sidePopupLabel">
-  <div class="offcanvas-header d-flex justify-content-end">
-
-    <div class="p-2">
-        <button class="btn btn-info btn-sm">Edit</button>
-    </div>
-    <div class="p-2">
-        <button class="btn btn-danger btn-sm">Delete</button>
-    </div>
-    <div class="p-2">
-        <button class="btn btn-info btn-sm">Detail</button>
-    </div>
-
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-  <div class="offcanvas-body">
-        <div class="row p-1">
-            <div class="col-md-9">
-                <strong>Improvement BOS > Development BAST</strong>
+    <div class="offcanvas-header">
+        <div class="d-flex justify-content-end w-100">
+            <div class="me-auto">
+                <button class="btn btn-info text-white btn-sm me-2">Edit</button>
+                <button class="btn btn-info text-white btn-sm">Detail</button>
             </div>
-            <div class="form-group row mb-0">
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                        Ditugaskan
-                    </p> 
-                </div>
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
-                    </p> 
-                </div>
-            </div>
-            <div class="form-group row mb-0">
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                        Tanggal
-                    </p> 
-                </div>
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
-                    </p> 
-                </div>
-            </div>
-            <div class="form-group row mb-0">
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                    Status Submit
-                    </p> 
-                </div>
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
-                    </p> 
-                </div>
-            </div>
-            <div class="form-group row mb-0">
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                        Status Tugas
-                    </p> 
-                </div>
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
-                    </p> 
-                </div>
-            </div>
-            <div class="form-group row mb-0">
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                        Tipe
-                    </p> 
-                </div>
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
-                    </p> 
-                </div>
-            </div>
-            <div class="form-group row mb-0">
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                    Recurring Days
-                    </p> 
-                </div>
-                <div class="col-md-5">
-                    <p class="form-control-plaintext">
-                    :najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj najskdnskjndkjsandkjnasdkj
-                    </p> 
-                </div>
-            </div>
-            <div class="form-group row mb-0">
-                <div class="col-md-12">
-                    <p class="form-control-plaintext">
-                        Deskripsi :
-                    </p> 
-                </div>
-                <div class="col-md-12 card">
-                    <div class="card-body">
-                        The extracted folder contains a large number of PNG files, each representing QR codes for various Toyota service centers or locations. :
-                        Tunas Toyota Balaraja_EVDL-JXK7XS
-                        Setiajaya Toyota Parung_EVDL-E6SYZM
-                        AUTO2000 Pramuka_EVDL-RFP2V0
-                        Astrido Toyota Tangerang_EVDL-SMARHH
-                    </div>
-                </div>
-            </div>
+            <button type="btn button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"><i class="btn btn-trash"></i></button>
         </div>
+    </div>
+  
+  <div class="offcanvas-body">
+
   </div>
 </div>
 
+<div id="loader" class="loading-overlay" style="display:none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
 @endsection
 
 @section('js')
@@ -388,36 +293,264 @@
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
+@canAccess('show','dailytasks')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const sidePopup = document.getElementById('sidePopup');
-    const popupContent = document.getElementById('popupContent');
+    $(document).on('click', '.show-popup-btn', function() {
+        var taskSlug = $(this).data('task-slug');
+        let url = "{{ route('dailytask.show', ':id') }}";
+        url = url.replace(':id', taskSlug);
 
-    // Bootstrap Offcanvas instance
-    const bsOffcanvas = new bootstrap.Offcanvas(sidePopup);
+        // Show loader
+        $('#loader').show();
 
-    // Show the popup when a "Show" button is clicked
-    document.querySelectorAll('.show-popup-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const taskName = this.getAttribute('data-task-name');
-            const taskStatus = this.getAttribute('data-task-status');
-            const taskDate = this.getAttribute('data-task-date');
+        $.ajax({
+            url: url,
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    // Update the content inside the sidebar and show the offcanvas
+                    $('#sidePopup .offcanvas-body').html(response.html);
+                    $('#sidePopup .offcanvas-header').html(response.htmlHead); // Optional header update
+                    let bsOffcanvas = new bootstrap.Offcanvas(document.getElementById('sidePopup'));
+                    bsOffcanvas.show(); // Show the sidebar
 
-            // Populate the popup content with task details
-            // popupContent.innerHTML = `
-            //     <h3>${taskName}</h3>
-            //     <p>Status: ${taskStatus}</p>
-            //     <p>Date: ${taskDate}</p>
-            // `;
-
-            // Show the Bootstrap Offcanvas popup
-            bsOffcanvas.show();
+                    // Re-initialize any necessary plugins (like tooltips or editors)
+                    if ($('#sidePopup .offcanvas-body').find('#description_note').length > 0) {
+                        generateThriveEditor("note");
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Task not found.'
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while fetching task details.'
+                });
+            },
+            complete: function() {
+                // Hide the loader after the AJAX request completes
+                $('#loader').hide();
+            }
         });
     });
-});
 
+    function reloadPopupContent(taskSlug) 
+    {
+        let url = "{{ route('dailytask.show', ':id') }}";
+        url = url.replace(':id', taskSlug);
+        
+        $.ajax({
+            url: url,
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    $('#sidePopup .offcanvas-body').html(response.html); // Update the popup content
+                    $('#sidePopup .offcanvas-header').html(response.htmlHead); // Update the popup header
+                    if(response.dailytask)
+                    {
+                        $('#task-row-' + response.dailytask.id).replaceWith(response.htmlTable);
+                    }
+                    if ($('#sidePopup .offcanvas-body').find('#description_note').length > 0) 
+                    {
+                        generateThriveEditor("note");
+                    }
 
+                    bsOffcanvas.show(); // Keep the popup open
+                } else {
+                    alert('Task not found.');
+                }
+            },
+            error: function() {
+                alert('Error fetching task details.');
+            }
+        });
+    }
 </script>
+@endcanAccess
+@canAccess('statuschange','dailytasks')
+<script>
+    $(document).ready(function () {
+        $('.select2').select2();
+    });
+
+    $(document).on('click', '#start-task-btn', function() {
+        var taskSlug = $(this).data('slug-task'); // Get the slug from the data attribute
+
+        if (!taskSlug) 
+        {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Warning',
+                text: 'Task slug is missing!',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+        
+        $('#loader').show();
+
+        let url = "{{ route('dailytask.statuschange',':id') }}";
+        url = url.replace(':id',taskSlug)
+
+        $.ajax({
+            url:url,
+            method: 'PUT',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Task status updated successfully!',
+                        timer: 1000,
+                        didOpen: () => {
+                            Swal.showLoading();
+                            const b = Swal.getHtmlContainer().querySelector('b');
+                            timerInterval = setInterval(() => {
+                                b.textContent = Swal.getTimerLeft();
+                            }, 100);
+                        },
+                        willClose: () => {
+                            clearInterval(timerInterval);
+                            reloadPopupContent(taskSlug); // Function to reload the popup content
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Failed to update task status.',
+                        timer: 3000,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                        willClose: () => {
+                            location.reload(); // Reload the page after the delay
+                        }
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while updating the task status.',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+            },
+            complete: function() {
+                // Hide the loader once the request is complete
+                $('#loader').hide();
+            }
+        });
+    });
+</script>
+@endcanAccess
+<script>
+    // Use event delegation to ensure the change event is handled even when mediaReport is rendered dynamically
+    $(document).on('change', '#mediaReport', function() {
+        
+        var maxFileSize = 1 * 1024 * 1024; // 1MB in bytes
+        var files = this.files;
+        var validFiles = [];
+
+        for (var i = 0; i < files.length; i++) {
+            if (files[i].size > maxFileSize) {
+                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus. Batas maksimal 1 Mb');
+            } else {
+                validFiles.push(files[i]);
+            }
+        }
+
+        // Clear the input and add back the valid files
+        $(this).val('');
+        var dataTransfer = new DataTransfer();
+        for (var j = 0; j < validFiles.length; j++) {
+            dataTransfer.items.add(validFiles[j]);
+        }
+        this.files = dataTransfer.files;
+    });
+</script>
+@canAccess('approvement','dailytasks')
+<script>
+$(document).on('click', '#submitApprovement', function(e) {
+    e.preventDefault();
+    
+    // Show confirmation alert
+    Swal.fire({
+        title: 'Anda yakin?',
+        text: "Anda tidak dapat membatalkan ini!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, setujui!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Proceed with form submission
+            var formData = $('#approvementForm').serialize(); // Get all form data
+            var slug = $('#submitApprovementSlug').val(); 
+            let url = "{{ route('dailytask.approvement', ':id') }}";
+            url = url.replace(':id', slug);
+            
+            $.ajax({
+                url: url,
+                method: 'PUT',
+                data: formData + '&_token=' + '{{ csrf_token() }}', // Include CSRF token in the data
+                beforeSend: function() {
+                    // Show a loading spinner or disable the button during submission
+                    $('#submitApprovement').attr('disabled', true).text('Processing...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Task approved successfully!',
+                            timer: 1000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            // Reload just the popup content without closing it
+                            reloadPopupContent(slug); // Function to reload the popup content
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to approve the task. Please try again.'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred. Please try again.'
+                    });
+                },
+                complete: function() {
+                    // Re-enable the button and reset the text after submission
+                    $('#submitApprovement').attr('disabled', false).text('Simpan Tugas');
+                }
+            });
+        }
+    });
+});
+</script>
+@endcanAccess
 <script>
     $(document).ready(function () {
         // Initialize Daterangepicker
@@ -469,14 +602,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 </script>
-<script>
-    $(document).ready(function () {
-        // Initialize Select2
-        $('.select2').select2();
-        // $('.select2mainProject').select2();
-        // $('.UserSelect2').select2();
-    });
-</script>
 @canAccess('export','dailytasks')
 <script>
     function exportFilteredData(format) 
@@ -496,7 +621,28 @@ document.addEventListener('DOMContentLoaded', function () {
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <style>
+    .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8); /* Transparent white background */
+    z-index: 1050; /* Ensure it stays above other content */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+
 .form-control-plaintext {
     white-space: normal; /* Allows text to wrap */
 }
@@ -555,6 +701,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
     .table-responsive p {
         margin-bottom: 0;
+    }
+</style>
+<style>
+    /* Default list styling */
+    .ql-editor ol,
+    .ql-editor ul {
+        padding-left: 1.5em;
+    }
+
+    /* Level 1 indentation */
+    .ql-editor .ql-indent-1 {
+        padding-left: 2em;
+    }
+
+    /* Level 2 indentation */
+    .ql-editor .ql-indent-2 {
+        padding-left: 3em;
+    }
+
+    /* Level 3 indentation */
+    .ql-editor .ql-indent-3 {
+        padding-left: 4em;
     }
 </style>
 @endsection

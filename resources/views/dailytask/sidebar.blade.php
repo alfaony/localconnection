@@ -1,120 +1,379 @@
-<div class="row p-1">
-    <div class="col-md-9">
-        <strong>Improvement BOS > Development BAST</strong>
-    </div>
-    <div class="form-group row mb-0">
-        <div class="col-md-5">
-            <p class="form-control-plaintext">
-                Ditugaskan
-            </p> 
-        </div>
-        <div class="col-md-5">
-            <p class="form-control-plaintext"><span class="badge badge badge-pill badge-info">{{ $dailytask->assign->name ?? '' }}</span></p>
-        </div>
-    </div>
-    <div class="form-group row mb-0">
-        <div class="col-md-5">
-            <p class="form-control-plaintext">
-                Tanggal
-            </p> 
-        </div>
-        <div class="col-md-5">
-            <p class="form-control-plaintext {{ $isOverdue ? 'text-danger' : '' }}">
-                {{ $dailytask->dateShow }}
-            </p> 
-        </div>
-    </div>
-    @if($dailytask->status_submit)
-    <div class="form-group row mb-0">
-        <div class="col-md-5">
-            <p class="form-control-plaintext">
-            Status Submit
-            </p> 
-        </div>
-        <div class="col-md-5">
-            <p class="form-control-plaintext {{ $dailytask->status_submit == 'late' ? 'text-danger' : 'text-success' }}">
-                {{ ucfirst($dailytask->status_submit) }}
-            </p>
-        </div>
-    </div>
-    @endif
-    <div class="form-group row mb-0">
-        <div class="col-md-5">
-            <p class="form-control-plaintext">
-                Status Tugas
-            </p> 
-        </div>
-        <div class="col-md-5">
-            <p class="form-control-plaintext">
-                @switch($dailytask->taskStatus->name)
-                    @case('backlog')
-                        <i class="fa fa-clipboard-list"></i> Backlog
-                        @break
-                    @case('todo')
-                        <i class="fa fa-list-alt"></i> Todo
-                        @break
-                    @case('doing')
-                        <i class="fa fa-hourglass-start"></i> Doing
-                        @break
-                    @case('in review')
-                        <i class="fa fa-eye" style="color: green;"></i> In Review
-                        @break
-                    @case('not complete')
-                        <i class="fa fa-times-circle" style="color: red;"></i> Not Complete
-                        @break
-                    @case('complete')
-                        <i class="fa fa-check" style="color: green;"></i> Complete
-                        @break
-                    @default
-                        {{ $dailytask->taskStatus->name }}
-                @endswitch
-            </p>
-        </div>
-    </div>
-    <div class="form-group row mb-0">
-        <div class="col-md-5">
-            <p class="form-control-plaintext">
-                Tipe
-            </p> 
-        </div>
-        <div class="col-md-5">
-            <p class="form-control-plaintext">{{ $dailytask->type ? $dailytask->type->name : "" }}</p>
-        </div>
-    </div>
-    @if(!empty($dailytask->recurring_days))
-    <div class="form-group row mb-0">
-        <div class="col-md-5">
-            <p class="form-control-plaintext">
-            Recurring Days
-            </p> 
-        </div>
-        <div class="col-md-5">
-            <div class="d-flex align-items-center mt-2">
-                @php
-                    $recurringDays = json_decode($dailytask->recurring_days, true);
-                @endphp
 
-                @foreach($recurringDays as $day)
-                    <span class="badge badge-info mr-2 mb-2" style="font-size: 14px;">
-                        {{ $daysMap[$day] ?? ucfirst($day) }}
-                    </span>
-                @endforeach
-            </div>
-        </div>
+<!-- Task Title -->
+<div class="form-group row">
+    <div class="col-md-10">
+        <strong>
+            @if($dailytask->head)
+                <!-- Jika ada head, tampilkan sebagai tombol -->
+                <button class="btn btn-link p-0" onclick="reloadPopupContent('{{ $dailytask->head->slug }}')">
+                    {{ $dailytask->head->name }}
+                </button>
+                <span class="mx-2"> < </span>
+                {{ $dailytask->name }}
+            @else
+                <!-- Jika tidak ada head, tampilkan nama tugas saja -->
+                {{ $dailytask->name }}
+            @endif
+        </strong>
     </div>
-    @endif
-    <div class="form-group row mb-0">
-        <div class="col-md-12">
-            <p class="form-control-plaintext">
-                Deskripsi :
-            </p> 
-        </div>
-        <div class="col-md-12 card">
-            <div class="card-body">
-                    <div class="col-sm-8 ql-editor mt-2" style="max-height: 40vh; overflow-y: auto; white-space:unset; padding:0px 0px;">
-                        {!! $dailytask->description !!}
-                    </div>
-            </div>
+</div>
+
+
+<!-- Assigned -->
+<div class="form-group row mb-3">
+    <div class="col-md-6">
+        <p class="form-control-plaintext"><strong>Ditugaskan:</strong></p>
+    </div>
+    <div class="col-md-6 mt-2">
+        <span class="badge badge-info">{{ $dailytask->assign->name ?? 'N/A' }}</span>
+    </div>
+</div>
+
+<!-- Tanggal -->
+<div class="form-group row mb-3">
+    <div class="col-md-6">
+        <p class="form-control-plaintext"><strong>Tanggal:</strong></p>
+    </div>
+    <div class="col-md-6">
+        <p class="form-control-plaintext {{ $isOverdue ? 'text-danger' : '' }}">{{ $dailytask->dateShow }}</p>
+    </div>
+</div>
+
+<!-- Status Submit -->
+@if($dailytask->status_submit)
+<div class="form-group row mb-3">
+    <div class="col-md-6">
+        <p class="form-control-plaintext"><strong>Status Submit:</strong></p>
+    </div>
+    <div class="col-md-6">
+        <p class="form-control-plaintext {{ $dailytask->status_submit == 'late' ? 'text-danger' : 'text-success' }}">
+            {{ ucfirst($dailytask->status_submit) }}
+        </p>
+    </div>
+</div>
+@endif
+
+<!-- Status Tugas -->
+<div class="form-group row mb-3">
+    <div class="col-md-6">
+        <p class="form-control-plaintext"><strong>Status Tugas:</strong></p>
+    </div>
+    <div class="col-md-6">
+        <p class="form-control-plaintext">
+            @switch($dailytask->taskStatus->name)
+                @case('backlog') <i class="fa fa-clipboard-list"></i> Backlog @break
+                @case('todo') <i class="fa fa-list-alt"></i> Todo @break
+                @case('doing') <i class="fa fa-hourglass-start"></i> Doing @break
+                @case('in review') <i class="fa fa-eye text-success"></i> In Review @break
+                @case('not complete') <i class="fa fa-times-circle text-danger"></i> Not Complete @break
+                @case('complete') <i class="fa fa-check text-success"></i> Complete @break
+                @default {{ $dailytask->taskStatus->name }}
+            @endswitch
+        </p>
+    </div>
+</div>
+
+<!-- Tipe -->
+<div class="form-group row mb-3">
+    <div class="col-md-6">
+        <p class="form-control-plaintext"><strong>Tipe:</strong></p>
+    </div>
+    <div class="col-md-6">
+        <p class="form-control-plaintext">{{ $dailytask->type ? $dailytask->type->name : 'N/A' }}</p>
+    </div>
+</div>
+
+<!-- Recurring Days -->
+@if(!empty($dailytask->recurring_days))
+<div class="form-group row mb-3">
+    <div class="col-md-6">
+        <p class="form-control-plaintext"><strong>Recurring Days:</strong></p>
+    </div>
+    <div class="col-md-6">
+        <div class="d-flex flex-wrap">
+            @php $recurringDays = json_decode($dailytask->recurring_days, true); @endphp
+            @foreach($recurringDays as $day)
+                <span class="badge badge-info me-2 mb-2 mt-2">{{ $daysMap[$day] ?? ucfirst($day) }}</span>
+            @endforeach
         </div>
     </div>
 </div>
+@endif
+
+<!-- Deskripsi -->
+<div class="accordion" id="accordionPanelsStayOpenExample">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+        Detail Tugas
+      </button>
+    </h2>
+    <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingOne">
+      <div class="accordion-body">
+          @if($dailytask->description)
+          <div class="form-group row mb-3">
+              <div class="col-md-12">
+                  <p class="form-control-plaintext"><strong>Deskripsi Tugas:</strong></p>
+              </div>
+              <div class="col-md-12">
+                  <div class="card">
+                      <div class="card-body">
+                          <div class="ql-editor" style="max-height: 40vh; overflow-y: auto; white-space: unset; padding: 0;">
+                              {!! $dailytask->description !!}
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          @endif
+          
+          <!-- Task Media -->
+          @if($dailytask->taskMedia->count())
+          <div class="form-group">
+              <label for="media">File Tugas:</label>
+              <div class="row g-3" style="max-height: 200px; overflow-y: auto;">
+                  @foreach($dailytask->taskMedia as $media)
+                  <div class="col-md-4">
+                      <div class="card me-2 mb-2">
+                          <div class="card-body d-flex justify-content-between align-items-center">
+                              <div>
+                                  @if(strpos($media->file_type, 'image') !== false)
+                                      <i class="fa fa-file-image" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                  @elseif(strpos($media->file_type, 'pdf') !== false)
+                                      <i class="fa fa-file-pdf" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                  @elseif(strpos($media->file_type, 'msword') !== false || strpos($media->file_type, 'officedocument.wordprocessingml.document') !== false)
+                                      <i class="fa fa-file-word" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                  @else
+                                      <i class="fa fa-file" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                  @endif
+                              </div>
+                              <div>
+                                  <div class="dropdown">
+                                      <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton{{ $media->id }}" data-toggle="dropdown">
+                                          <i class="fa fa-ellipsis-v"></i>
+                                      </button>
+                                      <div class="dropdown-menu">
+                                          <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                              <i class="fa fa-download"></i> Lihat
+                                          </a>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  @endforeach
+              </div>
+          </div>
+          @endif
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Task Action -->
+@if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::TODO || $dailytask->taskStatus->name == \App\Schemas\ParamSchema::NOTCOMPLATE)
+<div class="row mt-3">
+    <div class="col-md-12">
+        <button id="start-task-btn" class="btn btn-success" data-slug-task="{{ $dailytask->slug }}">Mulai Pekerjaan</button>
+    </div>
+</div>
+@endif
+<div class="row mt-3">
+    @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::DOING)
+        @canAccess('report','dailytasks')
+            <h5>Laporan Tugas</h5>
+            <form action="{{ route('dailytask.report', $dailytask->slug) }}" method="POST" enctype="multipart/form-data" id="reportForm">
+                @method('PUT')
+                @csrf
+                <input type="hidden" name="request" value="index">
+                <div class="form-group">
+                    <label for="note">Catatan</label>
+                    <input class="thriveEditor form-control" id="description_note" name="note" placeholder="yang akan dicetak di perjanjian" required />
+                </div>
+                <div class="form-group">
+                    <label for="media">Upload</label>
+                    <input type="file" id="mediaReport" name="media[]" class="form-control" multiple>
+                </div>
+                <button type="submit" class="btn btn-primary" id="submitReport">Simpan Laporan</button>
+            </form>
+
+        @endcanAccess
+    @endif
+</div>
+<!-- Approvement Section -->
+@if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::INREVIEW)
+<div class="row mt-3">
+    <div class="col-md-12">
+        <h5>Laporan Catatan dan Media</h5>
+    </div>
+    <div class="col-md-12">
+        <div class="accordion" id="accordionExample">
+            <!-- Accordion Item 1 -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    Detail Laporan
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <label for="media">Laporan:</label>
+                        <div class="card">
+                            <div class="card-body">
+                                @if($dailytask->report_note)
+                                    <div class="ql-editor" style="white-space:unset; padding:0px 0px;">
+                                        {!! $dailytask->report_note !!}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        @if($dailytask->media->count())
+                            <div class="form-group">
+                                <label for="media">File Laporan:</label>
+                                <div class="row g-3" style="max-height: 200px; overflow-y: auto;">
+                                    @foreach($dailytask->media as $media)
+                                    <div class="col-md-4">
+                                        <div class="card me-2 mb-2">
+                                            <div class="card-body d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    @if(strpos($media->file_type, 'image') !== false)
+                                                        <i class="fa fa-file-image" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                                    @elseif(strpos($media->file_type, 'pdf') !== false)
+                                                        <i class="fa fa-file-pdf" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                                    @elseif(strpos($media->file_type, 'msword') !== false || strpos($media->file_type, 'officedocument.wordprocessingml.document') !== false)
+                                                        <i class="fa fa-file-word" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                                    @else
+                                                        <i class="fa fa-file" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton{{ $media->id }}" data-toggle="dropdown">
+                                                            <i class="fa fa-ellipsis-v"></i>
+                                                        </button>
+                                                        <div class="dropdown-menu">
+                                                            <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                                                <i class="fa fa-download"></i> Lihat
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+    </div>
+
+    <div class="col-md-12 mt-3">
+        @canAccess('approvement', 'dailytasks')
+        <h5>Penilaian dan Penyelesaian</h5>
+        <form id="approvementForm" method="POST">
+            @csrf
+            <input type="hidden" name="slug" value="{{ $dailytask->slug }}" id="submitApprovementSlug">
+            <div class="form-group">
+                <label for="task_status">Status Tugas</label>
+                <select name="task_status" class="form-control select2" required>
+                    @foreach($approvement as $a)
+                    <option value="{{ $a->id }}">{{ ucfirst($a->name) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="form-group mt-2">
+                <label for="point">Poin</label>
+                <input type="number" name="point" class="form-control" value="{{ $dailytask->point }}">
+            </div>
+            <div class="d-flex justify-content-end">
+                <button type="button" id="submitApprovement" class="btn btn-success mt-3">Simpan Tugas</button>
+            </div>
+        </form>
+        @endcanAccess
+    </div>
+</div>
+@elseif($dailytask->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE)
+<div class="row">
+    <div class="col-md-12">
+        <h5>Informasi Pekerjaan</h5>
+        <div class="accordion" id="accordionPanelsStayOpenExample">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTwo">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                    Detail Laporan
+                    </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse show" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <label for="media">Laporan:</label>
+                        <div class="card">
+                            <div class="card-body">
+                                @if($dailytask->report_note)
+                                    <div class="ql-editor" style="white-space:unset; padding:0px 0px;">
+                                        {!! $dailytask->report_note !!}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        @if($dailytask->media->count())
+                            <div class="form-group">
+                                <label for="media">File Laporan:</label>
+                                <div class="row g-3" style="max-height: 200px; overflow-y: auto;">
+                                    @foreach($dailytask->media as $media)
+                                    <div class="col-md-4">
+                                        <div class="card me-2 mb-2">
+                                            <div class="card-body d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    @if(strpos($media->file_type, 'image') !== false)
+                                                        <i class="fa fa-file-image" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                                    @elseif(strpos($media->file_type, 'pdf') !== false)
+                                                        <i class="fa fa-file-pdf" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                                    @elseif(strpos($media->file_type, 'msword') !== false || strpos($media->file_type, 'officedocument.wordprocessingml.document') !== false)
+                                                        <i class="fa fa-file-word" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                                    @else
+                                                        <i class="fa fa-file" data-bs-toggle="tooltip" title="{{ basename($media->file_path) }}"></i>
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton{{ $media->id }}" data-toggle="dropdown">
+                                                            <i class="fa fa-ellipsis-v"></i>
+                                                        </button>
+                                                        <div class="dropdown-menu">
+                                                            <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                                                <i class="fa fa-download"></i> Lihat
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="alert alert-info mt-3">
+            <i class="fa fa-check-circle"></i> Pekerjaan telah diselesaikan.
+        </div>
+        <div class="form-group">
+            <label for="point">Poin yang Diberikan</label>
+            <input type="number" name="point" class="form-control" value="{{ $dailytask->point }}" readonly>
+        </div>
+    </div>
+</div>
+@endif

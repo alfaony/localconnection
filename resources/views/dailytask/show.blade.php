@@ -349,6 +349,7 @@
 
                 <!-- Right Column -->
                 <div class="col-md-5">
+                    @canAccess('statuschange','dailytasks')
                     @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::TODO || $dailytask->taskStatus->name == \App\Schemas\ParamSchema::NOTCOMPLATE )                    
                         <h6>Tugas</h6>
                         <form action="{{ route('dailytask.statuschange',$dailytask->slug) }}" method="POST">
@@ -358,6 +359,7 @@
                             <button type="submit" class="btn btn-success">Mulai Pekerjaan</button>
                         </form>
                     @endif
+                    @endcanAccess
                     
                     @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::DOING)
                         @canAccess('report','dailytasks')
