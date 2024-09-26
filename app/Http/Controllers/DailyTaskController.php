@@ -355,26 +355,88 @@ class DailyTaskController extends Controller
 
         
     }
+    public function showJson($slug)
+    {
+        try {
+            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+            $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+            $approvement = TaskStatus::where('name',ParamSchema::COMPLATE)->orWhere('name',ParamSchema::NOTCOMPLATE)->get();
+
+            $daysMap = config('custom.days');
+            $isOverdue = $dailytask->isOverdue();
+
+            $htmlContent = view('dailytask.sidebar', compact('dailytask','daysMap','isOverdue','doing','approvement'))->render();
+            $htmlHeadContact = view('dailytask.sidebarhead', compact('dailytask'))->render();
+            $htmlTableContent = view('dailytask.element-table', compact('dailytask'))->render();
+            
+            return response()->json([
+                'success' => true,
+                'dailytask'=>$dailytask,
+                'html' => $htmlContent,
+                'htmlHead' => $htmlHeadContact,
+                'htmlTable' => $htmlTableContent
+            ]);
+            
+        } catch (\Exception $e) {
+            // dd($e);
+            Log::error($e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Task not found.'
+            ], 404);
+        }
+    }
 
     public function show($slug)
     {
-        $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
-        $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+        try {
+            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $doing = TaskStatus::where('name', ParamSchema::TODO)->firstOrFail();
+            $approvement = TaskStatus::whereIn('name', [ParamSchema::COMPLATE, ParamSchema::NOTCOMPLATE])->get();
 
-        $approvement = TaskStatus::where('name',ParamSchema::COMPLATE)->orWhere('name',ParamSchema::NOTCOMPLATE)->get();
+            $daysMap = config('custom.days');
+            $isOverdue = $dailytask->isOverdue();
 
-        $showProject = Access::can('showproject','daily_task_projects');
+            // Handle AJAX request
+            if (request()->ajax()) {
+                $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement'))->render();
+                $htmlHeadContact = view('dailytask.sidebarhead', compact('dailytask'))->render();
+                $htmlTableContent = view('dailytask.element-table', compact('dailytask'))->render();
 
-        $users = User::byCompany(Auth::user()->company_id)->get();
-        $subTasks = DailyTask::byCompany(Auth::user()->company_id)->where('child_daily_task_id',$dailytask->id)->orderBy('created_at','desc')->get();
-        $types = DailyTaskType::get();
-        $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
-        $daysMap = config('custom.days');
+                return response()->json([
+                    'success' => true,
+                    'dailytask' => $dailytask,
+                    'html' => $htmlContent,
+                    'htmlHead' => $htmlHeadContact,
+                    'htmlTable' => $htmlTableContent
+                ]);
+            }
 
+            // Handle Web request
+            $showProject = Access::can('showproject', 'daily_task_projects');
+            $users = User::byCompany(Auth::user()->company_id)->get();
+            $subTasks = DailyTask::byCompany(Auth::user()->company_id)->where('child_daily_task_id', $dailytask->id)->orderBy('created_at', 'desc')->get();
+            $types = DailyTaskType::get();
+            $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
 
+            return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap'));
 
-        return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing','approvement', 'daysMap'));
+        } catch (\Exception $e) {
+            // dd($e);
+            Log::error($e->getMessage());
+
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Task not found.'
+                ], 404);
+            }
+
+            return redirect()->back()->with('error', 'Task not found.');
+        }
     }
+
 
     public function createdailytask($slug)
     {
@@ -729,6 +791,12 @@ class DailyTaskController extends Controller
             }
 
             DB::commit();
+
+            if($request->request)
+            {
+                return redirect()->route('dailytask.index')->with('report', true);
+            }
+
             return redirect()->route('dailytask.show', $dailytask->slug)->with('report', true);
         } catch (\Throwable $th) {
             DB::rollback();
@@ -736,6 +804,7 @@ class DailyTaskController extends Controller
             return redirect()->route('dailytask.show', $dailytask->slug);
         }
     }
+
 
     public function updatemedia(Request $request, $slug)
     {
@@ -800,8 +869,7 @@ class DailyTaskController extends Controller
 
     public function approvement(Request $request, $slug)
     {
-        $request->validate(
-        [
+        $request->validate([
             'point' => 'nullable|integer',
             'task_status' => 'required|exists:task_statuses,id',
         ]);
@@ -809,71 +877,63 @@ class DailyTaskController extends Controller
         $taskStatuss = TaskStatus::find($request->task_status);
 
         DB::beginTransaction();
-        $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+        $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         try {
-            //code...
             $dailytask->point = $request->point;
             $dailytask->task_status_id = $taskStatuss->id;
-            $dailytask->approved = $taskStatuss->name == ParamSchema::COMPLATE ? TRUE : FALSE;
+            $dailytask->approved = $taskStatuss->name == ParamSchema::COMPLATE ? true : false;
+
+            // Record message based on task status
+            $messageType = $taskStatuss->name == ParamSchema::COMPLATE ? 'approvement' : 'reject';
+            $this->message($dailytask->id, $messageType, 'Membuat ' . ucfirst($messageType) . ' Tugas ' . $dailytask->name);
             
-            $taskStatuss->name == ParamSchema::COMPLATE ? $this->message($dailytask->id,'approvement','Membuat Persetujuan Tugas '.$dailytask->name) : $this->message($dailytask->id,'reject','Membuat Penolakan Tugas '.$dailytask->name);
             $this->statusrecord($dailytask, $taskStatuss);
 
-            if($taskStatuss->name == ParamSchema::NOTCOMPLATE)
-            {
-                $dailytask->report_note = NULL;
-                $dailytask->submit = NULL;
-                $dailytask->status_submit = NULL;
-                
+            if ($taskStatuss->name == ParamSchema::NOTCOMPLATE) {
+                $dailytask->report_note = null;
+                $dailytask->submit = null;
+                $dailytask->status_submit = null;
 
-                // if ($dailytask->media()->exists()) 
-                // {
-                //     foreach ($dailytask->media as $media) {
-                //         $media->delete(); // This will also remove the file from storage due to the boot method in the Media model
-                //     }
+                // You can uncomment this if you want to delete media files as well
+                // foreach ($dailytask->media as $media) {
+                //     $media->delete(); 
                 // }
             }
 
-            // Call InboxHelper to send the notification
+            // Call InboxHelper to send notification
             $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
+            $userTo = Auth::user()->id == $dailytask->assignment_user_id ? $dailytask->user_id : $dailytask->assignment_user_id;
+            $this->sentInbox($userTo, "Tugas " . $dailytask->name . " telah di " . $taskStatuss->name, $directUrl);
 
-            if(Auth::user()->id == $dailytask->assignment_user_id)
-            {
-                $userTo = $dailytask->user_id;
-            }
-            elseif(Auth::user()->id == $dailytask->user_id)
-            {
-                $userTo = $dailytask->assignment_user_id;
-            }else
-            {
-                $userTo = $dailytask->assignment_user_id;
-                $this->sentInbox($dailytask->user_id,"Tugas ".$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
+            if ($dailytask->head) {
+                $this->sentInbox($dailytask->head->user_id, $dailytask->name . " telah di " . $taskStatuss->name, $directUrl);
+                $this->sentInbox($dailytask->head->assignment_user_id, $dailytask->name . " telah di " . $taskStatuss->name, $directUrl);
             }
 
-            $this->sentInbox($userTo,"Tugas ".$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
-            
-            if($dailytask->head)
-            {
-                if($dailytask->head->user_id == $dailytask->head->assignment_user_id)
-                {
-                    $this->sentInbox($dailytask->head->user_id,$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
-                }else
-                {
-                    $this->sentInbox($dailytask->head->user_id,$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
-                    $this->sentInbox($dailytask->head->assignment_user_id,$dailytask->name." telah di ".$taskStatuss->name, $directUrl);
-                }
-            }
             $dailytask->save();
-
             DB::commit();
+
+            if ($request->ajax()) {
+                // Return JSON response if it's an AJAX request
+                return response()->json(['success' => true, 'message' => 'Task updated successfully!','data'=>$dailytask]);
+            }
+
+            // Redirect back for non-AJAX requests (normal web submission)
             return redirect()->route('dailytask.show', $dailytask->slug)->with('approvement', true);
+
         } catch (\Throwable $th) {
-            //throw $th;
             Log::error($th->getMessage());
             DB::rollback();
+
+            if ($request->ajax()) {
+                // Return JSON error response for AJAX requests
+                return response()->json(['success' => false, 'message' => 'An error occurred while updating the task.']);
+            }
+
             return redirect()->route('dailytask.show', $dailytask->slug)->with('approvement', false);
         }
     }
+
 
     public function extend(Request $request, $slug)
     {
@@ -1093,18 +1153,42 @@ class DailyTaskController extends Controller
 
     }
 
-    public function statuschange(Request $request,$slug)
+    public function statuschange(Request $request, $slug)
     {
-        $dailyTask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
-        $doing = TaskStatus::where('name',ParamSchema::DOING)->firstOrFail();
-        $dailyTask->task_status_id = $doing->id;
-        
-        $dailyTask->save();
+        try {
+            // Retrieve the daily task and update the status to "Doing"
+            $dailyTask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $doing = TaskStatus::where('name', ParamSchema::DOING)->firstOrFail();
+            $dailyTask->task_status_id = $doing->id;
+            $dailyTask->save();
 
-        $this->message($dailyTask->id,'report','Tugas '.$dailyTask->name.' dikerjakan');
-        $this->statusrecord($dailyTask, $doing);
-        return redirect()->route('dailytask.show', $dailyTask->slug)->with('Working', true);
+            // Record the action and update status
+            $this->message($dailyTask->id, 'report', 'Tugas ' . $dailyTask->name . ' dikerjakan');
+            $this->statusrecord($dailyTask, $doing);
+
+            // If the request is an Ajax call, return a JSON response
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Task status updated successfully!',
+                ]);
+            }
+
+            // For non-Ajax requests, redirect back with a success message
+            return redirect()->route('dailytask.show', $dailyTask->slug)->with('Working', true);
+        } catch (\Exception $e) {
+            // Handle the exception and return error response
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Task update failed!',
+                ]);
+            }
+
+            return redirect()->back()->with('error', 'Task update failed!');
+        }
     }
+
 
     // Import
     public function import(Request $request)
