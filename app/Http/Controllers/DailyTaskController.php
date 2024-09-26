@@ -423,7 +423,7 @@ class DailyTaskController extends Controller
             return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap'));
 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             Log::error($e->getMessage());
 
             if (request()->ajax()) {
