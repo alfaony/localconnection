@@ -388,10 +388,12 @@ class DailyTaskController extends Controller
         }
     }
 
-    public function show($slug)
+    public function show(Request $request, $slug)
     {
+        DB::beginTransaction();
         try {
             $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $dailytaskNext = $request->next_slug ? DailyTask::select('id','slug','name')->byCompany(Auth::user()->company_id)->where('slug', $request->next_slug)->firstOrFail() : null;
             $doing = TaskStatus::where('name', ParamSchema::TODO)->firstOrFail();
             $approvement = TaskStatus::whereIn('name', [ParamSchema::COMPLATE, ParamSchema::NOTCOMPLATE])->get();
 
@@ -399,17 +401,18 @@ class DailyTaskController extends Controller
             $isOverdue = $dailytask->isOverdue();
 
             // Handle AJAX request
-            if (request()->ajax()) {
-                $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement'))->render();
-                $htmlHeadContact = view('dailytask.sidebarhead', compact('dailytask'))->render();
-                $htmlTableContent = view('dailytask.element-table', compact('dailytask'))->render();
+            $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext'))->render();
+            $htmlHeadContact = view('dailytask.sidebarhead', compact('dailytask'))->render();
+            $htmlTableContent = view('dailytask.element-table', compact('dailytask'))->render();
 
+            if (request()->ajax()) {
                 return response()->json([
                     'success' => true,
                     'dailytask' => $dailytask,
                     'html' => $htmlContent,
                     'htmlHead' => $htmlHeadContact,
-                    'htmlTable' => $htmlTableContent
+                    'htmlTable' => $htmlTableContent,
+                    'dailytaskNext' => $dailytaskNext
                 ]);
             }
 
@@ -420,10 +423,12 @@ class DailyTaskController extends Controller
             $types = DailyTaskType::get();
             $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
 
+            DB::commit();
             return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap'));
 
         } catch (\Exception $e) {
             // dd($e);
+            DB::rollback();
             Log::error($e->getMessage());
 
             if (request()->ajax()) {
