@@ -79,5 +79,5 @@ class ParamSchema
 
     const TEMPLATETUGAS = "sk_tugas_template";
 
-    const TEMPLATEJABATAN = "sk_jabatan_template";
+    const TEMPLATEJABATAN = "sk_management_template";
 }

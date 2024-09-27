@@ -365,7 +365,7 @@
                     });
 
                     break;
-                case 'sk_jabatan_template':
+                case 'sk_management_template':
                     form = `
                         <div class="letter-template">
                             <div class="card">

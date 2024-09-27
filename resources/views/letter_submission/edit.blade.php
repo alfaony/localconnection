@@ -266,7 +266,7 @@
 
             @if($template == \App\Schemas\ParamSchema::TEMPLATEJABATAN)
             <!-- SK Jabatan Template -->
-            <div class="form-row letter-template card" id="sk_jabatan_template" style="display:none;">
+            <div class="form-row letter-template card" id="sk_management_template" style="display:none;">
                 <div class="card-body">
                     <!-- Nama PT (Picklist) -->
                     <div class="col-md-12 mb-3">
