@@ -35,8 +35,7 @@ class ProjectController extends Controller
         ->OrderBy('created_at',$order)->paginate(10);
 
         $totalProject = Project::byRole()->count();
-        $workOrder = WorkOrder::whereDoesntHave('project')
-        ->byCompany(Auth::user()->company_id)
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)
         ->orderBy('created_at','desc')
         ->get();
 
@@ -88,8 +87,7 @@ class ProjectController extends Controller
         $projectEdit = Project::where('slug', $slug)->firstOrFail();
         $project = Project::byRole()->OrderBy('created_at','asc')->paginate(10);
         // $workOrder = WorkOrder::all();
-        $workOrder = WorkOrder::whereDoesntHave('project')
-        ->byCompany(Auth::user()->company_id)
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)
         ->orWhere('id', $projectEdit->work_order_id)
         ->orderBy('created_at','desc')
         ->get();

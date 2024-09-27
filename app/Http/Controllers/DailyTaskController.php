@@ -393,6 +393,7 @@ class DailyTaskController extends Controller
         DB::beginTransaction();
         try {
             $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $dailytaskChildCount = DailyTask::select('id')->byCompany(Auth::user()->company_id)->where('child_daily_task_id', $dailytask->id)->count();
             $dailytaskNext = $request->next_slug ? DailyTask::select('id','slug','name')->byCompany(Auth::user()->company_id)->where('slug', $request->next_slug)->firstOrFail() : null;
             $doing = TaskStatus::where('name', ParamSchema::TODO)->firstOrFail();
             $approvement = TaskStatus::whereIn('name', [ParamSchema::COMPLATE, ParamSchema::NOTCOMPLATE])->get();
@@ -401,7 +402,7 @@ class DailyTaskController extends Controller
             $isOverdue = $dailytask->isOverdue();
 
             // Handle AJAX request
-            $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext'))->render();
+            $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext','dailytaskChildCount'))->render();
             $htmlHeadContact = view('dailytask.sidebarhead', compact('dailytask'))->render();
             $htmlTableContent = view('dailytask.element-table', compact('dailytask'))->render();
 

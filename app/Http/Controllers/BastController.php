@@ -42,8 +42,11 @@ class BastController extends Controller
             return redirect()->to(route('bast.index'))->with('dataprojectnotfound',true);
         }
 
-        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')->where('id',$selectedWorkOrder->id)->orderBy('created_at','desc')->get();
-        $project = Project::byCompany(Auth::user()->company_id)->where('id',$selectedWorkOrder->project->id)->orderBy('created_at','desc')->get();
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereHas('reportProject')->orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)
+        ->whereHas('reportProject')
+        ->whereDoesntHave('bast')
+        ->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $nomorBast = $this->bastNumber()['result'];
         $signature = config('custom.customerSignature');
@@ -53,8 +56,11 @@ class BastController extends Controller
 
     public function create(Request $request)
     {
-        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')->whereHas('reportProject')->orderBy('created_at','desc')->get();
-        $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereHas('reportProject')->orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)
+        ->whereHas('reportProject')
+        ->whereDoesntHave('bast')
+        ->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $nomorBast = $this->bastNumber()['result'];
         $signature = config('custom.customerSignature');
@@ -100,9 +106,15 @@ class BastController extends Controller
      */
     public function edit($slug)
     {
-        $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         
-        $bast = Bast::where('slug',$slug)->first();
+        $bast = Bast::where('slug',$slug)->firstOrFail();
+
+        $project = Project::byCompany(Auth::user()->company_id)
+        ->whereHas('reportProject')
+        ->whereDoesntHave('bast')
+        ->orWhere('id',$bast->project_id)
+        ->orderBy('created_at','desc')->get();
+
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
         $nomorBast = $bast->number_result ?? '';
         $signature = config('custom.customerSignature');
