@@ -25,7 +25,31 @@ class LetterTypeSeeder extends Seeder
         $skJabatan = LetterType::updateOrCreate(
             ['name' => 'Surat Keputusan Jabatan'], 
             [
-                'template' => 'sk_jabatan_template',
+                'name' => "Surat Keputusan Manajemen",
+                'template' => 'sk_management_template',
+                'is_required' => false,
+                'is_duplicate' => true,
+                'auto_approve' => false,
+                'is_ending' => false,
+            ]
+        );
+
+        $skManagemen = LetterType::updateOrCreate(
+            ['name' => 'Surat Keputusan Manajemen'], 
+            [
+                'name' => "Surat Keputusan Manajemen",
+                'template' => 'sk_management_template',
+                'is_required' => false,
+                'is_duplicate' => true,
+                'auto_approve' => false,
+                'is_ending' => false,
+            ]
+        );
+
+        $skJabatan = LetterType::updateOrCreate(
+            ['name' => 'Surat Kuasa'], 
+            [
+                'template' => 'sk_kuasa_template',
                 'is_required' => false,
                 'is_duplicate' => true,
                 'auto_approve' => false,
@@ -61,7 +85,7 @@ class LetterTypeSeeder extends Seeder
                 'template' => 'sk_tugas_template',
                 'is_required' => false,
                 'is_duplicate' => true,
-                'auto_approve' => true,
+                'auto_approve' => false,
                 'is_ending' => false,
             ]
         );
@@ -76,6 +100,8 @@ class LetterTypeSeeder extends Seeder
                 'is_ending' => false,
             ]
         );
+
+        // Revisi
 
         // Update head_letter_types_id for all types except 'Surat Keterangan Magang'
         LetterType::where('head_letter_types_id','!=',null)->update([
