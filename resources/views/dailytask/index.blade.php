@@ -741,7 +741,7 @@
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.css" rel="stylesheet">
 <style>
-    .loading-overlay {
+.loading-overlay {
     position: fixed;
     top: 0;
     left: 0;

@@ -380,3 +380,11 @@
     </div>
 </div>
 @endif
+
+@if($dailytaskChildCount != 0)
+<div class="d-flex justify-content-end mt-3">
+    <a href="{{ route('dailytask.show', $dailytask->slug) }}" class="btn btn-link">
+        See {{ $dailytaskChildCount }} Childs
+    </a>
+</div>
+@endif
