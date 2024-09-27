@@ -50,7 +50,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             <select name="work_order" class="form-control select2"  id="">
                 <option value="" selected disabled>Pilih Surat Perintah Kerja</option>
                 @foreach($workOrder as $a)
-                <option value="{{ $a->id }}" {{ @$projectEdit->work_order_id == $a->id ? 'selected' : '' }}> {{ $a->number_result }} </option>
+                <option value="{{ $a->id }}" {{ @$projectEdit->work_order_id == $a->id ? 'selected' : '' }}> {{ $a->number_result }} {{ $a->quote ?"- ". $a->quote->customer->name : ""  }} </option>
                 @endforeach
             </select>
         </div>
