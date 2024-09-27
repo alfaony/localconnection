@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use Dcblogdev\Xero\Models\XeroToken;
 use LangleyFoxall\XeroLaravel\XeroApp;
 use League\OAuth2\Client\Token\AccessToken;
 use Dcblogdev\Xero\Facades\Xero;
+use Dcblogdev\Xero\Models\XeroToken;
 use Illuminate\Support\Facades\Log;
 use App\Models\ApiLog;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +29,12 @@ class XeroService
 
         if ($token) 
         {
+            Xero::setTenantId($token->tenant_id);
+            if (Xero::isConnected()) 
+            {
+                Xero::getAccessToken($redirectWhenNotConnected = false);
+            }
+
             $this->xero = new XeroApp(
                 new AccessToken(['access_token' => $token->access_token]),
                 $token->tenant_id
@@ -55,7 +61,6 @@ class XeroService
             return redirect()->back()->with('error', 'Failed to connect to Xero.');
         }
     }
-
     /**
      * Handle the Xero OAuth2 callback.
      *
