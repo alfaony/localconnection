@@ -18,9 +18,12 @@ return new class extends Migration
             
             $table->uuid('letter_submission_id')->nullable();
             $table->uuid('user_id')->nullable();
-
+            $table->bigInteger('salary')->nullable();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->foreign('letter_submission_id')->references('id')->on('letter_submissions')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
