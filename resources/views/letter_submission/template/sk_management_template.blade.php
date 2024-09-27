@@ -31,7 +31,7 @@
                 </tr>
                 <tr>
                     <th>Gaji Bulanan </th>
-                    <td>{{'Rp. '.number_format($fieldData['salary'],0,',','.') ?? "" }}</td>
+                    <td>{{isset($fieldData['salary']) ? 'Rp. '.number_format($fieldData['salary'],0,',','.') : "" }}</td>
                 </tr>
                 <tr>
                     <th>Tanggal Perhitungan Gaji </th>

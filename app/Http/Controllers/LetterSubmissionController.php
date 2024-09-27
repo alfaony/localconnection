@@ -19,6 +19,8 @@ use App\Models\SettingCompany;
 use App\Helpers\InboxHelper;
 use App\Helpers\EmailNotifHelper;
 use App\Models\User;
+use App\Models\UserSalary;
+
 
 use Carbon\Carbon;
 class LetterSubmissionController extends Controller
@@ -134,6 +136,8 @@ class LetterSubmissionController extends Controller
 
             $this->sendNotification($letterSubmission, 'store', Auth::user()->company_id);
 
+            $request->salary ? $this->updateSalary($request, $letterSubmission) : null;
+
             DB::commit();
             return redirect()->route('letter-submission.index')->with('success', 'Pengajuan surat berhasil dibuat.');
         } catch (\Throwable $th) {
@@ -236,6 +240,9 @@ class LetterSubmissionController extends Controller
             // Simpan data field yang sudah di-merge sebagai JSON
             $letterSubmission->field = json_encode($mergedFieldData);
 
+            // Updaate Salary
+            // dd($request->all());
+            $request->salary ? $this->updateSalary($request, $letterSubmission) : null;
             // check ouwnership
             if($letterSubmission->user_id != Auth::user()->id)
             {
@@ -254,6 +261,7 @@ class LetterSubmissionController extends Controller
             DB::commit();
             return redirect()->route('letter-submission.index')->with('success', 'Pengajuan surat berhasil diperbarui.');
         } catch (\Exception $e) {
+            dd($e);
             Log::error($e->getMessage());
             DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui pengajuan surat.');
@@ -558,6 +566,22 @@ class LetterSubmissionController extends Controller
         );
     }
 
+    protected function updateSalary($request, $letterSubmission)
+    {
+        $userSalaryExist = UserSalary::where('letter_submission_id', $letterSubmission->id)->first();
+        if($userSalaryExist)
+        {
+            $userSalaryExist->salary = $request->salary;
+            $userSalaryExist->save();
+        }else
+        {
+            $userSalary = new UserSalary();
+            $userSalary->salary = $request->salary;
+            $userSalary->user_id = $letterSubmission->user_id;
+            $userSalary->letter_submission_id = $letterSubmission->id;
+            $userSalary->save();
+        }
+    }
     // Inbox Notification
     private function sentInbox($to,$message,$directUrl)
     {
