@@ -9,7 +9,7 @@
         <div class="card-body">
             <!-- Header -->
             <div class="col-12 justify-content-center align-items-center">
-                <h6 class="text-center"><strong><h3>PERJANJIAN KERJA</h3></strong></h6>
+                <h4 class="text-center"><strong>PERJANJIAN KERJA</strong></h4>
                 <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
             </div>
 

@@ -31,7 +31,7 @@ class BastController extends Controller
      */
     public function createsuggest($slug)
     {
-        $selectedWorkOrder = WorkOrder::select('id')->with('reportProject')->byCompany(Auth::user()->company_id)->with('project')->where('slug',$slug)->first();
+        $selectedWorkOrder = WorkOrder::select('id','number_result')->with('reportProject')->byCompany(Auth::user()->company_id)->with('project')->where('slug',$slug)->first();
         if(!$selectedWorkOrder)
         {
             return redirect()->to(route('bast.index'))->with('datanotfound',true);

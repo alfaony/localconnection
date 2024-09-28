@@ -226,6 +226,7 @@
                                 @csrf
                                 @method('DELETE')
                                 @canAccess('destroy','dailytasks')
+                                <input type="hidden" name="redirect" value="back">
                                 <button type="button" class="btn btn-danger delete-button btn-sm"><i class="fa fa-trash"></i></button>
                                 @endcanAccess
                                 @endif
@@ -247,6 +248,7 @@
                                 @csrf
                                 @method('DELETE')
                                 @canAccess('destroy','dailytasks')
+                                <input type="hidden" name="redirect" value="back">
                                 <button type="button" class="btn btn-danger delete-button btn-sm"><i class="fa fa-trash"></i></button>
                                 @endcanAccess
                             </form>
@@ -351,6 +353,33 @@
         });
     });
 
+    $(document).on('click', '.copy-link-button', function () {
+        var taskSlug = $(this).data('task-slug');  // Get the slug from data-slug attribute
+        
+        if(taskSlug)
+        {
+            var link = "{{ route('dailytask.show',':id') }}"
+            link = link.replace(':id', taskSlug);
+    
+            navigator.clipboard.writeText(link).then(function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Link Tersalin',
+                    text: 'Link berhasil disalin ke clipboard',
+                    timer: 2000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+            }, function(err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Menyalin',
+                    text: 'Terjadi kesalahan saat menyalin link'
+                });
+            });
+        }
+    });
+    
     function reloadPopupContent(taskSlug) 
     {
         let url = "{{ route('dailytask.show', ':id') }}";
@@ -728,6 +757,33 @@
             });
         });
     });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Use event delegation to handle dynamically added elements
+        document.body.addEventListener('click', function (event) {
+            if (event.target.closest('.delete-button')) {
+                event.preventDefault();
+                const button = event.target.closest('.delete-button');
+                const form = button.closest('form');
+
+                Swal.fire({
+                    title: 'Apakah Anda Yakin Hapus Data?',
+                    text: "Data ini akan dihapus beserta child tasknya!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            }
+        });
+    });
+
 </script>
 @endsection
 

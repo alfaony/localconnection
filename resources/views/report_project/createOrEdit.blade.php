@@ -45,14 +45,16 @@
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label>Pilih SPK</label>
+                        {{-- 
                         <select class="form-control select2" name="work_order" id="chooseSpk" required>
                             <option value="" disabled selected>Pilih SPK</option>
                             @foreach($workOrder as $a)
                             <option value="{{ $a->id }}" {{  @$reportProject->work_order_id == $a->id ? 'selected'  : ''}} >{{ $a->number_result }}</option>
                             @endforeach
                         </select>
+                        --}}
                         <input type="hidden" id="work_order_id" value="{{ @$reportProject->work_order_id }}">
-                        <!-- <select class="form-control" id="work_order" name="work_order" required></select> -->
+                        <select class="form-control" id="work_order" name="work_order" required></select>
                     </div>
                 </div>
         
@@ -269,6 +271,17 @@
                 }
             }
         });
+
+        var selectedValueWorkOrder = "{{ @$selectedWorkOrder->id }}";
+        if(selectedValueWorkOrder)
+        {
+            title = "{{ @$selectedWorkOrder->number_result }}";
+            // Create an option element with the selected value
+            var newOption = new Option(title, selectedValueWorkOrder, true, true);
+    
+            // Append the option to the select2 element and trigger change
+            $('#work_order').append(newOption).trigger('change');
+        }
 
         var selectedValueQuote = "{{ @$reportProject->work_order_id }}";
         if(selectedValueQuote)

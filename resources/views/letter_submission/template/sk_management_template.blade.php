@@ -10,9 +10,8 @@
         <div class="card-body">
             <div class="col-12 justify-content-center align-items-center header">
                 <div class="header">
-                    <h3>
-                        SURAT KEPUTUSAN MANAJEMEN
-                    </h3>
+                    <h4 class="text-center"><strong>SURAT KEPUTUSAN MANAJEMEN</strong></h4>
+                    <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
                 </div>
                 <div class="sub-header">
                     Perihal: {{ $fieldData['perihal'] ?? "" }}
@@ -27,11 +26,11 @@
                 </tr>
                 <tr>
                     <th>Jabatan / Fungsi / Keahlian</th>
-                    <td>{{ $letterSubmission->user->last_position ? $letterSubmission->user->last_position->position->name : "" }}</td>
+                    <td>{{ $userPosition ? $userPosition->position->name : "" }}</td>
                 </tr>
                 <tr>
                     <th>Gaji Bulanan </th>
-                    <td>{{isset($fieldData['salary']) ? 'Rp. '.number_format($fieldData['salary'],0,',','.') : "" }}</td>
+                    <td>{{ $salary ? "Rp. ".number_format($salary->salary,0,',','.') : "" }}</td>
                 </tr>
                 <tr>
                     <th>Tanggal Perhitungan Gaji </th>

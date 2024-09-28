@@ -10,11 +10,8 @@
         <div class="card-body">
             <div class="col-12 justify-content-center align-items-center header">
                 <div class="header">
-                    <h3>
-                        <strong>
-                            SURAT KEPUTUSAN MANAJEMEN
-                        </strong>
-                        </h3>
+                    <h4 class="text-center"><strong>SURAT KETERANGAN KERJA</strong></h4>
+                    <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
                 </div>
                 <div class="sub-header">
                     Perihal: {{ $fieldData['perihal'] ?? "" }}

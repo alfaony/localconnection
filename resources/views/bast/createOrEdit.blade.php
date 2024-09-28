@@ -32,6 +32,7 @@
                 </div>
                 <div class="form-group">
                     <label for="pilihSPK" class="form-label">Pilih SPK</label>
+                    {{-- 
                     <select class="form-control select2" name="work_order" id="pilihSPK" required>
                         <option value="" selected disabled>Pilih</option>
                         @foreach($workOrder as $a)
@@ -39,7 +40,8 @@
                         @endforeach
                         <!-- Other options can be added here -->
                     </select>
-                    <!-- <select class="form-control" id="work_order" name="work_order" required></select> -->
+                    --}}
+                    <select class="form-control" id="work_order" name="work_order" required></select>
                 </div>
                 <div class="form-group">
                     <label for="pilihDataProyek" class="form-label">Pilih Data Proyek</label>
@@ -123,6 +125,17 @@
                 }
             }
         });
+
+        var selectedValueWorkOrder = "{{ @$selectedWorkOrder->id }}";
+        if(selectedValueWorkOrder)
+        {
+            title = "{{ @$selectedWorkOrder->number_result }}";
+            // Create an option element with the selected value
+            var newOption = new Option(title, selectedValueWorkOrder, true, true);
+    
+            // Append the option to the select2 element and trigger change
+            $('#work_order').append(newOption).trigger('change');
+        }
 
         var selectedValueQuote = "{{ @$bast->work_order_id }}";
         if(selectedValueQuote)

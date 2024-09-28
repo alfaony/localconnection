@@ -391,20 +391,21 @@
                                     <!-- Jabatan -->
                                     <div class="col-md-12 mb-3">
                                         <label for="jabatan">Jabatan <span class="text-danger">*</span></label>
-                                        <select class="form-control" name="position_id" id="position_id" readonly>
+                                        <select class="form-control" name="position_id" id="position_id" disabled>
                                             <option value="" selected disabled>Pilih </option>
                                             @foreach($lastPositon as $position)
                                                 <option value="{{ $position->id }}" {{ Auth::user()->last_position->position_id == $position->id ? 'selected' : '' }}>{{ $position->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+                                    <input type="hidden" class="form-control" id="amount" name="user_last_position" value="{{ Auth::user()->last_position->id  ?? "" }}" readonly>
                                     @endif
 
                                     <!-- Gaji Bulanan -->
                                     <div class="col-md-12 mb-3">
                                         <label for="monthly_salary">Gaji Bulanan</label>
                                         <input type="text" class="form-control" id="amount" value="{{ Auth::user()->lastSalary ? 'Rp. '.number_format(Auth::user()->lastSalary->salary,0,',','.') : "Rp. 0" }}" readonly>
-                                        <input type="hidden" class="form-control" id="amount" name="salary_old" value="{{ Auth::user()->lastSalary ? Auth::user()->lastSalary->salary : 0 }}" readonly>
+                                        <input type="hidden" class="form-control" id="amount" name="user_salary_id" value="{{ Auth::user()->lastSalary ? Auth::user()->lastSalary->id : 0 }}" readonly>
 
                                     </div>
                     
@@ -608,9 +609,10 @@
                                     </select>
                                 </div>
                                 @endif
+                                
                                 <div class="col-md-12 mb-3">
                                     <label for="salary_date">Tanggal Terakhir Bekerja <span class="text-danger">*</span></label>
-                                    <input type="date" name="end_date" class="form-control" value="{{ Auth::user()->last_position ? Auth::user()->last_position->end_date : '' }}" required>
+                                    <input type="date" name="end_date" min="{{ $twoMonthsLater }}" class="form-control" value="{{ Auth::user()->last_position ? Auth::user()->last_position->end_date : '' }}" required>
                                 </div>
                             </div>
                         </div>

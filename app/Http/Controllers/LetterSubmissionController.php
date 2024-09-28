@@ -72,11 +72,13 @@ class LetterSubmissionController extends Controller
         $letterTypes = LetterType::filterByUserStatus()->get();
         $positions = Position::byCompany(Auth::user()->company_id)->get();
         $lastPositon = Auth::user()->last_position ? Position::where('id',Auth::user()->last_position->position_id)->get() : null;
+        $twoMonthsLater = Carbon::now()->addMonths(2)->format('Y-m-d');
+
 
         $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
 
         // Melempar data jenis surat ke view create
-        return view('letter_submission.create', compact('letterTypes','positions','company','lastPositon'));
+        return view('letter_submission.create', compact('letterTypes','positions','company','lastPositon','twoMonthsLater'));
     }
 
     /**
@@ -153,6 +155,7 @@ class LetterSubmissionController extends Controller
         $letterTypes = LetterType::where('id', $letterSubmission->letter_type_id)->get();
 
         $user = $letterSubmission->user;
+        $twoMonthsLater = Carbon::parse($letterSubmission->created_at)->addMonths(2)->format('Y-m-d');
 
         if(!$letterSubmission->is_editable)
         {
@@ -172,11 +175,12 @@ class LetterSubmissionController extends Controller
         
         $lastPositon = isset($letterSubmission->convert_field['position_old_id']) ? Position::where('id',$letterSubmission->convert_field['position_old_id'] )->get() : null;
         $lastestPosition = isset($letterSubmission->convert_field['position_old_id']) ? Position::where('id',$letterSubmission->convert_field['position_old_id'] )->first() : null;
-
+        $salary = isset($letterSubmission->convert_field['user_salary_id']) ? UserSalary::where('id', $letterSubmission->convert_field['user_salary_id'])->first() : null;
+        $userPosition = isset($letterSubmission->convert_field['user_last_position']) ? UserPosition::where('id', $letterSubmission->convert_field['user_last_position'])->first() : null;
 
         $company = SettingCompany::byCompany($user->company_id)->get()->pluck('field_value','field_title');
 
-        return view('letter_submission.edit', compact('letterSubmission', 'letterTypes','positions', 'company', 'user','lastPositon', 'lastestPosition'));
+        return view('letter_submission.edit', compact('letterSubmission', 'letterTypes','positions', 'company', 'user','lastPositon', 'lastestPosition','salary','userPosition','twoMonthsLater'));
     }
 
     public function update(LetterSubmissionRequest $request, $id)
@@ -261,7 +265,7 @@ class LetterSubmissionController extends Controller
             DB::commit();
             return redirect()->route('letter-submission.index')->with('success', 'Pengajuan surat berhasil diperbarui.');
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             Log::error($e->getMessage());
             DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui pengajuan surat.');
@@ -278,9 +282,11 @@ class LetterSubmissionController extends Controller
 
         $positionOld = isset($letterSubmission->convert_field['position_old_id']) ? $this->findPosition($letterSubmission->convert_field['position_old_id']) : null;
         $positionNew = isset($letterSubmission->convert_field['position_new_id']) ? $this->findPosition($letterSubmission->convert_field['position_new_id']) : null;
+        $salary = isset($letterSubmission->convert_field['user_salary_id']) ? UserSalary::where('id', $letterSubmission->convert_field['user_salary_id'])->first() : null;
+        $userPosition = isset($letterSubmission->convert_field['user_last_position']) ? UserPosition::where('id', $letterSubmission->convert_field['user_last_position'])->first() : null;
 
         try {
-            return view('letter_submission.template.'.$letterSubmission->letterType->template, compact('letterSubmission','company', 'date', 'positionOld', 'positionNew','dateWithDay'));
+            return view('letter_submission.template.'.$letterSubmission->letterType->template, compact('letterSubmission','company', 'date', 'positionOld', 'positionNew','dateWithDay', 'salary', 'userPosition'));
         } catch (\Throwable $th) {
             return redirect()->to(route('letter-submission.index'))->with('error', 'Template surat tidak ditemukan.');
         }
