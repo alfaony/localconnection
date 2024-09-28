@@ -29,6 +29,8 @@
                         <option value="{{ $letterType->id }}" {{ @$letterSubmission->letter_type_id == $letterType->id ? 'selected' : '' }} data-template="{{ $letterType->template }}">{{ $letterType->name }}</option>
                     @endforeach
                 </select>
+                <input type="hidden" class="form-control" id="amount" name="user_last_position" value="{{ Auth::user()->last_position->id  ?? '' }}">
+                <input type="hidden" class="form-control" id="amount" name="user_salary_id" value="{{ Auth::user()->lastSalary ? Auth::user()->lastSalary->id : '' }}" readonly>
             </div>
         </div>
     </div>
@@ -800,7 +802,7 @@
                                 </div>
                             </div>
                         </div>
-                                                <div class="card">
+                        <div class="card">
                             <!-- Bagian Surat Keputusan -->
                             <div class="card-header">
                                 <div class="col-md-12 mb-3">
@@ -808,6 +810,11 @@
                                 </div>
                             </div>
                             <div class="card-body">
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Tanggal Surat Kuasa</label>
+                                    <input type="date" name="date" class="form-control" required>
+                                </div>
+
                                 <div class="col-md-12 mb-3">
                                     <label for="salary_date">Nama Lengkap</label>
                                     <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly>
@@ -821,7 +828,7 @@
                                 <!-- Jabatan Terakhir-->
                                 <div class="col-md-12 mb-3">
                                     <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
-                                    <select class="form-control" name="position_old_id" id="position_old_id" required>
+                                    <select class="form-control" name="position_old_id" id="position_old_id" readonly>
                                         <option value="" selected disabled>Pilih </option>
                                         @foreach($lastPositon as $positionlast)
                                             <option value="{{ $positionlast->id }}" {{ $positionlast->id == Auth::user()->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
@@ -829,6 +836,7 @@
                                     </select>
                                 </div>
                                 @endif
+                                <input type="hidden" class="form-control" id="amount" name="user_last_position" value="{{ Auth::user()->last_position->id  ?? "" }}" readonly>
                                 <div class="col-md-12 mb-3">
                                     <label for="job_responsibilities">Tanggung Jawab Pekerjaan <span class="text-danger">*</span></label>
                                     <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" required />

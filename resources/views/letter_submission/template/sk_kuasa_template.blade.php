@@ -92,7 +92,7 @@
 
                 <div class="row mt-4">
                     <div class="col-6 offset-6 text-center">
-                        <p class="mb-0">Jakarta, {{ isset($fieldData['start_date']) ? \Carbon\Carbon::parse($fieldData['start_date'])->locale('id')->translatedFormat('d F Y') : $date }}</p>
+                        <p class="mb-0">Jakarta, {{ $dateCustom ?? '' }}</p>
                     </div>
                 </div>
                 <div class="row mb-1">
