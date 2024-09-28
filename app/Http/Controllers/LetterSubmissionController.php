@@ -279,6 +279,7 @@ class LetterSubmissionController extends Controller
         $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
         $dateWithDay = Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('l, d F Y');
         $date = Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y');
+        $dateCustom = isset($letterSubmission->convert_field['date']) ? Carbon::parse($letterSubmission->convert_field['date'])->locale('id')->translatedFormat('d F Y') : Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y');
 
         $positionOld = isset($letterSubmission->convert_field['position_old_id']) ? $this->findPosition($letterSubmission->convert_field['position_old_id']) : null;
         $positionNew = isset($letterSubmission->convert_field['position_new_id']) ? $this->findPosition($letterSubmission->convert_field['position_new_id']) : null;
@@ -286,7 +287,7 @@ class LetterSubmissionController extends Controller
         $userPosition = isset($letterSubmission->convert_field['user_last_position']) ? UserPosition::where('id', $letterSubmission->convert_field['user_last_position'])->first() : null;
 
         try {
-            return view('letter_submission.template.'.$letterSubmission->letterType->template, compact('letterSubmission','company', 'date', 'positionOld', 'positionNew','dateWithDay', 'salary', 'userPosition'));
+            return view('letter_submission.template.'.$letterSubmission->letterType->template, compact('letterSubmission','company', 'date', 'positionOld', 'positionNew','dateWithDay', 'salary', 'userPosition','dateCustom'));
         } catch (\Throwable $th) {
             return redirect()->to(route('letter-submission.index'))->with('error', 'Template surat tidak ditemukan.');
         }

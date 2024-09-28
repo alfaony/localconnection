@@ -581,25 +581,30 @@
                     </div>
                     <div class="card-body">
                         <div class="col-md-12 mb-3">
+                            <label for="salary_date">Tanggal Surat Kuasa</label>
+                            <input type="date" name="date" class="form-control" value="{{ isset($fieldData['date']) ? \Carbon\Carbon::parse($fieldData['date'])->format('Y-m-d') : '' }}"required>
+                        </div>
+                        <div class="col-md-12 mb-3">
                             <label for="salary_date">Nama Lengkap</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly>
+                            <input type="text" class="form-control" value="{{ $user->name }}" readonly>
                         </div>
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">NIK</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->id_card }}" readonly>
+                            <input type="text" class="form-control" value="{{ $user->id_card }}" readonly>
                         </div>
                          <!-- Jabatan -->
                         @if(isset(Auth::user()->last_position))
                         <!-- Jabatan Terakhir-->
                         <div class="col-md-12 mb-3">
                             <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
-                            <select class="form-control" name="position_old_id" id="position_old_id" required>
+                            <select class="form-control" name="position_old_id" id="position_old_id" readonly>
                                 <option value="" selected disabled>Pilih </option>
-                                @foreach($lastPositon as $position)
-                                    <option value="{{ $position->id }}" {{ (isset($fieldData['position_old_id']) && $fieldData['position_old_id'] == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
+                                @foreach($positions as $position)
+                                    <option value="{{ $position->id }}" {{ (isset($userPosition) && $userPosition->position_id == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
                                 @endforeach
                             </select>
                         </div>
+                        <input type="hidden" class="form-control" id="amount" name="user_last_position" value="{{ $userPosition ? $userPosition->id : '' }}" readonly>
                         @endif
                         <div class="col-md-12 mb-3">
                             <label for="job_responsibilities">Tanggung Jawab Pekerjaan <span class="text-danger">*</span></label>
