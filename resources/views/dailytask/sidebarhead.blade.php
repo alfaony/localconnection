@@ -1,5 +1,6 @@
 <div class="d-flex justify-content-end w-100">
     <div class="me-auto">
+    <button type="button" class="btn btn-sm btn-primary ml-2 copy-link-button" data-task-slug="{{ $dailytask->slug }}"><i class="fa fa-link"></i></button>
     @if(!$dailytask->approved)
         <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
             @canAccess('show','dailytasks')
@@ -12,6 +13,7 @@
             @csrf
             @method('DELETE')
             @canAccess('destroy','dailytasks')
+            <input type="hidden" name="redirect" value="back">
             <button type="button" class="btn btn-danger delete-button btn-sm text-white"><i class="fa fa-trash"></i></button>
             @endcanAccess
             @endif
@@ -31,6 +33,7 @@
             @csrf
             @method('DELETE')
             @canAccess('destroy','dailytasks')
+            <input type="hidden" name="redirect" value="back">
             <button type="button" class="btn btn-danger delete-button btn-sm text-white"><i class="fa fa-trash"></i></button>
             @endcanAccess
         </form>

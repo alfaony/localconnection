@@ -693,9 +693,13 @@ class DailyTaskController extends Controller
         }
 
         $dailytask->delete();
-
+        
         if($request->redirect)
         {
+            if($request->redirect == "back")
+            {
+                return redirect()->back()->with('delete',true);
+            }
             return redirect()->route('dailytask.index')->with('delete',true);
         }else
         {
