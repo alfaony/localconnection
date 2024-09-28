@@ -60,15 +60,15 @@
                         <tr>
                             <td>
                                 Nama</td>
-                            <td>: {{ Auth::user()->name }}</td>
+                            <td>: {{ $user->name }}</td>
                         </tr>
                         <tr>
                             <td>No KTP</td>
-                            <td>: {{ Auth::user()->id_card }}</td>
+                            <td>: {{ $user->id_card }}</td>
                         </tr>
                         <tr>
                             <td>Alamat</td>
-                            <td>: {{ Auth::user()->address }}</td>
+                            <td>: {{ $user->address }}</td>
                         </tr>
                         <tr>
                             <td colspan="2">
@@ -90,38 +90,38 @@
                 </p>
             </div>
 
-            <div class="d-flex">
-                <!-- KTP and Signature Section -->
-                 <di class="row col-4 offset-7 mt-4">
-                     <p class="text-center">Jakarta, {{ $date ?? "" }}</p>
-                 </div>
-                 <div class="row">
-                     <div class="col-4 mt-4 justify-content-center align-items-center">
-                     @if($letterSubmission->status !== 0)
+                <div class="row mt-4">
+                    <div class="col-6 offset-6 text-center">
+                        <p class="mb-0">Jakarta, {{ isset($fieldData['start_date']) ? \Carbon\Carbon::parse($fieldData['start_date'])->locale('id')->translatedFormat('d F Y') : $date }}</p>
+                    </div>
+                </div>
+                <div class="row mb-1">
+                    <div class="col-6 text-center">
+                        Yang menerima Kuasa,
+                    </div>
+                    <div class="col-6 text-center pr-5">
+                        Yang memberi Kuasa,
+                    </div>
+                </div>
+                <div class="row">
+                     <div class="col-6 text-center">
+                        @if($letterSubmission->status !== 0)
                         <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
                             alt="Signature" style="height:150px">
                         @else
                         <div style="height: 150px;"></div> <!-- Empty space if no signature -->
-                    @endif
-                     </div>
-                     
-                     <div class="col-4 offset-4 mt-4 justify-content-center align-items-center">
-                         @if($letterSubmission->is_approved == 1)
-                         <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
-                         @else
-                         <div style="height: 150px;"></div> <!-- Empty space if no signature -->
-                         @endif
-                     </div>
-                 </div>
-                 <di class="row">
-                    <div class="col-4 mt-4">
-                        <p class="text-center"><strong>{{ $letterSubmission->user->name ?? "" }}</strong></p>
+                        @endif
+                        <p>{{ $letterSubmission->user->name }}</p>
                     </div>
-                    <div class="col-4 offset-3 mt-4 pr-5">
-                        <p class="text-center"><strong>{{ $company['director'] ?? "" }}</strong></p>
+                    <div class="col-6 text-center">
+                        @if($letterSubmission->is_approved == 1)
+                        <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
+                        @else
+                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                        @endif
+                        <p>{{ $company['director'] ?? "" }}</p>
                     </div>
-                 </div>
-            </div>
+                </div>
         </div>
     </div>
 </div>

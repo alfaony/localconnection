@@ -293,16 +293,17 @@
                         <select class="form-control" name="position_id" readonly>
                             <option value="" selected disabled>Pilih </option>
                             @foreach($positions as $position)
-                                <option value="{{ $position->id }}" {{ (isset($fieldData['position_id']) && $fieldData['position_id'] == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
+                                <option value="{{ $position->id }}" {{ (isset($userPosition) && $userPosition->position_id == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     @endif
+                    <input type="hidden" class="form-control" id="amount" name="user_last_position" value="{{ $userPosition ? $userPosition->id : '' }}" readonly>
 
                     <div class="col-md-12 mb-3">
                         <label for="monthly_salary">Gaji Bulanan</label>
-                        <input type="text" class="form-control" id="amount" value="{{ 'Rp. '.number_format($fieldData['salary_old'],0,',','.') ?? Rp. 0 }}" readonly>
-                        <input type="hidden" class="form-control" id="amount" name="salary_old" value="{{ $fieldData['salary_old'] }}" readonly>
+                        <input type="text" class="form-control" id="amount" value="{{ isset($salary) ? number_format($salary->salary, 0, ',', '.') : 'Rp. 0' }}" readonly>
+                        <input type="hidden" class="form-control" id="amount" name="user_salary_id" value="{{ isset($salary) ? $salary->id : 0 }}" readonly>
                     </div>
     
                     <div class="col-md-12 mb-3">
@@ -493,7 +494,7 @@
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label for="salary_date">Tanggal Terakhir Kerja</label>
-                                <input type="date" name="end_date"  class="form-control" value="{{ (isset($fieldData['end_date']) ) ? $fieldData['end_date'] : '' }}">
+                                <input type="date" name="end_date" class="form-control" value="{{ (isset($fieldData['end_date']) ) ? $fieldData['end_date'] : '' }}">
                                 <span class="text-danger">Kosongkan jika saat ini masih bekerja</span>
                             </div>
                         </div>
@@ -566,7 +567,7 @@
                         </div>
                         <div class="col-12">
                             <p class="text-justify"> 
-                                Demikian Surat kuasa ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya 
+                                Demikian Surat kuasa ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya
                             </p>
                         </div>
                     </div>
@@ -684,7 +685,7 @@
                         @endif
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Tanggal Terakhir Bekerja <span class="text-danger">*</span></label>
-                            <input type="date" name="end_date" class="form-control" value="{{ (isset($fieldData['end_date'])) ? $fieldData['end_date'] : '' }}" required>
+                            <input type="date" name="end_date" min="{{ $twoMonthsLater }}"  class="form-control" value="{{ (isset($fieldData['end_date'])) ? $fieldData['end_date'] : '' }}" required>
                         </div>
                     </div>
                 </div>
