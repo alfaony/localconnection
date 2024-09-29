@@ -9,7 +9,8 @@
         <div class="card scrollable-div" id="printThis">
             <div class="card-body">
                 <div class="text-center mb-4">
-                    <h4><strong>SURAT PENGUNDURAN DIRI</strong></h4>
+                    <h4 class="text-center"><strong>SURAT PENGUNDURAN DIRI</strong></h4>
+                    <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
                 </div>
                 
                 <p>Kepada Yth,<br>

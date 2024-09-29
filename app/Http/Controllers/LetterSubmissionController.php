@@ -256,6 +256,7 @@ class LetterSubmissionController extends Controller
             }else
             {
                 $letterSubmission->status = true;
+                $letterSubmission->reason = NULL;
                 $this->sendNotification($letterSubmission, 'update', Auth::user()->company_id);
             }
 
@@ -280,6 +281,7 @@ class LetterSubmissionController extends Controller
         $dateWithDay = Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('l, d F Y');
         $date = Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y');
         $dateCustom = isset($letterSubmission->convert_field['date']) ? Carbon::parse($letterSubmission->convert_field['date'])->locale('id')->translatedFormat('d F Y') : Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y');
+        $startDate = isset($letterSubmission->convert_field['start_date']) ? Carbon::parse($letterSubmission->convert_field['start_date'])->locale('id') : Carbon::parse($letterSubmission->created_at)->locale('id');
 
         $positionOld = isset($letterSubmission->convert_field['position_old_id']) ? $this->findPosition($letterSubmission->convert_field['position_old_id']) : null;
         $positionNew = isset($letterSubmission->convert_field['position_new_id']) ? $this->findPosition($letterSubmission->convert_field['position_new_id']) : null;
@@ -287,7 +289,7 @@ class LetterSubmissionController extends Controller
         $userPosition = isset($letterSubmission->convert_field['user_last_position']) ? UserPosition::where('id', $letterSubmission->convert_field['user_last_position'])->first() : null;
 
         try {
-            return view('letter_submission.template.'.$letterSubmission->letterType->template, compact('letterSubmission','company', 'date', 'positionOld', 'positionNew','dateWithDay', 'salary', 'userPosition','dateCustom'));
+            return view('letter_submission.template.'.$letterSubmission->letterType->template, compact('letterSubmission','company', 'date', 'positionOld', 'positionNew','dateWithDay', 'salary', 'userPosition','dateCustom','startDate'));
         } catch (\Throwable $th) {
             return redirect()->to(route('letter-submission.index'))->with('error', 'Template surat tidak ditemukan.');
         }
@@ -318,7 +320,14 @@ class LetterSubmissionController extends Controller
         $this->validate($request, [
             'action' => 'required|in:approve,decline',
             'selected_ids' => 'required|array',
-            'selected_ids.*' => 'required|uuid|exists:letter_submissions,id'
+            'selected_ids.*' => 'required|uuid|exists:letter_submissions,id',
+            'notes' => 'nullable|array',
+            'notes.*' => 'nullable|string|max:255'
+        ], [
+            'selected_ids.required' => 'Pilih setidaknya satu pengajuan untuk memberikan alasan.',
+            'selected_ids.*.exists' => 'Pengajuan yang dipilih tidak valid.',
+            'notes.*.string' => 'Alasan harus berupa teks.',
+            'notes.*.max' => 'Alasan tidak boleh lebih dari 255 karakter.'
         ]);
 
         DB::beginTransaction();
@@ -346,6 +355,10 @@ class LetterSubmissionController extends Controller
                     $letterSubmission = LetterSubmission::findOrFail($selected);
                     $letterSubmission->is_approved = $status;
                     $letterSubmission->status = true;
+                    if($request->notes[$selected])
+                    {
+                        $letterSubmission->reason = $request->notes[$selected];
+                    }
                     $letterSubmission->save();
                     if(($status == ParamSchema::APPROVE) && ($letterSubmission->letterType->name == ParamSchema::PERJANJIANKERJA))
                     {

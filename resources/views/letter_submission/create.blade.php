@@ -29,8 +29,8 @@
                         <option value="{{ $letterType->id }}" {{ @$letterSubmission->letter_type_id == $letterType->id ? 'selected' : '' }} data-template="{{ $letterType->template }}">{{ $letterType->name }}</option>
                     @endforeach
                 </select>
-                <input type="hidden" class="form-control" id="amount" name="user_last_position" value="{{ Auth::user()->last_position->id  ?? '' }}">
-                <input type="hidden" class="form-control" id="amount" name="user_salary_id" value="{{ Auth::user()->lastSalary ? Auth::user()->lastSalary->id : '' }}" readonly>
+                <input type="hidden" class="form-control" name="user_last_position" value="{{ Auth::user()->last_position->id  ?? '' }}">
+                <input type="hidden" class="form-control" name="user_salary_id" value="{{ Auth::user()->lastSalary ? Auth::user()->lastSalary->id : '' }}" >
             </div>
         </div>
     </div>

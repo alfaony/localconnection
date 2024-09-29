@@ -84,12 +84,14 @@
                         <tr>
                             @canAccess('approvement','letter_submissions')
                             <th><input type="checkbox" id="select-all"></th>
+                            <th>Alasan</th>
                             @endcanAccess
                             <th>Nama Lengkap</th>
                             <th>Surat</th>
                             <th>Status</th>
                             <th>Tanggal Pengajuan</th>
                             <th>Aksi</th>
+                            <th>Alasan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -105,6 +107,17 @@
                                     @endif
                                 @else
                                     <i class="fa fa-check"></i>
+                                @endif
+                            </td>
+                            <td>
+                                @if($submission->is_approved === null)
+                                    @if(is_null($submission->status) || $submission->status == 1)
+                                        <input type="text" name="notes[{{ $submission->id }}]" class="form-control" value="{{ $submission->notes ?? '' }}">
+                                    @else
+                                        {{ $submission->reason ?? '-' }}
+                                    @endif
+                                @else
+                                    {{ $submission->reason ?? '-' }}
                                 @endif
                             </td>
                             @endcanAccess
@@ -139,6 +152,9 @@
                                 <button type="button" class="btn btn-danger btn-sm delete-submission" data-id="{{ $submission->id }}"><i class="fa fa-trash"></i></button>
                                 @endif
                                 @endcanAccess
+                            </td>
+                            <td>
+                                {{ $submission->reason ?? '-' }}
                             </td>
                         </tr>
                         @endforeach
