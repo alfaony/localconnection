@@ -666,15 +666,15 @@
                     <div class="card-body col-md-12">
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Nama Lengkap</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly>
+                            <input type="text" class="form-control" value="{{ $user->name }}" readonly>
                         </div>
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Alamat</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->address }}" readonly>
+                            <input type="text" class="form-control" value="{{ $user->address }}" readonly>
                         </div>
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">NIK</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->id_card }}" readonly>
+                            <input type="text" class="form-control" value="{{ $user->id_card }}" readonly>
                         </div>
                         @if(isset($user->last_position))
                         <!-- Jabatan Terakhir-->

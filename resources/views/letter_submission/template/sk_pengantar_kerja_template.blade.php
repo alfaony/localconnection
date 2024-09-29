@@ -40,15 +40,15 @@
                         </tr>
                         <tr>
                             <td>Nama</td>
-                            <td>: {{ Auth::user()->name }}</td>
+                            <td>: {{ $user->name }}</td>
                         </tr>
                         <tr>
                             <td>No KTP</td>
-                            <td>: {{ Auth::user()->id_card }}</td>
+                            <td>: {{ $user->id_card }}</td>
                         </tr>
                         <tr>
                             <td>Alamat</td>
-                            <td>: {{ Auth::user()->address }}</td>
+                            <td>: {{ $user->address }}</td>
                         </tr>
                         <tr>
                             <td colspan="2">
