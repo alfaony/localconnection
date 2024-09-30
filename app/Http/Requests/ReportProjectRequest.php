@@ -26,7 +26,7 @@ class ReportProjectRequest extends FormRequest
         $rules = 
         [
             'date' => 'required|date',
-            'work_order' => 'required|string',
+            // 'work_order' => 'required|string',
             'project' => 'required|string',
             'name' => 'required|array',
             'link' => 'required|array',
@@ -42,7 +42,7 @@ class ReportProjectRequest extends FormRequest
             [
                 'file' => 'nullable|array',
                 'date' => 'required|date',
-                'work_order' => 'required|string',
+                // 'work_order' => 'required|string',
                 'project' => 'required|string',
                 'link.*' => 'required|url',
                 'file.*' => 'nullable|file|max:5000', // Contoh validasi untuk file PDF dengan maksimum 5MB.

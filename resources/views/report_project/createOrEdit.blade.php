@@ -42,21 +42,21 @@
                     </div>
                 </div>
         
+                {{-- 
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label>Pilih SPK</label>
-                        {{-- 
                         <select class="form-control select2" name="work_order" id="chooseSpk" required>
                             <option value="" disabled selected>Pilih SPK</option>
                             @foreach($workOrder as $a)
                             <option value="{{ $a->id }}" {{  @$reportProject->work_order_id == $a->id ? 'selected'  : ''}} >{{ $a->number_result }}</option>
                             @endforeach
                         </select>
-                        --}}
                         <input type="hidden" id="work_order_id" value="{{ @$reportProject->work_order_id }}">
                         <select class="form-control" id="work_order" name="work_order" required></select>
                     </div>
                 </div>
+                --}}
         
                 <div class="row mb-3">
                     <div class="col-md-12">
@@ -64,7 +64,7 @@
                         <select class="form-control select2" name="project" id="chooseProject" required>
                         <option value="" disabled selected>Pilih Proyek</option>
                             @foreach($project as $a)
-                            <option value="{{ $a->id }}" {{  @$reportProject->project_id == $a->id ? 'selected'  : ''}} >{{ $a->title }}</option>
+                            <option value="{{ $a->id }}" {{  @$reportProject->project_id == $a->id ? 'selected'  : ''}} >{{ $a->title }} {{ $a->workOrder->number_result }}</option>
                             @endforeach
                         </select>
                     </div>

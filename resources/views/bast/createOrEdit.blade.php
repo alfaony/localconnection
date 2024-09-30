@@ -31,8 +31,8 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="pilihSPK" class="form-label">Pilih SPK</label>
                     {{-- 
+                    <label for="pilihSPK" class="form-label">Pilih SPK</label>
                     <select class="form-control select2" name="work_order" id="pilihSPK" required>
                         <option value="" selected disabled>Pilih</option>
                         @foreach($workOrder as $a)
@@ -40,16 +40,16 @@
                         @endforeach
                         <!-- Other options can be added here -->
                     </select>
-                    --}}
                     <select class="form-control" id="work_order" name="work_order" required></select>
+                    --}}
                 </div>
                 <div class="form-group">
                     <label for="pilihDataProyek" class="form-label">Pilih Data Proyek</label>
                     <select class="form-control select2 projectChange" name="project" id="pilihDataProyek" required>
                         <option value="" disabled selected>Pilih</option>
                         @foreach($project as $a)
-                        <option value="{{ $a->id }}" data-report="{{ $a->reportProject ? $a->reportProject->id : '' }}" {{ @$bast->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
-                        @endforeach
+                        <option value="{{ $a->id }}" data-report="{{ $a->reportProject ? $a->reportProject->id : '' }}" {{ @$bast->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }} -  {{ $a->workOrder->number_result }}</option>
+                        @endforeach     
                         <!-- Other options can be added here -->
                     </select>
                 </div>
