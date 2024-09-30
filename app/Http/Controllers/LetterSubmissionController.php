@@ -374,7 +374,7 @@ class LetterSubmissionController extends Controller
 
                     if($status == ParamSchema::APPROVE && isset($letterSubmission->convert_field['salary']))
                     {
-                        $request->salary ? $this->updateSalary($letterSubmission->convert_field['salary'], $letterSubmission) : null;
+                        isset($letterSubmission->convert_field['salary']) ? $this->updateSalary($letterSubmission->convert_field['salary'], $letterSubmission) : null;
                     }
                     
                     $this->sendNotification($letterSubmission, $action, Auth::user()->company_id, true);

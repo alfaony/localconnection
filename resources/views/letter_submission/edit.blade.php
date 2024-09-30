@@ -59,7 +59,7 @@
                         <h5 class="text-center"><strong>PERJANJIAN MAGANG</strong></h5>
                         <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
         
-                        <p>Pada Hari {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('l, d F Y') }}  bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+                        <p>Pada Hari {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('l, d F Y') }}  bertempat di Jakarta, telah ditanda tangani perjanjian magang sama antara:</p>
         
                         <!-- Table to display company and employee information -->
                         <table class="table table-borderless">
