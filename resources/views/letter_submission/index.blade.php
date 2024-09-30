@@ -84,14 +84,13 @@
                         <tr>
                             @canAccess('approvement','letter_submissions')
                             <th><input type="checkbox" id="select-all"></th>
-                            <th>Alasan</th>
                             @endcanAccess
+                            <th>Alasan</th>
                             <th>Nama Lengkap</th>
                             <th>Surat</th>
                             <th>Status</th>
                             <th>Tanggal Pengajuan</th>
                             <th>Aksi</th>
-                            <th>Alasan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -109,18 +108,14 @@
                                     <i class="fa fa-check"></i>
                                 @endif
                             </td>
+                            @endcanAccess
                             <td>
-                                @if($submission->is_approved === null)
-                                    @if(is_null($submission->status) || $submission->status == 1)
-                                        <input type="text" name="notes[{{ $submission->id }}]" class="form-control" value="{{ $submission->notes ?? '' }}">
-                                    @else
-                                        {{ $submission->reason ?? '-' }}
-                                    @endif
+                                @if($approvement)
+                                        <input type="text" name="notes[{{ $submission->id }}]" class="form-control" value="{{ $submission->reason ?? '' }}">
                                 @else
                                     {{ $submission->reason ?? '-' }}
                                 @endif
                             </td>
-                            @endcanAccess
                             <td>{{ $submission->user->name ?? '-' }}</td>
                             <td>{{ $submission->letterType->name ?? '-' }}</td>
                             <td>
@@ -152,9 +147,6 @@
                                 <button type="button" class="btn btn-danger btn-sm delete-submission" data-id="{{ $submission->id }}"><i class="fa fa-trash"></i></button>
                                 @endif
                                 @endcanAccess
-                            </td>
-                            <td>
-                                {{ $submission->reason ?? '-' }}
                             </td>
                         </tr>
                         @endforeach

@@ -175,9 +175,8 @@
     
             <div class="col-12 justify-content-center align-items-center header">
                 <div class="header">
-                    <h3>
-                        SURAT KEPUTUSAN MANAJEMEN
-                    </h3>
+                    <h4 class="text-center"><strong>SURAT KEPUTUSAN MANAJEMEN</strong></h4>
+                    <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
                 </div>
                 <div class="sub-header">
                     Perihal: {{ "Penerimaan Magang" }}
@@ -316,9 +315,41 @@
     @endif
     @endif
 </div>
+<!-- Modal for inputting the reason for rejection -->
+<div class="modal fade" id="declineModal" tabindex="-1" aria-labelledby="declineModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="declineModalLabel">Alasan Penolakan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">Tutup</button>
+      </div>
+      <div class="modal-body">
+        <form id="declineForm" action="{{ route('letter-submission.approvement') }}" method="POST">
+          @csrf
+          @method('PATCH')
+          <input type="hidden" name="action" value="decline">
+          <input type="hidden" name="selected_ids[]" value="{{ $letterSubmission->id }}">
+
+          <div class="form-group">
+            <label for="modal-reason">Alasan Penolakan:</label>
+            <input type="text" name="notes[{{ $letterSubmission->id }}]" id="modal-reason" class="form-control" required>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            <button type="submit" class="btn btn-danger">Decline</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 @endsection
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"></script>
 <script>
     $(document).ready(function() {
         $("#downloadQuote").click(function(e) {

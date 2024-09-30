@@ -797,7 +797,7 @@
                                 </div>
                                 <div class="col-12">
                                     <p class="text-justify"> 
-                                        Demikian Surat kuasa ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya 
+                                        Demikian Surat kuasa ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya
                                     </p>
                                 </div>
                             </div>
