@@ -597,7 +597,7 @@
                         <!-- Jabatan Terakhir-->
                         <div class="col-md-12 mb-3">
                             <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
-                            <select class="form-control" name="position_old_id" id="position_old_id" readonly>
+                            <select class="form-control" name="position_old_id" id="position_old_id" disabled>
                                 <option value="" selected disabled>Pilih </option>
                                 @foreach($positions as $position)
                                     <option value="{{ $position->id }}" {{ (isset($userPosition) && $userPosition->position_id == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>

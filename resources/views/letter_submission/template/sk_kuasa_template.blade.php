@@ -63,6 +63,12 @@
                             <td>: {{ $user->name }}</td>
                         </tr>
                         <tr>
+                            <td>
+                                Jabatan
+                            </td>
+                            <td>: {{ $userPosition ? $userPosition->position->name : "" }}</td>
+                        </tr>
+                        <tr>
                             <td>No KTP</td>
                             <td>: {{ $user->id_card }}</td>
                         </tr>
