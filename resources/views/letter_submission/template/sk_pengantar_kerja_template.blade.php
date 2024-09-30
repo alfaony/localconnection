@@ -52,8 +52,7 @@
                         </tr>
                         <tr>
                             <td colspan="2">
-                                <p>Bertindak atas nama pribadi, sebagai pekerja / staff yang dipekerjakan, selanjutnya
-                                    disebut sebagai PIHAK KEDUA.</p>
+                                <p>Bertindak atas nama pribadi, sebagai pekerja / staff yang dipekerjakan.</p>
                             </td>
                         </tr>
                     </tbody>
