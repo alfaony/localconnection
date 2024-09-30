@@ -33,6 +33,7 @@
                             <td>Alamat</td>
                             <td>: {{ $company['address'] ?? "" }}</td>
                         </tr>
+                        
                         <tr>
                             <td colspan="2">
                                 Selanjutnya disebut PEMBERI KUASA               
