@@ -144,7 +144,7 @@
 
                 <div class="row mt-4">
                     <div class="col-6 text-center">
-                        <p>Jakarta, {{ $date ?? "" }}</p>
+                        <p>Jakarta, {{ $startDate ? $startDate->translatedFormat('d F Y') : "" }}</p>
                     </div>
                 </div>
 
