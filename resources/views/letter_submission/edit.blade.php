@@ -593,7 +593,7 @@
                             <input type="text" class="form-control" value="{{ $user->id_card }}" readonly>
                         </div>
                          <!-- Jabatan -->
-                        @if(isset(Auth::user()->last_position))
+                        @if(isset($user->last_position))
                         <!-- Jabatan Terakhir-->
                         <div class="col-md-12 mb-3">
                             <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
