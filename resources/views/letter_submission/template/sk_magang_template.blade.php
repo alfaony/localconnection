@@ -234,7 +234,7 @@
             </table>
             <!-- Footer -->
             <div class="text-left mt-4">
-                <p><strong>Jakarta, {{ $date ?? "" }}</strong></p>
+                <p><strong>Jakarta, {{ $startDate ? $startDate->translatedFormat('d F Y') : "" }}</strong></p>
             </div>
     
             <!-- KTP and Signature Section -->
@@ -305,7 +305,8 @@
             <button type="submit" class="btn btn-success mx-2" name="action" value="approve">
                 <i class="fa fa-check"></i> Approve
             </button>
-            <button type="button" class="btn btn-danger mx-2" data-bs-toggle="modal" data-bs-target="#declineModal">
+            <!-- Decline Button -->
+            <button type="button" class="btn btn-danger mx-2" name="action" value="decline">
                 <i class="fa fa-times"></i> Decline
             </button>
         </div>
