@@ -105,4 +105,67 @@ class XeroService
 
         return $existingContacts;
     }
+
+    public function createInvoice($bast, $contact)
+    {
+        if (!$contact || !isset($contact->ContactID)) {
+            throw new \Exception('Invalid contact. Contact ID is missing.');
+        }
+
+        // Prepare the line items for the invoice
+        $quoteProduct = $bast->workOrder->quote->quoteProduct;
+        $lineItems = $this->getLineItems($quoteProduct);
+
+        if (empty($lineItems)) {
+            throw new \Exception('Line items are empty or invalid.');
+        }
+        
+        try {
+            $invoice = [
+                "Type" => "ACCREC",  // ACCREC for sales invoices
+                "Contact" => [
+                    "ContactID" => $contact->ContactID // Use the contact ID from Xero
+                ],
+                "Date" => \Carbon\Carbon::now()->format('Y-m-d'), // Current date as invoice date
+                "DueDate" => \Carbon\Carbon::now()->addDays(30)->format('Y-m-d'), // Set due date as 30 days from now
+                "LineItems" => $lineItems, // Line items array from getLineItems method
+                "Status" => "DRAFT", // Invoice status
+                "LineAmountTypes" => "Exclusive" // Prices exclusive of tax
+            ];
+    
+            // Call Xero API to create the invoice
+            $createdInvoice = Xero::invoices()->store($invoice);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Invoice created successfully',
+                'invoice' => $createdInvoice
+            ], 200);
+
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error('Xero invoice creation failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Xero invoice creation failed.');
+        }
+    }
+
+    public function getLineItems($quoteProduct)
+    {
+        $lineItems = [];
+        if($quoteProduct)
+        {
+            foreach($quoteProduct as $item)
+            {
+                $lineItems[] = [
+                    "Description" => $item->description, // Description of the item/service
+                    "Quantity" => $item->qty, // Quantity of the item/service
+                    "UnitAmount" => $item->price_sell, // Unit price of the item/service
+                    "AccountCode" => '200', // Default Account Code if not provided
+                    "TaxType" => "OUTPUT" // Tax type e.g., "OUTPUT"
+                ];
+            }
+        }
+
+        return $lineItems;
+    }
 }

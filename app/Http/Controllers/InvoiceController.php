@@ -37,8 +37,7 @@ class InvoiceController extends Controller
 
         // Check or create contact
         $contact = $this->xeroService->checkOrCreateContact($contactData);
-
-        dd($contact->ContactID);
+        $invoice = $this->xeroService->createInvoice($bast,$contact);
         
     }
 
