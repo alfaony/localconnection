@@ -10,7 +10,7 @@
         <div class="card-body">
             <div class="col-12 justify-content-center align-items-center header">
                 <div class="header">
-                    <h4 class="text-center"><strong>SURAT KETERANGAN KERJA</strong></h4>
+                    <h4 class="text-center"><strong>SURAT KEPUTUSAN MANAJEMEN</strong></h4>
                     <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
                 </div>
                 <div class="sub-header">
