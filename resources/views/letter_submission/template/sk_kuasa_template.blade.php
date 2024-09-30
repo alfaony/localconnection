@@ -141,6 +141,10 @@
         @csrf
         @method('PATCH')
         <input type="hidden" name="selected_ids[]" value="{{ $letterSubmission->id }}">
+        <div class="form-group">
+            <label for="reason">Alasan Penolakan:</label>
+            <input type="text" name="notes[{{ $letterSubmission->id }}]" class="form-control" value="{{ $letterSubmission->reason ?? '' }}">
+        </div>
 
         <div class="d-flex justify-content-center">
             <!-- Approve Button -->
@@ -156,9 +160,41 @@
     @endcanAccess
     @endif
 </div>
+<!-- Modal for inputting the reason for rejection -->
+<div class="modal fade" id="declineModal" tabindex="-1" aria-labelledby="declineModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="declineModalLabel">Alasan Penolakan</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">Tutup</button>
+      </div>
+      <div class="modal-body">
+        <form id="declineForm" action="{{ route('letter-submission.approvement') }}" method="POST">
+          @csrf
+          @method('PATCH')
+          <input type="hidden" name="action" value="decline">
+          <input type="hidden" name="selected_ids[]" value="{{ $letterSubmission->id }}">
+
+          <div class="form-group">
+            <label for="modal-reason">Alasan Penolakan:</label>
+            <input type="text" name="notes[{{ $letterSubmission->id }}]" id="modal-reason" class="form-control" required>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            <button type="submit" class="btn btn-danger">Decline</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 @endsection
+
 @section('js')
-<script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"></script>
     $(document).ready(function() {
     $("#downloadQuote").click(function(e) {
         e.preventDefault();

@@ -23,6 +23,7 @@ use App\Models\UserSalary;
 
 
 use Carbon\Carbon;
+use App\Helpers\Access;
 class LetterSubmissionController extends Controller
 {
     /**
@@ -44,6 +45,7 @@ class LetterSubmissionController extends Controller
         $user = $request->input('user');
         $letterType = $request->input('letterType');
         $sort = $request->input('sort');
+        $approvement = Access::can('approvement','letter_submissions');
 
 
         $query = LetterSubmission::query();
@@ -59,7 +61,7 @@ class LetterSubmissionController extends Controller
         }
         
         $letterSubmissions = $query->byRole()->orderBy('updated_at',$sort ?? 'desc')->paginate(10);
-        return view('letter_submission.index', compact('letterSubmissions','users','letterTypes'));
+        return view('letter_submission.index', compact('letterSubmissions','users','letterTypes','approvement'));
     }
     /**
      * Show the form for creating a new letter submission.
@@ -129,16 +131,16 @@ class LetterSubmissionController extends Controller
             
             $letterSubmission->save();
 
-            if(isset($letterSubmission->convert_field['position_new_id']) && $letterType->auto_approve == ParamSchema::TRUE)
-            {
-                $this->updatePosition($letterSubmission->convert_field['position_new_id'],$letterSubmission);
-            }
+            // if(isset($letterSubmission->convert_field['position_new_id']) && $letterType->auto_approve == ParamSchema::TRUE)
+            // {
+            //     $this->updatePosition($letterSubmission->convert_field['position_new_id'],$letterSubmission);
+            // }
 
             $this->updateProfile($request, $letterSubmission->user);
 
             $this->sendNotification($letterSubmission, 'store', Auth::user()->company_id);
 
-            $request->salary ? $this->updateSalary($request, $letterSubmission) : null;
+            // $request->salary ? $this->updateSalary($request, $letterSubmission) : null;
 
             DB::commit();
             return redirect()->route('letter-submission.index')->with('success', 'Pengajuan surat berhasil dibuat.');
@@ -246,7 +248,7 @@ class LetterSubmissionController extends Controller
 
             // Updaate Salary
             // dd($request->all());
-            $request->salary ? $this->updateSalary($request, $letterSubmission) : null;
+            // $request->salary ? $this->updateSalary($request, $letterSubmission) : null;
             // check ouwnership
             if($letterSubmission->user_id != Auth::user()->id)
             {
@@ -256,7 +258,7 @@ class LetterSubmissionController extends Controller
             }else
             {
                 $letterSubmission->status = true;
-                $letterSubmission->reason = NULL;
+                // $letterSubmission->reason = NULL;
                 $this->sendNotification($letterSubmission, 'update', Auth::user()->company_id);
             }
 
@@ -355,7 +357,7 @@ class LetterSubmissionController extends Controller
                     $letterSubmission = LetterSubmission::findOrFail($selected);
                     $letterSubmission->is_approved = $status;
                     $letterSubmission->status = true;
-                    if($request->notes[$selected])
+                    if(isset($request->notes[$selected]))
                     {
                         $letterSubmission->reason = $request->notes[$selected];
                     }
@@ -368,6 +370,11 @@ class LetterSubmissionController extends Controller
                     if($status == ParamSchema::APPROVE && isset($letterSubmission->convert_field['position_new_id']))
                     {
                         $this->updatePosition($letterSubmission->convert_field['position_new_id'],$letterSubmission);
+                    }
+
+                    if($status == ParamSchema::APPROVE && isset($letterSubmission->convert_field['salary']))
+                    {
+                        $request->salary ? $this->updateSalary($letterSubmission->convert_field['salary'], $letterSubmission) : null;
                     }
                     
                     $this->sendNotification($letterSubmission, $action, Auth::user()->company_id, true);
@@ -586,17 +593,17 @@ class LetterSubmissionController extends Controller
         );
     }
 
-    protected function updateSalary($request, $letterSubmission)
+    protected function updateSalary($salary, $letterSubmission)
     {
         $userSalaryExist = UserSalary::where('letter_submission_id', $letterSubmission->id)->first();
         if($userSalaryExist)
         {
-            $userSalaryExist->salary = $request->salary;
+            $userSalaryExist->salary = $salary;
             $userSalaryExist->save();
         }else
         {
             $userSalary = new UserSalary();
-            $userSalary->salary = $request->salary;
+            $userSalary->salary = $salary;
             $userSalary->user_id = $letterSubmission->user_id;
             $userSalary->letter_submission_id = $letterSubmission->id;
             $userSalary->save();
