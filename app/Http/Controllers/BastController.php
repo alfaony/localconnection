@@ -44,7 +44,7 @@ class BastController extends Controller
 
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereHas('reportProject')->orderBy('created_at','desc')->get();
         $project = Project::byCompany(Auth::user()->company_id)
-        ->whereHas('reportProject')
+        // ->whereHas('reportProject')
         ->whereDoesntHave('bast')
         ->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
@@ -58,7 +58,7 @@ class BastController extends Controller
     {
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereHas('reportProject')->orderBy('created_at','desc')->get();
         $project = Project::byCompany(Auth::user()->company_id)
-        ->whereHas('reportProject')
+        // ->whereHas('reportProject')
         ->whereDoesntHave('bast')
         ->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
@@ -76,13 +76,15 @@ class BastController extends Controller
     public function store(BastRequest $request)
     {
         $bast = new Bast();
+        $project = Project::byCompany(Auth::user()->company_id)->where('id',$request->post('project'))->firstOrFail();
+
 
         $number = $this->bastNumber();
 
         $bast->date = $request->input('date');
         $bast->basts_number = $number['number'];
         $bast->number_result = $number['result'];
-        $bast->work_order_id = $request->input('work_order');
+        $bast->work_order_id = $project->work_order_id;
         $bast->project_id = $request->input('project');
         $bast->number_purchase = $request->input('number_purchase');
         $bast->pic = $request->input('pic');
@@ -92,7 +94,7 @@ class BastController extends Controller
         $bast->user_updated_id = Auth::user()->id;
         
         $bast->save();
-        $this->updateBudget($request->input('work_order'), $request->input('project'));
+        $this->updateBudget($project->work_order_id, $request->input('project'));
 
         return redirect()->to(route('bast.download.pdf',$bast->slug))->with('store', true);
     }
@@ -156,8 +158,10 @@ class BastController extends Controller
     public function update(BastRequest $request, $slug)
     {
         $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        $project = Project::byCompany(Auth::user()->company_id)->where('id',$request->post('project'))->firstOrFail();
+        
         $bast->date = $request->input('date');
-        $bast->work_order_id = $request->input('work_order');
+        $bast->work_order_id = $project->work_order_id;
         $bast->project_id = $request->input('project');
         $bast->number_purchase = $request->input('number_purchase');
         $bast->pic = $request->input('pic');
@@ -166,7 +170,7 @@ class BastController extends Controller
         $bast->user_updated_id = Auth::user()->id;
 
         $bast->save();
-        $this->updateBudget($request->input('work_order'), $request->input('project'));
+        $this->updateBudget($project->work_order_id, $request->input('project'));
         
         return redirect()->to(route('bast.download.pdf',$bast->slug))->with('update', true);
     }

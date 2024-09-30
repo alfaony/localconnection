@@ -26,7 +26,7 @@ class BastRequest extends FormRequest
         return 
         [
             'date' => 'required|date',
-            'work_order' => 'required|uuid|exists:work_orders,id',
+            // 'work_order' => 'required|uuid|exists:work_orders,id',
             'project' => 'required|uuid|exists:projects,id',
             'number_purchase' => 'required|string',
             'pic' => 'required|string',

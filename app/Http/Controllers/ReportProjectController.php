@@ -87,11 +87,12 @@ class ReportProjectController extends Controller
         try {
             $nomorReportProject = $this->reportProjectNumber();
             $reportProject = new ReportProject();
+            $project = Project::byCompany(Auth::user()->company_id)->find($request->post('project'));
     
             $reportProject->date = $request->post('date');
             $reportProject->report_project_number = $nomorReportProject['number'];
             $reportProject->number_result = $nomorReportProject['result'];
-            $reportProject->work_order_id = $request->post('work_order');
+            $reportProject->work_order_id = $project->work_order_id;
             $reportProject->project_id = $request->post('project');
             // $reportProject->link_report = $request->post('link_report');
             $reportProject->user_created_id = Auth::user()->id;
@@ -178,9 +179,11 @@ class ReportProjectController extends Controller
     {
         DB::beginTransaction();
         try {
+            $project = Project::byCompany(Auth::user()->company_id)->find($request->post('project'));
+
             $reportProject = ReportProject::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             $reportProject->date = $request->post('date');
-            $reportProject->work_order_id = $request->post('work_order');
+            $reportProject->work_order_id = $project->work_order_id;
             $reportProject->project_id = $request->post('project');  
             $reportProject->user_updated_id = Auth::user()->id;
             $reportProject->save();
