@@ -305,8 +305,7 @@
             <button type="submit" class="btn btn-success mx-2" name="action" value="approve">
                 <i class="fa fa-check"></i> Approve
             </button>
-            <!-- Decline Button -->
-            <button type="submit" class="btn btn-danger mx-2" name="action" value="decline">
+            <button type="button" class="btn btn-danger mx-2" data-bs-toggle="modal" data-bs-target="#declineModal">
                 <i class="fa fa-times"></i> Decline
             </button>
         </div>
