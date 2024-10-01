@@ -44,7 +44,7 @@ class BastController extends Controller
 
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereHas('reportProject')->orderBy('created_at','desc')->get();
         $project = Project::byCompany(Auth::user()->company_id)
-        // ->whereHas('reportProject')
+        ->whereHas('reportProject')
         ->whereDoesntHave('bast')
         ->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
@@ -58,7 +58,7 @@ class BastController extends Controller
     {
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereHas('reportProject')->orderBy('created_at','desc')->get();
         $project = Project::byCompany(Auth::user()->company_id)
-        // ->whereHas('reportProject')
+        //  ->whereHas('reportProject')
         ->whereDoesntHave('bast')
         ->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
@@ -258,9 +258,13 @@ class BastController extends Controller
         // Fetch data for the DataTable
         $query = WorkOrder::query();
         $query->byCompany(Auth::user()->company_id); // Filter by the company of the logged-in user
-        $query->whereHas('reportProject'); // Only fetch WorkOrders with an associated ReportProject
-        $query->whereDoesntHave('bast'); // Only fetch WorkOrders with an associated ReportProject
-        // $query->doesntHave('bast'); // Only fetch SPKs without an associated Bast
+        // $query->whereHas('reportProject'); // Only fetch WorkOrders with an associated ReportProject
+        // $query->whereDoesntHave('bast'); // Only fetch WorkOrders with an associated ReportProject
+        $query->whereHas('project', function($q) {
+            // Filter project yang tidak memiliki reportProject (HasOne)
+            $q->doesntHave('bast');
+            $q->has('reportProject');
+        });
 
         // Map column indexes to column names (modify these based on your actual database structure)
         $columnNames = ['date', 'number_result', 'project_name'];

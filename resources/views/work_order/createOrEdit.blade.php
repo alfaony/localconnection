@@ -49,7 +49,6 @@
                 <div class="row mb-3 mt-3">
                     <label class="col-sm-2 col-form-label">Pilih No. Quote</label>
                     <div class="col-sm-10">
-                        {{-- 
                         @if(@$workOrder)
                         <select name="quote" class="form-control select2" required>
                             <option value="" disabled selected>Quote</option>
@@ -67,7 +66,7 @@
                             <!-- Anda bisa menambahkan option lainnya di sini -->
                         </select>
                         @endif
-                        --}}
+                        {{-- 
                         @if(@$workOrder)
                         <input type="hidden" name="quote_id" id="quote_id" value="{{ @$workOrder->quote_id }}">
                         <select name="quote" id="selectQuote" class="form-control selectQuote" required>
@@ -79,6 +78,7 @@
                             
                         </select>
                         @endif
+                        --}}
                     </div>
                 </div>
         
