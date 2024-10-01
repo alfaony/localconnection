@@ -45,10 +45,10 @@
                 </div>
                 <div class="form-group">
                     <label for="pilihDataProyek" class="form-label">Pilih Data Proyek</label>
-                    <select class="form-control select2 projectChange" name="project" id="pilihDataProyek" required>
+                    <select class="form-control select2 projectChange" name="project" id="" required>
                         <option value="" disabled selected>Pilih</option>
                         @foreach($project as $a)
-                        <option value="{{ $a->id }}" data-report="{{ $a->reportProject ? $a->reportProject->id : '' }}" {{ @$bast->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }} -  {{ $a->workOrder->number_result }}</option>
+                        <option value="{{ $a->id }}" data-report="{{ $a->reportProject ? $a->reportProject->id : '' }}" {{ @$bast->project_id == $a->id ? 'selected' : '' }} {{ @$selectedWorkOrder->id == $a->work_order_id ? 'selected' : '' }}>{{ $a->title }} -  {{ $a->workOrder->number_result }}</option>
                         @endforeach     
                         <!-- Other options can be added here -->
                     </select>

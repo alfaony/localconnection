@@ -61,10 +61,9 @@
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label>Pilih Data Proyek</label>
-                        <select class="form-control select2" name="project" id="chooseProject" required>
-                        <option value="" disabled selected>Pilih Proyek</option>
+                        <select class="form-control select2" name="project" id="" required>
                             @foreach($project as $a)
-                            <option value="{{ $a->id }}" {{  @$reportProject->project_id == $a->id ? 'selected'  : ''}} >{{ $a->title }} {{ $a->workOrder->number_result }}</option>
+                            <option value="{{ $a->id }}" {{  @$reportProject->project_id == $a->id ? 'selected'  : ''}} {{ @$selectedWorkOrder->id == $a->work_order_id ? 'selected' : '' }}>{{ $a->title }} {{ $a->workOrder->number_result }}</option>
                             @endforeach
                         </select>
                     </div>

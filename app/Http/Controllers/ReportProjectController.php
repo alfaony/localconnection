@@ -349,7 +349,11 @@ class ReportProjectController extends Controller
         $query = WorkOrder::query();
         $query->byCompany(Auth::user()->company_id); // Filter by the company of the logged-in user
         $query->whereHas('project'); // Only fetch WorkOrders with an associated ReportProject
-        $query->doesntHave('reportProject'); // Only fetch WorkOrders without an associated ReportProject
+        $query->whereHas('project', function($q) {
+            // Filter project yang tidak memiliki reportProject (HasOne)
+            $q->doesntHave('reportProject');
+        });
+
 
         // Map column indexes to column names (modify these based on your actual database structure)
         $columnNames = ['date', 'work_order_number', 'description'];

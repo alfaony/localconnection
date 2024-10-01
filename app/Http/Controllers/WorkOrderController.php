@@ -39,12 +39,12 @@ class WorkOrderController extends Controller
     public function create()
     {   
         $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
-        // $quote = Quote::orderBy('created_at','desc')->get();
+        $quote = Quote::ByCompany(Auth::user()->company_id)->whereDoesntHave('workOrder')->orderBy('created_at','desc')->get();
 
         $userCreate = Auth::user()->name;
         $nomorWorkOrder = $this->workOrderNumber();
 
-        return view('work_order.createOrEdit',compact('product','userCreate','nomorWorkOrder'));
+        return view('work_order.createOrEdit',compact('product','userCreate','nomorWorkOrder','quote'));
     }
 
     /**
@@ -124,13 +124,13 @@ class WorkOrderController extends Controller
     {
         // dd($slug);
         $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
-        // $quote = Quote::orderBy('created_at','desc')->get();
         
         $workOrder = WorkOrder::where('slug', $slug)->firstOrFail();
+        $quote = Quote::ByCompany(Auth::user()->company_id)->whereDoesntHave('workOrder')->orWhere('id',$workOrder->quote_id)->orderBy('created_at','desc')->get();
         $userCreate = $workOrder->userCreate ? $workOrder->userCreate->name : '';
         $nomorWorkOrder = $workOrder->number_result ?? '';
 
-        return view('work_order.createOrEdit',compact('product','userCreate','nomorWorkOrder','workOrder'));
+        return view('work_order.createOrEdit',compact('product','userCreate','nomorWorkOrder','workOrder','quote'));
     }
     
     /**
