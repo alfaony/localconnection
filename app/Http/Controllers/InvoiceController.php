@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Bast;
+use App\Models\Invoice;
 use App\Services\XeroService;
 
 class InvoiceController extends Controller
@@ -26,6 +27,43 @@ class InvoiceController extends Controller
      */
     public function index()
     {
+        // $bast = Bast::byCompany(Auth::user()->company_id)->where('id','eb26b0d2-e36f-48e5-9821-d547acfdbf1a')->first();
+
+        // $customer = optional($bast->project)->workOrder->quote->customer;
+
+        // $contactData = [
+        //     'Name' => optional($customer)->name ?? 'Default Name', // Fallback if name is null
+        //     'EmailAddress' => optional($customer)->email ?? 'no-email@example.com' // Fallback if email is null
+        // ];
+
+        // // Check or create contact
+        // $contact = $this->xeroService->checkOrCreateContact($contactData);
+        // $invoice = $this->xeroService->createInvoice($bast,$contact);
+        
+        $bast = Bast::byCompany(Auth::user()->comapny_id)->get();
+        $invoices = Invoice::byCompany(Auth::user()->comapny_id)->paginate(10);
+
+        return view('invoice.index',compact('bast','invoices'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create(Request $request)
+    {
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        dd($request->all());
         $bast = Bast::byCompany(Auth::user()->company_id)->where('id','eb26b0d2-e36f-48e5-9821-d547acfdbf1a')->first();
 
         $customer = optional($bast->project)->workOrder->quote->customer;
@@ -38,28 +76,6 @@ class InvoiceController extends Controller
         // Check or create contact
         $contact = $this->xeroService->checkOrCreateContact($contactData);
         $invoice = $this->xeroService->createInvoice($bast,$contact);
-        
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
     }
 
     /**

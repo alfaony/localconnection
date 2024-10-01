@@ -39,6 +39,7 @@ class XeroService
                 new AccessToken(['access_token' => $token->access_token]),
                 $token->tenant_id
             );
+
         }
     }
 
@@ -143,7 +144,7 @@ class XeroService
             ], 200);
 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             Log::error('Xero invoice creation failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Xero invoice creation failed.');
         }
