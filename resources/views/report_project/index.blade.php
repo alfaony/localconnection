@@ -15,6 +15,12 @@
     @if(Session::get('delete'))
     <div class="alert alert-success mt-3">Laporan Proyek Berhasil Terhapus</div>
     @endif
+    @if(Session::get('datanotfound'))
+        <div class="alert alert-danger mt-3">SPK Tidak Ditemukan</div>
+    @endif
+    @if(Session::get('dataprojectnotfound'))
+        <div class="alert alert-danger mt-3">Proyek Tidak Ditemukan</div>
+    @endif
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -25,28 +31,89 @@
         </div>
     @endif
 </div>
-<div class="container">    
-    
-    <!-- Tombol Tambah Pembelian Baru -->
-    @canAccess('create','report_projects')
-    <button class="btn btn-primary mb-3" id="btnCreateReportProject">Tambah Laporan Proyek</button>
+
+<ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+    @canAccess('dataTableJson','report_projects')
+    <li class="nav-item">
+        <a class="nav-link active" id="bast-tab" data-toggle="tab" href="#bast" role="tab" aria-controls="bast" aria-selected="true">
+            <i class="fas fa-file-alt"></i> Laporan Proyek
+        </a>
+    </li>
     @endcanAccess
 
-    <!-- Tabel Pembelian -->
-    <table class="table table-bordered" id="datatableLaporanProject">
-        <thead>
-            <tr>
-                <th>Nomor Laporan Proyek</th>
-                <th>Date</th>
-                <th>SPK</th>
-                <th>Proyek</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        </tbody>
-            <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
-        </tbody>
-    </table>
+    @canAccess('dataTableJsonWorkOrderWithoutReportProject','report_projects')
+    <li class="nav-item">
+        <a class="nav-link" id="spk-tab" data-toggle="tab" href="#spk_report" role="tab" aria-controls="spk_report" aria-selected="false">
+            <i class="fa fa-clipboard-list"></i> SPK (Belum Terbuat Laporan)
+        </a>
+    </li>
+    @endcanAccess
+</ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+    <!-- BAST Tab -->
+    @canAccess('dataTableJson','basts')
+    <div class="tab-pane fade show active" id="bast" role="tabpanel" aria-labelledby="bast-tab">
+        <div class="card mt-3 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title">Laporan Proyek</h3>
+                @canAccess('create','report_projects')
+                <button class="btn btn-light float-right" id="btnCreateReportProject">
+                    <i class="fas fa-plus-circle"></i>
+                    Tambah Laporan Proyek
+                </button>
+                @endcanAccess
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                        <!-- Tabel Pembelian -->
+                    <table class="table table-bordered" id="datatableLaporanProject">
+                        <thead>
+                            <tr>
+                                <th>Nomor Laporan Proyek</th>
+                                <th>Tanggal</th>
+                                <th>SPK</th>
+                                <th>Project</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcanAccess
+
+    @canAccess('dataTableJsonWorkOrderWithoutReportProject','report_projects')
+    <!-- SPK Tab -->
+    <div class="tab-pane fade" id="spk_report" role="tabpanel" aria-labelledby="spk-tab">
+        <div class="card mt-3 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title">List SPK</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                <table class="table table-bordered" id="dataTableJsonWorkOrderWithoutReportProject" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Nomor SPK</th>
+                                <th>Total Anggaran</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcanAccess
 </div>
 
 
@@ -73,15 +140,33 @@
             columns: [
                 {data: 'number_result', name: 'number_result', orderable: true},
                 {data: 'date', name: 'date', orderable: true},
-                {data: 'work_order.number_result', name: 'work_order_number_result', orderable: false, searchable: false},
-                {data: 'project.title', name: 'project_name', orderable: false, searchable: false},
+                {data: 'work_order.number_result', name: 'number_result', orderable: false, searchable: false},
+                {data: 'project.title', name: 'project_title', orderable: false, searchable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
             order: [[1, 'desc']],
         });
     });
 </script>
-
+<script type="text/javascript">
+    $(document).ready(function() {
+        var table = $('#dataTableJsonWorkOrderWithoutReportProject').DataTable({
+            responsive: true,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{{ route("report-project.dataTableJsonWorkOrderWithoutReportProject")}}',
+                type: 'GET',
+                dataSrc: 'data'
+            },
+            columns: [
+                {data: 'number_result', name: 'number_result', orderable: false},
+                {data: 'total', name: 'total', orderable: false},
+                {data: 'action', name: 'action', orderable: false, searchable: false},
+            ],
+        });
+    });
+</script>
 <script>
     $(document).ready(function () {
         
@@ -91,8 +176,6 @@
             let url = "{{ route('report-project.create') }}";
 
             window.location.href = url;
-            
-
         });
     });
 </script>
@@ -104,37 +187,35 @@
 
 <style>
    body {
-            font-family: Arial, sans-serif;
-            /* padding: 20px; */
-            background-color: #f4f4f4;
-        }
-        .container {
-            background-color: #fff;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        #buttonSubmit {
-            padding: 10px 20px;
-            margin-top: 10px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+    }
+    .container {
+        background-color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    table, th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    #buttonSubmit {
+        padding: 10px 20px;
+        margin-top: 10px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
 </style>
 @stop

@@ -51,12 +51,17 @@ class InboxController extends Controller
         ]);
         
         // Mengecek apakah pesan memiliki direct_url
-        if ($message->direct_url) {
-            // Redirect ke URL yang ditentukan
-            return redirect()->to($message->direct_url);
-        } else {
-            // Jika tidak ada direct_url, tampilkan pesan pada show.blade.php
-            return redirect()->back();
+        // Redirect ke URL yang ditentukan
+        try {
+            if ($message->direct_url) 
+            {
+                return redirect()->to($message->direct_url);
+            } else {
+                // Jika tidak ada direct_url, tampilkan pesan pada show.blade.php
+                return redirect()->to(route('inbox.index'));
+            }
+        } catch (\Throwable $th) {
+            return redirect()->to(route('inbox.index'));
         }
     }
 

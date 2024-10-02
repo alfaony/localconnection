@@ -72,6 +72,10 @@ class Project extends Model
         return $this->hasMany(Suplier::class);
     }
 
+    public function bast()
+    {
+        return $this->hasOne(Bast::class);
+    }
     public function getPurchaseAttribute()
     {
         // return $this->suplier()->sum('total_price');

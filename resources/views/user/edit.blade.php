@@ -29,7 +29,7 @@
     <div class="card-body">
         <h2 class="mb-4">{{ @$userEdit ? 'Edit Profile' : 'Create User Profile' }}</h2>
         
-        <form action="{{ route('user.profileUpdate', $userEdit->slug) }}" method="post">
+        <form action="{{ route('user.profileUpdate', $userEdit->slug) }}" method="post" enctype="multipart/form-data">
             @csrf
             @if($userEdit)
             @method('PUT')
@@ -39,7 +39,33 @@
                 <label for="name">Nama:</label>
                 <input type="text" id="name" name="name" class="form-control" placeholder="Anwar" value="{{ old('name') ?? @$userEdit->name }}" required>
             </div>
+            <!-- Alamat -->
+            <div class="form-group">
+                <label for="alamat">Alamat <span class="text-danger">*</span></label>
+                <input type="text" name="address" class="form-control" placeholder="Masukkan Alamat Lengkap" value="{{ old('address') ?? @$userEdit->address }}" required>
+            </div>
 
+            <!-- Nomor KTP -->
+            <div class="form-group">
+                <label for="ktp">Nomor KTP <span class="text-danger">*</span></label>
+                <input type="number" name="id_card" class="form-control" placeholder="Masukkan Nomor KTP" value="{{ old('id_card') ?? @$userEdit->id_card }}"  required>
+            </div>
+
+            <!-- Upload KTP -->
+            <div class="form-group">
+                <label for="id_card_image">Upload KTP</label>
+                @if(@$userEdit->id_card_image)
+                <div class="mt-1 mb-2">
+                    <img src="{{ Storage::url(@$userEdit->id_card_image) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+                </div>
+                @endif
+                <input type="file" name="id_card_image" id="id_card_image" class="form-control" accept="image/*">
+            </div>
+
+            <div class="form-group">
+                <label for="npwp_number">No. NPWP</label>
+                <input type="number" name="npwp_number" class="form-control" placeholder="Masukkan nomor NPWP" value="{{ old('npwp_number') ?? @$userEdit->npwp_number }}"/>
+            </div>
             <div class="form-group">
                 <label for="email">Email:</label>
                 <p class="form-control-plaintext">{{ old('email') ?? @$userEdit->email }}</p>
@@ -78,7 +104,7 @@
                 <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="**********" autocomplete="new-password">
             </div>
             @else
-            @if(@$userEdit->id == Auth::user()->id)
+            @if(@$userEdit->id == @$userEditid)
             <div class="form-group">
                 <label for="oldPassword">Password Lama:</label>
                 <input type="password" id="oldPassword" name="oldPassword" class="form-control" placeholder="**********" autocomplete="off" >

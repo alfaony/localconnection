@@ -53,6 +53,8 @@ use App\Http\Controllers\ScheduleObController;
 use App\Http\Controllers\DivisionBudgetController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\InboxController;
+use App\Http\Controllers\LetterSubmissionController;
+use App\Http\Controllers\PositionController;
 use App\Http\Controllers\DeviceController;
 /*
 |--------------------------------------------------------------------------
@@ -74,6 +76,8 @@ Auth::routes([
   ]);
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+Route::get('/dailytask/showJson/{slug}', [DailyTaskController::class,'showJson'])->name('dailytask.showJson');
 
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
@@ -122,10 +126,14 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('agreement-letter/dataTableJson', [AgreementLetterController::class, 'dataTableJson'])->name('agreement-letter.datatable');
   Route::resource('agreement-letter', AgreementLetterController::class)->except(['show']);
 
+  Route::get('bast/createsuggest/{slug}', [BastController::class, 'createsuggest'])->name('bast.createsuggest');
+  Route::get('bast/dataTableJsonWorkOrderWithoutBast', [BastController::class, 'dataTableJsonWorkOrderWithoutBast'])->name('bast.dataTableJsonWorkOrderWithoutBast');
   Route::get('bast/downloadPdf/pdf/{slug}',[BastController::class,'downloadPdf'])->name('bast.download.pdf');
   Route::get('bast/dataTableJson', [BastController::class, 'dataTableJson'])->name('bast.datatable');
   Route::resource('bast', BastController::class)->except(['show']);
 
+  Route::get('report-project/createsuggest/{slug}', [ReportProjectController::class, 'createsuggest'])->name('report-project.createsuggest');
+  Route::get('report-project/dataTableJsonWorkOrderWithoutReportProject', [ReportProjectController::class, 'dataTableJsonWorkOrderWithoutReportProject'])->name('report-project.dataTableJsonWorkOrderWithoutReportProject');
   Route::delete('report-project/destroyDetail/{ReportProjectDetail}',[ReportProjectController::class,'destroyDetail'])->name('report-project.destroy.detail');
   Route::get('report-project/datatable', [ReportProjectController::class, 'dataTableJson'])->name('report-project.datatable');
   Route::resource('report-project', ReportProjectController::class)->except(['show']);
@@ -223,6 +231,10 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('/inbox/{id}', [InboxController::class, 'show'])->name('inbox.show');
   Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
   
+  Route::patch('letter-submission/approvement', [LetterSubmissionController::class, 'approvement'])->name('letter-submission.approvement');
+  Route::resource('letter-submission', LetterSubmissionController::class);
+  
+  Route::resource('position', PositionController::class);
   Route::get('device', [DeviceController::class,'index'])->name('device.index');
   Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
 });

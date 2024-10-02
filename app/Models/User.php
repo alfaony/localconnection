@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,6 +9,7 @@ use Laravel\Passport\HasApiTokens;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Ramsey\Uuid\Uuid;
+use App\Schemas\ParamSchema;
 
 class User extends Authenticatable
 {
@@ -119,6 +119,46 @@ class User extends Authenticatable
         return $this->belongsToMany(Division::class);
     }
 
+    public function userPosition()
+    {
+        return $this->hasMany(UserPosition::class);
+    }
+
+    public function getLastPositionAttribute()
+    {
+        return $this->userPosition()
+        ? $this->userPosition()->whereNull('end_date')->orderBy('created_at', 'desc')->first()
+        : null;
+    }
+    
+    public function getLastPositionNowAttribute()
+    {
+        return $this->userPosition()
+        ? $this->userPosition()->orderBy('created_at', 'desc')->first()
+        : null;
+    }
+
+    public function getFirstPositionAttribute()
+    {
+        return $this->userPosition() ? $this->userPosition()
+            ->whereHas('letterSubmission', function ($query) {
+                $query->whereHas('letterType', function ($query) {
+                    $query->where('template', ParamSchema::TEMPLATEPERJANJIANKERJA);
+                });
+            })
+            ->latest('created_at')  // Assuming you want the latest based on 'created_at'/
+            ->first() : "";
+    }
+
+    public function salary()
+    {
+        return $this->hasMany(UserSalary::class);
+    }
+
+    public function getLastSalaryAttribute()
+    {
+        return $this->salary()->latest()->first();
+    }
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

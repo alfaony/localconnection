@@ -46,6 +46,9 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuDailyTaskProjectKanbanSeeder::class);
         $this->call(PermissionForExportDailyTask::class);
         $this->call(PermissionForMenuInbox::class);
+        $this->call(PermissionForMenuMonitoringBast::class);
+        $this->call(PermissionAndSettingMenuLetterTypeSeeder::class);
+        $this->call(PermissionForMenuPosition::class);
         $this->call(PermissionForMenuDevice::class);
     }
 }
