@@ -15,6 +15,15 @@
             {{ session('error') }}
         </div>
     @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 </div>
 <div id="accordion">
 @canAccess('fetchusertask', 'project_dashboards')
@@ -428,7 +437,18 @@
                     $('#sidePopup .offcanvas-header').html(response.htmlHead); // Update the popup header
                     if(response.dailytask)
                     {
-                        $('#task-row-' + response.dailytask.id).replaceWith(response.htmlTable);
+                        var button = $('#btn-show-' + response.dailytask.id);
+                        var taskNo = button.data('task-no') ?? 0;
+                        
+                        let newRow = $(response.htmlTable); // Mengambil row baru dari response
+
+                        if(taskNo != 0)
+                        {
+                            taskNo = taskNo;
+                            newRow.prepend(`<td>${taskNo}</td>`);
+                        }
+                        // Gantikan row lama dengan row baru yang sudah dimodifikasi
+                        $('#task-row-' + response.dailytask.id).replaceWith(newRow);
                     }
                     if ($('#sidePopup .offcanvas-body').find('#description_note').length > 0) 
                     {
@@ -885,7 +905,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if(task)
                     {
                         // url = `<a href="${task.url}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>`;
-                        url = `<button class="btn btn-info btn-sm show-popup-btn" data-slug-next="${nextTaskSlug}" id="btn-show-${task.task_id}" data-task-id="${task.task_id}" data-task-slug="${task.slug}">
+                        url = `<button class="btn btn-info btn-sm show-popup-btn" data-task-no="${no}" data-slug-next="${nextTaskSlug}" id="btn-show-${task.task_id}" data-task-id="${task.task_id}" data-task-slug="${task.slug}">
                                 <i class="fa fa-eye"></i>
                             </button>`;
 
@@ -960,6 +980,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
         });
+    });
+
+    $(document).on('click', '#button-submitReport', function() 
+    {
+        const submitButton = document.getElementById('submitReport');
+        const noteInput = document.getElementById('description_note');
+        
+        if (noteInput.value.trim() === '') 
+        {
+            event.preventDefault();  // Mencegah submit form
+            Swal.fire({
+                title: 'Error!',
+                text: 'Catatan tidak boleh kosong!',
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
+        }else
+        {
+            $("#submit-submitReport").click()
+        }
     });
 </script>
 
