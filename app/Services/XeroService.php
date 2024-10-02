@@ -9,7 +9,9 @@ use Dcblogdev\Xero\Models\XeroToken;
 use Illuminate\Support\Facades\Log;
 use App\Models\ApiLog;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
+use Carbon\Carbon;
 
 class XeroService
 {
@@ -78,28 +80,32 @@ class XeroService
         }
     }
 
-    public function checkOrCreateContact(array $contactData)
+    public function checkOrCreateContact($customer)
     {   
-        $existingContacts = $this->xero->contacts()->where('EmailAddress', $contactData['EmailAddress'])
-                                                 ->where('Name', $contactData['Name'])
+
+        $existingContacts = $this->xero->contacts()->where('EmailAddress', $customer->email)
+                                                 ->where('Name', $customer->name)
                                                  ->first();
         if(!$existingContacts)
         {
             $data = [
-                'Name' => "testing",
-                'EmailAddress' => "testing@gmail.com",
+                'Name' => $customer->name,
+                'EmailAddress' => $customer->email,
                 'FirstName' => "",
                 'LastName' => "",
                 'Addresses' => [
                     [
                         'AddressType' => 'POBOX',
-                        'City' => "asdad",
-                        'Region' => "asd"
+                        'City' => "",
+                        'Region' => ""
                     ]
                 ]
             ];
 
             $newContact = Xero::contacts()->store($data);
+            return $this->xero->contacts()->where('EmailAddress', $customer->email)
+            ->where('Name', $customer->name)
+            ->first();
 
             return $newContact;
         }
@@ -107,14 +113,14 @@ class XeroService
         return $existingContacts;
     }
 
-    public function createInvoice($bast, $contact)
+    public function createInvoice($invoice, $contact)
     {
         if (!$contact || !isset($contact->ContactID)) {
             throw new \Exception('Invalid contact. Contact ID is missing.');
         }
 
         // Prepare the line items for the invoice
-        $quoteProduct = $bast->workOrder->quote->quoteProduct;
+        $quoteProduct = $invoice->invoiceProducts;
         $lineItems = $this->getLineItems($quoteProduct);
 
         if (empty($lineItems)) {
@@ -127,21 +133,15 @@ class XeroService
                 "Contact" => [
                     "ContactID" => $contact->ContactID // Use the contact ID from Xero
                 ],
-                "Date" => \Carbon\Carbon::now()->format('Y-m-d'), // Current date as invoice date
-                "DueDate" => \Carbon\Carbon::now()->addDays(30)->format('Y-m-d'), // Set due date as 30 days from now
+                "Date" => $invoice->start_date,
+                "DueDate" => $invoice->end_date,
                 "LineItems" => $lineItems, // Line items array from getLineItems method
                 "Status" => "DRAFT", // Invoice status
                 "LineAmountTypes" => "Exclusive" // Prices exclusive of tax
             ];
     
             // Call Xero API to create the invoice
-            $createdInvoice = Xero::invoices()->store($invoice);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Invoice created successfully',
-                'invoice' => $createdInvoice
-            ], 200);
+            return Xero::invoices()->store($invoice);
 
         } catch (\Exception $e) {
             // dd($e);
@@ -150,6 +150,39 @@ class XeroService
         }
     }
 
+
+    public function updateInvoice($invoice, $status = "DRAFT")
+    {
+        // Prepare the line items for the invoice
+        $quoteProduct = $invoice->invoiceProducts;
+        $lineItems = $this->getLineItems($quoteProduct);
+
+        if (empty($lineItems)) {
+            throw new \Exception('Line items are empty or invalid.');
+        }
+        
+        // dd($status);
+        try {
+            $data = [
+                "Type" => "ACCREC",  // ACCREC for sales invoices
+                "Contact" => [
+                    "ContactID" => $invoice->contact_xero_id // Use the contact ID from Xero
+                ],
+                "Date" => Carbon::parse($invoice->start_date)->format('Y-m-d'),
+                "DueDate" => Carbon::parse($invoice->end_date)->format('Y-m-d'),
+                "LineItems" => $lineItems, // Line items array from getLineItems method
+                "Status" => $status, // Invoice status
+                "LineAmountTypes" => "Exclusive" // Prices exclusive of tax
+            ];
+            
+            return Xero::invoices()->update($invoice->invoice_xero_id,$data);
+
+        } catch (\Exception $e) {
+            // dd($e);
+            Log::error('Xero invoice creation failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Xero invoice creation failed.');
+        }
+    }
     public function getLineItems($quoteProduct)
     {
         $lineItems = [];
@@ -157,8 +190,10 @@ class XeroService
         {
             foreach($quoteProduct as $item)
             {
+                $this->findOrCreateItem($item);
+
                 $lineItems[] = [
-                    "Description" => $item->description, // Description of the item/service
+                    "Description" => $item->product->name, // Description of the item/service
                     "Quantity" => $item->qty, // Quantity of the item/service
                     "UnitAmount" => $item->price_sell, // Unit price of the item/service
                     "AccountCode" => '200', // Default Account Code if not provided
@@ -169,4 +204,60 @@ class XeroService
 
         return $lineItems;
     }
+
+    
+    public function findOrCreateItem($itemData)
+    {
+        try {
+            // First, attempt to find the product in Xero based on its description or another unique field
+            $existingItem = $this->xero->items()
+                ->where('code', $itemData->product->slug)
+                ->first();
+
+            // If the item is found, return it
+            if ($existingItem) {
+                return $existingItem;
+            }
+
+            // If the item doesn't exist, create it
+            $newItem = [
+                "Code" => $itemData->product->slug, // Unique code for the item
+                "Name" => $itemData->product->name, // Name of the item
+                "Description" => $itemData->product->name, // Description of the item
+                "SalesDetails" => [
+                    "UnitPrice" => $itemData->product->price_sell, // Unit price for sales
+                ],
+                "PurchaseDetails" => [
+                    "UnitPrice" => $itemData->product->price_buy, // Unit price for purchases
+                ]
+            ]; 
+
+            return Xero::post('items', $newItem);
+        } catch (\Exception $e) {
+            dd($e);
+            // Handle any errors
+            Log::error('Xero item creation failed: ' . $e->getMessage());
+            throw new \Exception('Failed to find or create Xero item');
+        }
+    }
+
+    public function getInvoice($invoiceId)
+    {
+        try {
+            $pdfInvoice = Xero::get("invoices/{$invoiceId}", null, true, 'application/pdf');
+                   // Nama file yang akan digunakan saat mendownload
+            $fileName = "invoice_{$invoiceId}.pdf";
+
+            // Mengirimkan file PDF sebagai respons untuk di-download
+            return response($pdfInvoice['body'])
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+
+            // Mengembalikan path atau URL dari file PDF yang disimpan
+        } catch (\Exception $e) {
+            Log::error('Xero invoice retrieval failed: ' . $e->getMessage());
+            throw new \Exception('Failed to retrieve Xero invoice');
+        }
+    }
+
 }

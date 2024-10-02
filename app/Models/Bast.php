@@ -74,6 +74,11 @@ class Bast extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

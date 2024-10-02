@@ -1,134 +1,181 @@
 @extends('adminlte::page')
 
+@section('content_header')
+    <h1>Invoice</h1>
+@stop
+
+
+
 @section('content')
-<div class="container">
-    <h1>Invoice List</h1>
-
-    <!-- Button to trigger create modal -->
-    <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createInvoiceModal">
-        Create Invoice
-    </button>
-
-    <table class="table table-bordered">
+<div class="col-md-12">
+    @if(Session::get('store'))
+    <div class="alert alert-success mt-3">Berhasil Menambahkan Invoice</div>
+    @endif
+    @if(Session::get('update'))
+    <div class="alert alert-success mt-3">Invoice Berhasil Diperbarui</div>
+    @endif
+    @if(Session::get('delete'))
+    <div class="alert alert-success mt-3">Berhasil Menghapus Invoice</div>
+    @endif
+    @if(Session::get('xero'))
+    <div class="alert alert-success mt-3">Berhasil Terhubung Xero</div>
+    @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+</div>
+<div class="container">    
+    <!-- Tombol Tambah Pembelian Baru -->
+    @canAccess('create','quotes')
+    <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Invoice Baru</button>
+    @endcanAccess
+    
+    <!-- Search Bar -->
+    <!-- <form action="{{ route('invoice.index') }}" method="get">
+        <div class="d-flex flex-row-reverse">
+            <div class="p-2">
+                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+            </div>
+            <div class="p-2">
+                <input type="text" name="user" class="form-control" placeholder="Search">
+            </div>
+        </div>
+    </form> -->
+    
+    <!-- Tabel Pembelian -->
+    <table class="table table-bordered" id="tableQuote">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>User</th>
-                <th>BAST ID</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>Nomor Invoice</th>
+                <th>Total Invoice</th>
+                <th>Aksi</th>
             </tr>
         </thead>
+        {{-- 
         <tbody>
-            @foreach($invoices as $invoice)
+            @forelse($quote as $a)
             <tr>
-                <td>{{ $invoice->id }}</td>
-                <td>{{ $invoice->user->name }}</td>
-                <td>{{ $invoice->bast_id }}</td>
-                <td>{{ $invoice->start_date }}</td>
-                <td>{{ $invoice->end_date }}</td>
-                <td>{{ $invoice->status }}</td>
+                <td>{{ $no }}</td>
+                <td>{{ $a->number_result ?? '' }}</td>
+                <td>{{ 'Rp. '.number_format($a->total,0,',','.')  ?? 'Rp. 0' }}</td>
                 <td>
-                    <!-- Button to trigger edit modal -->
-                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editInvoiceModal" 
-                            data-id="{{ $invoice->id }}" data-status="{{ $invoice->status }}">
-                        Edit
-                    </button>
+                    <form method="post" action="{{ route('invoice.destroy',$a) }}">
+                        @csrf
+                        @method('delete')
+                        <a href="{{ route('invoice.download.pdf', ['slug' => $a->slug, 'nomor' => $no]) }}" class="btn btn-primary btn-sm"><i class="fa fa-file-pdf"></i></a>
+                        <a href="{{ route('invoice.edit',$a->slug).'?nomor='.$no }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                        <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                    </form>
                 </td>
             </tr>
-            @endforeach
+            @php $no++; @endphp
+            @empty
+            <tr>
+                <td colspan="5">
+                    <center>Data Kosong</center>
+                </td>
+            </tr>
+
+            @endforelse
+            <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
+        </tbody>
+        {{ $quote->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+        --}}
+        <tbody>
+
         </tbody>
     </table>
 </div>
 
-<!-- Modal Create -->
-<div class="modal fade" id="createInvoiceModal" tabindex="-1" aria-labelledby="createInvoiceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createInvoiceModalLabel">Create New Invoice</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('invoice.store') }}" method="POST">
-                    @csrf
-                    <div class="mb-3">
-                        <label for="bast_id" class="form-label">BAST ID</label>
-                        <select name="bast" class="form-control select2" id="">
-                            @foreach($bast as $a)
-                            <option value="{{ $a->id }}">{{ $a->number_result }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="start_date" class="form-label">Start Date</label>
-                        <input type="date" name="start_date" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label for="end_date" class="form-label">End Date</label>
-                        <input type="date" name="end_date" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Status</label>
-                        <input type="text" name="status" class="form-control">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Create Invoice</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Edit -->
-<div class="modal fade" id="editInvoiceModal" tabindex="-1" aria-labelledby="editInvoiceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editInvoiceModalLabel">Edit Invoice</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" name="id" id="edit_invoice_id">
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Status</label>
-                        <input type="text" name="status" id="edit_status" class="form-control">
-                    </div>
-                    <button type="submit" class="btn btn-warning">Update Invoice</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-@endsection
+@stop
 @section('js')
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-<script>
-    var editModal = document.getElementById('editInvoiceModal');
-    editModal.addEventListener('show.bs.modal', function (event) {
-        var button = event.relatedTarget;
-        var id = button.getAttribute('data-id');
-        var status = button.getAttribute('data-status');
-
-        var modalTitle = editModal.querySelector('.modal-title');
-        var invoiceIdInput = editModal.querySelector('#edit_invoice_id');
-        var statusInput = editModal.querySelector('#edit_status');
-
-        modalTitle.textContent = 'Edit Invoice #' + id;
-        invoiceIdInput.value = id;
-        statusInput.value = status;
-
-        document.getElementById('editInvoiceForm').action = '/invoices/' + id;
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var table = $('#tableQuote').DataTable({
+            responsive: true,
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{{ route("invoice.datatable")}}',
+                type: 'GET',
+                dataSrc: 'data'
+            },
+            columns: [
+                {data: 'number_result', name: 'number_result', orderable: false},
+                {data: 'total', name: 'total', orderable: false},
+                {data: 'action', name: 'action', orderable: false, searchable: false},
+            ],
+            // order: [[0, 'desc']],
+        });
     });
 </script>
-@stop
+<script>
+    $(document).ready(function () {
+        
+        $("#btnCreateSuplier").click(function (e) 
+        { 
+            e.preventDefault();
+            let url = "{{ route('invoice.create') }}";
 
+            window.location.href = url;
+        });
+    });
+</script>
+
+@stop
 @section('css')
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css"> 
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
+<style>
+   body {
+            font-family: Arial, sans-serif;
+            /* padding: 20px; */
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        /* table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        } */
+        #buttonSubmit {
+            padding: 10px 20px;
+            margin-top: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+</style>
 @stop

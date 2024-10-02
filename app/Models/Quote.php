@@ -80,6 +80,11 @@ class Quote extends Model
         return $this->hasOne(WorkOrder::class);
     }
     
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
     public function getQuoteNumberResultAttribute()
     {
         $date = Carbon::parse($this->created_at)->format('m/Y');

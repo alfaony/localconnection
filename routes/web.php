@@ -72,7 +72,21 @@ use App\Http\Controllers\InvoiceController;
 
 // ** Menu Yang mengakses XERO
 Route::group(['middleware' => ['web', 'XeroAuthenticated']], function(){
-  Route::resource('invoice',InvoiceController::class);
+  Route::get('xero',function(){
+
+    return redirect('/invoice')->with('xero',true);
+
+  });
+  Route::delete('invoice/destroyProduct/product/{invoiceProduct}',[invoiceController::class,'destroyProduct'])->name('invoice.destroy.product');
+  Route::get('invoice/productPrice/counting',[invoiceController::class,'productPrice'])->name('invoice.productPrice');
+  Route::get('invoice/select2', [invoiceController::class, 'select2'])->name('invoice.select2');
+  Route::get('invoice/dataTableJson', [invoiceController::class, 'dataTableJson'])->name('invoice.datatable');
+  Route::get('invoice/downloadPdf/pdf/{slug}',[invoiceController::class,'downloadPdf'])->name('invoice.download.pdf');
+  Route::get('invoice/counting',[invoiceController::class,'counting'])->name('invoice.counting');
+  Route::get('invoice/productCounting/counting',[invoiceController::class,'productCounting'])->name('invoice.productCounting');
+  Route::get('invoice/suggestionQuote/{id}/',[invoiceController::class,'suggestionQuote'])->name('invoice.suggestionQuote');
+
+  Route::resource('invoice', invoiceController::class)->except(['show']);
 });
 
 
@@ -246,7 +260,6 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('device', [DeviceController::class,'index'])->name('device.index');
   Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
 });
-
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

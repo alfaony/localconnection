@@ -2,19 +2,39 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Bast;
+
+use App\Http\Requests\InvoiceRequest;
+use Carbon\Carbon;
+
+use App\Helpers\Access;
+
+use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
+
+use App\Models\Quote;
 use App\Models\Invoice;
+use App\Models\InvoiceProduct;
+use App\Models\QuoteProduct;
+use App\Models\Product;
+use App\Models\Customer;
+use App\Models\SettingCompany;
+use App\Models\DivisionBudget;
+use App\Models\Bast;
+
 use App\Services\XeroService;
+
 
 class InvoiceController extends Controller
 {
     /**
-     * Contract For Connection Service
+     * 
+     * Xero For Service
      */
-     protected $xeroService;
+    protected $xeroService;
 
     public function __construct(XeroService $xeroService)
     {
@@ -25,25 +45,9 @@ class InvoiceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        // $bast = Bast::byCompany(Auth::user()->company_id)->where('id','eb26b0d2-e36f-48e5-9821-d547acfdbf1a')->first();
-
-        // $customer = optional($bast->project)->workOrder->quote->customer;
-
-        // $contactData = [
-        //     'Name' => optional($customer)->name ?? 'Default Name', // Fallback if name is null
-        //     'EmailAddress' => optional($customer)->email ?? 'no-email@example.com' // Fallback if email is null
-        // ];
-
-        // // Check or create contact
-        // $contact = $this->xeroService->checkOrCreateContact($contactData);
-        // $invoice = $this->xeroService->createInvoice($bast,$contact);
-        
-        $bast = Bast::byCompany(Auth::user()->comapny_id)->get();
-        $invoices = Invoice::byCompany(Auth::user()->comapny_id)->paginate(10);
-
-        return view('invoice.index',compact('bast','invoices'));
+        return view('invoice.index');
     }
 
     /**
@@ -53,6 +57,20 @@ class InvoiceController extends Controller
      */
     public function create(Request $request)
     {
+        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $customer = Customer::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
+        $userCreate = Auth::user()->name;
+        $date = Carbon::now()->format('m/Y');
+        $nomor = Invoice::byCompany(Auth::user()->company_id)->withTrashed()->max('invoice_number') + 1;
+        $nomorQuote = $nomor.'/'.$date;
+        $bast = Bast::byCompany(Auth::user()->company_id)
+        ->whereDoesnthave('invoice')
+        ->orderBy('created_at','desc')
+        ->get();
+
+        $date = Carbon::now();
+        
+        return view('invoice.createOrEdit',compact('product','customer','userCreate','nomorQuote','bast','date'));
     }
 
     /**
@@ -61,65 +79,515 @@ class InvoiceController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(InvoiceRequest $request)
     {
-        dd($request->all());
-        $bast = Bast::byCompany(Auth::user()->company_id)->where('id','eb26b0d2-e36f-48e5-9821-d547acfdbf1a')->first();
+        DB::beginTransaction();
+        try 
+        {
+            $date = Carbon::now()->format('m/Y');
+            $invoiceNumber = Invoice::byCompany(Auth::user()->company_id)->withTrashed()->max('invoice_number') + 1;
+            $bast = Bast::byCompany(Auth::user()->company_id)->where('id',$request->post('bast'))->firstOrFail();
+            $quote = Quote::byCompany(Auth::user()->company_id)->where('id',$bast->project->workOrder->quote_id)->firstOrFail();
 
-        $customer = optional($bast->project)->workOrder->quote->customer;
+            $numberResult = $invoiceNumber.'/'.$date;
+            $invoice = new Invoice();
+            $invoice->date = Carbon::now()->format('Y-m-d');
+            $invoice->bast_id = $request->post('bast');
+            $invoice->start_date = $request->post('start_date') ?? Carbon::now();
+            $invoice->end_date = $request->post('end_date') ?? Carbon::now();
+            $invoice->quote_id = $quote->id;
+            $invoice->invoice_number = $invoiceNumber;
+            $invoice->number_result = $numberResult;
+            $invoice->customer_id = $quote->customer_id;        
+            $invoice->tax = $request->post('tax');
+            $invoice->service_fee = $request->post('service_fee');
+            $invoice->discount = $request->post('discount');
+            $invoice->charges = $request->post('charges');
+            $invoice->total = $request->post('total');
+            $invoice->payment_term = $request->post('payment_term');
+            $invoice->third_party_docs = $request->post('third_party_docs');
+            
+            $invoice->user_created_id = Auth::user()->id;
+            $invoice->user_updated_id = Auth::user()->id;
+            $invoice->save();
 
-        $contactData = [
-            'Name' => optional($customer)->name ?? 'Default Name', // Fallback if name is null
-            'EmailAddress' => optional($customer)->email ?? 'no-email@example.com' // Fallback if email is null
-        ];
+            $product = $request->post('product');
+            $description = $request->post('description');
+            $qty = $request->post('qty');
+            $price = $request->post('price');
+            $sub_total = $request->post('sub_total');
 
-        // Check or create contact
-        $contact = $this->xeroService->checkOrCreateContact($contactData);
-        $invoice = $this->xeroService->createInvoice($bast,$contact);
-    }
+            for ($i = 0; $i < count($product); $i++) 
+            {
+                $invoiceProduct = new InvoiceProduct();
+                $invoiceProduct->sort = $i + 1;
+                $invoiceProduct->product_id = $product[$i];
+                $invoiceProduct->qty = $qty[$i];
+                $invoiceProduct->price_sell = $price[$i];
+                $invoiceProduct->sub_total = $sub_total[$i];
+                $invoiceProduct->description = $description[$i];
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
+                $invoice->invoiceProducts()->save($invoiceProduct);
+            }
+
+            $this->grandTotal($invoice);
+            $this->updateQuote($invoice->quote_id);
+            $this->generateXeroInvoice($invoice);
+
+            DB::commit();
+            return redirect()->to(route('invoice.index'))->with('store',true);
+            // return redirect()->to(route('invoice.download.pdf', ['slug' => $invoice->slug]))->with('store',true);
+        } catch (\Throwable $th) {
+            //throw $th;
+            dd($th);
+
+            DB::rollback();
+            Log::error($th);
+
+            return redirect()->to(route('invoice.index'))->with('false',true);
+
+        }
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Models\Quote  $invoice
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($slug,Request $request)
     {
-        //
+        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $invoice = Invoice::where('slug', $slug)->firstOrFail();
+
+        $bast = Bast::byCompany(Auth::user()->company_id)
+        ->whereDoesnthave('invoice')
+        ->orWhere('id', $invoice->bast_id)
+        ->orderBy('created_at','desc')
+        ->get();
+
+        $date = Carbon::parse($invoice->created_at)->format('m/Y');
+
+        $nomor = $request->get('nomor') ?? 0;
+        $nomorQuote = $invoice->quote_number_result ?? '';
+        $userCreate = $invoice->userCreate ? $invoice->userCreate->name : '';
+
+        return view('invoice.createOrEdit',compact('product','userCreate','nomorQuote','bast','date','invoice','nomor'));
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Models\Quote  $invoice
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(InvoiceRequest $request, $slug)
     {
-        //
+        DB::beginTransaction();
+        try 
+        {
+            $invoice = Invoice::byCompany(Auth::user()->company_id)->where('id', $slug)->first();
+            $bast = Bast::byCompany(Auth::user()->company_id)->where('id',$request->post('bast'))->firstOrFail();
+            $quote = Quote::byCompany(Auth::user()->company_id)->where('id',$bast->project->workOrder->quote_id)->firstOrFail();
+
+            $invoice->date = Carbon::now()->format('Y-m-d');
+            $invoice->bast_id = $request->post('bast');
+            $invoice->start_date = $request->post('start_date') ?? Carbon::now();
+            $invoice->end_date = $request->post('end_date') ?? Carbon::now();
+            $invoice->quote_id = $quote->id;
+            $invoice->customer_id = $quote->customer_id;        
+            $invoice->tax = $request->post('tax');
+            $invoice->service_fee = $request->post('service_fee');
+            $invoice->discount = $request->post('discount');
+            $invoice->charges = $request->post('charges');
+            $invoice->total = $request->post('total');
+            $invoice->payment_term = $request->post('payment_term');
+            $invoice->third_party_docs = $request->post('third_party_docs');
+        
+            $invoice->user_updated_id = Auth::user()->id;
+            $invoice->save();
+
+            $invoice->invoiceProducts()->delete();
+
+            $product = $request->post('product');
+            $description = $request->post('description');
+            $qty = $request->post('qty');
+            $price = $request->post('price');
+            $sub_total = $request->post('sub_total');
+
+            for ($i = 0; $i < count($product); $i++) 
+            {
+                $invoiceProduct = new InvoiceProduct();
+                $invoiceProduct->sort = $i + 1;
+                $invoiceProduct->product_id = $product[$i];
+                $invoiceProduct->qty = $qty[$i];
+                $invoiceProduct->price_sell = $price[$i];
+                $invoiceProduct->sub_total = $sub_total[$i];
+                $invoiceProduct->description = $description[$i];
+
+                $invoice->invoiceProducts()->save($invoiceProduct);
+            }
+
+            $this->grandTotal($invoice);
+            $this->xeroService->updateInvoice($invoice,"AUTHORISED");
+            
+            DB::commit();
+            return redirect()->to(route('invoice.index'))->with('update',true);
+            // return redirect()->to(route('invoice.download.pdf', ['slug' => $invoice->slug]))->with('store',true);
+        } catch (\Throwable $th) {
+            dd($th);
+            DB::rollback();
+            Log::error($th);
+            return redirect()->to(route('invoice.index'))->with('false',true);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Models\Quote  $invoice
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($slug)
     {
-        //
+        DB::beginTransaction();
+
+        try 
+        {
+            $invoice = Invoice::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $invoice->invoiceProducts()->delete();
+            
+            $invoice->delete();
+
+            // Mengurutkan ulang nomor quote
+            // Invoice::where('quote_number', '>', $deletedQuoteNumber)->decrement('quote_number');
+
+            DB::commit();
+            return redirect()->back()->with('delete', true);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // dd($e);
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menghapus invoice.');
+        }
+    }
+
+    /**
+     * Countring All
+     */
+    public function counting(Request $request)
+    {
+        $service_fee = $request->service_fee ?? 0;
+        $tax = $request->tax ?? 0;
+        $total = $request->total ?? 0;
+        $charges = $request->charges ?? 0;
+        $discount = $request->discount ?? 0;
+        $division_budget_id = $request->division_budget ?? NULL;
+        $invoice_id = $request->quote_id ?? NULL;
+
+        // Hitung total setelah diskon dan biaya tambahan
+        $totalAll = ($total + $charges) - $discount;
+        $serviceFee = $service_fee != 0 ? round(($totalAll * $service_fee) / 100) : 0;
+        $totalAfterServiceFee = $totalAll + $serviceFee;
+        $ppn = $tax != 0 ? round(($totalAfterServiceFee * $tax) / 100) : 0;
+        $grandTotal = $totalAfterServiceFee + $ppn;
+
+        // Ambil jumlah budget berdasarkan ID division_budget
+        $budgetAmount = 0;
+        $calculationExternal = false;
+        $budgetSisa = 0;
+        if (isset($division_budget_id)) 
+        {
+            $calculationExternal = true;
+            $budget = DivisionBudget::find($division_budget_id);
+            if ($budget) {
+                $budgetAmount = $budget->amount;
+
+                // Jika ini adalah update dan division_budget_id sama dengan yang ada di quote, tambahkan kembali grandTotal sebelumnya
+                if ($invoice_id) 
+                {
+                    $invoice = Invoice::find($invoice_id);
+                    if ($invoice && ($invoice->division_budget_id == $division_budget_id)) {
+                        $budgetAmount += $invoice->total;
+                    }
+                }
+
+                $budgetSisa = $budgetAmount - $grandTotal;
+            }
+        }
+
+        $save = true;
+        $result = [
+            'total' => $total,
+            'service_fee' => 'Rp. '.number_format($serviceFee, 0, ',', '.'),
+            'ppn' => 'Rp. '.number_format($ppn, 0, ',', '.'),
+            'grand_total' => 'Rp. '.number_format($grandTotal, 0, ',', '.'),
+            'grand_total_raw' => $grandTotal,
+            'budget_amount' => $budgetAmount,
+            'calculationExternal' => $calculationExternal,
+            'remaining_budget' => 'Rp. '.number_format($budgetSisa, 0, ',', '.'),
+        ];
+
+        // Periksa apakah grand total melebihi division budget
+        if ( isset($division_budget_id) && $grandTotal > $budgetAmount) {
+            $save = false;
+        }
+
+        return [
+            'status' => 200,
+            'message' => 'okay',
+            'save' => $save,
+            'data' => $result
+        ];
+    }
+    /**
+     * productPrice
+     */
+    public function productPrice(Request $request)
+    {
+        $quoteProductId = $request->get('quoteProductId');
+        $productId = $request->get('product');
+
+        $quoteProduct = QuoteProduct::find($quoteProductId);
+
+        if($quoteProduct)
+        {
+            if($quoteProduct && ($quoteProduct->product_id == $productId))
+            {
+                $price = $quoteProduct->price_sell;
+            }else
+            {
+                $product = Product::find($productId);
+                $price = $product->price_sell;
+            }
+        }else
+        {
+            $product = Product::find($productId);
+            $price = $product->price_sell;
+        }
+
+        return 
+        [
+            'status' => 200,
+            'message' => 'okay',
+            'data' => $price
+        ];
+    }
+    /**
+     * Product Countring
+     */
+    public function productCounting(Request $request)
+    {
+        $productId = $request->get('product');
+        $qty = $request->get('qty');
+        $price = $request->get('price');
+
+        $result = $price * $qty;
+
+        return [
+            'status' => 200,
+            'message' => 'okay',
+            'data' => $result
+        ];
+    }
+
+    /**
+     * 
+     * Destroy Project Save
+     */
+    public function destroyProduct($invoiceProductId)
+    {
+        $invoiceProduct = QuoteProduct::find($invoiceProductId);
+
+        $invoice = Invoice::find($invoiceProduct->quote_id);
+        $invoiceProduct->delete();
+
+        $this->grandTotal($invoice);
+
+        return true;
+    }
+
+    /**
+     * Download PDF
+     */
+    public function downloadPdf($slug)
+    {
+        $invoice = Invoice::where('slug', $slug)->firstOrFail();
+        if(!$invoice->invoice_xero_id)
+        {
+            $this->generateXeroInvoice($invoice);
+        }
+
+        return $this->xeroService->getInvoice($invoice->invoice_xero_id);
+
+    }
+    /**
+     * Total After PPN dll
+     */
+    private function grandTotal($invoice)
+    {
+        $service_fee = $invoice->service_fee ?? 0;
+        $tax = $invoice->tax ?? 0;
+
+        $total =  $invoice->invoiceProducts() ? $invoice->invoiceProducts()->sum('sub_total') : 0;
+        $charges = $invoice->charges ?? 0;
+        $discount = $invoice->discount ?? 0;
+
+        // return $tax;
+        $totalAll = ($total + $charges) - $discount;
+        $serviceFee = $service_fee != 0 ? round(($totalAll * $service_fee) / ParamSchema::PERCENTAGE) : 0 ;
+        
+        $totalAfterServiceFee = $totalAll + $serviceFee;
+        $ppn = $tax != 0 ? round(($totalAfterServiceFee * $tax) / ParamSchema::PERCENTAGE) : 0 ;
+        
+        $grandTotal = $totalAfterServiceFee + $ppn;
+
+        $invoice->total = $grandTotal;
+        $invoice->save();
+
+        return $grandTotal;
+    }
+
+    /**
+     * Data Table Quote
+     */
+    public function dataTableJson()
+    {
+        // Fetch data for the DataTable
+        $query = Invoice::query();
+        $query->byCompany(Auth::user()->company_id)->orderBy('invoice_number', 'desc');
+        // Map column indexes to column names (this may vary based on your table structure)
+        $columnNames = ['number_result', 'total', 'slug'];
+
+        // Define searchable columns
+        $searchable = 
+        [
+            0 => 'number_result',
+            1 => 'total',
+        ];
+
+        // define your bootstrap version (4 or 5)
+        $bootstrap = 4;
+
+        // Add action buttons to each row
+        $actionButtons = [];
+
+        if(Access::can('downloadPdf','quotes'))
+        {
+            $pdf = [
+                'name' => 'Pdf',
+                'route' => 'invoice.download.pdf',
+                'id' => true,
+            ];
+
+            array_push($actionButtons,$pdf);
+        }
+
+        if(Access::can('edit','quotes'))
+        {
+            $edit = [
+                'name' => 'Edit',
+                'route' => 'invoice.edit',
+                'id' => true,
+            ];
+
+            array_push($actionButtons,$edit);
+        }
+
+        if(Access::can('destroy','quotes'))
+        {
+            $destroy = [
+                'name' => 'Delete',
+                'route' => 'invoice.destroy',
+                'id' => true,
+            ];
+
+            array_push($actionButtons,$destroy);
+        }
+
+
+        $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+
+        $data = $response->getData();
+        foreach ($data->data as $index => $item) 
+        {
+            $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
+        }
+
+        return response()->json($data);
+    }
+
+    /**
+     * 
+     * Select2 Quote
+     */
+
+     public function select2(Request $request)
+     {
+        $invoice = Invoice::byCompany(Auth::user()->company_id)->with('customer')->byNumberResult($request->get('number_result'))
+                ->orderBy('created_at','desc')
+                ->limit(6)
+                ->get();
+                
+        return response()->json($invoice);
+     }
+
+     private function adjustBudget($division_budget_id, $amount)
+    {
+        $budget = DivisionBudget::find($division_budget_id);
+        if ($budget) {
+            $budget->amount += $amount;
+            $budget->save();
+        }
+    }
+
+    /**
+     * Suggetion When Choose Qute
+     */
+    public function suggestionQuote($id)
+    {
+        $bast = Bast::byCompany(Auth::user()->company_id)->where('id', $id)->first();
+
+        $invoice = Quote::byCompany(Auth::user()->company_id)->find($bast->project->workOrder->quote_id);
+        $invoiceProduct = $invoice->quoteProduct 
+        ? $invoice->quoteProduct()
+                ->select('product_id', 'qty', 'description', 'sort')
+                ->orderBy('sort')
+                ->get()
+                ->map(function($item) {
+                    return [
+                        'product_id' => $item->product_id,
+                        'qty' => $item->qty,
+                        'description' => $item->description,
+                    ];
+                })
+        : collect();
+        $invoiceCustomer = $invoice->customer ? $invoice->customer->name : '' ;
+        
+        $data = 
+        [
+            'quote' => $invoice,
+            'customer' => $invoiceCustomer,
+            'product' => $invoiceProduct
+        ];
+        return $data;
+    }
+
+    public function updateQuote($id)
+    {
+        $invoice = Quote::byCompany(Auth::user()->company_id)->find($id);
+        $invoice->status = ParamSchema::CLOSED;
+        $invoice->save();
+    }
+
+    public function generateXeroInvoice($invoice)
+    {
+        $contactXero = $this->xeroService->checkOrCreateContact($invoice->quote->customer);
+        $invoiceXero = $this->xeroService->createInvoice($invoice, $contactXero);
+        
+        $invoice->invoice_xero_id = $invoiceXero['InvoiceID'];
+        $invoice->contact_xero_id = $contactXero->ContactID;
+        $invoice->save();
     }
 }
