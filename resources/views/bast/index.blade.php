@@ -22,6 +22,10 @@
         <div class="alert alert-danger mt-3">Proyek Tidak Ditemukan</div>
     @endif
     
+    @error('message')
+        <div class="alert alert-danger">{{ $message }}</div>
+    @enderror
+
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>

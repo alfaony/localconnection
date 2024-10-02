@@ -63,7 +63,7 @@
                     <label>BAST</label>
                 </div>
                 <div class="col-6">
-                    <select name="bast" class="form-control select2 quoteSuggestion" id="">
+                    <select name="bast" class="form-control select2 quoteSuggestion" id="" required>
                         <option value="" selected disabled>--Pilih--</option>
                         @foreach($bast as $a)
                             <option value="{{ $a->id }}"  {{ @$invoice->bast_id == $a->id ? 'selected' : '' }}>{{ $a->number_result }}</option>
@@ -71,7 +71,7 @@
                     </select>
                 </div>
             </div>
-
+            
             <div class="row mt-3">
                 <div class="col-2">
                     <label>Nama Customer:</label>
@@ -80,7 +80,19 @@
                     <input type="text" class="form-control" value="{{ @$invoice->quote->customer->name }}" id="customer" placeholder="Pilih Nomor Quote" required="" readonly="">
                 </div>
             </div>
-        
+            <div class="row mt-3">
+                <div class="col-2">
+                    <label>Status</label>
+                </div>
+                <div class="col-6">
+                    <select name="status" class="form-control select2 quoteSuggestion" id="" required>
+                        <option value="" selected disabled>--Pilih--</option>
+                        @foreach($status as $id => $index)
+                            <option value="{{ $id }}"  {{ @$invoice->status == $id ? 'selected' : '' }}>{{ $index }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
             <div class="row mt-3">
                 <div class="col-2">
                     <label>Pajak:</label>

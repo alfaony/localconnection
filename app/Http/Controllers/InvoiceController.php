@@ -67,10 +67,11 @@ class InvoiceController extends Controller
         ->whereDoesnthave('invoice')
         ->orderBy('created_at','desc')
         ->get();
+        $status = config('custom.status_invoice');
 
         $date = Carbon::now();
         
-        return view('invoice.createOrEdit',compact('product','customer','userCreate','nomorQuote','bast','date'));
+        return view('invoice.createOrEdit',compact('product','customer','userCreate','nomorQuote','bast','date','status'));
     }
 
     /**
@@ -106,6 +107,7 @@ class InvoiceController extends Controller
             $invoice->total = $request->post('total');
             $invoice->payment_term = $request->post('payment_term');
             $invoice->third_party_docs = $request->post('third_party_docs');
+            $invoice->status = $request->post('status');
             
             $invoice->user_created_id = Auth::user()->id;
             $invoice->user_updated_id = Auth::user()->id;
@@ -139,7 +141,7 @@ class InvoiceController extends Controller
             // return redirect()->to(route('invoice.download.pdf', ['slug' => $invoice->slug]))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
 
             DB::rollback();
             Log::error($th);
@@ -171,8 +173,9 @@ class InvoiceController extends Controller
         $nomor = $request->get('nomor') ?? 0;
         $nomorQuote = $invoice->quote_number_result ?? '';
         $userCreate = $invoice->userCreate ? $invoice->userCreate->name : '';
+        $status = config('custom.status_invoice');
 
-        return view('invoice.createOrEdit',compact('product','userCreate','nomorQuote','bast','date','invoice','nomor'));
+        return view('invoice.createOrEdit',compact('product','userCreate','nomorQuote','bast','date','invoice','nomor','status'));
     }
 
     /**
@@ -192,7 +195,7 @@ class InvoiceController extends Controller
             $quote = Quote::byCompany(Auth::user()->company_id)->where('id',$bast->project->workOrder->quote_id)->firstOrFail();
 
             $invoice->date = Carbon::now()->format('Y-m-d');
-            $invoice->bast_id = $request->post('bast');
+            $invoice->bast_id = $bast->id;
             $invoice->start_date = $request->post('start_date') ?? Carbon::now();
             $invoice->end_date = $request->post('end_date') ?? Carbon::now();
             $invoice->quote_id = $quote->id;
@@ -204,6 +207,7 @@ class InvoiceController extends Controller
             $invoice->total = $request->post('total');
             $invoice->payment_term = $request->post('payment_term');
             $invoice->third_party_docs = $request->post('third_party_docs');
+            $invoice->status = $request->post('status');
         
             $invoice->user_updated_id = Auth::user()->id;
             $invoice->save();
@@ -230,13 +234,13 @@ class InvoiceController extends Controller
             }
 
             $this->grandTotal($invoice);
-            $this->xeroService->updateInvoice($invoice,"AUTHORISED");
+            $this->xeroService->updateInvoice($invoice,$request->post('status'));
             
             DB::commit();
             return redirect()->to(route('invoice.index'))->with('update',true);
             // return redirect()->to(route('invoice.download.pdf', ['slug' => $invoice->slug]))->with('store',true);
         } catch (\Throwable $th) {
-            dd($th);
+            // dd($th);
             DB::rollback();
             Log::error($th);
             return redirect()->to(route('invoice.index'))->with('false',true);
