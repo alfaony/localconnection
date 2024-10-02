@@ -59,7 +59,7 @@
                         <h5 class="text-center"><strong>PERJANJIAN MAGANG</strong></h5>
                         <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
         
-                        <p>Pada Hari {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('l, d F Y') }}  bertempat di Jakarta, telah ditanda tangani perjanjian kerja sama antara:</p>
+                        <p>Pada Hari {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('l, d F Y') }}  bertempat di Jakarta, telah ditanda tangani perjanjian magang sama antara:</p>
         
                         <!-- Table to display company and employee information -->
                         <table class="table table-borderless">
@@ -266,7 +266,7 @@
 
             @if($template == \App\Schemas\ParamSchema::TEMPLATEJABATAN)
             <!-- SK Jabatan Template -->
-            <div class="form-row letter-template card" id="sk_jabatan_template" style="display:none;">
+            <div class="form-row letter-template card" id="sk_management_template" style="display:none;">
                 <div class="card-body">
                     <!-- Nama PT (Picklist) -->
                     <div class="col-md-12 mb-3">
@@ -293,16 +293,17 @@
                         <select class="form-control" name="position_id" readonly>
                             <option value="" selected disabled>Pilih </option>
                             @foreach($positions as $position)
-                                <option value="{{ $position->id }}" {{ $user->last_position->position_id == $position->id ? 'selected' : '' }}>{{ $position->name }}</option>
+                                <option value="{{ $position->id }}" {{ (isset($userPosition) && $userPosition->position_id == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     @endif
+                    <input type="hidden" class="form-control" id="amount" name="user_last_position" value="{{ $userPosition ? $userPosition->id : '' }}" readonly>
 
                     <div class="col-md-12 mb-3">
                         <label for="monthly_salary">Gaji Bulanan</label>
-                        <input type="text" class="form-control" id="amount_show" placeholder="Rp {{ number_format($letterSubmission->salary ?? 0, 0, ',', '.') }}" oninput="formatRupiahFormat(this,'amount')"/>
-                        <input type="hidden" id="amount" name="salary" value="{{ $fieldData['salary'] ?? '' }}">
+                        <input type="text" class="form-control" id="amount" value="{{ isset($salary) ? number_format($salary->salary, 0, ',', '.') : 'Rp. 0' }}" readonly>
+                        <input type="hidden" class="form-control" id="amount" name="user_salary_id" value="{{ isset($salary) ? $salary->id : 0 }}" readonly>
                     </div>
     
                     <div class="col-md-12 mb-3">
@@ -493,7 +494,7 @@
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label for="salary_date">Tanggal Terakhir Kerja</label>
-                                <input type="date" name="end_date"  class="form-control" value="{{ (isset($fieldData['end_date']) ) ? $fieldData['end_date'] : '' }}">
+                                <input type="date" name="end_date" class="form-control" value="{{ (isset($fieldData['end_date']) ) ? $fieldData['end_date'] : '' }}">
                                 <span class="text-danger">Kosongkan jika saat ini masih bekerja</span>
                             </div>
                         </div>
@@ -502,6 +503,117 @@
             </div>
             @endif
 
+
+            @if($template == "sk_kuasa_template")
+            <!-- sk_pengantar_kerja_template -->
+            <div class="form-row letter-template card" id="sk_kuasa_template" style="display:none;">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="col-12 justify-content-center align-items-center">
+                            <h4 class="text-center"><strong>SURAT KUASA</strong></h4>
+                            <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
+                        </div>
+
+                        <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
+                            <p>Saya yang bertandatangan di bawah ini :</p>
+                        </div>
+
+                        <div class="col-12 mt-2">
+                            <!-- Table to display company and employee information -->
+                            <table class="table table-borderless detail-table">
+                                <tbody>
+                                    <tr>
+                                        <td>Nama</td>
+                                        <td>: {{ $company['name'] ?? "" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Penanggung Jawab</td>
+                                        <td>: {{ $company['director'] ?? "" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Alamat</td>
+                                        <td>: {{ $company['address'] ?? "" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            Dengan ini memberikan kuasa penuh kepada :
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Nama</td>
+                                        <td>: {{ $user->name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>No KTP</td>
+                                        <td>: {{ $user->id_card }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Alamat</td>
+                                        <td>: {{ $user->address }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            Selanjutnya disebut PENERIMA KUASA
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-12">
+                            <p class="text-justify mb-0"> 
+                                Penerima kuasa mewakili pemberi kuasa untuk :
+                            </p>
+                            {!! $fieldData['description'] ?? ''  !!}
+                        </div>
+                        <div class="col-12">
+                            <p class="text-justify"> 
+                                Demikian Surat kuasa ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <!-- Bagian Surat Keputusan -->
+                    <div class="card-header">
+                        <div class="col-md-12 mb-3">
+                            <h5 class="mb-2 text-center"><strong>SURAT KUASA</strong></h5>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="col-md-12 mb-3">
+                            <label for="salary_date">Tanggal Surat Kuasa</label>
+                            <input type="date" name="date" class="form-control" value="{{ isset($fieldData['date']) ? \Carbon\Carbon::parse($fieldData['date'])->format('Y-m-d') : '' }}"required>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="salary_date">Nama Lengkap</label>
+                            <input type="text" class="form-control" value="{{ $user->name }}" readonly>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="salary_date">NIK</label>
+                            <input type="text" class="form-control" value="{{ $user->id_card }}" readonly>
+                        </div>
+                         <!-- Jabatan -->
+                        @if(isset($user->last_position))
+                        <!-- Jabatan Terakhir-->
+                        <div class="col-md-12 mb-3">
+                            <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
+                            <select class="form-control" name="position_old_id" id="position_old_id" disabled>
+                                <option value="" selected disabled>Pilih </option>
+                                @foreach($positions as $position)
+                                    <option value="{{ $position->id }}" {{ (isset($userPosition) && $userPosition->position_id == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <input type="hidden" class="form-control" id="amount" name="user_last_position" value="{{ $userPosition ? $userPosition->id : '' }}" readonly>
+                        @endif
+                        <div class="col-md-12 mb-3">
+                            <label for="job_responsibilities">Tanggung Jawab Pekerjaan <span class="text-danger">*</span></label>
+                            <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" value="{{ $fieldData['description'] ?? ''  }}" required />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             @if($template == "sk_bekerja_resign_template")
             <!-- SK Bekerja Resign Template -->
@@ -554,15 +666,15 @@
                     <div class="card-body col-md-12">
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Nama Lengkap</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly>
+                            <input type="text" class="form-control" value="{{ $user->name }}" readonly>
                         </div>
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Alamat</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->address }}" readonly>
+                            <input type="text" class="form-control" value="{{ $user->address }}" readonly>
                         </div>
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">NIK</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->id_card }}" readonly>
+                            <input type="text" class="form-control" value="{{ $user->id_card }}" readonly>
                         </div>
                         @if(isset($user->last_position))
                         <!-- Jabatan Terakhir-->
@@ -578,7 +690,7 @@
                         @endif
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Tanggal Terakhir Bekerja <span class="text-danger">*</span></label>
-                            <input type="date" name="end_date" class="form-control" value="{{ (isset($fieldData['end_date'])) ? $fieldData['end_date'] : '' }}" required>
+                            <input type="date" name="end_date" min="{{ $twoMonthsLater }}"  class="form-control" value="{{ (isset($fieldData['end_date'])) ? $fieldData['end_date'] : '' }}" required>
                         </div>
                     </div>
                 </div>

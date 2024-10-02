@@ -9,12 +9,12 @@
     <div class="card scrollable-div" id="printThis">
         <div class="card-body">
             <div class="col-12 justify-content-center align-items-center">
-                <h4 class="text-center"><strong>SURAT KETERANGAN KERJA</strong></h4>
+                <h4 class="text-center"><strong>SURAT KUASA</strong></h4>
                 <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
             </div>
 
             <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
-                <p class="text-justify">Saya yang bertandatangan di bawah ini :</p>
+                <p>Saya yang bertandatangan di bawah ini :</p>
             </div>
 
             <div class="col-12 mt-2">
@@ -33,14 +33,41 @@
                             <td>Alamat</td>
                             <td>: {{ $company['address'] ?? "" }}</td>
                         </tr>
+                        
                         <tr>
                             <td colspan="2">
-                                Dengan ini menerangkan bahwa :
+                                Selanjutnya disebut PEMBERI KUASA               
                             </td>
                         </tr>
                         <tr>
-                            <td>Nama</td>
+                            <td class="mt-5" style="
+                                    height: 1rem;
+                                ">
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                Dengan ini memberikan kuasa penuh kepada :
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="mt-5" style="
+                                    height: 1rem;
+                                ">
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Nama</td>
                             <td>: {{ $user->name }}</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Jabatan
+                            </td>
+                            <td>: {{ $userPosition ? $userPosition->position->name : "" }}</td>
                         </tr>
                         <tr>
                             <td>No KTP</td>
@@ -52,35 +79,56 @@
                         </tr>
                         <tr>
                             <td colspan="2">
-                                <p>Bertindak atas nama pribadi, sebagai pekerja / staff yang dipekerjakan.</p>
+                                Selanjutnya disebut PENERIMA KUASA
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            
+            <div class="col-12">
+                <p class="text-justify mb-0"> 
+                    Penerima kuasa mewakili pemberi kuasa untuk :
+                </p>
+                {!! $fieldData['description'] ?? ''  !!}
+            </div>
             <div class="col-12">
                 <p class="text-justify"> 
-                    Telah bekerja di perusahaan kami, {{ $company['name'] ?? "" }}, sejak tgl {{ $user->first_position ? \Carbon\Carbon::parse($user->first_position->start_date)->locale('id')->translatedFormat('d F Y') : "" }} 
-                    s/d {{ isset($fieldData['end_date']) ? \Carbon\Carbon::parse($fieldData['end_date'])->locale('id')->translatedFormat('d F Y') : "saat ini" }} dengan posisi sebagai {{ isset($positionOld)? $positionOld->name : "" }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
+                    Demikian Surat kuasa ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya 
                 </p>
-                <p>Demikian surat keterangan ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.</p>
             </div>
 
-            <div class="col-12">
-                <div class="d-flex justify-content-start">
-                    <p>Jakarta, {{ $date ?? "" }} </p>
+                <div class="row mt-4">
+                    <div class="col-6 offset-6 text-center">
+                        <p class="mb-0">Jakarta, {{ $dateCustom ?? '' }}</p>
+                    </div>
                 </div>
-            </div>
-            <div class="col-12">
-                <p>Tertanda,</p>
-                <div class="col-6 text-left">
-                    @if($letterSubmission->is_approved == 1)
-                    <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
-                    <p>{{ $company['director'] ?? "" }}</p>
-                    @endif
+                <div class="row mb-1">
+                    <div class="col-6 text-center">
+                        Yang menerima Kuasa,
+                    </div>
+                    <div class="col-6 text-center pr-4">
+                        Yang memberi Kuasa,
+                    </div>
                 </div>
-            </div>
+                <div class="row">
+                     <div class="col-6 text-center">
+                        @if($letterSubmission->status !== 0)
+                        <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                            alt="Signature" style="height:150px">
+                        @else
+                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                        @endif
+                        <p>{{ $letterSubmission->user->name }}</p>
+                    </div>
+                    <div class="col-6 text-center">
+                        @if($letterSubmission->is_approved == 1)
+                        <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
+                        @else
+                        <div style="height: 150px;"></div> <!-- Empty space if no signature -->
+                        @endif
+                        <p>{{ $company['director'] ?? "" }}</p>
+                    </div>
+                </div>
         </div>
     </div>
 </div>
@@ -106,6 +154,7 @@
             <button type="submit" class="btn btn-success mx-2" name="action" value="approve">
                 <i class="fa fa-check"></i> Approve
             </button>
+            <!-- Decline Button -->
             <button type="button" class="btn btn-danger mx-2" data-bs-toggle="modal" data-bs-target="#declineModal">
                 <i class="fa fa-times"></i> Decline
             </button>

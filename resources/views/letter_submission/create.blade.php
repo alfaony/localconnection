@@ -29,6 +29,8 @@
                         <option value="{{ $letterType->id }}" {{ @$letterSubmission->letter_type_id == $letterType->id ? 'selected' : '' }} data-template="{{ $letterType->template }}">{{ $letterType->name }}</option>
                     @endforeach
                 </select>
+                <input type="hidden" class="form-control" name="user_last_position" value="{{ Auth::user()->last_position->id  ?? '' }}">
+                <input type="hidden" class="form-control" name="user_salary_id" value="{{ Auth::user()->lastSalary ? Auth::user()->lastSalary->id : '' }}" >
             </div>
         </div>
     </div>
@@ -365,7 +367,7 @@
                     });
 
                     break;
-                case 'sk_jabatan_template':
+                case 'sk_management_template':
                     form = `
                         <div class="letter-template">
                             <div class="card">
@@ -391,20 +393,22 @@
                                     <!-- Jabatan -->
                                     <div class="col-md-12 mb-3">
                                         <label for="jabatan">Jabatan <span class="text-danger">*</span></label>
-                                        <select class="form-control" name="position_id" id="position_id" readonly>
+                                        <select class="form-control" name="position_id" id="position_id" disabled>
                                             <option value="" selected disabled>Pilih </option>
                                             @foreach($lastPositon as $position)
                                                 <option value="{{ $position->id }}" {{ Auth::user()->last_position->position_id == $position->id ? 'selected' : '' }}>{{ $position->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
+                                    <input type="hidden" class="form-control" id="amount" name="user_last_position" value="{{ Auth::user()->last_position->id  ?? "" }}" readonly>
                                     @endif
 
                                     <!-- Gaji Bulanan -->
                                     <div class="col-md-12 mb-3">
-                                        <label for="monthly_salary">Gaji Bulanan <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control"  id="amount_show" placeholder="Rp 30.000.000" oninput="formatRupiahFormat(this,'amount')" required/>
-                                        <input type="hidden" id="amount" name="salary" name="name"  value="{{ old('salary') }}">
+                                        <label for="monthly_salary">Gaji Bulanan</label>
+                                        <input type="text" class="form-control" id="amount" value="{{ Auth::user()->lastSalary ? 'Rp. '.number_format(Auth::user()->lastSalary->salary,0,',','.') : "Rp. 0" }}" readonly>
+                                        <input type="hidden" class="form-control" id="amount" name="user_salary_id" value="{{ Auth::user()->lastSalary ? Auth::user()->lastSalary->id : 0 }}" readonly>
+
                                     </div>
                     
                                     <div class="col-md-12 mb-3">
@@ -607,9 +611,10 @@
                                     </select>
                                 </div>
                                 @endif
+                                
                                 <div class="col-md-12 mb-3">
                                     <label for="salary_date">Tanggal Terakhir Bekerja <span class="text-danger">*</span></label>
-                                    <input type="date" name="end_date" class="form-control" value="{{ Auth::user()->last_position ? Auth::user()->last_position->end_date : '' }}" required>
+                                    <input type="date" name="end_date" min="{{ $twoMonthsLater }}" class="form-control" value="{{ Auth::user()->last_position ? Auth::user()->last_position->end_date : '' }}" required>
                                 </div>
                             </div>
                         </div>
@@ -722,6 +727,126 @@
                     </div>
                     `
                     $("#form_template").html(form);
+                    break;
+
+                case 'sk_kuasa_template':
+                    form = `
+                    <!-- sk_pengantar_kerja_template -->
+                    <div class="letter-template" >
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="col-12 justify-content-center align-items-center">
+                                    <h4 class="text-center"><strong>SURAT KUASA</strong></h4>
+                                    <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
+                                </div>
+
+                                <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
+                                    <p>Saya yang bertandatangan di bawah ini :</p>
+                                </div>
+
+                                <div class="col-12 mt-2">
+                                    <!-- Table to display company and employee information -->
+                                    <table class="table table-borderless detail-table">
+                                        <tbody>
+                                            <tr>
+                                                <td>Nama</td>
+                                                <td>: {{ $company['name'] ?? "" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Penanggung Jawab</td>
+                                                <td>: {{ $company['director'] ?? "" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Alamat</td>
+                                                <td>: {{ $company['address'] ?? "" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    Dengan ini memberikan kuasa penuh kepada :
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Nama</td>
+                                                <td>: {{ Auth::user()->name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>No KTP</td>
+                                                <td>: {{ Auth::user()->id_card }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Alamat</td>
+                                                <td>: {{ Auth::user()->address }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    Selanjutnya disebut PENERIMA KUASA
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-12">
+                                    <p class="text-justify"> 
+                                        Penerima kuasa mewakili pemberi kuasa untuk :
+                                    </p>
+                                    <ol>
+                                        <li>[Tanggung jawab Penerima Kuasa]</li>
+                                        <li></li>
+                                        <li></li>
+                                    </ol>
+                                </div>
+                                <div class="col-12">
+                                    <p class="text-justify"> 
+                                        Demikian Surat kuasa ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <!-- Bagian Surat Keputusan -->
+                            <div class="card-header">
+                                <div class="col-md-12 mb-3">
+                                    <h5 class="mb-2 text-center"><strong>SURAT KUASA</strong></h5>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Tanggal Surat Kuasa</label>
+                                    <input type="date" name="date" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">Nama Lengkap</label>
+                                    <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label for="salary_date">NIK</label>
+                                    <input type="text" class="form-control" value="{{ Auth::user()->id_card }}" readonly>
+                                </div>
+                                 <!-- Jabatan -->
+                                @if(isset(Auth::user()->last_position))
+                                <!-- Jabatan Terakhir-->
+                                <div class="col-md-12 mb-3">
+                                    <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="position_old_id" id="position_old_id" readonly>
+                                        <option value="" selected disabled>Pilih </option>
+                                        @foreach($lastPositon as $positionlast)
+                                            <option value="{{ $positionlast->id }}" {{ $positionlast->id == Auth::user()->last_position->position_id ? 'selected' : '' }}>{{ $positionlast->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
+                                <input type="hidden" class="form-control" id="amount" name="user_last_position" value="{{ Auth::user()->last_position->id  ?? "" }}" readonly>
+                                <div class="col-md-12 mb-3">
+                                    <label for="job_responsibilities">Tanggung Jawab Pekerjaan <span class="text-danger">*</span></label>
+                                    <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" required />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `
+                    $("#form_template").html(form);
+                    generateThriveEditor("description");
                     break;
 
                     

@@ -75,7 +75,6 @@
             @method('PATCH')
             <div class="mb-3">
                 <button type="submit" class="btn btn-success" name="action" value="approve">Approve</button>
-                <button type="submit" class="btn btn-danger" name="action" value="decline">Decline</button>
             </div>
             @endcanAccess
             <div class="table-responsive">
@@ -90,6 +89,7 @@
                             <th>Status</th>
                             <th>Tanggal Pengajuan</th>
                             <th>Aksi</th>
+                            <th>Alasan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -104,7 +104,11 @@
                                         <i class="fa fa-times"></i>
                                     @endif
                                 @else
-                                    <i class="fa fa-check"></i>
+                                    @if($submission->is_approved)
+                                        <i class="fa fa-check"></i>
+                                    @else
+                                        <i class="fa fa-times"></i>
+                                    @endif
                                 @endif
                             </td>
                             @endcanAccess
@@ -139,6 +143,9 @@
                                 <button type="button" class="btn btn-danger btn-sm delete-submission" data-id="{{ $submission->id }}"><i class="fa fa-trash"></i></button>
                                 @endif
                                 @endcanAccess
+                            </td>
+                            <td>
+                                {{ $submission->reason ?? '-' }}
                             </td>
                         </tr>
                         @endforeach

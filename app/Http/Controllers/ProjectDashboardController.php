@@ -206,15 +206,17 @@ class ProjectDashboardController extends Controller
 
             return [
                 'is_overdue' => $task->isOverdue(),
-                'name_show' => $task->nameShow.' '.$headName,
-                'task_status' => $task->taskStatus->name, // Change to 'name' to simplify sorting
+                'name_show' => $task->nameShow . ' ' . $headName,
+                'task_status' => $task->taskStatus->name,
                 'date_show' => $task->date_show,
                 'user_create' => $task->user ? $task->user->name : '',
                 'user_assign' => $task->assign ? $task->assign->name : '',
                 'url' => $url,
                 'main_project' => $task->project ? $task->project->name : '',
                 'data_project' => $task->dataProject ? $task->dataProject->title : '',
-                'start_date' => $task->start_date, // Add start_date to use it in sorting
+                'start_date' => $task->start_date,
+                'slug' => $task->slug, // Add slug
+                'task_id' => $task->id, // Add task ID
             ];
         });
 
@@ -238,7 +240,13 @@ class ProjectDashboardController extends Controller
         $sortedTasks = $tasks->groupBy('task_status')->map(function ($group) {
             return $group->sortByDesc('start_date');
         })->flatten(1)->values(); // Reindex the collection after flattening
-    
+        
+        // Add next task slug logic
+        $sortedTasks->each(function (&$task, $key) use ($sortedTasks) {
+            $nextTask = $sortedTasks->get($key + 1); // Get next task
+            $task['next_task_slug'] = $nextTask ? $nextTask['slug'] : null; // Add next task slug
+        });
+
         return response()->json($sortedTasks);
     }
 }

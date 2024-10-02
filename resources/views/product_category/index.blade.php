@@ -17,6 +17,9 @@
     @if(Session::get('delete'))
         <div class="alert alert-success mt-3">Kategori berhasil dihapus!</div>
     @endif
+    @if(Session::get('notdelete'))
+        <div class="alert alert-danger mt-3">Kategori tidak dapat dihapus!, terdapat produk yang menggunakan kategori ini</div>
+    @endif
     @if ($errors->any())
         <div class="alert alert-danger mt-3">
             <ul>
@@ -79,6 +82,7 @@
             </tbody>
         </table>
     </div>
+    {{ $categories->withQueryString()->links('vendor.pagination.bootstrap-4') }}
 </div>
 
 @stop

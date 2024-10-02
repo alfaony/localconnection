@@ -31,6 +31,7 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    {{-- 
                     <label for="pilihSPK" class="form-label">Pilih SPK</label>
                     <select class="form-control select2" name="work_order" id="pilihSPK" required>
                         <option value="" selected disabled>Pilih</option>
@@ -39,15 +40,16 @@
                         @endforeach
                         <!-- Other options can be added here -->
                     </select>
-                    <!-- <select class="form-control" id="work_order" name="work_order" required></select> -->
+                    <select class="form-control" id="work_order" name="work_order" required></select>
+                    --}}
                 </div>
                 <div class="form-group">
                     <label for="pilihDataProyek" class="form-label">Pilih Data Proyek</label>
-                    <select class="form-control select2 projectChange" name="project" id="pilihDataProyek" required>
+                    <select class="form-control select2 projectChange" name="project" id="" required>
                         <option value="" disabled selected>Pilih</option>
                         @foreach($project as $a)
-                        <option value="{{ $a->id }}" data-report="{{ $a->reportProject ? $a->reportProject->id : '' }}" {{ @$bast->project_id == $a->id ? 'selected' : '' }}>{{ $a->title }}</option>
-                        @endforeach
+                        <option value="{{ $a->id }}" data-report="{{ $a->reportProject ? $a->reportProject->id : '' }}" {{ @$bast->project_id == $a->id ? 'selected' : '' }} {{ @$selectedWorkOrder->id == $a->work_order_id ? 'selected' : '' }}>{{ $a->title }} -  {{ $a->workOrder->number_result }}</option>
+                        @endforeach     
                         <!-- Other options can be added here -->
                     </select>
                 </div>
@@ -123,6 +125,17 @@
                 }
             }
         });
+
+        var selectedValueWorkOrder = "{{ @$selectedWorkOrder->id }}";
+        if(selectedValueWorkOrder)
+        {
+            title = "{{ @$selectedWorkOrder->number_result }}";
+            // Create an option element with the selected value
+            var newOption = new Option(title, selectedValueWorkOrder, true, true);
+    
+            // Append the option to the select2 element and trigger change
+            $('#work_order').append(newOption).trigger('change');
+        }
 
         var selectedValueQuote = "{{ @$bast->work_order_id }}";
         if(selectedValueQuote)

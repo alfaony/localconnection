@@ -39,6 +39,12 @@ class ProductCategoryController extends Controller
     public function destroy($slug)
     {
         $category = ProductCategory::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+
+        if(count($category->product) > 0)
+        {
+            return redirect()->route('product-category.index')->with('notdelete', 'Category can\'t be deleted!');
+        }
+        
         $category->delete();
         return redirect()->route('product-category.index')->with('delete', 'Category successfully deleted!');
     }

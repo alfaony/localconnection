@@ -31,7 +31,7 @@ class BastController extends Controller
      */
     public function createsuggest($slug)
     {
-        $selectedWorkOrder = WorkOrder::select('id')->with('reportProject')->byCompany(Auth::user()->company_id)->with('project')->where('slug',$slug)->first();
+        $selectedWorkOrder = WorkOrder::select('id','number_result')->with('reportProject')->byCompany(Auth::user()->company_id)->with('project')->where('slug',$slug)->first();
         if(!$selectedWorkOrder)
         {
             return redirect()->to(route('bast.index'))->with('datanotfound',true);
@@ -42,8 +42,11 @@ class BastController extends Controller
             return redirect()->to(route('bast.index'))->with('dataprojectnotfound',true);
         }
 
-        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')->where('id',$selectedWorkOrder->id)->orderBy('created_at','desc')->get();
-        $project = Project::byCompany(Auth::user()->company_id)->where('id',$selectedWorkOrder->project->id)->orderBy('created_at','desc')->get();
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereHas('reportProject')->orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)
+        ->whereHas('reportProject')
+        ->whereDoesntHave('bast')
+        ->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $nomorBast = $this->bastNumber()['result'];
         $signature = config('custom.customerSignature');
@@ -53,8 +56,11 @@ class BastController extends Controller
 
     public function create(Request $request)
     {
-        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')->whereHas('reportProject')->orderBy('created_at','desc')->get();
-        $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereHas('reportProject')->orderBy('created_at','desc')->get();
+        $project = Project::byCompany(Auth::user()->company_id)
+        //  ->whereHas('reportProject')
+        ->whereDoesntHave('bast')
+        ->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $nomorBast = $this->bastNumber()['result'];
         $signature = config('custom.customerSignature');
@@ -70,13 +76,15 @@ class BastController extends Controller
     public function store(BastRequest $request)
     {
         $bast = new Bast();
+        $project = Project::byCompany(Auth::user()->company_id)->where('id',$request->post('project'))->firstOrFail();
+
 
         $number = $this->bastNumber();
 
         $bast->date = $request->input('date');
         $bast->basts_number = $number['number'];
         $bast->number_result = $number['result'];
-        $bast->work_order_id = $request->input('work_order');
+        $bast->work_order_id = $project->work_order_id;
         $bast->project_id = $request->input('project');
         $bast->number_purchase = $request->input('number_purchase');
         $bast->pic = $request->input('pic');
@@ -86,7 +94,7 @@ class BastController extends Controller
         $bast->user_updated_id = Auth::user()->id;
         
         $bast->save();
-        $this->updateBudget($request->input('work_order'), $request->input('project'));
+        $this->updateBudget($project->work_order_id, $request->input('project'));
 
         return redirect()->to(route('bast.download.pdf',$bast->slug))->with('store', true);
     }
@@ -100,9 +108,15 @@ class BastController extends Controller
      */
     public function edit($slug)
     {
-        $project = Project::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         
-        $bast = Bast::where('slug',$slug)->first();
+        $bast = Bast::where('slug',$slug)->firstOrFail();
+
+        $project = Project::byCompany(Auth::user()->company_id)
+        ->whereHas('reportProject')
+        ->whereDoesntHave('bast')
+        ->orWhere('id',$bast->project_id)
+        ->orderBy('created_at','desc')->get();
+
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
         $nomorBast = $bast->number_result ?? '';
         $signature = config('custom.customerSignature');
@@ -144,8 +158,10 @@ class BastController extends Controller
     public function update(BastRequest $request, $slug)
     {
         $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        $project = Project::byCompany(Auth::user()->company_id)->where('id',$request->post('project'))->firstOrFail();
+        
         $bast->date = $request->input('date');
-        $bast->work_order_id = $request->input('work_order');
+        $bast->work_order_id = $project->work_order_id;
         $bast->project_id = $request->input('project');
         $bast->number_purchase = $request->input('number_purchase');
         $bast->pic = $request->input('pic');
@@ -154,7 +170,7 @@ class BastController extends Controller
         $bast->user_updated_id = Auth::user()->id;
 
         $bast->save();
-        $this->updateBudget($request->input('work_order'), $request->input('project'));
+        $this->updateBudget($project->work_order_id, $request->input('project'));
         
         return redirect()->to(route('bast.download.pdf',$bast->slug))->with('update', true);
     }
@@ -252,9 +268,13 @@ class BastController extends Controller
         // Fetch data for the DataTable
         $query = WorkOrder::query();
         $query->byCompany(Auth::user()->company_id); // Filter by the company of the logged-in user
-        $query->whereHas('reportProject'); // Only fetch WorkOrders with an associated ReportProject
-        $query->whereDoesntHave('bast'); // Only fetch WorkOrders with an associated ReportProject
-        // $query->doesntHave('bast'); // Only fetch SPKs without an associated Bast
+        // $query->whereHas('reportProject'); // Only fetch WorkOrders with an associated ReportProject
+        // $query->whereDoesntHave('bast'); // Only fetch WorkOrders with an associated ReportProject
+        $query->whereHas('project', function($q) {
+            // Filter project yang tidak memiliki reportProject (HasOne)
+            $q->doesntHave('bast');
+            $q->has('reportProject');
+        });
 
         // Map column indexes to column names (modify these based on your actual database structure)
         $columnNames = ['date', 'number_result', 'project_name'];

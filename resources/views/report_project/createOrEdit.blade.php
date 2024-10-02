@@ -42,6 +42,7 @@
                     </div>
                 </div>
         
+                {{-- 
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label>Pilih SPK</label>
@@ -52,17 +53,17 @@
                             @endforeach
                         </select>
                         <input type="hidden" id="work_order_id" value="{{ @$reportProject->work_order_id }}">
-                        <!-- <select class="form-control" id="work_order" name="work_order" required></select> -->
+                        <select class="form-control" id="work_order" name="work_order" required></select>
                     </div>
                 </div>
+                --}}
         
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label>Pilih Data Proyek</label>
-                        <select class="form-control select2" name="project" id="chooseProject" required>
-                        <option value="" disabled selected>Pilih Proyek</option>
+                        <select class="form-control select2" name="project" id="" required>
                             @foreach($project as $a)
-                            <option value="{{ $a->id }}" {{  @$reportProject->project_id == $a->id ? 'selected'  : ''}} >{{ $a->title }}</option>
+                            <option value="{{ $a->id }}" {{  @$reportProject->project_id == $a->id ? 'selected'  : ''}} {{ @$selectedWorkOrder->id == $a->work_order_id ? 'selected' : '' }}>{{ $a->title }} {{ $a->workOrder->number_result }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -269,6 +270,17 @@
                 }
             }
         });
+
+        var selectedValueWorkOrder = "{{ @$selectedWorkOrder->id }}";
+        if(selectedValueWorkOrder)
+        {
+            title = "{{ @$selectedWorkOrder->number_result }}";
+            // Create an option element with the selected value
+            var newOption = new Option(title, selectedValueWorkOrder, true, true);
+    
+            // Append the option to the select2 element and trigger change
+            $('#work_order').append(newOption).trigger('change');
+        }
 
         var selectedValueQuote = "{{ @$reportProject->work_order_id }}";
         if(selectedValueQuote)

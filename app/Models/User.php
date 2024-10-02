@@ -150,7 +150,15 @@ class User extends Authenticatable
             ->first() : "";
     }
 
+    public function salary()
+    {
+        return $this->hasMany(UserSalary::class);
+    }
 
+    public function getLastSalaryAttribute()
+    {
+        return $this->salary()->latest()->first();
+    }
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

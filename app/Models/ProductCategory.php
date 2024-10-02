@@ -62,6 +62,11 @@ class ProductCategory extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    public function product()
+    {
+        return $this->hasMany(Product::class);
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

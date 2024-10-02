@@ -19,8 +19,11 @@ use App\Models\SettingCompany;
 use App\Helpers\InboxHelper;
 use App\Helpers\EmailNotifHelper;
 use App\Models\User;
+use App\Models\UserSalary;
+
 
 use Carbon\Carbon;
+use App\Helpers\Access;
 class LetterSubmissionController extends Controller
 {
     /**
@@ -42,6 +45,7 @@ class LetterSubmissionController extends Controller
         $user = $request->input('user');
         $letterType = $request->input('letterType');
         $sort = $request->input('sort');
+        $approvement = Access::can('approvement','letter_submissions');
 
 
         $query = LetterSubmission::query();
@@ -57,7 +61,7 @@ class LetterSubmissionController extends Controller
         }
         
         $letterSubmissions = $query->byRole()->orderBy('updated_at',$sort ?? 'desc')->paginate(10);
-        return view('letter_submission.index', compact('letterSubmissions','users','letterTypes'));
+        return view('letter_submission.index', compact('letterSubmissions','users','letterTypes','approvement'));
     }
     /**
      * Show the form for creating a new letter submission.
@@ -70,11 +74,13 @@ class LetterSubmissionController extends Controller
         $letterTypes = LetterType::filterByUserStatus()->get();
         $positions = Position::byCompany(Auth::user()->company_id)->get();
         $lastPositon = Auth::user()->last_position ? Position::where('id',Auth::user()->last_position->position_id)->get() : null;
+        $twoMonthsLater = Carbon::now()->addMonths(2)->format('Y-m-d');
+
 
         $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
 
         // Melempar data jenis surat ke view create
-        return view('letter_submission.create', compact('letterTypes','positions','company','lastPositon'));
+        return view('letter_submission.create', compact('letterTypes','positions','company','lastPositon','twoMonthsLater'));
     }
 
     /**
@@ -125,14 +131,16 @@ class LetterSubmissionController extends Controller
             
             $letterSubmission->save();
 
-            if(isset($letterSubmission->convert_field['position_new_id']) && $letterType->auto_approve == ParamSchema::TRUE)
-            {
-                $this->updatePosition($letterSubmission->convert_field['position_new_id'],$letterSubmission);
-            }
+            // if(isset($letterSubmission->convert_field['position_new_id']) && $letterType->auto_approve == ParamSchema::TRUE)
+            // {
+            //     $this->updatePosition($letterSubmission->convert_field['position_new_id'],$letterSubmission);
+            // }
 
             $this->updateProfile($request, $letterSubmission->user);
 
             $this->sendNotification($letterSubmission, 'store', Auth::user()->company_id);
+
+            // $request->salary ? $this->updateSalary($request, $letterSubmission) : null;
 
             DB::commit();
             return redirect()->route('letter-submission.index')->with('success', 'Pengajuan surat berhasil dibuat.');
@@ -149,6 +157,7 @@ class LetterSubmissionController extends Controller
         $letterTypes = LetterType::where('id', $letterSubmission->letter_type_id)->get();
 
         $user = $letterSubmission->user;
+        $twoMonthsLater = Carbon::parse($letterSubmission->created_at)->addMonths(2)->format('Y-m-d');
 
         if(!$letterSubmission->is_editable)
         {
@@ -168,11 +177,12 @@ class LetterSubmissionController extends Controller
         
         $lastPositon = isset($letterSubmission->convert_field['position_old_id']) ? Position::where('id',$letterSubmission->convert_field['position_old_id'] )->get() : null;
         $lastestPosition = isset($letterSubmission->convert_field['position_old_id']) ? Position::where('id',$letterSubmission->convert_field['position_old_id'] )->first() : null;
-
+        $salary = isset($letterSubmission->convert_field['user_salary_id']) ? UserSalary::where('id', $letterSubmission->convert_field['user_salary_id'])->first() : null;
+        $userPosition = isset($letterSubmission->convert_field['user_last_position']) ? UserPosition::where('id', $letterSubmission->convert_field['user_last_position'])->first() : null;
 
         $company = SettingCompany::byCompany($user->company_id)->get()->pluck('field_value','field_title');
 
-        return view('letter_submission.edit', compact('letterSubmission', 'letterTypes','positions', 'company', 'user','lastPositon', 'lastestPosition'));
+        return view('letter_submission.edit', compact('letterSubmission', 'letterTypes','positions', 'company', 'user','lastPositon', 'lastestPosition','salary','userPosition','twoMonthsLater'));
     }
 
     public function update(LetterSubmissionRequest $request, $id)
@@ -236,6 +246,9 @@ class LetterSubmissionController extends Controller
             // Simpan data field yang sudah di-merge sebagai JSON
             $letterSubmission->field = json_encode($mergedFieldData);
 
+            // Updaate Salary
+            // dd($request->all());
+            // $request->salary ? $this->updateSalary($request, $letterSubmission) : null;
             // check ouwnership
             if($letterSubmission->user_id != Auth::user()->id)
             {
@@ -245,6 +258,7 @@ class LetterSubmissionController extends Controller
             }else
             {
                 $letterSubmission->status = true;
+                // $letterSubmission->reason = NULL;
                 $this->sendNotification($letterSubmission, 'update', Auth::user()->company_id);
             }
 
@@ -254,6 +268,7 @@ class LetterSubmissionController extends Controller
             DB::commit();
             return redirect()->route('letter-submission.index')->with('success', 'Pengajuan surat berhasil diperbarui.');
         } catch (\Exception $e) {
+            // dd($e);
             Log::error($e->getMessage());
             DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui pengajuan surat.');
@@ -267,12 +282,16 @@ class LetterSubmissionController extends Controller
         $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
         $dateWithDay = Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('l, d F Y');
         $date = Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y');
+        $dateCustom = isset($letterSubmission->convert_field['date']) ? Carbon::parse($letterSubmission->convert_field['date'])->locale('id')->translatedFormat('d F Y') : Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y');
+        $startDate = isset($letterSubmission->convert_field['start_date']) ? Carbon::parse($letterSubmission->convert_field['start_date'])->locale('id') : Carbon::parse($letterSubmission->created_at)->locale('id');
 
         $positionOld = isset($letterSubmission->convert_field['position_old_id']) ? $this->findPosition($letterSubmission->convert_field['position_old_id']) : null;
         $positionNew = isset($letterSubmission->convert_field['position_new_id']) ? $this->findPosition($letterSubmission->convert_field['position_new_id']) : null;
+        $salary = isset($letterSubmission->convert_field['user_salary_id']) ? UserSalary::where('id', $letterSubmission->convert_field['user_salary_id'])->first() : null;
+        $userPosition = isset($letterSubmission->convert_field['user_last_position']) ? UserPosition::where('id', $letterSubmission->convert_field['user_last_position'])->first() : null;
 
         try {
-            return view('letter_submission.template.'.$letterSubmission->letterType->template, compact('letterSubmission','company', 'date', 'positionOld', 'positionNew','dateWithDay'));
+            return view('letter_submission.template.'.$letterSubmission->letterType->template, compact('letterSubmission','company', 'date', 'positionOld', 'positionNew','dateWithDay', 'salary', 'userPosition','dateCustom','startDate'));
         } catch (\Throwable $th) {
             return redirect()->to(route('letter-submission.index'))->with('error', 'Template surat tidak ditemukan.');
         }
@@ -303,7 +322,14 @@ class LetterSubmissionController extends Controller
         $this->validate($request, [
             'action' => 'required|in:approve,decline',
             'selected_ids' => 'required|array',
-            'selected_ids.*' => 'required|uuid|exists:letter_submissions,id'
+            'selected_ids.*' => 'required|uuid|exists:letter_submissions,id',
+            'notes' => 'nullable|array',
+            'notes.*' => 'nullable|string|max:255'
+        ], [
+            'selected_ids.required' => 'Pilih setidaknya satu pengajuan untuk memberikan alasan.',
+            'selected_ids.*.exists' => 'Pengajuan yang dipilih tidak valid.',
+            'notes.*.string' => 'Alasan harus berupa teks.',
+            'notes.*.max' => 'Alasan tidak boleh lebih dari 255 karakter.'
         ]);
 
         DB::beginTransaction();
@@ -331,6 +357,10 @@ class LetterSubmissionController extends Controller
                     $letterSubmission = LetterSubmission::findOrFail($selected);
                     $letterSubmission->is_approved = $status;
                     $letterSubmission->status = true;
+                    if(isset($request->notes[$selected]))
+                    {
+                        $letterSubmission->reason = $request->notes[$selected];
+                    }
                     $letterSubmission->save();
                     if(($status == ParamSchema::APPROVE) && ($letterSubmission->letterType->name == ParamSchema::PERJANJIANKERJA))
                     {
@@ -340,6 +370,11 @@ class LetterSubmissionController extends Controller
                     if($status == ParamSchema::APPROVE && isset($letterSubmission->convert_field['position_new_id']))
                     {
                         $this->updatePosition($letterSubmission->convert_field['position_new_id'],$letterSubmission);
+                    }
+
+                    if($status == ParamSchema::APPROVE && isset($letterSubmission->convert_field['salary']))
+                    {
+                        isset($letterSubmission->convert_field['salary']) ? $this->updateSalary($letterSubmission->convert_field['salary'], $letterSubmission) : null;
                     }
                     
                     $this->sendNotification($letterSubmission, $action, Auth::user()->company_id, true);
@@ -558,6 +593,22 @@ class LetterSubmissionController extends Controller
         );
     }
 
+    protected function updateSalary($salary, $letterSubmission)
+    {
+        $userSalaryExist = UserSalary::where('letter_submission_id', $letterSubmission->id)->first();
+        if($userSalaryExist)
+        {
+            $userSalaryExist->salary = $salary;
+            $userSalaryExist->save();
+        }else
+        {
+            $userSalary = new UserSalary();
+            $userSalary->salary = $salary;
+            $userSalary->user_id = $letterSubmission->user_id;
+            $userSalary->letter_submission_id = $letterSubmission->id;
+            $userSalary->save();
+        }
+    }
     // Inbox Notification
     private function sentInbox($to,$message,$directUrl)
     {
