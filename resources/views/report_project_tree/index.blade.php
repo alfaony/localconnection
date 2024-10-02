@@ -428,7 +428,18 @@
                     $('#sidePopup .offcanvas-header').html(response.htmlHead); // Update the popup header
                     if(response.dailytask)
                     {
-                        $('#task-row-' + response.dailytask.id).replaceWith(response.htmlTable);
+                        var button = $('#btn-show-' + response.dailytask.id);
+                        var taskNo = button.data('task-no') ?? 0;
+                        
+                        let newRow = $(response.htmlTable); // Mengambil row baru dari response
+
+                        if(taskNo != 0)
+                        {
+                            taskNo = taskNo;
+                            newRow.prepend(`<td>${taskNo}</td>`);
+                        }
+                        // Gantikan row lama dengan row baru yang sudah dimodifikasi
+                        $('#task-row-' + response.dailytask.id).replaceWith(newRow);
                     }
                     if ($('#sidePopup .offcanvas-body').find('#description_note').length > 0) 
                     {
@@ -885,7 +896,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if(task)
                     {
                         // url = `<a href="${task.url}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>`;
-                        url = `<button class="btn btn-info btn-sm show-popup-btn" data-slug-next="${nextTaskSlug}" id="btn-show-${task.task_id}" data-task-id="${task.task_id}" data-task-slug="${task.slug}">
+                        url = `<button class="btn btn-info btn-sm show-popup-btn" data-task-no="${no}" data-slug-next="${nextTaskSlug}" id="btn-show-${task.task_id}" data-task-id="${task.task_id}" data-task-slug="${task.slug}">
                                 <i class="fa fa-eye"></i>
                             </button>`;
 
