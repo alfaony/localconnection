@@ -196,7 +196,8 @@
                     <label for="media">Upload</label>
                     <input type="file" id="mediaReport" name="media[]" class="form-control" multiple>
                 </div>
-                <button type="submit" class="btn btn-primary" id="submitReport">Simpan Laporan</button>
+                <button type="button" class="btn btn-primary" id="button-submitReport">Simpan Laporan</button>
+                <button type="submit" class="btn btn-primary" id="submit-submitReport" style="display:none">Simpan Laporan</button>
             </form>
 
         @endcanAccess

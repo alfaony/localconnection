@@ -4,10 +4,8 @@
     $isOverdue = $dailytask->isOverdue();
 @endphp
 <tr id="task-row-{{ $dailytask->id }}"> <!-- Added ID for each row -->
-    <td>
-        <span class="{{ $isOverdue ? 'text-danger' : '' }}">
-            {{ $dailytask->dateShow }}
-        </span>
+    <td class="name-cell">
+        <p>{!! $dailytask->head ? $dailytask->nameShow.'  <i class="fa fa-arrow-left"></i>  '. Str::limit($dailytask->head->name,50) : $dailytask->nameShow !!}</p>
     </td>
     <td>
     @switch($dailytask->taskStatus->name)
@@ -30,8 +28,10 @@
             {{ $dailytask->taskStatus->name }}
     @endswitch
     </td>
-    <td class="name-cell">
-        <p>{!! $dailytask->head ? $dailytask->nameShow.'  <i class="fa fa-arrow-left"></i>  '. Str::limit($dailytask->head->name,50) : $dailytask->nameShow !!}</p>
+    <td>
+        <span class="{{ $isOverdue ? 'text-danger' : '' }}">
+            {{ $dailytask->dateShow }}
+        </span>
     </td>
     <td class="name-cell">
         {{ $dailytask->dataProject ? $dailytask->dataProject->title : '' }}
