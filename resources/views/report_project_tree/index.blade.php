@@ -15,6 +15,15 @@
             {{ session('error') }}
         </div>
     @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 </div>
 <div id="accordion">
 @canAccess('fetchusertask', 'project_dashboards')
@@ -971,6 +980,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
         });
+    });
+
+    $(document).on('click', '#button-submitReport', function() 
+    {
+        const submitButton = document.getElementById('submitReport');
+        const noteInput = document.getElementById('description_note');
+        
+        if (noteInput.value.trim() === '') 
+        {
+            event.preventDefault();  // Mencegah submit form
+            Swal.fire({
+                title: 'Error!',
+                text: 'Catatan tidak boleh kosong!',
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
+        }else
+        {
+            $("#submit-submitReport").click()
+        }
     });
 </script>
 
