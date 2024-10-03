@@ -76,4 +76,10 @@ return
         'director' => 'Direktur',
        ],
 
+       'status_invoice' => 
+       [
+          'DRAFT' => 'Draft',
+         'AUTHORISED' => 'Authorised',
+       ],
+
 ];

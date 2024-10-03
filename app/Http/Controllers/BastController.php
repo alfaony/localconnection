@@ -250,6 +250,16 @@ class BastController extends Controller
             array_push($actionButtons,$destroy);
         }
 
+
+        $destroy = 
+            [
+                'name' => 'Create Invoice',
+                'route' => 'invoice.store',
+                'id' => true,
+            ];
+
+            array_push($actionButtons,$destroy);
+
         return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
     }
 

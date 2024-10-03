@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('content_header')
-    <h1>Quote</h1>
+    <h1>Invoice</h1>
 @stop
 
 
@@ -9,13 +9,16 @@
 @section('content')
 <div class="col-md-12">
     @if(Session::get('store'))
-    <div class="alert alert-success mt-3">Berhasil Menambahkan Quote</div>
+    <div class="alert alert-success mt-3">Berhasil Menambahkan Invoice</div>
     @endif
     @if(Session::get('update'))
-    <div class="alert alert-success mt-3">Quote Berhasil Diperbarui</div>
+    <div class="alert alert-success mt-3">Invoice Berhasil Diperbarui</div>
     @endif
     @if(Session::get('delete'))
-    <div class="alert alert-success mt-3">Berhasil Menghapus Quote</div>
+    <div class="alert alert-success mt-3">Berhasil Menghapus Invoice</div>
+    @endif
+    @if(Session::get('xero'))
+    <div class="alert alert-success mt-3">Berhasil Terhubung Xero</div>
     @endif
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -35,11 +38,11 @@
 <div class="container">    
     <!-- Tombol Tambah Pembelian Baru -->
     @canAccess('create','quotes')
-    <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Quote Baru</button>
+    <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Invoice Baru</button>
     @endcanAccess
     
     <!-- Search Bar -->
-    <!-- <form action="{{ route('quote.index') }}" method="get">
+    <!-- <form action="{{ route('invoice.index') }}" method="get">
         <div class="d-flex flex-row-reverse">
             <div class="p-2">
                 <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
@@ -54,10 +57,8 @@
     <table class="table table-bordered" id="tableQuote">
         <thead>
             <tr>
-                <th>Nomor Quote</th>
-                <th>Total Quote</th>
-                <th>Status Peralihan</th>
-                <th>Status Quote</th>
+                <th>Nomor Invoice</th>
+                <th>Total Invoice</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -69,11 +70,11 @@
                 <td>{{ $a->number_result ?? '' }}</td>
                 <td>{{ 'Rp. '.number_format($a->total,0,',','.')  ?? 'Rp. 0' }}</td>
                 <td>
-                    <form method="post" action="{{ route('quote.destroy',$a) }}">
+                    <form method="post" action="{{ route('invoice.destroy',$a) }}">
                         @csrf
                         @method('delete')
-                        <a href="{{ route('quote.download.pdf', ['slug' => $a->slug, 'nomor' => $no]) }}" class="btn btn-primary btn-sm"><i class="fa fa-file-pdf"></i></a>
-                        <a href="{{ route('quote.edit',$a->slug).'?nomor='.$no }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                        <a href="{{ route('invoice.download.pdf', ['slug' => $a->slug, 'nomor' => $no]) }}" class="btn btn-primary btn-sm"><i class="fa fa-file-pdf"></i></a>
+                        <a href="{{ route('invoice.edit',$a->slug).'?nomor='.$no }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
                         <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                     </form>
                 </td>
@@ -111,15 +112,13 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: '{{ route("quote.datatable")}}',
+                url: '{{ route("invoice.datatable")}}',
                 type: 'GET',
                 dataSrc: 'data'
             },
             columns: [
                 {data: 'number_result', name: 'number_result', orderable: false},
                 {data: 'total', name: 'total', orderable: false},
-                {data: 'budget_transition', name: 'budget_transition', orderable: false},
-                {data: 'status', name: 'status', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
             // order: [[0, 'desc']],
@@ -132,7 +131,7 @@
         $("#btnCreateSuplier").click(function (e) 
         { 
             e.preventDefault();
-            let url = "{{ route('quote.create') }}";
+            let url = "{{ route('invoice.create') }}";
 
             window.location.href = url;
         });

@@ -5,17 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Ramsey\Uuid\Uuid;
-use Carbon\Carbon;
 
-class Bast extends Model
+class Invoice extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory, SoftDeletes;
 
-    public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
-    protected $keyType = 'string'; // Tipe kunci primer adalah string
+    protected $table = 'invoices'; // Nama tabel di database
 
+    protected $keyType = 'uuid'; // Karena menggunakan UUID sebagai primary key
+    public $incrementing = false; // Non-incrementing ID, karena UUID
     protected static function boot()
     {
         parent::boot();
@@ -49,35 +49,33 @@ class Bast extends Model
 
         return $slug;
     }
-    public function getNumberAttribute()
+
+    // Relasi ke model User
+    public function userCreate(): BelongsTo
     {
-        $year = Carbon::parse($this->created_at)->format('Y');
-        return $this->basts_number.'/'.$year ?? ''; 
-    }
-    public function getRouteKeyName()
-    {
-        return 'slug';
-    }
-    
-    public function userCreate()
-    {
-        return $this->belongsTo(User::class,'user_created_id','id')->withTrashed();
+        return $this->belongsTo(User::class,'user_created_id');
     }
 
-    public function workOrder()
+    // Relasi ke model BAST
+    public function bast(): BelongsTo
     {
-        return $this->belongsTo(WorkOrder::class);
+        return $this->belongsTo(Bast::class);
     }
 
-    public function project()
+    public function invoiceProducts()
     {
-        return $this->belongsTo(Project::class);
+        return $this->hasMany(InvoiceProduct::class);
     }
 
-    public function invoice()
+    public function quote()
     {
-        return $this->hasOne(Invoice::class);
+        return $this->belongsTo(Quote::class)->withTrashed();
     }
+    // Mutator untuk format tanggal (jika diperlukan)
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+    ];
 
     public function scopeByCompany($query,$companyId)
     {
@@ -90,3 +88,4 @@ class Bast extends Model
         }
     }
 }
+
