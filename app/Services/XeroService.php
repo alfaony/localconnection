@@ -121,7 +121,7 @@ class XeroService
 
         // Prepare the line items for the invoice
         $quoteProduct = $invoice->invoiceProducts;
-        $lineItems = $this->getLineItems($quoteProduct);
+        $lineItems = $this->getLineItems($invoice,$quoteProduct);
         
         if (empty($lineItems)) {
             throw new \Exception('Line items are empty or invalid.');
@@ -141,10 +141,16 @@ class XeroService
             ];
     
             // Call Xero API to create the invoice
-            return Xero::invoices()->store($invoice);
+            $response = Xero::invoices()->store($invoice);
+
+            // Logging API request
+            $this->logApiRequest('invoices', 'POST', $invoice, $response, 200);
+
+            return $response;
 
         } catch (\Exception $e) {
             // dd($e);
+            $this->logApiRequest('invoices', 'POST', $invoice, $e->getMessage(), 500);
             Log::error('Xero invoice creation failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Xero invoice creation failed.');
         }
@@ -156,7 +162,7 @@ class XeroService
         // Prepare the line items for the invoice
         $quoteProduct = $invoice->invoiceProducts;
 
-        $lineItems = $this->getLineItems($quoteProduct);
+        $lineItems = $this->getLineItems($invoice, $quoteProduct);
         if (!$this->isCheckingInvoice($invoice)) {
             throw new \Exception('Invoice is not valid.');
         }
@@ -174,11 +180,17 @@ class XeroService
                 "LineAmountTypes" => "Exclusive" // Prices exclusive of tax
             ];
             
+            $response = Xero::invoices()->update($invoice->invoice_xero_id, $data);
 
-            return Xero::invoices()->update($invoice->invoice_xero_id,$data);
+            // Logging API request
+            $this->logApiRequest('invoices/' . $invoice->invoice_xero_id, 'PUT', $data, $response, 200);
+
+            return $response;
 
         } catch (\Exception $e) {
             // dd($e);
+            $this->logApiRequest('invoices/' . $invoice->invoice_xero_id, 'PUT', $data, $e->getMessage(), 500);
+            
             Log::error('Xero invoice creation failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Xero invoice creation failed.');
         }
@@ -202,10 +214,38 @@ class XeroService
         }
     }
 
-    protected function getLineItems($quoteProduct)
+    public function deleteInvoice($invoice)
+    {
+        
+        try {
+            if (!$this->isCheckingInvoice($invoice)) 
+            {
+                throw new \Exception('Invoice is not valid.');
+            }
+            $data = 
+            [
+                "Status" => "VOIDED"
+            ];
+
+            $response = Xero::invoices()->update($invoice->invoice_xero_id, $data);
+
+            $this->logApiRequest('Invoices', "delete", $invoice, $response, 200);
+
+            return $response;
+            
+        } catch (\Exception $e) {
+            $this->logApiRequest('invoices/' . $invoice->invoice_xero_id, "delete", $data, $e->getMessage(), 500);
+
+            Log::error('Xero invoice deletion failed: ' . $e->getMessage());
+            throw new \Exception('Failed to delete Xero invoice');
+        }
+    }
+
+    protected function getLineItems($invoice, $quoteProduct)
     {
         $lineItems = [];
         $postItems = [];
+        
         if($quoteProduct)
         {
             foreach($quoteProduct as $item)
@@ -229,6 +269,7 @@ class XeroService
                     ];
                 }
 
+                // Prepare the line items for the invoice
                 $lineItems[] = [
                     "Description" => $item->product->name, // Description of the item/service
                     "Quantity" => $item->qty, // Quantity of the item/service
@@ -245,22 +286,70 @@ class XeroService
             }
         }
 
+
+        // Calculate the totals including tax, service fee, and discount
+        $total = $invoice->invoiceProducts->sum('sub_total');
+        $discountAmount = $invoice->discount;
+        $chargesAmount = $invoice->charges;
+        $totalAll = ($total + $chargesAmount) - $discountAmount;
+        $serviceFeeAmount = $invoice->service_fee != 0 ? round(($totalAll * $invoice->service_fee) / 100) : 0;
+
+        // Add service fee, charges, and discount as additional line items in Xero invoice
+        if ($serviceFeeAmount > 0) 
+        {
+            $lineItems[] = [
+                "Description" => "Service Fee",
+                "Quantity" => 1,
+                "UnitAmount" => $serviceFeeAmount,
+                "AccountCode" => '200',
+                "TaxType" => "OUTPUT"
+            ];
+        }
+
+        if ($chargesAmount > 0) {
+            $lineItems[] = [
+                "Description" => "Additional Charges",
+                "Quantity" => 1,
+                "UnitAmount" => $chargesAmount,
+                "AccountCode" => '200',
+                "TaxType" => "OUTPUT"
+            ];
+        }
+
+        if ($discountAmount > 0) 
+        {
+            $lineItems[] = [
+                "Description" => "Discount",
+                "Quantity" => 1,
+                "UnitAmount" => -$discountAmount, // Discounts should be negative values
+                "AccountCode" => '200',
+                "TaxType" => "OUTPUT"
+            ];
+        }
+
         if(count($postItems) != 0)
         {
-            $this->findOrCreateItem($item, $postItems);        }
-
+            $this->createProductItem($postItems);       
+        }
+        
         return $lineItems;
     }
 
     
-    protected function findOrCreateItem($itemData, $postItems)
+    protected function createProductItem($postItems)
     {
         try {          
             $data['Items'] = $postItems;
+            $response = Xero::post('items', $data);
+    
+            // Logging API request
+            $this->logApiRequest('items', 'POST', $data, $response, 200);
 
-            Xero::post('items', $data);
+            return $response;
         } catch (\Exception $e) {
             // Handle any errors
+            $this->logApiRequest('items', 'POST', $data, $e->getMessage(), 500);
+
             Log::error('Xero item creation failed: ' . $e->getMessage());
             throw new \Exception('Failed to find or create Xero item');
         }

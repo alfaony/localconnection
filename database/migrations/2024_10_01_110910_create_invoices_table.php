@@ -17,7 +17,7 @@ return new class extends Migration
             $table->uuid('id')->primary(); // UUID sebagai primary key
             $table->date('start_date');
             $table->date('end_date');
-            $table->date('status')->nullable();
+            $table->string('status')->nullable();
             $table->uuid('quote_id');
             $table->uuid('bast_id');
             $table->uuid('user_created_id');

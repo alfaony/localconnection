@@ -56,7 +56,8 @@
             <tr>
                 <th>Nomor Quote</th>
                 <th>Total Quote</th>
-                <th>Status</th>
+                <th>Status Peralihan</th>
+                <th>Status Quote</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -118,6 +119,7 @@
                 {data: 'number_result', name: 'number_result', orderable: false},
                 {data: 'total', name: 'total', orderable: false},
                 {data: 'budget_transition', name: 'budget_transition', orderable: false},
+                {data: 'status', name: 'status', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
             // order: [[0, 'desc']],

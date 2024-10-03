@@ -17,7 +17,7 @@ return new class extends Migration
             $table->uuid('id')->primary(); // UUID sebagai primary key
             $table->uuid('invoice_id');
             $table->uuid('product_id');
-            $table->integer('qty')->nullable();
+            $table->bigInteger('qty')->nullable();
             $table->integer('sort')->nullable(true);
             $table->integer('price_sell')->nullable(true);
             $table->text('description')->nullable();

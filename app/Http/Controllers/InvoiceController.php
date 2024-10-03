@@ -260,12 +260,10 @@ class InvoiceController extends Controller
         try 
         {
             $invoice = Invoice::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $this->xeroService->deleteInvoice($invoice);
             $invoice->invoiceProducts()->delete();
             
             $invoice->delete();
-
-            // Mengurutkan ulang nomor quote
-            // Invoice::where('quote_number', '>', $deletedQuoteNumber)->decrement('quote_number');
 
             DB::commit();
             return redirect()->back()->with('delete', true);
