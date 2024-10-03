@@ -81,6 +81,7 @@ Route::get('/dailytask/showJson/{slug}', [DailyTaskController::class,'showJson']
 
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
+  Route::get('project/export', [ProjectController::class,'export'])->name('project.export');
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
   
