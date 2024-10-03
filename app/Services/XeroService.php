@@ -224,7 +224,8 @@ class XeroService
             }
             $data = 
             [
-                "Status" => "VOIDED"
+                "InvoiceID"=> $invoice->invoice_xero_id,
+                "Status" => $invoice->status == ParamSchema::AUTHORISED ? "VOIDED" : "DELETED"
             ];
 
             $response = Xero::invoices()->update($invoice->invoice_xero_id, $data);
@@ -234,6 +235,7 @@ class XeroService
             return $response;
             
         } catch (\Exception $e) {
+            // dd($e);
             $this->logApiRequest('invoices/' . $invoice->invoice_xero_id, "delete", $data, $e->getMessage(), 500);
 
             Log::error('Xero invoice deletion failed: ' . $e->getMessage());

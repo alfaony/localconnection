@@ -70,12 +70,11 @@ use App\Http\Controllers\InvoiceController;
 |
 */
 
-// ** Menu Yang mengakses XERO
-Route::group(['middleware' => ['web', 'XeroAuthenticated']], function(){
+Route::group(['middleware' => ['web', 'XeroAuthenticated','role.permission']], function(){
   Route::get('xero',function(){
 
     return redirect('/invoice')->with('xero',true);
-
+  
   });
   Route::delete('invoice/destroyProduct/product/{invoiceProduct}',[invoiceController::class,'destroyProduct'])->name('invoice.destroy.product');
   Route::get('invoice/productPrice/counting',[invoiceController::class,'productPrice'])->name('invoice.productPrice');

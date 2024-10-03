@@ -79,7 +79,8 @@ return
        'status_invoice' => 
        [
           'DRAFT' => 'Draft',
-         'AUTHORISED' => 'Authorised',
+          'SUBMITTED' => 'Submitted',
+          'AUTHORISED' => 'Authorised',
        ],
 
 ];

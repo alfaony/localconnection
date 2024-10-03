@@ -37,7 +37,7 @@
 </div>
 <div class="container">    
     <!-- Tombol Tambah Pembelian Baru -->
-    @canAccess('create','quotes')
+    @canAccess('create','invoices')
     <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Invoice Baru</button>
     @endcanAccess
     
