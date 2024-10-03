@@ -80,7 +80,7 @@ return
        [
           'DRAFT' => 'Draft',
           'SUBMITTED' => 'Submitted',
-          'AUTHORISED' => 'Authorised',
+          'AUTHORISED' => 'Waiting payment',
        ],
 
 ];

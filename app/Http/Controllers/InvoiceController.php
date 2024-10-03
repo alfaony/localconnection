@@ -47,7 +47,17 @@ class InvoiceController extends Controller
      */
     public function index(Request $request)
     {
-        return view('invoice.index');
+        // Ambil input pencarian dari request
+        $search = $request->input('search');
+
+        $invoice = Invoice::byCompany(Auth::user()->company_id)
+                ->when($search, function ($query, $search) 
+                {
+                    return $query->where('number_result', 'LIKE', "%{$search}%");
+                })
+                ->paginate(10);
+
+        return view('invoice.index',compact('invoice'));
     }
 
     /**
@@ -104,7 +114,7 @@ class InvoiceController extends Controller
             $invoice->total = $request->post('total');
             $invoice->payment_term = $request->post('payment_term');
             $invoice->third_party_docs = $request->post('third_party_docs');
-            $invoice->status = $request->post('status');
+            $invoice->status = $request->post('status') ?? ParamSchema::DRAFT;
             
             $invoice->user_created_id = Auth::user()->id;
             $invoice->user_updated_id = Auth::user()->id;
@@ -159,6 +169,10 @@ class InvoiceController extends Controller
         $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
         $invoice = Invoice::where('slug', $slug)->firstOrFail();
 
+        if($invoice->status == ParamSchema::AUTHORISED)
+        {
+            return redirect()->to(route('invoice.index'))->with('AUTHORISED',true);
+        }
         $bast = Bast::byCompany(Auth::user()->company_id)
         ->whereDoesnthave('invoice')
         ->orWhere('id', $invoice->bast_id)
@@ -176,6 +190,31 @@ class InvoiceController extends Controller
     }
 
     /**
+     * 
+     * SHow Product
+     */
+
+     public function show($slug)
+    {
+        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $invoice = Invoice::where('slug', $slug)->firstOrFail();
+
+        $bast = Bast::byCompany(Auth::user()->company_id)
+        ->whereDoesnthave('invoice')
+        ->orWhere('id', $invoice->bast_id)
+        ->orderBy('created_at','desc')
+        ->get();
+
+        $date = Carbon::parse($invoice->created_at)->format('m/Y');
+
+        $nomorQuote = $invoice->quote_number_result ?? '';
+        $userCreate = $invoice->userCreate ? $invoice->userCreate->name : '';
+        $status = config('custom.status_invoice');
+
+        return view('invoice.show',compact('product','userCreate','nomorQuote','bast','date','invoice','status'));
+    }
+    
+    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -187,9 +226,16 @@ class InvoiceController extends Controller
         DB::beginTransaction();
         try 
         {
+            $status = $request->post('status');
+
             $invoice = Invoice::byCompany(Auth::user()->company_id)->where('id', $slug)->first();
             $bast = Bast::byCompany(Auth::user()->company_id)->where('id',$request->post('bast'))->firstOrFail();
             $quote = Quote::byCompany(Auth::user()->company_id)->where('id',$bast->project->workOrder->quote_id)->firstOrFail();
+            
+            if($invoice->status == ParamSchema::AUTHORISED)
+            {
+                return redirect()->to(route('invoice.index'))->with('AUTHORISED',true);
+            }
 
             $invoice->date = Carbon::now()->format('Y-m-d');
             $invoice->bast_id = $bast->id;
@@ -204,7 +250,7 @@ class InvoiceController extends Controller
             $invoice->total = $request->post('total');
             $invoice->payment_term = $request->post('payment_term');
             $invoice->third_party_docs = $request->post('third_party_docs');
-            $invoice->status = $request->post('status');
+            $invoice->status = $status;
         
             $invoice->user_updated_id = Auth::user()->id;
             $invoice->save();
@@ -237,7 +283,7 @@ class InvoiceController extends Controller
             return redirect()->to(route('invoice.index'))->with('update',true);
             // return redirect()->to(route('invoice.download.pdf', ['slug' => $invoice->slug]))->with('store',true);
         } catch (\Throwable $th) {
-            // dd($th);
+            // dd($th);    
             DB::rollback();
             Log::error($th);
             return redirect()->to(route('invoice.index'))->with('false',true);
@@ -512,13 +558,25 @@ class InvoiceController extends Controller
         foreach ($data->data as $index => $item) 
         {
             $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
+            switch ($item->status) 
+            {
+                case 'DRAFT':
+                    $item->status = '<span class="badge badge-secondary">Draf</span>';
+                    break;
+                case 'SUBMITTED':
+                    $item->status = '<span class="badge badge-warning">Submitted</span>';
+                    break;
+                case 'AUTHORISED':
+                    $item->status = '<span class="badge badge-success">Waiting Payment</span>';
+                    break;
+            }
         }
 
         return response()->json($data);
     }
 
     /**
-     * 
+     * zero Invoice
      * Select2 Quote
      */
 
