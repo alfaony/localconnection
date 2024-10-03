@@ -475,7 +475,7 @@ class InvoiceController extends Controller
         // Add action buttons to each row
         $actionButtons = [];
 
-        if(Access::can('downloadPdf','quotes'))
+        if(Access::can('downloadPdf','invoices'))
         {
             $pdf = [
                 'name' => 'Pdf',
@@ -486,7 +486,7 @@ class InvoiceController extends Controller
             array_push($actionButtons,$pdf);
         }
 
-        if(Access::can('edit','quotes'))
+        if(Access::can('edit','invoices'))
         {
             $edit = [
                 'name' => 'Edit',
@@ -497,7 +497,7 @@ class InvoiceController extends Controller
             array_push($actionButtons,$edit);
         }
 
-        if(Access::can('destroy','quotes'))
+        if(Access::can('destroy','invoices'))
         {
             $destroy = [
                 'name' => 'Delete',
