@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Storage;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use App\Schemas\ParamSchema;
+
 class XeroService
 {
     /**
@@ -139,7 +141,7 @@ class XeroService
                 "Status" => "DRAFT", // Invoice status
                 "LineAmountTypes" => "Exclusive" // Prices exclusive of tax
             ];
-    
+            
             // Call Xero API to create the invoice
             $response = Xero::invoices()->store($invoice);
 
@@ -252,13 +254,16 @@ class XeroService
         {
             foreach($quoteProduct as $item)
             {
-                $check = $this->isCheckingProduct($item);
-                if(!$check)
+                if(!$item->product->xero_code);
                 {
+                    $xeroCode = Str::limit($item->product->slug,25,'');
+                    $item->product->xero_code = $xeroCode;
+                    $item->product->save();
+
                     $postItems[] = 
                     [
                         "ItemID" => $item->product->id,
-                        "Code" => Str::limit($item->product->slug,15,''),
+                        "Code" => $xeroCode,
                         "Description" => Str::limit(strip_tags($item->product->description),350,''),
                         "Name"=> Str::limit($item->product->name,45,''),
                         "PurchaseDetails"=> [
@@ -278,12 +283,7 @@ class XeroService
                     "UnitAmount" => $item->price_sell, // Unit price of the item/service
                     "AccountCode" => '200', // Default Account Code if not provided
                     "TaxType" => "OUTPUT", // Tax type e.g., "OUTPUT"
-                    'Item' => 
-                    [
-                        'ItemID' => $item->product->id,
-                        "Name"=> Str::limit($item->product->name,45,''),
-                        "Code" => Str::limit($item->product->slug,25,''),
-                    ]
+                    'ItemCode' => $item->product->xero_code,
                 ];
             }
         }
@@ -357,23 +357,6 @@ class XeroService
         }
     }
     
-
-    protected function isCheckingProduct($itemData)
-    {
-        // First, attempt to find the product in Xero based on its description or another unique field
-        $existingItem = $this->xero->items()
-        ->where('code', Str::limit($itemData->product->slug,15,''))
-        ->first();
-
-        if ($existingItem) 
-        {
-            return true;
-        }else
-        {
-            return false;
-        }
-    }
-
     protected function isCheckingInvoice($invoice)
     {
         // First, attempt to find the product in Xero based on its description or another unique field

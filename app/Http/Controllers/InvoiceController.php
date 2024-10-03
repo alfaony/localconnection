@@ -90,15 +90,12 @@ class InvoiceController extends Controller
             $bast = Bast::byCompany(Auth::user()->company_id)->where('id',$request->post('bast'))->firstOrFail();
             $quote = Quote::byCompany(Auth::user()->company_id)->where('id',$bast->project->workOrder->quote_id)->firstOrFail();
 
-            $numberResult = $invoiceNumber.'/'.$date;
             $invoice = new Invoice();
             $invoice->date = Carbon::now()->format('Y-m-d');
             $invoice->bast_id = $request->post('bast');
             $invoice->start_date = $request->post('start_date') ?? Carbon::now();
             $invoice->end_date = $request->post('end_date') ?? Carbon::now();
             $invoice->quote_id = $quote->id;
-            $invoice->invoice_number = $invoiceNumber;
-            $invoice->number_result = $numberResult;
             $invoice->customer_id = $quote->customer_id;        
             $invoice->tax = $request->post('tax');
             $invoice->service_fee = $request->post('service_fee');
@@ -588,6 +585,7 @@ class InvoiceController extends Controller
         $contactXero = $this->xeroService->checkOrCreateContact($invoice->quote->customer);
         $invoiceXero = $this->xeroService->createInvoice($invoice, $contactXero);
         
+        $invoice->number_result = $invoiceXero['InvoiceNumber'];
         $invoice->invoice_xero_id = $invoiceXero['InvoiceID'];
         $invoice->contact_xero_id = $contactXero->ContactID;
         $invoice->save();

@@ -51,5 +51,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuPosition::class);
         $this->call(PermissionForMenuDevice::class);
         $this->call(PermissionForMenuXero::class);
+        $this->call(PermissionForMenuInvoice::class);
     }
 }
