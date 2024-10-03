@@ -20,6 +20,9 @@
     @if(Session::get('xero'))
     <div class="alert alert-success mt-3">Berhasil Terhubung Xero</div>
     @endif
+    @if(Session::get('AUTHORISED'))
+    <div class="alert alert-success mt-3">Invoice Dalam Proses Pembayaran</div>
+    @endif
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -35,67 +38,92 @@
         </div>
     @endif
 </div>
-<div class="container">    
-    <!-- Tombol Tambah Pembelian Baru -->
-    @canAccess('create','invoices')
-    <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Invoice Baru</button>
-    @endcanAccess
-    
-    <!-- Search Bar -->
-    <!-- <form action="{{ route('invoice.index') }}" method="get">
-        <div class="d-flex flex-row-reverse">
-            <div class="p-2">
-                <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+<div class="card">    
+    <div class="card-body">    
+        <!-- Tombol Tambah Pembelian Baru -->
+        @canAccess('create','invoices')
+        <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Invoice Baru</button>
+        @endcanAccess
+        
+        <!-- Search Bar -->
+        <form action="{{ route('invoice.index') }}" method="get">
+            <div class="d-flex flex-row-reverse">
+                <div class="p-2">
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                </div>
+                <div class="p-2">
+                    <input type="text" name="search" class="form-control" placeholder="Search">
+                </div>
             </div>
-            <div class="p-2">
-                <input type="text" name="user" class="form-control" placeholder="Search">
-            </div>
-        </div>
-    </form> -->
-    
-    <!-- Tabel Pembelian -->
-    <table class="table table-bordered" id="tableQuote">
-        <thead>
-            <tr>
-                <th>Nomor Invoice</th>
-                <th>Total Invoice</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        {{-- 
-        <tbody>
-            @forelse($quote as $a)
-            <tr>
-                <td>{{ $no }}</td>
-                <td>{{ $a->number_result ?? '' }}</td>
-                <td>{{ 'Rp. '.number_format($a->total,0,',','.')  ?? 'Rp. 0' }}</td>
-                <td>
-                    <form method="post" action="{{ route('invoice.destroy',$a) }}">
-                        @csrf
-                        @method('delete')
-                        <a href="{{ route('invoice.download.pdf', ['slug' => $a->slug, 'nomor' => $no]) }}" class="btn btn-primary btn-sm"><i class="fa fa-file-pdf"></i></a>
-                        <a href="{{ route('invoice.edit',$a->slug).'?nomor='.$no }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
-                        <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
-                    </form>
-                </td>
-            </tr>
-            @php $no++; @endphp
-            @empty
-            <tr>
-                <td colspan="5">
-                    <center>Data Kosong</center>
-                </td>
-            </tr>
+        </form>
+        
+        <!-- Tabel Pembelian -->
+        <table class="table table-bordered" id="">
+            <thead>
+                <tr>
+                    <th>Nomor Invoice</th>
+                    <th>Status</th>
+                    <th>Total Invoice</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($invoice as $a)
+                <tr>
+                    <td>{{ $a->number_result ?? '' }}</td>
+                    <td>
+                    @switch($a->status)
+                        @case('DRAFT')
+                            <span class="badge badge-secondary">DRAFT</span>
+                            @break
 
-            @endforelse
-            <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
-        </tbody>
-        {{ $quote->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-        --}}
-        <tbody>
+                        @case('SUBMITTED')
+                            <span class="badge badge-warning">SUBMITTED</span>
+                            @break
 
-        </tbody>
-    </table>
+                        @case('AUTHORISED')
+                            <span class="badge badge-success">WAITING PAYMENT</span>
+                            @break
+
+                        @default
+                            <span class="badge badge-info">Unknown</span>
+                    @endswitch
+                    </td>
+                    <td>{{ 'Rp. '.number_format($a->total,0,',','.')  ?? 'Rp. 0' }}</td>
+                    <td>
+                        <form method="post" action="{{ route('invoice.destroy',$a) }}">
+                            @csrf
+                            @method('delete')
+                            @canAccess('downloadPdf','invoices')
+                            <a href="{{ route('invoice.download.pdf', ['slug' => $a->slug]) }}" class="btn btn-success btn-sm"><i class="fa fa-file-pdf"></i></a>
+                            @endcanAccess
+                            @canAccess('show','invoices')
+                            <a href="{{ route('invoice.show',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-eye"></i></a>
+                            @endcanAccess
+                            @canAccess('edit','invoices')
+                            @if($a->status != 'AUTHORISED')
+                            <a href="{{ route('invoice.edit',$a->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
+                            @endif
+                            @endcanAccess
+                            @canAccess('destroy','invoices')
+                            <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                            @endcanAccess
+                        </form>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5">
+                        <center>Data Kosong</center>
+                    </td>
+                </tr>
+
+                @endforelse
+                <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
+            </tbody>
+        </table>
+        {{ $invoice->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+    </div>
 </div>
 
 @stop
@@ -118,6 +146,7 @@
             },
             columns: [
                 {data: 'number_result', name: 'number_result', orderable: false},
+                {data: 'status', name: 'status', orderable: false},
                 {data: 'total', name: 'total', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],

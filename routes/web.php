@@ -85,7 +85,7 @@ Route::group(['middleware' => ['web', 'XeroAuthenticated','role.permission']], f
   Route::get('invoice/productCounting/counting',[invoiceController::class,'productCounting'])->name('invoice.productCounting');
   Route::get('invoice/suggestionQuote/{id}/',[invoiceController::class,'suggestionQuote'])->name('invoice.suggestionQuote');
 
-  Route::resource('invoice', invoiceController::class)->except(['show']);
+  Route::resource('invoice', invoiceController::class);
 });
 
 

@@ -86,4 +86,6 @@ class ParamSchema
     const OPEN = "open";
 
     const AUTHORISED = "AUTHORISED";
+
+    const DRAFT = "DRAFT";
 }

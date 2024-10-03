@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('content_header')
-    <h1 id="quote_title">Invoice Baru</h1>
+    <h1 id="quote_title">Invoice {{ $invoice->number_result }}</h1>
 @stop
 
 @section('content')
@@ -17,13 +17,6 @@
     @endif
 </div>
 <div class="card">
-    @if(@$invoice)
-    <form method="post" action="{{ route('invoice.update',$invoice) }}">
-    @method('put')
-    @else
-    <form method="post" action="{{ route('invoice.store') }}">
-    @endif
-    @csrf
     <div class="card-body">
         <div class="card-body">
             <div class="row mt-3">
@@ -31,13 +24,13 @@
                     <div class="form-group row">
                         <label for="date" class="col-sm-4 col-form-label text-right">Start Date:</label>
                         <div class="col-sm-8">
-                            <input type="date" id="date" name="start_date" class="form-control" placeholder="2023-03-10" value="{{ @$invoice ? @$invoice->start_date->format('Y-m-d') : old('start_date') }}" required>
+                            <input type="date" id="date" readonly class="form-control" placeholder="2023-03-10" value="{{ @$invoice ? @$invoice->start_date->format('Y-m-d') : old('start_date') }}" required>
                         </div>
                     </div>
                     <div class="form-group row">
                         <label for="due_date" class="col-sm-4 col-form-label text-right">Due Date:</label> <!-- Added due date field -->
                         <div class="col-sm-8">
-                            <input type="date" id="date" name="end_date" class="form-control" placeholder="2023-03-10" value="{{ @$invoice ? @$invoice->start_date->format('Y-m-d') : old('start_date') }}" required>
+                            <input type="date" id="date" readonly class="form-control" placeholder="2023-03-10" value="{{ @$invoice ? @$invoice->start_date->format('Y-m-d') : old('start_date') }}" required>
                         </div>
                     </div>
                     <div class="form-group row">
@@ -51,11 +44,10 @@
             
             <div class="row mt-3">
                 <div class="col-2">
-                    <p>No Invoice:</p>
+                    <label>No Invoice:</label>
                 </div>
                 <div class="col-6">
-                    <p>{{ $nomorQuote }}</p>
-                    <input type="hidden" name="nomor" value="{{ $nomor ?? '' }}">
+                    <input class="form-control" disabled  value="{{ $invoice->number_result ?? '' }}">
                 </div>
             </div>
             <div class="row mt-3">
@@ -63,7 +55,7 @@
                     <label>BAST</label>
                 </div>
                 <div class="col-6">
-                    <select name="bast" class="form-control select2 quoteSuggestion" id="">
+                    <select class="form-control" id="" readonly disabled>
                         <option value="" selected disabled>--Pilih--</option>
                         @foreach($bast as $a)
                             <option value="{{ $a->id }}"  {{ @$invoice->bast_id == $a->id ? 'selected' : '' }}>{{ $a->number_result }}</option>
@@ -81,13 +73,12 @@
                 </div>
             </div>
 
-            @if(@$invoice)
             <div class="row mt-3">
                 <div class="col-2">
                     <label>Status</label>
                 </div>
                 <div class="col-6">
-                    <select name="status" class="form-control select2 quoteSuggestion" id="" required>
+                    <select class="form-control" id="" readonly disabled>
                         <option value="" selected disabled>--Pilih--</option>
                         @foreach($status as $id => $index)
                             <option value="{{ $id }}"  {{ @$invoice->status == $id ? 'selected' : '' }}>{{ $index }}</option>
@@ -95,7 +86,6 @@
                     </select>
                 </div>
             </div>
-            @endif
 
             <div class="row mt-3">
                 <div class="col-2">
@@ -103,7 +93,7 @@
                 </div>
                 <div class="col-6">
                     <div class="input-group">
-                        <input type="number" name="tax" id="tax" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('tax') ?? @$invoice->tax }}">
+                        <input type="number" readonly id="tax" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('tax') ?? @$invoice->tax }}">
                         <div class="input-group-prepend">
                             <span class="input-group-text">%</span>
                         </div>
@@ -116,7 +106,7 @@
                 </div>
                 <div class="col-6">
                     <div class="input-group">
-                        <input type="number" name="service_fee" id="service_fee" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('service_fee') ?? @$invoice->service_fee }}">
+                        <input type="number" readonly id="service_fee" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('service_fee') ?? @$invoice->service_fee }}">
                         <div class="input-group-prepend">
                             <span class="input-group-text">%</span>
                         </div>
@@ -133,7 +123,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">Rp</span>
                         </div>
-                        <input type="text" class="form-control calculation" id="discount_show"  oninput="formatRupiahFormat(this,'discount')" />
+                        <input type="text" readonly class="form-control calculation" id="discount_show"  oninput="formatRupiahFormat(this,'discount')" />
                         <input type="hidden" class="form-control" name="discount" id="discount" value="{{ old('discount') ?? @$invoice->discount }}" />
                     </div>
                 </div>
@@ -147,7 +137,7 @@
                         <div class="input-group-prepend">
                             <span class="input-group-text">Rp</span>
                         </div>
-                        <input type="text" class="form-control calculation" id="charges_show"  oninput="formatRupiahFormat(this,'charges')"  />
+                        <input type="text" readonly class="form-control calculation" id="charges_show"  oninput="formatRupiahFormat(this,'charges')"  />
                         <input type="hidden" class="form-control" name="charges" id="charges" value="{{ old('charges') ?? @$invoice->charges }}" />
                     </div>
                 </div>
@@ -164,7 +154,7 @@
                     <label for="transition_text">Payment Terms:</label>
                 </div>
                 <div class="col-6">
-                    <input type="text" class="form-control" name="payment_term" value="{{ @$invoice->payment_term ? @$invoice->payment_term : '30D After Invoice' }}">
+                    <input type="text" class="form-control" readonly value="{{ @$invoice->payment_term ? @$invoice->payment_term : '30D After Invoice' }}">
                 </div>
             </div>
 
@@ -173,60 +163,49 @@
                     <label for="transition_text">Reference Third Party Docs:</label>
                 </div>
                 <div class="col-6">
-                    <input type="text" class="form-control" name="third_party_docs" value="{{ @$invoice->third_party_docs ? @$invoice->third_party_docs : '-' }}">
+                    <input type="text" class="form-control" readonly value="{{ @$invoice->third_party_docs ? @$invoice->third_party_docs : '-' }}">
                 </div>
             </div>
 
-            <table class="table table-bordered mt-3" id="tableQuote">
+            <table class="table table-striped mt-3" id="tableQuote">
                 <thead>
-                    <tr class="d-flex">
+                    <tr>
                         <th class="col-auto">#</th>
                         <th class="col-3">Produk/Jasa</th>
                         <th class="col-1">Satuan</th>
                         <th class="col-3">Description</th>
                         <th class="col-2">Qty</th>
                         <th class="col-2">Total</th>
-                        <th class="col"></th>
                     </tr>
                 </thead>
                 <tbody>
                     @if(@$invoice)
                     @php $nomorBaris = 1; @endphp
                     @foreach($invoice->invoiceProducts->sortBy('sort') as $a)
-                    <tr class="d-flex" data-key="{{ $a->id }}">
+                    <tr data-key="{{ $a->id }}">
                         <td class="col-auto">
                             {{ $nomorBaris++ }}
                         </td>
                         <td class="col-3">
-                            <select class="form-control productChange select2" name="product[]" id="product_{{ $a->id }}" required>
-                                <option value="" selected disabled>Pilih</option>
-                                @foreach($product->groupBy('category.name') as $category => $group)
-                                    <optgroup class="select2-result-selectable" label="{{ $category ?? 'Other' }}">
-                                        @foreach($group as $item)
-                                            <option value="{{ $item->id }}" data-key="{{ $a->id }}" data-methodcount="{{ $a->method_count }}" {{ $a->product_id == $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
-                                        @endforeach
-                                    </optgroup>
-                                @endforeach
-                            </select>
+                            {{ $a->product->name }}
+                            <input type="hidden" class="form-control" id="product_name_{{ $a->id }}" name="product_name[]" value="{{ $a->product->id ?? '' }}" readonly>
                         </td>
 
                         <td class="col-1" id="method_count_${key}">
                             {{ $a->product->method_count ?? "" }}
                         </td>
                         <td class="col-3">
-                            <input type="hidden" class="thriveEditor" data-ids="{{ $a->id }}" id="description_{{ $a->id }}"  name="description[]" value="{{ old('description') ?? @$a->description }}" required>
+                            {!! $a->description !!}
                         </td>
                         <td class="col-2">
                             <input type="hidden" id="price_{{ $a->id }}" name="price[]" data-key="{{ $a->id }}" min="1" class="form-control" value="{{ $a->price_sell }}" required>
-                            <input type="number" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ old('qty') ?? @$a->qty }}" required>
+                            <input type="hidden" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ old('qty') ?? @$a->qty }}" required>
+                            {{ $a->qty }}
                         </td>
                         <td class="col-2" id="sub_total_show_{{ $a->id }}">
                             {{ 'Rp. '.number_format($a->sub_total,0,',','.') }}
-                        </td>
-                        <td class="col">
                             <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]" value="{{ $a->id }}">
                             <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
-                            <button class="btn btn-danger btn-sm btnHapusData" data-id="{{ $a->id }}"><i class="fa fa-trash"></i></button>
                         </td>
                     </tr>
                     @endforeach
@@ -234,9 +213,6 @@
                 </tbody>
             </table>
             <div class="row mt-3">
-                <div class="col-md-8">
-                    <button type="button" class="btn btn-primary mb-2 allowSubmit" id="btnTambahBarisProduct"><i class="fa fa-plus"></i> Product</button>
-                </div>
                 <div class="col-4 offset-8">
                     <div class="d-flex justify-content-between mb-2">
                         <div>Total:</div>
@@ -268,19 +244,16 @@
             </div>
 
             
-            <div class="row mt-3">
-                <div class="offset-md-11">
-                @if(@$invoice)
-                <button type="button" id="submit" class="btn btn-primary">Ubah</button>
-                @else
-                <button type="button" id="submit"class="btn btn-primary">Simpan</button>
-                @endif
-                <button type="submit" id="btnSubmit" style="display:none;"></button>
+            <div class="mt-3">
+                <div class="d-flex justify-content-center align-items-center">
+                    <a href="{{ url()->previous() }}" class="btn btn-secondary mr-2"><i class="fa fa-arrow-left"></i>Kembali</a>
+                    @canAccess('downloadPdf','invoices')
+                    <a href="{{ route('invoice.download.pdf', ['slug' => $invoice->slug]) }}" class="btn btn-success"><i class="fa fa-file-pdf"></i> Download</a>
+                    @endcanAccess
                 </div>
             </div>
         </div>
     </div>
-    </form>
 </div>
 @stop
 @section('js')
