@@ -118,6 +118,9 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
         <div class="d-flex flex-row-reverse">
             <div class="p-2">
                 <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                @canAccess('export','projects')
+                <a href="{{ route('project.export') }}" class="btn btn-success"><i class="fa fa-file-excel"></i></a>
+                @endcanAccess
             </div>
             <div class="p-2">
                 <input type="text" name="search" class="form-control" placeholder="Search">
@@ -133,6 +136,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             </div>
         </div>
     </form>
+
         
     <table class="table table-bordered">
         <thead>
@@ -142,6 +146,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                 <th>Presentase Proyek</th>
                 <th>Nomor SPK</th>
                 <th>Total SPK</th>
+                <th>Status</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -153,6 +158,11 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                 <td> {{ $a->progress_percentage. "%"  ?? "0%" }} </td>
                 <td>{{ $a->workOrder ? $a->workOrder->number_result : '' }}</td>
                 <td>{{ $a->workOrder ? 'Rp. '.number_format($a->workOrder->total,0,',','.') : '' }}</td>
+                <td>
+                    {!! $a->status == 'open' 
+                        ? '<span class="badge badge-success">Open</span>' 
+                        : '<span class="badge badge-danger">Close</span>' !!}
+                </td>
                 <td>
                     <form method="post" action="{{ route('project.destroy',$a) }}">
                         @csrf

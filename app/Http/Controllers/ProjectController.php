@@ -10,6 +10,8 @@ use App\Http\Requests\ProjectRequest;
 use App\Models\Project;
 use App\Models\WorkOrder;
 use App\Models\Manager;
+use App\Exports\ProjectsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProjectController extends Controller
 {
@@ -157,4 +159,13 @@ class ProjectController extends Controller
         $project->delete();
         return redirect()->back()->with('delete',true);
     }
+
+    /**
+     * Export data
+     */
+    public function export()
+    {
+        return Excel::download(new ProjectsExport, 'projects.xlsx');
+    }
+
 }

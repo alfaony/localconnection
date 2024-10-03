@@ -10,6 +10,7 @@ use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Schemas\RoleSchema;
+use App\Schemas\ParamSchema;
 
 class Project extends Model
 {
@@ -75,6 +76,31 @@ class Project extends Model
     public function bast()
     {
         return $this->hasOne(Bast::class);
+    }
+
+    public function dailyTasks()
+    {
+        return $this->hasMany(DailyTask::class, 'project_id','id');
+    }
+
+    // Mutator untuk menghitung progress
+    public function getProgressTaskAttribute()
+    {
+        // Menghitung total DailyTask
+        $totalTasks  =  $this->dailyTasks()->count();
+        
+        // Menghitung DailyTask yang berstatus 'DONE'
+        $doneTasks = $this->dailyTasks()->whereHas('taskStatus', function ($query) {
+            $query->where('name', ParamSchema::COMPLATE);
+        })->count();
+
+        // Jika tidak ada task, progress adalah 0
+        if ($totalTasks === 0) {
+            return 0;
+        }
+
+        // Menghitung persentase progress
+        return round(($doneTasks / $totalTasks) * 100);
     }
     public function getPurchaseAttribute()
     {
