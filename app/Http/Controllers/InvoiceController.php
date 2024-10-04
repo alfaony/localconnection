@@ -55,6 +55,7 @@ class InvoiceController extends Controller
                 {
                     return $query->where('number_result', 'LIKE', "%{$search}%");
                 })
+                ->orderBy('created_at','desc')
                 ->paginate(10);
 
         return view('invoice.index',compact('invoice'));

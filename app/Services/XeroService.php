@@ -104,12 +104,10 @@ class XeroService
                 ]
             ];
 
-            $newContact = Xero::contacts()->store($data);
+            Xero::contacts()->store($data);
             return $this->xero->contacts()->where('EmailAddress', $customer->email)
             ->where('Name', $customer->name)
             ->first();
-
-            return $newContact;
         }
 
         return $existingContacts;
@@ -243,6 +241,11 @@ class XeroService
             Log::error('Xero invoice deletion failed: ' . $e->getMessage());
             throw new \Exception('Failed to delete Xero invoice');
         }
+    }
+
+    public function findInvoice($invoiceId)
+    {
+        return Xero::invoices()->find($invoiceId);
     }
 
     protected function getLineItems($invoice, $quoteProduct)

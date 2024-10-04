@@ -21,7 +21,8 @@ class XeroWebhookController extends Controller
         $user = User::where('name','root')->first();
 
         // Verifikasi signature
-        if ($calculatedSignature !== $xeroSignature) {
+        if ($calculatedSignature !== $xeroSignature) 
+        {
             Log::warning('Invalid Xero webhook signature');
 
             // Log kesalahan
@@ -38,15 +39,15 @@ class XeroWebhookController extends Controller
         }
 
         // Proses event webhook dari Xero
-        // $events = json_decode($payload, true)['events'];
+        $events = json_decode($payload, true)['events'];
 
-        // foreach ($events as $event) {
-        //     if ($event['eventType'] == 'UPDATE' && $event['resourceType'] == 'INVOICE') {
-        //         $invoiceId = $event['resourceId'];
-        //         $this->updateInvoiceFromXero($invoiceId);
-        //     }
-        // }
-
+        foreach ($events as $event) 
+        {
+            if ($event['eventType'] === 'UPDATE' && $event['eventCategory'] === 'INVOICE') {
+                $invoiceId = $event['resourceId'];
+                $this->updateInvoiceFromXero($invoiceId);
+            }
+        }
         // Log sukses
         ApiLog::create([
             'user_id' => $user->id,
@@ -60,4 +61,24 @@ class XeroWebhookController extends Controller
         return response()->json(['status' => 'success'], 200);
     }
 
+    protected function updateInvoiceFromXero($invoiceId)
+    {
+        try {
+            // Ambil detail invoice dari Xero menggunakan SDK atau API Xero
+            $xeroInvoice = Xero::invoices()->find($invoiceId);
+
+            // Cari invoice di database berdasarkan `xero_invoice_id`
+            $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first();
+
+            if ($invoice) {
+                // Update data invoice di database dengan data dari Xero
+                $invoice->status = $xeroInvoice['Status'];
+                $invoice->save();
+            } else {
+                Log::info("Invoice with ID {$invoiceId} not found in local database.");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to update invoice from Xero: " . $e->getMessage());
+        }
+    }
 }
