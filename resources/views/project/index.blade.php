@@ -20,6 +20,9 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
     @if(Session::get('delete'))
     <div class="alert alert-success mt-3">Berhasil Menghapus Proyek</div>
     @endif
+    @if(Session::get('project_close'))
+    <div class="alert alert-danger mt-3">Proyek Sudah Ditutup</div>
+    @endif
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -157,7 +160,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                 <td>{{ $no++ }}</td>
                 <td>{{ $a->title }}</td>
                 <td>
-                    {!! $a->status == 'open' 
+                    {!! $a->status_project == 'open' 
                         ? '<span class="badge badge-success">Open</span>' 
                         : '<span class="badge badge-danger">Close</span>' !!}
                 </td>
@@ -174,12 +177,14 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                         @canAccess('show','projects')
                         <a href="{{ route('project.show',$a->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
                         @endcanAccess
+                        @if($a->status_project == 'open')
                         @canAccess('edit','projects')
                         <a href="{{ route('project.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
                         @endcanAccess
                         @canAccess('destroy','projects')
                         <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                         @endcanAccess
+                        @endif
                     </form>
                 </td>
             </tr>
