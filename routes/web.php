@@ -70,7 +70,9 @@ use App\Http\Controllers\InvoiceController;
 |
 */
 
-Route::group(['middleware' => ['web', 'XeroAuthenticated','role.permission']], function(){
+Route::post('xero/webhook', [XeroController::class, 'handleWebhook']);
+
+Route::group(['middleware' => ['auth','web', 'XeroAuthenticated','role.permission']], function(){
   Route::get('xero',function(){
 
     return redirect('/invoice')->with('xero',true);
