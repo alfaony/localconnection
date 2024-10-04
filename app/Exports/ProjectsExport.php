@@ -42,7 +42,7 @@ class ProjectsExport implements FromCollection, WithHeadings, WithMapping
             $project->workOrder->quote->customer->name,                     // Field Client
             $project->title,                            // Field Project Name
             $project->user->name,             // Field PM (Project Manager)
-            $project->status,                           // Field Status Project
+            Ucfirst($project->status_project),                           // Field Status Project
             \Carbon\Carbon::parse($project->start_date)->format('d-m-Y'), // Field Start Date
             \Carbon\Carbon::parse($project->end_date)->format('d-m-Y'),   // Field End Date
             $project->progress_percentage,                   // Field Progress (misalnya dalam persen)

@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\XeroService;
+use App\Models\Invoice;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class XeroController extends Controller
 {
@@ -31,21 +34,47 @@ class XeroController extends Controller
         return redirect()->route('xero.invoices')->with('success', 'Connected to Xero.');
     }
 
-    // public function createInvoice(Request $request)
-    // {
-    //     $invoice = $this->xeroService->createInvoice($request->all());
+    public function handleWebhook(Request $request)
+    {
+        // Ambil raw payload dari request
+        $payload = $request->getContent();
 
-    //     if (!$invoice) {
-    //         return redirect()->back()->with('error', 'Unable to create invoice');
-    //     }
+        // Ambil webhook signing key dari environment (.env file)
+        $xeroSigningKey = env('XERO_WEBHOOK_KEY'); // Isi key dari Xero Developer Portal
 
-    //     return redirect()->route('xero.invoices')->with('success', 'Invoice created successfully.');
-    // }
+        // Verifikasi signature dari Xero
+        $signature = base64_encode(hash_hmac('sha256', $payload, $xeroSigningKey, true));
+        $xeroSignature = $request->header('X-Xero-Signature');
 
-    // public function listInvoices()
-    // {
-    //     $invoices = $this->xeroService->getInvoices();
-    //     return view('xero.invoices', compact('invoices'));
-    // }
+        if ($signature !== $xeroSignature) {
+            // Log jika signature tidak cocok
+            Log::warning('Invalid Xero webhook signature');
+            return response()->json(['error' => 'Invalid signature'], 400);
+        }
+
+        // Proses event dari payload Xero
+        $events = json_decode($payload, true)['events'];
+        foreach ($events as $event) {
+            // Contoh: cek apakah ini update invoice
+            if ($event['eventType'] == 'UPDATE' && $event['resourceType'] == 'INVOICE') {
+                // Cari invoice di database berdasarkan ID Xero
+                $invoiceId = $event['resourceId'];
+                $invoice = Invoice::where('xero_invoice_id', $invoiceId)->first();
+
+                if ($invoice) {
+                    // Panggil API Xero untuk mengambil detail invoice terbaru
+                    $xeroInvoice = Xero::invoices()->find($invoiceId);
+
+                    // Update data invoice di aplikasi Laravel
+                    $invoice->total = $xeroInvoice->total;
+                    $invoice->status = $xeroInvoice->status;
+                    $invoice->save();
+                }
+            }
+        }
+
+        // Kembalikan respon sukses ke Xero
+        return response()->json(['status' => 'success'], 200);
+    }
 
 }

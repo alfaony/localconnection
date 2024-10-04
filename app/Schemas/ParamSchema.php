@@ -83,6 +83,8 @@ class ParamSchema
 
     const CLOSED = "closed";
 
+    const CLOSE = "close";
+
     const OPEN = "open";
 
     const AUTHORISED = "AUTHORISED";

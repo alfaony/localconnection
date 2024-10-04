@@ -83,6 +83,29 @@ class Project extends Model
         return $this->hasMany(DailyTask::class, 'project_id','id');
     }
 
+    public function getStatusProjectAttribute()
+    {
+        $statusReport = false;
+        $progressTask = false;
+        if($this->reportProject)
+        {
+            $statusReport = true;
+        }
+
+        if($this->progress_task == ParamSchema::PERCENTAGE)
+        {
+            $progressTask = true;
+        }
+
+        if($statusReport && $progressTask)
+        {
+            return ParamSchema::CLOSE;
+        }
+        {
+            return ParamSchema::OPEN;
+        }
+    }
+
     // Mutator untuk menghitung progress
     public function getProgressTaskAttribute()
     {
