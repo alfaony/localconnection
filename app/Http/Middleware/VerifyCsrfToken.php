@@ -12,6 +12,6 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        //
+        'xero/webhook', // Tambahkan endpoint webhook di sini
     ];
 }
