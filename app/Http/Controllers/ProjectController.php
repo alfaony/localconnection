@@ -12,7 +12,7 @@ use App\Models\WorkOrder;
 use App\Models\Manager;
 use App\Exports\ProjectsExport;
 use Maatwebsite\Excel\Facades\Excel;
-
+use App\Schemas\ParamSchema;
 class ProjectController extends Controller
 {
     /**
@@ -95,6 +95,11 @@ class ProjectController extends Controller
         ->get();
     
 
+        if($projectEdit->status_project == ParamSchema::CLOSE)
+        {
+            return redirect()->to(route('project.index'))->with('project_close',true);
+        }
+
         $directManager = Manager::select('slug')->where('project_id',$projectEdit->id)->first();
 
         return view('project.index', compact('projectEdit','project','totalProject', 'workOrder' ,'directManager'));
@@ -125,6 +130,12 @@ class ProjectController extends Controller
     public function update(ProjectRequest $request, $slug)
     {
         $project = Project::byRole()->where('slug', $slug)->firstOrFail();
+
+        if($project->status_project == ParamSchema::CLOSE)
+        {
+            return redirect()->to(route('project.index'))->with('project_close',true);
+        }
+
         $project->user_id = Auth::user()->id;
         $project->title = $request->post('title');
         $project->budget = $request->post('budget');
@@ -156,6 +167,12 @@ class ProjectController extends Controller
     public function destroy($slug)
     {
         $project = Project::byRole()->where('slug', $slug)->firstOrFail();
+
+        if($project->status_project == ParamSchema::CLOSE)
+        {
+            return redirect()->back()->with('project_close',true);
+        }
+
         $project->delete();
         return redirect()->back()->with('delete',true);
     }
