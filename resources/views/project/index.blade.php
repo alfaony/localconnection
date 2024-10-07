@@ -137,6 +137,13 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                     <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
                 </select>
             </div>
+            <div class="p-2">
+                <select name="status" class="form-control">
+                    <option value="" disabled selected>-- Status --</option>
+                    <option value="open"  >Open</option>
+                    <option value="close" >Close</option>
+                </select>
+            </div>
         </div>
     </form>
 
@@ -197,8 +204,11 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             @endforelse
         </tbody>
     </table>
+    <div class="d-flex justify-content-center mt-2">
         {{ $project->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+    </div>
 </div>
+
 
 @stop
 
