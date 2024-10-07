@@ -104,12 +104,10 @@ class XeroService
                 ]
             ];
 
-            $newContact = Xero::contacts()->store($data);
+            Xero::contacts()->store($data);
             return $this->xero->contacts()->where('EmailAddress', $customer->email)
             ->where('Name', $customer->name)
             ->first();
-
-            return $newContact;
         }
 
         return $existingContacts;
@@ -118,6 +116,8 @@ class XeroService
     public function createInvoice($invoice, $contact)
     {
         if (!$contact || !isset($contact->ContactID)) {
+            $invoice->connecting = false;
+            $invoice->save();
             throw new \Exception('Invalid contact. Contact ID is missing.');
         }
 
@@ -126,11 +126,13 @@ class XeroService
         $lineItems = $this->getLineItems($invoice,$quoteProduct);
         
         if (empty($lineItems)) {
+            $invoice->connecting = false;
+            $invoice->save();
             throw new \Exception('Line items are empty or invalid.');
         }
         
         try {
-            $invoice = [
+            $invoiceXero = [
                 "Type" => "ACCREC",  // ACCREC for sales invoices
                 "Contact" => [
                     "ContactID" => $contact->ContactID // Use the contact ID from Xero
@@ -143,15 +145,18 @@ class XeroService
             ];
             
             // Call Xero API to create the invoice
-            $response = Xero::invoices()->store($invoice);
+            $response = Xero::invoices()->store($invoiceXero);
 
             // Logging API request
+            $invoice->connecting = true;
+            $invoice->save();
             $this->logApiRequest('invoices', 'POST', $invoice, $response, 200);
 
             return $response;
 
         } catch (\Exception $e) {
-            // dd($e);
+            $invoice->connecting = false;
+            $invoice->save();
             $this->logApiRequest('invoices', 'POST', $invoice, $e->getMessage(), 500);
             Log::error('Xero invoice creation failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Xero invoice creation failed.');
@@ -166,6 +171,8 @@ class XeroService
 
         $lineItems = $this->getLineItems($invoice, $quoteProduct);
         if (!$this->isCheckingInvoice($invoice)) {
+            $invoice->connecting = false;
+            $invoice->save();
             throw new \Exception('Invoice is not valid.');
         }
         
@@ -187,10 +194,15 @@ class XeroService
             // Logging API request
             $this->logApiRequest('invoices/' . $invoice->invoice_xero_id, 'PUT', $data, $response, 200);
 
+            $invoice->connecting = true;
+            $invoice->save();
+
             return $response;
 
         } catch (\Exception $e) {
             // dd($e);
+            $invoice->connecting = false;
+            $invoice->save();
             $this->logApiRequest('invoices/' . $invoice->invoice_xero_id, 'PUT', $data, $e->getMessage(), 500);
             
             Log::error('Xero invoice creation failed: ' . $e->getMessage());
@@ -238,11 +250,18 @@ class XeroService
             
         } catch (\Exception $e) {
             // dd($e);
+            $invoice->connecting = false;
+            $invoice->save();
             $this->logApiRequest('invoices/' . $invoice->invoice_xero_id, "delete", $data, $e->getMessage(), 500);
 
             Log::error('Xero invoice deletion failed: ' . $e->getMessage());
             throw new \Exception('Failed to delete Xero invoice');
         }
+    }
+
+    public function findInvoice($invoiceId)
+    {
+        return Xero::invoices()->find($invoiceId);
     }
 
     protected function getLineItems($invoice, $quoteProduct)

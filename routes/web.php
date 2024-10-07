@@ -58,6 +58,7 @@ use App\Http\Controllers\PositionController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\XeroController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\XeroWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,7 +71,8 @@ use App\Http\Controllers\InvoiceController;
 |
 */
 
-Route::post('xero/webhook', [XeroController::class, 'handleWebhook']);
+Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook']);
+Route::post('xero/webhookAvailable', [XeroWebhookController::class, 'webhookAvailable']);
 
 Route::group(['middleware' => ['auth','web', 'XeroAuthenticated','role.permission']], function(){
   Route::get('xero',function(){
