@@ -13,7 +13,11 @@ class Invoice extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'invoices'; // Nama tabel di database
-
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'connecting' => 'boolean',
+    ];
     protected $keyType = 'uuid'; // Karena menggunakan UUID sebagai primary key
     public $incrementing = false; // Non-incrementing ID, karena UUID
     protected static function boot()
@@ -71,11 +75,6 @@ class Invoice extends Model
     {
         return $this->belongsTo(Quote::class)->withTrashed();
     }
-    // Mutator untuk format tanggal (jika diperlukan)
-    protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
-    ];
 
     public function scopeByCompany($query,$companyId)
     {

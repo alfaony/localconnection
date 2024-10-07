@@ -64,6 +64,7 @@
                     <th>Nomor Invoice</th>
                     <th>Status</th>
                     <th>Total Invoice</th>
+                    <th>Status Connect</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -90,6 +91,13 @@
                     @endswitch
                     </td>
                     <td>{{ 'Rp. '.number_format($a->total,0,',','.')  ?? 'Rp. 0' }}</td>
+                    <td>
+                        @if($a->connecting)
+                            <span class="badge bg-success">Connected</span>
+                        @else
+                            <span class="badge bg-danger">Not Connected</span>
+                        @endif
+                    </td>
                     <td>
                         <form method="post" action="{{ route('invoice.destroy',$a) }}">
                             @csrf
