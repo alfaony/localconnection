@@ -56,6 +56,9 @@
                 <div class="form-group">
                     <label for="pilihDataProyek" class="form-label">Status Laporan Proyek</label>
                     <span class="form-control" id="reportProjectMessage"></span>
+                    @canAccess('requestReport','basts')
+                    <button type="button" id="requestReportButton" class="btn btn-warning mt-2 text-white" style="display: none;"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> Request</button>
+                    @endcanAccess
                 </div>
                 <hr>
                 <div class="form-group">
@@ -151,23 +154,52 @@
         $('.projectChange').on('change', function() {
         // Ambil data-report dari option yang dipilih
         var reportId = $(this).find(':selected').data('report');
+        var projectId = $(this).val();
         
         // Jika reportId kosong, tampilkan pesan dan disable tombol simpan
         if (!reportId) {
             $('#reportProjectMessage').text('Laporan Proyek Tidak Tersedia').addClass('text-red').removeClass('text-green');
             $('#saveButtonId').prop('disabled', true);  // diasumsikan bahwa tombol simpan memiliki id 'saveButtonId'
+            if(projectId)
+            {
+                $('#requestReportButton').show().data('project-id', projectId); // Menampilkan tombol request dan menyimpan Project ID
+            }
         } else {
             // Jika reportId ada, sembunyikan pesan dan aktifkan tombol simpan
             $('#reportProjectMessage').text('Laporan Proyek Tersedia').addClass('text-green').removeClass('text-red');;
             $('#saveButtonId').prop('disabled', false);
+            $('#requestReportButton').hide();
         }
+    });
+
+    $('#requestReportButton').on('click', function() 
+    {
+        var projectId = $(this).data('project-id');
+
+        $.ajax({
+            url: "{{ route('bast.requestReport') }}", // Ubah URL sesuai dengan route yang Anda miliki untuk menghandle permintaan
+            type: 'POST',
+            data: {
+                _token: "{{ csrf_token() }}",
+                project_id: projectId
+            },
+            success: function(response) {
+                console.log(response);
+                
+
+                Swal.fire('Request Sent', 'Your request has been successfully sent.', 'success');
+            },
+            error: function(xhr) {
+                Swal.fire('Error', 'There was an error sending your request.', 'error');
+            }
+        });
     });
 
     $('.projectChange').trigger('change');
     // Jika Anda ingin memeriksa kondisi saat pertama kali halaman dimuat (misalnya jika select sudah memiliki option yang dipilih),
     // Anda bisa memicu event change pada select saat halaman selesai dimuat
     });
-
+    
     function suggestSelect()
     {
         var selectWorkOrder ="{{ @$selectedWorkOrder->id ?? ''}}"

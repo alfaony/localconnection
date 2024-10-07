@@ -11,6 +11,7 @@ use App\Models\Bast;
 use App\Models\Project;
 use App\Models\WorkOrder;
 use App\Models\SettingCompany;
+use App\Helpers\InboxHelper;
 
 class BastController extends Controller
 {
@@ -297,6 +298,22 @@ class BastController extends Controller
         return response()->json($data);
     }
 
+    public function requestReport(Request $request)
+    {
+        $projectId = $request->input('project_id');
+        $project = Project::byCompany(Auth::user()->company_id)->findOrFail($projectId);
+
+        $directUrl = route('report-project.createsuggest', $project->workOrder->slug, $project->slug);
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $project->user_id, 
+            Auth::user()->id, 
+            'Request Report for ' . $project->name, 
+            $directUrl
+        );
+        
+        return response()->json(['message' => 'Request successfully sent']);
+    }
     private function bastNumber()
     {
         $date = Carbon::now()->format('m/Y');
