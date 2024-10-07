@@ -297,7 +297,7 @@ class ReportProjectController extends Controller
     {
         // Fetch data for the DataTable
         $query = ReportProject::query();
-        $query->byCompany(Auth::user()->company_id)->with('project','workOrder');
+        $query->byCompany(Auth::user()->company_id)->with('project','workOrder')->orderBy('created_at', 'desc');
 
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['date','number_result', 'slug'];
@@ -329,6 +329,18 @@ class ReportProjectController extends Controller
             array_push($actionButtons,$edit);
         }
 
+        if(Access::can('downloadall','report_projects'))
+        {
+            $edit = 
+            [
+                'name' => 'Download All File',
+                'route' => 'report-project.downloadall',
+                'id' => true,
+            ];
+
+            array_push($actionButtons,$edit);
+        }
+
         if(Access::can('destroy','report_projects'))
         {
             $destroy = 
@@ -340,6 +352,7 @@ class ReportProjectController extends Controller
 
             array_push($actionButtons,$destroy);
         }
+        
 
         return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
     }
@@ -353,7 +366,8 @@ class ReportProjectController extends Controller
         $query->whereHas('project', function($q) {
             // Filter project yang tidak memiliki reportProject (HasOne)
             $q->doesntHave('reportProject');
-        });
+        })
+        ->orderBy('created_at', 'desc');
 
 
         // Map column indexes to column names (modify these based on your actual database structure)
@@ -394,9 +408,10 @@ class ReportProjectController extends Controller
         if (!$reportProject) {
             return redirect()->back()->with('error', 'Report Project not found.');
         }
-
+        
         // Nama file ZIP
-        $zipFileName = 'reports_' . $reportProject->report_project_number . '.zip';
+        $zipFileName = 'reports_' . $reportProject->number_result . '.zip';
+        $zipFileName = str_replace('/', '_', $zipFileName);
         $zipPath = storage_path('app/public/' . $zipFileName);
 
         // Membuat ZIP
