@@ -876,7 +876,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fetch(url.replace(':userId', userId))
             .then(response => response.json())
             .then(tasks => {
-                let tasksHtml = '<table class="table table-bordered"><thead><tr><th>#</th><th>Tugas</th><th>Status</th><th>Tanggal</th><th>Main Proyek</th><th>Data Proyek</th><th>Dibuat</th><th>Ditugaskan</th><th>Action</th></tr></thead><tbody>';
+                let tasksHtml = '<table class="table table-bordered"><thead><tr><th>#</th><th>Tanggal</th><th>Status</th><th>Tugas</th><th>Main Proyek</th><th>Data Proyek</th><th>Dibuat</th><th>Ditugaskan</th><th>Action</th></tr></thead><tbody>';
                 tasks.forEach(task => {
                     console.log(task);
                     
@@ -925,9 +925,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     tasksHtml += `<tr id="task-row-${task.task_id}">
                                     <td>${no++}</td>
-                                    <td>${task.name_show}</td>
-                                    <td>${statusIcon} ${task.task_status}</td>
                                     <td>${date_show}</td>
+                                    <td>${statusIcon} ${task.task_status}</td>
+                                    <td>${task.name_show}</td>
                                     <td>${task.main_project}</td>
                                     <td>${task.data_project}</td>
                                     <td>${task.user_create}</td>

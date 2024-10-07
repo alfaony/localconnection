@@ -13,7 +13,7 @@ class ProjectsExport implements FromCollection, WithHeadings, WithMapping
     private $rowNumber = 0;
     public function collection()
     {
-        return Project::byCompany(Auth::user()->company_id)->get();
+        return Project::byCompany(Auth::user()->company_id)->orderBy('created_at', 'desc')->get();
     }
 
     // Menentukan judul kolom untuk file export
