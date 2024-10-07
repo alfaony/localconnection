@@ -24,6 +24,7 @@ use App\Models\Customer;
 use App\Models\SettingCompany;
 use App\Models\DivisionBudget;
 use App\Models\Bast;
+use App\Models\Company;
 
 use App\Services\XeroService;
 
@@ -200,7 +201,7 @@ class InvoiceController extends Controller
         $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
         $invoice = Invoice::where('slug', $slug)->firstOrFail();
 
-        $bast = Bast::byCompany(Auth::user()->company_id)
+        $basts = Bast::byCompany(Auth::user()->company_id)
         ->whereDoesnthave('invoice')
         ->orWhere('id', $invoice->bast_id)
         ->orderBy('created_at','desc')
@@ -212,7 +213,16 @@ class InvoiceController extends Controller
         $userCreate = $invoice->userCreate ? $invoice->userCreate->name : '';
         $status = config('custom.status_invoice');
 
-        return view('invoice.show',compact('product','userCreate','nomorQuote','bast','date','invoice','status'));
+
+        // Bast
+        
+        $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+
+        $bast = $invoice->bast;
+        $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
+        $nomorBast = $bast->number_result ?? '';
+        $today = Carbon::now()->format('d M Y');
+        return view('invoice.show',compact('product','userCreate','nomorQuote','basts','date','invoice','status','nomorBast','company','bast','today'));
     }
     
     /**
@@ -591,14 +601,6 @@ class InvoiceController extends Controller
         return response()->json($invoice);
      }
 
-     private function adjustBudget($division_budget_id, $amount)
-    {
-        $budget = DivisionBudget::find($division_budget_id);
-        if ($budget) {
-            $budget->amount += $amount;
-            $budget->save();
-        }
-    }
 
     /**
      * Suggetion When Choose Qute
