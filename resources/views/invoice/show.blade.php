@@ -1,7 +1,7 @@
 @extends('adminlte::page')
 
 @section('content_header')
-    <h1 id="quote_title">Invoice {{ $invoice->number_result }}</h1>
+    <h1 id="quote_title">Detail Invoice {{ $invoice->number_result }}</h1>
 @stop
 
 @section('content')
@@ -16,243 +16,413 @@
         </div>
     @endif
 </div>
-<div class="card">
-    <div class="card-body">
-        <div class="card-body">
-            <div class="row mt-3">
-                <div class="offset-md-6 col-6">
-                    <div class="form-group row">
-                        <label for="date" class="col-sm-4 col-form-label text-right">Start Date:</label>
-                        <div class="col-sm-8">
-                            <input type="date" id="date" readonly class="form-control" placeholder="2023-03-10" value="{{ @$invoice ? @$invoice->start_date->format('Y-m-d') : old('start_date') }}" required>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="due_date" class="col-sm-4 col-form-label text-right">Due Date:</label> <!-- Added due date field -->
-                        <div class="col-sm-8">
-                            <input type="date" id="date" readonly class="form-control" placeholder="2023-03-10" value="{{ @$invoice ? @$invoice->start_date->format('Y-m-d') : old('start_date') }}" required>
-                        </div>
-                    </div>
-                    <div class="form-group row">
-                        <label for="sales" class="col-sm-4 col-form-label text-right">Sales:</label>
-                        <div class="col-sm-8">
-                            <input type="text" id="sales" class="form-control" value="{{ $userCreate ?? '' }}" readonly>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row mt-3">
-                <div class="col-2">
-                    <label>No Invoice:</label>
-                </div>
-                <div class="col-6">
-                    <input class="form-control" disabled  value="{{ $invoice->number_result ?? '' }}">
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-2">
-                    <label>BAST</label>
-                </div>
-                <div class="col-6">
-                    <select class="form-control" id="" readonly disabled>
-                        <option value="" selected disabled>--Pilih--</option>
-                        @foreach($bast as $a)
-                            <option value="{{ $a->id }}"  {{ @$invoice->bast_id == $a->id ? 'selected' : '' }}>{{ $a->number_result }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
 
-            <div class="row mt-3">
-                <div class="col-2">
-                    <label>Nama Customer:</label>
-                </div>
-                <div class="col-6">
-                    <input type="text" class="form-control" value="{{ @$invoice->quote->customer->name }}" id="customer" placeholder="Pilih Nomor Quote" required="" readonly="">
-                </div>
-            </div>
+<div id="accordion">
+  <div class="card">
+    <div class="card-header" id="headingOne">
+      <h5 class="mb-0">
+        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Invoice {{ $invoice->number_result }}
+        </button>
+      </h5>
+    </div>
 
-            <div class="row mt-3">
-                <div class="col-2">
-                    <label>Status</label>
-                </div>
-                <div class="col-6">
-                    <select class="form-control" id="" readonly disabled>
-                        <option value="" selected disabled>--Pilih--</option>
-                        @foreach($status as $id => $index)
-                            <option value="{{ $id }}"  {{ @$invoice->status == $id ? 'selected' : '' }}>{{ $index }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div class="row mt-3">
-                <div class="col-2">
-                    <label>Pajak:</label>
-                </div>
-                <div class="col-6">
-                    <div class="input-group">
-                        <input type="number" readonly id="tax" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('tax') ?? @$invoice->tax }}">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text">%</span>
-                        </div>
+    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+      <div class="card-body">
+        <div class="row mt-3">
+            <div class="offset-md-6 col-6">
+                <div class="form-group row">
+                    <label for="date" class="col-sm-4 col-form-label text-right">Start Date:</label>
+                    <div class="col-sm-8">
+                        <input type="date" id="date" readonly class="form-control" placeholder="2023-03-10" value="{{ @$invoice ? @$invoice->start_date->format('Y-m-d') : old('start_date') }}" required>
                     </div>
                 </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-2">
-                    <label>Service Fee:</label>
-                </div>
-                <div class="col-6">
-                    <div class="input-group">
-                        <input type="number" readonly id="service_fee" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('service_fee') ?? @$invoice->service_fee }}">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text">%</span>
-                        </div>
+                <div class="form-group row">
+                    <label for="due_date" class="col-sm-4 col-form-label text-right">Due Date:</label> <!-- Added due date field -->
+                    <div class="col-sm-8">
+                        <input type="date" id="date" readonly class="form-control" placeholder="2023-03-10" value="{{ @$invoice ? @$invoice->start_date->format('Y-m-d') : old('start_date') }}" required>
                     </div>
                 </div>
-            </div>
-        
-            <div class="row mt-3">
-                <div class="col-2">
-                    <label>Discount:</label>
-                </div>
-                <div class="col-6">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text">Rp</span>
-                        </div>
-                        <input type="text" readonly class="form-control calculation" id="discount_show"  oninput="formatRupiahFormat(this,'discount')" />
-                        <input type="hidden" class="form-control" name="discount" id="discount" value="{{ old('discount') ?? @$invoice->discount }}" />
+                <div class="form-group row">
+                    <label for="sales" class="col-sm-4 col-form-label text-right">Sales:</label>
+                    <div class="col-sm-8">
+                        <input type="text" id="sales" class="form-control" value="{{ $userCreate ?? '' }}" readonly>
                     </div>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-2">
-                    <label>Other Tax/Charges:</label>
-                </div>
-                <div class="col-6">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text">Rp</span>
-                        </div>
-                        <input type="text" readonly class="form-control calculation" id="charges_show"  oninput="formatRupiahFormat(this,'charges')"  />
-                        <input type="hidden" class="form-control" name="charges" id="charges" value="{{ old('charges') ?? @$invoice->charges }}" />
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mt-5">
-                <div class="col-2">
-                    <p>Important Information</p>
-                </div>
-            </div>
-            
-            <div class="row mt-3">
-                <div class="col-2">
-                    <label for="transition_text">Payment Terms:</label>
-                </div>
-                <div class="col-6">
-                    <input type="text" class="form-control" readonly value="{{ @$invoice->payment_term ? @$invoice->payment_term : '30D After Invoice' }}">
-                </div>
-            </div>
-
-            <div class="row mt-3">
-                <div class="col-2">
-                    <label for="transition_text">Reference Third Party Docs:</label>
-                </div>
-                <div class="col-6">
-                    <input type="text" class="form-control" readonly value="{{ @$invoice->third_party_docs ? @$invoice->third_party_docs : '-' }}">
-                </div>
-            </div>
-
-            <table class="table table-striped mt-3" id="tableQuote">
-                <thead>
-                    <tr>
-                        <th class="col-auto">#</th>
-                        <th class="col-3">Produk/Jasa</th>
-                        <th class="col-1">Satuan</th>
-                        <th class="col-3">Description</th>
-                        <th class="col-2">Qty</th>
-                        <th class="col-2">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if(@$invoice)
-                    @php $nomorBaris = 1; @endphp
-                    @foreach($invoice->invoiceProducts->sortBy('sort') as $a)
-                    <tr data-key="{{ $a->id }}">
-                        <td class="col-auto">
-                            {{ $nomorBaris++ }}
-                        </td>
-                        <td class="col-3">
-                            {{ $a->product->name }}
-                            <input type="hidden" class="form-control" id="product_name_{{ $a->id }}" name="product_name[]" value="{{ $a->product->id ?? '' }}" readonly>
-                        </td>
-
-                        <td class="col-1" id="method_count_${key}">
-                            {{ $a->product->method_count ?? "" }}
-                        </td>
-                        <td class="col-3">
-                            {!! $a->description !!}
-                        </td>
-                        <td class="col-2">
-                            <input type="hidden" id="price_{{ $a->id }}" name="price[]" data-key="{{ $a->id }}" min="1" class="form-control" value="{{ $a->price_sell }}" required>
-                            <input type="hidden" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ old('qty') ?? @$a->qty }}" required>
-                            {{ $a->qty }}
-                        </td>
-                        <td class="col-2" id="sub_total_show_{{ $a->id }}">
-                            {{ 'Rp. '.number_format($a->sub_total,0,',','.') }}
-                            <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]" value="{{ $a->id }}">
-                            <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
-                        </td>
-                    </tr>
-                    @endforeach
-                    @endif
-                </tbody>
-            </table>
-            <div class="row mt-3">
-                <div class="col-4 offset-8">
-                    <div class="d-flex justify-content-between mb-2">
-                        <div>Total:</div>
-                        <div id="sub_total_result">Rp 0</div>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <div>Discount: -</div>
-                        <div id="discount_result">Rp 0</div>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <div>Other Tax/Charges:</div>
-                        <div id="charges_result">Rp 0</div>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <div id="service_fee_title">Service Fee:</div>
-                        <div id="service_fee_result">Rp 0</div>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <div id="ppn_title">PPN: 0%</div>
-                        <div id="ppn_result">Rp 0</div>
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-between mb-2">
-                        <strong>Grand Total:</strong>
-                        <strong id="grand_total_result">Rp 0</strong>
-                        <input type="hidden" id="grand_total_result_raw" value="70000">
-                    </div>
-                </div>
-            </div>
-
-            
-            <div class="mt-3">
-                <div class="d-flex justify-content-center align-items-center">
-                    <a href="{{ url()->previous() }}" class="btn btn-secondary mr-2"><i class="fa fa-arrow-left"></i>Kembali</a>
-                    @canAccess('downloadPdf','invoices')
-                    <a href="{{ route('invoice.download.pdf', ['slug' => $invoice->slug]) }}" class="btn btn-success"><i class="fa fa-file-pdf"></i> Download</a>
-                    @endcanAccess
                 </div>
             </div>
         </div>
+        
+        <div class="row mt-3">
+            <div class="col-2">
+                <label>No Invoice:</label>
+            </div>
+            <div class="col-6">
+                <input class="form-control" disabled  value="{{ $invoice->number_result ?? '' }}">
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-2">
+                <label>BAST</label>
+            </div>
+            <div class="col-6">
+                <select class="form-control" id="" readonly disabled>
+                    <option value="" selected disabled>--Pilih--</option>
+                    @foreach($basts as $a)
+                        <option value="{{ $a->id }}"  {{ @$invoice->bast_id == $a->id ? 'selected' : '' }}>{{ $a->number_result }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-2">
+                <label>Nama Customer:</label>
+            </div>
+            <div class="col-6">
+                <input type="text" class="form-control" value="{{ @$invoice->quote->customer->name }}" id="customer" placeholder="Pilih Nomor Quote" required="" readonly="">
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-2">
+                <label>Status</label>
+            </div>
+            <div class="col-6">
+                <select class="form-control" id="" readonly disabled>
+                    <option value="" selected disabled>--Pilih--</option>
+                    @foreach($status as $id => $index)
+                        <option value="{{ $id }}"  {{ @$invoice->status == $id ? 'selected' : '' }}>{{ $index }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-2">
+                <label>Pajak:</label>
+            </div>
+            <div class="col-6">
+                <div class="input-group">
+                    <input type="number" readonly id="tax" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('tax') ?? @$invoice->tax }}">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-2">
+                <label>Service Fee:</label>
+            </div>
+            <div class="col-6">
+                <div class="input-group">
+                    <input type="number" readonly id="service_fee" class="form-control calculation minNol" min="0" placeholder="10" value="{{ old('service_fee') ?? @$invoice->service_fee }}">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <div class="row mt-3">
+            <div class="col-2">
+                <label>Discount:</label>
+            </div>
+            <div class="col-6">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Rp</span>
+                    </div>
+                    <input type="text" readonly class="form-control calculation" id="discount_show"  oninput="formatRupiahFormat(this,'discount')" />
+                    <input type="hidden" class="form-control" name="discount" id="discount" value="{{ old('discount') ?? @$invoice->discount }}" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-2">
+                <label>Other Tax/Charges:</label>
+            </div>
+            <div class="col-6">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Rp</span>
+                    </div>
+                    <input type="text" readonly class="form-control calculation" id="charges_show"  oninput="formatRupiahFormat(this,'charges')"  />
+                    <input type="hidden" class="form-control" name="charges" id="charges" value="{{ old('charges') ?? @$invoice->charges }}" />
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-2">
+                <p>Important Information</p>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-2">
+                <label for="transition_text">Payment Terms:</label>
+            </div>
+            <div class="col-6">
+                <input type="text" class="form-control" readonly value="{{ @$invoice->payment_term ? @$invoice->payment_term : '30D After Invoice' }}">
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-2">
+                <label for="transition_text">Reference Third Party Docs:</label>
+            </div>
+            <div class="col-6">
+                <input type="text" class="form-control" readonly value="{{ @$invoice->third_party_docs ? @$invoice->third_party_docs : '-' }}">
+            </div>
+        </div>
+
+        <table class="table table-striped mt-3" id="tableQuote">
+            <thead>
+                <tr>
+                    <th class="col-auto">#</th>
+                    <th class="col-3">Produk/Jasa</th>
+                    <th class="col-1">Satuan</th>
+                    <th class="col-3">Description</th>
+                    <th class="col-2">Qty</th>
+                    <th class="col-2">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if(@$invoice)
+                @php $nomorBaris = 1; @endphp
+                @foreach($invoice->invoiceProducts->sortBy('sort') as $a)
+                <tr data-key="{{ $a->id }}">
+                    <td class="col-auto">
+                        {{ $nomorBaris++ }}
+                    </td>
+                    <td class="col-3">
+                        {{ $a->product->name }}
+                        <input type="hidden" class="form-control" id="product_name_{{ $a->id }}" name="product_name[]" value="{{ $a->product->id ?? '' }}" readonly>
+                    </td>
+
+                    <td class="col-1" id="method_count_${key}">
+                        {{ $a->product->method_count ?? "" }}
+                    </td>
+                    <td class="col-3">
+                        {!! $a->description !!}
+                    </td>
+                    <td class="col-2">
+                        <input type="hidden" id="price_{{ $a->id }}" name="price[]" data-key="{{ $a->id }}" min="1" class="form-control" value="{{ $a->price_sell }}" required>
+                        <input type="hidden" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ old('qty') ?? @$a->qty }}" required>
+                        {{ $a->qty }}
+                    </td>
+                    <td class="col-2" id="sub_total_show_{{ $a->id }}">
+                        {{ 'Rp. '.number_format($a->sub_total,0,',','.') }}
+                        <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]" value="{{ $a->id }}">
+                        <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
+                    </td>
+                </tr>
+                @endforeach
+                @endif
+            </tbody>
+        </table>
+        <div class="row mt-3">
+            <div class="col-4 offset-8">
+                <div class="d-flex justify-content-between mb-2">
+                    <div>Total:</div>
+                    <div id="sub_total_result">Rp 0</div>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <div>Discount: -</div>
+                    <div id="discount_result">Rp 0</div>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <div>Other Tax/Charges:</div>
+                    <div id="charges_result">Rp 0</div>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <div id="service_fee_title">Service Fee:</div>
+                    <div id="service_fee_result">Rp 0</div>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <div id="ppn_title">PPN: 0%</div>
+                    <div id="ppn_result">Rp 0</div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-2">
+                    <strong>Grand Total:</strong>
+                    <strong id="grand_total_result">Rp 0</strong>
+                    <input type="hidden" id="grand_total_result_raw" value="70000">
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="mt-3">
+            <div class="d-flex justify-content-center align-items-center">
+                @canAccess('downloadPdf','invoices')
+                <a href="{{ route('invoice.download.pdf', ['slug' => $invoice->slug]) }}" class="btn btn-success"><i class="fa fa-file-pdf"></i> Download</a>
+                @endcanAccess
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  @if($bast)
+  <div class="card">
+    <div class="card-header" id="headingTwo">
+      <h5 class="mb-0">
+        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+            Bast
+        </button>
+      </h5>
+    </div>
+    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+      <div class="card-body">
+        <div class="card" id="printThis">
+            <div class="card-body" id="printItem">
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                    <h1>Berita Acara Serah Terima</h1>
+                    <p>No. {{ $bast->number ?? '' }}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                    <table class="table table-bordered">
+                        <tr>
+                        <th>Nomor</th>
+                        <td>{{ $bast->number }}</td>
+                        </tr>
+                        <tr>
+                        <th>Tanggal</th>
+                        <td>{{ $today  ?? ''}}</td>
+                        </tr>
+                        <tr>
+                        <th>No. Purchase Order</th>
+                        <td>{{ $bast->number_purchase ?? '' }}</td>
+                        </tr>
+                        <tr>
+                        <th>Penanggung Jawab</th>
+                        <td>
+                            {{ $bast->pic ?? '' }}
+                        </td>
+                        </tr>
+                        <tr>
+                        <th>Perusahaan</th>
+                        <td>{{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</td>
+                        </tr>
+                    </table>
+                    </div>
+                    <div class="col-md-12">
+                    <p>Bersamaan dengan surat pernyataan ini, pekerjaan dengan nomor purchase order diatas dengan rincian pekerjaan:</p>
+                    <p><strong>{{ $bast->project ? $bast->project->title : '' }}</strong></p>
+                    <p>Telah diselesaikan dengan baik. Laporan bisa di unduh di link berikut ini</p>
+                    <ul>
+                        @if($bast->project)
+                        @if($bast->project->reportProject->reportProjectDetail)
+                        @php $detail = $bast->project->reportProject->reportProjectDetail; @endphp
+                        @foreach($detail as $a)
+                        <li>
+                            {{ $a->name .' - ' }}  <a href="{{ $a->url }}" class="text-primary">{{ $a->url }}</a>
+                        </li>
+                        @endforeach
+                        @endif
+                        @endif
+                    </ul>
+                    <ul>
+                    </ul>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="row">
+                        <div class="offset-1 col-3">
+                            <span style="margin-bottom: 0;">TTD</span>
+                        </div>
+                        <div class="offset-5 text-left">
+                            <p>Diterima,</p>
+                        </div>
+                        
+                        <div class="offset-1 col-2 mb-3 mt-3" id="space">
+                            <img src="{{ asset('logo/paraf.png') }}" alt="Signature" style="with:auto; height:150px">
+                        </div>
+                        <div class="col-8">
+
+                        </div>
+
+                        <div class="offset-1 col-3">
+                            {{ $company['director'] ?? '' }}
+                        </div>
+                        <div class="offset-5 text-left">
+                            <p class="noMargin">{{ $bast->workOrder ? $bast->workOrder->quote->customer->{$bast->customer_signature} : '' }}</p>
+                        </div>
+                        <div class="offset-9 text-left">
+                            <p>{{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12 text-center mt-3"> <!-- Penambahan class text-center dan mt-3 -->
+            <button type="button" id="downloadBast" class="btn btn-success"><i class="fa fa-file-pdf"></i> {{__('Download')}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
+  @if($bast->project && $bast->project->reportProject)
+  @php $reportProject = $bast->project->reportProject; @endphp  
+  <div class="card">
+    <div class="card-header" id="headingThree">
+      <h5 class="mb-0">
+        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+            Laporan Proyek
+        </button>
+      </h5>
+    </div>
+    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+      <div class="card-body">
+        <table class="table table-bordered mt-3" id="tableReport">
+            <thead>
+                <tr>
+                    <th >No</th>
+                    <th >Nama</th>
+                    <th >Link</th>
+                    <th >File</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php $no = 1; @endphp
+                @foreach(@$reportProject->reportProjectDetail as $a)
+                <tr>
+                    <td>
+                        {{ $no++ }}
+                    </td>
+                    <td width="30%">
+                        {{ $a->name }}
+                    </td>
+                    <td width="30%">
+                        {{ $a->link }}
+                    </td>
+                    <td width="20%">
+                        <a href="{{ Storage::url('reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-download"></i></a>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        
+      </div>
+      @canAccess('downloadall','report_projects')
+      <div class="mt-3 mb-2">
+            <div class="d-flex justify-content-center align-items-center">
+                <a href="{{ route('report-project.downloadall', ['slug' => $reportProject->slug]) }}" class="btn btn-success"><i class="fa fa-download"></i> Download All</a>
+            </div>
+        </div>
+        @endcanAccess
+    </div>
+  </div>
+  @endif
+</div>
+<div class="mt-3">
+    <div class="d-flex justify-content-center align-items-center">
+        <a href="{{ url()->previous() }}" class="btn btn-secondary mr-2"><i class="fa fa-arrow-left"></i>Kembali</a>
     </div>
 </div>
 @stop
@@ -943,6 +1113,40 @@
         }
 
         calculation();
+    }
+</script>
+
+<!-- Bast -->
+<script>
+    $(document).ready(function () 
+    {
+        $("#downloadBast").click(function (e) 
+        { 
+            e.preventDefault();
+            prinsts();
+            
+        });
+
+        $('.select2').select2({
+            width: '100%',
+            placeholder: 'Pilih Quote'
+        });
+    });
+
+    function prinsts() 
+    {
+        let name = "{{ $nomorBast }}"+"_bast";;
+        let printContents = document.getElementById("printThis").innerHTML;
+        let originalContents = document.body.innerHTML;
+
+        document.body.innerHTML = printContents;
+
+        window.addEventListener("beforeprint", (event) => {
+            document.title = name;
+        });
+
+        window.print();
+        document.body.innerHTML = originalContents;
     }
 </script>
 @stop

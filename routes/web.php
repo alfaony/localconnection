@@ -100,7 +100,6 @@ Auth::routes([
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Route::get('/dailytask/showJson/{slug}', [DailyTaskController::class,'showJson'])->name('dailytask.showJson');
 
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
@@ -161,6 +160,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::post('bast/requestReport', [BastController::class, 'requestReport'])->name('bast.requestReport');
   Route::resource('bast', BastController::class)->except(['show']);
 
+  Route::get('report-project/downloadall/{slug}', [ReportProjectController::class, 'downloadall'])->name('report-project.downloadall');
   Route::get('report-project/createsuggest/{slug}', [ReportProjectController::class, 'createsuggest'])->name('report-project.createsuggest');
   Route::get('report-project/dataTableJsonWorkOrderWithoutReportProject', [ReportProjectController::class, 'dataTableJsonWorkOrderWithoutReportProject'])->name('report-project.dataTableJsonWorkOrderWithoutReportProject');
   Route::delete('report-project/destroyDetail/{ReportProjectDetail}',[ReportProjectController::class,'destroyDetail'])->name('report-project.destroy.detail');

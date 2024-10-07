@@ -18,6 +18,7 @@ use App\Models\ReportProjectDetail;
 use App\Models\WorkOrder;
 use App\Models\Project;
 use App\Models\SortUrl;
+use ZipArchive;
 
 class ReportProjectController extends Controller
 {
@@ -385,6 +386,37 @@ class ReportProjectController extends Controller
 
         return response()->json($data);
     }
+
+    public function downloadall($slug)
+    {
+        // Ambil semua file berdasarkan ID reportProject
+        $reportProject = ReportProject::with('reportProjectDetail')->where('slug',$slug)->firstOrFail();
+        if (!$reportProject) {
+            return redirect()->back()->with('error', 'Report Project not found.');
+        }
+
+        // Nama file ZIP
+        $zipFileName = 'reports_' . $reportProject->report_project_number . '.zip';
+        $zipPath = storage_path('app/public/' . $zipFileName);
+
+        // Membuat ZIP
+        $zip = new ZipArchive;
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+            foreach ($reportProject->reportProjectDetail as $detail) {
+                $filePath = storage_path('app/public/reports/' . $detail->file);
+                if (file_exists($filePath)) {
+                    $zip->addFile($filePath, $detail->file);
+                }
+            }
+            $zip->close();
+        } else {
+            return redirect()->back()->with('error', 'Failed to create ZIP file.');
+        }
+
+        // Mengunduh file ZIP
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
+
 
     private function reportProjectNumber()
     {
