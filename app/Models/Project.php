@@ -147,27 +147,31 @@ class Project extends Model
 
     public function getProgressPercentageAttribute()
     {
-        if($this->start_date && $this->end_date)
-        {
+        if ($this->start_date && $this->end_date) {
             $now = Carbon::now();
             $start_date = Carbon::parse($this->start_date);
             $end_date = Carbon::parse($this->end_date);
 
+            // Jika tanggal sekarang sebelum start_date, progress adalah 0%
+            if ($now->lessThan($start_date)) {
+                return 0;
+            }
+
+            // Jika tanggal sekarang melewati end_date, progress adalah 100%
             if ($now->greaterThanOrEqualTo($end_date)) {
                 return 100;
             }
-    
+
+            // Hitung progress untuk tanggal yang berada di antara start_date dan end_date
             $totalDuration = $start_date->diffInSeconds($end_date);
             $elapsedDuration = $start_date->diffInSeconds($now);
-    
-            return $totalDuration > 0 ? intval(($elapsedDuration / $totalDuration) * 100) : 0;
 
-        }else
-        {
-            return 0;
+            return intval(($elapsedDuration / $totalDuration) * 100);
         }
 
+        return 0;
     }
+
     
     public function workOrder()
     {
