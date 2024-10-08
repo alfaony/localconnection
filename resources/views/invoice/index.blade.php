@@ -108,14 +108,14 @@
                             @canAccess('show','invoices')
                             <a href="{{ route('invoice.show',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-eye"></i></a>
                             @endcanAccess
-                            @canAccess('edit','invoices')
                             @if($a->status != 'AUTHORISED')
+                            @canAccess('edit','invoices')
                             <a href="{{ route('invoice.edit',$a->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
-                            @endif
                             @endcanAccess
                             @canAccess('destroy','invoices')
                             <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                             @endcanAccess
+                            @endif
                         </form>
                     </td>
                 </tr>

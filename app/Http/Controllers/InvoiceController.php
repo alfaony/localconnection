@@ -314,6 +314,10 @@ class InvoiceController extends Controller
         try 
         {
             $invoice = Invoice::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            if($invoice->status == ParamSchema::AUTHORISED)
+            {
+                return redirect()->to(route('invoice.index'))->with('AUTHORISED',true);
+            }
             $this->xeroService->deleteInvoice($invoice);
             $invoice->invoiceProducts()->delete();
             
