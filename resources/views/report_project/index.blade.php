@@ -53,7 +53,7 @@
     <!-- Tab panes -->
     <div class="tab-content">
     <!-- BAST Tab -->
-    @canAccess('dataTableJson','basts')
+    @canAccess('dataTableJson','report_projects')
     <div class="tab-pane fade show active" id="bast" role="tabpanel" aria-labelledby="bast-tab">
         <div class="card mt-3 shadow-sm">
             <div class="card-header bg-primary text-white">

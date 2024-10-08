@@ -81,6 +81,7 @@ Route::get('/dailytask/showJson/{slug}', [DailyTaskController::class,'showJson']
 
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
+  Route::get('project/export', [ProjectController::class,'export'])->name('project.export');
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
   
@@ -125,11 +126,12 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');
   Route::get('agreement-letter/dataTableJson', [AgreementLetterController::class, 'dataTableJson'])->name('agreement-letter.datatable');
   Route::resource('agreement-letter', AgreementLetterController::class)->except(['show']);
-
+  
   Route::get('bast/createsuggest/{slug}', [BastController::class, 'createsuggest'])->name('bast.createsuggest');
   Route::get('bast/dataTableJsonWorkOrderWithoutBast', [BastController::class, 'dataTableJsonWorkOrderWithoutBast'])->name('bast.dataTableJsonWorkOrderWithoutBast');
   Route::get('bast/downloadPdf/pdf/{slug}',[BastController::class,'downloadPdf'])->name('bast.download.pdf');
   Route::get('bast/dataTableJson', [BastController::class, 'dataTableJson'])->name('bast.datatable');
+  Route::post('bast/requestReport', [BastController::class, 'requestReport'])->name('bast.requestReport');
   Route::resource('bast', BastController::class)->except(['show']);
 
   Route::get('report-project/createsuggest/{slug}', [ReportProjectController::class, 'createsuggest'])->name('report-project.createsuggest');

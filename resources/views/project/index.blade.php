@@ -20,6 +20,9 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
     @if(Session::get('delete'))
     <div class="alert alert-success mt-3">Berhasil Menghapus Proyek</div>
     @endif
+    @if(Session::get('project_close'))
+    <div class="alert alert-danger mt-3">Proyek Sudah Ditutup</div>
+    @endif
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -118,6 +121,9 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
         <div class="d-flex flex-row-reverse">
             <div class="p-2">
                 <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                @canAccess('export','projects')
+                <a href="{{ route('project.export') }}" class="btn btn-success"><i class="fa fa-file-excel"></i></a>
+                @endcanAccess
             </div>
             <div class="p-2">
                 <input type="text" name="search" class="form-control" placeholder="Search">
@@ -131,15 +137,25 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                     <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
                 </select>
             </div>
+            <div class="p-2">
+                <select name="status" class="form-control">
+                    <option value="" disabled selected>-- Status --</option>
+                    <option value="open"  >Open</option>
+                    <option value="close" >Close</option>
+                </select>
+            </div>
         </div>
     </form>
+
         
     <table class="table table-bordered">
         <thead>
             <tr>
                 <th>No Proyek</th>
                 <th>Nama Proyek</th>
-                <th>Presentase Proyek</th>
+                <th>Status</th>
+                <th>Timeline</th>
+                <th>Progress</th>
                 <th>Nomor SPK</th>
                 <th>Total SPK</th>
                 <th>Aksi</th>
@@ -150,7 +166,15 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             <tr>
                 <td>{{ $no++ }}</td>
                 <td>{{ $a->title }}</td>
+                <td>
+                    {!! $a->status_project == 'open' 
+                        ? '<span class="badge badge-success">Open</span>' 
+                        : '<span class="badge badge-danger">Close</span>' !!}
+                </td>
                 <td> {{ $a->progress_percentage. "%"  ?? "0%" }} </td>
+                <td>
+                    {{ $a->progress_task."%" ?? "0%"  }}
+                </td>
                 <td>{{ $a->workOrder ? $a->workOrder->number_result : '' }}</td>
                 <td>{{ $a->workOrder ? 'Rp. '.number_format($a->workOrder->total,0,',','.') : '' }}</td>
                 <td>
@@ -160,12 +184,14 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                         @canAccess('show','projects')
                         <a href="{{ route('project.show',$a->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
                         @endcanAccess
+                        @if($a->status_project == 'open')
                         @canAccess('edit','projects')
                         <a href="{{ route('project.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
                         @endcanAccess
                         @canAccess('destroy','projects')
                         <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                         @endcanAccess
+                        @endif
                     </form>
                 </td>
             </tr>
@@ -178,8 +204,11 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             @endforelse
         </tbody>
     </table>
+    <div class="d-flex justify-content-center mt-2">
         {{ $project->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+    </div>
 </div>
+
 
 @stop
 

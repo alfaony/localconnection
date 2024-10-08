@@ -10,6 +10,7 @@ use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Schemas\RoleSchema;
+use App\Schemas\ParamSchema;
 
 class Project extends Model
 {
@@ -76,6 +77,54 @@ class Project extends Model
     {
         return $this->hasOne(Bast::class);
     }
+
+    public function dailyTasks()
+    {
+        return $this->hasMany(DailyTask::class, 'project_id','id');
+    }
+
+    public function getStatusProjectAttribute()
+    {
+        $statusReport = false;
+        $progressTask = false;
+        if($this->reportProject)
+        {
+            $statusReport = true;
+        }
+
+        if($this->progress_task == ParamSchema::PERCENTAGE)
+        {
+            $progressTask = true;
+        }
+
+        if($statusReport && $progressTask)
+        {
+            return ParamSchema::CLOSE;
+        }
+        {
+            return ParamSchema::OPEN;
+        }
+    }
+
+    // Mutator untuk menghitung progress
+    public function getProgressTaskAttribute()
+    {
+        // Menghitung total DailyTask
+        $totalTasks  =  $this->dailyTasks()->count();
+        
+        // Menghitung DailyTask yang berstatus 'DONE'
+        $doneTasks = $this->dailyTasks()->whereHas('taskStatus', function ($query) {
+            $query->where('name', ParamSchema::COMPLATE);
+        })->count();
+
+        // Jika tidak ada task, progress adalah 0
+        if ($totalTasks === 0) {
+            return 0;
+        }
+
+        // Menghitung persentase progress
+        return round(($doneTasks / $totalTasks) * 100);
+    }
     public function getPurchaseAttribute()
     {
         // return $this->suplier()->sum('total_price');
@@ -98,27 +147,31 @@ class Project extends Model
 
     public function getProgressPercentageAttribute()
     {
-        if($this->start_date && $this->end_date)
-        {
+        if ($this->start_date && $this->end_date) {
             $now = Carbon::now();
             $start_date = Carbon::parse($this->start_date);
             $end_date = Carbon::parse($this->end_date);
 
+            // Jika tanggal sekarang sebelum start_date, progress adalah 0%
+            if ($now->lessThan($start_date)) {
+                return 0;
+            }
+
+            // Jika tanggal sekarang melewati end_date, progress adalah 100%
             if ($now->greaterThanOrEqualTo($end_date)) {
                 return 100;
             }
-    
+
+            // Hitung progress untuk tanggal yang berada di antara start_date dan end_date
             $totalDuration = $start_date->diffInSeconds($end_date);
             $elapsedDuration = $start_date->diffInSeconds($now);
-    
-            return $totalDuration > 0 ? intval(($elapsedDuration / $totalDuration) * 100) : 0;
 
-        }else
-        {
-            return 0;
+            return intval(($elapsedDuration / $totalDuration) * 100);
         }
 
+        return 0;
     }
+
     
     public function workOrder()
     {

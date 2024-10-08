@@ -10,7 +10,10 @@ use App\Http\Requests\ProjectRequest;
 use App\Models\Project;
 use App\Models\WorkOrder;
 use App\Models\Manager;
-
+use App\Exports\ProjectsExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Schemas\ParamSchema;
+use Illuminate\Pagination\LengthAwarePaginator;
 class ProjectController extends Controller
 {
     /**
@@ -20,19 +23,43 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {   
-        $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
+        $order = $request->order == 'asc' ? 'asc' : 'desc';
+        $page = $request->input('page', 1); // Halaman saat ini
+        $perPage = 10; // Jumlah item per halaman
 
-        $project = Project::byRole()
-        ->where(function ($query) use ($request) {
-            $searchTerm = '%' . $request->get('search') . '%';
-            // Search in the manager's name
-            $query->where('title', 'like', $searchTerm)
-                // Or search in related project's title
-                ->orWhereHas('workOrder', function ($query) use ($searchTerm) {
-                    $query->where('number_result', 'like', $searchTerm);
-                });
-        })
-        ->OrderBy('created_at',$order)->paginate(10);
+        $query = Project::byRole()
+            ->where(function ($query) use ($request) {
+                $searchTerm = '%' . $request->get('search') . '%';
+                
+                // Pencarian dalam judul proyek dan nomor work order
+                $query->where('title', 'like', $searchTerm)
+                    ->orWhereHas('workOrder', function ($query) use ($searchTerm) {
+                        $query->where('number_result', 'like', $searchTerm);
+                    });
+            })
+            ->orderBy('created_at', $order);
+
+        // Ambil semua proyek
+        $projects = $query->get();
+
+        // Hitung total sebelum filtering
+
+        // Filter proyek berdasarkan `status_project`
+        if ($request->filled('status')) {
+            $projects = $projects->filter(function ($project) use ($request) {
+                return $project->status_project === $request->get('status');
+            });
+        }
+
+        $total = $projects->count();
+        // Gunakan LengthAwarePaginator untuk membuat pagination lengkap
+        $project = new LengthAwarePaginator(
+            $projects->forPage($page, $perPage), // Data untuk halaman saat ini
+            $total, // Total item
+            $perPage, // Item per halaman
+            $page, // Halaman saat ini
+            ['path' => $request->url(), 'query' => $request->query()] // URL dan query string untuk link pagination
+        );
 
         $totalProject = Project::byRole()->count();
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)
@@ -93,6 +120,11 @@ class ProjectController extends Controller
         ->get();
     
 
+        if($projectEdit->status_project == ParamSchema::CLOSE)
+        {
+            return redirect()->to(route('project.index'))->with('project_close',true);
+        }
+
         $directManager = Manager::select('slug')->where('project_id',$projectEdit->id)->first();
 
         return view('project.index', compact('projectEdit','project','totalProject', 'workOrder' ,'directManager'));
@@ -123,6 +155,12 @@ class ProjectController extends Controller
     public function update(ProjectRequest $request, $slug)
     {
         $project = Project::byRole()->where('slug', $slug)->firstOrFail();
+
+        if($project->status_project == ParamSchema::CLOSE)
+        {
+            return redirect()->to(route('project.index'))->with('project_close',true);
+        }
+
         $project->user_id = Auth::user()->id;
         $project->title = $request->post('title');
         $project->budget = $request->post('budget');
@@ -154,7 +192,22 @@ class ProjectController extends Controller
     public function destroy($slug)
     {
         $project = Project::byRole()->where('slug', $slug)->firstOrFail();
+
+        if($project->status_project == ParamSchema::CLOSE)
+        {
+            return redirect()->back()->with('project_close',true);
+        }
+
         $project->delete();
         return redirect()->back()->with('delete',true);
     }
+
+    /**
+     * Export data
+     */
+    public function export()
+    {
+        return Excel::download(new ProjectsExport, 'projects.xlsx');
+    }
+
 }

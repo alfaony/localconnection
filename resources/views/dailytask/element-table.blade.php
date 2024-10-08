@@ -4,34 +4,34 @@
     $isOverdue = $dailytask->isOverdue();
 @endphp
 <tr id="task-row-{{ $dailytask->id }}"> <!-- Added ID for each row -->
-    <td class="name-cell">
-        <p>{!! $dailytask->head ? $dailytask->nameShow.'  <i class="fa fa-arrow-left"></i>  '. Str::limit($dailytask->head->name,50) : $dailytask->nameShow !!}</p>
-    </td>
-    <td>
-    @switch($dailytask->taskStatus->name)
-        @case('todo')
-            <i class="fa fa-list-alt"></i> Todo
-            @break
-        @case('doing')
-            <i class="fa fa-hourglass-start"></i> Doing
-            @break
-        @case('in review')
-            <i class="fa fa-eye" style="color: green;"></i> In Review
-            @break
-        @case('not complete')
-            <i class="fa fa-times-circle" style="color: red;"></i> Not Complete
-            @break
-        @case('complete')
-            <i class="fa fa-check" style="color: green;"></i> Complete
-            @break
-        @default
-            {{ $dailytask->taskStatus->name }}
-    @endswitch
-    </td>
     <td>
         <span class="{{ $isOverdue ? 'text-danger' : '' }}">
             {{ $dailytask->dateShow }}
         </span>
+    </td>
+    <td>
+        @switch($dailytask->taskStatus->name)
+            @case('todo')
+                <i class="fa fa-list-alt"></i> Todo
+                @break
+            @case('doing')
+                <i class="fa fa-hourglass-start"></i> Doing
+                @break
+            @case('in review')
+                <i class="fa fa-eye" style="color: green;"></i> In Review
+                @break
+            @case('not complete')
+                <i class="fa fa-times-circle" style="color: red;"></i> Not Complete
+                @break
+            @case('complete')
+                <i class="fa fa-check" style="color: green;"></i> Complete
+                @break
+            @default
+                {{ $dailytask->taskStatus->name }}
+        @endswitch
+    </td>
+    <td class="name-cell">
+        <p>{!! $dailytask->head ? $dailytask->nameShow.'  <i class="fa fa-arrow-left"></i>  '. Str::limit($dailytask->head->name,50) : $dailytask->nameShow !!}</p>
     </td>
     <td class="name-cell">
         {{ $dailytask->dataProject ? $dailytask->dataProject->title : '' }}
