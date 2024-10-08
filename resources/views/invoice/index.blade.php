@@ -99,23 +99,46 @@
                         @endif
                     </td>
                     <td>
-                        <form method="post" action="{{ route('invoice.destroy',$a) }}">
+                        <form method="post" action="{{ route('invoice.destroy', $a) }}">
                             @csrf
                             @method('delete')
-                            @canAccess('downloadPdf','invoices')
-                            <a href="{{ route('invoice.download.pdf', ['slug' => $a->slug]) }}" class="btn btn-success btn-sm"><i class="fa fa-file-pdf"></i></a>
-                            @endcanAccess
-                            @canAccess('show','invoices')
-                            <a href="{{ route('invoice.show',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-eye"></i></a>
-                            @endcanAccess
-                            @if($a->status != 'AUTHORISED')
-                            @canAccess('edit','invoices')
-                            <a href="{{ route('invoice.edit',$a->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
-                            @endcanAccess
-                            @canAccess('destroy','invoices')
-                            <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
-                            @endcanAccess
-                            @endif
+
+                            <!-- Kebab menu (three dots) as the dropdown button -->
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-secondary btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fa fa-ellipsis-v"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <!-- Dropdown items -->
+                                     @canAccess('history', 'invoices')
+                                    <a href="{{ route('invoices.history', $a->slug) }}" class="dropdown-item">
+                                        <i class="fa fa-history"></i> View History
+                                    </a>
+                                    @endcanAccess
+                                    @canAccess('downloadPdf', 'invoices')
+                                    <a href="{{ route('invoice.download.pdf', ['slug' => $a->slug]) }}" class="dropdown-item">
+                                        <i class="fa fa-file-pdf"></i> Download PDF
+                                    </a>
+                                    @endcanAccess
+                                    @canAccess('show', 'invoices')
+                                    <a href="{{ route('invoice.show', $a->slug) }}" class="dropdown-item">
+                                        <i class="fa fa-eye"></i> View
+                                    </a>
+                                    @endcanAccess
+                                    @if($a->status != 'AUTHORISED')
+                                    @canAccess('edit', 'invoices')
+                                    <a href="{{ route('invoice.edit', $a->slug) }}" class="dropdown-item">
+                                        <i class="fa fa-edit"></i> Edit
+                                    </a>
+                                    @endcanAccess
+                                    @canAccess('destroy', 'invoices')
+                                    <button type="submit" onclick="return window.confirm('{{ __('Apakah Anda Yakin?') }}')" class="dropdown-item text-danger">
+                                        <i class="fa fa-trash"></i> Delete
+                                    </button>
+                                    @endcanAccess
+                                    @endif
+                                </div>
+                            </div>
                         </form>
                     </td>
                 </tr>

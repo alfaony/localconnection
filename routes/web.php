@@ -72,7 +72,6 @@ use App\Http\Controllers\XeroWebhookController;
 */
 
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook']);
-Route::post('xero/webhookAvailable', [XeroWebhookController::class, 'webhookAvailable']);
 
 Route::group(['middleware' => ['auth','web', 'XeroAuthenticated','role.permission']], function(){
   Route::get('xero',function(){
@@ -100,6 +99,7 @@ Auth::routes([
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+Route::get('invoice/history/{slug}', [InvoiceController::class, 'history'])->name('invoices.history');
 
 Route::group(['middleware' => ['auth','role.permission']], function()
 {

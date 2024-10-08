@@ -55,5 +55,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForProjectExportSeeder::class);
         $this->call(PermissionForRequestProjectSeeder::class);
         $this->call(PermissionForDownloadAllReportSeeder::class);
+        $this->call(PermissionForHistoryInvoiceSeeder::class);
     }
 }

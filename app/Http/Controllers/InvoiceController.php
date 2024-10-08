@@ -97,6 +97,8 @@ class InvoiceController extends Controller
         DB::beginTransaction();
         try 
         {
+            activity()->disableLogging();
+
             $date = Carbon::now()->format('m/Y');
             $invoiceNumber = Invoice::byCompany(Auth::user()->company_id)->withTrashed()->max('invoice_number') + 1;
             $bast = Bast::byCompany(Auth::user()->company_id)->where('id',$request->post('bast'))->firstOrFail();
@@ -145,9 +147,15 @@ class InvoiceController extends Controller
             $this->updateQuote($invoice->quote_id);
             $this->generateXeroInvoice($invoice);
 
+            activity()->enableLogging();
+            activity()
+                ->performedOn($invoice)
+                ->withProperties(['attributes' => $request->only([
+                    'start_date', 'end_date', 'total', 'tax', 'service_fee', 'discount', 'charges', 'status'
+                ])])
+                ->log('Invoice Inserted');
             DB::commit();
             return redirect()->to(route('invoice.index'))->with('store',true);
-            // return redirect()->to(route('invoice.download.pdf', ['slug' => $invoice->slug]))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);
@@ -237,6 +245,8 @@ class InvoiceController extends Controller
         DB::beginTransaction();
         try 
         {
+            activity()->disableLogging();
+
             $status = $request->post('status');
 
             $invoice = Invoice::byCompany(Auth::user()->company_id)->where('id', $slug)->first();
@@ -290,9 +300,16 @@ class InvoiceController extends Controller
             $this->grandTotal($invoice);
             $this->xeroService->updateInvoice($invoice,$request->post('status'));
             
+
+            activity()->enableLogging();
+            activity()
+                ->performedOn($invoice)
+                ->withProperties(['attributes' => $request->only([
+                    'start_date', 'end_date', 'total', 'tax', 'service_fee', 'discount', 'charges', 'status'
+                ])])
+                ->log('Invoice updated');
             DB::commit();
             return redirect()->to(route('invoice.index'))->with('update',true);
-            // return redirect()->to(route('invoice.download.pdf', ['slug' => $invoice->slug]))->with('store',true);
         } catch (\Throwable $th) {
             // dd($th);    
             DB::rollback();
@@ -333,6 +350,18 @@ class InvoiceController extends Controller
         }
     }
 
+    /**
+     * Hisotyr
+     */
+
+     public function history($slug)
+    {
+        $invoice = Invoice::where('slug', $slug)->firstOrFail();
+        // Mengambil semua aktivitas yang terkait dengan invoice ini
+        $activities = $invoice->activities()->orderBy('created_at', 'desc')->get();
+        
+        return view('invoice.history', compact('invoice', 'activities'));
+    }
     /**
      * Countring All
      */

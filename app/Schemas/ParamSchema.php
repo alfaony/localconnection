@@ -90,4 +90,10 @@ class ParamSchema
     const AUTHORISED = "AUTHORISED";
 
     const DRAFT = "DRAFT";
+
+    const SERVICEFEE = "Service Fee";
+
+    const ADDTIONALCHARGES = "Additional Charges";
+
+    const DISCOUNT="Discount";
 }
