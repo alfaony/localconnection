@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Ramsey\Uuid\Uuid;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Invoice extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'invoices'; // Nama tabel di database
     protected $casts = [
@@ -29,6 +31,15 @@ class Invoice extends Model
         {
             $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
         });
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll() // Log semua perubahan atribut
+            ->logOnlyDirty() // Hanya log perubahan yang berbeda dari nilai sebelumnya
+            ->useLogName('invoice') // Nama log (opsional)
+            ->setDescriptionForEvent(fn(string $eventName) => "Invoice has been {$eventName}"); // Deskripsi untuk setiap event
     }
 
     public function setDateAttribute($value)

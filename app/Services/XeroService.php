@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\ApiLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Product;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
@@ -273,10 +274,20 @@ class XeroService
         {
             foreach($quoteProduct as $item)
             {
-                if(!$item->product->xero_code);
+                if(!$item->product->xero_code)
                 {
-                    $xeroCode = Str::limit($item->product->slug,25,'');
-                    $item->product->xero_code = $xeroCode;
+                    // Mendapatkan nilai max dari row $product->number
+                    $maxNumber = Product::byCompany($invoice->userCreate->company_id)->max('number');
+                    $nextNumber = $maxNumber ? $maxNumber + 1 : 1;
+
+                    // Membuat kode berdasarkan nama perusahaan user dan nomor produk
+                    $name = explode(" ",$item->product->name);
+                    $xeroCode = Str::slug($invoice->userCreate->company->name . "-" . $nextNumber . "-" . $name[0]);
+
+                    $xeroChecking = $this->isCheckingItem($xeroCode);
+
+                    $item->product->number = $nextNumber;
+                    $item->product->xero_code = $xeroChecking;
                     $item->product->save();
 
                     $postItems[] = 
@@ -293,6 +304,25 @@ class XeroService
                             "UnitPrice"=> $item->product->price_sell,
                         ],
                     ];
+                }else{
+                    $isExistsItem = $this->xero->items()->where('Code', $item->product->xero_code)->first();
+                    if(!$isExistsItem)
+                    {
+                        $postItems[] = 
+                        [
+                            "ItemID" => $item->product->id,
+                            "Code" => $item->product->xero_code,
+                            "Description" => Str::limit(strip_tags($item->product->description),350,''),
+                            "Name"=> Str::limit($item->product->name,45,''),
+                            "PurchaseDetails"=> [
+                                    "UnitPrice"=> $item->product->price_buy,
+                            ],
+                            "SalesDetails"=> 
+                            [
+                                "UnitPrice"=> $item->product->price_sell,
+                            ],
+                        ];
+                    }
                 }
 
                 // Prepare the line items for the invoice
@@ -306,7 +336,6 @@ class XeroService
                 ];
             }
         }
-
 
         // Calculate the totals including tax, service fee, and discount
         $total = $invoice->invoiceProducts->sum('sub_total');
@@ -390,6 +419,22 @@ class XeroService
         {
             return false;
         }
+    }
+
+    protected function isCheckingItem($code)
+    {
+        do {
+            // Cek apakah item dengan kode tersebut sudah ada di Xero
+            $item = $this->xero->items()->where('Code', $code)->first();
+
+            // Jika item ditemukan, tambahkan karakter "-" diikuti angka acak pada kode
+            if ($item) {
+                $code .= '-' . rand(0, 9999); // Tambah angka acak dari 0 sampai 9999
+            }
+        } while ($item); // Ulangi sampai tidak ada item dengan kode tersebut
+
+        // Setelah kode unik ditemukan, lanjutkan logika untuk membuat item baru dengan kode tersebut
+        return $code; // Kembalikan kode yang sudah dipastikan unik
     }
 
     protected function logApiRequest($endpoint, $method, $requestPayload, $responsePayload, $statusCode)

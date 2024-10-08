@@ -40,7 +40,7 @@
                 <div class="form-group row">
                     <label for="due_date" class="col-sm-4 col-form-label text-right">Due Date:</label> <!-- Added due date field -->
                     <div class="col-sm-8">
-                        <input type="date" id="date" readonly class="form-control" placeholder="2023-03-10" value="{{ @$invoice ? @$invoice->start_date->format('Y-m-d') : old('start_date') }}" required>
+                        <input type="date" id="date" readonly class="form-control" placeholder="2023-03-10" value="{{ @$invoice ? @$invoice->end_date->format('Y-m-d') : old('start_date') }}" required>
                     </div>
                 </div>
                 <div class="form-group row">
