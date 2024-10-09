@@ -48,6 +48,7 @@ return [
 
     'device_iot_api' => [
         'url' => env('DEVICE_API_URL', 'https://iot.keloola.com/api/bos-device-list'),
+        'url_device_device' => env('DEVICE_URL_status', 'https://iot.keloola.com/api/bos-device-status'),
         'Authorization' => env('API_BEARER_TOKEN'),
     ],
     
