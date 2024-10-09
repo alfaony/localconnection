@@ -96,4 +96,6 @@ class ParamSchema
     const ADDTIONALCHARGES = "Additional Charges";
 
     const DISCOUNT="Discount";
+
+    const DELETE="DELETED";
 }

@@ -100,8 +100,12 @@
                             <span class="badge badge-success">WAITING PAYMENT</span>
                             @break
 
+                        @case('PAID')
+                            <span class="badge badge-success">PAID</span>
+                            @break
+
                         @default
-                            <span class="badge badge-info">Unknown</span>
+                            <span class="badge badge-danger">{{ $a->status }}</span>
                     @endswitch
                     </td>
                     <td>{{ 'Rp. '.number_format($a->total,0,',','.')  ?? 'Rp. 0' }}</td>
@@ -113,7 +117,7 @@
                         @endif
                     </td>
                     <td>
-                        <form method="post" action="{{ route('invoice.destroy', $a) }}">
+                        <form method="post" action="{{ route('invoice.destroy', $a->slug) }}">
                             @csrf
                             @method('delete')
 
@@ -139,7 +143,7 @@
                                         <i class="fa fa-eye"></i> View
                                     </a>
                                     @endcanAccess
-                                    @if($a->status != 'AUTHORISED')
+                                    @if(($a->status != 'PAID') && ($a->status != 'DELETED') && ($a->status != 'VOID') )
                                     @canAccess('edit', 'invoices')
                                     <a href="{{ route('invoice.edit', $a->slug) }}" class="dropdown-item">
                                         <i class="fa fa-edit"></i> Edit

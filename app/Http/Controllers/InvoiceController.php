@@ -348,8 +348,8 @@ class InvoiceController extends Controller
             return redirect()->back()->with('delete', true);
 
         } catch (\Exception $e) {
+            // dd($e->getMessage());
             DB::rollBack();
-            // dd($e);
             return redirect()->back()->with('error', 'Terjadi kesalahan saat menghapus invoice.');
         }
     }
