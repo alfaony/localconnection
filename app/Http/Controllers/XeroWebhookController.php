@@ -58,7 +58,13 @@ class XeroWebhookController extends Controller
                     $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first(); 
                     if(isset($xeroInvoice) && $invoice)
                     {
-                        $this->updateInvoiceFromXero($invoiceId);
+                        if($xeroInvoice['Status'] == ParamSchema::DELETE)
+                        {
+                            $this->deleteInvoice($invoice, $xeroInvoice);
+                        }else
+                        {
+                            $this->updateInvoiceFromXero($invoiceId);
+                        }
                     }
                 }
             }
@@ -99,6 +105,7 @@ class XeroWebhookController extends Controller
 
     protected function updateInvoiceFromXero($invoiceId)
     {
+        $form = array();
         try {
             $user = User::where('name','root')->first();
             $xeroInvoice = Xero::invoices()->find($invoiceId);
@@ -107,7 +114,6 @@ class XeroWebhookController extends Controller
             // Add If
             if($xeroInvoice && $invoice)
             {                
-                $form = array();
                 // Ambil detail invoice dari Xero menggunakan SDK atau API Xero
 
                 $findContact = $this->findOrCreateContact($invoice, $xeroInvoice['Contact']['Name'], $xeroInvoice['Contact']['EmailAddress']);
@@ -331,5 +337,23 @@ class XeroWebhookController extends Controller
 
         $invoice->total = $grandTotal;
         $invoice->save();
+    }
+
+    protected function deleteInvoice($invoice, $xeroInvoice)
+    {
+        try {
+            if ($invoice) 
+            {
+                $invoice->invoiceProducts()->delete(); // Hapus produk terkait
+                $invoice->delete(); // Hapus invoice
+
+                Log::info("Invoice with ID {$invoiceId} deleted successfully.");
+            } else {
+                Log::info("Invoice with ID {$invoiceId} not found in local database for deletion.");
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Failed to delete invoice from Xero: " . $e->getMessage());
+        }
     }
 }
