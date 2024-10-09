@@ -98,6 +98,8 @@ class XeroWebhookController extends Controller
             $user = User::where('name','root')->first();
             $xeroInvoice = Xero::invoices()->find($invoiceId);
             $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first();
+
+            // Add If
             if($xeroInvoice && $invoice)
             {                
                 $form = array();
