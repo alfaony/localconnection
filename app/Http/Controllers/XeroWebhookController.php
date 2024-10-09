@@ -171,6 +171,14 @@ class XeroWebhookController extends Controller
             }
             else {
                 Log::info("Invoice with ID {$invoiceId} not found in local database.");
+                ApiLog::create([
+                    'user_id' => $user->id,
+                    'endpoint' => '/webhook/xero',
+                    'method' => 'POST',
+                    'request_payload' => json_encode($form),
+                    'response_payload' => json_encode(['error' => "Invoice with ID {$invoiceId} not found in local database."]),
+                    'status_code' => 500,
+                ]);
             }
         } catch (\Exception $e) {
             ApiLog::create([
