@@ -53,7 +53,7 @@ class XeroWebhookController extends Controller
             if ($event['eventType'] === 'UPDATE' && $event['eventCategory'] === 'INVOICE') {
                 $invoiceId = $event['resourceId'];
                 if($invoiceId)
-                {
+                {                    
                     $this->updateInvoiceFromXero($invoiceId);
                 }
             }
@@ -94,10 +94,10 @@ class XeroWebhookController extends Controller
 
     protected function updateInvoiceFromXero($invoiceId)
     {
-        
         try {
+            $user = User::where('name','root')->first();
             $xeroInvoice = Xero::invoices()->find($invoiceId);
-            $invoice = Invoice::where('invoice_xero_id', $invoiceId)->firstOrFail();
+            $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first();
             if($xeroInvoice && $invoice)
             {                
                 $form = array();
@@ -173,14 +173,14 @@ class XeroWebhookController extends Controller
                 Log::info("Invoice with ID {$invoiceId} not found in local database.");
             }
         } catch (\Exception $e) {
-            // ApiLog::create([
-            //     'user_id' => $invoice->userCreate->id,
-            //     'endpoint' => '/webhook/xero',
-            //     'method' => 'POST',
-            //     'request_payload' => json_encode($form),
-            //     'response_payload' => json_encode($e->getMessage()),
-            //     'status_code' => 500,
-            // ]);
+            ApiLog::create([
+                'user_id' => $user->id,
+                'endpoint' => '/webhook/xero',
+                'method' => 'POST',
+                'request_payload' => json_encode($form),
+                'response_payload' => json_encode($e->getMessage()),
+                'status_code' => 500,
+            ]);
             
             Log::error("Failed to update invoice from Xero: " . $e->getMessage());
         }
@@ -279,15 +279,16 @@ class XeroWebhookController extends Controller
 
             return true;
         } catch (\Throwable $th) {
+            $user = User::where('name','root')->first();
 
-            // ApiLog::create([
-            //     'user_id' => $invoice->userCreate->id,
-            //     'endpoint' => '/webhook/xero',
-            //     'method' => 'POST',
-            //     'request_payload' => json_encode($form),
-            //     'response_payload' => json_encode(['status' => 'success']),
-            //     'status_code' => 200,
-            // ]);
+            ApiLog::create([
+                'user_id' => $user->id,
+                'endpoint' => '/webhook/xero',
+                'method' => 'POST',
+                'request_payload' => json_encode($form),
+                'response_payload' => json_encode(['status' => 'success']),
+                'status_code' => 200,
+            ]);
 
             DB::rollback();
             Log::error($th);
