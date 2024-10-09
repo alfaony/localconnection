@@ -52,7 +52,10 @@ class XeroWebhookController extends Controller
         {
             if ($event['eventType'] === 'UPDATE' && $event['eventCategory'] === 'INVOICE') {
                 $invoiceId = $event['resourceId'];
-                $this->updateInvoiceFromXero($invoiceId);
+                if($invoiceId)
+                {
+                    $this->updateInvoiceFromXero($invoiceId);
+                }
             }
         }
         // Log sukses

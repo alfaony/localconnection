@@ -50,13 +50,17 @@ class InvoiceController extends Controller
     {
         // Ambil input pencarian dari request
         $search = $request->input('search');
+        $order = $request->input('order') ?? 'desc';
 
         $invoice = Invoice::byCompany(Auth::user()->company_id)
-                ->when($search, function ($query, $search) 
-                {
-                    return $query->where('number_result', 'LIKE', "%{$search}%");
-                })
-                ->orderBy('created_at','desc')
+        ->when($search, function ($query, $search) {
+            return $query->where('number_result', 'LIKE', "%{$search}%")
+                         ->orWhereHas('bast', function ($q) use ($search) {
+                             $q->where('number_result', 'LIKE', "%{$search}%");
+                         });
+        })
+    
+                ->orderBy('created_at', $order)
                 ->paginate(10);
 
         return view('invoice.index',compact('invoice'));

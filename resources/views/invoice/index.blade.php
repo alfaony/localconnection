@@ -50,9 +50,19 @@
             <div class="d-flex flex-row-reverse">
                 <div class="p-2">
                     <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                    <a href="{{ route('invoice.index') }}" class="btn btn-secondary">Reset</a>
                 </div>
                 <div class="p-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search">
+                    <input type="text" name="search" class="form-control" placeholder="Search" value="{{ request('search') }}">
+                </div>
+                <div class="p-2">
+                @php
+                    $order = request('order', 'desc');
+                @endphp
+                    <select name="order" class="form-control">
+                        <option value="asc" {{ $order == 'asc' ? 'selected' : '' }} >A - Z Created By</option>
+                        <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
+                    </select>
                 </div>
             </div>
         </form>
@@ -62,6 +72,7 @@
             <thead>
                 <tr>
                     <th>Nomor Invoice</th>
+                    <th>BAST</th>
                     <th>Status</th>
                     <th>Total Invoice</th>
                     <th>Status Connect</th>
@@ -72,6 +83,9 @@
                 @forelse($invoice as $a)
                 <tr>
                     <td>{{ $a->number_result ?? '' }}</td>
+                    <td>
+                        {{ $a->bast->number_result }}
+                    </td>
                     <td>
                     @switch($a->status)
                         @case('DRAFT')
