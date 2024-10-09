@@ -53,7 +53,7 @@ class XeroWebhookController extends Controller
             if ($event['eventType'] === 'UPDATE' && $event['eventCategory'] === 'INVOICE') {
                 $invoiceId = $event['resourceId'];
                 if($invoiceId)
-                {
+                {                    
                     $this->updateInvoiceFromXero($invoiceId);
                 }
             }
@@ -94,86 +94,101 @@ class XeroWebhookController extends Controller
 
     protected function updateInvoiceFromXero($invoiceId)
     {
-        $invoice = Invoice::where('invoice_xero_id', $invoiceId)->firstOrFail();
         try {
-            $form = array();
-            // Ambil detail invoice dari Xero menggunakan SDK atau API Xero
+            $user = User::where('name','root')->first();
             $xeroInvoice = Xero::invoices()->find($invoiceId);
+            $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first();
+            if($xeroInvoice && $invoice)
+            {                
+                $form = array();
+                // Ambil detail invoice dari Xero menggunakan SDK atau API Xero
 
-            $findContact = $this->findOrCreateContact($invoice, $xeroInvoice['Contact']['Name'], $xeroInvoice['Contact']['EmailAddress']);
+                $findContact = $this->findOrCreateContact($invoice, $xeroInvoice['Contact']['Name'], $xeroInvoice['Contact']['EmailAddress']);
 
-            $product = array();
-            $discount = 0;
-            $serviceFee = 0;
-            $otherCharges = 0;
-            $totalProductPrice = 0;
+                $product = array();
+                $discount = 0;
+                $serviceFee = 0;
+                $otherCharges = 0;
+                $totalProductPrice = 0;
 
-            if(isset($xeroInvoice['LineItems']))
-            {
-                foreach ($xeroInvoice['LineItems'] as $key => $value) 
+                if(isset($xeroInvoice['LineItems']))
                 {
-                    if($value['Description'] == ParamSchema::ADDTIONALCHARGES)
+                    foreach ($xeroInvoice['LineItems'] as $key => $value) 
                     {
-                        $otherCharges = $value['UnitAmount'];
-                    }
+                        if($value['Description'] == ParamSchema::ADDTIONALCHARGES)
+                        {
+                            $otherCharges = $value['UnitAmount'];
+                        }
 
-                    if($value['Description'] == ParamSchema::SERVICEFEE)
-                    {
-                        $serviceFee = $value['UnitAmount'];
-                    }
+                        if($value['Description'] == ParamSchema::SERVICEFEE)
+                        {
+                            $serviceFee = $value['UnitAmount'];
+                        }
 
-                    if($value['Description'] == ParamSchema::DISCOUNT)
-                    {
-                        $discount = $value['UnitAmount'];
-                    }
+                        if($value['Description'] == ParamSchema::DISCOUNT)
+                        {
+                            $discount = $value['UnitAmount'];
+                        }
 
-                    if(isset($value['ItemCode']) && isset($value['UnitAmount']))
-                    {
-                        $product[] = [
-                            'code' => $value['ItemCode'],
-                            'product' => $this->findOrCreateProduct($invoice, $value['ItemCode'], $value['UnitAmount']),
-                            'description' => $value['Description'],
-                            'qty' => $value['Quantity'],
-                            'price' => $value['UnitAmount'],
-                            'lineAmount' => $value['LineAmount'],
-                        ];
+                        if(isset($value['ItemCode']) && isset($value['UnitAmount']))
+                        {
+                            $product[] = [
+                                'code' => $value['ItemCode'],
+                                'product' => $this->findOrCreateProduct($invoice, $value['ItemCode'], $value['UnitAmount']),
+                                'description' => $value['Description'],
+                                'qty' => $value['Quantity'],
+                                'price' => $value['UnitAmount'],
+                                'lineAmount' => $value['LineAmount'],
+                            ];
 
-                        $totalProductPrice += $value['LineAmount'];
+                            $totalProductPrice += $value['LineAmount'];
+                        }
                     }
                 }
+
+                $totalAll = ($totalProductPrice + $otherCharges) + $discount;
+                $serviceFeePercentage = $totalAll > 0 ? round(($serviceFee / $totalAll) * 100) : 0;
+
+                $form = 
+                [
+                    'start_date' => Carbon::parse($xeroInvoice['DateString'])->format('Y-m-d'),
+                    'end_date' => Carbon::parse($xeroInvoice['DueDateString'])->format('Y-m-d'),
+                    'contact' => $findContact,
+                    'status' => $xeroInvoice['Status'],
+                    'product_item' => $xeroInvoice['LineItems'],
+                    'discount' => $discount,
+                    'other_charges' => $otherCharges,
+                    'service_fee' => $serviceFee,
+                    'service_fee_percentage' => $serviceFeePercentage,
+                    'invoiceDetail'=> $product,
+                    'sub_total' => $xeroInvoice['SubTotal'],
+                    'total_tax' => $xeroInvoice['TotalTax'],
+                    'total' => $xeroInvoice['Total'],
+                ];
+
+                
+                return $this->updateInvoice($invoice, $form);
             }
-
-            $totalAll = ($totalProductPrice + $otherCharges) + $discount;
-            $serviceFeePercentage = $totalAll > 0 ? round(($serviceFee / $totalAll) * 100) : 0;
-
-            $form = 
-            [
-                'start_date' => Carbon::parse($xeroInvoice['DateString'])->format('Y-m-d'),
-                'end_date' => Carbon::parse($xeroInvoice['DueDateString'])->format('Y-m-d'),
-                'contact' => $findContact,
-                'status' => $xeroInvoice['Status'],
-                'product_item' => $xeroInvoice['LineItems'],
-                'discount' => $discount,
-                'other_charges' => $otherCharges,
-                'service_fee' => $serviceFee,
-                'service_fee_percentage' => $serviceFeePercentage,
-                'invoiceDetail'=> $product,
-                'sub_total' => $xeroInvoice['SubTotal'],
-                'total_tax' => $xeroInvoice['TotalTax'],
-                'total' => $xeroInvoice['Total'],
-            ];
-
-            
-            return $this->updateInvoice($invoice, $form);
+            else {
+                Log::info("Invoice with ID {$invoiceId} not found in local database.");
+                ApiLog::create([
+                    'user_id' => $user->id,
+                    'endpoint' => '/webhook/xero',
+                    'method' => 'POST',
+                    'request_payload' => json_encode($form),
+                    'response_payload' => json_encode(['error' => "Invoice with ID {$invoiceId} not found in local database."]),
+                    'status_code' => 500,
+                ]);
+            }
         } catch (\Exception $e) {
-            // ApiLog::create([
-            //     'user_id' => $invoice->userCreate->id,
-            //     'endpoint' => '/webhook/xero',
-            //     'method' => 'POST',
-            //     'request_payload' => json_encode($form),
-            //     'response_payload' => json_encode($e->getMessage()),
-            //     'status_code' => 500,
-            // ]);
+            ApiLog::create([
+                'user_id' => $user->id,
+                'endpoint' => '/webhook/xero',
+                'method' => 'POST',
+                'request_payload' => json_encode($form),
+                'response_payload' => json_encode($e->getMessage()),
+                'status_code' => 500,
+            ]);
             
             Log::error("Failed to update invoice from Xero: " . $e->getMessage());
         }
@@ -272,15 +287,16 @@ class XeroWebhookController extends Controller
 
             return true;
         } catch (\Throwable $th) {
+            $user = User::where('name','root')->first();
 
-            // ApiLog::create([
-            //     'user_id' => $invoice->userCreate->id,
-            //     'endpoint' => '/webhook/xero',
-            //     'method' => 'POST',
-            //     'request_payload' => json_encode($form),
-            //     'response_payload' => json_encode(['status' => 'success']),
-            //     'status_code' => 200,
-            // ]);
+            ApiLog::create([
+                'user_id' => $user->id,
+                'endpoint' => '/webhook/xero',
+                'method' => 'POST',
+                'request_payload' => json_encode($form),
+                'response_payload' => json_encode(['status' => 'success']),
+                'status_code' => 200,
+            ]);
 
             DB::rollback();
             Log::error($th);
