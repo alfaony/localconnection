@@ -51,15 +51,6 @@
             
             <div class="row mt-3">
                 <div class="col-2">
-                    <p>No Invoice:</p>
-                </div>
-                <div class="col-6">
-                    <p>{{ $nomorQuote }}</p>
-                    <input type="hidden" name="nomor" value="{{ $nomor ?? '' }}">
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-2">
                     <label>BAST</label>
                 </div>
                 <div class="col-6">

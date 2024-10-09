@@ -320,7 +320,7 @@
                         @php $detail = $bast->project->reportProject->reportProjectDetail; @endphp
                         @foreach($detail as $a)
                         <li>
-                            {{ $a->name .' - ' }}  <a href="{{ $a->url }}" class="text-primary">{{ $a->url }}</a>
+                            {{ $a->name .' - ' }}  @if($a->link)<a href="{{ $a->link }}" target="_blank" class="text-primary">{{ $a->link }}</a> @endif
                         </li>
                         @endforeach
                         @endif
@@ -378,6 +378,32 @@
     </div>
     <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
       <div class="card-body">
+        <div class="form-group row">
+            <div class="col-md-6">
+                <h2>Laporan Proyek</h2>
+                <div class="mt-5">No Report: {{ $reportProject->number_result }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="row">
+                    <label for="date" class="col-sm-8 col-form-label text-right">Tanggal:</label>
+                    <div class="col-sm-4">
+                        <input type="date" class="form-control" id="date" value="{{ old('date') ?? @$reportProject->date }}" readonly>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <label class="col-sm-8 col-form-label text-right">PM:</label>
+                    <div class="col-sm-4">
+                        <span class="form-control-plaintext">{{ $userCreate ?? '' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <label>Data Proyek</label>
+                <input type="text" class="form-control" id="date" value="{{ old('date') ?? @$reportProject->project->title }}" readonly>
+            </div>
+        </div>
         <table class="table table-bordered mt-3" id="tableReport">
             <thead>
                 <tr>
