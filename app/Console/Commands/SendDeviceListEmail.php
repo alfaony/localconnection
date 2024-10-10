@@ -28,46 +28,57 @@ class SendDeviceListEmail extends Command
 
     public function handle()
     {
-        $company = Company::where('name', 'BOS 3')->firstOrFail();
-        $user = User::where('company_id', $company->id)->whereHas('role',function($query)
+        $companies = Company::all();
+
+        
+        
+        foreach ($companies as $company) 
         {
-            $query->where('name',RoleSchema::BM);
-        })->first();
-        $toEmails = [];
-        $toNames = [];
+            $users = User::where('company_id', $company->id)->whereHas('role',function($query)
+            {
+                $query->where('name',RoleSchema::BM);
+            })->get();
+            $toEmails = [];
+            $toNames = [];
+            # code...
+            if($company && count($users)> 0)
+            {
 
-
-        if($company && $user)
-        {
-            $deviceList = $this->deviceService->listDeviceOpen($company->id, $user);
-            if ($deviceList['success'] && !empty($deviceList['devices'])) {
-                
-                $smtpConfig = SettingCompany::byCompany($user->company_id)->get()->pluck('field_value','field_title');
-                $fromEmail = $smtpConfig['username'] ?? '';
-                $fromName = $smtpConfig['name'] ?? '';
-
-                $toEmails[] = $user->email;
-                $toNames[] = $user->name;
-                $data = 
-                [
-                    'name' => $user->name,
-                    'devices' => $deviceList['devices'],
-                ];
-
-
-                return EmailNotifHelper::sentEmail(
-                    $fromEmail,
-                    $fromName,
-                    $toEmails, 
-                    $toNames, 
-                    "Laporan Lampu/Pintu Belum dimatikan/ditutup",
-                    "email.notif_device_report",
-                    $data, 
-                    $smtpConfig, 
-                    $company->id, 
-                );
-            } else {
-                $this->info('No devices available; email not sent.');
+                $user = $users->first();
+                $deviceList = $this->deviceService->listDeviceOpen($company->id, $user);
+                if ($deviceList['success'] && !empty($deviceList['devices'])) 
+                {
+                    
+                    $smtpConfig = SettingCompany::byCompany($user->company_id)->get()->pluck('field_value','field_title');
+                    $fromEmail = $smtpConfig['username'] ?? '';
+                    $fromName = $smtpConfig['name'] ?? '';
+                    
+                    foreach ($users as $user) 
+                    {
+                        $toEmails[] = $user->email;
+                        $toNames[] = $user->name;
+                        $data = 
+                        [
+                            'name' => $user->name,
+                            'devices' => $deviceList['devices'],
+                        ];
+        
+        
+                        return EmailNotifHelper::sentEmail(
+                            $fromEmail,
+                            $fromName,
+                            $toEmails, 
+                            $toNames, 
+                            "Laporan Lampu/Pintu Belum dimatikan/ditutup",
+                            "email.notif_device_report",
+                            $data, 
+                            $smtpConfig, 
+                            $company->id, 
+                        );
+                    }
+                } else {
+                    $this->info('No devices available; email not sent.');
+                }
             }
         }
 
