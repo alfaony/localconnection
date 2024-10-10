@@ -72,6 +72,7 @@ use App\Http\Controllers\XeroWebhookController;
 */
 
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook']);
+Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
 Route::group(['middleware' => ['auth','web', 'XeroAuthenticated','role.permission']], function(){
   Route::get('xero',function(){

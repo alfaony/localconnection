@@ -324,14 +324,15 @@ class XeroService
                         ];
                     }
                 }
-
+                $taxType = $this->findOrCreateTaxRate($invoice->tax) ?? "OUTPUT"; // Ambil TaxType berdasarkan nilai pajak di invoice
                 // Prepare the line items for the invoice
                 $lineItems[] = [
                     "Description" => $item->product->name, // Description of the item/service
                     "Quantity" => $item->qty, // Quantity of the item/service
                     "UnitAmount" => $item->price_sell, // Unit price of the item/service
                     "AccountCode" => '200', // Default Account Code if not provided
-                    "TaxType" => "OUTPUT", // Tax type e.g., "OUTPUT"
+                    // "TaxType" => "OUTPUT", // Tax type e.g., "OUTPUT"
+                    "TaxType" => $taxType, // Tax type e.g., "OUTPUT"
                     'ItemCode' => $item->product->xero_code,
                 ];
             }
@@ -352,7 +353,8 @@ class XeroService
                 "Quantity" => 1,
                 "UnitAmount" => $serviceFeeAmount,
                 "AccountCode" => '200',
-                "TaxType" => "OUTPUT"
+                // "TaxType" => "OUTPUT"
+                "TaxType" => $taxType, // Tax type e.g., "OUTPUT"
             ];
         }
 
@@ -362,7 +364,8 @@ class XeroService
                 "Quantity" => 1,
                 "UnitAmount" => $chargesAmount,
                 "AccountCode" => '200',
-                "TaxType" => "OUTPUT"
+                // "TaxType" => "OUTPUT"
+                "TaxType" => $taxType, // Tax type e.g., "OUTPUT"
             ];
         }
 
@@ -373,7 +376,8 @@ class XeroService
                 "Quantity" => 1,
                 "UnitAmount" => -$discountAmount, // Discounts should be negative values
                 "AccountCode" => '200',
-                "TaxType" => "OUTPUT"
+                // "TaxType" => "OUTPUT"
+                "TaxType" => $taxType, // Tax type e.g., "OUTPUT"
             ];
         }
 
@@ -447,6 +451,48 @@ class XeroService
             'response_payload' => json_encode($responsePayload),
             'status_code' => $statusCode,
         ]);
+    }
+
+    protected function findOrCreateTaxRate($taxPercentage)
+    {
+        // Coba temukan TaxRate yang ada dengan tarif pajak yang diminta
+        $taxRatesResponse = Xero::get('taxRates');
+        $taxRates = $taxRatesResponse['body']['TaxRates'];
+    
+        // Periksa apakah ada TaxRate dengan EffectiveRate yang sesuai
+         foreach ($taxRates as $taxRate) 
+         {
+            if ($taxRate['EffectiveRate'] == $taxPercentage && $taxRate['Status'] == 'ACTIVE') {
+                foreach ($taxRate['TaxComponents'] as $component) {
+                    if ($component['Rate'] == $taxPercentage && !$component['IsCompound'] && !$component['IsNonRecoverable']) {
+                        return $taxRate['TaxType'];
+                    }
+                }
+            }
+        }
+        $newTaxRate = [
+            'Name' => "Custom Tax Rate {$taxPercentage}%",
+            'TaxComponents' => [
+                [
+                    'Name' => "Custom Tax Component {$taxPercentage}%",
+                    'Rate' => $taxPercentage,
+                    'IsCompound' => false,
+                    'IsNonRecoverable' => false,
+                ]
+            ]
+        ];
+        
+        try {
+            $response = Xero::post('taxRates', $newTaxRate);
+            if(isset($response['body']['TaxRates']))
+            {
+                return $response['body']['TaxRates'][0]['TaxType'];
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to create Tax Rate: " . $e->getMessage());
+            throw new \Exception('Failed to create Tax Rate in Xero');
+        }
+        
     }
 
 }
