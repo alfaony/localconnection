@@ -143,7 +143,7 @@
                                         <i class="fa fa-eye"></i> View
                                     </a>
                                     @endcanAccess
-                                    @if(($a->status != 'PAID') && ($a->status != 'DELETED') && ($a->status != 'VOID') )
+                                    @if(($a->status != 'PAID') && ($a->status != 'DELETED') && ($a->status != 'VOID') && ($a->status != 'AUTHORISED'))
                                     @canAccess('edit', 'invoices')
                                     <a href="{{ route('invoice.edit', $a->slug) }}" class="dropdown-item">
                                         <i class="fa fa-edit"></i> Edit
