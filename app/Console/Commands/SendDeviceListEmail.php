@@ -64,7 +64,7 @@ class SendDeviceListEmail extends Command
                         ];
         
         
-                        return EmailNotifHelper::sentEmail(
+                        EmailNotifHelper::sentEmail(
                             $fromEmail,
                             $fromName,
                             $toEmails, 
@@ -75,9 +75,12 @@ class SendDeviceListEmail extends Command
                             $smtpConfig, 
                             $company->id, 
                         );
+
+                        $this->info('Email sent to '.$user->name.' in '.$company->name);
                     }
-                } else {
-                    $this->info('No devices available; email not sent.');
+                } else 
+                {
+                    $this->info('No devices available; email not sent. in'.$company->name);
                 }
             }
         }
