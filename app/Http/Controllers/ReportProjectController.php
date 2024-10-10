@@ -306,6 +306,8 @@ class ReportProjectController extends Controller
         [
             0 => 'number_result',
             1 => 'date',
+            2 => 'workOrder.number_result',
+            3 => 'project.title',
         ];
 
         // define your bootstrap version (4 or 5)
@@ -340,7 +342,7 @@ class ReportProjectController extends Controller
             array_push($actionButtons,$destroy);
         }
 
-        return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+        return datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
     }
 
     public function dataTableJsonWorkOrderWithoutReportProject()

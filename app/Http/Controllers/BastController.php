@@ -202,12 +202,11 @@ class BastController extends Controller
         $columnNames = ['date', 'number_result', 'slug'];
 
         // Define searchable columns
-        $searchable = 
-        [
-            0 => 'number_result',
-            1 => 'date',
+        $searchable = [
+            'number_result',
+            'date',
+            'workOrder.number_result', // Relasi: mencari di dalam kolom work_order
         ];
-
         // define your bootstrap version (4 or 5)
         $bootstrap = 4;
 
@@ -251,7 +250,7 @@ class BastController extends Controller
             array_push($actionButtons,$destroy);
         }
 
-        return datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+        return datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
     }
 
     public function dataTableJsonWorkOrderWithoutBast()
