@@ -102,6 +102,13 @@ class XeroWebhookController extends Controller
             Log::error("Failed to update invoice from Xero: " . $e->getMessage());
         }
     }
+    
+
+    // public function isCheckingInvoice($id)
+    // {
+    //     $invoice = Invoice::where('slug',$id)->first();
+    //     dd($this->updateInvoiceFromXero($invoice->invoice_xero_id));
+    // }
 
     protected function updateInvoiceFromXero($invoiceId)
     {
@@ -123,11 +130,16 @@ class XeroWebhookController extends Controller
                 $serviceFee = 0;
                 $otherCharges = 0;
                 $totalProductPrice = 0;
+                $taxVariable = 0;
 
                 if(isset($xeroInvoice['LineItems']))
                 {
                     foreach ($xeroInvoice['LineItems'] as $key => $value) 
                     {
+                        if(isset($value['TaxType']))
+                        {
+                            $taxVariable = $this->findTaxRate($value['TaxType']);
+                        }
                         if($value['Description'] == ParamSchema::ADDTIONALCHARGES)
                         {
                             $otherCharges = $value['UnitAmount'];
@@ -161,6 +173,10 @@ class XeroWebhookController extends Controller
 
                 $totalAll = ($totalProductPrice + $otherCharges) + $discount;
                 $serviceFeePercentage = $totalAll > 0 ? round(($serviceFee / $totalAll) * 100) : 0;
+
+                // update invoice tax
+                $invoice->tax = $taxVariable;
+                $invoice->save();
 
                 $form = 
                 [
@@ -355,5 +371,26 @@ class XeroWebhookController extends Controller
         } catch (\Exception $e) {
             Log::error("Failed to delete invoice from Xero: " . $e->getMessage());
         }
+    }
+
+    protected function findTaxRate($TaxType)
+    {
+        // Coba temukan TaxRate yang ada dengan tarif pajak yang diminta
+        $taxRatesResponse = Xero::get('taxRates');
+        $taxRates = $taxRatesResponse['body']['TaxRates'];
+
+        // Periksa apakah ada TaxRate dengan EffectiveRate yang sesuai
+         foreach ($taxRates as $taxRate) 
+         {
+            if($taxRate['TaxType'] == $TaxType)
+            {
+                // return $taxRate['TaxComponents'][0]['Rate'];
+                foreach ($taxRate['TaxComponents'] as $key => $value) 
+                {
+                    return $value['Rate'];
+                }
+            }
+        } 
+
     }
 }
