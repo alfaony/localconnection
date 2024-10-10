@@ -140,7 +140,7 @@
             columns: [
                 {data: 'number_result', name: 'basts.number_result', orderable: true},
                 {data: 'date', name: 'date', orderable: true},
-                {data: 'work_order.number_result', name: 'work_order', orderable: false, searchable: false}, // Fetch work_order number_result as work_order_number
+                {data: 'work_order.number_result', name: 'work_order'}, // Fetch work_order number_result as work_order_number
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
             order: [[0, 'desc']],

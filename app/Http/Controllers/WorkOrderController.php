@@ -376,7 +376,7 @@ class WorkOrderController extends Controller
     {
         // Fetch data for the DataTable
         $query = WorkOrder::query();
-        $query->byCompany(Auth::user()->company_id)->orderBy('work_order_number', 'desc');
+        $query->byCompany(Auth::user()->company_id)->with('quote')->orderBy('work_order_number', 'desc');
 
         // OrderBy
         $query->orderBy('work_order_number', 'desc');
@@ -389,6 +389,7 @@ class WorkOrderController extends Controller
         $searchable = [
             0 => 'number_result',
             1 => 'total',
+            2 => 'quote.number_result'
         ];
 
         // define your bootstrap version (4 or 5)
@@ -434,7 +435,7 @@ class WorkOrderController extends Controller
             array_push($actionButtons,$destroy);
         }
 
-        $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+        $response =  datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
 
         $data = $response->getData();
         foreach ($data->data as $index => $item) 

@@ -140,8 +140,8 @@
             columns: [
                 {data: 'number_result', name: 'number_result', orderable: true},
                 {data: 'date', name: 'date', orderable: true},
-                {data: 'work_order.number_result', name: 'number_result', orderable: false, searchable: false},
-                {data: 'project.title', name: 'project_title', orderable: false, searchable: false},
+                {data: 'work_order.number_result', name: 'work_order.number_result'},
+                {data: 'project.title', name: 'project_title', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
             order: [[1, 'desc']],
