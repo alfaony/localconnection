@@ -183,7 +183,7 @@ class InvoiceController extends Controller
         $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
         $invoice = Invoice::where('slug', $slug)->firstOrFail();
 
-        if($invoice->status == ParamSchema::AUTHORISED)
+        if(($invoice->status == 'PAID') && ($invoice->status == 'DELETED') && ($invoice->status == 'VOID') && ($invoice->status == 'AUTHORISED'))
         {
             return redirect()->to(route('invoice.index'))->with('AUTHORISED',true);
         }
@@ -257,7 +257,7 @@ class InvoiceController extends Controller
             $bast = Bast::byCompany(Auth::user()->company_id)->where('id',$request->post('bast'))->firstOrFail();
             $quote = Quote::byCompany(Auth::user()->company_id)->where('id',$bast->project->workOrder->quote_id)->firstOrFail();
             
-            if($invoice->status == ParamSchema::AUTHORISED)
+            if(($invoice->status == 'PAID') && ($invoice->status == 'DELETED') && ($invoice->status == 'VOID') && ($invoice->status == 'AUTHORISED'))
             {
                 return redirect()->to(route('invoice.index'))->with('AUTHORISED',true);
             }
@@ -335,7 +335,7 @@ class InvoiceController extends Controller
         try 
         {
             $invoice = Invoice::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-            if($invoice->status == ParamSchema::AUTHORISED)
+            if(($invoice->status == 'PAID') && ($invoice->status == 'DELETED') && ($invoice->status == 'VOID') && ($invoice->status == 'AUTHORISED'))
             {
                 return redirect()->to(route('invoice.index'))->with('AUTHORISED',true);
             }
