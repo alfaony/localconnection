@@ -157,7 +157,7 @@ class ReportProjectController extends Controller
     public function edit($slug)
     {
         $reportProject = ReportProject::where('slug',$slug)->first();
-        $nomorReportProject = $this->reportProjectNumber()['result'];
+        $nomorReportProject = $reportProject->number_result;
         $project = Project::byCompany(Auth::user()->company_id)
         ->whereDoesntHave('reportProject')
         ->orWhere('id', $reportProject->project_id)
