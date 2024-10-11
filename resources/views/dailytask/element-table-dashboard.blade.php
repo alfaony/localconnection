@@ -39,7 +39,6 @@
     <td class="name-cell">
         {{ $dailytask->dataProject ? $dailytask->dataProject->title : '' }}
     </td>
-    <td>{{ $dailytask->point == 0 ? "-" : $dailytask->point }}</td>
     <td class="name-cell">{{ $dailytask->user->name ?? '' }}</td>
     <td class="name-cell">{{ $dailytask->assign->name ?? '' }}</td>
     <td>
