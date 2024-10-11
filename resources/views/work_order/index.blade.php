@@ -37,6 +37,7 @@
         <thead>
             <tr>
                 <th>Nomor SPK</th>
+                <th>Nomor Quote</th>
                 <th>Total Anggaran</th>
                 <th>Aksi</th>
             </tr>
@@ -69,6 +70,7 @@
             },
             columns: [
                 {data: 'number_result', name: 'number_result', orderable: false},
+                {data: 'quote.number_result', name: 'quote.number_result', orderable: false},
                 {data: 'total', name: 'total', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
