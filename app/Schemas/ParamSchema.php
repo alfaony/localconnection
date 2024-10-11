@@ -84,4 +84,6 @@ class ParamSchema
     const OPEN = "open";
 
     const CLOSE = "close";
+
+    const PENANGGUNGJAWAB = "penanggung_jawab";
 }

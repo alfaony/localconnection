@@ -169,7 +169,8 @@
                     <th class="col-auto">Tanggal</th>
                     <th class="col-auto">Status</th>
                     <th class="col-auto">Tugas</th>
-                    <th class="col-auto">Proyek</th>
+                    <th class="col-auto">Main Proyek</th>
+                    <th class="col-auto">Data Proyek</th>
                     <th class="col-auto">Poin</th>
                     <th class="col-auto">Dibuat</th>
                     <th class="col-auto">Ditugaskan</th>
@@ -213,6 +214,9 @@
                         </td>
                         <td class="name-cell">
                             <p>{!! $dailytask->head ? $dailytask->nameShow.'  <i class="fa fa-arrow-left"></i>  '. Str::limit($dailytask->head->name,50) : $dailytask->nameShow !!}</p>
+                        </td>
+                        <td class="name-cell">
+                            {{ $dailytask->project ? $dailytask->project->name : '' }}
                         </td>
                         <td class="name-cell">
                             {{ $dailytask->dataProject ? $dailytask->dataProject->title : '' }}
