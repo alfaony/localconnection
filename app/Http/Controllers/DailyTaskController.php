@@ -405,6 +405,7 @@ class DailyTaskController extends Controller
             $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext','dailytaskChildCount'))->render();
             $htmlHeadContact = view('dailytask.sidebarhead', compact('dailytask'))->render();
             $htmlTableContent = view('dailytask.element-table', compact('dailytask'))->render();
+            $htmlTableContentDashboard = view('dailytask.element-table-dashboard', compact('dailytask'))->render();
 
             if (request()->ajax()) {
                 return response()->json([
@@ -413,6 +414,7 @@ class DailyTaskController extends Controller
                     'html' => $htmlContent,
                     'htmlHead' => $htmlHeadContact,
                     'htmlTable' => $htmlTableContent,
+                    'htmlTableDashboard' => $htmlTableContentDashboard,
                     'dailytaskNext' => $dailytaskNext
                 ]);
             }

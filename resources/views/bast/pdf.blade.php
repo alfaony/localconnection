@@ -85,7 +85,11 @@
                         {{ $company['director'] ?? '' }}
                     </div>
                     <div class="offset-5 text-left">
+                        @if($bast->customer_signature == \App\Schemas\ParamSchema::PENANGGUNGJAWAB)
+                        <p class="noMargin">{{ $bast->pic ?? '' }}</p>
+                        @else
                         <p class="noMargin">{{ $bast->workOrder ? $bast->workOrder->quote->customer->{$bast->customer_signature} : '' }}</p>
+                        @endif
                     </div>
                     <div class="offset-9 text-left">
                         <p>{{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</p>

@@ -218,7 +218,7 @@
                     Detail Laporan
                     </button>
                 </h2>
-                <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne">
                     <div class="accordion-body">
                         <label for="media">Laporan:</label>
                         <div class="card">
@@ -316,7 +316,7 @@
                     Detail Laporan
                     </button>
                 </h2>
-                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo">
                     <div class="accordion-body">
                         <label for="media">Laporan:</label>
                         <div class="card">

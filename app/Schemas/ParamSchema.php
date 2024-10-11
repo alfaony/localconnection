@@ -98,4 +98,5 @@ class ParamSchema
     const DISCOUNT="Discount";
 
     const DELETE="DELETED";
+    const PENANGGUNGJAWAB = "penanggung_jawab";
 }

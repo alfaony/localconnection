@@ -71,9 +71,11 @@ return
          'sunday' => 'Minggu',
        ],
 
-       'customerSignature'=>[
+       'customerSignature'=>
+       [
         'pic' => 'PIC',
         'director' => 'Direktur',
+        'penanggung_jawab' => 'Penanggung Jawab'
        ],
 
        'status_invoice' => 
