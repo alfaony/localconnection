@@ -30,13 +30,13 @@
   <div class="card p-3 mt-3">
     <div class="card-header" id="headingOne">
       <h5 class="mb-0">
-        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseDashboardProject" aria-expanded="true" aria-controls="collapseDashboardProject">
             Pantauan Tugas
         </button>
       </h5>
     </div>
 
-    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+    <div id="collapseDashboardProject" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
         <div class="card-body">
             <div class="accordion" id="taskAccordion">
                 <form method="GET" action="{{ route('projectdashboard.index') }}" class="mb-3">
@@ -440,7 +440,7 @@
                         var button = $('#btn-show-' + response.dailytask.id);
                         var taskNo = button.data('task-no') ?? 0;
                         
-                        let newRow = $(response.htmlTable); // Mengambil row baru dari response
+                        let newRow = $(response.htmlTableDashboard); // Mengambil row baru dari response
 
                         if(taskNo != 0)
                         {
