@@ -141,7 +141,7 @@ class XeroService
                 "DueDate" => $invoice->end_date,
                 "LineItems" => $lineItems, // Line items array from getLineItems method
                 "Status" => "DRAFT", // Invoice status
-                "LineAmountTypes" => $invoice->tax != '0' ? "Exclusive" : "NoTax", // Prices exclusive of tax
+                "LineAmountTypes" => (!empty($invoice->tax) && $invoice->tax > 0) ? "Exclusive" : "NoTax", 
             ];
             
             // Call Xero API to create the invoice
@@ -186,7 +186,7 @@ class XeroService
                 "DueDate" => Carbon::parse($invoice->end_date)->format('Y-m-d'),
                 "LineItems" => $lineItems, // Line items array from getLineItems method
                 "Status" => $status, // Invoice status
-                "LineAmountTypes" => $invoice->tax != '0' ? "Exclusive" : "NoTax", // Prices exclusive of tax
+                "LineAmountTypes" => (!empty($invoice->tax) && $invoice->tax > 0) ? "Exclusive" : "NoTax",
             ];
             
             $response = Xero::invoices()->update($invoice->invoice_xero_id, $data);
