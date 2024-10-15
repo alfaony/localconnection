@@ -39,15 +39,15 @@ class ReportProjectController extends Controller
      */
     public function createsuggest($slug)
     {
-        $selectedWorkOrder = WorkOrder::select('id','number_result')->with('reportProject')->byCompany(Auth::user()->company_id)->with('project')->where('slug',$slug)->first();
-        if(!$selectedWorkOrder)
+        $selectedProject = Project::byCompany(Auth::user()->company_id)->whereDoesntHave('reportProject')->where('slug',$slug)->first();
+        if(!$selectedProject)
         {
-            return redirect()->to(route('report-project.index'))->with('datanotfound',true);
+            return redirect()->to(route('report-project.index'))->with('dataprojectnotfound',true);
         }
 
-        if(!$selectedWorkOrder->project)
+        if(!$selectedProject->workOrder)
         {
-            return redirect()->to(route('bast.index'))->with('dataprojectnotfound',true);
+            return redirect()->to(route('report-project.index'))->with('datanotfound',true);
         }
 
 
@@ -59,7 +59,7 @@ class ReportProjectController extends Controller
 
         $userCreate = Auth::user()->name;
 
-        return view('report_project.createOrEdit',compact('project','nomorReportProject','userCreate','workOrder','selectedWorkOrder'));
+        return view('report_project.createOrEdit',compact('project','nomorReportProject','userCreate','workOrder','selectedProject'));
     }
 
     public function create()
@@ -158,7 +158,7 @@ class ReportProjectController extends Controller
     public function edit($slug)
     {
         $reportProject = ReportProject::where('slug',$slug)->first();
-        $nomorReportProject = $this->reportProjectNumber()['result'];
+        $nomorReportProject = $reportProject->number_result;
         $project = Project::byCompany(Auth::user()->company_id)
         ->whereDoesntHave('reportProject')
         ->orWhere('id', $reportProject->project_id)
@@ -362,23 +362,18 @@ class ReportProjectController extends Controller
     public function dataTableJsonWorkOrderWithoutReportProject()
     {
         // Fetch data for the DataTable
-        $query = WorkOrder::query();
+        $query = Project::query();
         $query->byCompany(Auth::user()->company_id); // Filter by the company of the logged-in user
-        $query->whereHas('project'); // Only fetch WorkOrders with an associated ReportProject
-        $query->whereHas('project', function($q) {
-            // Filter project yang tidak memiliki reportProject (HasOne)
-            $q->doesntHave('reportProject');
-        })
-        ->orderBy('created_at', 'desc');
-
+        $query->doesntHave('reportProject');
+        $query->with('workOrder')->orderBy('created_at', 'desc');
 
         // Map column indexes to column names (modify these based on your actual database structure)
-        $columnNames = ['date', 'work_order_number', 'description'];
+        $columnNames = ['title', 'work_order_number', 'description'];
 
         // Define searchable columns
         $searchable = [
-            0 => 'work_order_number',
-            1 => 'date',
+            'title',
+            'workOrder.number_result', // Relasi: mencari di dalam kolom work_order
         ];
 
         // Define action buttons
@@ -392,14 +387,14 @@ class ReportProjectController extends Controller
             ];
         }
 
-        $response = datatablesFormater($query, $columnNames, $actionButtons, $searchable, 4); // assuming bootstrap version 4
+        $response = datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, 4); // assuming bootstrap version 4
 
         $data = $response->getData();
         foreach ($data->data as $index => $item) 
         {
-            $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
+            $item->work_order->total = 'Rp. '.number_format($item->work_order->total, 0,',','.'); // Format angka dengan 2 desimal
         }
-
+        
         return response()->json($data);
     }
 
