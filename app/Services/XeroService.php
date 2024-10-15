@@ -131,7 +131,6 @@ class XeroService
             $invoice->save();
             throw new \Exception('Line items are empty or invalid.');
         }
-        
         try {
             $invoiceXero = [
                 "Type" => "ACCREC",  // ACCREC for sales invoices
@@ -142,7 +141,7 @@ class XeroService
                 "DueDate" => $invoice->end_date,
                 "LineItems" => $lineItems, // Line items array from getLineItems method
                 "Status" => "DRAFT", // Invoice status
-                "LineAmountTypes" => "Exclusive" // Prices exclusive of tax
+                "LineAmountTypes" => $invoice->tax != '0' ? "Exclusive" : "NoTax", // Prices exclusive of tax
             ];
             
             // Call Xero API to create the invoice
@@ -187,7 +186,7 @@ class XeroService
                 "DueDate" => Carbon::parse($invoice->end_date)->format('Y-m-d'),
                 "LineItems" => $lineItems, // Line items array from getLineItems method
                 "Status" => $status, // Invoice status
-                "LineAmountTypes" => "Exclusive" // Prices exclusive of tax
+                "LineAmountTypes" => $invoice->tax != '0' ? "Exclusive" : "NoTax", // Prices exclusive of tax
             ];
             
             $response = Xero::invoices()->update($invoice->invoice_xero_id, $data);
