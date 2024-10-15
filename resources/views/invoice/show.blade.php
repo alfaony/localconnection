@@ -269,7 +269,7 @@
     <div class="card-header" id="headingTwo">
       <h5 class="mb-0">
         <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-            Bast
+            BAST
         </button>
       </h5>
     </div>
@@ -320,7 +320,7 @@
                         @php $detail = $bast->project->reportProject->reportProjectDetail; @endphp
                         @foreach($detail as $a)
                         <li>
-                            {{ $a->name .' - ' }}  @if($a->link)<a href="{{ $a->link }}" target="_blank" class="text-primary">{{ $a->link }}</a> @endif
+                            {{ $a->name .' - ' }}  <a href="{{ $a->url }}" class="text-primary">{{ $a->url }}</a>
                         </li>
                         @endforeach
                         @endif

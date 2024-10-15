@@ -83,7 +83,6 @@ class ReportProjectController extends Controller
      */
     public function store(ReportProjectRequest $request)
     {
-
         DB::beginTransaction();
         try {
             $nomorReportProject = $this->reportProjectNumber();
@@ -101,15 +100,16 @@ class ReportProjectController extends Controller
             
             $reportProject->save();
 
+            $is_report = $request->post('is_report');
             $name = $request->post('name');
             $link = $request->post('link');
             $file = $request->file('file');
             
-
             for ($i = 0; $i < count($name); $i++) 
             {
                 $reportProjectDetail = new ReportProjectDetail;
                 $reportProjectDetail->name = $name[$i];
+                $reportProjectDetail->is_report = $is_report[$i];
                 $reportProjectDetail->link = $link[$i];
                 
                 if ($file[$i]) 
@@ -190,6 +190,7 @@ class ReportProjectController extends Controller
             $reportProject->save();
     
             $ids = $request->post('ids');
+            $is_report = $request->post('is_report');
             $name = $request->post('name');
             $link = $request->post('link');
             $file = $request->file('file');
@@ -203,6 +204,7 @@ class ReportProjectController extends Controller
                 if(!$id)
                 {
                     $reportProjectDetail = new ReportProjectDetail;
+                    $reportProjectDetail->is_report = $is_report[$i];
                     $reportProjectDetail->name = $name[$i];
                     $reportProjectDetail->link = $link[$i];
                     
@@ -231,6 +233,7 @@ class ReportProjectController extends Controller
                 }else
                 {
                     $reportProjectDetail = ReportProjectDetail::find($id);
+                    $reportProjectDetail->is_report = $is_report[$i];
                     $reportProjectDetail->name = $name[$i];
                     $reportProjectDetail->link = $link[$i];
                     

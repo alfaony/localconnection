@@ -142,6 +142,8 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('quote', QuoteController::class)->except(['show']);
 
   Route::delete('work-order/destroyProduct/product/{WorkOrderProduct}',[WorkOrderController::class,'destroyProduct'])->name('work-order.destroy.product');
+  Route::get('work-order/dataTableJsonQuoteWithoutWorkOrder', [WorkOrderController::class, 'dataTableJsonQuoteWithoutWorkOrder'])->name('work-order.dataTableJsonQuoteWithoutWorkOrder');
+  Route::get('work-order/createsuggest/{slug}', [WorkOrderController::class, 'createsuggest'])->name('work-order.createsuggest');
   Route::get('work-order/productPrice/counting', [WorkOrderController::class, 'productPrice'])->name('work-order.productPrice');
   Route::get('work-order/select2', [WorkOrderController::class, 'select2'])->name('work-order.select2');
   Route::get('work-order/downloadPdf/pdf/{slug}/',[WorkOrderController::class,'downloadPdf'])->name('work-order.download.pdf');

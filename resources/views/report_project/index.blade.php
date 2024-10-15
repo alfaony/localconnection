@@ -50,8 +50,8 @@
     @endcanAccess
 </ul>
 
-    <!-- Tab panes -->
-    <div class="tab-content">
+<!-- Tab panes -->
+<div class="tab-content">
     <!-- BAST Tab -->
     @canAccess('dataTableJson','report_projects')
     <div class="tab-pane fade show active" id="bast" role="tabpanel" aria-labelledby="bast-tab">
@@ -139,13 +139,13 @@
                 dataSrc: 'data'
             },
             columns: [
-                {data: 'number_result', name: 'number_result', orderable: true},
-                {data: 'date', name: 'date', orderable: true},
+                {data: 'number_result', name: 'number_result', orderable: false},
+                {data: 'date', name: 'date', orderable: false},
                 {data: 'work_order.number_result', name: 'work_order.number_result'},
                 {data: 'project.title', name: 'project_title', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
-            order: [[1, 'desc']],
+            // order: [[1, 'desc']],
         });
     });
 </script>

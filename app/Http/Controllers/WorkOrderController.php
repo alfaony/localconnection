@@ -32,6 +32,25 @@ class WorkOrderController extends Controller
     }
 
     /**
+     * Create Suggestion 
+     */
+    public function createsuggest($slug)
+    {   
+        $quoteSuggestion = Quote::ByCompany(Auth::user()->company_id)->whereDoesntHave('workOrder')->where('slug', $slug)->first();
+        if(!$quoteSuggestion)
+        {
+            return redirect()->to(route('work_order.index'))->with('datanotfound',true);
+        }
+
+        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $quote = Quote::ByCompany(Auth::user()->company_id)->whereDoesntHave('workOrder')->orderBy('created_at','desc')->get();
+
+        $userCreate = Auth::user()->name;
+        $nomorWorkOrder = $this->workOrderNumber();
+
+        return view('work_order.createOrEdit',compact('product','userCreate','nomorWorkOrder','quote','quoteSuggestion'));
+    }
+    /**
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response
@@ -371,7 +390,7 @@ class WorkOrderController extends Controller
         return $nomor.'/'.$date;
 
     }
-
+    
     public function dataTableJson()
     {
         // Fetch data for the DataTable
@@ -446,6 +465,55 @@ class WorkOrderController extends Controller
         return response()->json($data);
     }
 
+    /**
+     * WOrk Order
+     */
+
+     public function dataTableJsonQuoteWithoutWorkOrder()
+    {
+        // Fetch data for the DataTable
+        $query = Quote::query();
+        $query->byCompany(Auth::user()->company_id)->whereDoesntHave('workOrder')->orderBy('quote_number', 'desc');
+        // Map column indexes to column names (this may vary based on your table structure)
+        $columnNames = ['number_result', 'total', 'budget_transition', 'slug'];
+
+        // Define searchable columns
+        $searchable = 
+        [
+            0 => 'number_result',
+            1 => 'total',
+        ];
+
+        // define your bootstrap version (4 or 5)
+        $bootstrap = 4;
+
+        // Add action buttons to each row
+        $actionButtons = [];
+
+        if(Access::can('createsuggest','work_orders'))
+        {
+            $destroy = [
+                'name' => 'Membuat SPK',
+                'route' => 'work-order.createsuggest',
+                'id' => true,
+            ];
+
+            array_push($actionButtons,$destroy);
+        }
+
+
+        $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+
+        $data = $response->getData();
+        foreach ($data->data as $index => $item) 
+        {
+            $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
+            $color = $item->budget_transition ? 'badge badge-success' : 'badge badge-primary';
+            $item->budget_transition = $item->budget_transition ? "<span class='badge $color'>Peralihan</span>" : "<span class='badge $color'>Baru</span>";
+        }
+
+        return response()->json($data);
+    }
     /**
      * Select 
      */
