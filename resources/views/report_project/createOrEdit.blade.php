@@ -99,43 +99,52 @@
                     </div>
                 </div>
                 
-                <table class="table table-bordered mt-3" id="tableReport">
-                    <thead>
-                        <tr>
-                            <th >No</th>
-                            <th >Nama</th>
-                            <th >Link</th>
-                            <th >File</th>
-                            <th >Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if(@$reportProject)
-                        @php $no = 1; @endphp
-                        @foreach(@$reportProject->reportProjectDetail as $a)
-                        <tr>
-                            <td>
-                                {{ $no++ }}
-                            </td>
-                            <td width="30%">
-                                <input type="hidden" class="form-control" name="ids[]" value="{{ $a->id }}" required>
-                                <input type="text" class="form-control" id="name_" name="name[]" value="{{ $a->name }}" required>
-                            </td>
-                            <td width="30%">
-                                <input type="text" class="form-control" id="link_" name="link[]" value="{{ $a->link }}" required>
-                            </td>
-                            <td width="20%">
-                            <input type="file" class="form-control" id="file_" name="file[]" >
-                            </td>
-                            <td>
-                                <a href="{{ Storage::url('reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-download"></i></a>
-                                <button class="btn btn-sm btn-danger btnHapusData" data-id="{{ $a->id }}" title="delete"><i class="fa fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        @endforeach
-                        @endif
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-bordered mt-3" id="tableReport">
+                        <thead>
+                            <tr>
+                                <th >No</th>
+                                <th >Nama</th>
+                                <th >Laporan</th>
+                                <th >Link</th>
+                                <th >File</th>
+                                <th >Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if(@$reportProject)
+                            @php $no = 1; @endphp
+                            @foreach(@$reportProject->reportProjectDetail as $index => $a)
+                            <tr>
+                                <td>
+                                    {{ $no++ }}
+                                </td>
+                                <td width="30%">
+                                    <input type="hidden" class="form-control" name="ids[]" value="{{ $a->id }}" required>
+                                    <input type="text" class="form-control" id="name_" name="name[]" value="{{ $a->name }}" required>
+                                </td>
+                                <td>
+                                    <!-- Hidden input default 0 -->
+                                    <input type="hidden" name="is_report[{{ $index }}]" value="0">
+                                    <!-- Checkbox is_report -->
+                                    <input type="checkbox" class="form-control is_report_checkbox" name="is_report[{{ $index }}]" value="1" {{ $a->is_report ? 'checked' : '' }}>
+                                </td>
+                                <td width="30%">
+                                    <input type="text" class="form-control" id="link_" name="link[]" value="{{ $a->link }}" required>
+                                </td>
+                                <td width="20%">
+                                <input type="file" class="form-control" id="file_" name="file[]" >
+                                </td>
+                                <td>
+                                    <a href="{{ Storage::url('reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-download"></i></a>
+                                    <button class="btn btn-sm btn-danger btnHapusData" data-id="{{ $a->id }}" title="delete"><i class="fa fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            @endforeach
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
 
                 <div class="row mb-3">
                     <div class="col-md-12 text-right">
@@ -170,6 +179,12 @@
                     <td>
                         <input type="hidden" class="form-control" name="ids[]" required>
                         <input type="text" class="form-control" id="name_" name="name[]" required>
+                    </td>
+                    <td>
+                        <!-- Hidden input default 0 -->
+                        <input type="hidden" name="is_report[${noBaris - 1}]" value="0">
+                        <!-- Checkbox is_report -->
+                        <input type="checkbox" class="form-control is_report_checkbox" name="is_report[${noBaris - 1}]" value="1">
                     </td>
                     <td>
                         <input type="text" class="form-control" id="link_" name="link[]" required>

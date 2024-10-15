@@ -52,5 +52,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuDevice::class);
         $this->call(PermissionForProjectExportSeeder::class);
         $this->call(PermissionForRequestProjectSeeder::class);
+        $this->call(PermissionForSuggestWorkOrderSeeder::class);
     }
 }
