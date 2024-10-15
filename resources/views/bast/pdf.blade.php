@@ -55,7 +55,7 @@
                     @php $detail = $bast->project->reportProject->reportedDetails; @endphp
                     @foreach($detail as $a)
                     <li>
-                        {{ $a->name .' - ' }}  @if($a->link)<a href="{{ $a->link }}" target="_blank" class="text-primary">{{ $a->link }}</a> @endif
+                        {{ $a->name .' - ' }}  <a href="{{ $a->url }}" class="text-primary">{{ $a->url }}</a>
                     </li>
                     @endforeach
                     @endif
