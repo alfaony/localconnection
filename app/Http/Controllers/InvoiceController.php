@@ -51,19 +51,26 @@ class InvoiceController extends Controller
         // Ambil input pencarian dari request
         $search = $request->input('search');
         $order = $request->input('order') ?? 'desc';
+        $status = $request->input('status');
+        $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null; // Parse tanggal dari string ke Carbon
+        $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
 
-        $invoice = Invoice::byCompany(Auth::user()->company_id)
+        $invoice = Invoice::byCompany(Auth::user()->company_id)->byDateRange($start_date,$end_date)
         ->when($search, function ($query, $search) {
             return $query->where('number_result', 'LIKE', "%{$search}%")
                          ->orWhereHas('bast', function ($q) use ($search) {
                              $q->where('number_result', 'LIKE', "%{$search}%");
                          });
         })
-    
-                ->orderBy('created_at', $order)
-                ->paginate(10);
+        ->when($status, function ($query, $status) {
+            return $query->where('status', $status);
+        })
+        ->orderBy('created_at', $order)
+        ->paginate(10);
 
-        return view('invoice.index',compact('invoice'));
+        $searchByStatus = config('custom.status_invoice_search');
+
+        return view('invoice.index',compact('invoice','searchByStatus'));
     }
 
     /**

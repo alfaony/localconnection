@@ -84,5 +84,12 @@ return
           'SUBMITTED' => 'Submitted',
           'AUTHORISED' => 'Waiting payment',
        ],
+       'status_invoice_search' => 
+       [
+          'DRAFT' => 'Draft',
+          'SUBMITTED' => 'Submitted',
+          'AUTHORISED' => 'Waiting payment',
+          'PAID' => 'Paid',
+       ],
 
 ];

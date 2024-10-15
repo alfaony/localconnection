@@ -64,6 +64,19 @@
                         <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
                     </select>
                 </div>
+                <div class="p-2">
+                    <select name="status" class="form-control">
+                        <option value="">Semua Status</option>
+                        @foreach($searchByStatus as $key => $value)
+                            <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>{{ $value }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="p-2">
+                    <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="{{ request('start_date') && request('end_date') ? request('start_date').' - '.request('end_date') : '' }}">
+                    <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
+                    <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
+                </div>
             </div>
         </form>
         
@@ -76,6 +89,8 @@
                     <th>Status</th>
                     <th>Total Invoice</th>
                     <th>Status Connect</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -115,6 +130,12 @@
                         @else
                             <span class="badge bg-danger">Not Connected</span>
                         @endif
+                    </td>
+                    <td>
+                        {{ $a->start_date ? \Carbon\Carbon::parse($a->start_date)->format('d-m-Y') : '' }}
+                    </td>
+                    <td>
+                        {{ $a->end_date ? \Carbon\Carbon::parse($a->end_date)->format('d-m-Y') : '' }}
                     </td>
                     <td>
                         <form method="post" action="{{ route('invoice.destroy', $a->slug) }}">
@@ -182,6 +203,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script type="text/javascript">
     $(document).ready(function() {
         var table = $('#tableQuote').DataTable({
@@ -215,12 +238,40 @@
         });
     });
 </script>
+<script>
+    // Initialize Daterangepicker
+    $('#date_range').daterangepicker({
+        autoUpdateInput: false, // Prevents the input from being automatically populated
+        locale: {
+            format: 'DD-MM-YYYY',
+            cancelLabel: 'Clear', // Adds a clear button to the picker
+        },
+    });
 
+    $('#date_range').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('DD-MM-YYYY') + ' - ' + picker.endDate.format('DD-MM-YYYY'));
+    });
+
+    // Clear the date range when the user clicks on 'Clear'
+    $('#date_range').on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+        $('#start_date').val(null); // Set start_date to null
+        $('#end_date').val(null); // Set end_date to null
+    });
+
+
+    // Capture the date range selection
+    $('#date_range').on('apply.daterangepicker', function(ev, picker) {
+        $('#start_date').val(picker.startDate.format('DD-MM-YYYY'));
+        $('#end_date').val(picker.endDate.format('DD-MM-YYYY'));
+    });
+</script>
 @stop
 @section('css')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css"> 
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 <style>
    body {
             font-family: Arial, sans-serif;
