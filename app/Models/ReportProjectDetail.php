@@ -39,4 +39,9 @@ class ReportProjectDetail extends Model
     {
         return $this->sortUrl ? url('/')."/".$this->sortUrl->slug : '';
     }
+
+    public function scopeByReport($query)
+    {
+        return $query->where('is_report', true);
+    }
 }
