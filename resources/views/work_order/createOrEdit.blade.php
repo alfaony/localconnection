@@ -53,15 +53,15 @@
                         <select name="quote" class="form-control select2" required>
                             <option value="" disabled selected>Quote</option>
                             @foreach($quote as $a)
-                            <option value="{{ $a->id }}" data-customer="{{ $a->customer ? $a->customer->name : '' }}" {{ @$workOrder->quote_id == $a->id ? 'selected' : '' }}>{{ $a->number_result  ?? ''}}</option>
+                            <option value="{{ $a->id }}" data-customer="{{ $a->customer ? $a->customer->name : '' }}" {{ @$workOrder->quote_id == $a->id ? 'selected' : '' }} >{{ $a->number_result  ?? ''}}</option>
                             @endforeach
                             <!-- Anda bisa menambahkan option lainnya di sini -->
                         </select>
                         @else
-                        <select name="quote" class="form-control select2 quoteSuggestion" required>
+                        <select name="quote" class="form-control select2 quoteSuggestion" id="select-quote-suggestion"required>
                             <option value="" disabled selected>Quote</option>
                             @foreach($quote as $a)
-                            <option value="{{ $a->id }}" data-customer="{{ $a->customer ? $a->customer->name : '' }}" {{ @$workOrder->quote_id == $a->id ? 'selected' : '' }}>{{ $a->number_result  ?? ''}}</option>
+                            <option value="{{ $a->id }}" data-customer="{{ $a->customer ? $a->customer->name : '' }}" {{ @$quoteSuggestion->id == $a->id ? 'selected' : '' }}>{{ $a->number_result  ?? ''}}</option>
                             @endforeach
                             <!-- Anda bisa menambahkan option lainnya di sini -->
                         </select>
@@ -704,6 +704,14 @@
         $("#customer").val(customerName);
     }
 </script>
+
+@if(@$quoteSuggestion)
+<script>
+    $(document).ready(function () {
+        $('#select-quote-suggestion').trigger('change');
+    });
+</script>
+@endif
 @stop
 @section('css')
 <!-- Select2 CSS -->

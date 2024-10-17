@@ -52,7 +52,7 @@
                 <ul>
                     @if($bast->project)
                     @if($bast->project->reportProject->reportProjectDetail)
-                    @php $detail = $bast->project->reportProject->reportProjectDetail; @endphp
+                    @php $detail = $bast->project->reportProject->reportedDetails; @endphp
                     @foreach($detail as $a)
                     <li>
                         {{ $a->name .' - ' }}  <a href="{{ $a->url }}" class="text-primary">{{ $a->url }}</a>

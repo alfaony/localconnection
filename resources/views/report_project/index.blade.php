@@ -44,14 +44,14 @@
     @canAccess('dataTableJsonWorkOrderWithoutReportProject','report_projects')
     <li class="nav-item">
         <a class="nav-link" id="spk-tab" data-toggle="tab" href="#spk_report" role="tab" aria-controls="spk_report" aria-selected="false">
-            <i class="fa fa-clipboard-list"></i> SPK (Belum Terbuat Laporan)
+            <i class="fa fa-clipboard-list"></i> Proyek (Belum Terbuat Laporan)
         </a>
     </li>
     @endcanAccess
 </ul>
 
-    <!-- Tab panes -->
-    <div class="tab-content">
+<!-- Tab panes -->
+<div class="tab-content">
     <!-- BAST Tab -->
     @canAccess('dataTableJson','report_projects')
     <div class="tab-pane fade show active" id="bast" role="tabpanel" aria-labelledby="bast-tab">
@@ -93,13 +93,14 @@
     <div class="tab-pane fade" id="spk_report" role="tabpanel" aria-labelledby="spk-tab">
         <div class="card mt-3 shadow-sm">
             <div class="card-header bg-primary text-white">
-                <h3 class="card-title">List SPK</h3>
+                <h3 class="card-title">Daftar Proyek</h3>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                 <table class="table table-bordered" id="dataTableJsonWorkOrderWithoutReportProject" style="width:100%">
                         <thead>
                             <tr>
+                                <th>Proyek</th>
                                 <th>Nomor SPK</th>
                                 <th>Total Anggaran</th>
                                 <th>Aksi</th>
@@ -138,13 +139,13 @@
                 dataSrc: 'data'
             },
             columns: [
-                {data: 'number_result', name: 'number_result', orderable: true},
-                {data: 'date', name: 'date', orderable: true},
+                {data: 'number_result', name: 'number_result', orderable: false},
+                {data: 'date', name: 'date', orderable: false},
                 {data: 'work_order.number_result', name: 'work_order.number_result'},
                 {data: 'project.title', name: 'project_title', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
-            order: [[1, 'desc']],
+            // order: [[1, 'desc']],
         });
     });
 </script>
@@ -160,8 +161,9 @@
                 dataSrc: 'data'
             },
             columns: [
-                {data: 'number_result', name: 'number_result', orderable: false},
-                {data: 'total', name: 'total', orderable: false},
+                {data: 'title', name: 'title', orderable: false},
+                {data: 'work_order.number_result', name: 'work_order.number_result', orderable: false},
+                {data: 'work_order.total', name: 'work_order.total', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
         });
