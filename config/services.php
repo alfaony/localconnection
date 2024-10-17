@@ -51,5 +51,11 @@ return [
         'url' => env('DEVICE_API_URL', 'https://iot.keloola.com/api/bos-device-list'),
         'Authorization' => env('API_BEARER_TOKEN'),
     ],
+
+    'checking_setting' => 
+    [
+        'duration' => env('CHECKIN_DURATION', 120),
+        'times' => env('CHECKIN_TIME', 10),
+    ]
     
 ];

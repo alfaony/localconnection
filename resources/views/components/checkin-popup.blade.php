@@ -49,7 +49,9 @@
     // Fungsi untuk mendengarkan perubahan data check-in secara real-time
     function checkScheduledTime(scheduledTime, localId, entry) {   
         const currentTime = Math.floor(Date.now() / 1000);
-        const timeLeft = (scheduledTime + 125) - currentTime;
+        let times = parseInt("{{ config('services.checking_setting.duration') }}");
+        
+        const timeLeft = (scheduledTime + times) - currentTime;
 
         if (timeLeft > 0 && currentTime >= scheduledTime && entry.is_active) 
         {
@@ -93,7 +95,7 @@
                     // Cek waktu secara berkala setiap 6 detik
                     intervalIdMap[localId] = setInterval(() => {
                         checkScheduledTime(scheduledTime, localId, entry);
-                    }, 6000);
+                    }, 1000);
                 }
             });
 
@@ -107,6 +109,11 @@
         const popup = document.getElementById('checkinPopup');
         const overlay = document.getElementById('overlay');
         
+        if (popup.style.display === 'flex') 
+        {
+            return; // Jika sudah terbuka, jangan mulai countdown baru
+        }
+
         if (popup) {
             popup.style.display = 'flex';
             popup.dataset.checkinId = localId;
@@ -145,6 +152,7 @@
         
         popup.style.setProperty('display', 'none', 'important'); 
 
+        if (intervalId) clearInterval(intervalId); // Pastikan interval countdown dihentikan
         updateStatus(); // Panggil fungsi untuk memperbarui status di server
     }
 

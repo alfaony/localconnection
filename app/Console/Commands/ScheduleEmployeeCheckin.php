@@ -112,8 +112,7 @@ class ScheduleEmployeeCheckin extends Command
     private function generateRandomCheckinTimes()
     {
         $times = [];
-        while (count($times) < 5
-        ) 
+        while (count($times) < config('services.checking_setting.times')) 
         {
             $time = Carbon::today()->addHours(rand(8, 16))->addMinutes(rand(0, 59));
             if ($time->hour === 12) {
