@@ -44,10 +44,13 @@
         @endif
 
     </div>
+    @include('components.checkin-popup')
+
 @stop
 
 @section('adminlte_js')
+    {{-- Include Firebase Initialization --}}
+    @include('partials.firebase')
     @stack('js')
     @yield('js')
-    @include('inbox.inboxscript')
 @stop

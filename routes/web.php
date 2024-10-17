@@ -56,6 +56,8 @@ use App\Http\Controllers\InboxController;
 use App\Http\Controllers\LetterSubmissionController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\NationalHolidayController;
+use App\Http\Controllers\EmployeeCheckingController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -240,12 +242,13 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('device', [DeviceController::class,'index'])->name('device.index');
   Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
 });
+Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
+Route::resource('employee-checking', EmployeeCheckingController::class);
 
+Route::resource('national-holiday', NationalHolidayController::class)->only(['index','store','update','destroy']);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
-
-
 
 Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');
 

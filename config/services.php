@@ -43,7 +43,8 @@ return [
         'messaging_sender_id' => env('FIREBASE_MESSAGING_SENDER_ID'),
         'app_id' => env('FIREBASE_APP_ID'),
         'service_account' => env('FIREBASE_SERVICE_ACCOUNT'),
-        'service_database_url' => env('FIREBASE_SERVICE_DATABASE_URL'),
+        'service_database_inbox_url' => env('FIREBASE_SERVICE_DATABASE_INBOX_URL'),
+        'service_database_checkin_url' => env('FIREBASE_SERVICE_DATABASE_CHECKIN_URL'),
     ],
 
     'device_iot_api' => [

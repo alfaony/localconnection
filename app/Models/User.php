@@ -119,6 +119,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Division::class);
     }
 
+    public function getFirstDivisionAttribute()
+    {
+        return $this->divisions->first();
+    }
+    
     public function userPosition()
     {
         return $this->hasMany(UserPosition::class);
