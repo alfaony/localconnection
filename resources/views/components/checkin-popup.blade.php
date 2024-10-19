@@ -1,4 +1,5 @@
 <!-- Firebase harus di-include di layout utama sebelum popup ini -->
+ @canAccess('update','employee_checkings')
 <div id="checkinPopup" class="" style="display: none !important;">
     <div class="popup-content">
         <h2>Time to Check-in </h2>
@@ -15,6 +16,7 @@
         <div id="photoSection" class="form-group" style="display: none; margin-top: 15px;">
             <input type="file" class="form-control" id="photo" name="photo" accept="image/*" capture="environment" onchange="compressAndPreviewImageCheckin();" required>
             <small class="text-muted">Klik untuk mengambil foto menggunakan kamera.</small>
+            <span id="photo-warning" style="color: red; font-size: 12px;"></span> <!-- Peringatan foto -->
             <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-thumbnail mt-3">
         </div>
 
@@ -24,6 +26,7 @@
             <p id="locationStatus"></p>
             <input type="hidden" id="latitude" name="latitude">
             <input type="hidden" id="longitude" name="longitude">
+            <span id="location-warning" style="color: red; font-size: 12px;"></span> <!-- Peringatan lokasi -->
         </div>
 
         <!-- Google reCAPTCHA -->
@@ -32,7 +35,7 @@
         </div>
 
         <!-- Submit Button -->
-        <!-- <button id="submitCheckin" class="btn btn-primary mt-4">Submit Check-in</button> -->
+        <button id="submitCheckin" class="btn btn-primary mt-4" onclick="onSubmit()">Submit Check-in</button>
     </div>
 </div>
 
@@ -65,6 +68,48 @@
             showCheckinPopup(timeLeft, localId);
         }
     }
+
+    function monitorCheckin() 
+    {
+        const userId = "{{ Auth::user()->id }}";
+        const checkin = firebase.app().database("{{ config('services.firebase.service_database_checkin_url') }}");
+
+        checkin.ref('employee_checkins/' + userId).on('value', (snapshot) => {
+            const data = snapshot.val();
+            if(data)
+            {
+                Object.keys(data).forEach((key) => 
+                {
+                    const entry = data[key];
+                    if (entry && entry.local_id && entry.is_active) {
+    
+                        
+                        const scheduledTimeStr = entry.scheduled_time;
+                        const localId = entry.local_id;
+                        const scheduledTime = new Date(scheduledTimeStr).getTime() / 1000;
+                        const currentTime = Math.floor(Date.now() / 1000);
+                        
+                        let times = parseInt("{{ config('services.checking_setting.duration') }}");
+                        
+                        const timeLeft = (scheduledTime + times) - currentTime;
+    
+                        console.log("Show time: " + entry.local_id + " "+entry.is_active+" "+ entry.scheduled_time );
+                        if (timeLeft) 
+                        {
+                            let showTimeCheckin = document.getElementById('show_time_checkin');
+                            let showTimeCheckinId = document.getElementById('show_time_checkin_id');
+    
+                            showTimeCheckinId.textContent = entry.local_id;
+                            showTimeCheckin.textContent = entry.scheduled_time;
+                            
+                            showCheckinPopup(timeLeft, localId, entry.requires_photo, entry.requires_location);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
 
     function monitorCheckinData() 
     {
@@ -105,13 +150,36 @@
     }
 
     // Fungsi untuk menampilkan popup check-in
-    function showCheckinPopup(remainingTime, localId) {
+    function showCheckinPopup(remainingTime, localId, requiresPhoto = false, requiresLocation = false) {
         const popup = document.getElementById('checkinPopup');
         const overlay = document.getElementById('overlay');
+
+        const photoInput = document.getElementById('photo');
+        const photoSection = document.getElementById('photoSection');
+        const locationSection = document.getElementById('locationSection');
+        const locationButton = document.querySelector('#locationSection button');
         
         if (popup.style.display === 'flex') 
         {
             return; // Jika sudah terbuka, jangan mulai countdown baru
+        }
+
+        if (requiresPhoto) 
+        {
+            photoSection.style.display = 'block';
+            photoInput.setAttribute('required', 'required');
+        } else {
+            photoSection.style.display = 'none';
+            photoInput.removeAttribute('required');
+        }
+
+        // Atur visibilitas dan required pada lokasi
+        if (requiresLocation) {
+            locationSection.style.display = 'block';
+            locationButton.setAttribute('required', 'required');
+        } else {
+            locationSection.style.display = 'none';
+            locationButton.removeAttribute('required');
         }
 
         if (popup) {
@@ -121,7 +189,7 @@
         
         if (overlay) {
             overlay.style.display = 'block';
-        }
+        }   
 
         startCountdown(remainingTime, localId);
     }
@@ -163,17 +231,95 @@
     // }
 
     // Memantau data saat halaman dimuat
-    window.onload = monitorCheckinData;
+    window.onload = monitorCheckin;
 </script>
 
 
 <script>
-    
-    function onSubmit(token) 
+    function getLocation() 
     {
-        // Panggil fungsi submitCheckin atau fungsi lain dengan token reCAPTCHA
-        submitCheckin(token);
+        // Reset pesan peringatan lokasi
+        const locationWarning = document.getElementById('location-warning');
+        if (locationWarning) {
+            locationWarning.textContent = '';
+            locationWarning.style.color = '';
+        }
+
+        // Cek apakah browser mendukung geolocation
+        if (navigator.geolocation) {
+            // Minta izin pengguna untuk mendapatkan lokasi saat ini
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    // Jika lokasi berhasil didapatkan
+                    document.getElementById('latitude').value = position.coords.latitude;
+                    document.getElementById('longitude').value = position.coords.longitude;
+                    document.getElementById('locationStatus').textContent = "Lokasi berhasil didapatkan!";
+                    document.getElementById('locationStatus').style.color = 'green';
+                },
+                function(error) {
+                    // Menangani kesalahan saat mendapatkan lokasi
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            document.getElementById('locationStatus').textContent = "Akses lokasi ditolak. Silakan aktifkan izin lokasi di browser Anda.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            document.getElementById('locationStatus').textContent = "Informasi lokasi tidak tersedia.";
+                            break;
+                        case error.TIMEOUT:
+                            document.getElementById('locationStatus').textContent = "Permintaan lokasi melebihi batas waktu.";
+                            break;
+                        case error.UNKNOWN_ERROR:
+                            document.getElementById('locationStatus').textContent = "Terjadi kesalahan tidak diketahui.";
+                            break;
+                    }
+                    document.getElementById('locationStatus').style.color = 'red';
+                }
+            );
+        } else {
+            // Jika geolocation tidak didukung oleh browser
+            document.getElementById('locationStatus').textContent = "Geolocation tidak didukung oleh browser ini.";
+            document.getElementById('locationStatus').style.color = 'red';
+        }
     }
+
+
+    function onSubmit() 
+    {
+        // Ambil elemen input foto, lokasi, dan elemen untuk menampilkan peringatan
+        const photoInput = document.getElementById('photo');
+        const latitude = document.getElementById('latitude').value;
+        const longitude = document.getElementById('longitude').value;
+        const photoWarning = document.getElementById('photo-warning');
+        const locationWarning = document.getElementById('location-warning');
+        const recaptchaToken = grecaptcha.getResponse();
+
+        // Reset pesan peringatan
+        if (photoWarning) photoWarning.textContent = '';
+        if (locationWarning) locationWarning.textContent = '';
+
+        // Validasi input foto jika diperlukan
+        if (photoInput.hasAttribute('required') && !photoInput.files[0]) {
+            if (photoWarning) {
+                photoWarning.textContent = 'Foto diperlukan sebelum melakukan check-in.';
+                photoWarning.style.color = 'red';
+            }
+            return; // Hentikan eksekusi jika foto belum diambil
+        }
+
+        // Validasi lokasi jika diperlukan
+        if (document.getElementById('locationSection').style.display === 'block' && (!latitude || !longitude)) {
+            if (locationWarning) {
+                locationWarning.textContent = 'Lokasi diperlukan sebelum melakukan check-in.';
+                locationWarning.style.color = 'red';
+            }
+            return; // Hentikan eksekusi jika lokasi belum diambil
+        }
+
+        // Meminta reCAPTCHA token sebelum submit
+        submitCheckin(recaptchaToken);
+    }
+
+
 
     function submitCheckin(recaptchaToken) 
     {
@@ -266,48 +412,50 @@
 </script>
 
 <script>
-function compressAndPreviewImageCheckin() {
-    const fileInput = document.getElementById('photo');
-    const preview = document.getElementById('photo-preview');
+    function compressAndPreviewImageCheckin() 
+    {
+        const fileInput = document.getElementById('photo');
+        const preview = document.getElementById('photo-preview');
 
-    if (!fileInput.files[0]) {
-        preview.src = "";
-        return;
-    }
+        if (!fileInput.files[0]) {
+            preview.src = "";
+            return;
+        }
 
-    const reader = new FileReader();
-    reader.readAsDataURL(fileInput.files[0]);
-    reader.onload = function (event) {
-        const imgElement = document.createElement("img");
-        imgElement.src = event.target.result;
-        imgElement.onload = function (e) {
-            const canvas = document.createElement("canvas");
-            const MAX_WIDTH = 150;
+        const reader = new FileReader();
+        reader.readAsDataURL(fileInput.files[0]);
+        reader.onload = function (event) {
+            const imgElement = document.createElement("img");
+            imgElement.src = event.target.result;
+            imgElement.onload = function (e) {
+                const canvas = document.createElement("canvas");
+                const MAX_WIDTH = 150;
 
-            const scaleSize = MAX_WIDTH / e.target.width;
-            canvas.width = MAX_WIDTH;
-            canvas.height = e.target.height * scaleSize;
+                const scaleSize = MAX_WIDTH / e.target.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = e.target.height * scaleSize;
 
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(e.target, 0, 0, canvas.width, canvas.height);
-            ctx.canvas.toBlob((blob) => {
-                const file = new File([blob], "compressed_image.jpg", {
-                    type: 'image/jpeg',
-                    quality: 0.8 // Lowering the quality to reduce file size
-                });
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(e.target, 0, 0, canvas.width, canvas.height);
+                ctx.canvas.toBlob((blob) => {
+                    const file = new File([blob], "compressed_image.jpg", {
+                        type: 'image/jpeg',
+                        quality: 0.8 // Lowering the quality to reduce file size
+                    });
 
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                fileInput.files = dataTransfer.files;
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
 
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onloadend = function () {
-                    preview.src = reader.result;
-                    preview.style.display = 'block';
-                }
-            }, 'image/jpeg', 0.6);
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onloadend = function () {
+                        preview.src = reader.result;
+                        preview.style.display = 'block';
+                    }
+                }, 'image/jpeg', 0.6);
+            }
         }
     }
-}
 </script>
+@endcanAccess

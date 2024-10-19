@@ -27,10 +27,10 @@ class ScheduleEmployeeCheckin extends Command
         }
         
         // 2. Cek jika hari ini adalah akhir pekan (Sabtu/Minggu)
-        if ($today->isWeekend()) {
-            $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
-            return;
-        }
+        // if ($today->isWeekend()) {
+        //     $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
+        //     return;
+        // }
         
         // 3. Array email pengguna yang sedang cuti
         $onLeaveEmails = [
@@ -48,20 +48,20 @@ class ScheduleEmployeeCheckin extends Command
              ->get();
 
         // 4. Koneksi ke Firebase
-        try {
-            $firebase = (new Factory)
-            ->withServiceAccount(storage_path(config('services.firebase.service_account')))
-            ->withDatabaseUri(config('services.firebase.service_database_checkin_url'))
-            ->createDatabase();
+        // try {
+        //     $firebase = (new Factory)
+            // ->withServiceAccount(storage_path(config('services.firebase.service_account')))
+            // ->withDatabaseUri(config('services.firebase.service_database_checkin_url'))
+        //     ->createDatabase();
 
-            $this->info("Terhubung ke Firebase.");
-        } catch (FirebaseException $e) {
-            $this->error("Gagal terhubung ke Firebase. Data akan tetap disimpan secara lokal.");
-            $firebase = null;
-        }
+        //     $this->info("Terhubung ke Firebase.");
+        // } catch (FirebaseException $e) {
+        //     $this->error("Gagal terhubung ke Firebase. Data akan tetap disimpan secara lokal.");
+        //     $firebase = null;
+        // }
 
         foreach ($users as $user) {
-            $this->scheduleCheckinForUser($user, $firebase);
+            $this->scheduleCheckinForUser($user);
         }
         
         $this->info("Jadwal check-in selesai dibuat dan disimpan di Firebase serta database lokal.");
@@ -72,27 +72,28 @@ class ScheduleEmployeeCheckin extends Command
         return NationalHoliday::where('date', $date->toDateString())->exists();
     }
 
-    private function scheduleCheckinForUser($user, $firebase)
+    private function scheduleCheckinForUser($user, $firebase = null)
     {
         $checkinTimes = $this->generateRandomCheckinTimes();
 
         foreach ($checkinTimes as $time) {
+            // dd($it)
             // Simpan di database lokal
             $local = $this->saveLocal($user, $time);
 
             // Coba simpan di Firebase jika tersedia
-            if ($firebase) {
-                try {
-                    $firebase->getReference('employee_checkins/'.$user->id.'/'.$local->id)->set([
-                        'local_id' => $local->id,
-                        'scheduled_time' => $time,
-                        'is_active' => true,
-                        'created_at' => now()->toDateTimeString(),
-                    ]);
-                } catch (FirebaseException $e) {
-                    $this->error("Gagal menyimpan di Firebase untuk user {$user->id}. Data tetap tersimpan di lokal.");
-                }
-            }
+            // if ($firebase) {
+            //     try {
+            //         $firebase->getReference('employee_checkins/'.$user->id.'/'.$local->id)->set([
+            //             'local_id' => $local->id,
+            //             'scheduled_time' => $time,
+            //             'is_active' => true,
+            //             'created_at' => now()->toDateTimeString(),
+            //         ]);
+            //     } catch (FirebaseException $e) {
+            //         $this->error("Gagal menyimpan di Firebase untuk user {$user->id}. Data tetap tersimpan di lokal.");
+            //     }
+            // }
         }
     }
 
@@ -103,7 +104,8 @@ class ScheduleEmployeeCheckin extends Command
         return EmployeeChecking::create([
             'user_id' => $user->id,
             'division_id' => $firstDivision->id,
-            'scheduled_time' => $time,
+            'scheduled_time' => $time['checkin_time'],
+            'scheduled_timeout' => $time['timeout_time'],
             'is_active' => true,
             'is_completed' => false,
         ]);
@@ -112,18 +114,27 @@ class ScheduleEmployeeCheckin extends Command
     private function generateRandomCheckinTimes()
     {
         $times = [];
+        $duration = config('services.checking_setting.duration_minutes'); // Get the duration from config
+
         while (count($times) < config('services.checking_setting.times')) 
         {
             $time = Carbon::today()->addHours(rand(8, 16))->addMinutes(rand(0, 59));
-            if ($time->hour === 12) {
-                continue; // Lewati iterasi ini dan buat waktu baru
+
+            if ($time->hour === 12) 
+            {
+                continue; // Skip lunch hour (if needed)
             }
-            
-            // if ($time->hour === 10) 
-            // {
-                $times[] = $time->format('Y-m-d H:i:s'); // Format menjadi datetime lengkap
-            // }
+
+            // Check-in time and timeout (check-in time + duration)
+            $timeout = $time->copy()->addMinutes($duration);
+
+            $times[] = [
+                'checkin_time' => $time->format('Y-m-d H:i:s'),
+                'timeout_time' => $timeout->format('Y-m-d H:i:s')
+            ];
         }
+
         return $times;
     }
+
 }

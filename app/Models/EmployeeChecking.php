@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Schemas\RoleSchema;
+use Illuminate\Support\Facades\Auth;
 
 class EmployeeChecking extends Model
 {
@@ -14,6 +16,7 @@ class EmployeeChecking extends Model
         'user_id',
         'division_id',
         'scheduled_time',
+        'scheduled_timeout',
         'checkin_start_time',
         'is_active',
         'is_completed',
@@ -29,7 +32,7 @@ class EmployeeChecking extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class,'user_id');
     }
 
     /**
@@ -55,5 +58,17 @@ class EmployeeChecking extends Model
     public function scopeIncomplete($query)
     {
         return $query->where('is_completed', false);
+    }
+
+    /**
+     * 
+     * FIlter by Role
+     */
+    public function scopeByRole($query)
+    {
+        if(Auth::user()->role->name != RoleSchema::ROOT || Auth::user()->role->name != RoleSchema::ADMIN )
+        {
+            $query->where('user_id',Auth::user()->id);
+        }
     }
 }

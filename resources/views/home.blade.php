@@ -340,7 +340,6 @@
 </div>
 @endif
 @endsection
-
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
@@ -395,6 +394,99 @@
     });
 </script>
 @endcanAccess
+<script>
+    
+    const messaging = firebase.messaging();
+
+    function initFirebaseMessagingRegistration() 
+    {
+        const storedToken = localStorage.getItem('fcm_token');
+        
+        // if (storedToken) {
+        //     console.log("Token yang tersimpan:", storedToken);
+            
+        // } else {
+            if (Notification.permission === 'granted') {
+                // Jika izin sudah diberikan, ambil token FCM
+                messaging.getToken({ vapidKey: "{{ config('services.firebase.vapid_key') }}" })
+                    .then((token) => {
+                        if (token) {
+                            // Simpan token di Local Storage
+                            localStorage.setItem('fcm_token', token);
+                            sendTokenToServer(token);
+                        } else {
+                            console.log('No registration token available. Request permission to generate one.');
+                        }
+                    })
+                    .catch((err) => {
+                        console.error('An error occurred while retrieving token. ', err);
+                    });
+            } else if (Notification.permission === 'default') {
+                // Panggil fungsi untuk meminta izin notifikasi
+                requestNotificationPermission();
+            } else {
+                alert("Notifikasi telah diblokir di pengaturan browser. Silakan aktifkan notifikasi di pengaturan untuk menerima pemberitahuan.");
+            }
+    //     }
+    }
+
+    function requestNotificationPermission() {
+        Notification.requestPermission().then(function(permission) {
+            console.log('Notification permission status:', permission);
+            if (permission === 'granted') {
+                // Jika pengguna memberikan izin, inisialisasi FCM
+                initFirebaseMessagingRegistration();
+            } else if (permission === 'denied') 
+            {
+                console.log("Notifikasi ditolak. Silakan aktifkan notifikasi di pengaturan browser untuk menerima pemberitahuan.");
+            }
+        }).catch(function(err) {
+            console.error('Failed to get notification permission:', err);
+        });
+    }
+
+    function sendTokenToServer(token) {
+        $.ajax({
+            url: "{{ route('user.updatefcm') }}",
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                token: token
+            },
+            success: function(response) {
+                console.log("Token berhasil disimpan.");
+            },
+            error: function(err) {
+                console.error("Gagal menyimpan token:", err);
+            }
+        });
+    }
+
+    // Fungsi untuk memantau interaksi pertama pengguna
+    function triggerNotificationRequestOnInteraction() {
+        if (Notification.permission === 'default') 
+        {
+            // Permintaan izin notifikasi akan muncul pada interaksi pertama
+            requestNotificationPermission();
+
+            // Hapus event listener setelah permintaan dikirim
+            document.removeEventListener('click', triggerNotificationRequestOnInteraction);
+            document.removeEventListener('keydown', triggerNotificationRequestOnInteraction);
+            document.removeEventListener('scroll', triggerNotificationRequestOnInteraction);
+        }
+    }
+
+    // Memantau interaksi pengguna di halaman (scroll, klik, atau ketik)
+    window.onload = function() {
+        // Cek status izin notifikasi
+        initFirebaseMessagingRegistration();
+
+        // Tambahkan listener untuk memantau interaksi pertama pengguna
+        document.addEventListener('click', triggerNotificationRequestOnInteraction);
+        document.addEventListener('keydown', triggerNotificationRequestOnInteraction);
+        document.addEventListener('scroll', triggerNotificationRequestOnInteraction);
+    };
+</script>
 
 @stop
 

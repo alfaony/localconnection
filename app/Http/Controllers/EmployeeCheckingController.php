@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -10,6 +12,9 @@ use Kreait\Firebase\Factory;
 use Kreait\Firebase\Exception\FirebaseException;
 
 use App\Models\EmployeeChecking;
+use App\Models\User;
+
+use Carbon\Carbon;
 
 class EmployeeCheckingController extends Controller
 {
@@ -28,9 +33,33 @@ class EmployeeCheckingController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $users = User::byCompany(Auth::user()->company_id)->get();
+        $query = EmployeeChecking::query();
+
+        // Filter by user
+        if ($request->has('user') && $request->user) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->user . '%');
+            });
+        }
+
+        // Filter by date range
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('scheduled_time', [
+                Carbon::parse($request->start_date)->startOfDay(),
+                Carbon::parse($request->end_date)->endOfDay(),
+            ]);
+        }
+
+        $query->byRole();
+        // Exclude check-ins scheduled for times that have passed
+        $query->where('scheduled_time', '<', Carbon::now());
+
+        $employeeCheckings = $query->orderBy('scheduled_time','desc')->paginate(10);
+
+        return view('employee_checking.index', compact('employeeCheckings', 'users'));
     }
 
     /**
@@ -120,21 +149,37 @@ class EmployeeCheckingController extends Controller
         if ($request->hasFile('photo')) 
         {
             $photoPath = $request->file('photo')->store('checkin_photos', 'public');
-            $employeeChecking->photo_url = Storage::url($photoPath);
+            $employeeChecking->photo_path = Storage::url($photoPath);
         }
 
         // Update latitude dan longitude jika ada
         if ($request->filled('latitude')) 
         {
-            $employeeChecking->latitude = $request->input('latitude');
+            $employeeChecking->location_latitude = $request->input('latitude');
         }
         if ($request->filled('longitude')) {
-            $employeeChecking->longitude = $request->input('longitude');
+            $employeeChecking->location_longitude = $request->input('longitude');
+        }
+
+        $user = Auth::user();
+
+        // Update fcm_id pada user_status terkait
+        if ($user->status) {
+            $user->status->update([
+                'last_scheduled_checkin' => $employeeChecking->scheduled_time,
+            ]);
+        } else 
+        {
+            // Jika UserStatus belum ada, buat satu dan simpan fcm_id
+            $user->status()->create([
+                'last_scheduled_checkin' => $employeeChecking->scheduled_time,
+            ]);
         }
 
         // Update status check-in
         $employeeChecking->is_active = false;
         $employeeChecking->is_completed = true;
+        $employeeChecking->checkin_start_time = Carbon::now();
         $employeeChecking->save();
 
         // Update data di Firebase
@@ -149,8 +194,7 @@ class EmployeeCheckingController extends Controller
                 'is_active' => false,
             ];
 
-            $this->firebaseDatabase->getReference('employee_checkins/' . Auth::user()->id . '/' . $employeeChecking->id)
-            ->update($payload);
+            $this->firebaseDatabase->getReference('employee_checkins/' . $employeeChecking->user_id . '/' . $employeeChecking->id)->remove();
         }
 
         return response()->json(['message' => 'Check-in updated successfully']);
@@ -187,8 +231,7 @@ class EmployeeCheckingController extends Controller
                 'is_active' => false,
             ];
 
-            $this->firebaseDatabase->getReference('employee_checkins/' . Auth::user()->id . '/' . $employeeChecking->id)
-            ->update($payload);
+            $this->firebaseDatabase->getReference('employee_checkins/' . Auth::user()->id . '/' . $employeeChecking->id)->remove();
         }
 
         return response()->json(['message' => 'Check-in updated successfully']);

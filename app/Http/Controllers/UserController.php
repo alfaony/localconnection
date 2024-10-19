@@ -270,9 +270,32 @@ class UserController extends Controller
 
         $user->save();
 
-        return redirect()->to(route('home'))->with('updateProfile',true);
+        return redirect()->to(route('home'))->with('updateProfile',true);   
+    }
 
-        
+    public function updatefcm(Request $request)
+    {
+        // Validasi input
+        $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        // Dapatkan user yang sedang login
+        $user = Auth::user();
+
+        // Update fcm_id pada user_status terkait
+        if ($user->status) {
+            $user->status->update([
+                'fcm_id' => $request->token,
+            ]);
+        } else {
+            // Jika UserStatus belum ada, buat satu dan simpan fcm_id
+            $user->status()->create([
+                'fcm_id' => $request->token,
+            ]);
+        }
+
+        return response()->json(['message' => 'FCM ID updated successfully.'], 200);
     }
     
 }

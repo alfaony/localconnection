@@ -66,6 +66,8 @@ class AppServiceProvider extends ServiceProvider
             $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
             $managementCompanyMenu = 
             [
+                'national_holidays',
+                'employee_checkings',
                 'letter_submissions',
                 'positions',
                 'employees',
@@ -345,6 +347,18 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Device',
                     'route' => 'device.index',
                     'icon' => 'fa fa-mobile-alt',
+                ],
+                'national_holidays' => 
+                [
+                    'text' => 'National Holiday',
+                    'route' => 'national-holiday.index',
+                    'icon' => 'fa fa-calendar-alt',
+                ],
+                'employee_checkings' => 
+                [
+                    'text' => 'Employee Check-In',
+                    'route' => 'employee-checking.index',
+                    'icon' => 'fa fa-user-check',
                 ],
             ];
 

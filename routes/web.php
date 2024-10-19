@@ -89,6 +89,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   
   Route::get('user/profileEdit/{slug}', [UserController::class,'profileEdit'])->name('user.profileEdit');
   Route::put('user/profileUpdate/{slug}', [UserController::class,'profileUpdate'])->name('user.profileUpdate');
+  Route::post('user/updatefcm',[UserController::class,'updatefcm'])->name('user.updatefcm');
   Route::resource('user', UserController::class);
 
   Route::delete('suplier/deletePurchase/purchase/{purchase}',[SuplierController::class,'deletePurchase'])->name('suplier.destroy.purchase');
@@ -241,11 +242,12 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('position', PositionController::class);
   Route::get('device', [DeviceController::class,'index'])->name('device.index');
   Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
-});
-Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
-Route::resource('employee-checking', EmployeeCheckingController::class);
 
-Route::resource('national-holiday', NationalHolidayController::class)->only(['index','store','update','destroy']);
+  Route::resource('national-holiday', NationalHolidayController::class)->only(['index','store','update','destroy']);
+  
+  Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
+  Route::resource('employee-checking', EmployeeCheckingController::class);
+});
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

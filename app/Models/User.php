@@ -109,6 +109,10 @@ class User extends Authenticatable
         return $this->hasMany(SettingCompany::class);
     }
 
+    public function status()
+    {
+        return $this->hasOne(UserStatus::class);
+    }
     public function approver()
     {
         return $this->belongsTo(User::class, 'approvement_user_id');

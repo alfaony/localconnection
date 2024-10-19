@@ -1,6 +1,7 @@
 <!-- resources/views/partials/firebase.blade.php -->
 <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-messaging-compat.js"></script>
 
 <script>
     const firebaseConfig = {
@@ -14,7 +15,5 @@
 
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
-    }
-
-    // Inisialisasi dua koneksi database
+    }    
 </script>

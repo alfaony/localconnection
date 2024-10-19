@@ -43,6 +43,7 @@ return [
         'messaging_sender_id' => env('FIREBASE_MESSAGING_SENDER_ID'),
         'app_id' => env('FIREBASE_APP_ID'),
         'service_account' => env('FIREBASE_SERVICE_ACCOUNT'),
+        'vapid_key' => env('FIREBASE_VAPID_KEY'),
         'service_database_inbox_url' => env('FIREBASE_SERVICE_DATABASE_INBOX_URL'),
         'service_database_checkin_url' => env('FIREBASE_SERVICE_DATABASE_CHECKIN_URL'),
     ],
@@ -55,6 +56,7 @@ return [
     'checking_setting' => 
     [
         'duration' => env('CHECKIN_DURATION', 120),
+        'duration_minutes' => env('CHECKIN_DURATION_MINUTES', 60),
         'times' => env('CHECKIN_TIME', 10),
     ]
     
