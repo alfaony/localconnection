@@ -75,6 +75,11 @@ class ReportProject extends Model
         return $this->hasMany(ReportProjectDetail::class);
     }
 
+    public function reportedDetails()
+    {
+        return $this->reportProjectDetail()->byReport();
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

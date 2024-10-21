@@ -31,6 +31,8 @@ class RolePermission
                 // check if requested action is in permissions list
                 $data['url'] = $firstUrl;
                 $data['actionMethod'] = $actionMethod;
+
+                // dd($actionMethod,$url);
                 foreach ($permissions as $permission){
                     if ($actionMethod == $permission->method && $url == $permission->table){
                         // authorized request

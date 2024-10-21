@@ -84,6 +84,8 @@ class RoleController extends Controller
             'positions',
             'national_holidays',
             'employee_checkings',
+            'invoices',
+            'xeros',
         ];
 
         $checked = array_merge($mainMenus);
@@ -197,6 +199,8 @@ class RoleController extends Controller
                 'positions',
                 'national_holidays',
                 'employee_checkings',
+                'invoices',
+                'xeros',
             ];
         $checked = array_merge($mainMenus);
 
@@ -270,6 +274,8 @@ class RoleController extends Controller
                 'positions',
                 'national_holidays',
                 'employee_checkings',
+                'invoices',
+                'xeros',
             ];
         
         $checked = array_merge($mainMenus);

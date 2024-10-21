@@ -56,7 +56,8 @@
             <tr>
                 <th>Nomor Quote</th>
                 <th>Total Quote</th>
-                <th>Status</th>
+                <th>Status Peralihan</th>
+                <th>Status Quote</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -71,8 +72,8 @@
                     <form method="post" action="{{ route('quote.destroy',$a) }}">
                         @csrf
                         @method('delete')
-                        <a href="{{ route('quote.download.pdf', ['slug' => $a->slug, 'nomor' => $no]) }}" class="btn btn-primary btn-sm"><i class="fa fa-file-pdf"></i></a>
-                        <a href="{{ route('quote.edit',$a->slug).'?nomor='.$no }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                        <a href="{{ route('quote.download.pdf', ['slug' => $a->slug, 'nomor' => $no]) }}" class="btn btn-success btn-sm"><i class="fa fa-file-pdf"></i></a>
+                        <a href="{{ route('quote.edit',$a->slug).'?nomor='.$no }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
                         <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                     </form>
                 </td>
@@ -118,6 +119,7 @@
                 {data: 'number_result', name: 'number_result', orderable: false},
                 {data: 'total', name: 'total', orderable: false},
                 {data: 'budget_transition', name: 'budget_transition', orderable: false},
+                {data: 'status', name: 'status', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
             ],
             // order: [[0, 'desc']],

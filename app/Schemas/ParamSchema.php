@@ -81,9 +81,22 @@ class ParamSchema
 
     const TEMPLATEJABATAN = "sk_management_template";
 
-    const OPEN = "open";
+    const CLOSED = "closed";
 
     const CLOSE = "close";
 
+    const OPEN = "open";
+
+    const AUTHORISED = "AUTHORISED";
+
+    const DRAFT = "DRAFT";
+
+    const SERVICEFEE = "Service Fee";
+
+    const ADDTIONALCHARGES = "Additional Charges";
+
+    const DISCOUNT="Discount";
+
+    const DELETE="DELETED";
     const PENANGGUNGJAWAB = "penanggung_jawab";
 }

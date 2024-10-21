@@ -7,10 +7,12 @@
     "require": {
         "php": "^8.0.2",
         "anhskohbo/no-captcha": "^3.6",
+        "dcblogdev/laravel-xero": "^1.1",
         "doctrine/dbal": "^3.7",
         "guzzlehttp/guzzle": "^7.2",
         "jeroennoten/laravel-adminlte": "^3.9",
         "kreait/laravel-firebase": "^5.9",
+        "langleyfoxall/xero-laravel": "^3.4",
         "laravel/framework": "^9.19",
         "laravel/passport": "^11.10",
         "laravel/sanctum": "^3.0",

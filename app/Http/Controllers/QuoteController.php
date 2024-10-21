@@ -164,6 +164,11 @@ class QuoteController extends Controller
         $user = Auth::user();
         $divisionIds = $user->divisions->pluck('id');
 
+        if($quote->status == ParamSchema::CLOSED)
+        {
+            return redirect()->route('quote.index')->with('error', 'Quote sudah ditutup.');
+        }
+
         if ($divisionIds->isEmpty()) {
             // Handle the case where the user does not belong to any divisions
             // You can return an empty collection or a message, or redirect
@@ -205,6 +210,11 @@ class QuoteController extends Controller
             if ($quote->division_budget_id) 
             {
                 $this->adjustBudget($quote->division_budget_id, $quote->total);
+            }
+
+            if($quote->status == ParamSchema::CLOSED)
+            {
+                return redirect()->route('quote.index')->with('error', 'Quote sudah ditutup.');
             }
     
             // Perbarui data quote
@@ -285,6 +295,10 @@ class QuoteController extends Controller
             // Delete
             // Menghapus relasi terlebih dahulu
             $quote = Quote::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            if($quote->status == ParamSchema::CLOSED)
+            {
+                return redirect()->route('quote.index')->with('error', 'Quote sudah ditutup.');
+            }
             if ($quote->division_budget_id) 
             {
                 $this->adjustBudget($quote->division_budget_id, $quote->total);
@@ -551,7 +565,9 @@ class QuoteController extends Controller
         {
             $item->total = 'Rp. '.number_format($item->total, 0,',','.'); // Format angka dengan 2 desimal
             $color = $item->budget_transition ? 'badge badge-success' : 'badge badge-primary';
+            $status = $item->status == ParamSchema::OPEN ? 'badge badge-success' : 'badge badge-danger';
             $item->budget_transition = $item->budget_transition ? "<span class='badge $color'>Peralihan</span>" : "<span class='badge $color'>Baru</span>";
+            $item->status = $item->status == ParamSchema::OPEN ? "<span class='badge $status'>Open</span>" : "<span class='badge $status'>Closed</span>";
         }
 
         return response()->json($data);

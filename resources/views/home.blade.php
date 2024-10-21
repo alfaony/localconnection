@@ -64,20 +64,24 @@
         
         <div class="row mt-3">
             <div class="col-md-4">
-                <div class="card text-white bg-warning mb-3">
+                <a href="{{ route('quote.index') }}">
+                <div class="card text-white bg-warning mb-3 hover-card">
                     <div class="card-body">
                         <h5 class="card-title">Total Quote</h5>
                         <p class="card-text">{{ $totalQuote }}</p>
                     </div>
                 </div>
+                </a>
             </div>
             <div class="col-md-4">
-                <div class="card text-white bg-warning mb-3">
+                <a href="{{ route('work-order.index') }}">
+                <div class="card text-white bg-warning mb-3 hover-card">
                     <div class="card-body">
                         <h5 class="card-title">Total SPK</h5>
                         <p class="card-text">{{ $totalWorkOrder }}</p>
                     </div>
                 </div>
+                </a>
             </div>
         </div>
     </div>
@@ -506,4 +510,25 @@
         font-weight: bold;
     }
 </style>
+<style>
+    .hover-card {
+        transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+
+    .hover-card:hover {
+        background-color: #ffcf63 !important; /* Warna hover */
+        transform: scale(1.05); /* Efek zoom */
+    }
+
+    .hover-card .card-title,
+    .hover-card .card-text {
+        transition: color 0.3s ease;
+    }
+
+    .hover-card:hover .card-title,
+    .hover-card:hover .card-text {
+        color: #000000; /* Warna teks saat hover */
+    }
+</style>
+
 @endsection
