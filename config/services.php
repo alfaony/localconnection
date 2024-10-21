@@ -57,7 +57,7 @@ return [
     'checking_setting' => 
     [
         'duration' => env('CHECKIN_DURATION', 120),
-        'duration_minutes' => env('CHECKIN_DURATION_MINUTES', 60),
+        'duration_minutes' => env('CHECKIN_DURATION_MINUTES', 2),
         'times' => env('CHECKIN_TIME', 10),
     ]
     

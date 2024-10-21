@@ -41,6 +41,9 @@ class Kernel extends ConsoleKernel
             }
         }
 
+        // Run Scheduler
+        $schedule->command('schedule:employee-checkin')->dailyAt('07:00');
+
         $employeeCheckings = EmployeeChecking::where('is_active', true)
             ->whereDate('scheduled_time', Carbon::today()) // Filter today's check-ins
             ->get();

@@ -16,6 +16,7 @@ use App\Models\User;
 
 use Carbon\Carbon;
 
+use App\Schemas\ParamSchema;
 class EmployeeCheckingController extends Controller
 {
     
@@ -40,62 +41,88 @@ class EmployeeCheckingController extends Controller
         $endDate = $request->input('end_date');
         $userId = $request->input('user_id');
         $tab = $request->input('tab') ?? 'point_checkin';
+        $today = Carbon::today()->toDateString();
 
-        // load
-        // dd($startDate,$endDate);
-        $users = User::byCompany(Auth::user()->company_id)->get();
+        // Load data pengguna
+        $userSelect = User::byCompany(Auth::user()->company_id)->get();
 
-        // nullable
-        $employeeCheckings = array();
-        $checkins = null;
+        // Nullable variabel
+        $employeeCheckings = collect();
+        $users = collect();
+
+        // Hitung jumlah hari dalam rentang tanggal
+        $totalDays = 1; // Default 1 hari jika startDate dan endDate tidak ada
+
+        $start = $startDate ? Carbon::parse($startDate)->startOfDay() : Carbon::today()->startOfDay();
+        $end = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::today()->endOfDay();
+        $totalDays = $start->diffInDays($end) + 1; // Total hari dalam rentang
 
         switch ($tab) 
         {
             case 'point_checkin':
-                // Query untuk memfilter berdasarkan user dan rentang tanggal
-                $checkins = EmployeeChecking::when($userId, function ($query) use ($userId) {
-                    return $query->where('user_id', $userId);
-                })
-                ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                    $start = Carbon::parse($startDate)->startOfDay();
-                    $end = Carbon::parse($endDate)->endOfDay();
-                
-                    return $q->whereBetween('scheduled_time', [$start, $end]);
-                })
-                ->selectRaw('user_id, date(scheduled_time) as checkin_date, 
-                            SUM(is_completed = true) as total_successful, 
-                            SUM(is_completed = false) as total_failed')
-                ->groupBy('user_id', 'checkin_date')
-                ->paginate(10); // Pagination dengan 10 data per halaman
-        
-        
+                // Ambil data pengguna dengan pagination
+                $users = User::byCompany(auth()->user()->company_id)
+                    ->when($userId, function ($query) use ($userId, $start) {
+                        return $query->where('id', $userId);
+                    })
+                    ->withCount([
+                        'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
+                            $query->where('is_active', false)->where('is_completed', true)->whereDate('scheduled_time', $today);
+                        },
+                        'employeeCheckings as total_successful_checkins' => function ($query) use ($startDate, $endDate, $start, $end) {
+                            $query->where('is_active', false)->where('is_completed', true);
+                            if ($startDate && $endDate) 
+                            {
+                                $query->whereBetween('scheduled_time', [$start, $end]);
+                            }
+                        },
+                        'employeeCheckings as total_failed_checkins' => function ($query) use ($startDate, $endDate, $start, $end) {
+                            $query->where('is_completed', false)
+                                ->where('is_active', false);
+                            if ($startDate && $endDate) {
+                                $query->whereBetween('scheduled_time', [$start, $end]);
+                            }
+                        }
+                    ])
+                    ->paginate(10);
+
+                // Hitung point check-in dan persentase
+                foreach ($users as $user) {
+                    $totalCheckins = $user->total_successful_checkins;
+                    $totalToday = $user->total_checkin_today ?? 0;
+
+                    // Hitung total target check-in
+                    $targetCheckins = $totalDays * ParamSchema::TARGET_CHECKIN;
+                    // Hitung presentase point check-in dan check-in hari ini
+                    $pointPercentage = $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
+                    $todayPercentage = $totalToday ? ($totalToday / 10) * 100 : 0;
+
+                    $user->point_checkin = "{$totalCheckins} (" . number_format($pointPercentage, 2) . "%)";
+                    $user->today_percentage = "{$totalToday} (" . number_format($todayPercentage, 2) . "%)";
+                }
                 break;
+
             case 'detail_checkin':
-                if($userId)
-                {
+                if ($userId) {
                     $query = EmployeeChecking::query();
-                    // Filter by date range
+
+                    // Filter by user ID
                     $query->when($userId, function ($q) use ($userId) {
                         $q->where('user_id', $userId);
                     });
 
                     // Filter by date range
-                    $query->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                        $start = Carbon::parse($startDate)->startOfDay();
-                        $end = Carbon::parse($endDate)->endOfDay();
-                    
+                    $query->when($startDate && $endDate, function ($q) use ($start, $end) {
                         $q->whereBetween('scheduled_time', [$start, $end]);
                     });
-            
-                    // $query->byRole();
-                    // Exclude check-ins scheduled for times that have passed
-                    // $query->where('scheduled_time', '<', Carbon::now());
-                    $employeeCheckings = $query->orderBy('scheduled_time','desc')->paginate(10);
+
+                    // Ambil data dengan pagination
+                    $employeeCheckings = $query->orderBy('scheduled_time', 'desc')->paginate(10);
                 }
                 break;
         }
 
-        return view('employee_checking.index', compact('employeeCheckings','checkins','users'));
+        return view('employee_checking.index', compact('employeeCheckings', 'users', 'userSelect', 'tab'));
     }
 
     /**

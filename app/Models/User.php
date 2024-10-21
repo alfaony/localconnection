@@ -133,6 +133,10 @@ class User extends Authenticatable
         return $this->hasMany(UserPosition::class);
     }
 
+    public function employeeCheckings()
+    {
+        return $this->hasMany(EmployeeChecking::class);
+    }
     public function getLastPositionAttribute()
     {
         return $this->userPosition()
