@@ -35,34 +35,78 @@ class EmployeeCheckingController extends Controller
      */
     public function index(Request $request)
     {
+        // Search
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $userId = $request->input('user_id');
+        $tab = $request->input('tab') ?? 'point_checkin';
+
+        // load
+        // dd($startDate,$endDate);
         $users = User::byCompany(Auth::user()->company_id)->get();
-        $query = EmployeeChecking::query();
 
-        // Filter by user
-        if ($request->has('user') && $request->user) {
-            $query->whereHas('user', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->user . '%');
-            });
+        // nullable
+        $employeeCheckings = null;
+        $checkins = null;
+
+        switch ($tab) 
+        {
+            case 'point_checkin':
+                // Query untuk memfilter berdasarkan user dan rentang tanggal
+                $checkins = EmployeeChecking::when($userId, function ($query) use ($userId) {
+                    return $query->where('user_id', $userId);
+                })
+                ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                    $start = Carbon::parse($startDate)->startOfDay();
+                    $end = Carbon::parse($endDate)->endOfDay();
+                
+                    return $q->whereBetween('scheduled_time', [$start, $end]);
+                })
+                ->selectRaw('user_id, date(scheduled_time) as checkin_date, 
+                            SUM(is_completed = true) as total_successful, 
+                            SUM(is_completed = false) as total_failed')
+                ->groupBy('user_id', 'checkin_date')
+                ->paginate(10); // Pagination dengan 10 data per halaman
+        
+        
+                break;
+            case 'detail_checkin':
+                    $query = EmployeeChecking::query();
+                    // Filter by date range
+                    $query->when($userId, function ($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    });
+
+                    // Filter by date range
+                    $query->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                        $start = Carbon::parse($startDate)->startOfDay();
+                        $end = Carbon::parse($endDate)->endOfDay();
+                    
+                        $q->whereBetween('scheduled_time', [$start, $end]);
+                    });
+            
+                    // $query->byRole();
+                    // Exclude check-ins scheduled for times that have passed
+                    $query->where('scheduled_time', '<', Carbon::now());
+                    $employeeCheckings = $query->orderBy('scheduled_time','desc')->paginate(10);
+                break;
         }
 
-        // Filter by date range
-        if ($request->has('start_date') && $request->has('end_date')) {
-            $query->whereBetween('scheduled_time', [
-                Carbon::parse($request->start_date)->startOfDay(),
-                Carbon::parse($request->end_date)->endOfDay(),
-            ]);
-        }
-
-        $query->byRole();
-        // Exclude check-ins scheduled for times that have passed
-        $query->where('scheduled_time', '<', Carbon::now());
-
-        $employeeCheckings = $query->orderBy('scheduled_time','desc')->paginate(10);
-
-        return view('employee_checking.index', compact('employeeCheckings', 'users'));
+        return view('employee_checking.index', compact('employeeCheckings','checkins','users'));
     }
 
     /**
+     * Diploy Report
+     */
+    public function report(Request $request)
+    {
+
+
+
+
+        return view('employee_checking.report', compact('checkins','users'));
+    }
+        /**
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response

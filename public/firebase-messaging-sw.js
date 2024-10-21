@@ -25,10 +25,29 @@ messaging.onBackgroundMessage((payload) => {
     const notificationOptions = {
         body: payload.notification.body,
         icon: '/logo/logo-thrive.png',  // Update path ke icon
+        data: { url: payload.data.url || '/' } // URL untuk pengalihan
     };
     
-    return self.registration.showNotification(notificationTitle, notificationOptions)
-        .then(() => console.log('Notifikasi berhasil ditampilkan'))
-        .catch(err => console.error('Gagal menampilkan notifikasi:', err));
-    
-});
+      // Tambahkan suara notifikasi
+      const audio = new Audio('/audio/notification-sound.mp3'); // Ganti path dengan suara notifikasi yang valid
+      audio.play().catch(err => console.error('Gagal memutar suara notifikasi:', err));
+  
+      // Tampilkan notifikasi
+      return self.registration.showNotification(notificationTitle, notificationOptions)
+          .then(() => console.log('Notifikasi berhasil ditampilkan'))
+          .catch(err => console.error('Gagal menampilkan notifikasi:', err));
+  });
+  
+  // Menangani klik pada notifikasi
+  self.addEventListener('notificationclick', function(event) {
+      console.log('Notifikasi diklik:', event.notification);
+  
+      event.notification.close(); // Tutup notifikasi
+  
+      // Pengalihan ke URL yang disertakan di data notifikasi
+      if (event.notification.data && event.notification.data.url) {
+          event.waitUntil(
+              clients.openWindow(event.notification.data.url)
+          );
+      }
+  });

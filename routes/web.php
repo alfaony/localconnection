@@ -81,6 +81,8 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 Route::get('/dailytask/showJson/{slug}', [DailyTaskController::class,'showJson'])->name('dailytask.showJson');
 
+Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');
+
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
   Route::get('project/export', [ProjectController::class,'export'])->name('project.export');
