@@ -72,6 +72,7 @@ class ScheduleEmployeeCheckin extends Command
         return NationalHoliday::where('date', $date->toDateString())->exists();
     }
 
+    // Comment
     private function scheduleCheckinForUser($user, $firebase = null)
     {
         $checkinTimes = $this->generateRandomCheckinTimes();
