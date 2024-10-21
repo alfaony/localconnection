@@ -31,9 +31,9 @@ return [
     |
     */
 
-    'lifetime' => env('SESSION_LIFETIME', 120),
+    'lifetime' => 525600, // 1 tahun dalam menit
+    'expire_on_close' => false, // Sesi tidak akan berakhir ketika browser ditutup
 
-    'expire_on_close' => false,
 
     /*
     |--------------------------------------------------------------------------
