@@ -399,12 +399,26 @@
 </script>
 @endcanAccess
 <script>
-    
-    const messaging = firebase.messaging();
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cek apakah token FCM di localStorage sama dengan yang ada di server
+        const savedToken = localStorage.getItem('fcm_token');
+        const serverToken = "{{ Auth::user()->status->fcm_id }}";
+
+        // Jika token tidak sama atau tidak ada, lakukan registrasi FCM
+        if (savedToken !== serverToken) {
+            initFirebaseMessagingRegistration();
+        }
+
+        // Tambahkan listener untuk memantau interaksi pertama pengguna
+        document.addEventListener('click', triggerNotificationRequestOnInteraction);
+        document.addEventListener('keydown', triggerNotificationRequestOnInteraction);
+        document.addEventListener('scroll', triggerNotificationRequestOnInteraction);
+    });
 
     function initFirebaseMessagingRegistration() 
     {
         const storedToken = localStorage.getItem('fcm_token');
+        const messaging = firebase.messaging();
         
         // if (storedToken) {
         //     console.log("Token yang tersimpan:", storedToken);
@@ -481,15 +495,16 @@
     }
 
     // Memantau interaksi pengguna di halaman (scroll, klik, atau ketik)
-    window.onload = function() {
-        // Cek status izin notifikasi
-        initFirebaseMessagingRegistration();
 
-        // Tambahkan listener untuk memantau interaksi pertama pengguna
-        document.addEventListener('click', triggerNotificationRequestOnInteraction);
-        document.addEventListener('keydown', triggerNotificationRequestOnInteraction);
-        document.addEventListener('scroll', triggerNotificationRequestOnInteraction);
-    };
+    // window.onload = function() {
+    //     // Cek status izin notifikasi
+    //     initFirebaseMessagingRegistration();
+
+    //     // Tambahkan listener untuk memantau interaksi pertama pengguna
+    //     document.addEventListener('click', triggerNotificationRequestOnInteraction);
+    //     document.addEventListener('keydown', triggerNotificationRequestOnInteraction);
+    //     document.addEventListener('scroll', triggerNotificationRequestOnInteraction);
+    // };
 </script>
 
 @stop
