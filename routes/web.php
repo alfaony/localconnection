@@ -56,6 +56,8 @@ use App\Http\Controllers\InboxController;
 use App\Http\Controllers\LetterSubmissionController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\NationalHolidayController;
+use App\Http\Controllers\EmployeeCheckingController;
 use App\Http\Controllers\XeroController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\XeroWebhookController;
@@ -102,6 +104,8 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 Route::get('invoice/history/{slug}', [InvoiceController::class, 'history'])->name('invoices.history');
 
+Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');
+
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
   // Xero Setting
@@ -114,6 +118,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   
   Route::get('user/profileEdit/{slug}', [UserController::class,'profileEdit'])->name('user.profileEdit');
   Route::put('user/profileUpdate/{slug}', [UserController::class,'profileUpdate'])->name('user.profileUpdate');
+  Route::post('user/updatefcm',[UserController::class,'updatefcm'])->name('user.updatefcm');
   Route::resource('user', UserController::class);
 
   Route::delete('suplier/deletePurchase/purchase/{purchase}',[SuplierController::class,'deletePurchase'])->name('suplier.destroy.purchase');
@@ -269,12 +274,15 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('position', PositionController::class);
   Route::get('device', [DeviceController::class,'index'])->name('device.index');
   Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
+
+  Route::resource('national-holiday', NationalHolidayController::class)->only(['index','store','update','destroy']);
+  
+  Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
+  Route::resource('employee-checking', EmployeeCheckingController::class);
 });
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
-
-
 
 Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');
 

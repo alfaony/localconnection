@@ -82,6 +82,8 @@ class RoleController extends Controller
             'letter_submissions',
             'devices',
             'positions',
+            'national_holidays',
+            'employee_checkings',
             'invoices',
             'xeros',
         ];
@@ -195,6 +197,8 @@ class RoleController extends Controller
                 'letter_submissions',
                 'devices',
                 'positions',
+                'national_holidays',
+                'employee_checkings',
                 'invoices',
                 'xeros',
             ];
@@ -268,6 +272,8 @@ class RoleController extends Controller
                 'letter_submissions',
                 'devices',
                 'positions',
+                'national_holidays',
+                'employee_checkings',
                 'invoices',
                 'xeros',
             ];

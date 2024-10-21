@@ -44,10 +44,12 @@
         @endif
 
     </div>
+
+
 @stop
 
 @section('adminlte_js')
+    {{-- Include Firebase Initialization --}}
     @stack('js')
     @yield('js')
-    @include('inbox.inboxscript')
 @stop

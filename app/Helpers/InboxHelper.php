@@ -14,11 +14,11 @@ class InboxHelper
 
     public function __construct()
     {
-        if(config('services.firebase.service_account') && config('services.firebase.service_database_url') && !isset($this->database))
+        if(config('services.firebase.service_account') && config('services.firebase.service_database_inbox_url') && !isset($this->database))
         {
             $factory = (new Factory)
                 ->withServiceAccount(storage_path(config('services.firebase.service_account'))) // Ambil dari konfigurasi
-                ->withDatabaseUri(config('services.firebase.service_database_url'));
+                ->withDatabaseUri(config('services.firebase.service_database_inbox_url'));
     
             $this->database = $factory->createDatabase();
             $this->messaging = $factory->createMessaging();
