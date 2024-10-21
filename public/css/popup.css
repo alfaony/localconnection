@@ -1,5 +1,11 @@
 
 /* Full-screen overlay */
+.modal-body {
+    max-height: 70vh; /* Batas tinggi 70% dari tinggi viewport */
+    overflow-y: auto; /* Menambahkan scroll ketika konten melebihi batas */
+}
+
+/* Popup content */
 #checkinPopup {
     position: fixed;
     top: 0;

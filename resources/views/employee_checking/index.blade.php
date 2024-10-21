@@ -26,7 +26,7 @@
                 <div class="col-md-4">
                     <select name="user_id" id="user_id" class="form-control select2">
                         <option value="">Semua Pengguna</option>
-                        @foreach($users as $user)
+                        @foreach($userSelect as $user)
                             <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
                                 {{ $user->name }}
                             </option>
@@ -72,31 +72,27 @@
                  role="tabpanel" 
                  aria-labelledby="point-checkin-tab">
                 <!-- Tabel hasil pencarian -->
-                <div class="table-reponsive">
+                <div class="table-responsive">
                     <table class="table table-bordered mt-4">
                         <thead>
                             <tr>
-                                <th>Nama Pengguna</th>
-                                <th>Tanggal</th>
-                                <th>Check-in Berhasil</th>
-                                <th>Check-in Gagal</th>
-                                <th>Detail</th>
+                                <th>Nama</th>
+                                <th>Point Check-In</th>
+                                <th>Total Check-In Hari Ini</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($checkins as $checkin)
+                            @forelse($users as $user)
                                 <tr>
-                                    <td>{{ $checkin->user->name }}</td>
-                                    <td>{{ $checkin->checkin_date }}</td>
-                                    <td>{{ $checkin->total_successful }}</td>
-                                    <td>{{ $checkin->total_failed }}</td>
+                                    <td>{{ $user->name }}</td>
+                                    <td>{{ $user->point_checkin }}</td>
+                                    <td>{{ $user->today_percentage }}</td>
                                     <td>
                                         <form action="{{ route('employee-checking.index') }}" method="GET">
-                                            <input type="hidden" name="tab" value="{{ 'detail_checkin' }}">
+                                            <input type="hidden" name="tab" value="detail_checkin">
                                             <div class="input-group">
-                                                <input type="hidden" id="start_date" name="start_date" value="{{ $checkin->checkin_date }}">
-                                                <input type="hidden" id="end_date" name="end_date" value="{{ $checkin->checkin_date }}">
-                                                <input type="hidden" id="user_id" name="user_id" value="{{ $checkin->user->id }}">
+                                                <input type="hidden" id="user_id" name="user_id" value="{{ $user->id }}">
                                             </div>
                                             <button type="submit" class="btn btn-primary"><i class="fa fa-eye"></i></button>
                                         </form>
@@ -110,8 +106,10 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Pagination -->
                 <div class="d-flex justify-content-center mt-3">
-                    {{ $checkins->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+                    {{ $users->withQueryString()->links('vendor.pagination.bootstrap-4') }}
                 </div>
             </div>
             @endif
@@ -139,10 +137,14 @@
                                     <td>{{ $checking->user->name }}</td>
                                     <td>{{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}</td>
                                     <td>
+                                        @if(!$checking->is_active)
                                         @if($checking->is_completed)
                                             <span class="badge bg-success"><i class="fa fa-check"></i></span>
                                         @else
                                             <span class="badge bg-danger"><i class="fa fa-times"></i></span>
+                                        @endif
+                                        @else
+                                            <span class="badge bg-warning"><i class="fa fa-clock"></i></span>
                                         @endif
                                     </td>
                                     <td>

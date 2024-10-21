@@ -32,6 +32,7 @@
         <!-- Google reCAPTCHA -->
         <div id="captchaSection" style="margin-top: 15px;">
             <div class="g-recaptcha" data-sitekey="{{ config('captcha.sitekey') }}" data-callback="onSubmit"></div>
+            <span id="captcha-warning" style="color: red; font-size: 12px;"></span> <!-- Pesan peringatan -->
         </div>
 
         <!-- Submit Button -->
@@ -313,6 +314,17 @@
                 locationWarning.style.color = 'red';
             }
             return; // Hentikan eksekusi jika lokasi belum diambil
+        }
+
+        if (!recaptchaToken) 
+        {
+            // Tampilkan pesan peringatan di halaman
+            const captchaWarning = document.getElementById('captcha-warning');
+            if (captchaWarning) {
+                captchaWarning.textContent = 'Captcha belum terverifikasi. Silakan selesaikan reCAPTCHA sebelum melakukan check-in.';
+                captchaWarning.style.color = 'red';
+            }
+            return; // Hentikan eksekusi jika reCAPTCHA belum terverifikasi
         }
 
         // Meminta reCAPTCHA token sebelum submit
