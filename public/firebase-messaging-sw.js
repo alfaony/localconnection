@@ -29,8 +29,8 @@ messaging.onBackgroundMessage((payload) => {
     };
     
       // Tambahkan suara notifikasi
-      const audio = new Audio('/audio/notification-sound.mp3'); // Ganti path dengan suara notifikasi yang valid
-      audio.play().catch(err => console.error('Gagal memutar suara notifikasi:', err));
+    //   const audio = new Audio('/audio/notification-sound.mp3'); // Ganti path dengan suara notifikasi yang valid
+    //   audio.play().catch(err => console.error('Gagal memutar suara notifikasi:', err));
   
       // Tampilkan notifikasi
       return self.registration.showNotification(notificationTitle, notificationOptions)

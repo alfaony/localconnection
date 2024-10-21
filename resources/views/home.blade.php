@@ -402,12 +402,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Cek apakah token FCM di localStorage sama dengan yang ada di server
         const savedToken = localStorage.getItem('fcm_token');
-        const serverToken = "{{ Auth::user()->status->fcm_id }}";
+
 
         // Jika token tidak sama atau tidak ada, lakukan registrasi FCM
-        if (savedToken !== serverToken) {
-            initFirebaseMessagingRegistration();
-        }
+        // if (savedToken !== serverToken) {
+        // }
+        initFirebaseMessagingRegistration();
 
         // Tambahkan listener untuk memantau interaksi pertama pengguna
         document.addEventListener('click', triggerNotificationRequestOnInteraction);
