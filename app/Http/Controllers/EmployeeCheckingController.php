@@ -87,7 +87,7 @@ class EmployeeCheckingController extends Controller
             
                     // $query->byRole();
                     // Exclude check-ins scheduled for times that have passed
-                    $query->where('scheduled_time', '<', Carbon::now());
+                    // $query->where('scheduled_time', '<', Carbon::now());
                     $employeeCheckings = $query->orderBy('scheduled_time','desc')->paginate(10);
                 break;
         }
