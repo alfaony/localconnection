@@ -46,7 +46,7 @@ class EmployeeCheckingController extends Controller
         $users = User::byCompany(Auth::user()->company_id)->get();
 
         // nullable
-        $employeeCheckings = null;
+        $employeeCheckings = array();
         $checkins = null;
 
         switch ($tab) 
@@ -71,6 +71,8 @@ class EmployeeCheckingController extends Controller
         
                 break;
             case 'detail_checkin':
+                if($userId)
+                {
                     $query = EmployeeChecking::query();
                     // Filter by date range
                     $query->when($userId, function ($q) use ($userId) {
@@ -89,6 +91,7 @@ class EmployeeCheckingController extends Controller
                     // Exclude check-ins scheduled for times that have passed
                     // $query->where('scheduled_time', '<', Carbon::now());
                     $employeeCheckings = $query->orderBy('scheduled_time','desc')->paginate(10);
+                }
                 break;
         }
 
