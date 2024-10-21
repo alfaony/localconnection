@@ -91,6 +91,8 @@ class CheckinNotification extends Command
                 return;
             }
 
+            $url = route('employee-checking.index');
+
             // Buat pesan notifikasi
             $message = CloudMessage::withTarget('token', $fcmId)
                 ->withNotification([
@@ -100,6 +102,7 @@ class CheckinNotification extends Command
                 ->withData([
                     'checkin_time' => $checkin->scheduled_time,
                     'user_id' => $checkin->user_id,
+                    'url' => $url,
                 ]);
 
             // Kirim pesan notifikasi ke Firebase
