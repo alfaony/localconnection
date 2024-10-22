@@ -39,9 +39,10 @@ class EmployeeCheckingController extends Controller
         // Search
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
-        $userId = $request->input('user_id');
-        $tab = $request->input('tab') ?? 'point_checkin';
+        $userId = $request->input('user_id') ?? Auth::user()->id;
+        $tab = $request->input('tab') ?? 'detail_checkin';
         $today = Carbon::today()->toDateString();
+        $manualCheck = $this->checkingDivision(Auth::user());
 
         // Load data pengguna
         $userSelect = User::byCompany(Auth::user()->company_id)->get();
@@ -122,7 +123,7 @@ class EmployeeCheckingController extends Controller
                 break;
         }
 
-        return view('employee_checking.index', compact('employeeCheckings', 'users', 'userSelect', 'tab'));
+        return view('employee_checking.index', compact('employeeCheckings', 'users', 'userSelect', 'tab', 'manualCheck'));
     }
 
     /**
@@ -194,16 +195,19 @@ class EmployeeCheckingController extends Controller
             'longitude' => 'nullable',
             'recaptcha' => 'required'
         ]);
-        // Verifikasi reCAPTCHA
-        // $recaptcha = $request->input('recaptcha');
-        // $response = Http::post('https://www.google.com/recaptcha/api/siteverify', [
-        //     'secret' => config('captcha.secret'),
-        //     'response' => $recaptcha,
-        // ]);
+        $source = $request->input('source') ?? 'auto_checkin';
 
-        // if (!$response->json()['success']) {
-        //     return response()->json(['message' => 'reCAPTCHA verification failed.'], 422);
-        // }
+        // Verifikasi reCAPTCHA
+        $recaptcha = $request->input('recaptcha');
+        $response = Http::post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => config('captcha.secret'),
+            'response' => $recaptcha,
+        ]);
+
+        if (!$response->json()['success']) 
+        {
+            return response()->json(['message' => 'reCAPTCHA verification failed.'], 422);
+        }
 
         // Validasi bahwa $local_id sesuai dengan jadwal dan user yang melakukan check-in
 
@@ -213,10 +217,30 @@ class EmployeeCheckingController extends Controller
         }
 
         // Pastikan check-in dilakukan dalam waktu yang diperbolehkan
-        $scheduledTime = strtotime($employeeChecking->scheduled_time);
-        $currentTime = time();
-        if ($currentTime < $scheduledTime || $currentTime > ($scheduledTime + config('services.checking_setting.duration'))) {
-            return response()->json('Check-in time is outside the allowed window.', 422);
+        
+        if($source == 'auto_checkin')
+        {
+            $scheduledTime = strtotime($employeeChecking->scheduled_time);
+            $currentTime = time();
+            if ($currentTime < $scheduledTime || $currentTime > ($scheduledTime + config('services.checking_setting.duration'))) {
+                return response()->json('Check-in time is outside the allowed window.', 422);
+            }
+        }
+
+        if ($source == 'manual_checkin') 
+        {
+            $lastScheduledCheckin = Auth::user()->status ? Auth::user()->status->last_scheduled_checkin : null;
+    
+            if ($lastScheduledCheckin) 
+            {
+                $lastCheckinTime = Carbon::parse($lastScheduledCheckin);
+                $currentCheckinTime = Carbon::now();
+                $timeDifference = $currentCheckinTime->diffInMinutes($lastCheckinTime);
+    
+                if ($timeDifference < 30) {
+                    return response()->json('Check-in gagal: Anda harus menunggu 30 menit sebelum melakukan check-in manual berikutnya.', 422);
+                }
+            }
         }
 
         // Simpan foto jika ada
@@ -240,13 +264,13 @@ class EmployeeCheckingController extends Controller
         // Update fcm_id pada user_status terkait
         if ($user->status) {
             $user->status->update([
-                'last_scheduled_checkin' => $employeeChecking->scheduled_time,
+                'last_scheduled_checkin' => Carbon::now(),
             ]);
         } else 
         {
             // Jika UserStatus belum ada, buat satu dan simpan fcm_id
             $user->status()->create([
-                'last_scheduled_checkin' => $employeeChecking->scheduled_time,
+                'last_scheduled_checkin' => Carbon::now(),
             ]);
         }
 
@@ -254,6 +278,13 @@ class EmployeeCheckingController extends Controller
         $employeeChecking->is_active = false;
         $employeeChecking->is_completed = true;
         $employeeChecking->checkin_start_time = Carbon::now();
+
+        if($source == 'manual_checkin')
+        {
+            $employeeChecking->scheduled_time = Carbon::now();
+            $employeeChecking->scheduled_timeout = Carbon::now();
+            $employeeChecking->checkin_start_time = Carbon::now();
+        }
         $employeeChecking->save();
 
         // Update data di Firebase
@@ -309,5 +340,46 @@ class EmployeeCheckingController extends Controller
         }
 
         return response()->json(['message' => 'Check-in updated successfully']);
+    }
+
+    /**
+     * 
+     * Protected for checking has divison
+     */
+    protected function checkingDivision($user)
+    {
+        $divisions = $user->divisions;
+        $employeeChecking = EmployeeChecking::where('user_id', $user->id)->where('scheduled_time', Carbon::now())->count();
+
+        $manual_checkin = false;
+        $requires_photo = false;
+        $requires_location = false;
+
+        if($divisions->count() > 0)
+        {
+            foreach ($divisions as $division) 
+            {
+                if($division->manual_checkin)
+                {
+                    $manual_checkin = true;
+                }
+
+                if($division->requires_photo)
+                {
+                    $requires_photo = true;
+                }
+
+                if($division->requires_location)
+                {
+                    $requires_location = true;
+                }
+            }
+        }
+
+        return [
+            'manual_checkin' => $manual_checkin,
+            'requires_photo' => $requires_photo,
+            'requires_location' => $requires_location
+        ];
     }
 }

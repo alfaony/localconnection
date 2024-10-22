@@ -5,7 +5,7 @@
 @section('content_header')
 <div class="card">
     <div class="card-header">
-        <h4>Laporan Check-in Karyawan</h4>
+        <h4>Daftar & Laporan Check-in Karyawan</h4>
     </div>
 </div>
 @stop
@@ -41,6 +41,17 @@
         <!-- Tab Navigation -->
         <ul class="nav nav-tabs" id="reportTab" role="tablist">
             <li class="nav-item">
+                <a class="nav-link {{ request('tab') == 'detail_checkin' || is_null(request('tab')) ? 'active' : '' }}" 
+                id="detail-checkin-tab" 
+                data-toggle="tab" 
+                href="#detail_checkin" 
+                role="tab" 
+                aria-controls="detail_checkin" 
+                aria-selected="{{ request('tab') == 'detail_checkin' || is_null(request('tab')) ? 'true' : 'false' }}">
+                    Daftar Check-in Karyawan
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ request('tab') == 'point_checkin' ? 'active' : '' }}" 
                    id="point-checkin-tab" 
                    data-toggle="tab" 
@@ -51,70 +62,12 @@
                    Point Check-in
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link {{ request('tab') == 'detail_checkin' ? 'active' : '' }}" 
-                   id="detail-checkin-tab" 
-                   data-toggle="tab" 
-                   href="#detail_checkin" 
-                   role="tab" 
-                   aria-controls="detail_checkin" 
-                   aria-selected="{{ request('tab') == 'detail_checkin' ? 'true' : 'false' }}">
-                   Detail Check-in
-                </a>
-            </li>
         </ul>
 
         <!-- Tab Content -->
         <div class="tab-content mt-3">
-            @if(request('tab') == 'point_checkin')
-            <div class="tab-pane fade {{ request('tab') == 'point_checkin' ? 'show active' : '' }}" 
-                 id="point_checkin" 
-                 role="tabpanel" 
-                 aria-labelledby="point-checkin-tab">
-                <!-- Tabel hasil pencarian -->
-                <div class="table-responsive">
-                    <table class="table table-bordered mt-4">
-                        <thead>
-                            <tr>
-                                <th>Nama</th>
-                                <th>Point Check-In</th>
-                                <th>Total Check-In Hari Ini</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($users as $user)
-                                <tr>
-                                    <td>{{ $user->name }}</td>
-                                    <td>{{ $user->point_checkin }}</td>
-                                    <td>{{ $user->today_percentage }}</td>
-                                    <td>
-                                        <form action="{{ route('employee-checking.index') }}" method="GET">
-                                            <input type="hidden" name="tab" value="detail_checkin">
-                                            <div class="input-group">
-                                                <input type="hidden" id="user_id" name="user_id" value="{{ $user->id }}">
-                                            </div>
-                                            <button type="submit" class="btn btn-primary"><i class="fa fa-eye"></i></button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center">Tidak ada data untuk ditampilkan.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="d-flex justify-content-center mt-3">
-                    {{ $users->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-                </div>
-            </div>
-            @endif
-            @if(request('tab') == 'detail_checkin')
-            <div class="tab-pane fade {{ request('tab') == 'detail_checkin' ? 'show active' : '' }}" 
+            @if(request('tab') == 'detail_checkin' || is_null(request('tab')))
+            <div class="tab-pane fade {{ request('tab') == 'detail_checkin' || is_null(request('tab')) ? 'show active' : '' }}" 
                  id="detail_checkin" 
                  role="tabpanel" 
                  aria-labelledby="detail-checkin-tab">
@@ -128,6 +81,9 @@
                                 <th>Jadwal Check-In</th>
                                 <th>Status</th>
                                 <th>Detail</th>
+                                @if($manualCheck['manual_checkin'])
+                                <th>Check-In</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -135,7 +91,15 @@
                             @forelse($employeeCheckings as $checking)
                                 <tr>
                                     <td>{{ $checking->user->name }}</td>
-                                    <td>{{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}</td>
+                                    <td>
+                                        @if(!$checking->is_active)
+                                            @if($checking->is_completed)
+                                                {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
+                                            @endif
+                                        @else
+                                            {{ $checking->created_at ? \Carbon\Carbon::parse($checking->created_at)->locale('id')->translatedFormat('F d,y') : '' }}
+                                        @endif
+                                    </td>
                                     <td>
                                         @if(!$checking->is_active)
                                         @if($checking->is_completed)
@@ -211,6 +175,22 @@
                                             <span class="text-muted">Tidak ada detail</span>
                                         @endif
                                     </td>
+                                    @if($manualCheck['manual_checkin'])
+                                    <td>
+                                        @if(!$checking->is_active)
+                                            @if($checking->is_completed)
+                                                <span class="badge bg-success"><i class="fa fa-check"></i></span>
+                                            @else
+                                                <span class="badge bg-danger"><i class="fa fa-times"></i></span>
+                                            @endif
+                                        @else
+                                            <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#globalCheckinPopup"
+                                                onclick="setCheckinId('{{ $checking->id }}', {{ $manualCheck['requires_photo'] ? 'true' : 'false' }}, {{ $manualCheck['requires_location'] ? 'true' : 'false' }})">
+                                                <i class="fa fa-pencil"></i> Manual Check-In
+                                            </button> 
+                                        @endif
+                                    </td>
+                                    @endif
                                 </tr>
                             @empty
                                 <tr>
@@ -229,19 +209,111 @@
                 @endif
             </div>
             @endif
+            @if(request('tab') == 'point_checkin')
+            <div class="tab-pane fade {{ request('tab') == 'point_checkin' ? 'show active' : '' }}" 
+                 id="point_checkin" 
+                 role="tabpanel" 
+                 aria-labelledby="point-checkin-tab">
+                <!-- Tabel hasil pencarian -->
+                <div class="table-responsive">
+                    <table class="table table-bordered mt-4">
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Point Check-In</th>
+                                <th>Total Check-In Hari Ini</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($users as $user)
+                                <tr>
+                                    <td>{{ $user->name }}</td>
+                                    <td>{{ $user->point_checkin }}</td>
+                                    <td>{{ $user->today_percentage }}</td>
+                                    <td>
+                                        <form action="{{ route('employee-checking.index') }}" method="GET">
+                                            <input type="hidden" name="tab" value="detail_checkin">
+                                            <div class="input-group">
+                                                <input type="hidden" id="user_id" name="user_id" value="{{ $user->id }}">
+                                            </div>
+                                            <button type="submit" class="btn btn-primary"><i class="fa fa-eye"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center">Tidak ada data untuk ditampilkan.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-center mt-3">
+                    {{ $users->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 </div>
 
+@if($manualCheck['manual_checkin'])
+<!-- Global Popup Check-In -->
+<div id="globalCheckinPopup" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="globalCheckinPopupLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="globalCheckinPopupLabel">Time to Check-In</h5>
+                <button type="button" class="close" id="btnclosemodal"data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Foto -->
+                <div id="globalPhotoSection" class="form-group" style="display: none; margin-top: 15px;">
+                    <span id="globalPhotoWarning" style="color: red; font-size: 15px;"></span>
+                    <input type="file" class="form-control" id="globalPhoto" accept="image/*" capture="environment" onchange="compressAndPreviewImageCheckin();" required>
+                    <small class="text-muted">Klik untuk mengambil foto menggunakan kamera.</small>
+                    <img id="globalPhotoPreview" src="#" alt="Photo Preview" style="display:none;" class="img-thumbnail mt-3">
+                </div>
+
+                <!-- Lokasi -->
+                <div id="globalLocationSection" class="form-group" style="display: none; margin-top: 15px;">
+                    <button class="btn btn-secondary" onclick="getLocation()">Share Location</button>
+                    <p id="globalLocationStatus"></p>
+                    <input type="hidden" id="globalLatitude">
+                    <input type="hidden" id="globalLongitude">
+                    <span id="globalLocationWarning" style="color: red; font-size: 15px;"></span>
+                </div>
+
+                <!-- reCAPTCHA -->
+                <div id="globalCaptchaSection" class="mt-4">
+                    <div class="g-recaptcha" data-sitekey="{{ config('captcha.sitekey') }}" data-callback="onSubmit"></div>
+                    <span id="globalCaptchaWarning" style="color: red; font-size: 15px;"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="globalSubmitCheckin" class="btn btn-primary" onclick="onSubmit()">Submit Check-in</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 @endsection
 
 @section('js')
-<!-- Include Select2 JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>   
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function () {
             $('.select2').select2();
@@ -304,6 +376,230 @@
             });
         });
     </script>
+
+@if($manualCheck['manual_checkin'])
+<script>
+    // Fungsi untuk mengatur ID check-in dan memeriksa foto/lokasi
+    function setCheckinId(id, requiresPhoto, requiresLocation) 
+    {   
+        resetGlobalPopup(); // Reset data sebelumnya
+
+        // Set ID check-in di popup
+        document.getElementById('globalCheckinPopup').dataset.checkinId = id;
+
+        // Tampilkan atau sembunyikan bagian foto sesuai dengan parameter
+        const photoSection = document.getElementById('globalPhotoSection');
+        const photoInput = document.getElementById('globalPhoto');
+        if (requiresPhoto) {
+            photoSection.style.display = 'block';
+            photoInput.setAttribute('required', 'required');
+        } else {
+            photoSection.style.display = 'none';
+            photoInput.removeAttribute('required');
+        }
+
+        // Tampilkan atau sembunyikan bagian lokasi sesuai dengan parameter
+        const locationSection = document.getElementById('globalLocationSection');
+        if (requiresLocation) {
+            locationSection.style.display = 'block';
+        } else {
+            locationSection.style.display = 'none';
+        }
+    }
+
+    // Fungsi untuk mereset popup
+    function resetGlobalPopup() {
+        document.getElementById('globalPhoto').value = '';
+        document.getElementById('globalLatitude').value = '';
+        document.getElementById('globalLongitude').value = '';
+        document.getElementById('globalPhotoPreview').style.display = 'none';
+        document.getElementById('globalLocationWarning').textContent = '';
+        document.getElementById('globalCaptchaWarning').textContent = '';
+        grecaptcha.reset();
+    }
+
+    // Fungsi untuk submit check-in
+    function onSubmit() 
+    {
+        const latitude = document.getElementById('globalLatitude').value;
+        const longitude = document.getElementById('globalLongitude').value;
+        const photoInput = document.getElementById('globalPhoto');
+        const photo = document.getElementById('globalPhoto').files[0];
+        const recaptchaToken = grecaptcha.getResponse();
+        const id = document.getElementById('globalCheckinPopup').dataset.checkinId;
+
+        const requiresPhoto = photoInput.hasAttribute('required');
+        if (requiresPhoto && !photo) {
+            document.getElementById('globalPhotoWarning').textContent = 'Foto diperlukan sebelum melakukan check-in.';
+            document.getElementById('globalPhotoWarning').style.color = 'red';
+            return; // Hentikan eksekusi jika foto belum diisi
+        } else {
+            document.getElementById('globalPhotoWarning').textContent = '';
+        }
+
+        // Validasi lokasi jika diperlukan
+        const requiresLocation = document.getElementById('globalLocationSection').style.display === 'block';
+        if (requiresLocation && (!latitude || !longitude)) {
+            document.getElementById('globalLocationWarning').textContent = 'Lokasi diperlukan sebelum melakukan check-in.';
+            document.getElementById('globalLocationWarning').style.color = 'red';
+            return; // Hentikan eksekusi jika lokasi belum diisi
+        } else 
+        {
+            document.getElementById('globalLocationWarning').textContent = '';
+        }
+        // Validasi reCAPTCHA
+        if (!recaptchaToken) {
+            document.getElementById('globalCaptchaWarning').textContent = 'Captcha belum terverifikasi.';
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append('latitude', latitude);
+        formData.append('longitude', longitude);
+        formData.append('recaptcha', recaptchaToken);
+        formData.append('source', "manual_checkin");
+        formData.append('_method', 'PUT');
+
+        if (photo) {
+            formData.append('photo', photo);
+        }
+
+        let url = "{{ route('employee-checking.update', ':id') }}".replace(":id", id);
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                $("#btnclosemodal").click();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Check-in berhasil!',
+                    timer: 2000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+
+                $('#globalCheckinPopup').modal('hide');
+            },
+            error: function(xhr) {
+                $("#btnclosemodal").click();
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal melakukan check-in',
+                    text: xhr.responseText,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+
+                $('#globalCheckinPopup').modal('hide');
+            }
+        });
+    }
+</script>
+
+<script>
+    function compressAndPreviewImageCheckin() 
+    {
+        const fileInput = document.getElementById('globalPhoto');
+        const preview = document.getElementById('globalPhotoPreview');
+
+        if (!fileInput.files[0]) {
+            preview.src = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.readAsDataURL(fileInput.files[0]);
+        reader.onload = function (event) {
+            const imgElement = document.createElement("img");
+            imgElement.src = event.target.result;
+            imgElement.onload = function (e) {
+                const canvas = document.createElement("canvas");
+                const MAX_WIDTH = 150;
+
+                const scaleSize = MAX_WIDTH / e.target.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = e.target.height * scaleSize;
+
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(e.target, 0, 0, canvas.width, canvas.height);
+                ctx.canvas.toBlob((blob) => {
+                    const file = new File([blob], "compressed_image.jpg", {
+                        type: 'image/jpeg',
+                        quality: 0.8 // Lowering the quality to reduce file size
+                    });
+
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
+
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onloadend = function () {
+                        preview.src = reader.result;
+                        preview.style.display = 'block';
+                    }
+                }, 'image/jpeg', 0.6);
+            }
+        }
+    }
+
+    function getLocation() 
+    {
+        // Reset pesan peringatan lokasi
+        const locationWarning = document.getElementById('globalLocationWarning');
+        if (locationWarning) {
+            locationWarning.textContent = '';
+            locationWarning.style.color = '';
+        }
+
+        // Cek apakah browser mendukung geolocation
+        if (navigator.geolocation) {
+            // Minta izin pengguna untuk mendapatkan lokasi saat ini
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    // Jika lokasi berhasil didapatkan
+                    document.getElementById('globalLatitude').value = position.coords.latitude;
+                    document.getElementById('globalLongitude').value = position.coords.longitude;
+                    document.getElementById('globalLocationStatus').textContent = "Lokasi berhasil didapatkan!";
+                    document.getElementById('globalLocationStatus').style.color = 'green';
+                },
+                function(error) {
+                    // Menangani kesalahan saat mendapatkan lokasi
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            document.getElementById('globalLocationStatus').textContent = "Akses lokasi ditolak. Silakan aktifkan izin lokasi di browser Anda.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            document.getElementById('globalLocationStatus').textContent = "Informasi lokasi tidak tersedia.";
+                            break;
+                        case error.TIMEOUT:
+                            document.getElementById('globalLocationStatus').textContent = "Permintaan lokasi melebihi batas waktu.";
+                            break;
+                        case error.UNKNOWN_ERROR:
+                            document.getElementById('globalLocationStatus').textContent = "Terjadi kesalahan tidak diketahui.";
+                            break;
+                    }
+                    document.getElementById('globalLocationStatus').style.color = 'red';
+                }
+            );
+        } else {
+            // Jika geolocation tidak didukung oleh browser
+            document.getElementById('globalLocationStatus').textContent = "Geolocation tidak didukung oleh browser ini.";
+            document.getElementById('globalLocationStatus').style.color = 'red';
+        }
+    }
+</script>
+@endif
 @stop
 @section('css')
     <!-- Include Select2 CSS -->

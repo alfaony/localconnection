@@ -101,15 +101,28 @@ class ScheduleEmployeeCheckin extends Command
     private function saveLocal($user, $time)
     {
         $firstDivision = $user->first_division;
-
-        return EmployeeChecking::create([
-            'user_id' => $user->id,
-            'division_id' => $firstDivision->id,
-            'scheduled_time' => $time['checkin_time'],
-            'scheduled_timeout' => $time['timeout_time'],
-            'is_active' => true,
-            'is_completed' => false,
-        ]);
+        
+        if(!$firstDivision->manual_checkin) 
+        {
+            return EmployeeChecking::create([
+                'user_id' => $user->id,
+                'division_id' => $firstDivision->id,
+                'scheduled_time' => $time['checkin_time'],
+                'scheduled_timeout' => $time['timeout_time'],
+                'is_active' => true,
+                'is_completed' => false,
+            ]);
+        }else
+        {
+            return EmployeeChecking::create([
+                'user_id' => $user->id,
+                'division_id' => $firstDivision->id,
+                'scheduled_time' => null,
+                'scheduled_timeout' => null,
+                'is_active' => true,
+                'is_completed' => false,
+            ]);
+        }
     }
 
     private function generateRandomCheckinTimes()
