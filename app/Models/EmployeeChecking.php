@@ -12,10 +12,11 @@ class EmployeeChecking extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $guarded = ['scheduled_time'];
+
     protected $fillable = [
         'user_id',
         'division_id',
-        'scheduled_time',
         'scheduled_timeout',
         'checkin_start_time',
         'is_active',
