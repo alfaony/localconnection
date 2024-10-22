@@ -28,6 +28,21 @@ class EmployeeChecking extends Model
     ];
 
     /**
+     * Can't Update schedule_time
+     */
+    public static function boot()
+    {
+        parent::boot();
+
+        static::updating(function ($model) {
+            // Pastikan scheduled_time tidak berubah
+            if ($model->isDirty('scheduled_time')) {
+                $model->scheduled_time = $model->getOriginal('scheduled_time');
+            }
+        });
+    }
+
+    /**
      * Relasi ke model User
      * Satu EmployeeChecking hanya terkait dengan satu User
      */
