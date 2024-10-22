@@ -12,11 +12,10 @@ class EmployeeChecking extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $guarded = ['scheduled_time'];
-
     protected $fillable = [
         'user_id',
         'division_id',
+        'scheduled_time',
         'scheduled_timeout',
         'checkin_start_time',
         'is_active',
@@ -26,21 +25,6 @@ class EmployeeChecking extends Model
         'location_latitude',
         'location_longitude'
     ];
-
-    /**
-     * Can't Update schedule_time
-     */
-    public static function boot()
-    {
-        parent::boot();
-
-        static::updating(function ($model) {
-            // Pastikan scheduled_time tidak berubah
-            if ($model->isDirty('scheduled_time')) {
-                $model->scheduled_time = $model->getOriginal('scheduled_time');
-            }
-        });
-    }
 
     /**
      * Relasi ke model User
