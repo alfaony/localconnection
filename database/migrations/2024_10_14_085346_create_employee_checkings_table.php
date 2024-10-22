@@ -12,7 +12,7 @@ class CreateEmployeeCheckingsTable extends Migration
             $table->bigIncrements('id');
             $table->uuid('user_id');
             $table->uuid('division_id');
-            $table->timestamp('scheduled_time'); // Waktu yang dijadwalkan untuk check-in
+            $table->timestamp('scheduled_time')->nullable(); // Waktu yang dijadwalkan untuk check-in
             $table->timestamp('checkin_start_time')->nullable(); // Waktu mulai check-in
             $table->boolean('is_active')->default(false); // Status aktif saat check-in berjalan
             $table->boolean('is_completed')->default(false); // Status apakah check-in selesai
