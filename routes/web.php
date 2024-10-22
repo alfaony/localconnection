@@ -56,6 +56,10 @@ use App\Http\Controllers\InboxController;
 use App\Http\Controllers\LetterSubmissionController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\XeroController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\XeroWebhookController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -67,20 +71,43 @@ use App\Http\Controllers\DeviceController;
 |
 */
 
-Route::get('/', function () {
-    return redirect()->to('/home');
+Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook']);
+Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
+
+Route::group(['middleware' => ['auth','web', 'XeroAuthenticated','role.permission']], function(){
+  Route::get('xero',function(){
+
+    return redirect('/invoice')->with('xero',true);
+  
+  });
+  Route::delete('invoice/destroyProduct/product/{invoiceProduct}',[invoiceController::class,'destroyProduct'])->name('invoice.destroy.product');
+  Route::get('invoice/productPrice/counting',[invoiceController::class,'productPrice'])->name('invoice.productPrice');
+  Route::get('invoice/select2', [invoiceController::class, 'select2'])->name('invoice.select2');
+  Route::get('invoice/dataTableJson', [invoiceController::class, 'dataTableJson'])->name('invoice.datatable');
+  Route::get('invoice/downloadPdf/pdf/{slug}',[invoiceController::class,'downloadPdf'])->name('invoice.download.pdf');
+  Route::get('invoice/counting',[invoiceController::class,'counting'])->name('invoice.counting');
+  Route::get('invoice/productCounting/counting',[invoiceController::class,'productCounting'])->name('invoice.productCounting');
+  Route::get('invoice/suggestionQuote/{id}/',[invoiceController::class,'suggestionQuote'])->name('invoice.suggestionQuote');
+
+  Route::resource('invoice', invoiceController::class);
 });
+
 
 Auth::routes([
     'register' => false, // Registration Routes...
   ]);
 
+Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Route::get('/dailytask/showJson/{slug}', [DailyTaskController::class,'showJson'])->name('dailytask.showJson');
+Route::get('invoice/history/{slug}', [InvoiceController::class, 'history'])->name('invoices.history');
 
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
+  // Xero Setting
+  Route::get('xero/connect', [XeroController::class,'connect']);
+  Route::get('xero/disconnect', [XeroController::class,'disconnect']);
+  
   Route::get('project/export', [ProjectController::class,'export'])->name('project.export');
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
@@ -136,6 +163,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::post('bast/requestReport', [BastController::class, 'requestReport'])->name('bast.requestReport');
   Route::resource('bast', BastController::class)->except(['show']);
 
+  Route::get('report-project/downloadall/{slug}', [ReportProjectController::class, 'downloadall'])->name('report-project.downloadall');
   Route::get('report-project/createsuggest/{slug}', [ReportProjectController::class, 'createsuggest'])->name('report-project.createsuggest');
   Route::get('report-project/dataTableJsonWorkOrderWithoutReportProject', [ReportProjectController::class, 'dataTableJsonWorkOrderWithoutReportProject'])->name('report-project.dataTableJsonWorkOrderWithoutReportProject');
   Route::delete('report-project/destroyDetail/{ReportProjectDetail}',[ReportProjectController::class,'destroyDetail'])->name('report-project.destroy.detail');
@@ -242,7 +270,6 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('device', [DeviceController::class,'index'])->name('device.index');
   Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
 });
-
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

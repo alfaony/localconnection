@@ -50,8 +50,12 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionAndSettingMenuLetterTypeSeeder::class);
         $this->call(PermissionForMenuPosition::class);
         $this->call(PermissionForMenuDevice::class);
+        $this->call(PermissionForMenuXero::class);
+        $this->call(PermissionForMenuInvoice::class);
         $this->call(PermissionForProjectExportSeeder::class);
         $this->call(PermissionForRequestProjectSeeder::class);
+        $this->call(PermissionForDownloadAllReportSeeder::class);
+        $this->call(PermissionForHistoryInvoiceSeeder::class);
         $this->call(PermissionForSuggestWorkOrderSeeder::class);
     }
 }

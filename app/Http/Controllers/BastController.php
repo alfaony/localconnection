@@ -195,7 +195,7 @@ class BastController extends Controller
     public function dataTableJson()
     {
         // Fetch data for the DataTable
-        $query = Bast::with('workOrder')->byCompany(Auth::user()->company_id);
+        $query = Bast::with('workOrder')->byCompany(Auth::user()->company_id)->orderBy('date','desc');
 
 
         // Map column indexes to column names (this may vary based on your table structure)
@@ -250,6 +250,16 @@ class BastController extends Controller
             array_push($actionButtons,$destroy);
         }
 
+
+        $destroy = 
+            [
+                'name' => 'Create Invoice',
+                'route' => 'invoice.store',
+                'id' => true,
+            ];
+
+            array_push($actionButtons,$destroy);
+
         return datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
     }
 
@@ -264,7 +274,7 @@ class BastController extends Controller
             // Filter project yang tidak memiliki reportProject (HasOne)
             $q->doesntHave('bast');
             $q->has('reportProject');
-        });
+        })->orderBy('created_at', 'desc');
 
         // Map column indexes to column names (modify these based on your actual database structure)
         $columnNames = ['date', 'number_result', 'project_name'];

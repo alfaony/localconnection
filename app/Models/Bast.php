@@ -66,12 +66,17 @@ class Bast extends Model
 
     public function workOrder()
     {
-        return $this->belongsTo(WorkOrder::class);
+        return $this->belongsTo(WorkOrder::class)->withTrashed();
     }
 
     public function project()
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Project::class)->withTrashed();
+    }
+
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
     }
 
     public function scopeByCompany($query,$companyId)

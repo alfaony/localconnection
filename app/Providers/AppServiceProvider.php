@@ -86,6 +86,7 @@ class AppServiceProvider extends ServiceProvider
                 'supliers',
                 'report_projects',
                 'basts',
+                'invoices',
                 'reports',
             ];
 
@@ -346,6 +347,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'device.index',
                     'icon' => 'fa fa-mobile-alt',
                 ],
+                'invoices' =>
+                [
+                    'text' => 'Invoice',
+                    'route' => 'invoice.index',
+                    'icon' => 'fa fa-file-invoice',
+                ]
             ];
 
             foreach ($listMenu as $role) 
