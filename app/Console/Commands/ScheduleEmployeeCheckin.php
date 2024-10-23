@@ -87,7 +87,7 @@ class ScheduleEmployeeCheckin extends Command
 
     private function saveLocal($user, $time, $isOnLeave = false)
     {
-        $firstDivision = $user->first_division;
+        $firstDivision = $this->findFirstDivision($user);
         
         if($isOnLeave)
         {
@@ -127,6 +127,20 @@ class ScheduleEmployeeCheckin extends Command
 
     }
 
+    private function findFirstDivision($user)
+    {
+        foreach ($user->divisions as $division) 
+        {
+            if($division->manual_checkin)
+            {
+                return $division;
+            }
+        }
+
+
+        return $user->divisions->first();
+
+    }
     // private function generateRandomCheckinTimes()
     // {
     //     $times = [];

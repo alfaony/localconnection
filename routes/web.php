@@ -277,6 +277,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::resource('national-holiday', NationalHolidayController::class)->only(['index','store','update','destroy']);
   
+  Route::get('employee-checking/checkLastScheduledCheckin',[EmployeeCheckingController::class,'checkLastScheduledCheckin'])->name('employee-checking.checkLastScheduledCheckin');
   Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
   Route::resource('employee-checking', EmployeeCheckingController::class)->only(['index','update']);
 });

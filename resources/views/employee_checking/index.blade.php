@@ -195,8 +195,8 @@
                                         @else
                                             @if($checking->isToday())
                                             @if($checking->user_id == Auth::user()->id)
-                                            <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#globalCheckinPopup"
-                                                onclick="setCheckinId('{{ $checking->id }}', {{ $manualCheck['requires_photo'] ? 'true' : 'false' }}, {{ $manualCheck['requires_location'] ? 'true' : 'false' }})">
+                                            <button class="btn btn-info btn-sm" type="button"
+                                                onclick="checkLastScheduledCheckin('{{ $checking->id }}', {{ $manualCheck['requires_photo'] ? 'true' : 'false' }}, {{ $manualCheck['requires_location'] ? 'true' : 'false' }})" >
                                                 <i class="fa fa-pencil"></i> Manual Check-In
                                             </button> 
                                             @else
@@ -329,6 +329,7 @@
 
 @section('js')
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>   
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
@@ -399,10 +400,49 @@
     </script>
 
 @if($manualCheck['manual_checkin'])
+@canAccess('checkLastScheduledCheckin','employee_checkings')
+<script>
+    function checkLastScheduledCheckin(id, requiresPhoto, requiresLocation) {
+        $.ajax({
+            url: "{{ route('employee-checking.checkLastScheduledCheckin') }}",
+            type: 'GET',
+            success: function(response) {
+                if (response) {
+                    // Jika responsnya 'true', izinkan membuka modal
+                    setCheckinId(id, requiresPhoto, requiresLocation);
+                } else {
+                    // Jika responsnya 'false', tampilkan pesan error
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Check-in Gagal',
+                        text: 'Anda harus menunggu 30 menit sebelum melakukan check-in manual berikutnya.',
+                        timer: 3000,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    });
+                }
+            },
+            error: function(xhr) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan saat memeriksa waktu check-in.',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+            }
+        });
+    }
+</script>
+@endcanAccess
+
+
 <script>
     // Fungsi untuk mengatur ID check-in dan memeriksa foto/lokasi
     function setCheckinId(id, requiresPhoto, requiresLocation) 
     {   
+        $('#globalCheckinPopup').modal('show'); // Tampilkan modal dengan Bootstrap 4
         resetGlobalPopup(); // Reset data sebelumnya
 
         // Set ID check-in di popup
@@ -497,12 +537,12 @@
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
             success: function(response) {
-                $("#btnclosemodal").click();
+                $('#globalCheckinPopup').modal('hide');
 
                 Swal.fire({
                     icon: 'success',
                     title: 'Check-in berhasil!',
-                    timer: 2000,
+                    timer: 4000,
                     timerProgressBar: true,
                     showConfirmButton: false
                 }).then(function() {
@@ -512,7 +552,7 @@
                 $('#globalCheckinPopup').modal('hide');
             },
             error: function(xhr) {
-                $("#btnclosemodal").click();
+                $('#globalCheckinPopup').modal('hide');
 
                 Swal.fire({
                     icon: 'error',
