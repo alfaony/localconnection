@@ -198,16 +198,16 @@ class EmployeeCheckingController extends Controller
         $source = $request->input('source') ?? 'auto_checkin';
 
         // Verifikasi reCAPTCHA
-        $recaptcha = $request->input('recaptcha');
-        $response = Http::post('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => config('captcha.secret'),
-            'response' => $recaptcha,
-        ]);
+        // $recaptcha = $request->input('recaptcha');
+        // $response = Http::post('https://www.google.com/recaptcha/api/siteverify', [
+        //     'secret' => config('captcha.secret'),
+        //     'response' => $recaptcha,
+        // ]);
 
-        if (!$response->json()['success']) 
-        {
-            return response()->json(['message' => 'reCAPTCHA verification failed.'], 422);
-        }
+        // if (!$response->json()['success']) 
+        // {
+        //     return response()->json(['message' => 'reCAPTCHA verification failed.'], 422);
+        // }
 
         // Validasi bahwa $local_id sesuai dengan jadwal dan user yang melakukan check-in
 
