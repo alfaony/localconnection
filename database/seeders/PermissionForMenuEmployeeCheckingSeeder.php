@@ -21,7 +21,7 @@ class PermissionForMenuEmployeeCheckingSeeder extends Seeder
     public function run()
     {   
 
-        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'updatestatus'];
+        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'updatestatus','checkLastScheduledCheckin'];
        
         $roles = Role::all();
 

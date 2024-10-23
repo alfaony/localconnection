@@ -287,6 +287,34 @@ class EmployeeCheckingController extends Controller
     }
 
     /**
+     * Check last Schedule Check-In
+     */
+    public function checkLastScheduledCheckin(Request $request)
+    {
+        $user = Auth::user(); // Atau ambil user berdasarkan $userId
+
+        if ($user) {
+            $lastScheduledCheckin = $user->status ? $user->status->last_scheduled_checkin : null;
+
+            if ($lastScheduledCheckin) {
+                $lastCheckinTime = Carbon::parse($lastScheduledCheckin);
+                $currentCheckinTime = Carbon::now();
+                $timeDifference = $currentCheckinTime->diffInMinutes($lastCheckinTime);
+
+                if ($timeDifference < 30) 
+                {
+                    return response()->json(false, 200);
+                }else
+                {
+                    return response()->json(true, 200);
+                }
+            }else
+            {
+                return response()->json(true, 200);
+            }
+        }
+    }
+    /**
      * 
      * Protected for checking has divison
      */
