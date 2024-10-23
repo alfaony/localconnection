@@ -185,7 +185,8 @@
                                             <span class="text-muted">Tidak ada detail</span>
                                         @endif
                                     </td>
-                                    @if($manualCheck['manual_checkin'] && $checking->user_id == Auth::user()->id)
+                                    @if($manualCheck['manual_checkin'])
+                                    @if($checking->user_id == Auth::user()->id)
                                     <td>
                                         @if(!$checking->is_active)
                                             @if($checking->is_completed)
@@ -211,6 +212,7 @@
                                     </td>
                                     @else
                                         <td> - </td>
+                                    @endif
                                     @endif
                                 </tr>
                             @empty

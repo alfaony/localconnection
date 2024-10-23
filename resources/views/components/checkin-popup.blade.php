@@ -31,7 +31,11 @@
 
         <!-- Google reCAPTCHA -->
         <div id="captchaSection" style="margin-top: 15px;">
-            <div class="g-recaptcha" data-sitekey="{{ config('captcha.sitekey') }}" data-callback="onSubmit"></div>
+            <div class="g-recaptcha" data-sitekey="{{ config('captcha.sitekey') }}" 
+            data-callback="onRecaptchaSuccess"
+            data-expired-callback="onRecaptchaExpired"
+            data-error-callback="onRecaptchaError">
+        </div>
             <span id="captcha-warning" style="color: red; font-size: 12px;"></span> <!-- Pesan peringatan -->
         </div>
 
@@ -237,6 +241,8 @@
 
 
 <script>
+    let recaptchaToken = '';
+
     function getLocation() 
     {
         // Reset pesan peringatan lokasi
@@ -283,6 +289,22 @@
         }
     }
 
+    function onRecaptchaSuccess(token) 
+    {
+        recaptchaToken = token;
+        document.getElementById('captcha-warning').textContent = ''; // Reset pesan peringatan
+    }
+
+    // Fungsi callback yang dipanggil saat reCAPTCHA token kadaluarsa
+    function onRecaptchaExpired() {
+        recaptchaToken = ''; // Hapus token
+        document.getElementById('captcha-warning').textContent = 'Captcha telah kadaluarsa. Silakan ulangi lagi.';
+    }
+
+    // Fungsi callback yang dipanggil jika ada error pada reCAPTCHA
+    function onRecaptchaError() {
+        document.getElementById('captcha-warning').textContent = 'Terjadi kesalahan pada reCAPTCHA. Silakan coba lagi.';
+    }
 
     function onSubmit() 
     {
