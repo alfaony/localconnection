@@ -59,7 +59,7 @@
                    role="tab" 
                    aria-controls="point_checkin" 
                    aria-selected="{{ request('tab') == 'point_checkin' ? 'true' : 'false' }}">
-                   Point Check-in
+                   Jumlah Check-in
                 </a>
             </li>
         </ul>
