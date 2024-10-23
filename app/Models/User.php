@@ -8,8 +8,11 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Ramsey\Uuid\Uuid;
+
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
 
 class User extends Authenticatable
 {
@@ -188,6 +191,36 @@ class User extends Authenticatable
             {
                 $query->where('name', $role);
             });
+        }
+    }
+
+    public function scopeByRoleSearch($query)
+    {
+        if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR)
+        {
+            return $query->where('company_id', Auth::user()->company_id);
+        }
+        else
+        {
+            return $query->where('id', Auth::user()->id);
+        }
+    }
+
+    public function scopeByRoleList($query,$userId)
+    {
+        if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR)
+        {
+            if($userId)
+            {
+                return $query->where('id', $userId);
+            }else
+            {
+                $query->byCompany(Auth::user()->company_id);
+            }
+        }
+        else
+        {
+            return $query->where('id', Auth::user()->id);
         }
     }
 }
