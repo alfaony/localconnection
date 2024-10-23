@@ -9,13 +9,21 @@ use App\Models\EmployeeChecking;
 use Carbon\Carbon;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Exception\FirebaseException;
+use App\Services\DayoffService;
 
 use App\Schemas\RoleSchema;
 class ScheduleEmployeeCheckin extends Command
 {
     protected $signature = 'schedule:employee-checkin';
     protected $description = 'Schedule employee check-in excluding weekends, national holidays, and user leave days';
+    protected $dayoffService;
 
+    public function __construct(DayoffService $dayoffService)
+    {
+        parent::__construct();
+
+        $this->dayoffService = $dayoffService;
+    }
     public function handle()
     {
         $today = Carbon::today();
@@ -27,38 +35,23 @@ class ScheduleEmployeeCheckin extends Command
         }
         
         // 2. Cek jika hari ini adalah akhir pekan (Sabtu/Minggu)
-        // if ($today->isWeekend()) {
-        //     $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
-        //     return;
-        // }
+        if ($today->isWeekend()) {
+            $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
+            return;
+        }
         
         // 3. Array email pengguna yang sedang cuti
-        $onLeaveEmails = [
-            'user1@example.com',
-            'user2@example.com',
-            // tambahkan email lainnya sesuai kebutuhan
-        ];
-
+        $onLeaveEmails = $this->listDayoffEmployee();
         // Ambil semua user yang tidak cuti
-        $users = User::whereNotIn('email', $onLeaveEmails) // Tidak sedang cuti
-             ->whereHas('divisions') // Memiliki divisi
-             ->whereDoesntHave('role', function ($query) {
-                 $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]); // Bukan 'Root' atau 'Admin'
-             })
-             ->get();
-
-        // 4. Koneksi ke Firebase
-        // try {
-        //     $firebase = (new Factory)
-            // ->withServiceAccount(storage_path(config('services.firebase.service_account')))
-            // ->withDatabaseUri(config('services.firebase.service_database_checkin_url'))
-        //     ->createDatabase();
-
-        //     $this->info("Terhubung ke Firebase.");
-        // } catch (FirebaseException $e) {
-        //     $this->error("Gagal terhubung ke Firebase. Data akan tetap disimpan secara lokal.");
-        //     $firebase = null;
-        // }
+        $users = User::query()
+        ->when(!empty($onLeaveEmails), function ($query) use ($onLeaveEmails) {
+            $query->whereNotIn('email', $onLeaveEmails); // Tidak sedang cuti jika ada email yang sedang cuti
+        })
+        ->whereHas('divisions') // Memiliki divisi
+        ->whereDoesntHave('role', function ($query) {
+            $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]); // Bukan 'Root' atau 'Admin'
+        })
+        ->get();
 
         foreach ($users as $user) {
             $this->scheduleCheckinForUser($user);
@@ -149,6 +142,21 @@ class ScheduleEmployeeCheckin extends Command
         }
 
         return $times;
+    }
+
+    protected function listDayoffEmployee()
+    {
+        $list = [];
+        $dayoffList = $this->dayoffService->getCutiListBOS();
+        if(count($dayoffList) > 0)
+        {
+            foreach ($dayoffList as $value) 
+            {
+                $list[] = $value['email_staff'];
+            }
+        }
+
+        return $list;
     }
 
 }

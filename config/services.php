@@ -59,6 +59,13 @@ return [
         'duration' => env('CHECKIN_DURATION', 120),
         'duration_minutes' => env('CHECKIN_DURATION_MINUTES', 2),
         'times' => env('CHECKIN_TIME', 10),
-    ]
+    ],
+
+    'cuti_api' => 
+    [
+        'base_url' => env('CUTI_API_BASE_URL', 'https://hris.gemateknologi.com/CutiApi'),
+        'token' => env('CUTI_API_TOKEN'),
+    ],
+
     
 ];
