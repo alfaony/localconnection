@@ -184,10 +184,15 @@
                                                 <span class="badge bg-danger"><i class="fa fa-times"></i></span>
                                             @endif
                                         @else
+                                            @if($checking->isToday())
                                             <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#globalCheckinPopup"
                                                 onclick="setCheckinId('{{ $checking->id }}', {{ $manualCheck['requires_photo'] ? 'true' : 'false' }}, {{ $manualCheck['requires_location'] ? 'true' : 'false' }})">
                                                 <i class="fa fa-pencil"></i> Manual Check-In
                                             </button> 
+                                            @else
+                                                <span class="badge bg-danger"><i class="fa fa-times"></i></span>
+                                            @endif
+
                                         @endif
                                     </td>
                                     @endif
@@ -484,6 +489,8 @@
                     timer: 2000,
                     timerProgressBar: true,
                     showConfirmButton: false
+                }).then(function() {
+                    location.reload();
                 });
 
                 $('#globalCheckinPopup').modal('hide');
@@ -498,6 +505,8 @@
                     timer: 3000,
                     timerProgressBar: true,
                     showConfirmButton: false
+                }).then(function() {
+                    location.reload();
                 });
 
                 $('#globalCheckinPopup').modal('hide');
