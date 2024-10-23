@@ -118,31 +118,84 @@ class ScheduleEmployeeCheckin extends Command
         }
     }
 
+    // private function generateRandomCheckinTimes()
+    // {
+    //     $times = [];
+    //     $duration = config('services.checking_setting.duration_minutes'); // Get the duration from config
+
+    //     while (count($times) < config('services.checking_setting.times')) 
+    //     {
+    //         $time = Carbon::today()->addHours(rand(8, 16))->addMinutes(rand(0, 59));
+
+    //         if ($time->hour === 12) 
+    //         {
+    //             continue; // Skip lunch hour (if needed)
+    //         }
+
+    //         // Check-in time and timeout (check-in time + duration)
+    //         $timeout = $time->copy()->addMinutes($duration);
+
+    //         $times[] = [
+    //             'checkin_time' => $time->format('Y-m-d H:i:s'),
+    //             'timeout_time' => $timeout->format('Y-m-d H:i:s')
+    //         ];
+    //     }
+
+    //     return $times;
+    // }
+    
+    // Improvement that generates random check-in times with checking overlaps or not
     private function generateRandomCheckinTimes()
     {
         $times = [];
         $duration = config('services.checking_setting.duration_minutes'); // Get the duration from config
+        $bufferMinutes = 10; // Buffer waktu minimal antar check-in
+        $maxAttempts = 50; // Batas percobaan untuk menghindari loop tak terbatas
 
-        while (count($times) < config('services.checking_setting.times')) 
+        while (count($times) < config('services.checking_setting.times') && $maxAttempts > 0) 
         {
+            // Generate random check-in time
             $time = Carbon::today()->addHours(rand(8, 16))->addMinutes(rand(0, 59));
 
-            if ($time->hour === 12) 
-            {
+            // Lewati jam makan siang jika diperlukan
+            if ($time->hour === 12) {
                 continue; // Skip lunch hour (if needed)
             }
 
-            // Check-in time and timeout (check-in time + duration)
+            // Hitung waktu timeout
             $timeout = $time->copy()->addMinutes($duration);
 
-            $times[] = [
-                'checkin_time' => $time->format('Y-m-d H:i:s'),
-                'timeout_time' => $timeout->format('Y-m-d H:i:s')
-            ];
+            // Cek apakah ada konflik atau jarak kurang dari buffer waktu
+            $conflict = false;
+            foreach ($times as $scheduled) {
+                $existingStart = Carbon::parse($scheduled['checkin_time']);
+                $existingEnd = Carbon::parse($scheduled['timeout_time']);
+
+                // Cek tumpang tindih dan jarak minimal 10 menit
+                if (
+                    $time->between($existingStart->copy()->subMinutes($bufferMinutes), $existingEnd->copy()->addMinutes($bufferMinutes)) || 
+                    $timeout->between($existingStart->copy()->subMinutes($bufferMinutes), $existingEnd->copy()->addMinutes($bufferMinutes))
+                ) {
+                    $conflict = true;
+                    break; // Ada konflik, keluar dari loop
+                }
+            }
+
+            // Jika tidak ada konflik, tambahkan ke daftar waktu
+            if (!$conflict) {
+                $times[] = [
+                    'checkin_time' => $time->format('Y-m-d H:i:s'),
+                    'timeout_time' => $timeout->format('Y-m-d H:i:s')
+                ];
+            } else {
+                $maxAttempts--; // Kurangi batas percobaan hanya jika ada konflik
+            }
         }
 
         return $times;
     }
+
+
 
     protected function listDayoffEmployee()
     {
