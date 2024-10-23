@@ -44,9 +44,6 @@ class ScheduleEmployeeCheckin extends Command
         $onLeaveEmails = $this->listDayoffEmployee();
         // Ambil semua user yang tidak cuti
         $users = User::query()
-        ->when(!empty($onLeaveEmails), function ($query) use ($onLeaveEmails) {
-            $query->whereNotIn('email', $onLeaveEmails); // Tidak sedang cuti jika ada email yang sedang cuti
-        })
         ->whereHas('divisions') // Memiliki divisi
         ->whereDoesntHave('role', function ($query) {
             $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]); // Bukan 'Root' atau 'Admin'
@@ -54,7 +51,7 @@ class ScheduleEmployeeCheckin extends Command
         ->get();
 
         foreach ($users as $user) {
-            $this->scheduleCheckinForUser($user);
+            $this->scheduleCheckinForUser($user, $onLeaveEmails);
         }
         
         $this->info("Jadwal check-in selesai dibuat dan disimpan di Firebase serta database lokal.");
@@ -66,56 +63,68 @@ class ScheduleEmployeeCheckin extends Command
     }
 
     // Comment
-    private function scheduleCheckinForUser($user, $firebase = null)
+    private function scheduleCheckinForUser($user, $onLeaveEmails = [])
     {
-        $checkinTimes = $this->generateRandomCheckinTimes();
-
-        foreach ($checkinTimes as $time) {
-            // dd($it)
-            // Simpan di database lokal
-            $local = $this->saveLocal($user, $time);
-
-            // Coba simpan di Firebase jika tersedia
-            // if ($firebase) {
-            //     try {
-            //         $firebase->getReference('employee_checkins/'.$user->id.'/'.$local->id)->set([
-            //             'local_id' => $local->id,
-            //             'scheduled_time' => $time,
-            //             'is_active' => true,
-            //             'created_at' => now()->toDateTimeString(),
-            //         ]);
-            //     } catch (FirebaseException $e) {
-            //         $this->error("Gagal menyimpan di Firebase untuk user {$user->id}. Data tetap tersimpan di lokal.");
-            //     }
-            // }
+        // Cek jika user sedang cuti
+        if ($onLeaveEmails && !in_array($user->email, $onLeaveEmails)) {
+            $checkinTimes = $this->generateRandomCheckinTimes();
+            foreach ($checkinTimes as $time) 
+            {
+                // Simpan di database lokal
+                $local = $this->saveLocal($user, $time);
+            }
+        }else
+        {
+            $time = 
+            [
+                'checkin_time' => NULL,
+                'timeout_time' => NULL,
+            ];
+            $local = $this->saveLocal($user, $time, true);
         }
+
     }
 
-    private function saveLocal($user, $time)
+    private function saveLocal($user, $time, $isOnLeave = false)
     {
         $firstDivision = $user->first_division;
         
-        if(!$firstDivision->manual_checkin) 
+        if($isOnLeave)
         {
             return EmployeeChecking::create([
                 'user_id' => $user->id,
                 'division_id' => $firstDivision->id,
                 'scheduled_time' => $time['checkin_time'],
                 'scheduled_timeout' => $time['timeout_time'],
-                'is_active' => true,
+                'is_dayoff' => true,
+                'is_active' => false,
                 'is_completed' => false,
             ]);
         }else
         {
-            return EmployeeChecking::create([
-                'user_id' => $user->id,
-                'division_id' => $firstDivision->id,
-                'scheduled_time' => null,
-                'scheduled_timeout' => null,
-                'is_active' => true,
-                'is_completed' => false,
-            ]);
+            if(!$firstDivision->manual_checkin) 
+            {
+                return EmployeeChecking::create([
+                    'user_id' => $user->id,
+                    'division_id' => $firstDivision->id,
+                    'scheduled_time' => $time['checkin_time'],
+                    'scheduled_timeout' => $time['timeout_time'],
+                    'is_active' => true,
+                    'is_completed' => false,
+                ]);
+            }else
+            {
+                return EmployeeChecking::create([
+                    'user_id' => $user->id,
+                    'division_id' => $firstDivision->id,
+                    'scheduled_time' => null,
+                    'scheduled_timeout' => null,
+                    'is_active' => true,
+                    'is_completed' => false,
+                ]);
+            }
         }
+
     }
 
     // private function generateRandomCheckinTimes()
