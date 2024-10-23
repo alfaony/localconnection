@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
@@ -60,28 +61,55 @@ class EmployeeCheckingController extends Controller
 
         switch ($tab) 
         {
+            case 'detail_checkin':
+                if ($userId) {
+                    $query = EmployeeChecking::query();
+
+                    // Filter by user ID
+                    $query->when($userId, function ($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    });
+
+                    // Filter by date range
+                    $query->when($startDate && $endDate, function ($q) use ($start, $end) {
+                        $q->whereBetween('created_at', [$start, $end]);
+                    });
+
+                    // Ambil data dengan pagination
+                    $employeeCheckings = $query->orderBy('created_at', 'desc')->paginate(10);
+                }
+                break;
             case 'point_checkin':
                 // Ambil data pengguna dengan pagination
+                $totalDaysQuery = EmployeeChecking::where('user_id', $userId);
+                // Filter berdasarkan rentang tanggal (jika ada)
+                if ($start && $end) 
+                {
+                    $totalDaysQuery->whereBetween('created_at', [$start, $end]);
+                }
+
+                $totalDays = $totalDaysQuery->distinct()->count(DB::raw('DATE(created_at)'));
+
                 $users = User::byCompany(auth()->user()->company_id)
                     ->when($userId, function ($query) use ($userId, $start) {
                         return $query->where('id', $userId);
                     })
                     ->withCount([
                         'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
-                            $query->where('is_active', false)->where('is_completed', true)->whereDate('scheduled_time', $today);
+                            $query->where('is_active', false)->where('is_completed', true)->whereDate('created_at', $today);
                         },
                         'employeeCheckings as total_successful_checkins' => function ($query) use ($startDate, $endDate, $start, $end) {
                             $query->where('is_active', false)->where('is_completed', true);
-                            if ($startDate && $endDate) 
+                            if ($start && $end) 
                             {
-                                $query->whereBetween('scheduled_time', [$start, $end]);
+                                $query->whereBetween('created_at', [$start, $end]);
                             }
                         },
                         'employeeCheckings as total_failed_checkins' => function ($query) use ($startDate, $endDate, $start, $end) {
                             $query->where('is_completed', false)
                                 ->where('is_active', false);
                             if ($startDate && $endDate) {
-                                $query->whereBetween('scheduled_time', [$start, $end]);
+                                $query->whereBetween('created_at', [$start, $end]);
                             }
                         }
                     ])
@@ -100,25 +128,6 @@ class EmployeeCheckingController extends Controller
 
                     $user->point_checkin = "{$totalCheckins} (" . number_format($pointPercentage, 2) . "%)";
                     $user->today_percentage = "{$totalToday} (" . number_format($todayPercentage, 2) . "%)";
-                }
-                break;
-
-            case 'detail_checkin':
-                if ($userId) {
-                    $query = EmployeeChecking::query();
-
-                    // Filter by user ID
-                    $query->when($userId, function ($q) use ($userId) {
-                        $q->where('user_id', $userId);
-                    });
-
-                    // Filter by date range
-                    $query->when($startDate && $endDate, function ($q) use ($start, $end) {
-                        $q->whereBetween('scheduled_time', [$start, $end]);
-                    });
-
-                    // Ambil data dengan pagination
-                    $employeeCheckings = $query->orderBy('scheduled_time', 'desc')->paginate(10);
                 }
                 break;
         }
@@ -144,22 +153,22 @@ class EmployeeCheckingController extends Controller
         $source = $request->input('source') ?? 'auto_checkin';
 
         // Verifikasi reCAPTCHA
-        // $recaptcha = $request->input('recaptcha');
-        // $response = Http::post('https://www.google.com/recaptcha/api/siteverify', [
-        //     'secret' => config('captcha.secret'),
-        //     'response' => $recaptcha,
-        // ]);
+        $recaptcha = $request->input('recaptcha');
+        $response = Http::get('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => config('captcha.secret'),
+            'response' => $recaptcha,
+        ]);
 
-        // if (!$response->json()['success']) 
-        // {
-        //     return response()->json(['message' => 'reCAPTCHA verification failed.'], 422);
-        // }
+        if (!$response->json()['success']) 
+        {
+            return response()->json(['Verification reCAPTCHA verification failed.'], 422);
+        }
 
         // Validasi bahwa $local_id sesuai dengan jadwal dan user yang melakukan check-in
 
         if (!$employeeChecking) 
         {
-            return response()->json(['message' => 'Invalid check-in schedule.'], 422);
+            return response()->json('Invalid check-in schedule.', 422);
         }
 
         // Pastikan check-in dilakukan dalam waktu yang diperbolehkan

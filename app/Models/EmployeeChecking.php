@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Schemas\RoleSchema;
 use Illuminate\Support\Facades\Auth;
 
+use Carbon\Carbon;
 class EmployeeChecking extends Model
 {
     use HasFactory, SoftDeletes;
@@ -43,6 +44,15 @@ class EmployeeChecking extends Model
     {
         return $this->belongsTo(Division::class);
     }
+
+    /**
+     * is today
+     */
+
+     public function isToday()
+     {
+         return $this->created_at->toDateString() == Carbon::today()->toDateString();
+     }
 
     /**
      * Scope untuk memfilter jadwal yang aktif
