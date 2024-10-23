@@ -8,7 +8,7 @@
 
         <!-- Timer Countdown -->
         <div class="timer form-group ">
-            <span class="countdown mt-5" id="countdown"></span>
+            <span class="countdown" id="countdown"></span>
         </div>
 
         <!-- Foto (Muncul jika divisi memerlukan) -->
@@ -43,7 +43,7 @@
     </div>
 </div>
 
-<link rel="stylesheet" href="{{ asset('css/popup.css') }}">
+<link rel="stylesheet" href="{{ asset('css/popup_backup.css') }}">
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
