@@ -3,13 +3,12 @@
 <div id="checkinPopup" class="" style="display: none !important;">
     <div class="popup-content">
         <h2>Time to Check-in </h2>
-        <p id="show_time_checkin"></p>
-        <p id="show_time_checkin_id"></p>
-        <p>Please confirm your presence within:</p>
+        <p class="mb-0" id="show_time_checkin"></p>
+        <p class="mb-0">Please confirm your presence within:</p>
 
         <!-- Timer Countdown -->
-        <div class="timer form-group mb-5">
-            <span class="countdown" id="countdown"></span>
+        <div class="timer form-group ">
+            <span class="countdown mt-5" id="countdown"></span>
         </div>
 
         <!-- Foto (Muncul jika divisi memerlukan) -->
@@ -64,9 +63,7 @@
         if (timeLeft > 0 && currentTime >= scheduledTime && entry.is_active) 
         {
             let showTimeCheckin = document.getElementById('show_time_checkin');
-            let showTimeCheckinId = document.getElementById('show_time_checkin_id');
 
-            showTimeCheckinId.textContent = entry.local_id;
             showTimeCheckin.textContent = entry.scheduled_time;
             console.log("Show time: " + entry.local_id + " "+entry.is_active+" "+ entry.scheduled_time );
             
@@ -102,9 +99,7 @@
                         if (timeLeft) 
                         {
                             let showTimeCheckin = document.getElementById('show_time_checkin');
-                            let showTimeCheckinId = document.getElementById('show_time_checkin_id');
     
-                            showTimeCheckinId.textContent = entry.local_id;
                             showTimeCheckin.textContent = entry.scheduled_time;
                             
                             showCheckinPopup(timeLeft, localId, entry.requires_photo, entry.requires_location);
