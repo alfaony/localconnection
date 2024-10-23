@@ -3,13 +3,12 @@
 <div id="checkinPopup" class="" style="display: none !important;">
     <div class="popup-content">
         <h2>Time to Check-in </h2>
-        <p id="show_time_checkin"></p>
-        <p id="show_time_checkin_id"></p>
-        <p>Please confirm your presence within:</p>
+        <p class="mb-0" id="show_time_checkin"></p>
+        <p class="mb-0">Please confirm your presence within:</p>
 
         <!-- Timer Countdown -->
-        <div class="timer form-group mb-5">
-            <span class="countdown" id="countdown"></span>
+        <div class="timer form-group ">
+            <span class="countdown mt-5" id="countdown"></span>
         </div>
 
         <!-- Foto (Muncul jika divisi memerlukan) -->
@@ -31,7 +30,11 @@
 
         <!-- Google reCAPTCHA -->
         <div id="captchaSection" style="margin-top: 15px;">
-            <div class="g-recaptcha" data-sitekey="{{ config('captcha.sitekey') }}" data-callback="onSubmit"></div>
+            <div class="g-recaptcha" data-sitekey="{{ config('captcha.sitekey') }}" 
+            data-callback="onRecaptchaSuccess"
+            data-expired-callback="onRecaptchaExpired"
+            data-error-callback="onRecaptchaError">
+        </div>
             <span id="captcha-warning" style="color: red; font-size: 12px;"></span> <!-- Pesan peringatan -->
         </div>
 
@@ -60,9 +63,7 @@
         if (timeLeft > 0 && currentTime >= scheduledTime && entry.is_active) 
         {
             let showTimeCheckin = document.getElementById('show_time_checkin');
-            let showTimeCheckinId = document.getElementById('show_time_checkin_id');
 
-            showTimeCheckinId.textContent = entry.local_id;
             showTimeCheckin.textContent = entry.scheduled_time;
             console.log("Show time: " + entry.local_id + " "+entry.is_active+" "+ entry.scheduled_time );
             
@@ -98,9 +99,7 @@
                         if (timeLeft) 
                         {
                             let showTimeCheckin = document.getElementById('show_time_checkin');
-                            let showTimeCheckinId = document.getElementById('show_time_checkin_id');
     
-                            showTimeCheckinId.textContent = entry.local_id;
                             showTimeCheckin.textContent = entry.scheduled_time;
                             
                             showCheckinPopup(timeLeft, localId, entry.requires_photo, entry.requires_location);
@@ -237,6 +236,8 @@
 
 
 <script>
+    let recaptchaToken = '';
+
     function getLocation() 
     {
         // Reset pesan peringatan lokasi
@@ -283,6 +284,22 @@
         }
     }
 
+    function onRecaptchaSuccess(token) 
+    {
+        recaptchaToken = token;
+        document.getElementById('captcha-warning').textContent = ''; // Reset pesan peringatan
+    }
+
+    // Fungsi callback yang dipanggil saat reCAPTCHA token kadaluarsa
+    function onRecaptchaExpired() {
+        recaptchaToken = ''; // Hapus token
+        document.getElementById('captcha-warning').textContent = 'Captcha telah kadaluarsa. Silakan ulangi lagi.';
+    }
+
+    // Fungsi callback yang dipanggil jika ada error pada reCAPTCHA
+    function onRecaptchaError() {
+        document.getElementById('captcha-warning').textContent = 'Terjadi kesalahan pada reCAPTCHA. Silakan coba lagi.';
+    }
 
     function onSubmit() 
     {

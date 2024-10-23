@@ -59,7 +59,7 @@
                    role="tab" 
                    aria-controls="point_checkin" 
                    aria-selected="{{ request('tab') == 'point_checkin' ? 'true' : 'false' }}">
-                   Point Check-in
+                   Jumlah Check-in
                 </a>
             </li>
         </ul>
@@ -93,9 +93,7 @@
                                     <td>{{ $checking->user->name }}</td>
                                     <td>
                                         @if(!$checking->is_active && !$checking->isDayoff())
-                                            @if($checking->is_completed)
-                                                {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
-                                            @endif
+                                            {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
                                         @else
                                             @if($checking->isDayoff())
                                             <span class="badge bg-info"><i class="fa fa-suitcase"></i></span>
@@ -185,7 +183,8 @@
                                             <span class="text-muted">Tidak ada detail</span>
                                         @endif
                                     </td>
-                                    @if($manualCheck['manual_checkin'] && $checking->user_id == Auth::user()->id)
+                                    @if($manualCheck['manual_checkin'])
+                                    @if($checking->user_id == Auth::user()->id)
                                     <td>
                                         @if(!$checking->is_active)
                                             @if($checking->is_completed)
@@ -211,6 +210,7 @@
                                     </td>
                                     @else
                                         <td> - </td>
+                                    @endif
                                     @endif
                                 </tr>
                             @empty
@@ -241,7 +241,7 @@
                         <thead>
                             <tr>
                                 <th>Nama</th>
-                                <th>Point Check-In</th>
+                                <th>Total Check-In</th>
                                 <th>Total Check-In Hari Ini</th>
                                 <th>Aksi</th>
                             </tr>
