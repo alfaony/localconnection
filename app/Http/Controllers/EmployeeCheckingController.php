@@ -46,18 +46,15 @@ class EmployeeCheckingController extends Controller
         $manualCheck = $this->checkingDivision(Auth::user());
 
         // Load data pengguna
-        $userSelect = User::byCompany(Auth::user()->company_id)->get();
+        $userSelect = User::byRoleSearch()->get();
 
         // Nullable variabel
         $employeeCheckings = collect();
         $users = collect();
 
-        // Hitung jumlah hari dalam rentang tanggal
-        $totalDays = 1; // Default 1 hari jika startDate dan endDate tidak ada
 
         $start = $startDate ? Carbon::parse($startDate)->startOfDay() : Carbon::today()->startOfDay();
         $end = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::today()->endOfDay();
-        $totalDays = $start->diffInDays($end) + 1; // Total hari dalam rentang
 
         switch ($tab) 
         {
@@ -67,7 +64,7 @@ class EmployeeCheckingController extends Controller
 
                     // Filter by user ID
                     $query->when($userId, function ($q) use ($userId) {
-                        $q->where('user_id', $userId);
+                        $q->byRole($userId);
                     });
 
                     // Filter by date range
@@ -81,7 +78,7 @@ class EmployeeCheckingController extends Controller
                 break;
             case 'point_checkin':
                 // Ambil data pengguna dengan pagination
-                $totalDaysQuery = EmployeeChecking::where('user_id', $userId)->where('is_dayoff', false);
+                $totalDaysQuery = EmployeeChecking::byRole($userId)->where('is_dayoff', false);
                 // Filter berdasarkan rentang tanggal (jika ada)
                 if ($start && $end) 
                 {
@@ -90,10 +87,10 @@ class EmployeeCheckingController extends Controller
 
                 $totalDays = $totalDaysQuery->distinct()->count(DB::raw('DATE(created_at)'));
 
-                $users = User::byCompany(auth()->user()->company_id)
-                    ->when($userId, function ($query) use ($userId, $start) {
-                        return $query->where('id', $userId);
-                    })
+                $users = User::byRoleList($userId)
+                    // ->when($userId, function ($query) use ($userId, $start) {
+                    //     return $query->where('id', $userId);
+                    // })
                     ->withCount([
                         'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
                             $query->where('is_active', false)->where('is_completed', true)->where('is_dayoff', false)->whereDate('created_at', $today);

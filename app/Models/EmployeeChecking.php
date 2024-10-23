@@ -84,11 +84,36 @@ class EmployeeChecking extends Model
      * 
      * FIlter by Role
      */
-    public function scopeByRole($query)
+    public function scopeByRole($query, $userId)
     {
-        if(Auth::user()->role->name != RoleSchema::ROOT || Auth::user()->role->name != RoleSchema::ADMIN )
+        if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR)
+        {
+            if($userId)
+            {
+                return $query->where('user_id', $userId);
+            }else
+            {
+                $query->byCompany(Auth::user()->company_id);
+            }
+        }
+        else
         {
             $query->where('user_id',Auth::user()->id);
+        }
+    }
+
+    /**
+     * 
+     * By Company
+     */
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
         }
     }
 }

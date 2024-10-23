@@ -288,7 +288,7 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="globalCheckinPopupLabel">Time to Check-In</h5>
-                <button type="button" class="close" id="btnclosemodal"data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" id="btnclosemodal" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -303,7 +303,7 @@
 
                 <!-- Lokasi -->
                 <div id="globalLocationSection" class="form-group" style="display: none; margin-top: 15px;">
-                    <button class="btn btn-secondary" onclick="getLocation()">Share Location</button>
+                    <button class="btn btn-success" onclick="getLocation()">Share Location</button>
                     <p id="globalLocationStatus"></p>
                     <input type="hidden" id="globalLatitude">
                     <input type="hidden" id="globalLongitude">
@@ -312,13 +312,17 @@
 
                 <!-- reCAPTCHA -->
                 <div id="globalCaptchaSection" class="mt-4">
-                    <div class="g-recaptcha" data-sitekey="{{ config('captcha.sitekey') }}" data-callback="onSubmit"></div>
+                    <div class="g-recaptcha" data-sitekey="{{ config('captcha.sitekey') }}" 
+                    data-callback="onRecaptchaSuccessGlobal"
+                    data-expired-callback="onRecaptchaExpiredGlobal"
+                    data-error-callback="onRecaptchaErrorGlobal">
+                    ></div>
                     <span id="globalCaptchaWarning" style="color: red; font-size: 15px;"></span>
                 </div>
             </div>
             <div class="modal-footer">
                 <button id="globalSubmitCheckin" class="btn btn-primary" onclick="onSubmit()">Submit Check-in</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -329,7 +333,7 @@
 
 @section('js')
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>   
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
@@ -436,9 +440,25 @@
     }
 </script>
 @endcanAccess
-
-
 <script>
+    let recaptchaTokenGlobal = '';
+
+    function onRecaptchaSuccessGlobal(token) 
+    {
+        recaptchaTokenGlobal = token;
+        document.getElementById('globalCaptchaWarning').textContent = ''; // Reset pesan peringatan
+    }
+
+    // Fungsi callback yang dipanggil saat reCAPTCHA token kadaluarsa
+    function onRecaptchaExpiredGlobal() {
+        recaptchaTokenGlobal = ''; // Hapus token
+        document.getElementById('globalCaptchaWarning').textContent = 'Captcha telah kadaluarsa. Silakan ulangi lagi.';
+    }
+
+    // Fungsi callback yang dipanggil jika ada error pada reCAPTCHA
+    function onRecaptchaErrorGlobal() {
+        document.getElementById('globalCaptchaWarning').textContent = 'Terjadi kesalahan pada reCAPTCHA. Silakan coba lagi.';
+    }
     // Fungsi untuk mengatur ID check-in dan memeriksa foto/lokasi
     function setCheckinId(id, requiresPhoto, requiresLocation) 
     {   
@@ -486,7 +506,7 @@
         const longitude = document.getElementById('globalLongitude').value;
         const photoInput = document.getElementById('globalPhoto');
         const photo = document.getElementById('globalPhoto').files[0];
-        const recaptchaToken = grecaptcha.getResponse();
+        const recaptchaTokenGlobal = grecaptcha.getResponse();
         const id = document.getElementById('globalCheckinPopup').dataset.checkinId;
 
         const requiresPhoto = photoInput.hasAttribute('required');
@@ -509,7 +529,7 @@
             document.getElementById('globalLocationWarning').textContent = '';
         }
         // Validasi reCAPTCHA
-        if (!recaptchaToken) {
+        if (!recaptchaTokenGlobal) {
             document.getElementById('globalCaptchaWarning').textContent = 'Captcha belum terverifikasi.';
             return;
         }
@@ -517,7 +537,7 @@
         let formData = new FormData();
         formData.append('latitude', latitude);
         formData.append('longitude', longitude);
-        formData.append('recaptcha', recaptchaToken);
+        formData.append('recaptcha', recaptchaTokenGlobal);
         formData.append('source', "manual_checkin");
         formData.append('_method', 'PUT');
 
@@ -667,7 +687,7 @@
 @endif
 @stop
 @section('css')
-    <!-- Include Select2 CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
