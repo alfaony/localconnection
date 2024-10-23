@@ -21,6 +21,7 @@ class EmployeeChecking extends Model
         'checkin_start_time',
         'is_active',
         'is_completed',
+        'is_dayoff',
         'photo_path',
         'score',
         'location_latitude',
@@ -54,6 +55,15 @@ class EmployeeChecking extends Model
          return $this->created_at->toDateString() == Carbon::today()->toDateString();
      }
 
+
+     /**
+      * Dayoff
+      */
+
+      public function isDayoff()
+      {
+        return $this->is_dayoff;
+      }
     /**
      * Scope untuk memfilter jadwal yang aktif
      */

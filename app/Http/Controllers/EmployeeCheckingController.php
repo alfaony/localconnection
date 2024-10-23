@@ -81,7 +81,7 @@ class EmployeeCheckingController extends Controller
                 break;
             case 'point_checkin':
                 // Ambil data pengguna dengan pagination
-                $totalDaysQuery = EmployeeChecking::where('user_id', $userId);
+                $totalDaysQuery = EmployeeChecking::where('user_id', $userId)->where('is_dayoff', false);
                 // Filter berdasarkan rentang tanggal (jika ada)
                 if ($start && $end) 
                 {
@@ -96,10 +96,10 @@ class EmployeeCheckingController extends Controller
                     })
                     ->withCount([
                         'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
-                            $query->where('is_active', false)->where('is_completed', true)->whereDate('created_at', $today);
+                            $query->where('is_active', false)->where('is_completed', true)->where('is_dayoff', false)->whereDate('created_at', $today);
                         },
                         'employeeCheckings as total_successful_checkins' => function ($query) use ($startDate, $endDate, $start, $end) {
-                            $query->where('is_active', false)->where('is_completed', true);
+                            $query->where('is_active', false)->where('is_completed', true)->where('is_dayoff', false);
                             if ($start && $end) 
                             {
                                 $query->whereBetween('created_at', [$start, $end]);
@@ -107,7 +107,8 @@ class EmployeeCheckingController extends Controller
                         },
                         'employeeCheckings as total_failed_checkins' => function ($query) use ($startDate, $endDate, $start, $end) {
                             $query->where('is_completed', false)
-                                ->where('is_active', false);
+                                ->where('is_active', false)
+                                ->where('is_dayoff', false);
                             if ($startDate && $endDate) {
                                 $query->whereBetween('created_at', [$start, $end]);
                             }

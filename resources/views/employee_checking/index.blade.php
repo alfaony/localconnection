@@ -92,23 +92,33 @@
                                 <tr>
                                     <td>{{ $checking->user->name }}</td>
                                     <td>
-                                        @if(!$checking->is_active)
+                                        @if(!$checking->is_active && !$checking->isDayoff())
                                             @if($checking->is_completed)
                                                 {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
                                             @endif
                                         @else
+                                            @if($checking->isDayoff())
+                                            <span class="badge bg-info"><i class="fa fa-suitcase"></i></span>
+                                                Sedang Cuti
+                                            @else
                                             {{ $checking->created_at ? \Carbon\Carbon::parse($checking->created_at)->locale('id')->translatedFormat('F d,y') : '' }}
+                                            @endif
                                         @endif
                                     </td>
                                     <td>
-                                        @if(!$checking->is_active)
+                                        @if(!$checking->is_active && !$checking->isDayoff())
                                         @if($checking->is_completed)
                                             <span class="badge bg-success"><i class="fa fa-check"></i></span>
                                         @else
                                             <span class="badge bg-danger"><i class="fa fa-times"></i></span>
                                         @endif
                                         @else
+                                            @if($checking->isDayoff())
+                                            <span class="badge bg-info"><i class="fa fa-suitcase"></i></span>
+                                                Sedang Cuti
+                                            @else
                                             <span class="badge bg-warning"><i class="fa fa-clock"></i></span>
+                                            @endif
                                         @endif
                                     </td>
                                     <td>
@@ -175,7 +185,7 @@
                                             <span class="text-muted">Tidak ada detail</span>
                                         @endif
                                     </td>
-                                    @if($manualCheck['manual_checkin'])
+                                    @if($manualCheck['manual_checkin'] && $checking->user_id == Auth::user()->id)
                                     <td>
                                         @if(!$checking->is_active)
                                             @if($checking->is_completed)
@@ -185,6 +195,7 @@
                                             @endif
                                         @else
                                             @if($checking->isToday())
+                                            @if($checking->user_id == Auth::user()->id)
                                             <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#globalCheckinPopup"
                                                 onclick="setCheckinId('{{ $checking->id }}', {{ $manualCheck['requires_photo'] ? 'true' : 'false' }}, {{ $manualCheck['requires_location'] ? 'true' : 'false' }})">
                                                 <i class="fa fa-pencil"></i> Manual Check-In
@@ -192,9 +203,14 @@
                                             @else
                                                 <span class="badge bg-danger"><i class="fa fa-times"></i></span>
                                             @endif
+                                            @else
+                                                <span class="badge bg-danger"><i class="fa fa-times"></i></span>
+                                            @endif
 
                                         @endif
                                     </td>
+                                    @else
+                                        <td> - </td>
                                     @endif
                                 </tr>
                             @empty
