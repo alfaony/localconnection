@@ -77,8 +77,8 @@ class ScheduleEmployeeCheckin extends Command
         {
             $time = 
             [
-                'checkin_time' => NULL,
-                'timeout_time' => NULL,
+                'checkin_time' => Carbon::now(),
+                'timeout_time' => Carbon::now(),
             ];
             $local = $this->saveLocal($user, $time, true);
         }

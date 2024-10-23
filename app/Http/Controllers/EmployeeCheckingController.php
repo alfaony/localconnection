@@ -76,7 +76,7 @@ class EmployeeCheckingController extends Controller
                     });
 
                     // Ambil data dengan pagination
-                    $employeeCheckings = $query->orderBy('created_at', 'desc')->paginate(10);
+                    $employeeCheckings = $query->orderBy('scheduled_time', 'desc')->paginate(10);
                 }
                 break;
             case 'point_checkin':
