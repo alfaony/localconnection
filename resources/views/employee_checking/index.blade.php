@@ -243,7 +243,7 @@
                         <thead>
                             <tr>
                                 <th>Nama</th>
-                                <th>Point Check-In</th>
+                                <th>Total Check-In</th>
                                 <th>Total Check-In Hari Ini</th>
                                 <th>Aksi</th>
                             </tr>

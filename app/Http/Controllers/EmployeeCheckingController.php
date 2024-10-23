@@ -127,8 +127,8 @@ class EmployeeCheckingController extends Controller
                     $pointPercentage = $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
                     $todayPercentage = $totalToday ? ($totalToday / 10) * 100 : 0;
 
-                    $user->point_checkin = "{$totalCheckins} (" . number_format($pointPercentage, 2) . "%)";
-                    $user->today_percentage = "{$totalToday} (" . number_format($todayPercentage, 2) . "%)";
+                    $user->point_checkin = "{$totalCheckins} (" . number_format($pointPercentage, 0) . "%)";
+                    $user->today_percentage = "{$totalToday} (" . number_format($todayPercentage, 0) . "%)";
                 }
                 break;
         }
