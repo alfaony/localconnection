@@ -93,9 +93,7 @@
                                     <td>{{ $checking->user->name }}</td>
                                     <td>
                                         @if(!$checking->is_active && !$checking->isDayoff())
-                                            @if($checking->is_completed)
-                                                {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
-                                            @endif
+                                            {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
                                         @else
                                             @if($checking->isDayoff())
                                             <span class="badge bg-info"><i class="fa fa-suitcase"></i></span>
