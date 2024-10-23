@@ -127,60 +127,6 @@ class EmployeeCheckingController extends Controller
     }
 
     /**
-     * Diploy Report
-     */
-    public function report(Request $request)
-    {
-
-
-
-
-        return view('employee_checking.report', compact('checkins','users'));
-    }
-        /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\EmployeeChecking  $employeeChecking
-     * @return \Illuminate\Http\Response
-     */
-    public function show(EmployeeChecking $employeeChecking)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\EmployeeChecking  $employeeChecking
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(EmployeeChecking $employeeChecking)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -303,18 +249,6 @@ class EmployeeCheckingController extends Controller
         }
 
         return response()->json(['message' => 'Check-in updated successfully']);
-    }
-
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\EmployeeChecking  $employeeChecking
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(EmployeeChecking $employeeChecking)
-    {
-        //
     }
 
     /**
