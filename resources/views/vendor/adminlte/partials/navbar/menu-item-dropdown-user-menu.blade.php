@@ -22,8 +22,8 @@
                  class="user-image img-circle elevation-2"
                  alt="{{ Auth::user()->email }}">
         @endif
-        <span @if(config('adminlte.usermenu_image')) class="d-none d-md-inline" @endif>
-            {{ Auth::user()->email }}
+        <span @if(config('adminlte.usermenu_image')) class="d-none d-md-inline" @else class="nav-link-email" @endif>
+            {{ Auth::user()->name }}
         </span>
     </a>
 
