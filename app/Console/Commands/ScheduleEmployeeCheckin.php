@@ -91,7 +91,6 @@ class ScheduleEmployeeCheckin extends Command
         
         if($isOnLeave)
         {
-            dd($user);
             return EmployeeChecking::create([
                 'user_id' => $user->id,
                 'division_id' => $firstDivision->id,
@@ -173,7 +172,7 @@ class ScheduleEmployeeCheckin extends Command
     {
         $times = [];
         $duration = config('services.checking_setting.duration_minutes'); // Get the duration from config
-        $bufferMinutes = 10; // Buffer waktu minimal antar check-in
+        $bufferMinutes = 30; // Buffer waktu minimal antar check-in
         $maxAttempts = 50; // Batas percobaan untuk menghindari loop tak terbatas
 
         while (count($times) < config('services.checking_setting.times') && $maxAttempts > 0) 
