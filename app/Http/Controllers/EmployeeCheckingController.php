@@ -53,8 +53,8 @@ class EmployeeCheckingController extends Controller
         $users = collect();
 
 
-        $start = $startDate ? Carbon::parse($startDate)->startOfMonth()->startOfDay() : Carbon::now()->startOfMonth()->startOfDay();
-        $end = $endDate ? Carbon::parse($endDate)->endOfMonth()->endOfDay() : Carbon::now()->endOfMonth()->endOfDay();
+        $start = $startDate ? Carbon::parse($startDate)->startOfDay() : Carbon::now()->startOfMonth()->startOfDay();
+        $end = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::now()->endOfMonth()->endOfDay();
 
         switch ($tab) 
         {
@@ -130,7 +130,7 @@ class EmployeeCheckingController extends Controller
                 break;
         }
 
-        return view('employee_checking.index', compact('employeeCheckings', 'users', 'userSelect', 'tab', 'manualCheck'));
+        return view('employee_checking.index', compact('employeeCheckings', 'users', 'userSelect', 'tab', 'manualCheck','start', 'end'));
     }
 
     /**
