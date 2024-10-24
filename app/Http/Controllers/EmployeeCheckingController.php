@@ -40,7 +40,7 @@ class EmployeeCheckingController extends Controller
         // Search
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
-        $userId = $request->input('user_id') ?? Auth::user()->id;
+        $userId = $request->input('user_id');
         $tab = $request->input('tab') ?? 'detail_checkin';
         $today = Carbon::today()->toDateString();
         $manualCheck = $this->checkingDivision(Auth::user());
@@ -59,38 +59,25 @@ class EmployeeCheckingController extends Controller
         switch ($tab) 
         {
             case 'detail_checkin':
-                if ($userId) {
-                    $query = EmployeeChecking::query();
+                $query = EmployeeChecking::query();
 
-                    // Filter by user ID
-                    $query->when($userId, function ($q) use ($userId) {
-                        $q->byRole($userId);
-                    });
+                // Filter by user ID
+                $query->byRole($userId);
 
-                    // Filter by date range
-                    $query->when($startDate && $endDate, function ($q) use ($start, $end) {
-                        $q->whereBetween('created_at', [$start, $end]);
-                    });
+                // Filter by date range
+                $query->when($startDate && $endDate, function ($q) use ($start, $end) {
+                    $q->whereBetween('created_at', [$start, $end]);
+                });
 
-                    // Ambil data dengan pagination
-                    $employeeCheckings = $query->orderBy('updated_at', 'desc')->paginate(10);
-                }
+                // Ambil data dengan pagination
+                $employeeCheckings = $query->orderBy('updated_at', 'desc')
+                ->orderBy('is_active', 'desc')->paginate(10);
                 break;
             case 'point_checkin':
-                // Ambil data pengguna dengan pagination
-                $totalDaysQuery = EmployeeChecking::byRole($userId)->where('is_dayoff', false);
-                // Filter berdasarkan rentang tanggal (jika ada)
-                if ($start && $end) 
-                {
-                    $totalDaysQuery->whereBetween('created_at', [$start, $end]);
-                }
-
-                $totalDays = $totalDaysQuery->distinct()->count(DB::raw('DATE(created_at)'));
-
-                $users = User::byRoleList($userId)
-                    // ->when($userId, function ($query) use ($userId, $start) {
-                    //     return $query->where('id', $userId);
-                    // })
+                $users = User::select('id','name')->byCompany(Auth::user()->company_id)
+                    ->when($userId, function ($query) use ($userId, $start) {
+                        return $query->where('id', $userId);
+                    })
                     ->withCount([
                         'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
                             $query->where('is_active', false)->where('is_completed', true)->where('is_dayoff', false)->whereDate('created_at', $today);
@@ -109,6 +96,15 @@ class EmployeeCheckingController extends Controller
                             if ($startDate && $endDate) {
                                 $query->whereBetween('created_at', [$start, $end]);
                             }
+                        },
+                        'employeeCheckings as total_days' => function ($query) use ($start, $end) {
+                            $query->select(DB::raw('COUNT(DISTINCT DATE(created_at))'))
+                                ->where('is_dayoff', false);
+                                // ->where('is_completed', true);
+
+                            if ($start && $end) {
+                                $query->whereBetween('created_at', [$start, $end]);
+                            }
                         }
                     ])
                     ->paginate(10);
@@ -119,7 +115,7 @@ class EmployeeCheckingController extends Controller
                     $totalToday = $user->total_checkin_today ?? 0;
 
                     // Hitung total target check-in
-                    $targetCheckins = $totalDays * ParamSchema::TARGET_CHECKIN;
+                    $targetCheckins = $user->total_days * ParamSchema::TARGET_CHECKIN;
                     // Hitung presentase point check-in dan check-in hari ini
                     $pointPercentage = $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
                     $todayPercentage = $totalToday ? ($totalToday / 10) * 100 : 0;
