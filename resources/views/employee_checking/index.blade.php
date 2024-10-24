@@ -14,13 +14,13 @@
 <div class="card">
     <div class="card-body">
         <form action="{{ route('employee-checking.index') }}" method="GET">
-            <div class="row mb-3 justify-content-end">
+            <div class="row justify-content-end">
                 <div class="col-md-4">
                     <input type="hidden" name="tab" value="{{ request('tab') }}">
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="{{ request('start_date') && request('end_date') ? request('start_date').' - '.request('end_date') : '' }}">
-                        <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
-                        <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
+                        <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="{{ $start && $end ? \Carbon\Carbon::parse($start)->format('d-m-Y').' - '.\Carbon\Carbon::parse($end)->format('d-m-Y') : '' }}">
+                        <input type="hidden" id="start_date" name="start_date" value="{{ $start ? \Carbon\Carbon::parse($start)->format('d-m-Y') : '' }}">
+                        <input type="hidden" id="end_date" name="end_date" value="{{ $end ? \Carbon\Carbon::parse($end)->format('d-m-Y') : '' }}">
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -39,6 +39,13 @@
     </div>
     <div class="card-body">
         <!-- Tab Navigation -->
+        <div class="row justify-content-start">
+            <div class="col-md-4">
+                <span class="form-control-plaintext text-muted">
+                    Periode : {{ $start ? \Carbon\Carbon::parse($start)->format('d F Y') : '' }} - {{ $end ? \Carbon\Carbon::parse($end)->format('d F Y') : '' }}
+                </span>
+            </div>
+        </div>
         <ul class="nav nav-tabs" id="reportTab" role="tablist">
             <li class="nav-item">
                 <a class="nav-link {{ request('tab') == 'detail_checkin' || is_null(request('tab')) ? 'active' : '' }}" 
@@ -95,12 +102,7 @@
                                         @if(!$checking->is_active && !$checking->isDayoff())
                                             {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
                                         @else
-                                            @if($checking->isDayoff())
-                                            <span class="badge bg-info"><i class="fa fa-suitcase"></i></span>
-                                                Sedang Cuti
-                                            @else
                                             {{ $checking->created_at ? \Carbon\Carbon::parse($checking->created_at)->locale('id')->translatedFormat('F d,y') : '' }}
-                                            @endif
                                         @endif
                                     </td>
                                     <td>
@@ -262,7 +264,7 @@
                                             <button type="submit" class="btn btn-primary"><i class="fa fa-eye"></i></button>
                                         </form>
                                         @else
-                                        -
+                                        
                                         @endif
                                     </td>
                                 </tr>
