@@ -88,13 +88,7 @@ class EmployeeChecking extends Model
     {
         if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR || Auth::user()->role->name == RoleSchema::HR || Auth::user()->role->name == RoleSchema::FINANCE)
         {
-            if($userId)
-            {
-                return $query->where('user_id', $userId);
-            }else
-            {
-                return $query->byCompany(Auth::user()->company_id);
-            }
+            return $query->where('user_id', $userId);
         }
         else
         {
