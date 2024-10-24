@@ -66,7 +66,7 @@ class ScheduleEmployeeCheckin extends Command
     private function scheduleCheckinForUser($user, $onLeaveEmails = [])
     {
         // Cek jika user sedang cuti
-        if ($onLeaveEmails && !in_array($user->email, $onLeaveEmails)) {
+        if (!in_array($user->email, $onLeaveEmails)) {
             $checkinTimes = $this->generateRandomCheckinTimes();
             foreach ($checkinTimes as $time) 
             {
@@ -91,6 +91,7 @@ class ScheduleEmployeeCheckin extends Command
         
         if($isOnLeave)
         {
+            dd($user);
             return EmployeeChecking::create([
                 'user_id' => $user->id,
                 'division_id' => $firstDivision->id,
