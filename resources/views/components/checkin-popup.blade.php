@@ -388,9 +388,11 @@
                     icon: 'success',
                     title: 'Check-in successful!',
                     text: 'Your check-in has been successfully submitted.',
-                    timer: 2000,
+                    timer: 3000,
                     timerProgressBar: true,
                     showConfirmButton: false
+                }).then(() => {
+                    location.reload();
                 })
             },
             error: function (xhr, status, error) {
