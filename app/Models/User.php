@@ -183,6 +183,25 @@ class User extends Authenticatable
         }
     }
 
+    // Is Or Not
+    public function isShow()
+     {
+        if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR || Auth::user()->role->name == RoleSchema::HR || Auth::user()->role->name == RoleSchema::FINANCE)
+        {
+            return true;      
+        }else
+        {
+            if($this->id == Auth::user()->id)
+            {
+                return true;
+            }else
+            {
+                return false;
+            }
+        }
+        
+
+     }
     public function scopeByRole($query,$role)
     {
         if($role)
@@ -208,8 +227,8 @@ class User extends Authenticatable
 
     public function scopeByRoleList($query,$userId)
     {
-        if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR)
-        {
+        // if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR)
+        // {
             if($userId)
             {
                 return $query->where('id', $userId);
@@ -217,10 +236,10 @@ class User extends Authenticatable
             {
                 $query->byCompany(Auth::user()->company_id);
             }
-        }
-        else
-        {
-            return $query->where('id', Auth::user()->id);
-        }
+        // }
+        // else
+        // {
+        //     return $query->where('id', Auth::user()->id);
+        // }
     }
 }

@@ -253,6 +253,7 @@
                                     <td>{{ $user->point_checkin }}</td>
                                     <td>{{ $user->today_percentage }}</td>
                                     <td>
+                                        @if($user->isShow())
                                         <form action="{{ route('employee-checking.index') }}" method="GET">
                                             <input type="hidden" name="tab" value="detail_checkin">
                                             <div class="input-group">
@@ -260,6 +261,9 @@
                                             </div>
                                             <button type="submit" class="btn btn-primary"><i class="fa fa-eye"></i></button>
                                         </form>
+                                        @else
+                                        -
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
