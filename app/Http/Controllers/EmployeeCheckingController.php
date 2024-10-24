@@ -46,7 +46,7 @@ class EmployeeCheckingController extends Controller
         $manualCheck = $this->checkingDivision(Auth::user());
 
         // Load data pengguna
-        $userSelect = User::byRoleSearch()->get();
+        $userSelect = User::byCompany(Auth::user()->company_id)->get();
 
         // Nullable variabel
         $employeeCheckings = collect();
@@ -70,8 +70,12 @@ class EmployeeCheckingController extends Controller
                 });
 
                 // Ambil data dengan pagination
-                $employeeCheckings = $query->orderBy('updated_at', 'desc')
-                ->orderBy('is_active', 'desc')->paginate(10);
+                // $employeeCheckings = $query->orderByRaw('is_active = false')->orderBy('updated_at', 'desc')
+                // ->paginate(10);
+                $employeeCheckings = $query->orderByRaw('DATE(updated_at) DESC') // Urutkan tanggal secara menurun
+                ->orderByRaw('is_active = false') // Pindahkan is_active=false ke bawah
+                ->orderBy('updated_at', 'desc') // Urutkan berdasarkan updated_at
+                ->paginate(10);
                 break;
             case 'point_checkin':
                 $users = User::select('id','name')->byCompany(Auth::user()->company_id)
