@@ -21,7 +21,7 @@
 
         <!-- Share Location (Muncul jika divisi memerlukan) -->
         <div id="locationSection" class="form-group" style="display: none; margin-top: 15px;">
-            <button class="form-control" onclick="getLocation()">Share Location</button>
+            <button class="form-control" onclick="getLocationNow()">Share Location</button>
             <p id="locationStatus"></p>
             <input type="hidden" id="latitude" name="latitude">
             <input type="hidden" id="longitude" name="longitude">
@@ -52,6 +52,7 @@
 <script>
     let intervalId; // Variabel global untuk menyimpan ID timer
     let intervalIdMap = {}; // Peta untuk menyimpan ID interval berdasarkan localId
+    let recaptchaToken = '';
 
     // Fungsi untuk mendengarkan perubahan data check-in secara real-time
     function checkScheduledTime(scheduledTime, localId, entry) {   
@@ -78,6 +79,10 @@
 
         checkin.ref('employee_checkins/' + userId).on('value', (snapshot) => {
             const data = snapshot.val();
+
+            // Hentikan interval sebelumnya
+            if (intervalId) clearInterval(intervalId);
+            
             if(data)
             {
                 Object.keys(data).forEach((key) => 
@@ -232,59 +237,54 @@
 
     // Memantau data saat halaman dimuat
     window.onload = monitorCheckin;
-</script>
 
+    function getLocationNow() 
+   {
+       // Reset pesan peringatan lokasi
+       const locationWarning = document.getElementById('location-warning');
+       if (locationWarning) {
+           locationWarning.textContent = '';
+           locationWarning.style.color = '';
+       }
 
-<script>
-    let recaptchaToken = '';
+       // Cek apakah browser mendukung geolocation
+       if (navigator.geolocation) {
+           // Minta izin pengguna untuk mendapatkan lokasi saat ini
+           navigator.geolocation.getCurrentPosition(
+               function(position) {
+                   // Jika lokasi berhasil didapatkan
+                   document.getElementById('latitude').value = position.coords.latitude;
+                   document.getElementById('longitude').value = position.coords.longitude;
+                   document.getElementById('locationStatus').textContent = "Lokasi berhasil didapatkan!";
+                   document.getElementById('locationStatus').style.color = 'green';
+               },
+               function(error) {
+                   // Menangani kesalahan saat mendapatkan lokasi
+                   switch (error.code) {
+                       case error.PERMISSION_DENIED:
+                           document.getElementById('locationStatus').textContent = "Akses lokasi ditolak. Silakan aktifkan izin lokasi di browser Anda.";
+                           break;
+                       case error.POSITION_UNAVAILABLE:
+                           document.getElementById('locationStatus').textContent = "Informasi lokasi tidak tersedia.";
+                           break;
+                       case error.TIMEOUT:
+                           document.getElementById('locationStatus').textContent = "Permintaan lokasi melebihi batas waktu.";
+                           break;
+                       case error.UNKNOWN_ERROR:
+                           document.getElementById('locationStatus').textContent = "Terjadi kesalahan tidak diketahui.";
+                           break;
+                   }
+                   document.getElementById('locationStatus').style.color = 'red';
+               }
+           );
+       } else {
+           // Jika geolocation tidak didukung oleh browser
+           document.getElementById('locationStatus').textContent = "Geolocation tidak didukung oleh browser ini.";
+           document.getElementById('locationStatus').style.color = 'red';
+       }
+   }
 
-    function getLocation() 
-    {
-        // Reset pesan peringatan lokasi
-        const locationWarning = document.getElementById('location-warning');
-        if (locationWarning) {
-            locationWarning.textContent = '';
-            locationWarning.style.color = '';
-        }
-
-        // Cek apakah browser mendukung geolocation
-        if (navigator.geolocation) {
-            // Minta izin pengguna untuk mendapatkan lokasi saat ini
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    // Jika lokasi berhasil didapatkan
-                    document.getElementById('latitude').value = position.coords.latitude;
-                    document.getElementById('longitude').value = position.coords.longitude;
-                    document.getElementById('locationStatus').textContent = "Lokasi berhasil didapatkan!";
-                    document.getElementById('locationStatus').style.color = 'green';
-                },
-                function(error) {
-                    // Menangani kesalahan saat mendapatkan lokasi
-                    switch (error.code) {
-                        case error.PERMISSION_DENIED:
-                            document.getElementById('locationStatus').textContent = "Akses lokasi ditolak. Silakan aktifkan izin lokasi di browser Anda.";
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            document.getElementById('locationStatus').textContent = "Informasi lokasi tidak tersedia.";
-                            break;
-                        case error.TIMEOUT:
-                            document.getElementById('locationStatus').textContent = "Permintaan lokasi melebihi batas waktu.";
-                            break;
-                        case error.UNKNOWN_ERROR:
-                            document.getElementById('locationStatus').textContent = "Terjadi kesalahan tidak diketahui.";
-                            break;
-                    }
-                    document.getElementById('locationStatus').style.color = 'red';
-                }
-            );
-        } else {
-            // Jika geolocation tidak didukung oleh browser
-            document.getElementById('locationStatus').textContent = "Geolocation tidak didukung oleh browser ini.";
-            document.getElementById('locationStatus').style.color = 'red';
-        }
-    }
-
-    function onRecaptchaSuccess(token) 
+   function onRecaptchaSuccess(token) 
     {
         recaptchaToken = token;
         document.getElementById('captcha-warning').textContent = ''; // Reset pesan peringatan
@@ -410,6 +410,8 @@
                     timer: 3000,
                     timerProgressBar: true,
                     showConfirmButton: false
+                }).then(() => {
+                    location.reload();
                 });
             }
         });
