@@ -82,6 +82,7 @@
 
             // Hentikan interval sebelumnya
             if (intervalId) clearInterval(intervalId);
+
             
             if(data)
             {
@@ -111,6 +112,9 @@
                         }
                     }
                 });
+            }else
+            {
+                closePopup();
             }
         });
     }
