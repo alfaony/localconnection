@@ -441,8 +441,7 @@
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
             success: function (response) {
-                console.log("Status Updated");
-                
+                location.reload();
             }
         });
     }
