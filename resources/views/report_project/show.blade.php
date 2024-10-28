@@ -210,9 +210,9 @@
                         location.reload();
                     });
                 },
-                error: function() {
-                    
-                    Swal.fire('Error!', 'An error occurred.', 'error');
+                error: function(xhr) 
+                {
+                    console.log(xhr.responseText);
                 }
             });
         }
