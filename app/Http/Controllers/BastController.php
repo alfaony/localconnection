@@ -317,7 +317,7 @@ class BastController extends Controller
         $inboxHelper->sent(
             $project->user_id, 
             Auth::user()->id, 
-            'Request Report for ' . $project->name, 
+            'Request Report for ' . $project->title, 
             $directUrl
         );
         
