@@ -425,6 +425,7 @@
     {
         const localId = document.getElementById('checkinPopup').dataset.checkinId;
         
+        if(!localId) return;
         let url = "{{ route('employee-checking.updatestatus',':id') }}";
         url = url.replace(":id",localId)
         
