@@ -385,7 +385,6 @@ class ReportProjectController extends Controller
             return response()->json(['message' => 'Approvement berhasil disimpan.']);
         } catch (\Throwable $th) {
             //throw $th;
-            // return $th;
             Log::error($th->getMessage());
             return response()->json(['message' => 'Approvement gagal disimpan.'], 500);
         }
@@ -623,9 +622,9 @@ class ReportProjectController extends Controller
             if($lead) $toEmails[] = $lead->email;
         }else
         {
-            $toEmails[] = $reportProject->user->email;
-            $toUserId[] = $reportProject->user->id;
-            $toNames[] = $reportProject->user->name;
+            $toEmails[] = $reportProject->userCreate->email;
+            $toUserId[] = $reportProject->userCreate->id;
+            $toNames[] = $reportProject->userCreate->name;
             $ccEmails = [Auth::user()->email];
         }
 
@@ -634,6 +633,7 @@ class ReportProjectController extends Controller
         $fromName = $smtpConfig['name'] ?? '';
 
         $directUrl = route('report-project.show', $reportProject->slug);
+        $data['url'] = $directUrl;
 
         switch ($timeNotify) 
         {

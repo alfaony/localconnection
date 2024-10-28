@@ -6,22 +6,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
             margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
         }
         .container {
+            background-color: #ffffff;
             max-width: 600px;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            text-align: left;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         .header {
             font-size: 20px;
@@ -88,7 +84,7 @@
             Detail Laporan Proyek
         </div>
         <ul class="details">
-            <li><strong>No. SPK/Nama Proyek:</strong> {{ $data['work_order'] }}/{{ $data['project'] }}</li>
+            <li><strong>No. SPK/Nama Proyek:</strong> {{ $data['work_order'] }} - {{ $data['project'] }}</li>
             <li><strong>Tanggal Unggah:</strong> {{ $data['created_at'] }}</li>
             <li><strong>Penanggung Jawab:</strong> {{ $data['user_create'] }}</li>
             <li><strong>Catatan:</strong> {!! $data['notes'] !!}</li>
@@ -96,7 +92,7 @@
         <div class="content">
             Kami mohon agar revisi dapat diselesaikan secepatnya untuk memastikan proyek berjalan sesuai jadwal. Setelah revisi diunggah kembali, kami akan melakukan peninjauan ulang secepatnya.
         </div>
-        <a href="#" class="button">Tinjau Laporan</a>
+        <a href="{{ $data['url'] }}" class="button">Tinjau Laporan</a>
         <div class="content" style="margin-top: 25px;">
             Terima kasih atas perhatian dan kerjasamanya.
         </div>

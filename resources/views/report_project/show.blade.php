@@ -212,7 +212,7 @@
                 },
                 error: function(xhr) 
                 {
-                    console.log(xhr.responseText);
+                    console.log(xhr);
                 }
             });
         }
