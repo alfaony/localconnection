@@ -173,9 +173,17 @@ class EmployeeCheckingController extends Controller
         
         if($source == 'auto_checkin')
         {
-            $scheduledTime = strtotime($employeeChecking->scheduled_time);
+            // Konversi waktu terjadwal ke format timestamp
+            $scheduledStartTime = strtotime($employeeChecking->scheduled_time);
+            $scheduledEndTime = strtotime($employeeChecking->scheduled_timeout);
             $currentTime = time();
-            if ($currentTime < $scheduledTime || $currentTime > ($scheduledTime + config('services.checking_setting.duration'))) {
+
+            // Hitung batas waktu check-in yang diperbolehkan
+            $checkinWindowEnd = $scheduledStartTime + config('services.checking_setting.duration');
+
+            // Periksa apakah waktu saat ini berada di luar jendela waktu check-in yang diperbolehkan
+            if ($currentTime < $scheduledEndTime && ($currentTime < $scheduledStartTime || $currentTime > $checkinWindowEnd)) 
+            {
                 return response()->json('Check-in time is outside the allowed window.', 422);
             }
         }
