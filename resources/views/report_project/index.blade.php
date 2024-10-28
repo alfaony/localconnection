@@ -72,6 +72,7 @@
                         <thead>
                             <tr>
                                 <th>Nomor Laporan Proyek</th>
+                                <th>Status</th>
                                 <th>Tanggal</th>
                                 <th>SPK</th>
                                 <th>Project</th>
@@ -140,6 +141,7 @@
             },
             columns: [
                 {data: 'number_result', name: 'number_result', orderable: false},
+                {data: 'is_approve', name: 'is_approve', orderable: false},
                 {data: 'date', name: 'date', orderable: false},
                 {data: 'work_order.number_result', name: 'work_order.number_result'},
                 {data: 'project.title', name: 'project_title', orderable: false},
