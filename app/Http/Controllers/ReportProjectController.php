@@ -377,6 +377,7 @@ class ReportProjectController extends Controller
     
             $approvement = $request->is_approve == 1 ? 'approve' : 'notapprove';
             
+            // Not APprove Email
             if($approvement == 'notapprove')
             {
                 $this->sendNotification($project, $approvement, Auth::user()->company_id,true,$request->notes);
