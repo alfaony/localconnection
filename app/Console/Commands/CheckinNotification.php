@@ -45,11 +45,14 @@ class CheckinNotification extends Command
 
             if($currentTime == $scheduleTime)
             {
-                $this->sendCheckinNotification($checkin, 'Time to Check-in', 'Please check-in now!');
                 
                 if($checkin->division->manual_checkin == false)
                 {
+                    $this->sendCheckinNotification($checkin, 'Time to Check-in', 'Please check-in now!');
                     $this->scheduleCheckinForUser($checkin);
+                }else
+                {
+                    $this->sendCheckinNotification($checkin, "It's been 30 minutes, time to check in", 'Please check-in now!');
                 }
             }
 
