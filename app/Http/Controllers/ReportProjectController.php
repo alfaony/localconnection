@@ -18,9 +18,15 @@ use App\Models\ReportProjectDetail;
 use App\Models\WorkOrder;
 use App\Models\Project;
 use App\Models\SortUrl;
+use App\Models\User;
+use App\Models\SettingCompany;
+
 use ZipArchive;
 
 use App\Helpers\InboxHelper;
+use App\Helpers\EmailNotifHelper;
+
+use App\Schemas\RoleSchema;
 class ReportProjectController extends Controller
 {
     /**
@@ -138,7 +144,8 @@ class ReportProjectController extends Controller
             }
     
             
-            
+            $this->sendNotification($reportProject, 'store', Auth::user()->company_id);
+
             DB::commit();
             return redirect()->to(route('report-project.index'))->with('store', true);
         } catch (\Throwable $th) 
@@ -210,6 +217,7 @@ class ReportProjectController extends Controller
             if(($reportProject->user_create_id == Auth::user()->id || $reportProject->user_updated_id == Auth::user()->id ) && $reportProject->is_approve === 0)
             {
                 $reportProject->is_approve = NULL;
+                $this->sendNotification($reportProject, 'update', Auth::user()->company_id);
             }
             $reportProject->date = $request->post('date');
             $reportProject->work_order_id = $project->work_order_id;
@@ -289,6 +297,8 @@ class ReportProjectController extends Controller
     
             }
             
+            $this->sendNotification($reportProject, 'update', Auth::user()->company_id);
+
             DB::commit();
             return redirect()->to(route('report-project.index'))->with('update', true);
         } catch (\Throwable $th) {
@@ -332,39 +342,52 @@ class ReportProjectController extends Controller
             return response()->json(['message' => 'Proyek tidak ditemukan.'], 404);
         }
 
-        // Update approvement status dan note
-        if($request->is_approve == 0)
-        {
-            $inboxHelper = new InboxHelper();
-            if($project->user_created_id != $project->user_updated_id)
+        try {
+            // Update approvement status dan note
+            if($request->is_approve == 0)
             {
-                $directUrl = route('report-project.edit', $project->slug);
-
-                $inboxHelper->sent
-                (
-                    $project->user_created_id, 
-                    Auth::user()->id, 
-                    'Report Tertolak, dengan catatan' . $request->note, 
-                    $directUrl
-                );
-
-
-                $inboxHelper->sent
-                (
-                    $project->user_created_id, 
-                    Auth::user()->id, 
-                    'Report Tertolak, dengan catatan' . $request->note, 
-                    $directUrl
-                );
-                
+                $inboxHelper = new InboxHelper();
+                if($project->user_created_id != $project->user_updated_id)
+                {
+                    $directUrl = route('report-project.edit', $project->slug);
+    
+                    $inboxHelper->sent
+                    (
+                        $project->user_created_id, 
+                        Auth::user()->id, 
+                        'Report Tertolak, dengan catatan' . $request->note, 
+                        $directUrl
+                    );
+    
+    
+                    $inboxHelper->sent
+                    (
+                        $project->user_created_id, 
+                        Auth::user()->id, 
+                        'Report Tertolak, dengan catatan' . $request->note, 
+                        $directUrl
+                    );
+                    
+                }
             }
+    
+            $project->is_approve = $request->is_approve;
+            $project->note = $request->note;
+            $project->save();
+    
+            $approvement = $request->is_approve == 1 ? 'approve' : 'notapprove';
+            
+            if($approvement == 'notapprove')
+            {
+                $this->sendNotification($project, $approvement, Auth::user()->company_id,true,$request->notes);
+            }
+    
+            return response()->json(['message' => 'Approvement berhasil disimpan.']);
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th->getMessage());
+            return response()->json(['message' => 'Approvement gagal disimpan.'], 500);
         }
-
-        $project->is_approve = $request->is_approve;
-        $project->note = $request->note;
-        $project->save();
-
-        return response()->json(['message' => 'Approvement berhasil disimpan.']);
     }
 
     /**
@@ -560,5 +583,118 @@ class ReportProjectController extends Controller
             'number' => $nomor ?? 0,
             'result' => $nomor.'/'.$date ?? '' 
         ];
+    }
+
+    private function sendNotification($reportProject, $timeNotify, $companyId, $approval = null,  $notes = null)
+    {
+        $data = [
+            'work_order' => $reportProject->workOrder->number_result,
+            'project' => $reportProject->project->title,
+            'user_create' => $reportProject->userCreate->name,
+            'created_at' => Carbon::parse($reportProject->created_at)->format('d-m-Y'),
+            'notes' => $notes
+        ];
+        
+        $toEmails = [];
+        $toUserId = [];
+        $toNames = [];
+        
+        if(!$approval)
+        {
+            $ccEmails = [Auth::user()->email];
+            $usersAdmin = User::where('company_id',Auth::user()->company_id)->whereHas('role', function($q){
+                $q->where('name',RoleSchema::ADMIN);
+            })->get();
+
+            if($usersAdmin->isEmpty())
+            {
+                return false;
+            }
+
+            $lead = User::byCompany(Auth::user()->company_id)->where('id',Auth::user()->approvement_user_id)->first();
+            foreach ($usersAdmin as $user) 
+            {
+                $toEmails[] = $user->email;
+                $toUserId[] = $user->id;
+                $toNames[] = $user->name;
+            }
+
+            if($lead) $toEmails[] = $lead->email;
+        }else
+        {
+            $toEmails[] = $reportProject->userCreate->email;
+            $toUserId[] = $reportProject->userCreate->id;
+            $toNames[] = $reportProject->userCreate->name;
+            $ccEmails = [Auth::user()->email];
+        }
+
+        $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $fromEmail = $smtpConfig['username'] ?? '';
+        $fromName = $smtpConfig['name'] ?? '';
+
+        $directUrl = route('report-project.show', $reportProject->slug);
+        $data['url'] = $directUrl;
+
+        switch ($timeNotify) 
+        {
+            case "store":
+                $subject = 'Laporan Proyek Baru untuk Persetujuan';
+                $tamplate = 'email.notif_create_report_project';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "update":
+                $subject = 'Notifikasi Pembaruan Laporan Proyek – Revisi Telah Diupload';
+                $tamplate = 'email.notif_create_report_project';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "approve":
+                $subject = 'Anggaran '.$budget->name.' Disetujui';
+                $tamplate = 'email.notif_budget_approval';
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "notapprove":
+                $subject = 'Laporan Proyek – Revisi Diperlukan';
+                $tamplate = 'email.notif_decline_report_project';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+        }
+
+        $data['title'] = $subject;
+        
+        // Email Helper Notification
+         EmailNotifHelper::sentEmail(
+            $fromEmail,
+            $fromName,
+            $toEmails, 
+            $toNames, 
+            $subject,
+            $tamplate,
+            $data, 
+            $smtpConfig, 
+            $companyId, 
+            $ccEmails
+        );
+    }
+
+    private function sentInbox($to,$message,$directUrl)
+    {
+        foreach ($to as $key => $value) 
+        {
+            $inboxHelper = new InboxHelper();
+            $inboxHelper->sent(
+                $value, 
+                Auth::user()->id, 
+                $message, 
+                $directUrl
+            );
+        }
+
+        return;
     }
 }
