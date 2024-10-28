@@ -13,6 +13,7 @@ use App\Models\WorkOrder;
 use App\Models\SettingCompany;
 use App\Helpers\InboxHelper;
 
+use PDF;
 class BastController extends Controller
 {
     /**
@@ -146,7 +147,12 @@ class BastController extends Controller
         $nomorBast = $bast->number_result ?? '';
         $today = Carbon::now()->format('d M Y');
 
-        return view('bast.pdf',compact('nomorBast','workOrder','userCreate','project','bast', 'today', 'company'));
+        $pdf = PDF::loadView('bast.pdf_download', compact(
+            'nomorBast', 'workOrder', 'userCreate', 'project', 'bast', 'today', 'company'
+        ));
+
+        return $pdf->stream("test" . '.pdf');
+        // return view('bast.pdf',compact('nomorBast','workOrder','userCreate','project','bast', 'today', 'company'));
     }
 
     /**
