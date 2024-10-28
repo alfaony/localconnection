@@ -205,7 +205,12 @@ class ReportProjectController extends Controller
         try {
             $project = Project::byCompany(Auth::user()->company_id)->find($request->post('project'));
 
+            
             $reportProject = ReportProject::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            if(($reportProject->user_create_id == Auth::user()->id || $reportProject->user_updated_id == Auth::user()->id ) && $reportProject->is_approve === 0)
+            {
+                $reportProject->is_approve = NULL;
+            }
             $reportProject->date = $request->post('date');
             $reportProject->work_order_id = $project->work_order_id;
             $reportProject->project_id = $request->post('project');  
@@ -218,12 +223,6 @@ class ReportProjectController extends Controller
             $link = $request->post('link');
             $file = $request->file('file');
             
-    
-            if(($reportProject->user_create_id == Auth::user()->id || $reportProject->user_updated_id == Auth::user()->id ) && $reportProject->is_status === false)
-            {
-                $reportProject->is_approve = NULL;
-            }
-
             for ($i = 0; $i < count($name); $i++) 
             {
                 $id = $ids[$i];
@@ -455,25 +454,21 @@ class ReportProjectController extends Controller
             $status = NULL;
             $badgeClass = ''; // Menyimpan kelas badge
 
-            switch ($item->is_approve) 
+            // Cek nilai is_approve dan set status dan kelas badge
+            if (is_null($item->is_approve)) 
             {
-                case NULL:
-                    $status = "Waiting Approve";
-                    $badgeClass = 'badge-warning'; // Kelas badge untuk waiting
-                    break;
-
-                case '1':
-                    $status = "Approve";
-                    $badgeClass = 'badge-success'; // Kelas badge untuk approve
-                    break;
-
-                case '0':
-                    $status = "Declined";
-                    $badgeClass = 'badge-danger'; // Kelas badge untuk declined
-                    break;
-
-                default:
-                    break;
+                $status = "Waiting Approve";
+                $badgeClass = 'badge-warning';
+            } 
+            elseif ($item->is_approve == 1) 
+            {
+                $status = "Approve";
+                $badgeClass = 'badge-success';
+            } 
+            elseif ($item->is_approve == 0) 
+            {
+                $status = "Declined";
+                $badgeClass = 'badge-danger';
             }
 
             // Mengubah status menjadi badge
