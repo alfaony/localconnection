@@ -20,6 +20,7 @@ use App\Models\Project;
 use App\Models\SortUrl;
 use ZipArchive;
 
+use App\Helpers\InboxHelper;
 class ReportProjectController extends Controller
 {
     /**
@@ -94,6 +95,7 @@ class ReportProjectController extends Controller
             $reportProject->number_result = $nomorReportProject['result'];
             $reportProject->work_order_id = $project->work_order_id;
             $reportProject->project_id = $request->post('project');
+            $reportProject->is_approve = NULL;
             // $reportProject->link_report = $request->post('link_report');
             $reportProject->user_created_id = Auth::user()->id;
             $reportProject->user_updated_id = Auth::user()->id;
@@ -169,6 +171,27 @@ class ReportProjectController extends Controller
         return view('report_project.createOrEdit',compact('project','nomorReportProject','userCreate','reportProject','workOrder'));
     }
 
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\ReportProject  $ReportProject
+     * @return \Illuminate\Http\Response
+     */
+    public function show($slug)
+    {
+        $reportProject = ReportProject::where('slug',$slug)->first();
+        $nomorReportProject = $reportProject->number_result;
+        $project = Project::byCompany(Auth::user()->company_id)
+        ->whereDoesntHave('reportProject')
+        ->orWhere('id', $reportProject->project_id)
+        ->orderBy('created_at', 'desc')->get();
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
+        $userCreate = $reportProject->userCreate ? $reportProject->userCreate->name : '';
+
+        return view('report_project.show',compact('project','nomorReportProject','userCreate','reportProject','workOrder'));
+    }
+
     /**
      * Update the specified resource in storage.
      *
@@ -182,7 +205,12 @@ class ReportProjectController extends Controller
         try {
             $project = Project::byCompany(Auth::user()->company_id)->find($request->post('project'));
 
+            
             $reportProject = ReportProject::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            if(($reportProject->user_create_id == Auth::user()->id || $reportProject->user_updated_id == Auth::user()->id ) && $reportProject->is_approve === 0)
+            {
+                $reportProject->is_approve = NULL;
+            }
             $reportProject->date = $request->post('date');
             $reportProject->work_order_id = $project->work_order_id;
             $reportProject->project_id = $request->post('project');  
@@ -195,7 +223,6 @@ class ReportProjectController extends Controller
             $link = $request->post('link');
             $file = $request->file('file');
             
-    
             for ($i = 0; $i < count($name); $i++) 
             {
                 $id = $ids[$i];
@@ -293,6 +320,53 @@ class ReportProjectController extends Controller
         ReportProjectDetail::find($id)->delete();
         return true;
     }
+
+    /**
+     * approvement
+     */
+    public function approvement(Request $request, $id)
+    {
+        $project = ReportProject::find($id);
+
+        if (!$project) {
+            return response()->json(['message' => 'Proyek tidak ditemukan.'], 404);
+        }
+
+        // Update approvement status dan note
+        if($request->is_approve == 0)
+        {
+            $inboxHelper = new InboxHelper();
+            if($project->user_created_id != $project->user_updated_id)
+            {
+                $directUrl = route('report-project.edit', $project->slug);
+
+                $inboxHelper->sent
+                (
+                    $project->user_created_id, 
+                    Auth::user()->id, 
+                    'Report Tertolak, dengan catatan' . $request->note, 
+                    $directUrl
+                );
+
+
+                $inboxHelper->sent
+                (
+                    $project->user_created_id, 
+                    Auth::user()->id, 
+                    'Report Tertolak, dengan catatan' . $request->note, 
+                    $directUrl
+                );
+                
+            }
+        }
+
+        $project->is_approve = $request->is_approve;
+        $project->note = $request->note;
+        $project->save();
+
+        return response()->json(['message' => 'Approvement berhasil disimpan.']);
+    }
+
     /**
      * Data table for load AgreementLetter
      */
@@ -300,15 +374,16 @@ class ReportProjectController extends Controller
     {
         // Fetch data for the DataTable
         $query = ReportProject::query();
-        $query->byCompany(Auth::user()->company_id)->with('project','workOrder')->orderBy('created_at', 'desc');
+        $query->byCompany(Auth::user()->company_id)->with('project','workOrder')->orderBy('is_approve', 'asc')->orderBy('created_at', 'desc');
 
         // Map column indexes to column names (this may vary based on your table structure)
-        $columnNames = ['date','number_result', 'slug'];
+        $columnNames = ['date','is_approve','number_result', 'slug'];
 
         // Define searchable columns
         $searchable = 
         [
             0 => 'number_result',
+            0 => 'is_approve',
             1 => 'date',
             2 => 'workOrder.number_result',
             3 => 'project.title',
@@ -321,6 +396,18 @@ class ReportProjectController extends Controller
         $actionButtons = [
             
         ];
+
+        if(Access::can('show','report_projects'))
+        {
+            $edit = 
+            [
+                'name' => 'Show',
+                'route' => 'report-project.show',
+                'id' => true,
+            ];
+
+            array_push($actionButtons,$edit);
+        }
 
         if(Access::can('edit','report_projects'))
         {
@@ -359,7 +446,37 @@ class ReportProjectController extends Controller
         }
         
 
-        return datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+        $response = datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+
+        $data = $response->getData();
+        foreach ($data->data as $index => $item) 
+        {
+            $status = NULL;
+            $badgeClass = ''; // Menyimpan kelas badge
+
+            // Cek nilai is_approve dan set status dan kelas badge
+            if (is_null($item->is_approve)) 
+            {
+                $status = "Waiting Approve";
+                $badgeClass = 'badge-warning';
+            } 
+            elseif ($item->is_approve == 1) 
+            {
+                $status = "Approve";
+                $badgeClass = 'badge-success';
+            } 
+            elseif ($item->is_approve == 0) 
+            {
+                $status = "Declined";
+                $badgeClass = 'badge-danger';
+            }
+
+            // Mengubah status menjadi badge
+            $item->is_approve = "<span class='badge $badgeClass'>$status</span>";
+        }
+
+
+        return response()->json($data);
     }
 
     public function dataTableJsonWorkOrderWithoutReportProject()

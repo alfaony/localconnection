@@ -76,6 +76,8 @@ use App\Http\Controllers\XeroWebhookController;
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook']);
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
+
+
 Route::group(['middleware' => ['auth','web', 'XeroAuthenticated','role.permission']], function(){
   Route::get('xero',function(){
 
@@ -171,9 +173,10 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('report-project/downloadall/{slug}', [ReportProjectController::class, 'downloadall'])->name('report-project.downloadall');
   Route::get('report-project/createsuggest/{slug}', [ReportProjectController::class, 'createsuggest'])->name('report-project.createsuggest');
   Route::get('report-project/dataTableJsonWorkOrderWithoutReportProject', [ReportProjectController::class, 'dataTableJsonWorkOrderWithoutReportProject'])->name('report-project.dataTableJsonWorkOrderWithoutReportProject');
-  Route::delete('report-project/destroyDetail/{ReportProjectDetail}',[ReportProjectController::class,'destroyDetail'])->name('report-project.destroy.detail');
   Route::get('report-project/datatable', [ReportProjectController::class, 'dataTableJson'])->name('report-project.datatable');
-  Route::resource('report-project', ReportProjectController::class)->except(['show']);
+  Route::put('report-project/approvement/{slug}', [ReportProjectController::class, 'approvement'])->name('report-project.approvement');
+  Route::delete('report-project/destroyDetail/{ReportProjectDetail}',[ReportProjectController::class,'destroyDetail'])->name('report-project.destroy.detail');
+  Route::resource('report-project', ReportProjectController::class);
 
   Route::resource('setting-company', SettingCompanyController::class)->only('index','store');
   Route::resource('role', RoleController::class);

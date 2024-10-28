@@ -48,7 +48,7 @@
                     <select class="form-control select2 projectChange" name="project" id="" required>
                         <option value="" disabled selected>Pilih</option>
                         @foreach($project as $a)
-                        <option value="{{ $a->id }}" data-report="{{ $a->reportProject ? $a->reportProject->id : '' }}" {{ @$bast->project_id == $a->id ? 'selected' : '' }} {{ @$selectedWorkOrder->id == $a->work_order_id ? 'selected' : '' }}>{{ $a->title }} -  {{ $a->workOrder->number_result }}</option>
+                        <option value="{{ $a->id }}" {{ $a->reportProject ? '' : 'disabled' }}  data-statusreport="{{ $a->reportProject ? $a->reportProject->is_approve : '' }}" data-report="{{ $a->reportProject ? $a->reportProject->id : '' }}" {{ @$bast->project_id == $a->id ? 'selected' : '' }} {{ @$selectedWorkOrder->id == $a->work_order_id ? 'selected' : '' }}>{{ $a->title }} -  {{ $a->workOrder->number_result }}</option>
                         @endforeach     
                         <!-- Other options can be added here -->
                     </select>
@@ -154,10 +154,11 @@
         $('.projectChange').on('change', function() {
         // Ambil data-report dari option yang dipilih
         var reportId = $(this).find(':selected').data('report');
+        var statusReport = $(this).find(':selected').data('statusreport');
         var projectId = $(this).val();
-        
+            
         // Jika reportId kosong, tampilkan pesan dan disable tombol simpan
-        if (!reportId) {
+        if (!reportId ||statusReport == 0) {
             $('#reportProjectMessage').text('Laporan Proyek Tidak Tersedia').addClass('text-red').removeClass('text-green');
             $('#saveButtonId').prop('disabled', true);  // diasumsikan bahwa tombol simpan memiliki id 'saveButtonId'
             if(projectId)
