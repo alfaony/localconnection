@@ -380,7 +380,7 @@ class ReportProjectController extends Controller
             // Not APprove Email
             if($approvement == 'notapprove')
             {
-                $this->sendNotification($project, $approvement, Auth::user()->company_id,true,$request->notes);
+                $this->sendNotification($project, $approvement, Auth::user()->company_id,true,$request->note);
             }
     
             return response()->json(['message' => 'Approvement berhasil disimpan.']);
