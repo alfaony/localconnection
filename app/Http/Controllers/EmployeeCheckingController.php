@@ -57,7 +57,7 @@ class EmployeeCheckingController extends Controller
 
 
         $start = $startDate ? Carbon::parse($startDate)->startOfDay() : Carbon::now()->startOfMonth()->startOfDay();
-        $end = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::now()->endOfMonth()->endOfDay();
+        $end = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::now()->endOfDay();
 
         switch ($tab) 
         {

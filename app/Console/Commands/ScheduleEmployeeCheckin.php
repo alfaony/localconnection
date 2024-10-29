@@ -46,7 +46,7 @@ class ScheduleEmployeeCheckin extends Command
         $users = User::query()
         ->whereHas('divisions') // Memiliki divisi
         ->whereDoesntHave('role', function ($query) {
-            $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]); // Bukan 'Root' atau 'Admin'
+            $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::DIRECTOR]); // Bukan 'Root' atau 'Admin'
         })
         ->get();
 
