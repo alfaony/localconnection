@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -81,6 +82,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    protected $appends = ['point_checkin', 'today_percentage', 'point_percentage'];
 
     public function role()
     {
@@ -174,6 +177,66 @@ class User extends Authenticatable
     public function getLastSalaryAttribute()
     {
         return $this->salary()->latest()->first();
+    }
+
+    public function getPointCheckinAttribute()
+    {
+        $totalCheckins = $this->total_successful_checkins ?? 0;
+        $targetCheckins = $this->total_days * ParamSchema::TARGET_CHECKIN;
+
+        $pointPercentage = $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
+
+        return "{$totalCheckins} (" . number_format($pointPercentage, 0) . "%)";
+    }
+
+    public function getTodayPercentageAttribute()
+    {
+        $totalToday = $this->total_checkin_today ?? 0;
+
+        $todayPercentage = $totalToday ? ($totalToday / 10) * 100 : 0;
+
+        return "{$totalToday} (" . number_format($todayPercentage, 0) . "%)";
+    }
+
+    public function getPointPercentageAttribute()
+    {
+        $totalCheckins = $this->total_successful_checkins ?? 0;
+        $targetCheckins = $this->total_days * ParamSchema::TARGET_CHECKIN;
+
+        return $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
+    }
+
+    // Scope query untuk mendapatkan data user dengan perhitungan
+    public function scopeWithCheckinCounts($query, $userId = null, $start = null, $end = null, $today = null)
+    {
+        return $query->select('users.*')
+            ->byCompany(auth()->user()->company_id)
+            ->when($userId, function ($query) use ($userId) {
+                $query->where('id', $userId);
+            })
+            ->withCount([
+                'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
+                    $query->where('is_active', false)
+                          ->where('is_completed', true)
+                          ->where('is_dayoff', false)
+                          ->whereDate('created_at', $today);
+                },
+                'employeeCheckings as total_successful_checkins' => function ($query) use ($start, $end) {
+                    $query->where('is_active', false)
+                          ->where('is_completed', true)
+                          ->where('is_dayoff', false);
+                    if ($start && $end) {
+                        $query->whereBetween('created_at', [$start, $end]);
+                    }
+                },
+                'employeeCheckings as total_days' => function ($query) use ($start, $end) {
+                    $query->select(DB::raw('COUNT(DISTINCT DATE(created_at))'))
+                          ->where('is_dayoff', false);
+                    if ($start && $end) {
+                        $query->whereBetween('created_at', [$start, $end]);
+                    }
+                }
+            ]);
     }
     public function scopeByCompany($query,$companyId)
     {

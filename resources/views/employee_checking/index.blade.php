@@ -15,7 +15,13 @@
     <div class="card-body">
         <form action="{{ route('employee-checking.index') }}" method="GET">
             <div class="row justify-content-end">
-                <div class="col-md-4">
+                <div class="col-md-3">
+                        <select name="sort_order" id="sort_order" class="form-control">
+                            <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Dari Point Tertinggi</option>
+                            <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>Dari Point Terendah</option>
+                        </select>
+                </div>
+                <div class="col-md-3">
                     <input type="hidden" name="tab" value="{{ request('tab') }}">
                     <div class="input-group">
                         <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="{{ $start && $end ? \Carbon\Carbon::parse($start)->format('d-m-Y').' - '.\Carbon\Carbon::parse($end)->format('d-m-Y') : '' }}">
@@ -23,7 +29,7 @@
                         <input type="hidden" id="end_date" name="end_date" value="{{ $end ? \Carbon\Carbon::parse($end)->format('d-m-Y') : '' }}">
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <select name="user_id" id="user_id" class="form-control select2">
                         <option value="">Semua Pengguna</option>
                         @foreach($userSelect as $user)

@@ -18,6 +18,7 @@ use App\Models\User;
 use Carbon\Carbon;
 
 use App\Schemas\ParamSchema;
+use Illuminate\Pagination\LengthAwarePaginator;
 class EmployeeCheckingController extends Controller
 {
     
@@ -41,6 +42,8 @@ class EmployeeCheckingController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $userId = $request->input('user_id');
+        $sortOrder = $request->input('sort_order') ?? 'desc';
+        
         $tab = $request->input('tab') ?? 'detail_checkin';
         $today = Carbon::today()->toDateString();
         $manualCheck = $this->checkingDivision(Auth::user());
@@ -78,55 +81,74 @@ class EmployeeCheckingController extends Controller
                 ->paginate(10);
                 break;
             case 'point_checkin':
-                $users = User::select('id','name')->byCompany(Auth::user()->company_id)
-                    ->when($userId, function ($query) use ($userId, $start) {
-                        return $query->where('id', $userId);
-                    })
-                    ->withCount([
-                        'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
-                            $query->where('is_active', false)->where('is_completed', true)->where('is_dayoff', false)->whereDate('created_at', $today);
-                        },
-                        'employeeCheckings as total_successful_checkins' => function ($query) use ($startDate, $endDate, $start, $end) {
-                            $query->where('is_active', false)->where('is_completed', true)->where('is_dayoff', false);
-                            if ($start && $end) 
-                            {
-                                $query->whereBetween('created_at', [$start, $end]);
-                            }
-                        },
-                        'employeeCheckings as total_failed_checkins' => function ($query) use ($startDate, $endDate, $start, $end) {
-                            $query->where('is_completed', false)
-                                ->where('is_active', false)
-                                ->where('is_dayoff', false);
-                            if ($startDate && $endDate) {
-                                $query->whereBetween('created_at', [$start, $end]);
-                            }
-                        },
-                        'employeeCheckings as total_days' => function ($query) use ($start, $end) {
-                            $query->select(DB::raw('COUNT(DISTINCT DATE(created_at))'))
-                                ->where('is_dayoff', false);
-                                // ->where('is_completed', true);
+                // $users = User::select('id','name')->byCompany(Auth::user()->company_id)
+                //     ->when($userId, function ($query) use ($userId, $start) {
+                //         return $query->where('id', $userId);
+                //     })
+                //     ->withCount([
+                //         'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
+                //             $query->where('is_active', false)->where('is_completed', true)->where('is_dayoff', false)->whereDate('created_at', $today);
+                //         },
+                //         'employeeCheckings as total_successful_checkins' => function ($query) use ($startDate, $endDate, $start, $end) {
+                //             $query->where('is_active', false)->where('is_completed', true)->where('is_dayoff', false);
+                //             if ($start && $end) 
+                //             {
+                //                 $query->whereBetween('created_at', [$start, $end]);
+                //             }
+                //         },
+                //         'employeeCheckings as total_failed_checkins' => function ($query) use ($startDate, $endDate, $start, $end) {
+                //             $query->where('is_completed', false)
+                //                 ->where('is_active', false)
+                //                 ->where('is_dayoff', false);
+                //             if ($startDate && $endDate) {
+                //                 $query->whereBetween('created_at', [$start, $end]);
+                //             }
+                //         },
+                //         'employeeCheckings as total_days' => function ($query) use ($start, $end) {
+                //             $query->select(DB::raw('COUNT(DISTINCT DATE(created_at))'))
+                //                 ->where('is_dayoff', false);
+                //                 // ->where('is_completed', true);
 
-                            if ($start && $end) {
-                                $query->whereBetween('created_at', [$start, $end]);
-                            }
-                        }
-                    ])
-                    ->paginate(10);
+                //             if ($start && $end) {
+                //                 $query->whereBetween('created_at', [$start, $end]);
+                //             }
+                //         }
+                //     ])
+                //     ->paginate(10);
+                // // Hitung point check-in dan persentase
+                // foreach ($users as $user) {
+                //     $totalCheckins = $user->total_successful_checkins;
+                //     $totalToday = $user->total_checkin_today ?? 0;
 
-                // Hitung point check-in dan persentase
-                foreach ($users as $user) {
-                    $totalCheckins = $user->total_successful_checkins;
-                    $totalToday = $user->total_checkin_today ?? 0;
+                //     // Hitung total target check-in
+                //     $targetCheckins = $user->total_days * ParamSchema::TARGET_CHECKIN;
+                //     // Hitung presentase point check-in dan check-in hari ini
+                //     $pointPercentage = $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
+                //     $todayPercentage = $totalToday ? ($totalToday / 10) * 100 : 0;
 
-                    // Hitung total target check-in
-                    $targetCheckins = $user->total_days * ParamSchema::TARGET_CHECKIN;
-                    // Hitung presentase point check-in dan check-in hari ini
-                    $pointPercentage = $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
-                    $todayPercentage = $totalToday ? ($totalToday / 10) * 100 : 0;
+                //     $user->point_checkin = "{$totalCheckins} (" . number_format($pointPercentage, 0) . "%)";
+                //     $user->today_percentage = "{$totalToday} (" . number_format($todayPercentage, 0) . "%)";
+                // }
+                
+                $users = User::withCheckinCounts($userId, $start, $end, $today)->get();
 
-                    $user->point_checkin = "{$totalCheckins} (" . number_format($pointPercentage, 0) . "%)";
-                    $user->today_percentage = "{$totalToday} (" . number_format($todayPercentage, 0) . "%)";
-                }
+                // Kalkulasi point_percentage dan sorting di sisi PHP
+                $users = $users->map(function ($user) {
+                    $user->point_percentage = $user->point_percentage;
+                    return $user;
+                })->sortBy([
+                    ['point_percentage', $sortOrder]
+                ]);
+
+                $currentPage = $request->get('page', 1);
+                $users = new LengthAwarePaginator
+                (
+                    $users->forPage($currentPage, 10), 
+                    $users->count(), 
+                    10, 
+                    $currentPage,
+                    ['path' => $request->url(), 'query' => $request->query()]
+                );
                 break;
         }
 
