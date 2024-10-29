@@ -42,7 +42,7 @@
         <div class="card-body" id="printItem">
             <div class="row">
                 <div class="col-md-12 text-center">
-                    <h1>Berita Acara Serah Terima</h1>
+                    <h3>Berita Acara Serah Terima</h3>
                     <p>No. {{ $bast->number ?? '' }}</p>
                 </div>
             </div>

@@ -161,7 +161,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('bast/downloadPdf/pdf/{slug}',[BastController::class,'downloadPdf'])->name('bast.download.pdf');
   Route::get('bast/dataTableJson', [BastController::class, 'dataTableJson'])->name('bast.datatable');
   Route::post('bast/requestReport', [BastController::class, 'requestReport'])->name('bast.requestReport');
-  Route::resource('bast', BastController::class)->except(['show']);
+  Route::resource('bast', BastController::class);
 
   Route::get('report-project/downloadall/{slug}', [ReportProjectController::class, 'downloadall'])->name('report-project.downloadall');
   Route::get('report-project/createsuggest/{slug}', [ReportProjectController::class, 'createsuggest'])->name('report-project.createsuggest');
@@ -270,6 +270,8 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('device', [DeviceController::class,'index'])->name('device.index');
   Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
 });
+
+Route::get('/bast/{slug}/pdf', [BastController::class, 'showPdf'])->name('bast.showPdf');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

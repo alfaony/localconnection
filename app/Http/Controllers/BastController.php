@@ -2,18 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BastRequest;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Requests\BastRequest;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
+
 use App\Helpers\Access;
+use App\Helpers\InboxHelper;
+
 use App\Models\Bast;
 use App\Models\Project;
 use App\Models\WorkOrder;
 use App\Models\SettingCompany;
-use App\Helpers\InboxHelper;
+use App\Models\BastEmailRecord;
+
 
 use PDF;
+use Carbon\Carbon;
+
 class BastController extends Controller
 {
     /**
@@ -131,6 +139,55 @@ class BastController extends Controller
     }
 
     /**
+     * Show PDF
+     */
+    public function showPdf($slug)
+    {
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->get();
+        $project = Project::byCompany(Auth::user()->company_id)->get();
+        $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value', 'field_title');
+
+        $bast = Bast::where('slug', $slug)->first();
+        $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
+        $nomorBast = $bast->number_result ?? '';
+        $today = Carbon::now()->format('d M Y');
+
+        $pdf = PDF::loadView('bast.pdf_download', compact(
+            'nomorBast', 'workOrder', 'userCreate', 'project', 'bast', 'today', 'company'
+        ));
+        
+        $filename = str_replace('/', '_', $nomorBast);
+        return $pdf->stream("BAST_{$filename}.pdf");
+    }
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\Basts  $basts
+     * @return \Illuminate\Http\Response
+     */
+    public function show($slug)
+    {
+        
+        $bast = Bast::where('slug',$slug)->firstOrFail();
+
+        $project = Project::byCompany(Auth::user()->company_id)
+        ->whereHas('reportProject')
+        ->whereDoesntHave('bast')
+        ->orWhere('id',$bast->project_id)
+        ->orderBy('created_at','desc')->get();
+
+        $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
+        $nomorBast = $bast->number_result ?? '';
+        $signature = config('custom.customerSignature');
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereDoesntHave('bast')
+        ->whereHas('reportProject')
+        ->orWhere('id', $bast->work_order_id)
+        ->orderBy('created_at','desc')->get();
+
+        return view('bast.show',compact('nomorBast','userCreate','project','bast','signature','workOrder'));
+    }
+
+    /**
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\Basts  $basts
@@ -226,6 +283,18 @@ class BastController extends Controller
             [
                 'name' => 'Pdf',
                 'route' => 'bast.download.pdf',
+                'id' => true,
+            ];
+
+            array_push($actionButtons,$pdf);
+        }
+
+        if(Access::can('show','basts'))
+        {
+            $pdf = 
+            [
+                'name' => 'Show',
+                'route' => 'bast.show',
                 'id' => true,
             ];
 
@@ -329,6 +398,45 @@ class BastController extends Controller
         
         return response()->json(['message' => 'Request successfully sent']);
     }
+
+    public function sendEmail(Request $request, $slug)
+    {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'to' => 'required|array|min:1',
+            'to.*' => 'required|email',
+            'cc' => 'nullable|array',
+            'cc.*' => 'nullable|email',
+            'subject' => 'nullable|string',
+            'content' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $bast = Bast::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+
+        // Save email record to the bast_email_records table
+        BastEmailRecord::create([
+            'bast_id' => $bast->id,
+            'to' => json_encode($request->to), // Store as JSON
+            'cc' => json_encode($request->cc), // Store as JSON
+            'subject' => $request->subject,
+            'content' => $request->content,
+        ]);
+
+        // Send email
+        Mail::send([], [], function ($message) use ($request) {
+            $message->to($request->to)
+                    ->cc($request->cc)
+                    ->subject($request->subject)
+                    ->setBody($request->content, 'text/html');
+        });
+
+        return redirect()->back()->with('success', 'Email berhasil dikirim.');
+    }
+
     private function bastNumber()
     {
         $date = Carbon::now()->format('m/Y');
