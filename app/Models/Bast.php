@@ -79,6 +79,11 @@ class Bast extends Model
         return $this->hasOne(Invoice::class);
     }
 
+    public function fileMerge()
+    {
+        return $this->hasMany(BastFileMerge::class, 'bast_id')->orderBy('version', 'desc');
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)
