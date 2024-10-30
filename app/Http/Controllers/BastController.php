@@ -198,13 +198,6 @@ class BastController extends Controller
         ->orWhere('id',$bast->project_id)
         ->orderBy('created_at','desc')->get();
 
-        $fileMerges = BastFileMerge::where('bast_id', $bast->id)
-                                   ->orderBy('version', 'desc')
-                                   ->paginate(3);
-
-        $fileMergesChooice = BastFileMerge::where('bast_id', $bast->id)
-            ->orderBy('version', 'desc')->get();
-
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
         $nomorBast = $bast->number_result ?? '';
         $signature = config('custom.customerSignature');
@@ -217,7 +210,7 @@ class BastController extends Controller
         ->orderBy('created_at', 'desc')
         ->paginate(2);
 
-        return view('bast.show',compact('nomorBast','userCreate','project','bast','signature','workOrder','fileMerges','fileMergesChooice','bastEmailRecords'));
+        return view('bast.show',compact('nomorBast','userCreate','project','bast','signature','workOrder','bastEmailRecords'));
     }
 
     /**
