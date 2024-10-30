@@ -133,7 +133,7 @@
                                     <input type="text" class="form-control" id="link_" name="link[]" value="{{ $a->link }}" required>
                                 </td>
                                 <td width="20%">
-                                <input type="file" class="form-control" id="file_" name="file[]" >
+                                <input type="file" class="form-control" id="file_" name="file[]" accept=".pdf" >
                                 </td>
                                 <td>
                                     <a href="{{ Storage::url('reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-download"></i></a>
@@ -190,7 +190,7 @@
                         <input type="text" class="form-control" id="link_" name="link[]" required>
                     </td>
                     <td>
-                        <input type="file" class="form-control" id="file_" name="file[]" required>
+                        <input type="file" class="form-control" id="file_" name="file[]" accept=".pdf" required>
                     </td>
                     <td>
                         <button class="btn btn-danger btnHapus"><i class="fa fa-trash"></i></button>
