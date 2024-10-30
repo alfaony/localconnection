@@ -324,17 +324,17 @@ class BastController extends Controller
         $actionButtons = [
         ];
 
-        // if(Access::can('downloadPdf','basts'))
-        // {
-        //     $pdf = 
-        //     [
-        //         'name' => 'Pdf',
-        //         'route' => 'bast.download.pdf',
-        //         'id' => true,
-        //     ];
+        if(Access::can('downloadPdf','basts'))
+        {
+            $pdf = 
+            [
+                'name' => 'Pdf',
+                'route' => 'bast.download.pdf',
+                'id' => true,
+            ];
 
-        //     array_push($actionButtons,$pdf);
-        // }
+            array_push($actionButtons,$pdf);
+        }
 
         if(Access::can('show','basts'))
         {
