@@ -18,6 +18,7 @@ use App\Models\ReportProjectDetail;
 use App\Models\WorkOrder;
 use App\Models\Project;
 use App\Models\SortUrl;
+use App\Models\SettingCompany;
 use ZipArchive;
 
 use PDF;
@@ -477,7 +478,9 @@ class ReportProjectController extends Controller
             }
             // Generate a new PDF from the 'bast.pdf_download' view
             $today = Carbon::now()->format('d M Y');
-            $additionalPdf = PDF::loadView('bast.pdf_download', compact('bast', 'today'));
+            $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+
+            $additionalPdf = PDF::loadView('bast.pdf_download', compact('bast', 'today','company'));
 
             // Convert generated PDF to a string
             $additionalPdfContent = $additionalPdf->output();

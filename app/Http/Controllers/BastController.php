@@ -238,7 +238,7 @@ class BastController extends Controller
         $today = Carbon::now()->format('d M Y');
 
         $pdf = PDF::loadView('bast.pdf_download', compact(
-            'bast','today'
+            'bast','today','company'
         ));
 
         return $pdf->stream("test" . '.pdf');
@@ -579,9 +579,11 @@ class BastController extends Controller
                     $pdfFiles[] = $filePath;
                 }
             }
-            // Generate a new PDF from the 'bast.pdf_download' view
+            // Generate a new PDF from the  array of PDF view
             $today = Carbon::now()->format('d M Y');
-            $additionalPdf = PDF::loadView('bast.pdf_download', compact('bast', 'today'));
+            $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+
+            $additionalPdf = PDF::loadView('bast.pdf_download', compact('bast', 'today', 'company'));
 
             // Convert generated PDF to a string
             $additionalPdfContent = $additionalPdf->output();
