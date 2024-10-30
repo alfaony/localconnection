@@ -3,9 +3,33 @@
 @section('title', 'Detail BAST')
 
 @section('content')
+<div class="row">
+    <div class="col-md-12">
+        @if(Session::get('update'))
+        <div class="alert alert-success mt-3">File Berhasil Diperbarui</div>
+        @endif
+        @if(Session::get('successEmail'))
+        <div class="alert alert-success mt-3">Email Berhasil Dikirim</div>
+        @endif
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        @endif
+    </div>
+</div>
 <div class="row mt-3">
-    <div class="col-md-8">
-        <div class="card h-100">
+    <div class="col-md-7">
+        <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Detail BAST</h3>
             </div>
@@ -26,32 +50,83 @@
                 <!-- Preview PDF -->
                 <div class="row mb-4">
                     <div class="col-md-12">
-                        <h5 class="mb-3">Preview PDF BAST</h5>
-                        <iframe src="{{ route('bast.showPdf', $bast->slug) }}" 
+                    <label for="">Preview PDF BAST (Latest Merge)</label>
+                    @if ($fileMergesChooice->isNotEmpty())
+                        <!-- Display the latest merged PDF -->
+                        <iframe src="{{ Storage::url($fileMergesChooice->first()->path) }}" 
                                 style="width: 100%; height: 600px; border: 1px solid #ccc;" 
                                 frameborder="0">
                         </iframe>
+                    @else
+                        <p class="text-muted">No merged PDF available.</p>
+                    @endif
                     </div>
                 </div>
     
                 <!-- Action Buttons -->
                 <div class="text-right mt-4">
                     <a href="{{ route('bast.index') }}" class="btn btn-secondary">Kembali</a>
-                    <a href="{{ route('bast.showPdf', $bast->slug) }}" class="btn btn-primary" target="_blank">
-                        Unduh PDF
-                    </a>
+                    <a href="{{ route('bast.edit', $bast->slug) }}" class="btn btn-primary"><i class="fa fa-edit"></i> Edit</a>
                 </div>
             </div>
         </div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Riwayat File</h3>
+                <form method="post" action="{{ route('bast.merge', $bast->slug) }}">
+                    @method('PUT')
+                    @csrf
+                    <button class="btn btn-primary float-right"><i class="fas fa-sync-alt"></i> Perbarui File</button>
+                    <!-- <a href="{{ route('bast.showPdf', $bast->slug) }}" class="btn btn-primary float-right" target="_blank" onclick="setTimeout(function(){ window.location.reload(); }, 1000);">
+                        <i class="fas fa-sync-alt"></i> Perbarui File
+                    </a> -->
+                </form>
+            </div>
+            <div class="card-body">
+                @if ($fileMerges->count() > 0)
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Version</th>
+                                    <th>Created At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($fileMerges as $merge)
+                                <tr>
+                                    <td>{{ $merge->version }}</td>
+                                    <td>{{ $merge->created_at->format('d M Y H:i') }}</td>
+                                    <td>
+                                        <a href="{{ Storage::url($merge->path) }}" class="btn btn-sm btn-primary" target="_blank">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination Links -->
+                    <div class="d-flex justify-content-center mt-3">
+                        {{ $fileMerges->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+                    </div>
+                @else
+                    <p class="text-muted">No merged files available.</p>
+                @endif
+            </div>
+        </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-5">
         <!-- Email Form -->
-        <div class="card h-100">
+        <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Kirim Email</h3>
             </div>
             <div class="card-body">
-    
+                <form action="{{ route('bast.sendEmail', $bast->slug) }}" method="POST">
                     @csrf
                     <div class="form-group">
                         <label for="to">To:</label>
@@ -78,6 +153,15 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="fileMergeChoice">Pilih File:</label>
+                        <select name="fileMergeChoice" class="form-control selectNonMultiple2" required>
+                            <option value="" disabled selected>Pilih file</option>
+                            @foreach ($fileMergesChooice as $merge)
+                                <option value="{{ $merge->id }}">{{"version - ".$merge->version }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="subject">Subject:</label>
                         <input type="text" name="subject" class="form-control" placeholder="Masukkan subject email">
                     </div>
@@ -86,6 +170,34 @@
                         <input class="thriveEditor form-control" id="description_content" data-ids="content" name="content" rows="3" placeholder="yang akan dicetak di perjanjian"/>
                     </div>
                     <button type="submit" class="btn btn-primary">Kirim Email</button>
+                </form>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Riwayat Email BAST</h3>
+            </div>
+            <div class="card-body">
+                @if ($bastEmailRecords->count() > 0)
+                    @foreach ($bastEmailRecords as $record)
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Subject: {{ $record->subject }}</h5>
+                                <p><strong>To:</strong> {{ implode(', ', json_decode($record->to, true)) }}</p>
+                                <p><strong>CC:</strong> {{ implode(', ', json_decode($record->cc, true) ?? []) }}</p>
+                                <p><strong>Isi Email:</strong> {!! nl2br(e($record->content)) !!}</p>
+                                <p><strong>Tanggal Dikirim:</strong> {{ \Carbon\Carbon::parse($record->created_at)->format('d M Y H:i') }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+
+                    <!-- Pagination -->
+                    <div class="d-flex justify-content-center mt-3">
+                        {{ $bastEmailRecords->links() }}
+                    </div>
+                @else
+                    <p class="text-center">Belum ada riwayat email yang dikirim.</p>
+                @endif
             </div>
         </div>
     </div>
@@ -105,7 +217,14 @@
             allowClear: true,
             width: '100%'
         });
+
+        $('.selectNonMultiple2').select2({
+            placeholder: 'Pilih Versi',
+            allowClear: true,
+            width: '100%'
+        });
     });
+    
 </script>
 @endsection
 

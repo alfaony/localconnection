@@ -271,7 +271,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
 });
 
-Route::get('/bast/{slug}/pdf', [BastController::class, 'showPdf'])->name('bast.showPdf');
+Route::post('/ast/sendBastEmail/{slug}', [BastController::class, 'sendBastEmail'])->name('bast.sendEmail');
+Route::put('bast/merge/{slug}', [BastController::class,'merge'])->name('bast.merge');
+Route::get('bast/{slug}/pdf', [BastController::class, 'showPdf'])->name('bast.showPdf');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

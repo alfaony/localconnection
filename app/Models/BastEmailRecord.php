@@ -12,7 +12,7 @@ class BastEmailRecord extends Model
     protected $table = 'bast_email_records';
 
     protected $fillable = [
-        'bast_id', 'to', 'cc', 'subject', 'content'
+        'bast_id','user_id','to', 'cc', 'subject', 'content',
     ];
 
     // Cast 'to' and 'cc' fields as arrays

@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 use App\Helpers\Access;
 use App\Helpers\InboxHelper;
@@ -17,10 +19,13 @@ use App\Models\Project;
 use App\Models\WorkOrder;
 use App\Models\SettingCompany;
 use App\Models\BastEmailRecord;
-
+use App\Models\BastFileMerge;
 
 use PDF;
+use setasign\Fpdi\Fpdi;
+use App\Mail\SendBastEmail;
 use Carbon\Carbon;
+use App\Helpers\EmailNotifHelper;
 
 class BastController extends Controller
 {
@@ -176,6 +181,13 @@ class BastController extends Controller
         ->orWhere('id',$bast->project_id)
         ->orderBy('created_at','desc')->get();
 
+        $fileMerges = BastFileMerge::where('bast_id', $bast->id)
+                                   ->orderBy('version', 'desc')
+                                   ->paginate(3);
+
+        $fileMergesChooice = BastFileMerge::where('bast_id', $bast->id)
+            ->orderBy('version', 'desc')->get();
+
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
         $nomorBast = $bast->number_result ?? '';
         $signature = config('custom.customerSignature');
@@ -184,7 +196,11 @@ class BastController extends Controller
         ->orWhere('id', $bast->work_order_id)
         ->orderBy('created_at','desc')->get();
 
-        return view('bast.show',compact('nomorBast','userCreate','project','bast','signature','workOrder'));
+        $bastEmailRecords = BastEmailRecord::where('bast_id', $bast->id)
+        ->orderBy('created_at', 'desc')
+        ->paginate(2);
+
+        return view('bast.show',compact('nomorBast','userCreate','project','bast','signature','workOrder','fileMerges','fileMergesChooice','bastEmailRecords'));
     }
 
     /**
@@ -205,7 +221,7 @@ class BastController extends Controller
         $today = Carbon::now()->format('d M Y');
 
         $pdf = PDF::loadView('bast.pdf_download', compact(
-            'nomorBast', 'workOrder', 'userCreate', 'project', 'bast', 'today', 'company'
+            'bast','today'
         ));
 
         return $pdf->stream("test" . '.pdf');
@@ -399,42 +415,203 @@ class BastController extends Controller
         return response()->json(['message' => 'Request successfully sent']);
     }
 
-    public function sendEmail(Request $request, $slug)
+    public function sendBastEmail(Request $request, $slug)
     {
-        // Validate the request
-        $validator = Validator::make($request->all(), [
-            'to' => 'required|array|min:1',
-            'to.*' => 'required|email',
+        $request->validate([
+            'to' => 'required|array',
+            'to.*' => 'email',
             'cc' => 'nullable|array',
-            'cc.*' => 'nullable|email',
-            'subject' => 'nullable|string',
-            'content' => 'nullable|string',
+            'cc.*' => 'email',
+            'fileMergeChoice' => 'required|exists:bast_file_merges,id',
+            'subject' => 'required|string',
+            'content' => 'required|string',
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+        try {
+            // Retrieve the BAST and the selected merged file
+            $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+
+            $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $fileMerge = BastFileMerge::findOrFail($request->fileMergeChoice);
+
+            // Retrieve the file path and ensure it exists
+            $filePath = Storage::path($fileMerge->path);
+            if (!Storage::exists($fileMerge->path)) {
+                return redirect()->back()->with('error', 'Selected file does not exist.');
+            }
+
+            // Send the email with the attachment
+            $data = 
+            [
+                'subject' => $request->subject,
+                'content' => $request->content,
+            ];
+
+            $nameFile = "BAST_".str_replace('/','-', $bast->number_result). '.pdf';
+            $attachments = [
+                $filePath => $nameFile,
+            ];
+
+            $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+            $fromEmail = $smtpConfig['username'] ?? '';
+            $fromName = $smtpConfig['name'] ?? '';
+            $toEmails = $request->to;
+            $toNames = $request->to;
+            $ccEmails = $request->cc;
+            $subject = $request->subject;
+            $tamplate = "email.bast_email";
+            $companyId = Auth::user()->company_id;
+            
+            EmailNotifHelper::sentEmail(
+                $fromEmail,
+                $fromName,
+                $toEmails, 
+                $toNames, 
+                $subject,
+                $tamplate,
+                $data, 
+                $smtpConfig, 
+                $companyId, 
+                $ccEmails,
+                [],
+                $attachments
+            );
+
+            // Simpan record ke database
+            $bastEmailRecord = new BastEmailRecord();
+            $bastEmailRecord->bast_id = $bast->id;
+            $bastEmailRecord->to = json_encode($request->to);
+            $bastEmailRecord->cc = json_encode($request->cc);
+            $bastEmailRecord->subject = $request->subject;
+            $bastEmailRecord->content = $request->content;
+            $bastEmailRecord->bast_file_merge_id = $request->fileMergeChoice;
+            $bastEmailRecord->save();
+
+            return redirect()->back()->with('successEmail', true);
+        } catch (\Exception $e) {
+            // dd($e);
+            \Log::error('Failed to send BAST email: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to send the email.');
         }
+    }
 
-        $bast = Bast::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+    // Main controller method
+    public function merge($slug)
+    {
+        try {
+            // Get BAST by company and slug
+            $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $reportProject = $bast->project->reportProject;
 
-        // Save email record to the bast_email_records table
-        BastEmailRecord::create([
-            'bast_id' => $bast->id,
-            'to' => json_encode($request->to), // Store as JSON
-            'cc' => json_encode($request->cc), // Store as JSON
-            'subject' => $request->subject,
-            'content' => $request->content,
-        ]);
+            if (!$reportProject) {
+                return redirect()->back()->with('error', 'Report Project not found.');
+            }
 
-        // Send email
-        Mail::send([], [], function ($message) use ($request) {
-            $message->to($request->to)
-                    ->cc($request->cc)
-                    ->subject($request->subject)
-                    ->setBody($request->content, 'text/html');
-        });
+            // Call the private method to handle PDF merging
+            $mergedFilePath = $this->mergePdfFiles($bast, $reportProject);
 
-        return redirect()->back()->with('success', 'Email berhasil dikirim.');
+            if ($mergedFilePath) {
+                // Save record to bast_file_merges table
+                $latestVersion = BastFileMerge::where('bast_id', $bast->id)->max('version');
+                $newVersion = $latestVersion ? $latestVersion + 1 : 1;
+
+                BastFileMerge::create([
+                    'bast_id' => $bast->id,
+                    'version' => $newVersion,
+                    'path' => $mergedFilePath,
+                ]);
+
+                return redirect()->back()->with('update', true);
+            }
+
+            return redirect()->back()->with('error', 'Failed to merge PDF files.');
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to merge PDFs for BAST: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'An error occurred while merging PDF files.');
+        } catch (\Throwable $th) {
+            \Log::error('Unexpected error in PDF merging: ' . $th->getMessage());
+            return redirect()->back()->with('error', 'An unexpected error occurred.');
+        }
+    }
+
+    // Private function to merge PDF files
+    private function mergePdfFiles($bast, $reportProject)
+    {
+        try {
+            // Initialize an array to store PDF file paths
+            $pdfFiles = [];
+
+            // Collect only PDF files from reportProjectDetail
+            foreach ($reportProject->reportProjectDetail as $detail) {
+                $filePath = storage_path('app/public/reports/' . $detail->file);
+                $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+
+                if (file_exists($filePath) && strtolower($fileExtension) === 'pdf') {
+                    $pdfFiles[] = $filePath;
+                }
+            }
+
+            // Generate a new PDF from the 'bast.pdf_download' view
+            $today = Carbon::now()->format('d M Y');
+            $additionalPdf = PDF::loadView('bast.pdf_download', compact('bast', 'today'));
+
+            // Convert generated PDF to a string
+            $additionalPdfContent = $additionalPdf->output();
+
+            // Save the additional PDF as a temporary file
+            $tempFilePath = 'public/temp_additional.pdf';
+            Storage::put($tempFilePath, $additionalPdfContent);
+
+            // Initialize FPDI to merge PDFs
+            $mergedPdf = new Fpdi();
+
+            // Add the additional PDF first
+            $additionalPdfPath = Storage::path($tempFilePath);
+            if (file_exists($additionalPdfPath)) {
+                $pageCount = $mergedPdf->setSourceFile($additionalPdfPath);
+
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $templateId = $mergedPdf->importPage($pageNo);
+                    $size = $mergedPdf->getTemplateSize($templateId);
+
+                    $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $mergedPdf->useTemplate($templateId);
+                }
+            } else {
+                throw new \Exception('Temporary additional PDF file not found.');
+            }
+
+            // Merge the collected PDF files
+            foreach ($pdfFiles as $pdfFile) {
+                $pageCount = $mergedPdf->setSourceFile($pdfFile);
+
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $templateId = $mergedPdf->importPage($pageNo);
+                    $size = $mergedPdf->getTemplateSize($templateId);
+
+                    $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $mergedPdf->useTemplate($templateId);
+                }
+            }
+
+            // Create the final merged PDF path
+            $finalFileName = 'merged_' . str_replace('/', '_', $bast->number_result) . '.pdf';
+            $finalFilePath = 'public/reports/' . $finalFileName;
+
+            // Output the final merged PDF to storage
+            $finalPdfContent = $mergedPdf->Output('', 'S');
+            Storage::put($finalFilePath, $finalPdfContent);
+
+            // Delete temporary files
+            Storage::delete($tempFilePath);
+
+            return $finalFilePath;
+
+        } catch (\Exception $e) {
+            \Log::error('Error in merging PDF files: ' . $e->getMessage());
+            return false;
+        }
     }
 
     private function bastNumber()
