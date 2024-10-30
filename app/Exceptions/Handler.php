@@ -62,7 +62,6 @@ class Handler extends ExceptionHandler
     // discrod
     public function discordLog($data)
     {
-        return $data;
         $status_colors = [
             'emergency' => '15548997',
             'alert' => '15418782',
