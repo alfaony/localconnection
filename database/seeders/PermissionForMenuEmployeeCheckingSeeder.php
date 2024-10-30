@@ -22,8 +22,17 @@ class PermissionForMenuEmployeeCheckingSeeder extends Seeder
     {   
 
         $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'updatestatus','checkLastScheduledCheckin'];
-       
-        $roles = Role::all();
+        
+        $manager = Role::where('name',RoleSchema::MANAGER)->first();
+        $staff = Role::where('name',RoleSchema::STAFF)->first();
+        $sales = Role::where('name',RoleSchema::SALES)->first();
+        $admin = Role::where('name',RoleSchema::ADMIN)->first();
+        $finance = Role::where('name',RoleSchema::FINANCE)->first();
+        $procurement = Role::where('name',RoleSchema::PROCUREMENT)->first();
+        $root = Role::where('name',RoleSchema::ROOT)->first();
+        $pm = Role::where('name',RoleSchema::PM)->first();
+        $hr = Role::where('name',RoleSchema::HR)->first();
+        $director = Role::where('name',RoleSchema::DIRECTOR)->first();
 
 
         foreach ($methods as $method) 
@@ -39,16 +48,17 @@ class PermissionForMenuEmployeeCheckingSeeder extends Seeder
             ]);
 
             //assign role & permission
-            foreach ($roles as $role) 
-            {
-                PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
-            }
+
+            PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $staff->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $sales->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $procurement->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $pm->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $hr->id, 'permission_id' => $permission->id]);
         }
     }
 }
-
-
-
-
-
-
