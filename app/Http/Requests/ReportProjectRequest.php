@@ -33,7 +33,7 @@ class ReportProjectRequest extends FormRequest
             'file' => 'required|array',
             'name.*' => 'required|string',
             'link.*' => 'required|url',
-            'file.*' => 'required|file|max:5000', // Contoh validasi untuk file PDF dengan maksimum 5MB.
+            'file.*' => 'required|file|max:64000', // Contoh validasi untuk file PDF dengan maksimum 64MB.
         ];
 
         if ($this->isMethod('patch')) 
@@ -45,7 +45,7 @@ class ReportProjectRequest extends FormRequest
                 // 'work_order' => 'required|string',
                 'project' => 'required|string',
                 'link.*' => 'required|url',
-                'file.*' => 'nullable|file|max:5000', // Contoh validasi untuk file PDF dengan maksimum 5MB.
+                'file.*' => 'nullable|file|max:64000', // Contoh validasi untuk file PDF dengan maksimum 64MB.
             ];
         }
 
