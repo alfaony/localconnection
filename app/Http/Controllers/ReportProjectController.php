@@ -27,6 +27,10 @@ use App\Helpers\InboxHelper;
 use App\Helpers\EmailNotifHelper;
 
 use App\Schemas\RoleSchema;
+
+use PDF;
+use setasign\Fpdi\Fpdi;
+use App\Mail\SendBastEmail;
 class ReportProjectController extends Controller
 {
     /**
@@ -298,6 +302,11 @@ class ReportProjectController extends Controller
             }
             
             $this->sendNotification($reportProject, 'update', Auth::user()->company_id);
+
+            if($reportProject->project->bast)
+            {
+                $mergedFilePath = $this->mergePdfFiles($reportProject->project->bast, $reportProject);
+            }
 
             DB::commit();
             return redirect()->to(route('report-project.index'))->with('update', true);
@@ -697,5 +706,91 @@ class ReportProjectController extends Controller
         }
 
         return;
+    }
+    private function mergePdfFiles($bast, $reportProject)
+    {
+        try {
+            // Check if a file already exists and delete it before updating
+            if (!empty($bast->file_merge_path) && Storage::exists($bast->file_merge_path)) 
+            {
+                Storage::delete($bast->file_merge_path);
+            }
+            
+            // Initialize an array to store PDF file paths
+            $pdfFiles = [];
+
+            // Collect only PDF files from reportProjectDetail
+            foreach ($reportProject->reportProjectDetail as $detail) {
+                $filePath = storage_path('app/public/reports/' . $detail->file);
+                $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+
+                if (file_exists($filePath) && strtolower($fileExtension) === 'pdf') {
+                    $pdfFiles[] = $filePath;
+                }
+            }
+            // Generate a new PDF from the 'bast.pdf_download' view
+            $today = Carbon::now()->format('d M Y');
+            $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+
+            $additionalPdf = PDF::loadView('bast.pdf_download', compact('bast', 'today','company'));
+
+            // Convert generated PDF to a string
+            $additionalPdfContent = $additionalPdf->output();
+
+            // Save the additional PDF as a temporary file
+            $tempFilePath = 'public/temp_additional.pdf';
+            Storage::put($tempFilePath, $additionalPdfContent);
+
+            // Initialize FPDI to merge PDFs
+            $mergedPdf = new Fpdi();
+
+            // Add the additional PDF first
+            $additionalPdfPath = Storage::path($tempFilePath);
+            if (file_exists($additionalPdfPath)) {
+                $pageCount = $mergedPdf->setSourceFile($additionalPdfPath);
+
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $templateId = $mergedPdf->importPage($pageNo);
+                    $size = $mergedPdf->getTemplateSize($templateId);
+
+                    $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $mergedPdf->useTemplate($templateId);
+                }
+            } else {
+                throw new \Exception('Temporary additional PDF file not found.');
+            }
+
+            // Merge the collected PDF files
+            foreach ($pdfFiles as $pdfFile) {
+                $pageCount = $mergedPdf->setSourceFile($pdfFile);
+
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $templateId = $mergedPdf->importPage($pageNo);
+                    $size = $mergedPdf->getTemplateSize($templateId);
+
+                    $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $mergedPdf->useTemplate($templateId);
+                }
+            }
+
+            // Create the final merged PDF path
+            $finalFileName = 'merged_' . str_replace('/', '_', $bast->number_result) . '.pdf';
+            $finalFilePath = 'public/reports/' . $finalFileName;
+
+            // Output the final merged PDF to storage
+            $finalPdfContent = $mergedPdf->Output('', 'S');
+            Storage::put($finalFilePath, $finalPdfContent);
+
+            // Delete temporary files
+            Storage::delete($tempFilePath);
+
+            $bast->file_merge_path = $finalFilePath;
+            $bast->save();
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('Error in merging PDF files: ' . $e->getMessage());
+            return false;
+        }
     }
 }
