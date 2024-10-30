@@ -101,11 +101,26 @@
             <livewire:scripts />
         @endif
     @endif
-
+    @include('partials.firebase')
+    @auth
+    @include('components.checkin-popup')
+    @endauth
     {{-- Custom Scripts --}}
     @yield('adminlte_js')
+    @include('partials.permission-fcm')
 
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then(function(registration) {
+                console.log('Service Worker registered with scope:', registration.scope);
+            }).catch(function(err) {
+                console.log('Service Worker registration failed:', err);
+            });
+        }
+    </script>
     @auth
+
     <footer class="main-footer" >
         <strong>Copyright © 2020-2023 Thrive IT Solution</strong>
     </footer>

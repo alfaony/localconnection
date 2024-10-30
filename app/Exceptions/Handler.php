@@ -89,9 +89,9 @@ class Handler extends ExceptionHandler
             ]
         ];
 
-        $response = Http::post(config('services.discord.webhook_url'), $request);
+        // $response = Http::post(config('services.discord.webhook_url'), $request);
 
-        return $response->successful();
+        // return $response->successful();
     }
 
     public function render($request, Throwable $exception)

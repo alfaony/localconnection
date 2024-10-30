@@ -7,6 +7,7 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 use App\Models\SettingCompany;
 use App\Models\Company;
+use App\Models\EmployeeChecking;
 use Carbon\Carbon;
 
 class Kernel extends ConsoleKernel
@@ -26,6 +27,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('project:reccuring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        // $schedule->command('email:send-device-list')->dailyAt('13:00');
 
         $company = Company::all();
         foreach ($company as $a) 
@@ -37,6 +39,32 @@ class Kernel extends ConsoleKernel
             {
                 $schedule->command('project:send-expiration-notifications')->timezone('Asia/Jakarta')->dailyAt($sentTime);
             }
+        }
+
+        // Run Scheduler
+        $schedule->command('schedule:employee-checkin')->dailyAt('07:00');
+
+        $employeeCheckings = EmployeeChecking::where('is_active', true)
+            ->whereDate('scheduled_time', Carbon::today()) // Filter today's check-ins
+            ->get();
+
+        foreach ($employeeCheckings as $checking) 
+        {
+            // Calculate the notification time (1 minute before scheduled time)
+            $checkinNotificationTime = Carbon::parse($checking->scheduled_time);
+            
+            // Schedule the notification 1 minute before check-in time
+            $schedule->command('checkin:notifyAndSentPopup')
+                ->timezone('Asia/Jakarta')
+                ->dailyAt($checkinNotificationTime->format('H:i'));
+
+            // Calculate the deactivation time (2 minutes after scheduled time)
+            $checkinDeactivateTime = Carbon::parse($checking->scheduled_timeout);
+
+            // Schedule the deactivation 2 minutes after check-in time
+            $schedule->command('checkin:deactivateAndRemove')
+                ->timezone('Asia/Jakarta')
+                ->dailyAt($checkinDeactivateTime->format('H:i'));
         }
     }
 
