@@ -45,7 +45,7 @@ class ReportProjectRequest extends FormRequest
                 // 'work_order' => 'required|string',
                 'project' => 'required|string',
                 'link.*' => 'required|url',
-                'file.*' => 'nullable|file|max:5000', // Contoh validasi untuk file PDF dengan maksimum 5MB.
+                'file.*' => 'nullable|file|max:64000', // Contoh validasi untuk file PDF dengan maksimum 64MB.
             ];
         }
 
