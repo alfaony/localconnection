@@ -126,19 +126,21 @@
                 @if ($bastEmailRecords->count() > 0)
                     @foreach ($bastEmailRecords as $record)
                         <div class="card mb-3">
+                            <div class="card-header">
+                                <h5 class="card-title">Subject : {{ $record->subject }}</h5>
+                            </div>
                             <div class="card-body">
-                                <h5 class="card-title">Subject: {{ $record->subject }}</h5>
-                                <p><strong>To:</strong> {{ implode(', ', json_decode($record->to, true)) }}</p>
-                                <p><strong>CC:</strong> {{ implode(', ', json_decode($record->cc, true) ?? []) }}</p>
-                                <p><strong>Isi Email:</strong> {!! nl2br(e($record->content)) !!}</p>
-                                <p><strong>Tanggal Dikirim:</strong> {{ \Carbon\Carbon::parse($record->created_at)->format('d M Y H:i') }}</p>
+                                <p class="mb-0"><strong>To:</strong> {{ implode(', ', json_decode($record->to, true)) }}</p>
+                                <p class="mb-0"><strong>CC:</strong> {{ implode(', ', json_decode($record->cc, true) ?? []) }}</p>
+                                <p class="mb-0"><strong>Tanggal Dikirim:</strong> {{ \Carbon\Carbon::parse($record->created_at)->format('d M Y H:i') }}</p>
+                                <p class="mb-0"><strong>Dibuat:</strong> {{ $record->user ? $record->user->name : '-' }}</p>
                             </div>
                         </div>
                     @endforeach
 
                     <!-- Pagination -->
                     <div class="d-flex justify-content-center mt-3">
-                        {{ $bastEmailRecords->links() }}
+                        {{ $bastEmailRecords->withQueryString()->links('vendor.pagination.bootstrap-4') }}
                     </div>
                 @else
                     <p class="text-center">Belum ada riwayat email yang dikirim.</p>

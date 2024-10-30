@@ -510,11 +510,11 @@ class BastController extends Controller
             // Simpan record ke database
             $bastEmailRecord = new BastEmailRecord();
             $bastEmailRecord->bast_id = $bast->id;
+            $bastEmailRecord->user_id = Auth::user()->id;
             $bastEmailRecord->to = json_encode($request->to);
             $bastEmailRecord->cc = json_encode($request->cc);
             $bastEmailRecord->subject = $request->subject;
             $bastEmailRecord->content = $request->content;
-            $bastEmailRecord->bast_file_merge_id = $request->fileMergeChoice;
             $bastEmailRecord->save();
 
             return redirect()->back()->with('successEmail', true);
