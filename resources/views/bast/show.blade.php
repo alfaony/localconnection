@@ -29,7 +29,7 @@
 </div>
 <div class="row mt-3">
     <div class="col-md-7">
-        <div class="card">
+        <div class="card  h-100">
             <div class="card-header">
                 <h3 class="card-title">Detail BAST</h3>
             </div>
@@ -51,10 +51,11 @@
                 <div class="row mb-4">
                     <div class="col-md-12">
                     <label for="">Preview PDF BAST (Latest Merge)</label>
-                    @if ($fileMergesChooice->isNotEmpty())
+                    @if ($bast->file_merge_path)
+
                         <!-- Display the latest merged PDF -->
-                        <iframe src="{{ Storage::url($fileMergesChooice->first()->path) }}" 
-                                style="width: 100%; height: 600px; border: 1px solid #ccc;" 
+                        <iframe src="{{ Storage::url($bast->file_merge_path) }}" 
+                                style="width: 100%; height: 900px; border: 1px solid #ccc;" 
                                 frameborder="0">
                         </iframe>
                     @else
@@ -70,55 +71,8 @@
                 </div>
             </div>
         </div>
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Riwayat File</h3>
-                <form method="post" action="{{ route('bast.merge', $bast->slug) }}">
-                    @method('PUT')
-                    @csrf
-                    <button class="btn btn-primary float-right"><i class="fas fa-sync-alt"></i> Perbarui File</button>
-                    <!-- <a href="{{ route('bast.showPdf', $bast->slug) }}" class="btn btn-primary float-right" target="_blank" onclick="setTimeout(function(){ window.location.reload(); }, 1000);">
-                        <i class="fas fa-sync-alt"></i> Perbarui File
-                    </a> -->
-                </form>
-            </div>
-            <div class="card-body">
-                @if ($fileMerges->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Version</th>
-                                    <th>Created At</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($fileMerges as $merge)
-                                <tr>
-                                    <td>{{ $merge->version }}</td>
-                                    <td>{{ $merge->created_at->format('d M Y H:i') }}</td>
-                                    <td>
-                                        <a href="{{ Storage::url($merge->path) }}" class="btn btn-sm btn-primary" target="_blank">
-                                            View
-                                        </a>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination Links -->
-                    <div class="d-flex justify-content-center mt-3">
-                        {{ $fileMerges->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-                    </div>
-                @else
-                    <p class="text-muted">No merged files available.</p>
-                @endif
-            </div>
-        </div>
     </div>
+    @canAccess('sendBastEmail','basts')
     <div class="col-md-5">
         <!-- Email Form -->
         <div class="card">
@@ -153,15 +107,6 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="fileMergeChoice">Pilih File:</label>
-                        <select name="fileMergeChoice" class="form-control selectNonMultiple2" required>
-                            <option value="" disabled selected>Pilih file</option>
-                            @foreach ($fileMergesChooice as $merge)
-                                <option value="{{ $merge->id }}">{{"version - ".$merge->version }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label for="subject">Subject:</label>
                         <input type="text" name="subject" class="form-control" placeholder="Masukkan subject email">
                     </div>
@@ -169,7 +114,7 @@
                         <label for="content">Isi:</label>
                         <input class="thriveEditor form-control" id="description_content" data-ids="content" name="content" rows="3" placeholder="yang akan dicetak di perjanjian"/>
                     </div>
-                    <button type="submit" class="btn btn-primary">Kirim Email</button>
+                    <button type="submit" class="btn btn-primary" onclick="this.form.submit(); this.disabled = true;">Kirim Email</button>
                 </form>
             </div>
         </div>
@@ -201,6 +146,7 @@
             </div>
         </div>
     </div>
+    @endcanAccess
 </div>
 @endsection
 

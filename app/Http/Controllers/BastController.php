@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 use App\Helpers\Access;
 use App\Helpers\InboxHelper;
@@ -90,28 +91,44 @@ class BastController extends Controller
      */
     public function store(BastRequest $request)
     {
-        $bast = new Bast();
-        $project = Project::byCompany(Auth::user()->company_id)->where('id',$request->post('project'))->firstOrFail();
+        DB::beginTransaction();
+        try {
+            $bast = new Bast();
+            $project = Project::byCompany(Auth::user()->company_id)->where('id',$request->post('project'))->firstOrFail();
+    
+    
+            $number = $this->bastNumber();
+    
+            $bast->date = $request->input('date');
+            $bast->basts_number = $number['number'];
+            $bast->number_result = $number['result'];
+            $bast->work_order_id = $project->work_order_id;
+            $bast->project_id = $request->input('project');
+            $bast->number_purchase = $request->input('number_purchase');
+            $bast->pic = $request->input('pic');
+            $bast->customer_signature = $request->input('customer_signature');
+    
+            $bast->user_created_id = Auth::user()->id;
+            $bast->user_updated_id = Auth::user()->id;
+            
+            $bast->save();
+            $this->updateBudget($project->work_order_id, $request->input('project'));
+    
+            if($bast->project->reportProject)
+            {
+                $mergedFilePath = $this->mergePdfFiles($bast, $bast->project->reportProject);
+            }
 
+            DB::commit();
+            return redirect()->to(route('bast.show',$bast->slug))->with('store', true);
+        } catch (\Throwable $th) {
+            //throw $th;
+            // dd($th);
+            DB::rollBack();
+            \Log::error($th);
+            return redirect()->back()->with('store', false);
+        }
 
-        $number = $this->bastNumber();
-
-        $bast->date = $request->input('date');
-        $bast->basts_number = $number['number'];
-        $bast->number_result = $number['result'];
-        $bast->work_order_id = $project->work_order_id;
-        $bast->project_id = $request->input('project');
-        $bast->number_purchase = $request->input('number_purchase');
-        $bast->pic = $request->input('pic');
-        $bast->customer_signature = $request->input('customer_signature');
-
-        $bast->user_created_id = Auth::user()->id;
-        $bast->user_updated_id = Auth::user()->id;
-        
-        $bast->save();
-        $this->updateBudget($project->work_order_id, $request->input('project'));
-
-        return redirect()->to(route('bast.download.pdf',$bast->slug))->with('store', true);
     }
 
 
@@ -146,24 +163,24 @@ class BastController extends Controller
     /**
      * Show PDF
      */
-    public function showPdf($slug)
-    {
-        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->get();
-        $project = Project::byCompany(Auth::user()->company_id)->get();
-        $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value', 'field_title');
+    // public function showPdf($slug)
+    // {
+    //     $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->get();
+    //     $project = Project::byCompany(Auth::user()->company_id)->get();
+    //     $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value', 'field_title');
 
-        $bast = Bast::where('slug', $slug)->first();
-        $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
-        $nomorBast = $bast->number_result ?? '';
-        $today = Carbon::now()->format('d M Y');
+    //     $bast = Bast::where('slug', $slug)->first();
+    //     $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
+    //     $nomorBast = $bast->number_result ?? '';
+    //     $today = Carbon::now()->format('d M Y');
 
-        $pdf = PDF::loadView('bast.pdf_download', compact(
-            'nomorBast', 'workOrder', 'userCreate', 'project', 'bast', 'today', 'company'
-        ));
+    //     $pdf = PDF::loadView('bast.pdf_download', compact(
+    //         'nomorBast', 'workOrder', 'userCreate', 'project', 'bast', 'today', 'company'
+    //     ));
         
-        $filename = str_replace('/', '_', $nomorBast);
-        return $pdf->stream("BAST_{$filename}.pdf");
-    }
+    //     $filename = str_replace('/', '_', $nomorBast);
+    //     return $pdf->stream("BAST_{$filename}.pdf");
+    // }
     /**
      * Show the form for editing the specified resource.
      *
@@ -240,19 +257,33 @@ class BastController extends Controller
         $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $project = Project::byCompany(Auth::user()->company_id)->where('id',$request->post('project'))->firstOrFail();
         
-        $bast->date = $request->input('date');
-        $bast->work_order_id = $project->work_order_id;
-        $bast->project_id = $request->input('project');
-        $bast->number_purchase = $request->input('number_purchase');
-        $bast->pic = $request->input('pic');
-        $bast->customer_signature = $request->input('customer_signature');
-
-        $bast->user_updated_id = Auth::user()->id;
-
-        $bast->save();
-        $this->updateBudget($project->work_order_id, $request->input('project'));
-        
-        return redirect()->to(route('bast.download.pdf',$bast->slug))->with('update', true);
+        DB::beginTransaction();
+        try {
+            $bast->date = $request->input('date');
+            $bast->work_order_id = $project->work_order_id;
+            $bast->project_id = $request->input('project');
+            $bast->number_purchase = $request->input('number_purchase');
+            $bast->pic = $request->input('pic');
+            $bast->customer_signature = $request->input('customer_signature');
+    
+            $bast->user_updated_id = Auth::user()->id;
+    
+            $bast->save();
+            $this->updateBudget($project->work_order_id, $request->input('project'));
+            if($bast->project->reportProject)
+            {
+                $mergedFilePath = $this->mergePdfFiles($bast, $bast->project->reportProject);
+            }
+            
+            DB::commit();
+            return redirect()->to(route('bast.show',$bast->slug))->with('update', true);
+        } catch (\Throwable $th) {
+            //throw $th;
+            // dd($th);
+            DB::rollBack();
+            Log::error($th->getMessage());
+            return redirect()->back()->with('update',false);
+        }
     }
 
     /**
@@ -293,17 +324,17 @@ class BastController extends Controller
         $actionButtons = [
         ];
 
-        if(Access::can('downloadPdf','basts'))
-        {
-            $pdf = 
-            [
-                'name' => 'Pdf',
-                'route' => 'bast.download.pdf',
-                'id' => true,
-            ];
+        // if(Access::can('downloadPdf','basts'))
+        // {
+        //     $pdf = 
+        //     [
+        //         'name' => 'Pdf',
+        //         'route' => 'bast.download.pdf',
+        //         'id' => true,
+        //     ];
 
-            array_push($actionButtons,$pdf);
-        }
+        //     array_push($actionButtons,$pdf);
+        // }
 
         if(Access::can('show','basts'))
         {
@@ -422,21 +453,20 @@ class BastController extends Controller
             'to.*' => 'email',
             'cc' => 'nullable|array',
             'cc.*' => 'email',
-            'fileMergeChoice' => 'required|exists:bast_file_merges,id',
             'subject' => 'required|string',
             'content' => 'required|string',
         ]);
 
         try {
             // Retrieve the BAST and the selected merged file
+            $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            
             $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
 
-            $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-            $fileMerge = BastFileMerge::findOrFail($request->fileMergeChoice);
 
             // Retrieve the file path and ensure it exists
-            $filePath = Storage::path($fileMerge->path);
-            if (!Storage::exists($fileMerge->path)) {
+            $filePath = Storage::path($bast->file_merge_path);
+            if (!Storage::exists($bast->file_merge_path)) {
                 return redirect()->back()->with('error', 'Selected file does not exist.');
             }
 
@@ -496,49 +526,47 @@ class BastController extends Controller
     }
 
     // Main controller method
-    public function merge($slug)
-    {
-        try {
-            // Get BAST by company and slug
-            $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-            $reportProject = $bast->project->reportProject;
+    // private function merge($bast)
+    // {
+    //     try {
+    //         // Get BAST by company and slug
+    //         $reportProject = $bast->project->reportProject;
 
-            if (!$reportProject) {
-                return redirect()->back()->with('error', 'Report Project not found.');
-            }
+    //         if (!$reportProject) {
+    //             throw new \Exception('No report project found for the selected BAST.');
+    //         }
 
-            // Call the private method to handle PDF merging
-            $mergedFilePath = $this->mergePdfFiles($bast, $reportProject);
+    //         // Call the private method to handle PDF merging
+    //         $mergedFilePath = $this->mergePdfFiles($bast, $reportProject);
 
-            if ($mergedFilePath) {
-                // Save record to bast_file_merges table
-                $latestVersion = BastFileMerge::where('bast_id', $bast->id)->max('version');
-                $newVersion = $latestVersion ? $latestVersion + 1 : 1;
+    //         if ($mergedFilePath) 
+    //         {
+    //             // Save record to bast_file_merges table
 
-                BastFileMerge::create([
-                    'bast_id' => $bast->id,
-                    'version' => $newVersion,
-                    'path' => $mergedFilePath,
-                ]);
+    //             return true;
+    //         }
 
-                return redirect()->back()->with('update', true);
-            }
+    //         return false;
 
-            return redirect()->back()->with('error', 'Failed to merge PDF files.');
-
-        } catch (\Exception $e) {
-            \Log::error('Failed to merge PDFs for BAST: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'An error occurred while merging PDF files.');
-        } catch (\Throwable $th) {
-            \Log::error('Unexpected error in PDF merging: ' . $th->getMessage());
-            return redirect()->back()->with('error', 'An unexpected error occurred.');
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to merge PDFs for BAST: ' . $e->getMessage());
+    //         return redirect()->back()->with('error', 'An error occurred while merging PDF files.');
+    //     } catch (\Throwable $th) {
+    //         \Log::error('Unexpected error in PDF merging: ' . $th->getMessage());
+    //         return redirect()->back()->with('error', 'An unexpected error occurred.');
+    //     }
+    // }
 
     // Private function to merge PDF files
     private function mergePdfFiles($bast, $reportProject)
     {
         try {
+            // Check if a file already exists and delete it before updating
+            if (!empty($bast->file_merge_path) && Storage::exists($bast->file_merge_path)) 
+            {
+                Storage::delete($bast->file_merge_path);
+            }
+            
             // Initialize an array to store PDF file paths
             $pdfFiles = [];
 
@@ -551,7 +579,6 @@ class BastController extends Controller
                     $pdfFiles[] = $filePath;
                 }
             }
-
             // Generate a new PDF from the 'bast.pdf_download' view
             $today = Carbon::now()->format('d M Y');
             $additionalPdf = PDF::loadView('bast.pdf_download', compact('bast', 'today'));
@@ -606,8 +633,10 @@ class BastController extends Controller
             // Delete temporary files
             Storage::delete($tempFilePath);
 
-            return $finalFilePath;
+            $bast->file_merge_path = $finalFilePath;
+            $bast->save();
 
+            return true;
         } catch (\Exception $e) {
             \Log::error('Error in merging PDF files: ' . $e->getMessage());
             return false;
