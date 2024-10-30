@@ -62,7 +62,6 @@ class Handler extends ExceptionHandler
     // discrod
     public function discordLog($data)
     {
-        return $data;
         $status_colors = [
             'emergency' => '15548997',
             'alert' => '15418782',
@@ -90,9 +89,9 @@ class Handler extends ExceptionHandler
             ]
         ];
 
-        // $response = Http::post(config('services.discord.webhook_url'), $request);
+        $response = Http::post(config('services.discord.webhook_url'), $request);
 
-        // return $response->successful();
+        return $response->successful();
     }
 
     public function render($request, Throwable $exception)
