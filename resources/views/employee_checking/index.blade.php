@@ -40,6 +40,7 @@
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary">Filter</button>
+                <button type="button" class="btn btn-secondary ml-2" onclick="window.location.href='{{ route('employee-checking.index') }}'">Reset</button>
             </div>
         </form>
     </div>
