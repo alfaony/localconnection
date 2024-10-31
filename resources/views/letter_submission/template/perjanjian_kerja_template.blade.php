@@ -235,7 +235,7 @@
             <div class="col-12 mt-3">
                 <div class="row">
                     <p class="text-justify">
-                        Pengangkatan ini berlaku efektif sejak di tanda-tangani, pegawai yang dipromosikan akan menduduki posisi Personal Assistant dalam perusahaan. Dan tunduk pada Undang - Undang Perusahaan Terbatas, Nomor 40 tahun 2007 yang mengikatkan kewenangan dan tanggung jawabnya.
+                        Pengangkatan ini berlaku efektif sejak di tanda-tangani, pegawai yang dipromosikan akan menduduki posisi {{ isset($positionNew)? $positionNew->name : "" }} dalam perusahaan. Dan tunduk pada Undang - Undang Perusahaan Terbatas, Nomor 40 tahun 2007 yang mengikatkan kewenangan dan tanggung jawabnya.
                     </p>
                 </div>
             </div>
