@@ -20,6 +20,7 @@ class LetterSubmissionRequest extends FormRequest
             'start_date' => 'nullable|date', // Tanggal bersifat nullable
             'end_date' => 'nullable|date|after_or_equal:start_date', // Tanggal akhir nullable dan harus >= tanggal mulai
             'letter_type_id' => 'required|uuid|exists:letter_types,id', // UUID harus ada di tabel letter_types
+            'file' => 'nullable|file|max:5000'
         ];
     }
 
@@ -35,6 +36,7 @@ class LetterSubmissionRequest extends FormRequest
             'start_date.date' => 'Kolom Tanggal Mulai harus berupa tanggal yang valid.',
             'end_date.date' => 'Kolom Tanggal Selesai harus berupa tanggal yang valid.',
             'end_date.after_or_equal' => 'Kolom Tanggal Selesai harus sama atau setelah Tanggal Mulai.',
+            'file.max' => 'Ukuran file maksimal adalah 5MB.',
         ];
     }
 }
