@@ -48,6 +48,7 @@
                 <div class="col-md-12">
                 <p>Bersamaan dengan surat pernyataan ini, pekerjaan dengan nomor purchase order diatas dengan rincian pekerjaan:</p>
                 <p><strong>{{ $bast->project ? $bast->project->title : '' }}</strong></p>
+                <p><b>{{ $bast->period ? "periode ".$bast->period : '' }}</b></p>
                 <p>Telah diselesaikan dengan baik. Laporan bisa di unduh di link berikut ini</p>
                 <ul>
                     @if($bast->project)
