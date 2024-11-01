@@ -35,9 +35,25 @@
         .noMargin {
             margin: 0;
         }
+        header {
+            /* position: fixed; */
+            /* top: 0cm; */
+            /* left: 0cm; */
+            /* right: 0cm; */
+            /* height: 6cm; */
+            /* margin-right: 2cm; */
+            /* margin-left: 1cm; */
+        }
     </style>
 </head>
 <body>
+    <header>
+        <div class="row">
+            <div class="col-md-12">
+                <img src="{{ public_path('storage/' . $company['header']) }}" alt="Company Logo" class="img-fluid">
+            </div>
+        </div>
+    </header>
     <div class="card" id="printThis">
         <div class="card-body" id="printItem">
             <div class="row">
@@ -74,6 +90,7 @@
                 <div class="col-md-12">
                     <p>Bersamaan dengan surat pernyataan ini, pekerjaan dengan nomor purchase order diatas dengan rincian pekerjaan:</p>
                     <p><strong>{{ $bast->project ? $bast->project->title : '' }}</strong></p>
+                    <p><strong>{{ $bast->period ? "Period ".$bast->period : '' }}</strong></p>
                     <p>Telah diselesaikan dengan baik. Laporan bisa di unduh di link berikut ini</p>
                     <ul>
                         @if($bast->project && $bast->project->reportProject && $bast->project->reportProject->reportedDetails)
