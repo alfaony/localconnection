@@ -56,6 +56,7 @@ class CompanyController extends Controller
     
             $fieldProfile = ['name' => $request->post('company_pt'),'director'=> $request->post('director'),'address' => $request->post('address'),'npwp_number' => $request->post('npwp_number'),'currency'=>'','currency_usd'=>"",'nib_file'=>'','acta_file'=> '','npwp_file' => '','signature_file' => '','template_perjanjian' => $request->post('template_perjanjian')];
             $fieldEmail = ['clock_in' => '08:00','reward_point_conversion' => '500','late_point'=>-10,'on_time_poin'=>0,'host' => '','port' => '','username' => '','password' => '','encryption'=> '','sent_time'=>'','sent_time_status'=>''];
+            $fieldHeadLetter = ['header' => '', 'footer' => ''];
     
             foreach ($fieldProfile as $key => $value) 
             {
@@ -67,6 +68,15 @@ class CompanyController extends Controller
             }
 
             foreach ($fieldEmail as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldHeadLetter as $key => $value) 
             {
                 $field = new SettingCompany();
                 $field->user_id = $user->id;
