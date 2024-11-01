@@ -108,6 +108,7 @@ class BastController extends Controller
             $bast->pic = $request->input('pic');
             $bast->customer_signature = $request->input('customer_signature');
             $bast->period = $request->input('period');
+    
             $bast->user_created_id = Auth::user()->id;
             $bast->user_updated_id = Auth::user()->id;
             
@@ -129,25 +130,6 @@ class BastController extends Controller
             return redirect()->back()->with('store', false);
         }
 
-        $number = $this->bastNumber();
-
-        $bast->date = $request->input('date');
-        $bast->basts_number = $number['number'];
-        $bast->number_result = $number['result'];
-        $bast->work_order_id = $project->work_order_id;
-        $bast->project_id = $request->input('project');
-        $bast->number_purchase = $request->input('number_purchase');
-        $bast->pic = $request->input('pic');
-        $bast->customer_signature = $request->input('customer_signature');
-        $bast->period = $request->input('period');
-
-        $bast->user_created_id = Auth::user()->id;
-        $bast->user_updated_id = Auth::user()->id;
-        
-        $bast->save();
-        $this->updateBudget($project->work_order_id, $request->input('project'));
-
-        return redirect()->to(route('bast.download.pdf',$bast->slug))->with('store', true);
     }
 
 

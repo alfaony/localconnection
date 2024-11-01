@@ -68,32 +68,87 @@
             </div>
             <div class="mt-5">
                 <div class="row">
-                    <div class="offset-1 col-3">
-                        <span style="margin-bottom: 0;">TTD</span>
+                    <div class="col-md-12 text-center">
+                    <h1>Berita Acara Serah Terima</h1>
+                    <p>No. {{ $bast->number ?? '' }}</p>
                     </div>
-                    <div class="offset-5 text-left">
-                        <p>Diterima,</p>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                    <table class="table table-bordered">
+                        <tr>
+                        <th>Nomor</th>
+                        <td>{{ $bast->number }}</td>
+                        </tr>
+                        <tr>
+                        <th>Tanggal</th>
+                        <td>{{ $today  ?? ''}}</td>
+                        </tr>
+                        <tr>
+                        <th>No. Purchase Order</th>
+                        <td>{{ $bast->number_purchase ?? '' }}</td>
+                        </tr>
+                        <tr>
+                        <th>Penanggung Jawab</th>
+                        <td>
+                            {{ $bast->pic ?? '' }}
+                        </td>
+                        </tr>
+                        <tr>
+                        <th>Perusahaan</th>
+                        <td>{{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</td>
+                        </tr>
+                    </table>
                     </div>
-                    
-                    <div class="offset-1 col-2 mb-3 mt-3" id="space">
-                        <img src="{{ asset('logo/paraf.png') }}" alt="Signature" style="with:auto; height:150px">
-                    </div>
-                    <div class="col-8">
-
-                    </div>
-
-                    <div class="offset-1 col-3">
-                        {{ $company['director'] ?? '' }}
-                    </div>
-                    <div class="offset-5 text-left">
-                        @if($bast->customer_signature == \App\Schemas\ParamSchema::PENANGGUNGJAWAB)
-                        <p class="noMargin">{{ $bast->pic ?? '' }}</p>
-                        @else
-                        <p class="noMargin">{{ $bast->workOrder ? $bast->workOrder->quote->customer->{$bast->customer_signature} : '' }}</p>
+                    <div class="col-md-12">
+                    <p>Bersamaan dengan surat pernyataan ini, pekerjaan dengan nomor purchase order diatas dengan rincian pekerjaan:</p>
+                    <p><strong>{{ $bast->project ? $bast->project->title : '' }}</strong></p>
+                    <p>Telah diselesaikan dengan baik. Laporan bisa di unduh di link berikut ini</p>
+                    <ul>
+                        @if($bast->project)
+                        @if($bast->project->reportProject->reportProjectDetail)
+                        @php $detail = $bast->project->reportProject->reportedDetails; @endphp
+                        @foreach($detail as $a)
+                        <li>
+                            {{ $a->name .' - ' }}  <a href="{{ $a->url }}" class="text-primary">{{ $a->url }}</a>
+                        </li>
+                        @endforeach
                         @endif
+                        @endif
+                    </ul>
+                    <ul>
+                    </ul>
                     </div>
-                    <div class="offset-9 text-left">
-                        <p>{{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</p>
+                </div>
+                <div class="mt-5">
+                    <div class="row">
+                        <div class="offset-1 col-3">
+                            <span style="margin-bottom: 0;">TTD</span>
+                        </div>
+                        <div class="offset-5 text-left">
+                            <p>Diterima,</p>
+                        </div>
+                        
+                        <div class="offset-1 col-2 mb-3 mt-3" id="space">
+                            <img src="{{ asset('logo/paraf.png') }}" alt="Signature" style="with:auto; height:150px">
+                        </div>
+                        <div class="col-8">
+    
+                        </div>
+    
+                        <div class="offset-1 col-3">
+                            {{ $company['director'] ?? '' }}
+                        </div>
+                        <div class="offset-5 text-left">
+                            @if($bast->customer_signature == \App\Schemas\ParamSchema::PENANGGUNGJAWAB)
+                            <p class="noMargin">{{ $bast->pic ?? '' }}</p>
+                            @else
+                            <p class="noMargin">{{ $bast->workOrder ? $bast->workOrder->quote->customer->{$bast->customer_signature} : '' }}</p>
+                            @endif
+                        </div>
+                        <div class="offset-9 text-left">
+                            <p>{{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -153,6 +208,15 @@
         {
             margin-left : 50px;
             margin-right : 50px;
+        }
+        .container, #printThis 
+        {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        #printItem {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
         }
     }
    body 
