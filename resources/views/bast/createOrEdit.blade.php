@@ -63,7 +63,7 @@
                 <hr>
                 <div class="form-group">
                     <label for="pilihDataProyek" class="form-label">Periode</label>
-                    <input type="text" class="form-control" name="period" id="period" placeholder="Periode" value="{{ old('periode') ?? @$bast->periode }}" required>
+                    <input type="text" class="form-control" name="period" id="period" placeholder="Periode" value="{{ old('periode') ?? @$bast->periode }}">
                 </div>
                 <div class="form-group">
                     <label for="purchaseOrder" class="form-label">No. Purchase Order</label>
