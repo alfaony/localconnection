@@ -102,12 +102,14 @@
     </style>
 </head>
 <body>
+    @if(!empty($company['header']) && !empty($company['footer']))
     <header>
         <img src="{{ public_path('storage/' . $company['header']) }}" alt="Company Logo" class="header-image" style="margin-bottom: 150px">
     </header>
     <footer>
         <img src="{{ public_path('storage/' . $company['footer']) }}" alt="Company Footer" class="footer-image">
     </footer>
+    @endif
     
     <div class="content">
         <div class="card" id="printThis">
