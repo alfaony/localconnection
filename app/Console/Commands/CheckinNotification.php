@@ -36,6 +36,7 @@ class CheckinNotification extends Command
         $employeeCheckings = EmployeeChecking::where('is_active', true)
             ->where('is_completed', false)
             ->whereDate('scheduled_time', Carbon::today()) // Memfilter hanya jadwal check-in untuk hari ini
+            ->whereTime('scheduled_time', Carbon::now()->tz('Asia/Jakarta')->format('H:i'))
             ->get();
 
         foreach ($employeeCheckings as $checkin) 

@@ -308,11 +308,13 @@
             <div class="modal-body">
                 <!-- Foto -->
                 <div id="globalPhotoSection" class="form-group" style="display: none; margin-top: 15px;">
-                    <span id="globalPhotoWarning" style="color: red; font-size: 15px;"></span>
-                    <input type="file" class="form-control" id="globalPhoto" accept="image/*" capture="environment" onchange="compressAndPreviewImageCheckin();" required>
-                    <small class="text-muted">Klik untuk mengambil foto menggunakan kamera.</small>
+                    <video id="globalVideoFeed" autoplay playsinline style="width: 100%; height: auto;"></video>
+                    <canvas id="globalCanvas" style="display:none;"></canvas>
+                    <button id="globalTakePhotoButton" class="btn btn-secondary mt-2" onclick="takeGlobalPhoto()">Take Photo</button>
                     <img id="globalPhotoPreview" src="#" alt="Photo Preview" style="display:none;" class="img-thumbnail mt-3">
+                    <input type="file" id="globalPhoto" name="photo" style="display: none;"> <!-- Hidden file input for form submission -->
                 </div>
+                <span id="globalPhotoWarning" style="color: red; font-size: 12px;"></span> <!-- Peringatan foto -->
 
                 <!-- Lokasi -->
                 <div id="globalLocationSection" class="form-group" style="display: none; margin-top: 15px;">
@@ -485,6 +487,8 @@
         const photoSection = document.getElementById('globalPhotoSection');
         const photoInput = document.getElementById('globalPhoto');
         if (requiresPhoto) {
+            openGlobalCamera();
+            
             photoSection.style.display = 'block';
             photoInput.setAttribute('required', 'required');
         } else {
@@ -695,6 +699,47 @@
             document.getElementById('globalLocationStatus').textContent = "Geolocation tidak didukung oleh browser ini.";
             document.getElementById('globalLocationStatus').style.color = 'red';
         }
+    }
+    function openGlobalCamera() 
+    {
+        const video = document.getElementById('globalVideoFeed');
+        
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                console.error("Error accessing camera: ", err);
+                alert("Could not access camera. Please allow camera access.");
+            });
+    }
+    
+    function takeGlobalPhoto() 
+    {
+        const video = document.getElementById('globalVideoFeed');
+        const canvas = document.getElementById('globalCanvas');
+        const photoInput = document.getElementById('globalPhoto');
+        const photoPreview = document.getElementById('globalPhotoPreview');
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+            const file = new File([blob], "checkin_photo.jpg", { type: "image/jpeg" });
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            photoInput.files = dataTransfer.files;
+
+            photoPreview.src = URL.createObjectURL(blob);
+            photoPreview.style.display = 'block';
+            video.style.display = 'none';
+            document.getElementById('globalTakePhotoButton').style.display = 'none';
+
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }, "image/jpeg", 0.7);
     }
 </script>
 @endif
