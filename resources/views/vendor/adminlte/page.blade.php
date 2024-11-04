@@ -5,6 +5,22 @@
 @section('adminlte_css')
     @stack('css')
     @yield('css')
+    <style>
+    .nav-link-email {
+        white-space: normal; /* Izinkan teks untuk membungkus ke baris baru */
+        display: block;      /* Membuat elemen span menjadi blok sehingga mudah membungkus */
+        word-wrap: break-word; /* Membungkus kata panjang ke baris berikutnya */
+    }
+
+    /* Responsive adjustment for smaller screens */
+    @media (max-width: 576px) {
+        .nav-link-email {
+            max-width: 100%; /* Mengisi lebar penuh pada layar kecil */
+        }
+    }
+</style>
+
+
 @stop
 
 @section('classes_body', $layoutHelper->makeBodyClasses())
@@ -44,10 +60,12 @@
         @endif
 
     </div>
+
+
 @stop
 
 @section('adminlte_js')
+    {{-- Include Firebase Initialization --}}
     @stack('js')
     @yield('js')
-    @include('inbox.inboxscript')
 @stop

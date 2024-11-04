@@ -48,6 +48,9 @@ class DivisionController extends Controller
         $division = Division::create([
             'user_id' => auth()->id(),
             'name' => $request->name,
+            'manual_checkin' => $request->has('manual_checkin') ? 1 : 0,
+            'requires_photo' => $request->has('requires_photo') ? 1 : 0,
+            'requires_location' => $request->has('requires_location') ? 1 : 0,
         ]);
 
         return redirect()->route('division.index')->with('success', 'Division Store successfully.');
@@ -145,6 +148,9 @@ class DivisionController extends Controller
 
         $division->update([
             'name' => $request->name,
+            'manual_checkin' => $request->has('manual_checkin') ? 1 : 0,
+            'requires_photo' => $request->has('requires_photo') ? 1 : 0,
+            'requires_location' => $request->has('requires_location') ? 1 : 0,
         ]);
 
         return redirect()->route('division.index')->with('success', 'Division updated successfully.');

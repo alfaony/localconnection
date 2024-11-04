@@ -165,14 +165,14 @@
                     <table style="width: 100%; text-align: center;">
                         <tr>
                             <td style="width: 50%; vertical-align: top;">
-                                <p style="margin-bottom: 20px;">TTD</p>
-                                <img src="{{ public_path('logo/paraf.png') }}" alt="Signature" style="width:auto; height:150px; margin-bottom: 10px;">
+                                <p style="margin-bottom: 10px;">TTD</p>
+                                <img src="{{ public_path('logo/paraf.png') }}" alt="Signature" style="width:auto; height:100px; margin-bottom: 10px;">
                                 <p>{{ $company['director'] ?? '' }}</p>
                             </td>
 
                             <td style="width: 50%; vertical-align: top;">
-                                <p style="margin-bottom: 20px;">Diterima,</p>
-                                <div style="margin: 90px 0;"></div>
+                                <p style="margin-bottom: 10px;">Diterima,</p>
+                                <div style="margin: 60px 0;"></div>
                                 @if($bast->customer_signature == \App\Schemas\ParamSchema::PENANGGUNGJAWAB)
                                     <p class="noMargin">{{ $bast->pic ?? '' }}</p>
                                 @else

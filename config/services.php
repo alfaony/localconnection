@@ -43,12 +43,29 @@ return [
         'messaging_sender_id' => env('FIREBASE_MESSAGING_SENDER_ID'),
         'app_id' => env('FIREBASE_APP_ID'),
         'service_account' => env('FIREBASE_SERVICE_ACCOUNT'),
-        'service_database_url' => env('FIREBASE_SERVICE_DATABASE_URL'),
+        'vapid_key' => env('FIREBASE_VAPID_KEY'),
+        'service_database_inbox_url' => env('FIREBASE_SERVICE_DATABASE_INBOX_URL'),
+        'service_database_checkin_url' => env('FIREBASE_SERVICE_DATABASE_CHECKIN_URL'),
     ],
 
     'device_iot_api' => [
         'url' => env('DEVICE_API_URL', 'https://iot.keloola.com/api/bos-device-list'),
+        'url_device_device' => env('DEVICE_URL_status', 'https://iot.keloola.com/api/bos-device-status'),
         'Authorization' => env('API_BEARER_TOKEN'),
     ],
+
+    'checking_setting' => 
+    [
+        'duration' => env('CHECKIN_DURATION', 120),
+        'duration_minutes' => env('CHECKIN_DURATION_MINUTES', 2),
+        'times' => env('CHECKIN_TIME', 10),
+    ],
+
+    'cuti_api' => 
+    [
+        'base_url' => env('CUTI_API_BASE_URL', 'https://hris.gemateknologi.com/CutiApi'),
+        'token' => env('CUTI_API_TOKEN'),
+    ],
+
     
 ];

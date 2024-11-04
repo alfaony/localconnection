@@ -20,7 +20,6 @@ use App\Models\Project;
 use App\Models\WorkOrder;
 use App\Models\SettingCompany;
 use App\Models\BastEmailRecord;
-use App\Models\BastFileMerge;
 
 use PDF;
 use setasign\Fpdi\Fpdi;
@@ -199,13 +198,6 @@ class BastController extends Controller
         ->orWhere('id',$bast->project_id)
         ->orderBy('created_at','desc')->get();
 
-        $fileMerges = BastFileMerge::where('bast_id', $bast->id)
-                                   ->orderBy('version', 'desc')
-                                   ->paginate(3);
-
-        $fileMergesChooice = BastFileMerge::where('bast_id', $bast->id)
-            ->orderBy('version', 'desc')->get();
-
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
         $nomorBast = $bast->number_result ?? '';
         $signature = config('custom.customerSignature');
@@ -218,7 +210,7 @@ class BastController extends Controller
         ->orderBy('created_at', 'desc')
         ->paginate(2);
 
-        return view('bast.show',compact('nomorBast','userCreate','project','bast','signature','workOrder','fileMerges','fileMergesChooice','bastEmailRecords'));
+        return view('bast.show',compact('nomorBast','userCreate','project','bast','signature','workOrder','bastEmailRecords'));
     }
 
     /**
@@ -267,7 +259,6 @@ class BastController extends Controller
             $bast->pic = $request->input('pic');
             $bast->customer_signature = $request->input('customer_signature');
             $bast->period = $request->input('period');
-            
             $bast->user_updated_id = Auth::user()->id;
     
             $bast->save();
@@ -441,7 +432,7 @@ class BastController extends Controller
         $inboxHelper->sent(
             $project->user_id, 
             Auth::user()->id, 
-            'Request Report for ' . $project->name, 
+            'Request Report for ' . $project->title, 
             $directUrl
         );
         
@@ -661,6 +652,7 @@ class BastController extends Controller
 
     /**
      * update total value SPK to budget project
+     * Update Budget
      */
     private function updateBudget($workOrderId,$projectId)
     {

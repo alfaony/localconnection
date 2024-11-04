@@ -59,7 +59,7 @@
                                 frameborder="0">
                         </iframe>
                     @else
-                        <p class="text-muted">No merged PDF available.</p>
+                        <p class="text-muted">No PDF available.</p>
                     @endif
                     </div>
                 </div>
@@ -80,6 +80,8 @@
                 <h3 class="card-title">Kirim Email</h3>
             </div>
             <div class="card-body">
+                <!-- Email Form -->
+                @if ($bast->file_merge_path)
                 <form action="{{ route('bast.sendEmail', $bast->slug) }}" method="POST">
                     @csrf
                     <div class="form-group">
@@ -116,6 +118,9 @@
                     </div>
                     <button type="submit" class="btn btn-primary" onclick="this.form.submit(); this.disabled = true;">Kirim Email</button>
                 </form>
+                @else
+                    <p class="text-muted">No PDF available.</p>
+                @endif
             </div>
         </div>
         <div class="card">

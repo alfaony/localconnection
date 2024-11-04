@@ -56,6 +56,8 @@ use App\Http\Controllers\InboxController;
 use App\Http\Controllers\LetterSubmissionController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\NationalHolidayController;
+use App\Http\Controllers\EmployeeCheckingController;
 use App\Http\Controllers\XeroController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\XeroWebhookController;
@@ -73,6 +75,8 @@ use App\Http\Controllers\XeroWebhookController;
 
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook']);
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
+
+
 
 Route::group(['middleware' => ['auth','web', 'XeroAuthenticated','role.permission']], function(){
   Route::get('xero',function(){
@@ -102,6 +106,8 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 Route::get('invoice/history/{slug}', [InvoiceController::class, 'history'])->name('invoices.history');
 
+Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');
+
 Route::group(['middleware' => ['auth','role.permission']], function()
 {
   // Xero Setting
@@ -114,6 +120,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   
   Route::get('user/profileEdit/{slug}', [UserController::class,'profileEdit'])->name('user.profileEdit');
   Route::put('user/profileUpdate/{slug}', [UserController::class,'profileUpdate'])->name('user.profileUpdate');
+  Route::post('user/updatefcm',[UserController::class,'updatefcm'])->name('user.updatefcm');
   Route::resource('user', UserController::class);
 
   Route::delete('suplier/deletePurchase/purchase/{purchase}',[SuplierController::class,'deletePurchase'])->name('suplier.destroy.purchase');
@@ -166,9 +173,10 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('report-project/downloadall/{slug}', [ReportProjectController::class, 'downloadall'])->name('report-project.downloadall');
   Route::get('report-project/createsuggest/{slug}', [ReportProjectController::class, 'createsuggest'])->name('report-project.createsuggest');
   Route::get('report-project/dataTableJsonWorkOrderWithoutReportProject', [ReportProjectController::class, 'dataTableJsonWorkOrderWithoutReportProject'])->name('report-project.dataTableJsonWorkOrderWithoutReportProject');
-  Route::delete('report-project/destroyDetail/{ReportProjectDetail}',[ReportProjectController::class,'destroyDetail'])->name('report-project.destroy.detail');
   Route::get('report-project/datatable', [ReportProjectController::class, 'dataTableJson'])->name('report-project.datatable');
-  Route::resource('report-project', ReportProjectController::class)->except(['show']);
+  Route::put('report-project/approvement/{slug}', [ReportProjectController::class, 'approvement'])->name('report-project.approvement');
+  Route::delete('report-project/destroyDetail/{ReportProjectDetail}',[ReportProjectController::class,'destroyDetail'])->name('report-project.destroy.detail');
+  Route::resource('report-project', ReportProjectController::class);
 
   Route::resource('setting-company', SettingCompanyController::class)->only('index','store');
   Route::resource('role', RoleController::class);
@@ -269,14 +277,18 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('position', PositionController::class);
   Route::get('device', [DeviceController::class,'index'])->name('device.index');
   Route::get('device/dataJson', [DeviceController::class, 'dataJson'])->name('device.dataJson');
+
+  Route::resource('national-holiday', NationalHolidayController::class)->only(['index','store','update','destroy']);
+  
+  Route::get('employee-checking/checkLastScheduledCheckin',[EmployeeCheckingController::class,'checkLastScheduledCheckin'])->name('employee-checking.checkLastScheduledCheckin');
+  Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
+  Route::resource('employee-checking', EmployeeCheckingController::class)->only(['index','update']);
   Route::post('bast/sendBastEmail/{slug}', [BastController::class, 'sendBastEmail'])->name('bast.sendEmail');;
 });
 
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
-
-
 
 Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');
 
