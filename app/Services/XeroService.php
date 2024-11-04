@@ -11,11 +11,13 @@ use App\Models\ApiLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Product;
+use Illuminate\Support\Facades\Session;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use App\Schemas\ParamSchema;
 
+use App\Services\XeroBos;
 class XeroService
 {
     /**
@@ -28,24 +30,34 @@ class XeroService
     /**
      * Constructor to initialize the XeroApp instance.
      */
-    public function __construct()
+    // public function __construct()
+    // {
+    //     $token = XeroToken::first();
+    //     if ($token) 
+    //     {
+    //         Xero::setTenantId($token->tenant_id);
+    //         if (Xero::isConnected()) 
+    //         {
+    //             Xero::getAccessToken($redirectWhenNotConnected = false);
+    //         }
+
+    //         $this->xero = new XeroApp(
+    //             new AccessToken(['access_token' => $token->access_token]),
+    //             $token->tenant_id
+    //         );
+
+    //     }
+    // }
+
+    protected function setXeroConfig()
     {
-        $token = XeroToken::first();
+        $xeroBos = new XeroBos();
+        dd($xeroBos);
+    }
 
-        if ($token) 
-        {
-            Xero::setTenantId($token->tenant_id);
-            if (Xero::isConnected()) 
-            {
-                Xero::getAccessToken($redirectWhenNotConnected = false);
-            }
-
-            $this->xero = new XeroApp(
-                new AccessToken(['access_token' => $token->access_token]),
-                $token->tenant_id
-            );
-
-        }
+    public function isConnected()
+    {
+        return true;
     }
 
     public function connect()

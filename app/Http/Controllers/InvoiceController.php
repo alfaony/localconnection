@@ -54,6 +54,8 @@ class InvoiceController extends Controller
         $status = $request->input('status');
         $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null; // Parse tanggal dari string ke Carbon
         $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
+        
+        $isConnect = $this->xeroService->isConnected();
 
         $invoice = Invoice::byCompany(Auth::user()->company_id)->byDateRange($start_date,$end_date)
         ->when($search, function ($query, $search) {
@@ -70,7 +72,7 @@ class InvoiceController extends Controller
 
         $searchByStatus = config('custom.status_invoice_search');
 
-        return view('invoice.index',compact('invoice','searchByStatus'));
+        return view('invoice.index',compact('invoice','searchByStatus','isConnect'));
     }
 
     /**

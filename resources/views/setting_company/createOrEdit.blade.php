@@ -230,6 +230,43 @@
                             </div>
                         </div>
                     </div>
+                    <div class="card">
+                        <div class="card-header" id="headingXero">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseXero" aria-expanded="true" aria-controls="collapseXero">
+                                    Xero Credential
+                                </button>
+                            </h2>
+                        </div>
+
+                        <div id="collapseXero" class="collapse" aria-labelledby="headingXero" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="client_id">Client ID</label>
+                                    <input type="text" name="client_id" class="form-control" value="{{ old('client_id', isset($data['client_id']) ? $data['client_id'] : '') }}">
+                                    @error('client_id')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+    
+                                <div class="form-group">
+                                    <label for="client_secret">Client Secret</label>
+                                    <input type="text" name="client_secret" class="form-control" value="{{ old('client_secret', isset($data['client_secret']) ? $data['client_secret'] : '') }}">
+                                    @error('client_secret')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+    
+                                <div class="form-group">
+                                    <label for="webhook_key">Webhook Key</label>
+                                    <input type="text" name="webhook_key" class="form-control" value="{{ old('webhook_key', isset($data['webhook_key']) ? $data['webhook_key'] : '') }}">
+                                    @error('webhook_key')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Simpan</button>
