@@ -228,13 +228,13 @@
 
     // Fungsi untuk menutup popup
     function closePopup() {
-        // const popup = document.getElementById('checkinPopup');
-        // const overlay = document.getElementById('overlay');
+        const popup = document.getElementById('checkinPopup');
+        const overlay = document.getElementById('overlay');
         
-        // popup.style.setProperty('display', 'none', 'important'); 
+        popup.style.setProperty('display', 'none', 'important'); 
 
-        // if (intervalId) clearInterval(intervalId); // Pastikan interval countdown dihentikan
-        // updateStatus(); // Panggil fungsi untuk memperbarui status di server
+        if (intervalId) clearInterval(intervalId); // Pastikan interval countdown dihentikan
+        updateStatus(); // Panggil fungsi untuk memperbarui status di server
     }
 
     // Fungsi untuk memperbarui status check-in di server (contoh)
