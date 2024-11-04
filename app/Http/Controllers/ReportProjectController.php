@@ -218,7 +218,7 @@ class ReportProjectController extends Controller
 
             
             $reportProject = ReportProject::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-            if(($reportProject->user_create_id == Auth::user()->id || $reportProject->user_updated_id == Auth::user()->id ) && $reportProject->is_approve === 0)
+            if($reportProject->user_create_id == Auth::user()->id || $reportProject->user_updated_id == Auth::user()->id )
             {
                 $reportProject->is_approve = NULL;
                 $this->sendNotification($reportProject, 'update', Auth::user()->company_id);
