@@ -32,7 +32,7 @@
                         <form method="POST" action="{{ $logout_url }}" >
                             @csrf
                             
-                            <a class="nav-link" href="#" onclick="event.preventDefault(); this.closest('form').submit();">
+                            <a class="nav-link" href="#" onclick="event.preventDefault(); logoutUser();">
                                 {{ 'Logout' }}
                             </a>
                         </form>

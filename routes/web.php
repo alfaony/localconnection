@@ -61,6 +61,7 @@ use App\Http\Controllers\EmployeeCheckingController;
 use App\Http\Controllers\XeroController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\XeroWebhookController;
+use App\Http\Controllers\LoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +77,7 @@ use App\Http\Controllers\XeroWebhookController;
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook']);
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 
 Route::group(['middleware' => ['auth','web', 'XeroAuthenticated','role.permission']], function(){
