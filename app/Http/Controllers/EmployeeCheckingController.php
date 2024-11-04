@@ -213,7 +213,7 @@ class EmployeeCheckingController extends Controller
 
         if ($source == 'manual_checkin') 
         {
-            $lastScheduledCheckin = EmployeeChecking::where('user_id', $employeeChecking->user_id)->where('scheduled_time', Carbon::today())->orderBy('updated_at', 'desc')->first();
+            $lastScheduledCheckin = EmployeeChecking::where('user_id', $employeeChecking->user_id)->whereDate('scheduled_time', Carbon::today())->orderBy('updated_at', 'desc')->first();
     
             if ($lastScheduledCheckin) 
             {
@@ -328,7 +328,7 @@ class EmployeeCheckingController extends Controller
         $user = Auth::user(); // Atau ambil user berdasarkan $userId
 
         if ($user) {
-            $lastScheduledCheckin = EmployeeChecking::where('user_id', $user->id)->where('scheduled_time', Carbon::today())->orderBy('updated_at', 'desc')->first();
+            $lastScheduledCheckin = EmployeeChecking::where('user_id', $user->id)->whereDate('scheduled_time', Carbon::today())->orderBy('updated_at', 'desc')->first();
     
             if ($lastScheduledCheckin) 
             {
