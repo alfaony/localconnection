@@ -14,6 +14,7 @@ class DeviceService
     public function fetchDevices($page = 1, $search = '')
     {
         $url = config('services.device_iot_api.url');
+        $status = config('services.device_iot_api.url_device_device');
         $token = config('services.device_iot_api.Authorization');
         $companyId = Auth::user()->company_id; // Assuming Auth::user() is available
 
@@ -59,6 +60,60 @@ class DeviceService
             ApiLog::create([
                 'user_id' => Auth::user()->id,
                 'endpoint' => $url,
+                'method' => 'GET',
+                'request_payload' => json_encode($queryParams),
+                'error_message' => $e->getMessage(),
+            ]);
+
+            // Optionally rethrow the exception if you want to handle it elsewhere
+            throw $e;
+        }
+    }
+
+    public function listDeviceOpen($companyId, $user)
+    {
+        $urlStatus = config('services.device_iot_api.url_device_device');
+        $token = config('services.device_iot_api.Authorization');
+
+        $queryParams = [
+            'company_id' => $companyId,
+        ];
+
+        try {
+            // Make the API request with pagination and search filters
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$token}",
+                'Accept'        => 'application/json',
+            ])->get($urlStatus, $queryParams);
+
+            // Log the successful request
+            ApiLog::create([
+                'user_id' => $user->id,
+                'endpoint' => $urlStatus,
+                'method' => 'GET',
+                'request_payload' => json_encode($queryParams),
+                'response_payload' => json_encode($response->json()),
+                'status_code' => $response->status(),
+            ]);
+
+            if ($response->successful()) {
+                return [
+                    'success'    => true,
+                    'devices'    => $response->json('data'),
+                ];
+            } else {    
+                return [
+                    'success' => false,
+                    'message' => 'Failed to fetch devices from API.',
+                    'status'  => $response->status()
+                ];
+            }
+            
+        } catch (\Exception $e) {
+            // Log the exception details
+            ApiLog::create([
+                'user_id' => $user->id,
+                'endpoint' => $urlStatus,
                 'method' => 'GET',
                 'request_payload' => json_encode($queryParams),
                 'error_message' => $e->getMessage(),

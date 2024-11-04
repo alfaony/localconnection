@@ -12,7 +12,7 @@ class Division extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['id', 'user_id', 'name'];
+    protected $fillable = ['id', 'user_id', 'name','requires_photo','requires_location','manual_checkin'];
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string

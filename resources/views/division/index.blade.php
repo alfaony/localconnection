@@ -13,7 +13,7 @@
 @endif
 <div class="card-body">
     @canAccess('store','divisions')
-    <button type="button" class="btn btn-info " data-toggle="modal" data-target="#createModal" ><i class="fa fa-plus"></i>Divisi</button>
+    <button type="button" class="btn btn-info" data-toggle="modal" data-target="#createModal"><i class="fa fa-plus"></i> Divisi</button>
     @endcanAccess
     
     <table class="table mt-3">
@@ -29,10 +29,10 @@
                 <td>{{ $division->name }}</td>
                 <td>
                     @canAccess('show','divisions')
-                    <a href="{{ route('division.show',$division->slug) }}" class="btn btn-success btn-sm"><i class="fa fa-eye"></i></a>
+                    <a href="{{ route('division.show', $division->slug) }}" class="btn btn-success btn-sm"><i class="fa fa-eye"></i></a>
                     @endcanAccess
                     @canAccess('edit','divisions')
-                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#editModal{{ $division->slug }}" ><i class="fa fa-edit"></i></button>
+                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#editModal{{ $division->slug }}"><i class="fa fa-edit"></i></button>
                     @endcanAccess
                     @canAccess('destroy','divisions')
                     <form action="{{ route('division.destroy', $division->slug) }}" method="POST" style="display:inline-block;">
@@ -61,6 +61,21 @@
                                 <div class="form-group">
                                     <label for="name">Nama</label>
                                     <input type="text" class="form-control" name="name" value="{{ $division->name }}" required>
+                                </div>
+                                <!-- Checkbox -->
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" name="manual_checkin" value="1" {{ $division->manual_checkin ? 'checked' : '' }}>
+                                        <label class="form-check-label">Manual Check-In</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" name="requires_photo" value="1" {{ $division->requires_photo ? 'checked' : '' }}>
+                                        <label class="form-check-label">Require Check-In Photo</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" name="requires_location" value="1" {{ $division->requires_location ? 'checked' : '' }}>
+                                        <label class="form-check-label">Required Check-In Location</label>
+                                    </div>
                                 </div>
                                 <button type="submit" class="btn btn-primary">Update</button>
                             </form>
@@ -92,6 +107,21 @@
                         <label for="name">Nama</label>
                         <input type="text" class="form-control" name="name" required>
                     </div>
+                    <!-- Checkbox -->
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="manual_checkin" value="1">
+                            <label class="form-check-label">Manual Check-In</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="requires_photo" value="1">
+                            <label class="form-check-label">Require Check-In Photo</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" name="requires_location" value="1">
+                            <label class="form-check-label">Required Check-In Location</label>
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-primary">Buat</button>
                 </form>
             </div>
@@ -100,6 +130,7 @@
 </div>
 </div>
 @endsection
+
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
@@ -110,6 +141,7 @@
     });
 </script>
 @endsection
+
 @section('css')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
