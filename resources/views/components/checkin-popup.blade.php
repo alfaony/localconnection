@@ -12,12 +12,14 @@
         </div>
 
         <!-- Foto (Muncul jika divisi memerlukan) -->
-        <div id="photoSection" class="form-group" style="display: none; margin-top: 15px;">
-            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" capture="environment" onchange="compressAndPreviewImageCheckin();" required>
-            <small class="text-muted">Klik untuk mengambil foto menggunakan kamera.</small>
-            <span id="photo-warning" style="color: red; font-size: 12px;"></span> <!-- Peringatan foto -->
+        <div id="photoSection" class="form-group" style="margin-top: 15px;">
+            <video id="videoFeed" autoplay playsinline style="width: 100%; height: auto;"></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <button id="takePhotoButton" class="btn btn-secondary mt-2" onclick="takePhoto()">Take Photo</button>
             <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-thumbnail mt-3">
+            <input type="file" id="photo" name="photo" style="display: none;"> <!-- Hidden file input for form submission -->
         </div>
+        <span id="photo-warning" style="color: red; font-size: 12px;"></span> <!-- Peringatan foto -->
 
         <!-- Share Location (Muncul jika divisi memerlukan) -->
         <div id="locationSection" class="form-group" style="display: none; margin-top: 15px;">
@@ -177,6 +179,8 @@
         {
             photoSection.style.display = 'block';
             photoInput.setAttribute('required', 'required');
+
+            openCamera();
         } else {
             photoSection.style.display = 'none';
             photoInput.removeAttribute('required');
@@ -224,13 +228,13 @@
 
     // Fungsi untuk menutup popup
     function closePopup() {
-        const popup = document.getElementById('checkinPopup');
-        const overlay = document.getElementById('overlay');
+        // const popup = document.getElementById('checkinPopup');
+        // const overlay = document.getElementById('overlay');
         
-        popup.style.setProperty('display', 'none', 'important'); 
+        // popup.style.setProperty('display', 'none', 'important'); 
 
-        if (intervalId) clearInterval(intervalId); // Pastikan interval countdown dihentikan
-        updateStatus(); // Panggil fungsi untuk memperbarui status di server
+        // if (intervalId) clearInterval(intervalId); // Pastikan interval countdown dihentikan
+        // updateStatus(); // Panggil fungsi untuk memperbarui status di server
     }
 
     // Fungsi untuk memperbarui status check-in di server (contoh)
@@ -241,6 +245,56 @@
 
     // Memantau data saat halaman dimuat
     window.onload = monitorCheckin;
+    // Buka popup dan aktifkan kamera secara otomatis
+
+    // Fungsi untuk membuka kamera
+    function openCamera() 
+    {
+        const video = document.getElementById('videoFeed');
+        
+        // Akses kamera dan tampilkan video feed
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                console.error("Error accessing camera: ", err);
+                alert("Could not access camera. Please allow camera access.");
+            });
+    }
+
+    // Fungsi untuk mengambil foto saat tombol "Take Photo" ditekan
+    function takePhoto() {
+        const video = document.getElementById('videoFeed');
+        const canvas = document.getElementById('canvas');
+        const photoInput = document.getElementById('photo');
+        const photoPreview = document.getElementById('photo-preview');
+        
+        // Ambil foto dari video feed
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Konversi canvas ke Blob dan tampilkan preview
+        canvas.toBlob((blob) => {
+            const file = new File([blob], "checkin_photo.jpg", { type: "image/jpeg" });
+
+            // Simpan file ke input type="file" agar bisa dikirim bersama form
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            photoInput.files = dataTransfer.files;
+
+            // Tampilkan preview gambar dan hentikan video feed
+            photoPreview.src = URL.createObjectURL(blob);
+            photoPreview.style.display = 'block';
+            video.style.display = 'none';
+            document.getElementById('takePhotoButton').style.display = 'none';
+
+            // Hentikan stream kamera setelah foto diambil
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }, "image/jpeg", 0.7);
+    }
 
     function getLocationNow() 
    {
