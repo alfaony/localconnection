@@ -31,6 +31,7 @@ class DeactivateCheckin extends Command
     {
         // Fetch all active check-ins that are scheduled for today and are not completed
         $employeeCheckings = EmployeeChecking::whereDate('scheduled_time', Carbon::today()) // Filter for today's scheduled check-ins
+            ->whereTime('scheduled_timeout', Carbon::now()->tz('Asia/Jakarta')->format('H:i'))
             ->get();
 
         foreach ($employeeCheckings as $checkin) 
