@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 use App\Schemas\RoleSchema;
 
 use App\Http\Requests\UserRequest;
@@ -14,9 +15,10 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Company;
 use App\Models\Division;
+use App\Models\UserStatus;
 
 use App\Rules\MatchOldPassword;
-
+use Carbon\Carbon;
 class UserController extends Controller
 {
     /**
@@ -207,12 +209,14 @@ class UserController extends Controller
     public function profileEdit($slug)
     {
         $userEdit = User::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        $userApps = UserStatus::where('user_id', $userEdit->id)->orderby('last_scheduled_checkin','desc')->paginate(5);
 
+        
         if($userEdit->id != Auth::user()->id)
         {
             return redirect()->back();
         }
-        return view('user.edit', compact('userEdit'));
+        return view('user.edit', compact('userEdit','userApps'));
     }
 
     /**
@@ -281,21 +285,33 @@ class UserController extends Controller
         ]);
 
         // Dapatkan user yang sedang login
-        $user = Auth::user();
-
-        // Update fcm_id pada user_status terkait
-        if ($user->status) {
-            $user->status->update([
-                'fcm_id' => $request->token,
-            ]);
-        } else {
-            // Jika UserStatus belum ada, buat satu dan simpan fcm_id
-            $user->status()->create([
-                'fcm_id' => $request->token,
-            ]);
+        try 
+        {
+            $user = Auth::user();
+            $userStatus = UserStatus::where('user_id', $user->id)->where('fcm_id', $request->token)->first();
+    
+            if (!$userStatus) 
+            {
+                $userStatus = new UserStatus();
+                $userStatus->user_id = $user->id;
+                $userStatus->browser_name = $request->browser_name;
+                $userStatus->fcm_id = $request->token;
+                $userStatus->is_online = 1;
+                $userStatus->last_login_at = Carbon::now();
+            } else {
+                $userStatus->browser_name = $request->browser_name;
+                $userStatus->fcm_id = $request->token;
+                $userStatus->is_online = 1;
+                $userStatus->last_login_at = Carbon::now();
+            }
+            $userStatus->save();
+            
+            return response()->json(['message' => 'FCM ID updated successfully.'], 200);
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th);
+            return response()->json(['message' => 'Failed to update FCM ID.'], 500);
         }
-
-        return response()->json(['message' => 'FCM ID updated successfully.'], 200);
     }
     
 }

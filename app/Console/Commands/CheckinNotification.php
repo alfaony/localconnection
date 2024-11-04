@@ -91,9 +91,10 @@ class CheckinNotification extends Command
                 return;
             }
 
-            $fcmId = $checkin->user->status->fcm_id;
+            $userFcmCollect = $checkin->user->status;
 
-            if (!$fcmId) {
+            if (!$userFcmCollect) 
+            {
                 $this->warn("No FCM ID found for user: {$checkin->user_id}");
                 return;
             }
@@ -101,19 +102,22 @@ class CheckinNotification extends Command
             $url = route('employee-checking.index');
 
             // Buat pesan notifikasi
-            $message = CloudMessage::withTarget('token', $fcmId)
-                ->withNotification([
-                    'title' => $title,
-                    'body' => $body,
-                ])
-                ->withData([
-                    'checkin_time' => $checkin->scheduled_time,
-                    'user_id' => $checkin->user_id,
-                    'url' => $url,
-                ]);
-
-            // Kirim pesan notifikasi ke Firebase
-            $this->messaging->send($message);
+            foreach ($userFcmCollect as $fcm) 
+            {
+                $message = CloudMessage::withTarget('token', $fcm->fcm_id)
+                    ->withNotification([
+                        'title' => $title,
+                        'body' => $body,
+                    ])
+                    ->withData([
+                        'checkin_time' => $checkin->scheduled_time,
+                        'user_id' => $checkin->user_id,
+                        'url' => $url,
+                    ]);
+    
+                // Kirim pesan notifikasi ke Firebase
+                $this->messaging->send($message);
+            }
 
             $this->info("Notification sent to user: {$checkin->user_id} for check-in at: {$checkin->scheduled_time}");
 

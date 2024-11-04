@@ -14,6 +14,7 @@ use Kreait\Firebase\Exception\FirebaseException;
 
 use App\Models\EmployeeChecking;
 use App\Models\User;
+use App\Models\UserStatus;
 
 use Carbon\Carbon;
 
@@ -212,11 +213,11 @@ class EmployeeCheckingController extends Controller
 
         if ($source == 'manual_checkin') 
         {
-            $lastScheduledCheckin = Auth::user()->status ? Auth::user()->status->last_scheduled_checkin : null;
+            $lastScheduledCheckin = EmployeeChecking::where('user_id', $employeeChecking->user_id)->where('scheduled_time', Carbon::today())->orderBy('updated_at', 'desc')->first();
     
             if ($lastScheduledCheckin) 
             {
-                $lastCheckinTime = Carbon::parse($lastScheduledCheckin);
+                $lastCheckinTime = Carbon::parse($lastScheduledCheckin->scheduled_time);
                 $currentCheckinTime = Carbon::now();
                 $timeDifference = $currentCheckinTime->diffInMinutes($lastCheckinTime);
     
@@ -245,16 +246,22 @@ class EmployeeCheckingController extends Controller
         $user = Auth::user();
 
         // Update fcm_id pada user_status terkait
-        if ($user->status) {
-            $user->status->update([
-                'last_scheduled_checkin' => Carbon::now(),
-            ]);
-        } else 
+        // if ($user->status) {
+        //     $user->status->update([
+        //         'last_scheduled_checkin' => Carbon::now(),
+        //     ]);
+        // } else 
+        // {
+        //     // Jika UserStatus belum ada, buat satu dan simpan fcm_id
+        //     $user->status()->create([
+        //         'last_scheduled_checkin' => Carbon::now(),
+        //     ]);
+        // }
+        $recorded = UserStatus::where('user_id', $user->id)->where('fcm_id', $request->input('fcm_token'))->first();
+        if ($recorded)
         {
-            // Jika UserStatus belum ada, buat satu dan simpan fcm_id
-            $user->status()->create([
-                'last_scheduled_checkin' => Carbon::now(),
-            ]);
+            $recorded->last_scheduled_checkin = Carbon::now();
+            $recorded->save();
         }
 
         // Update status check-in
@@ -321,10 +328,11 @@ class EmployeeCheckingController extends Controller
         $user = Auth::user(); // Atau ambil user berdasarkan $userId
 
         if ($user) {
-            $lastScheduledCheckin = $user->status ? $user->status->last_scheduled_checkin : null;
-
-            if ($lastScheduledCheckin) {
-                $lastCheckinTime = Carbon::parse($lastScheduledCheckin);
+            $lastScheduledCheckin = EmployeeChecking::where('user_id', $user->id)->where('scheduled_time', Carbon::today())->orderBy('updated_at', 'desc')->first();
+    
+            if ($lastScheduledCheckin) 
+            {
+                $lastCheckinTime = Carbon::parse($lastScheduledCheckin->scheduled_time);
                 $currentCheckinTime = Carbon::now();
                 $timeDifference = $currentCheckinTime->diffInMinutes($lastCheckinTime);
 

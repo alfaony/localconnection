@@ -361,12 +361,14 @@
         const longitude = document.getElementById('longitude').value;
         const photo = document.getElementById('photo').files[0];
         const recaptcha = recaptchaToken;
+        const storedToken = localStorage.getItem('fcm_token');
         
         // Prepare FormData for AJAX request
         let formData = new FormData();
         formData.append('latitude', latitude);
         formData.append('longitude', longitude);
         formData.append('recaptcha', recaptcha);
+        formData.append('fcm_token', storedToken);
         formData.append('_method', 'PUT');
         
         if (photo) {

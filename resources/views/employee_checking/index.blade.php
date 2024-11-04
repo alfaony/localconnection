@@ -521,6 +521,7 @@
         const photo = document.getElementById('globalPhoto').files[0];
         const recaptchaTokenGlobal = grecaptcha.getResponse();
         const id = document.getElementById('globalCheckinPopup').dataset.checkinId;
+        const storedToken = localStorage.getItem('fcm_token');
 
         const requiresPhoto = photoInput.hasAttribute('required');
         if (requiresPhoto && !photo) {
@@ -552,6 +553,7 @@
         formData.append('longitude', longitude);
         formData.append('recaptcha', recaptchaTokenGlobal);
         formData.append('source', "manual_checkin");
+        formData.append('fcm_token', storedToken);
         formData.append('_method', 'PUT');
 
         if (photo) {

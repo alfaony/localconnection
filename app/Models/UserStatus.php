@@ -16,6 +16,7 @@ class UserStatus extends Model
     protected $fillable = [
         'user_id',
         'fcm_id',
+        'browser_name',
         'last_login_at',
         'last_scheduled_checkin',
         'is_online',
