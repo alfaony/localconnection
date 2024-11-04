@@ -720,7 +720,8 @@ class ReportProjectController extends Controller
             $pdfFiles = [];
 
             // Collect only PDF files from reportProjectDetail
-            foreach ($reportProject->reportProjectDetail as $detail) {
+            foreach ($reportProject->reportedDetails as $detail) 
+            {
                 $filePath = storage_path('app/public/reports/' . $detail->file);
                 $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
 
@@ -783,7 +784,7 @@ class ReportProjectController extends Controller
 
             // Delete temporary files
             Storage::delete($tempFilePath);
-
+            
             $bast->file_merge_path = $finalFilePath;
             $bast->save();
 
