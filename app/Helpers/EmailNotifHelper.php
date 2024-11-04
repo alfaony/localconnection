@@ -13,7 +13,7 @@ use App\Models\EmailLog;
 class EmailNotifHelper
 {
 
-    public static function sentEmail($fromEmail, $fromName, $toEmails, $toNames, $subject, $view, $data, $smtpConfig, $companyId, $ccEmails = [], $ccNames = [])
+    public static function sentEmail($fromEmail, $fromName, $toEmails, $toNames, $subject, $view, $data, $smtpConfig, $companyId, $ccEmails = [], $ccNames = [], $attachments = [])
     {
         // Konfigurasi pengaturan SMTP menggunakan data dinamis
         Config::set('mail.mailers.smtp.host', $smtpConfig['host']);
@@ -29,7 +29,7 @@ class EmailNotifHelper
         try {
             if($smtpConfig['host'] && $smtpConfig['port'] && $smtpConfig['username'])
             {
-                Mail::send($view, ['data' => $data], function ($message) use ($fromEmail, $fromName, $toEmails, $toNames, $subject, $data, $ccEmails, $ccNames) {
+                Mail::send($view, ['data' => $data], function ($message) use ($fromEmail, $fromName, $toEmails, $toNames, $subject, $data, $ccEmails, $ccNames, $attachments) {
                     foreach ($toEmails as $key => $toEmail) {
                         $toName = $toNames[$key] ?? null;
                         $message->to($toEmail, $toName);
@@ -41,6 +41,19 @@ class EmailNotifHelper
                     }
 
                     $message->subject($subject)->from($fromEmail, $fromName);
+
+                    // Attach files if provided and not empty
+                    if (!empty($attachments)) 
+                    {
+                        foreach ($attachments as $filePath => $fileName) {
+                            if (file_exists($filePath)) {
+                                $message->attach($filePath, [
+                                    'as' => $fileName,
+                                    'mime' => mime_content_type($filePath),
+                                ]);
+                            }
+                        }
+                    }
                 });
 
                 // save to log

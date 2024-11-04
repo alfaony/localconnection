@@ -114,7 +114,15 @@ class LetterSubmissionController extends Controller
                 // Update signature image path di tabel users
                 $fieldData['signature_image'] = $filePath;
             }
-
+            
+            // Jika ada file yang diupload
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $fileName = $file->getClientOriginalName();
+                $filePath = 'public/files/' . $fileName;
+                Storage::put($filePath, file_get_contents($file->getRealPath()));
+                $fieldData['file'] = $filePath;
+            }
             $letterSubmission = new LetterSubmission();
             $letterSubmission->letter_type_id = $request->letter_type_id;
             $letterSubmission->status = NULL;
@@ -230,6 +238,15 @@ class LetterSubmissionController extends Controller
 
                 // Update signature image path di tabel users
                 $fieldData['signature_image'] = $filePath;
+            }
+
+            if ($request->hasFile('file')) 
+            {
+                $file = $request->file('file');
+                $fileName = $file->getClientOriginalName();
+                $filePath = 'public/files/' . $fileName;
+                Storage::put($filePath, file_get_contents($file->getRealPath()));
+                $fieldData['file'] = $filePath;
             }
 
             $this->updateProfile($request, $letterSubmission->user);

@@ -816,6 +816,11 @@
                                 </div>
 
                                 <div class="col-md-12 mb-3">
+                                    <label for="salary_date">File Dokumen yang dikuasakan</label>
+                                    <input type="file" name="file" class="form-control" accept=".pdf" required>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
                                     <label for="salary_date">Nama Lengkap</label>
                                     <input type="text" class="form-control" value="{{ Auth::user()->name }}" readonly>
                                 </div>
