@@ -415,6 +415,24 @@
         document.addEventListener('scroll', triggerNotificationRequestOnInteraction);
     });
 
+    function getBrowserName() 
+    {
+        const agent = navigator.userAgent.toLowerCase();
+        if (agent.indexOf("firefox") > -1) {
+            return "Mozilla Firefox";
+        } else if (agent.indexOf("safari") > -1 && agent.indexOf("chrome") === -1) {
+            return "Safari";
+        } else if (agent.indexOf("chrome") > -1) {
+            return "Google Chrome";
+        } else if (agent.indexOf("edge") > -1) {
+            return "Microsoft Edge";
+        } else if (agent.indexOf("opera") > -1 || agent.indexOf("opr") > -1) {
+            return "Opera";
+        } else {
+            return "Browser tidak dikenal";
+        }
+    }
+
     function initFirebaseMessagingRegistration() 
     {
         const storedToken = localStorage.getItem('fcm_token');
@@ -464,17 +482,22 @@
     }
 
     function sendTokenToServer(token) {
+        const browserName = getBrowserName();
+
         $.ajax({
             url: "{{ route('user.updatefcm') }}",
             type: 'POST',
             data: {
                 _token: '{{ csrf_token() }}',
-                token: token
+                token: token,
+                browser_name: browserName
             },
             success: function(response) {
                 console.log("Token berhasil disimpan.");
             },
             error: function(err) {
+                console.log($(err).text());
+                
                 console.error("Gagal menyimpan token:", err);
             }
         });
