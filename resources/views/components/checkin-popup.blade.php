@@ -44,6 +44,7 @@
         <button id="submitCheckin" class="btn btn-primary mt-4" onclick="onSubmit()">Submit Check-in</button>
     </div>
 </div>
+<audio id="checkinAudio" src="/audio/notification-sound.mp3" preload="auto"></audio>
 
 <link rel="stylesheet" href="{{ asset('css/popup_backup.css') }}">
 
@@ -211,10 +212,18 @@
     function startCountdown(duration, localId) {
         let countdownEl = document.getElementById('countdown');
         let timer = duration;
+        const audio = document.getElementById('checkinAudio'); // Referensi ke elemen audio
 
         // Hentikan timer jika sudah berjalan sebelumnya
         if (intervalId) clearInterval(intervalId);
 
+        if (audio) 
+        {
+            audio.currentTime = 0; // Mulai dari awal
+            audio.play().catch(error => {
+                console.error("Audio playback failed:", error);
+            });
+        }
         // Mulai timer baru
         intervalId = setInterval(() => {
             timer--;
