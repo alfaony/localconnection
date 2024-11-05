@@ -22,9 +22,8 @@ class ProjectDashboardController extends Controller
         $today = \Carbon\Carbon::today();
         $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : NULL ;
         $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : NULL ;
-
-        $divisionId = $request->get('division_id'); // Get the division filter from the request
-
+        $defaultDivisi = Auth::user()->FirstDivision ? Auth::user()->FirstDivision->id : NULL;
+        $divisionId = $request->get('division_id') ?? $defaultDivisi;  // Get the division filter from the request
         $overdueTasksQuery = User::select('id', 'slug', 'name')
             ->where('company_id', Auth::user()->company_id)
             ->withCount([
