@@ -103,21 +103,28 @@ class CheckinNotification extends Command
             $url = route('employee-checking.index');
 
             // Buat pesan notifikasi
-            foreach ($userFcmCollect as $fcm) 
+            $fcmTokens = $userFcmCollect->pluck('fcm_id')->toArray();
+
+            // Create the notification message
+            $message = CloudMessage::new()
+                ->withNotification([
+                    'title' => $title,
+                    'body' => $body,
+                ])
+                ->withData([
+                    'checkin_time' => $checkin->scheduled_time,
+                    'user_id' => $checkin->user_id,
+                    'url' => $url,
+            ]);
+
+            // Kirim pesan notifikasi ke Firebase
+            $sendReport = $this->messaging->sendMulticast($message, $fcmTokens);
+            if ($sendReport->hasFailures()) 
             {
-                $message = CloudMessage::withTarget('token', $fcm->fcm_id)
-                    ->withNotification([
-                        'title' => $title,
-                        'body' => $body,
-                    ])
-                    ->withData([
-                        'checkin_time' => $checkin->scheduled_time,
-                        'user_id' => $checkin->user_id,
-                        'url' => $url,
-                    ]);
-    
-                // Kirim pesan notifikasi ke Firebase
-                $this->messaging->send($message);
+                // Log or handle any failures
+                foreach ($sendReport->failures()->all() as $failure) {
+                    Log::error('Notification failed for token: ' . $failure->target()->value());
+                }
             }
 
             $this->info("Notification sent to user: {$checkin->user_id} for check-in at: {$checkin->scheduled_time}");
