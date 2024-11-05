@@ -169,7 +169,16 @@
         const photoSection = document.getElementById('photoSection');
         const locationSection = document.getElementById('locationSection');
         const locationButton = document.querySelector('#locationSection button');
+        const audio = document.getElementById('checkinAudio'); // Referensi ke elemen audio
         
+        if (audio) 
+        {
+            audio.currentTime = 0; // Mulai dari awal
+            audio.play().catch(error => {
+                console.error("Audio playback failed:", error);
+            });
+        }
+
         if (popup.style.display === 'flex') 
         {
             return; // Jika sudah terbuka, jangan mulai countdown baru
@@ -211,18 +220,10 @@
     function startCountdown(duration, localId) {
         let countdownEl = document.getElementById('countdown');
         let timer = duration;
-        const audio = document.getElementById('checkinAudio'); // Referensi ke elemen audio
-
+        
         // Hentikan timer jika sudah berjalan sebelumnya
         if (intervalId) clearInterval(intervalId);
-
-        if (audio) 
-        {
-            audio.currentTime = 0; // Mulai dari awal
-            audio.play().catch(error => {
-                console.error("Audio playback failed:", error);
-            });
-        }
+        
         // Mulai timer baru
         intervalId = setInterval(() => {
             timer--;
