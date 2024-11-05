@@ -107,7 +107,6 @@
     @endauth
     {{-- Custom Scripts --}}
     @yield('adminlte_js')
-    @include('partials.permission-fcm')
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -124,6 +123,7 @@
         function logoutUser() 
         {
             const fcmToken = localStorage.getItem('fcm_token');
+            localStorage.removeItem('fcm_token');
 
             if (fcmToken) {
                 fetch('/logout', {
