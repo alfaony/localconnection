@@ -42,7 +42,7 @@
         <button id="submitCheckin" class="btn btn-primary mt-4" onclick="onSubmit()">Submit Check-in</button>
     </div>
 </div>
-
+<audio id="checkinAudio" src="/audio/notification-sound.mp3" preload="auto"></audio>
 <link rel="stylesheet" href="{{ asset('css/popup_backup.css') }}">
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -207,8 +207,16 @@
     // Fungsi untuk memulai hitungan mundur
     function startCountdown(duration, localId) {
         let countdownEl = document.getElementById('countdown');
+        const audio = document.getElementById('checkinAudio'); // Referensi ke elemen audio
         let timer = duration;
 
+        if (audio) 
+        {
+            audio.currentTime = 0; // Mulai dari awal
+            audio.play().catch(error => {
+                console.error("Audio playback failed:", error);
+            });
+        }
         // Hentikan timer jika sudah berjalan sebelumnya
         if (intervalId) clearInterval(intervalId);
 
