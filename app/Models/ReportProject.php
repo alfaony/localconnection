@@ -69,7 +69,7 @@ class ReportProject extends Model
     {
         return $this->belongsTo(Project::class);
     }
-
+    
     public function reportProjectDetail()
     {
         return $this->hasMany(ReportProjectDetail::class);

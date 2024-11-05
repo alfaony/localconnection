@@ -27,7 +27,7 @@
         </div>
     @endif
 </div>
-<form action="{{ route('letter-submission.update',$letterSubmission) }}" method="POST">
+<form action="{{ route('letter-submission.update',$letterSubmission) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('put')
     
@@ -583,6 +583,13 @@
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Tanggal Surat Kuasa</label>
                             <input type="date" name="date" class="form-control" value="{{ isset($fieldData['date']) ? \Carbon\Carbon::parse($fieldData['date'])->format('Y-m-d') : '' }}"required>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="salary_date">File Dokumen yang dikuasakan</label>
+                            @if(isset($fieldData['file']))
+                                <a href="{{ Storage::url($fieldData['file']) }}" target="_blank"><i class="fa fa-download"></i> File</a>
+                            @endif
+                            <input type="file" name="file" class="form-control" accept=".pdf">
                         </div>
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Nama Lengkap</label>
