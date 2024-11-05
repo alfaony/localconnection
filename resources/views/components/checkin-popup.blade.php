@@ -95,8 +95,8 @@
                         const scheduledTimeStr = entry.scheduled_time;
                         const localId = entry.local_id;
                         const scheduledTime = new Date(scheduledTimeStr).getTime() / 1000;
-                        // const currentTime = Math.floor(Date.now() / 1000);
-                        const currentTime = parseInt("{{ \Carbon\Carbon::now()->timestamp }}");
+                        const currentTime = Math.floor(Date.now() / 1000);
+                        // const currentTime = parseInt("{{ \Carbon\Carbon::now()->timestamp }}");
                         
                         let times = parseInt("{{ config('services.checking_setting.duration') }}");
                         
