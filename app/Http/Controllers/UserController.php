@@ -289,7 +289,7 @@ class UserController extends Controller
         {
             $user = Auth::user();
             $userStatus = UserStatus::where('user_id', $user->id)->where('fcm_id', $request->token)->first();
-    
+        
             if (!$userStatus) 
             {
                 $userStatus = new UserStatus();
@@ -300,7 +300,7 @@ class UserController extends Controller
                 $userStatus->last_login_at = Carbon::now();
             } else {
                 $userStatus->browser_name = $request->browser_name;
-                $userStatus->fcm_id = $request->token;
+                $userStatus->fcm_id = $request->new_token ?? $request->token;
                 $userStatus->is_online = 1;
                 $userStatus->last_login_at = Carbon::now();
             }
