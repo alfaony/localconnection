@@ -97,8 +97,8 @@
         const browserName = getBrowserName();
         storedToken = localStorage.getItem('fcm_token');
 
-        if(token != storedToken) 
-        {
+        // if(token != storedToken) 
+        // {
             $.ajax({
                 url: "{{ route('user.updatefcm') }}",
                 type: 'POST',
@@ -119,7 +119,7 @@
                     console.error("Gagal menyimpan token:", err);
                 }
             });
-        }
+        // }
     }
 
     // Fungsi untuk memantau interaksi pertama pengguna
