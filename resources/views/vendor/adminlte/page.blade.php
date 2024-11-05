@@ -66,6 +66,7 @@
 
 @section('adminlte_js')
     {{-- Include Firebase Initialization --}}
+    @include('partials.permission-fcm')
     @stack('js')
     @yield('js')
 @stop
