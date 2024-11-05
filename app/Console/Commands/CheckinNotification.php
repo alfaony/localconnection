@@ -115,7 +115,10 @@ class CheckinNotification extends Command
                     'checkin_time' => $checkin->scheduled_time,
                     'user_id' => $checkin->user_id,
                     'url' => $url,
+            ])->withAndroidConfig([
+                'priority' => 'high',
             ]);
+        
 
             // Kirim pesan notifikasi ke Firebase
             $sendReport = $this->messaging->sendMulticast($message, $fcmTokens);
