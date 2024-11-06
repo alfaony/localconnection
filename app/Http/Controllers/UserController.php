@@ -90,6 +90,15 @@ class UserController extends Controller
         $user->company_id = $request->post('company') ?? Auth::user()->company_id;
         $user->password = bcrypt($request->post('password'));
         $user->approvement_user_id = $request->post('approvement_user_id') ?? NULL;
+
+        // Checkin
+        $user->is_checkin = $request->post('is_checkin', 0); // Default 0 jika tidak dicentang
+        $user->manual_checkin = $request->post('manual_checkin', 0);
+        $user->requires_photo = $request->post('requires_photo', 0);
+        $user->requires_location = $request->post('requires_location', 0);
+        $user->start_time = $request->post('start_time');
+        $user->end_time = $request->post('end_time');
+        $user->rest_time = $request->post('rest_time');
         $user->save();
 
 
@@ -182,6 +191,15 @@ class UserController extends Controller
 
         $divisions = $request->input('divisions');
         $user->divisions()->sync($divisions);
+
+        // Checkin
+        $user->is_checkin = $request->post('is_checkin', 0); // Default 0 jika tidak dicentang
+        $user->manual_checkin = $request->post('manual_checkin', 0);
+        $user->requires_photo = $request->post('requires_photo', 0);
+        $user->requires_location = $request->post('requires_location', 0);
+        $user->start_time = $request->post('start_time');
+        $user->end_time = $request->post('end_time');
+        $user->rest_time = $request->post('rest_time');
 
         $user->save();
 
