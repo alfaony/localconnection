@@ -69,7 +69,7 @@ class ScheduleEmployeeCheckin extends Command
     {
         // Cek jika user sedang cuti
         if (!in_array($user->email, $onLeaveEmails)) {
-            $checkinTimes = $this->generateRandomCheckinTimes();
+            $checkinTimes = $this->generateRandomCheckinTimes($user->start_time, $user->end_time, $user->checkin_rest);
             foreach ($checkinTimes as $time) 
             {
                 // Simpan di database lokal
@@ -193,42 +193,44 @@ class ScheduleEmployeeCheckin extends Command
 
     //     return $times;
     // }
-    private function generateRandomCheckinTimes($start_time = '08:00', $end_time = '17:00', $rest_time = '12:00')
+    private function generateRandomCheckinTimes($start_time, $end_time, $rest_time)
     {
         $targetCheckins = 10; // Jumlah check-in yang diinginkan
-        $duration = config('services.checking_setting.duration_minutes'); // Durasi dari config
-        $bufferMinutes = 30; // Buffer waktu minimal antar check-in
+        $duration = config('services.checking_setting.duration_minutes'); // Durasi dari konfigurasi
+        $bufferMinutes = 30; // Waktu buffer minimal antar check-in
         $maxAttempts = 100; // Batas percobaan untuk menghindari loop tak terbatas
 
         // Konversi waktu mulai, akhir, dan istirahat ke objek Carbon dengan nilai default
-        $start = Carbon::createFromTimeString($start_time);
-        $end = Carbon::createFromTimeString($end_time);
-        $restStart = Carbon::createFromTimeString($rest_time);
-        $restEnd = $restStart->copy()->addHour(); // 1 jam waktu istirahat
-        
+        $start = Carbon::createFromTimeString($start_time ?? '08:00');
+        $end = Carbon::createFromTimeString($end_time ?? '17:00');
+        $restStart = Carbon::createFromTimeString($rest_time ?? '12:00');
+        $restEnd = $restStart->copy()->addHour(); // Istirahat makan siang selama 1 jam
+
         do {
             $times = []; // Reset daftar waktu check-in
             $attempts = $maxAttempts;
 
             while (count($times) < $targetCheckins && $attempts > 0) 
             {
-                // Generate random check-in time within the working hours
-                $time = Carbon::today()->addHours(rand($start->hour, $end->hour - 1))->addMinutes(rand(0, 59));
+                // Menghasilkan jam dan menit acak yang berada dalam jam kerja yang valid
+                $hour = rand($start->hour, $end->hour - 1); // Menghindari jam 17 sebagai waktu mulai
+                $minute = rand(0, 59);
+                $time = Carbon::today()->setTime($hour, $minute, 0);
 
-                // Lewati jam istirahat jika diperlukan
-                if ($time->between($restStart, $restEnd)) {
-                    continue; // Skip rest time
+                // Memastikan waktu berada dalam jam kerja dan melewatkan waktu istirahat
+                if ($time->lt($start) || $time->gte($end) || $time->between($restStart, $restEnd)) {
+                    continue; // Lewati jika di luar jam kerja atau di waktu istirahat
                 }
 
-                // Hitung waktu timeout
+                // Hitung waktu habisnya check-in
                 $timeout = $time->copy()->addMinutes($duration);
 
-                // Pastikan timeout berada dalam jam kerja
+                // Lewati jika waktu habis berada di luar jam kerja
                 if ($timeout->greaterThan($end)) {
-                    continue; // Skip if timeout is outside of working hours
+                    continue; 
                 }
 
-                // Cek apakah ada konflik atau jarak kurang dari buffer waktu
+                // Cek apakah ada konflik atau jarak kurang dari waktu buffer
                 $conflict = false;
                 foreach ($times as $scheduled) {
                     $existingStart = Carbon::parse($scheduled['checkin_time']);
@@ -239,7 +241,7 @@ class ScheduleEmployeeCheckin extends Command
                         $timeout->between($existingStart->copy()->subMinutes($bufferMinutes), $existingEnd->copy()->addMinutes($bufferMinutes))
                     ) {
                         $conflict = true;
-                        break; // Ada konflik, keluar dari loop
+                        break; // Keluar dari loop jika ada konflik
                     }
                 }
 
@@ -250,7 +252,7 @@ class ScheduleEmployeeCheckin extends Command
                         'timeout_time' => $timeout->format('Y-m-d H:i:s')
                     ];
                 } else {
-                    $attempts--; // Kurangi batas percobaan hanya jika ada konflik
+                    $attempts--; // Kurangi jumlah percobaan hanya jika ada konflik
                 }
             }
 
@@ -258,6 +260,7 @@ class ScheduleEmployeeCheckin extends Command
 
         return $times;
     }
+
 
 
     protected function listDayoffEmployee()
