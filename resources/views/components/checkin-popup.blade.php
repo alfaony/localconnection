@@ -16,6 +16,7 @@
             <video id="videoFeed" autoplay playsinline style="width: 100%; height: auto;"></video>
             <canvas id="canvas" style="display:none;"></canvas>
             <button id="takePhotoButton" class="btn btn-secondary mt-2" onclick="takePhoto()">Take Photo</button>
+            <button id="toggleCameraButton" class="btn btn-info mt-2" onclick="toggleCamera()">Switch Camera</button>
             <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-thumbnail mt-3">
             <input type="file" id="photo" name="photo" style="display: none;"> <!-- Hidden file input for form submission -->
         </div>
@@ -257,12 +258,14 @@
     // Buka popup dan aktifkan kamera secara otomatis
 
     // Fungsi untuk membuka kamera
+    let currentFacingMode = 'environment'; // Default kamera belakang
+
     function openCamera() 
     {
         const video = document.getElementById('videoFeed');
         
         // Akses kamera dan tampilkan video feed
-        navigator.mediaDevices.getUserMedia({ video: true })
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } })
             .then((stream) => {
                 video.srcObject = stream;
             })
@@ -272,6 +275,20 @@
             });
     }
 
+    function toggleCamera() 
+    {
+        // Beralih antara kamera depan dan belakang
+        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+        
+        // Hentikan aliran video yang aktif sebelum beralih
+        const video = document.getElementById('videoFeed');
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+
+        // Buka kamera dengan facingMode yang diperbarui
+        openCamera();
+    }
     // Fungsi untuk mengambil foto saat tombol "Take Photo" ditekan
     function takePhoto() {
         const video = document.getElementById('videoFeed');

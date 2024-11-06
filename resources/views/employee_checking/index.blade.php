@@ -311,6 +311,8 @@
                     <video id="globalVideoFeed" autoplay playsinline style="width: 100%; height: auto;"></video>
                     <canvas id="globalCanvas" style="display:none;"></canvas>
                     <button id="globalTakePhotoButton" class="btn btn-secondary mt-2" onclick="takeGlobalPhoto()">Take Photo</button>
+                    <button id="toggleCameraButton" class="btn btn-info mt-2" onclick="toggleCamera()">Switch Camera</button>
+
                     <img id="globalPhotoPreview" src="#" alt="Photo Preview" style="display:none;" class="img-thumbnail mt-3">
                     <input type="file" id="globalPhoto" name="photo" style="display: none;"> <!-- Hidden file input for form submission -->
                 </div>
@@ -611,6 +613,8 @@
 </script>
 
 <script>
+    let currentFacingModeManual = 'environment'; // Default kamera belakang
+
     function compressAndPreviewImageCheckin() 
     {
         const fileInput = document.getElementById('globalPhoto');
@@ -705,8 +709,8 @@
     function openGlobalCamera() 
     {
         const video = document.getElementById('globalVideoFeed');
-        
-        navigator.mediaDevices.getUserMedia({ video: true })
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingModeManual } })
             .then((stream) => {
                 video.srcObject = stream;
             })
@@ -715,33 +719,20 @@
                 alert("Could not access camera. Please allow camera access.");
             });
     }
-    
-    function takeGlobalPhoto() 
+
+    function toggleCamera() 
     {
-        const video = document.getElementById('globalVideoFeed');
-        const canvas = document.getElementById('globalCanvas');
-        const photoInput = document.getElementById('globalPhoto');
-        const photoPreview = document.getElementById('globalPhotoPreview');
+        // Beralih antara kamera depan dan belakang
+        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
         
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const context = canvas.getContext('2d');
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        canvas.toBlob((blob) => {
-            const file = new File([blob], "checkin_photo.jpg", { type: "image/jpeg" });
-
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            photoInput.files = dataTransfer.files;
-
-            photoPreview.src = URL.createObjectURL(blob);
-            photoPreview.style.display = 'block';
-            video.style.display = 'none';
-            document.getElementById('globalTakePhotoButton').style.display = 'none';
-
+        // Hentikan aliran video yang aktif sebelum beralih
+        const video = document.getElementById('globalVideoFeed');
+        if (video.srcObject) {
             video.srcObject.getTracks().forEach(track => track.stop());
-        }, "image/jpeg", 0.7);
+        }
+
+        // Buka kamera dengan facingMode yang diperbarui
+        openGlobalCamera();
     }
 </script>
 @endif
