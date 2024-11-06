@@ -43,11 +43,14 @@ class ScheduleEmployeeCheckin extends Command
         // 3. Array email pengguna yang sedang cuti
         $onLeaveEmails = $this->listDayoffEmployee();
         // Ambil semua user yang tidak cuti
-        $users = User::where('is_checkin', true)->get();
-        // ->whereHas('divisions') // Memiliki divisi
+        $users = User::query()
+        ->where('is_checkin', true)
+        ->whereHas('divisions') // Memiliki divisi
         // ->whereDoesntHave('role', function ($query) {
         //     $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::DIRECTOR, RoleSchema::SECURITY, RoleSchema::OB, RoleSchema::BM]); // Bukan 'Root' atau 'Admin'
         // })
+        ->get();
+
         
 
         foreach ($users as $user) {
