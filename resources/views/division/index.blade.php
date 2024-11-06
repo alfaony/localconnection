@@ -62,6 +62,7 @@
                                     <label for="name">Nama</label>
                                     <input type="text" class="form-control" name="name" value="{{ $division->name }}" required>
                                 </div>
+                                {{-- 
                                 <!-- Checkbox -->
                                 <div class="form-group">
                                     <div class="form-check">
@@ -76,6 +77,7 @@
                                         <input type="checkbox" class="form-check-input" name="requires_location" value="1" {{ $division->requires_location ? 'checked' : '' }}>
                                         <label class="form-check-label">Required Check-In Location</label>
                                     </div>
+                                    --}}
                                 </div>
                                 <button type="submit" class="btn btn-primary">Update</button>
                             </form>
@@ -108,6 +110,7 @@
                         <input type="text" class="form-control" name="name" required>
                     </div>
                     <!-- Checkbox -->
+                     {{-- 
                     <div class="form-group">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" name="manual_checkin" value="1">
@@ -121,6 +124,7 @@
                             <input type="checkbox" class="form-check-input" name="requires_location" value="1">
                             <label class="form-check-label">Required Check-In Location</label>
                         </div>
+                        --}}
                     </div>
                     <button type="submit" class="btn btn-primary">Buat</button>
                 </form>
