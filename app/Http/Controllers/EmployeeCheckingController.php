@@ -304,32 +304,23 @@ class EmployeeCheckingController extends Controller
      */
     protected function checkingDivision($user)
     {
-        $divisions = $user->divisions;
-        $employeeChecking = EmployeeChecking::where('user_id', $user->id)->where('scheduled_time', Carbon::now())->count();
-
         $manual_checkin = false;
         $requires_photo = false;
         $requires_location = false;
 
-        if($divisions->count() > 0)
-        {
-            foreach ($divisions as $division) 
-            {
-                if($division->manual_checkin)
-                {
-                    $manual_checkin = true;
-                }
-
-                if($division->requires_photo)
-                {
-                    $requires_photo = true;
-                }
-
-                if($division->requires_location)
-                {
-                    $requires_location = true;
-                }
-            }
+        switch ($user) {
+            case $user->manual_checkin:
+                $manual_checkin = true;
+                break;
+            case $user->requires_photo:
+                $requires_photo = true;
+                break;
+            case $user->requires_location:
+                $requires_location = true;
+                break;
+            default:
+                # code...
+                break;
         }
 
         return [
