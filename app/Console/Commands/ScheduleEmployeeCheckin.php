@@ -69,7 +69,7 @@ class ScheduleEmployeeCheckin extends Command
     {
         // Cek jika user sedang cuti
         if (!in_array($user->email, $onLeaveEmails)) {
-            $checkinTimes = $this->generateRandomCheckinTimes($user->start_time, $user->end_time, $user->checkin_rest);
+            $checkinTimes = $this->generateRandomCheckinTimes($user->start_time, $user->end_time, $user->rest_time);
             foreach ($checkinTimes as $time) 
             {
                 // Simpan di database lokal
