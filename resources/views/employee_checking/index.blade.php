@@ -507,6 +507,16 @@
         }
     }
 
+    document.getElementById('globalCheckinPopup').addEventListener('hidden.bs.modal', closeCamera);
+    
+    function closeCamera() 
+    {
+        const video = document.getElementById('globalVideoFeed');
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop()); // Stop all video tracks
+            video.srcObject = null; // Remove the video source
+        }
+    }
     // Fungsi untuk mereset popup
     function resetGlobalPopup() {
         document.getElementById('globalPhoto').value = '';
@@ -709,9 +719,11 @@
     function openGlobalCamera() 
     {
         const video = document.getElementById('globalVideoFeed');
-
+        
+        // Request the video stream with the specified facing mode
         navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingModeManual } })
             .then((stream) => {
+                videoStream = stream; // Store the stream to manage it later
                 video.srcObject = stream;
             })
             .catch((err) => {
@@ -758,10 +770,26 @@
         if (video.srcObject) {
             video.srcObject.getTracks().forEach(track => track.stop());
         }
-
+        
         // Buka kamera dengan facingMode yang diperbarui
         openGlobalCamera();
     }
+
+    // Automatically close the camera when the modal closes
+    function closeCamera() 
+    {
+        const video = document.getElementById('globalVideoFeed');
+        if (video.srcObject) 
+        {
+            // Stop all tracks of the video stream
+            video.srcObject.getTracks().forEach(track => track.stop());
+            
+            // Release the video resource by setting srcObject to null
+            video.srcObject = null;
+        }
+    }
+
+    document.getElementById('globalCheckinPopup').addEventListener('hidden.bs.modal', closeCamera);
 </script>
 @endif
 @stop
