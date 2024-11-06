@@ -32,6 +32,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
     <div class="col-md-12 mt-2">
         @if(!@$userEdit)
         @canAccess('store','users')
+        <!-- Create -->
         <p id="penggunaNo"></p>
         <form action="{{ route('user.store') }}" method="post">
             @csrf
@@ -50,7 +51,55 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <option value="{{ $division->id }}">{{ $division->name }}</option>
                 @endforeach
             </select>
-    
+
+            <div class="form-group mt-2 mb-1">
+                <label for="checkin-settings">Setting Check-In:</label>
+                
+                <!-- Check-In Setting -->
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" name="is_checkin" id="is_checkin" value="1" >
+                    <label class="form-check-label" for="is_checkin">Enable Check-In</label>
+                </div>
+
+                <!-- Additional Settings - Visible only if is_checkin is enabled -->
+                <div id="additionalSettings" style="display: none;">
+                    <!-- Manual Check-In -->
+                    <div class="form-check mt-2">
+                        <input type="checkbox" class="form-check-input" name="manual_checkin" id="manual_checkin" value="1" {{ old('manual_checkin', 0) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="manual_checkin">Check-In Manual</label>
+                    </div>
+
+                    <!-- Require Photo -->
+                    <div class="form-check mt-2">
+                        <input type="checkbox" class="form-check-input" name="requires_photo" id="requires_photo" value="1" {{ old('requires_photo', false) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="requires_photo">Memerlukan Foto Check-In</label>
+                    </div>
+
+                    <!-- Require Location -->
+                    <div class="form-check mt-2">
+                        <input type="checkbox" class="form-check-input" name="requires_location" id="requires_location" value="1" {{ old('requires_location', false) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="requires_location">Memerlukan Lokasi Check-In</label>
+                    </div>
+
+                    <!-- Time Settings -->
+                    <div class="form-group mt-3">
+                        <label for="start_time">Jam Kerja:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">Mulai</span>
+                            <input type="time" class="form-control" name="start_time" id="start_time" value="{{ old('start_time') }}">
+                            <span class="input-group-text">Selesai</span>
+                            <input type="time" class="form-control" name="end_time" id="end_time" value="{{ old('end_time') }}">
+                        </div>
+                    </div>
+
+                    <!-- Rest Time -->
+                    <div class="form-group mt-2">
+                        <label for="rest_time">Waktu Istirahat:</label>
+                        <input type="time" class="form-control" name="rest_time" id="rest_time" value="{{ old('rest_time') }}">
+                    </div>
+                </div>
+            </div>
+
             @if($roleAccess)
             <label for="phone">Role:</label>
             <select name="role" class="form-control mb-2 select2" required>
@@ -102,6 +151,8 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             @endif
         </form>
         @endcanAccess
+
+        <!-- Update -->
         @elseif(@$userEdit)
         @canAccess('update','users')
         <form action="{{ route('user.update',$userEdit) }}" method="post">
@@ -122,7 +173,53 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <option value="{{ $division->id }}" {{ isset($divisionsUser) && in_array($division->id, $divisionsUser) ? 'selected' : '' }}>{{ $division->name }}</option>
                 @endforeach
             </select>
+            <div class="form-group mt-2 mb-1">
+                <label for="checkin-settings">Setting Check-In:</label>
+                
+                <!-- Check-In Setting -->
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" name="is_checkin" id="is_checkin" value="1" {{ @$userEdit->is_checkin ? 'checked' : '' }}>
+                    <label class="form-check-label" for="is_checkin">Enable Check-In</label>
+                </div>
 
+                <!-- Additional Settings - Visible only if is_checkin is enabled -->
+                <div id="additionalSettings" style="display: none;">
+                    <!-- Manual Check-In -->
+                    <div class="form-check mt-2">
+                        <input type="checkbox" class="form-check-input" name="manual_checkin" id="manual_checkin" value="1" {{ @$userEdit->manual_checkin ? 'checked' : '' }}>
+                        <label class="form-check-label" for="manual_checkin">Check-In Manual</label>
+                    </div>
+
+                    <!-- Require Photo -->
+                    <div class="form-check mt-2">
+                        <input type="checkbox" class="form-check-input" name="requires_photo" id="requires_photo" value="1" {{ @$userEdit->requires_photo ? 'checked' : '' }}>
+                        <label class="form-check-label" for="requires_photo">Memerlukan Foto Check-In</label>
+                    </div>
+
+                    <!-- Require Location -->
+                    <div class="form-check mt-2">
+                        <input type="checkbox" class="form-check-input" name="requires_location" id="requires_location" value="1" {{ @$userEdit->requires_location ? 'checked' : '' }}>
+                        <label class="form-check-label" for="requires_location">Memerlukan Lokasi Check-In</label>
+                    </div>
+
+                    <!-- Time Settings -->
+                    <div class="form-group mt-3">
+                        <label for="start_time">Jam Kerja:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">Mulai</span>
+                            <input type="time" class="form-control" name="start_time" id="start_time" value="{{ old('start_time') ?? @$userEdit->start_time }}">
+                            <span class="input-group-text">Selesai</span>
+                            <input type="time" class="form-control" name="end_time" id="end_time" value="{{ old('end_time') ?? @$userEdit->end_time }}">
+                        </div>
+                    </div>
+
+                    <!-- Rest Time -->
+                    <div class="form-group mt-2">
+                        <label for="rest_time">Waktu Istirahat:</label>
+                        <input type="time" class="form-control" name="rest_time" id="rest_time" value="{{ old('rest_time') ?? @$userEdit->rest_time }}">
+                    </div>
+                </div>
+            </div>
             @if($roleAccess)
             <label for="phone">Role:</label>
             <select name="role" class="form-control mb-2 select2" required>
@@ -239,6 +336,26 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<!-- Script to toggle dependent options -->
+<script>
+    function toggleAdditionalSettings() 
+    {
+        const isCheckinChecked = document.getElementById('is_checkin').checked;
+        document.getElementById('additionalSettings').style.display = isCheckinChecked ? 'block' : 'none';
+
+        // Set required attributes for time fields based on is_checkin state
+        document.getElementById('start_time').required = isCheckinChecked;
+        document.getElementById('end_time').required = isCheckinChecked;
+        document.getElementById('rest_time').required = isCheckinChecked;
+    }
+    // Show/hide additional settings based on "Enable Check-In" checkbox
+    document.getElementById('is_checkin').addEventListener('change', toggleAdditionalSettings);
+
+    // Initialize display and required attributes on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleAdditionalSettings();
+    });
+</script>
 <script>
     $(document).ready(function()
     {
