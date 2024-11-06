@@ -123,36 +123,28 @@
         function logoutUser() 
         {
             const fcmToken = localStorage.getItem('fcm_token');
-            localStorage.removeItem('fcm_token');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-            if (fcmToken) {
-                fetch('/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({ fcm_token: fcmToken })
-                })
-                .then(response => {
-                    console.log('Response:', response);
-                    
-                    if (response.ok) {
-                        // Hapus fcm_token dari Local Storage setelah logout berhasil
-                        localStorage.removeItem('fcm_token');
-                        // Redirect ke halaman login atau halaman utama
-                        window.location.href = '/login';
-                    } else {
-                        console.error('Logout gagal');
-                    }
-                })
-                .catch(error => {
-                    console.error('Terjadi kesalahan saat logout:', error);
-                });
-            } else {
-                console.warn('FCM token tidak ditemukan di Local Storage.');
-                window.location.href = '/login';
-            }
+            fetch('/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                body: JSON.stringify({ fcm_token: fcmToken || null })
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Clear Local Storage and redirect after successful logout
+                    localStorage.removeItem('fcm_token');
+                    window.location.href = '/login';
+                } else {
+                    console.error('Logout failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error during logout:', error);
+            });
         }
     </script>
     <footer class="main-footer" >

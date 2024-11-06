@@ -36,6 +36,13 @@ class UserRequest extends FormRequest
                 'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
                 'password' => 'required|min:6',
                 'confirmPassword' => 'required|same:password',
+                'is_checkin' => 'nullable|boolean',
+                'manual_checkin' => 'nullable|boolean',
+                'requires_photo' => 'nullable|boolean',
+                'requires_location' => 'nullable|boolean',
+                'start_time' => 'required_if:is_checkin,1|nullable|date_format:H:i',
+                'end_time' => 'required_if:is_checkin,1|nullable|date_format:H:i|after:start_time',
+                'rest_time' => 'required_if:is_checkin,1|nullable|date_format:H:i',
             ];
         }else
         {
@@ -70,6 +77,18 @@ class UserRequest extends FormRequest
             'newPassword.min' => 'Password baru minimal 6 karakter.',
             'confirmPassword.required' => 'Konfirmasi password harus diisi.',
             'confirmPassword.same' => 'Konfirmasi password harus sama dengan password.',
+
+            'is_checkin.boolean' => 'Status check-in harus berupa nilai boolean.',
+            'manual_checkin.boolean' => 'Status check-in manual harus berupa nilai boolean.',
+            'requires_photo.boolean' => 'Status membutuhkan foto check-in harus berupa nilai boolean.',
+            'requires_location.boolean' => 'Status membutuhkan lokasi check-in harus berupa nilai boolean.',
+            'start_time.required_if' => 'Jam mulai harus diisi jika check-in diaktifkan.',
+            'start_time.date_format' => 'Format jam mulai tidak valid. Gunakan format HH:mm.',
+            'end_time.required_if' => 'Jam selesai harus diisi jika check-in diaktifkan.',
+            'end_time.date_format' => 'Format jam selesai tidak valid. Gunakan format HH:mm.',
+            'end_time.after' => 'Jam selesai harus setelah jam mulai.',
+            'rest_time.required_if' => 'Waktu istirahat harus diisi jika check-in diaktifkan.',
+            'rest_time.date_format' => 'Format waktu istirahat tidak valid. Gunakan format HH:mm.',
         ];
     }
 }
