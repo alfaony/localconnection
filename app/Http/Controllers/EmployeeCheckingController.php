@@ -308,19 +308,19 @@ class EmployeeCheckingController extends Controller
         $requires_photo = false;
         $requires_location = false;
 
-        switch ($user) {
-            case $user->manual_checkin:
-                $manual_checkin = true;
-                break;
-            case $user->requires_photo:
-                $requires_photo = true;
-                break;
-            case $user->requires_location:
-                $requires_location = true;
-                break;
-            default:
-                # code...
-                break;
+        if($user->manual_checkin)
+        {
+            $manual_checkin = true;
+        }
+
+        if($user->requires_photo)
+        {
+            $requires_photo = true;
+        }
+
+        if($user->requires_location)
+        {
+            $requires_location = true;
         }
 
         return [
