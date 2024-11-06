@@ -763,7 +763,7 @@
     function toggleCamera() 
     {
         // Beralih antara kamera depan dan belakang
-        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+        currentFacingModeManual = currentFacingModeManual === 'environment' ? 'user' : 'environment';
         
         // Hentikan aliran video yang aktif sebelum beralih
         const video = document.getElementById('globalVideoFeed');
