@@ -107,7 +107,6 @@
     @endauth
     {{-- Custom Scripts --}}
     @yield('adminlte_js')
-    @include('partials.permission-fcm')
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -120,7 +119,42 @@
         }
     </script>
     @auth
+    <script>
+        function logoutUser() 
+        {
+            const fcmToken = localStorage.getItem('fcm_token');
+            localStorage.removeItem('fcm_token');
 
+            if (fcmToken) {
+                fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ fcm_token: fcmToken })
+                })
+                .then(response => {
+                    console.log('Response:', response);
+                    
+                    if (response.ok) {
+                        // Hapus fcm_token dari Local Storage setelah logout berhasil
+                        localStorage.removeItem('fcm_token');
+                        // Redirect ke halaman login atau halaman utama
+                        window.location.href = '/login';
+                    } else {
+                        console.error('Logout gagal');
+                    }
+                })
+                .catch(error => {
+                    console.error('Terjadi kesalahan saat logout:', error);
+                });
+            } else {
+                console.warn('FCM token tidak ditemukan di Local Storage.');
+                window.location.href = '/login';
+            }
+        }
+    </script>
     <footer class="main-footer" >
         <strong>Copyright © 2020-2023 Thrive IT Solution</strong>
     </footer>

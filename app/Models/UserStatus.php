@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+// use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserStatus extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $table = 'user_status';
 
@@ -16,6 +16,7 @@ class UserStatus extends Model
     protected $fillable = [
         'user_id',
         'fcm_id',
+        'browser_name',
         'last_login_at',
         'last_scheduled_checkin',
         'is_online',

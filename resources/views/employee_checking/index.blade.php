@@ -311,6 +311,8 @@
                     <video id="globalVideoFeed" autoplay playsinline style="width: 100%; height: auto;"></video>
                     <canvas id="globalCanvas" style="display:none;"></canvas>
                     <button id="globalTakePhotoButton" class="btn btn-secondary mt-2" onclick="takeGlobalPhoto()">Take Photo</button>
+                    <button id="toggleCameraButton" class="btn btn-info mt-2" onclick="toggleCamera()">Switch Camera</button>
+
                     <img id="globalPhotoPreview" src="#" alt="Photo Preview" style="display:none;" class="img-thumbnail mt-3">
                     <input type="file" id="globalPhoto" name="photo" style="display: none;"> <!-- Hidden file input for form submission -->
                 </div>
@@ -525,6 +527,7 @@
         const photo = document.getElementById('globalPhoto').files[0];
         const recaptchaTokenGlobal = grecaptcha.getResponse();
         const id = document.getElementById('globalCheckinPopup').dataset.checkinId;
+        const storedToken = localStorage.getItem('fcm_token');
 
         const requiresPhoto = photoInput.hasAttribute('required');
         if (requiresPhoto && !photo) {
@@ -556,6 +559,7 @@
         formData.append('longitude', longitude);
         formData.append('recaptcha', recaptchaTokenGlobal);
         formData.append('source', "manual_checkin");
+        formData.append('fcm_token', storedToken);
         formData.append('_method', 'PUT');
 
         if (photo) {
@@ -609,6 +613,8 @@
 </script>
 
 <script>
+    let currentFacingModeManual = 'environment'; // Default kamera belakang
+
     function compressAndPreviewImageCheckin() 
     {
         const fileInput = document.getElementById('globalPhoto');
@@ -703,8 +709,8 @@
     function openGlobalCamera() 
     {
         const video = document.getElementById('globalVideoFeed');
-        
-        navigator.mediaDevices.getUserMedia({ video: true })
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingModeManual } })
             .then((stream) => {
                 video.srcObject = stream;
             })
@@ -713,7 +719,7 @@
                 alert("Could not access camera. Please allow camera access.");
             });
     }
-    
+
     function takeGlobalPhoto() 
     {
         const video = document.getElementById('globalVideoFeed');
@@ -740,6 +746,21 @@
 
             video.srcObject.getTracks().forEach(track => track.stop());
         }, "image/jpeg", 0.7);
+    }
+    
+    function toggleCamera() 
+    {
+        // Beralih antara kamera depan dan belakang
+        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+        
+        // Hentikan aliran video yang aktif sebelum beralih
+        const video = document.getElementById('globalVideoFeed');
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+
+        // Buka kamera dengan facingMode yang diperbarui
+        openGlobalCamera();
     }
 </script>
 @endif

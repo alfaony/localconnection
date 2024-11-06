@@ -7,10 +7,12 @@
 @endif
 
 <li class="nav-item">
-    <a class="nav-link" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-        <i class="fa fa-fw fa-power-off text-red"></i>
-        {{ __('adminlte::adminlte.log_out') }}
-    </a>
+    <a class="btn btn-default btn-flat float-right @if(!$profile_url) btn-block @endif"
+               href="#" onclick="event.preventDefault(); logoutUser(); ">
+                <i class="fa fa-fw fa-power-off text-red"></i>
+                {{ __('adminlte::adminlte.log_out') }}
+            </a>
+
     <form id="logout-form" action="{{ $logout_url }}" method="POST" style="display: none;">
         @if(config('adminlte.logout_method'))
             {{ method_field(config('adminlte.logout_method')) }}

@@ -92,9 +92,10 @@ class CheckinNotification extends Command
                 return;
             }
 
-            $fcmId = $checkin->user->status->fcm_id;
+            $userFcmCollect = $checkin->user->status;
 
-            if (!$fcmId) {
+            if (!$userFcmCollect) 
+            {
                 $this->warn("No FCM ID found for user: {$checkin->user_id}");
                 return;
             }
@@ -102,7 +103,10 @@ class CheckinNotification extends Command
             $url = route('employee-checking.index');
 
             // Buat pesan notifikasi
-            $message = CloudMessage::withTarget('token', $fcmId)
+            $fcmTokens = $userFcmCollect->pluck('fcm_id')->toArray();
+
+            // Create the notification message
+            $message = CloudMessage::new()
                 ->withNotification([
                     'title' => $title,
                     'body' => $body,
@@ -111,10 +115,20 @@ class CheckinNotification extends Command
                     'checkin_time' => $checkin->scheduled_time,
                     'user_id' => $checkin->user_id,
                     'url' => $url,
-                ]);
+            ])->withAndroidConfig([
+                'priority' => 'high',
+            ]);
+        
 
             // Kirim pesan notifikasi ke Firebase
-            $this->messaging->send($message);
+            $sendReport = $this->messaging->sendMulticast($message, $fcmTokens);
+            if ($sendReport->hasFailures()) 
+            {
+                // Log or handle any failures
+                foreach ($sendReport->failures()->all() as $failure) {
+                    Log::error('Notification failed for token: ' . $failure->target()->value());
+                }
+            }
 
             $this->info("Notification sent to user: {$checkin->user_id} for check-in at: {$checkin->scheduled_time}");
 

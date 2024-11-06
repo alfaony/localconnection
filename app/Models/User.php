@@ -117,7 +117,7 @@ class User extends Authenticatable
 
     public function status()
     {
-        return $this->hasOne(UserStatus::class);
+        return $this->hasMany(UserStatus::class);
     }
     public function approver()
     {
