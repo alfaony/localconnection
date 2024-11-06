@@ -720,6 +720,34 @@
             });
     }
 
+    function takeGlobalPhoto() 
+    {
+        const video = document.getElementById('globalVideoFeed');
+        const canvas = document.getElementById('globalCanvas');
+        const photoInput = document.getElementById('globalPhoto');
+        const photoPreview = document.getElementById('globalPhotoPreview');
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob((blob) => {
+            const file = new File([blob], "checkin_photo.jpg", { type: "image/jpeg" });
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            photoInput.files = dataTransfer.files;
+
+            photoPreview.src = URL.createObjectURL(blob);
+            photoPreview.style.display = 'block';
+            video.style.display = 'none';
+            document.getElementById('globalTakePhotoButton').style.display = 'none';
+
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }, "image/jpeg", 0.7);
+    }
+    
     function toggleCamera() 
     {
         // Beralih antara kamera depan dan belakang
