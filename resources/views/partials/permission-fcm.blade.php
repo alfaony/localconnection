@@ -54,13 +54,18 @@
                                 sendTokenToServer(newToken);
                                 localStorage.setItem('fcm_token', newToken);
                                 console.log("New token registered.");
-                            } else if (storedToken !== newToken) {
-                                // If token has changed, update the server with the new token
+                            } 
+                            // else if (storedToken !== newToken) {
+                            //     // If token has changed, update the server with the new token
+                            //     sendTokenToServer(storedToken, newToken);
+                            //     localStorage.setItem('fcm_token', newToken); // Update stored token
+                            //     console.log("Token updated.");
+                            // } 
+                            else 
+                            {
                                 sendTokenToServer(storedToken, newToken);
                                 localStorage.setItem('fcm_token', newToken); // Update stored token
                                 console.log("Token updated.");
-                            } else {
-                                console.log("Token is already up-to-date.");
                             }
                         } else {
                             console.log('No registration token available. Request permission to generate one.');
