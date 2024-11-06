@@ -70,7 +70,7 @@
                 @endcanAccess
 
             <a class="btn btn-default btn-flat float-right @if(!$profile_url) btn-block @endif"
-               href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+               href="#" onclick="event.preventDefault(); logoutUser();">
                 <i class="fa fa-fw fa-power-off text-red"></i>
                 {{ __('adminlte::adminlte.log_out') }}
             </a>

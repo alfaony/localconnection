@@ -9,9 +9,9 @@ use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Exception\FirebaseException;
 use Carbon\Carbon;
 
-class CheckinNotification extends Command
+class CheckinNotificationV2 extends Command
 {
-    protected $signature = 'checkin:notifyAndSentPopup';
+    protected $signature = 'checkin:active {--id= : The ID of the employee checking}';
     protected $description = 'Send notifications to users for scheduled check-ins';
 
     protected $messaging;
@@ -33,21 +33,18 @@ class CheckinNotification extends Command
     public function handle()
     {
         // Ambil semua jadwal check-in dari tabel EmployeeChecking yang aktif dan belum selesai
-        $employeeCheckings = EmployeeChecking::where('is_active', true)
-            ->where('is_completed', false)
-            ->whereDate('scheduled_time', Carbon::today()) // Memfilter hanya jadwal check-in untuk hari ini
-            ->whereTime('scheduled_time', Carbon::now()->tz('Asia/Jakarta')->format('H:i'))
-            ->get();
+        $id = $this->option('id');
+        $checkin = EmployeeChecking::find($id);
 
-        foreach ($employeeCheckings as $checkin) 
+        if($checkin)
         {
             $scheduleTime = Carbon::parse($checkin->scheduled_time)->format('H:i');
             $currentTime = Carbon::now()->tz('Asia/Jakarta')->format('H:i');
-
+    
             if($currentTime == $scheduleTime)
             {
                 
-                if($checkin->division->manual_checkin == false)
+                if($checkin->user->manual_checkin == false)
                 {
                     $this->sendCheckinNotification($checkin, 'Time to Check-in', 'Please check-in now!');
                     $this->scheduleCheckinForUser($checkin);
@@ -56,8 +53,8 @@ class CheckinNotification extends Command
                     $this->sendCheckinNotification($checkin, "It's been 30 minutes, time to check in", 'Please check-in now!');
                 }
             }
-
         }
+
 
         $this->info('Check-in notifications processed successfully.');
     }
@@ -73,8 +70,9 @@ class CheckinNotification extends Command
                     'scheduled_time' => $checkin->scheduled_time,
                     'scheduled_timeout' => $checkin->scheduled_timeout,
                     'is_active' => true,
-                    'requires_photo' => $checkin->division->requires_photo,
-                    'requires_location' => $checkin->division->requires_location,
+                    'requires_photo' => $checkin->user->requires_photo,
+                    'requires_location' => $checkin->user->requires_location,
+                    'time_server' => Carbon::now()->tz('Asia/Jakarta'),
                 ]);
             } catch (FirebaseException $e) {
                 $this->error("Gagal menyimpan di Firebase untuk user {$checkin->user_id}. Data tetap tersimpan di lokal.");

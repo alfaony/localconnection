@@ -1,5 +1,5 @@
 <!-- Firebase harus di-include di layout utama sebelum popup ini -->
- @canAccess('update','employee_checkings')
+@canAccess('update','employee_checkings')
 <div id="checkinPopup" class="" style="display: none !important;">
     <div class="popup-content">
         <h2>Time to Check-in </h2>
@@ -16,6 +16,7 @@
             <video id="videoFeed" autoplay playsinline style="width: 100%; height: auto;"></video>
             <canvas id="canvas" style="display:none;"></canvas>
             <button id="takePhotoButton" class="btn btn-secondary mt-2" onclick="takePhoto()">Take Photo</button>
+            <button id="toggleCameraButton" class="btn btn-info mt-2" onclick="toggleCamera()">Switch Camera</button>
             <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-thumbnail mt-3">
             <input type="file" id="photo" name="photo" style="display: none;"> <!-- Hidden file input for form submission -->
         </div>
@@ -169,7 +170,16 @@
         const photoSection = document.getElementById('photoSection');
         const locationSection = document.getElementById('locationSection');
         const locationButton = document.querySelector('#locationSection button');
+        const audio = document.getElementById('checkinAudio'); // Referensi ke elemen audio
         
+        if (audio) 
+        {
+            audio.currentTime = 0; // Mulai dari awal
+            audio.play().catch(error => {
+                console.error("Audio playback failed:", error);
+            });
+        }
+
         if (popup.style.display === 'flex') 
         {
             return; // Jika sudah terbuka, jangan mulai countdown baru
@@ -210,19 +220,11 @@
     // Fungsi untuk memulai hitungan mundur
     function startCountdown(duration, localId) {
         let countdownEl = document.getElementById('countdown');
-        const audio = document.getElementById('checkinAudio'); // Referensi ke elemen audio
         let timer = duration;
-
-        if (audio) 
-        {
-            audio.currentTime = 0; // Mulai dari awal
-            audio.play().catch(error => {
-                console.error("Audio playback failed:", error);
-            });
-        }
+        
         // Hentikan timer jika sudah berjalan sebelumnya
         if (intervalId) clearInterval(intervalId);
-
+        
         // Mulai timer baru
         intervalId = setInterval(() => {
             timer--;
@@ -256,12 +258,14 @@
     // Buka popup dan aktifkan kamera secara otomatis
 
     // Fungsi untuk membuka kamera
+    let currentFacingMode = 'environment'; // Default kamera belakang
+
     function openCamera() 
     {
         const video = document.getElementById('videoFeed');
         
         // Akses kamera dan tampilkan video feed
-        navigator.mediaDevices.getUserMedia({ video: true })
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } })
             .then((stream) => {
                 video.srcObject = stream;
             })
@@ -271,6 +275,20 @@
             });
     }
 
+    function toggleCamera() 
+    {
+        // Beralih antara kamera depan dan belakang
+        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+        
+        // Hentikan aliran video yang aktif sebelum beralih
+        const video = document.getElementById('videoFeed');
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+
+        // Buka kamera dengan facingMode yang diperbarui
+        openCamera();
+    }
     // Fungsi untuk mengambil foto saat tombol "Take Photo" ditekan
     function takePhoto() {
         const video = document.getElementById('videoFeed');
@@ -423,12 +441,14 @@
         const longitude = document.getElementById('longitude').value;
         const photo = document.getElementById('photo').files[0];
         const recaptcha = recaptchaToken;
+        const storedToken = localStorage.getItem('fcm_token');
         
         // Prepare FormData for AJAX request
         let formData = new FormData();
         formData.append('latitude', latitude);
         formData.append('longitude', longitude);
         formData.append('recaptcha', recaptcha);
+        formData.append('fcm_token', storedToken);
         formData.append('_method', 'PUT');
         
         if (photo) {

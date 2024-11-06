@@ -107,7 +107,6 @@
     @endauth
     {{-- Custom Scripts --}}
     @yield('adminlte_js')
-    @include('partials.permission-fcm')
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -120,7 +119,34 @@
         }
     </script>
     @auth
+    <script>
+        function logoutUser() 
+        {
+            const fcmToken = localStorage.getItem('fcm_token');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
+            fetch('/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                body: JSON.stringify({ fcm_token: fcmToken || null })
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Clear Local Storage and redirect after successful logout
+                    localStorage.removeItem('fcm_token');
+                    window.location.href = '/login';
+                } else {
+                    console.error('Logout failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error during logout:', error);
+            });
+        }
+    </script>
     <footer class="main-footer" >
         <strong>Copyright © 2020-2023 Thrive IT Solution</strong>
     </footer>
