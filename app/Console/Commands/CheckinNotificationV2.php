@@ -70,8 +70,8 @@ class CheckinNotificationV2 extends Command
                     'scheduled_time' => $checkin->scheduled_time,
                     'scheduled_timeout' => $checkin->scheduled_timeout,
                     'is_active' => true,
-                    'requires_photo' => $checkin->division->requires_photo,
-                    'requires_location' => $checkin->division->requires_location,
+                    'requires_photo' => $checkin->user->requires_photo,
+                    'requires_location' => $checkin->user->requires_location,
                     'time_server' => Carbon::now()->tz('Asia/Jakarta'),
                 ]);
             } catch (FirebaseException $e) {
