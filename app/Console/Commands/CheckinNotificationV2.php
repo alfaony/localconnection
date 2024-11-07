@@ -7,6 +7,7 @@ use App\Models\EmployeeChecking;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Exception\FirebaseException;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class CheckinNotificationV2 extends Command
