@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.0.2",
         "anhskohbo/no-captcha": "^3.6",
+        "barryvdh/laravel-dompdf": "^3.0",
         "dcblogdev/laravel-xero": "^1.1",
         "doctrine/dbal": "^3.7",
         "guzzlehttp/guzzle": "^7.2",
@@ -20,6 +21,8 @@
         "laravel/ui": "^4.2",
         "maatwebsite/excel": "^3.1",
         "ramsey/uuid": "^4.7",
+        "setasign/fpdf": "^1.8",
+        "setasign/fpdi": "^2.6",
         "spatie/laravel-activitylog": "^4.7"
     },
     "require-dev": {

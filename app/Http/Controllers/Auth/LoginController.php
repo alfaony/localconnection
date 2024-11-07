@@ -13,12 +13,13 @@ use App\Models\Attendance;
 use App\Models\SettingCompany;
 use App\Models\ScheduleOb;
 use Illuminate\Support\Facades\Auth;
+use App\Models\UserStatus;
 
 class LoginController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | Login Controller
+    | Login ControllPer
     |--------------------------------------------------------------------------
     |
     | This controller handles authenticating users for the application and
@@ -120,6 +121,28 @@ class LoginController extends Controller
 
     //     return redirect()->intended($this->redirectPath());
     // }
+
+    //*
+    public function logout(Request $request)
+    {
+        // Ambil `fcm_id` dari request
+        $fcmId = $request->input('fcm_token');
+
+        // Jika `fcm_id` tersedia, hapus `user_status`
+        if ($fcmId) 
+        {
+            UserStatus::where('fcm_id', $fcmId)->delete();
+        }
+
+        // Logout pengguna
+        Auth::logout();
+
+        // Redirect setelah logout
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/login')->with('status', 'Logout berhasil');
+    }
 
 
     /**

@@ -18,8 +18,19 @@ use App\Models\ReportProjectDetail;
 use App\Models\WorkOrder;
 use App\Models\Project;
 use App\Models\SortUrl;
+use App\Models\User;
+use App\Models\SettingCompany;
+
 use ZipArchive;
 
+use App\Helpers\InboxHelper;
+use App\Helpers\EmailNotifHelper;
+
+use App\Schemas\RoleSchema;
+
+use PDF;
+use setasign\Fpdi\Fpdi;
+use App\Mail\SendBastEmail;
 class ReportProjectController extends Controller
 {
     /**
@@ -94,6 +105,7 @@ class ReportProjectController extends Controller
             $reportProject->number_result = $nomorReportProject['result'];
             $reportProject->work_order_id = $project->work_order_id;
             $reportProject->project_id = $request->post('project');
+            $reportProject->is_approve = NULL;
             // $reportProject->link_report = $request->post('link_report');
             $reportProject->user_created_id = Auth::user()->id;
             $reportProject->user_updated_id = Auth::user()->id;
@@ -136,7 +148,8 @@ class ReportProjectController extends Controller
             }
     
             
-            
+            $this->sendNotification($reportProject, 'store', Auth::user()->company_id);
+
             DB::commit();
             return redirect()->to(route('report-project.index'))->with('store', true);
         } catch (\Throwable $th) 
@@ -169,6 +182,27 @@ class ReportProjectController extends Controller
         return view('report_project.createOrEdit',compact('project','nomorReportProject','userCreate','reportProject','workOrder'));
     }
 
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\ReportProject  $ReportProject
+     * @return \Illuminate\Http\Response
+     */
+    public function show($slug)
+    {
+        $reportProject = ReportProject::where('slug',$slug)->first();
+        $nomorReportProject = $reportProject->number_result;
+        $project = Project::byCompany(Auth::user()->company_id)
+        ->whereDoesntHave('reportProject')
+        ->orWhere('id', $reportProject->project_id)
+        ->orderBy('created_at', 'desc')->get();
+        $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
+        $userCreate = $reportProject->userCreate ? $reportProject->userCreate->name : '';
+
+        return view('report_project.show',compact('project','nomorReportProject','userCreate','reportProject','workOrder'));
+    }
+
     /**
      * Update the specified resource in storage.
      *
@@ -182,7 +216,13 @@ class ReportProjectController extends Controller
         try {
             $project = Project::byCompany(Auth::user()->company_id)->find($request->post('project'));
 
+            
             $reportProject = ReportProject::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            if($reportProject->user_create_id == Auth::user()->id || $reportProject->user_updated_id == Auth::user()->id )
+            {
+                $reportProject->is_approve = NULL;
+                $this->sendNotification($reportProject, 'update', Auth::user()->company_id);
+            }
             $reportProject->date = $request->post('date');
             $reportProject->work_order_id = $project->work_order_id;
             $reportProject->project_id = $request->post('project');  
@@ -195,7 +235,6 @@ class ReportProjectController extends Controller
             $link = $request->post('link');
             $file = $request->file('file');
             
-    
             for ($i = 0; $i < count($name); $i++) 
             {
                 $id = $ids[$i];
@@ -262,6 +301,13 @@ class ReportProjectController extends Controller
     
             }
             
+            $this->sendNotification($reportProject, 'update', Auth::user()->company_id);
+
+            if($reportProject->project->bast)
+            {
+                $mergedFilePath = $this->mergePdfFiles($reportProject->project->bast, $reportProject);
+            }
+
             DB::commit();
             return redirect()->to(route('report-project.index'))->with('update', true);
         } catch (\Throwable $th) {
@@ -293,6 +339,67 @@ class ReportProjectController extends Controller
         ReportProjectDetail::find($id)->delete();
         return true;
     }
+
+    /**
+     * approvement
+     */
+    public function approvement(Request $request, $id)
+    {
+        $project = ReportProject::find($id);
+
+        if (!$project) {
+            return response()->json(['message' => 'Proyek tidak ditemukan.'], 404);
+        }
+
+        try {
+            // Update approvement status dan note
+            if($request->is_approve == 0)
+            {
+                $inboxHelper = new InboxHelper();
+                if($project->user_created_id != $project->user_updated_id)
+                {
+                    $directUrl = route('report-project.edit', $project->slug);
+    
+                    $inboxHelper->sent
+                    (
+                        $project->user_created_id, 
+                        Auth::user()->id, 
+                        'Report Tertolak, dengan catatan' . $request->note, 
+                        $directUrl
+                    );
+    
+    
+                    $inboxHelper->sent
+                    (
+                        $project->user_created_id, 
+                        Auth::user()->id, 
+                        'Report Tertolak, dengan catatan' . $request->note, 
+                        $directUrl
+                    );
+                    
+                }
+            }
+    
+            $project->is_approve = $request->is_approve;
+            $project->note = $request->note;
+            $project->save();
+    
+            $approvement = $request->is_approve == 1 ? 'approve' : 'notapprove';
+            
+            // Not APprove Email
+            if($approvement == 'notapprove')
+            {
+                $this->sendNotification($project, $approvement, Auth::user()->company_id,true,$request->note);
+            }
+    
+            return response()->json(['message' => 'Approvement berhasil disimpan.']);
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th->getMessage());
+            return response()->json(['message' => 'Approvement gagal disimpan.'], 500);
+        }
+    }
+
     /**
      * Data table for load AgreementLetter
      */
@@ -300,15 +407,16 @@ class ReportProjectController extends Controller
     {
         // Fetch data for the DataTable
         $query = ReportProject::query();
-        $query->byCompany(Auth::user()->company_id)->with('project','workOrder')->orderBy('created_at', 'desc');
+        $query->byCompany(Auth::user()->company_id)->with('project','workOrder')->orderBy('is_approve', 'asc')->orderBy('created_at', 'desc');
 
         // Map column indexes to column names (this may vary based on your table structure)
-        $columnNames = ['date','number_result', 'slug'];
+        $columnNames = ['date','is_approve','number_result', 'slug'];
 
         // Define searchable columns
         $searchable = 
         [
             0 => 'number_result',
+            0 => 'is_approve',
             1 => 'date',
             2 => 'workOrder.number_result',
             3 => 'project.title',
@@ -321,6 +429,18 @@ class ReportProjectController extends Controller
         $actionButtons = [
             
         ];
+
+        if(Access::can('show','report_projects'))
+        {
+            $edit = 
+            [
+                'name' => 'Show',
+                'route' => 'report-project.show',
+                'id' => true,
+            ];
+
+            array_push($actionButtons,$edit);
+        }
 
         if(Access::can('edit','report_projects'))
         {
@@ -359,7 +479,37 @@ class ReportProjectController extends Controller
         }
         
 
-        return datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+        $response = datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+
+        $data = $response->getData();
+        foreach ($data->data as $index => $item) 
+        {
+            $status = NULL;
+            $badgeClass = ''; // Menyimpan kelas badge
+
+            // Cek nilai is_approve dan set status dan kelas badge
+            if (is_null($item->is_approve)) 
+            {
+                $status = "Waiting Approve";
+                $badgeClass = 'badge-warning';
+            } 
+            elseif ($item->is_approve == 1) 
+            {
+                $status = "Approve";
+                $badgeClass = 'badge-success';
+            } 
+            elseif ($item->is_approve == 0) 
+            {
+                $status = "Declined";
+                $badgeClass = 'badge-danger';
+            }
+
+            // Mengubah status menjadi badge
+            $item->is_approve = "<span class='badge $badgeClass'>$status</span>";
+        }
+
+
+        return response()->json($data);
     }
 
     public function dataTableJsonWorkOrderWithoutReportProject()
@@ -443,5 +593,205 @@ class ReportProjectController extends Controller
             'number' => $nomor ?? 0,
             'result' => $nomor.'/'.$date ?? '' 
         ];
+    }
+
+    private function sendNotification($reportProject, $timeNotify, $companyId, $approval = null,  $notes = null)
+    {
+        $data = [
+            'work_order' => $reportProject->workOrder->number_result,
+            'project' => $reportProject->project->title,
+            'user_create' => $reportProject->userCreate->name,
+            'created_at' => Carbon::parse($reportProject->created_at)->format('d-m-Y'),
+            'notes' => $notes
+        ];
+        
+        $toEmails = [];
+        $toUserId = [];
+        $toNames = [];
+        
+        if(!$approval)
+        {
+            $ccEmails = [Auth::user()->email];
+            $usersAdmin = User::where('company_id',Auth::user()->company_id)->whereHas('role', function($q){
+                $q->where('name',RoleSchema::ADMIN);
+            })->get();
+
+            if($usersAdmin->isEmpty())
+            {
+                return false;
+            }
+
+            $lead = User::byCompany(Auth::user()->company_id)->where('id',Auth::user()->approvement_user_id)->first();
+            foreach ($usersAdmin as $user) 
+            {
+                $toEmails[] = $user->email;
+                $toUserId[] = $user->id;
+                $toNames[] = $user->name;
+            }
+
+            if($lead) $toEmails[] = $lead->email;
+        }else
+        {
+            $toEmails[] = $reportProject->userCreate->email;
+            $toUserId[] = $reportProject->userCreate->id;
+            $toNames[] = $reportProject->userCreate->name;
+            $ccEmails = [Auth::user()->email];
+        }
+
+        $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $fromEmail = $smtpConfig['username'] ?? '';
+        $fromName = $smtpConfig['name'] ?? '';
+
+        $directUrl = route('report-project.show', $reportProject->slug);
+        $data['url'] = $directUrl;
+
+        switch ($timeNotify) 
+        {
+            case "store":
+                $subject = 'Laporan Proyek Baru untuk Persetujuan';
+                $tamplate = 'email.notif_create_report_project';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "update":
+                $subject = 'Notifikasi Pembaruan Laporan Proyek – Revisi Telah Diupload';
+                $tamplate = 'email.notif_create_report_project';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "approve":
+                $subject = 'Anggaran '.$budget->name.' Disetujui';
+                $tamplate = 'email.notif_budget_approval';
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "notapprove":
+                $subject = 'Laporan Proyek – Revisi Diperlukan';
+                $tamplate = 'email.notif_decline_report_project';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+        }
+
+        $data['title'] = $subject;
+        
+        // Email Helper Notification
+         EmailNotifHelper::sentEmail(
+            $fromEmail,
+            $fromName,
+            $toEmails, 
+            $toNames, 
+            $subject,
+            $tamplate,
+            $data, 
+            $smtpConfig, 
+            $companyId, 
+            $ccEmails
+        );
+    }
+
+    private function sentInbox($to,$message,$directUrl)
+    {
+        foreach ($to as $key => $value) 
+        {
+            $inboxHelper = new InboxHelper();
+            $inboxHelper->sent(
+                $value, 
+                Auth::user()->id, 
+                $message, 
+                $directUrl
+            );
+        }
+
+        return;
+    }
+    private function mergePdfFiles($bast, $reportProject)
+    {
+        try {
+            // Check if a file already exists and delete it before updating
+            if (!empty($bast->file_merge_path) && Storage::exists($bast->file_merge_path)) 
+            {
+                Storage::delete($bast->file_merge_path);
+            }
+            
+            // Initialize an array to store PDF file paths
+            $pdfFiles = [];
+
+            // Collect only PDF files from reportProjectDetail
+            foreach ($reportProject->reportedDetails as $detail) 
+            {
+                $filePath = storage_path('app/public/reports/' . $detail->file);
+                $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+
+                if (file_exists($filePath) && strtolower($fileExtension) === 'pdf') {
+                    $pdfFiles[] = $filePath;
+                }
+            }
+            // Generate a new PDF from the 'bast.pdf_download' view
+            $today = Carbon::now()->format('d M Y');
+            $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+
+            $additionalPdf = PDF::loadView('bast.pdf_download', compact('bast', 'today','company'));
+
+            // Convert generated PDF to a string
+            $additionalPdfContent = $additionalPdf->output();
+
+            // Save the additional PDF as a temporary file
+            $tempFilePath = 'public/temp_additional.pdf';
+            Storage::put($tempFilePath, $additionalPdfContent);
+
+            // Initialize FPDI to merge PDFs
+            $mergedPdf = new Fpdi();
+
+            // Add the additional PDF first
+            $additionalPdfPath = Storage::path($tempFilePath);
+            if (file_exists($additionalPdfPath)) {
+                $pageCount = $mergedPdf->setSourceFile($additionalPdfPath);
+
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $templateId = $mergedPdf->importPage($pageNo);
+                    $size = $mergedPdf->getTemplateSize($templateId);
+
+                    $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $mergedPdf->useTemplate($templateId);
+                }
+            } else {
+                throw new \Exception('Temporary additional PDF file not found.');
+            }
+
+            // Merge the collected PDF files
+            foreach ($pdfFiles as $pdfFile) {
+                $pageCount = $mergedPdf->setSourceFile($pdfFile);
+
+                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                    $templateId = $mergedPdf->importPage($pageNo);
+                    $size = $mergedPdf->getTemplateSize($templateId);
+
+                    $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                    $mergedPdf->useTemplate($templateId);
+                }
+            }
+
+            // Create the final merged PDF path
+            $finalFileName = 'merged_' . str_replace('/', '_', $bast->number_result) . '.pdf';
+            $finalFilePath = 'public/reports/' . $finalFileName;
+
+            // Output the final merged PDF to storage
+            $finalPdfContent = $mergedPdf->Output('', 'S');
+            Storage::put($finalFilePath, $finalPdfContent);
+
+            // Delete temporary files
+            Storage::delete($tempFilePath);
+            
+            $bast->file_merge_path = $finalFilePath;
+            $bast->save();
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('Error in merging PDF files: ' . $e->getMessage());
+            return false;
+        }
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 use App\Schemas\RoleSchema;
 
 use App\Http\Requests\UserRequest;
@@ -14,9 +15,10 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Company;
 use App\Models\Division;
+use App\Models\UserStatus;
 
 use App\Rules\MatchOldPassword;
-
+use Carbon\Carbon;
 class UserController extends Controller
 {
     /**
@@ -90,6 +92,15 @@ class UserController extends Controller
         $user->company_id = $request->post('company') ?? Auth::user()->company_id;
         $user->password = bcrypt($request->post('password'));
         $user->approvement_user_id = $request->post('approvement_user_id') ?? NULL;
+
+        // Checkin
+        $user->is_checkin = $request->post('is_checkin', 0); // Default 0 jika tidak dicentang
+        $user->manual_checkin = $request->post('manual_checkin', 0);
+        $user->requires_photo = $request->post('requires_photo', 0);
+        $user->requires_location = $request->post('requires_location', 0);
+        $user->start_time = $request->post('start_time');
+        $user->end_time = $request->post('end_time');
+        $user->rest_time = $request->post('rest_time');
         $user->save();
 
 
@@ -183,6 +194,15 @@ class UserController extends Controller
         $divisions = $request->input('divisions');
         $user->divisions()->sync($divisions);
 
+        // Checkin
+        $user->is_checkin = $request->post('is_checkin', 0); // Default 0 jika tidak dicentang
+        $user->manual_checkin = $request->post('manual_checkin', 0);
+        $user->requires_photo = $request->post('requires_photo', 0);
+        $user->requires_location = $request->post('requires_location', 0);
+        $user->start_time = $request->post('start_time');
+        $user->end_time = $request->post('end_time');
+        $user->rest_time = $request->post('rest_time');
+
         $user->save();
 
         return redirect()->to(route('user.index'))->with('update',true);
@@ -207,12 +227,14 @@ class UserController extends Controller
     public function profileEdit($slug)
     {
         $userEdit = User::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        $userApps = UserStatus::where('user_id', $userEdit->id)->orderby('last_scheduled_checkin','desc')->paginate(5);
 
+        
         if($userEdit->id != Auth::user()->id)
         {
             return redirect()->back();
         }
-        return view('user.edit', compact('userEdit'));
+        return view('user.edit', compact('userEdit','userApps'));
     }
 
     /**
@@ -270,9 +292,44 @@ class UserController extends Controller
 
         $user->save();
 
-        return redirect()->to(route('home'))->with('updateProfile',true);
+        return redirect()->to(route('home'))->with('updateProfile',true);   
+    }
 
+    public function updatefcm(Request $request)
+    {
+        // Validasi input
+        $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        // Dapatkan user yang sedang login
+        try 
+        {
+            $user = Auth::user();
+            $userStatus = UserStatus::where('user_id', $user->id)->where('fcm_id', $request->token)->first();
         
+            if (!$userStatus) 
+            {
+                $userStatus = new UserStatus();
+                $userStatus->user_id = $user->id;
+                $userStatus->browser_name = $request->browser_name;
+                $userStatus->fcm_id = $request->token;
+                $userStatus->is_online = 1;
+                $userStatus->last_login_at = Carbon::now();
+            } else {
+                $userStatus->browser_name = $request->browser_name;
+                $userStatus->fcm_id = $request->new_token ?? $request->token;
+                $userStatus->is_online = 1;
+                $userStatus->last_login_at = Carbon::now();
+            }
+            $userStatus->save();
+            
+            return response()->json(['message' => 'FCM ID updated successfully.'], 200);
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th);
+            return response()->json(['message' => 'Failed to update FCM ID.'], 500);
+        }
     }
     
 }

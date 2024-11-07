@@ -5,11 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Ramsey\Uuid\Uuid;
+
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
 
 class User extends Authenticatable
 {
@@ -79,6 +83,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    protected $appends = ['point_checkin', 'today_percentage', 'point_percentage'];
+
     public function role()
     {
         return $this->belongsTo(Role::class)->withTrashed();
@@ -109,6 +115,10 @@ class User extends Authenticatable
         return $this->hasMany(SettingCompany::class);
     }
 
+    public function status()
+    {
+        return $this->hasMany(UserStatus::class);
+    }
     public function approver()
     {
         return $this->belongsTo(User::class, 'approvement_user_id');
@@ -119,11 +129,20 @@ class User extends Authenticatable
         return $this->belongsToMany(Division::class);
     }
 
+    public function getFirstDivisionAttribute()
+    {
+        return $this->divisions->first();
+    }
+    
     public function userPosition()
     {
         return $this->hasMany(UserPosition::class);
     }
 
+    public function employeeCheckings()
+    {
+        return $this->hasMany(EmployeeChecking::class);
+    }
     public function getLastPositionAttribute()
     {
         return $this->userPosition()
@@ -159,6 +178,66 @@ class User extends Authenticatable
     {
         return $this->salary()->latest()->first();
     }
+
+    public function getPointCheckinAttribute()
+    {
+        $totalCheckins = $this->total_successful_checkins ?? 0;
+        $targetCheckins = $this->total_days * ParamSchema::TARGET_CHECKIN;
+
+        $pointPercentage = $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
+
+        return "{$totalCheckins} (" . number_format($pointPercentage, 0) . "%)";
+    }
+
+    public function getTodayPercentageAttribute()
+    {
+        $totalToday = $this->total_checkin_today ?? 0;
+
+        $todayPercentage = $totalToday ? ($totalToday / 10) * 100 : 0;
+
+        return "{$totalToday} (" . number_format($todayPercentage, 0) . "%)";
+    }
+
+    public function getPointPercentageAttribute()
+    {
+        $totalCheckins = $this->total_successful_checkins ?? 0;
+        $targetCheckins = $this->total_days * ParamSchema::TARGET_CHECKIN;
+
+        return $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
+    }
+
+    // Scope query untuk mendapatkan data user dengan perhitungan
+    public function scopeWithCheckinCounts($query, $userId = null, $start = null, $end = null, $today = null)
+    {
+        return $query->select('users.*')
+            ->byCompany(auth()->user()->company_id)
+            ->when($userId, function ($query) use ($userId) {
+                $query->where('id', $userId);
+            })
+            ->withCount([
+                'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
+                    $query->where('is_active', false)
+                          ->where('is_completed', true)
+                          ->where('is_dayoff', false)
+                          ->whereDate('created_at', $today);
+                },
+                'employeeCheckings as total_successful_checkins' => function ($query) use ($start, $end) {
+                    $query->where('is_active', false)
+                          ->where('is_completed', true)
+                          ->where('is_dayoff', false);
+                    if ($start && $end) {
+                        $query->whereBetween('created_at', [$start, $end]);
+                    }
+                },
+                'employeeCheckings as total_days' => function ($query) use ($start, $end) {
+                    $query->select(DB::raw('COUNT(DISTINCT DATE(created_at))'))
+                          ->where('is_dayoff', false);
+                    if ($start && $end) {
+                        $query->whereBetween('created_at', [$start, $end]);
+                    }
+                }
+            ]);
+    }
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)
@@ -167,6 +246,25 @@ class User extends Authenticatable
         }
     }
 
+    // Is Or Not
+    public function isShow()
+     {
+        if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR || Auth::user()->role->name == RoleSchema::HR || Auth::user()->role->name == RoleSchema::FINANCE)
+        {
+            return true;      
+        }else
+        {
+            if($this->id == Auth::user()->id)
+            {
+                return true;
+            }else
+            {
+                return false;
+            }
+        }
+        
+
+     }
     public function scopeByRole($query,$role)
     {
         if($role)
@@ -176,5 +274,35 @@ class User extends Authenticatable
                 $query->where('name', $role);
             });
         }
+    }
+
+    public function scopeByRoleSearch($query)
+    {
+        if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR)
+        {
+            return $query->where('company_id', Auth::user()->company_id);
+        }
+        else
+        {
+            return $query->where('id', Auth::user()->id);
+        }
+    }
+
+    public function scopeByRoleList($query,$userId)
+    {
+        // if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR)
+        // {
+            if($userId)
+            {
+                return $query->where('id', $userId);
+            }else
+            {
+                $query->byCompany(Auth::user()->company_id);
+            }
+        // }
+        // else
+        // {
+        //     return $query->where('id', Auth::user()->id);
+        // }
     }
 }

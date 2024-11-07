@@ -101,11 +101,52 @@
             <livewire:scripts />
         @endif
     @endif
-
+    @include('partials.firebase')
+    @auth
+    @include('components.checkin-popup')
+    @endauth
     {{-- Custom Scripts --}}
     @yield('adminlte_js')
 
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then(function(registration) {
+                console.log('Service Worker registered with scope:', registration.scope);
+            }).catch(function(err) {
+                console.log('Service Worker registration failed:', err);
+            });
+        }
+    </script>
     @auth
+    <script>
+        function logoutUser() 
+        {
+            const fcmToken = localStorage.getItem('fcm_token');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            fetch('/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                body: JSON.stringify({ fcm_token: fcmToken || null })
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Clear Local Storage and redirect after successful logout
+                    localStorage.removeItem('fcm_token');
+                    window.location.href = '/login';
+                } else {
+                    console.error('Logout failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error during logout:', error);
+            });
+        }
+    </script>
     <footer class="main-footer" >
         <strong>Copyright © 2020-2023 Thrive IT Solution</strong>
     </footer>

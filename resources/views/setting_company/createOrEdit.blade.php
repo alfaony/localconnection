@@ -261,6 +261,36 @@
                                     <label for="webhook_key">Webhook Key</label>
                                     <input type="text" name="webhook_key" class="form-control" value="{{ old('webhook_key', isset($data['webhook_key']) ? $data['webhook_key'] : '') }}">
                                     @error('webhook_key')
+                        <div class="card-header" id="headingThree">
+                        <h5 class="mb-0">
+                            <button type="button" class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                Header dan Footer Kop Surat
+                            </button>
+                        </h5>
+                        </div>
+                        <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="header">Upload Header</label>
+                                    @if(isset($data['header']) && file_exists(public_path('storage/' . $data['header']))) 
+                                        <div class="mb-2">
+                                            <a href="{{ Storage::url($data['header']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Header</a>
+                                        </div>
+                                    @endif
+                                    <input type="file" name="header" class="form-control-file" accept="image/*">
+                                    @error('header')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="form-group">
+                                    <label for="footer">Upload Footer</label>
+                                    @if(isset($data['footer']) && file_exists(public_path('storage/' . $data['footer']))) 
+                                        <div class="mb-2">
+                                            <a href="{{ Storage::url($data['footer']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Footer</a>
+                                        </div>
+                                    @endif
+                                    <input type="file" name="footer" class="form-control-file" accept="image/*">
+                                    @error('footer')
                                     <span class="text-danger text-sm">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -268,7 +298,6 @@
                         </div>
                     </div>
                 </div>
-
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
 
