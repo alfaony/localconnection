@@ -123,7 +123,7 @@ class CheckinNotificationV2 extends Command
             if ($sendReport->hasFailures()) 
             {
                 // Log or handle any failures
-                foreach ($sendReport->failures() as $failure) {
+                foreach ($sendReport->failures()->getItems() as $failure) {
                     Log::error('Notification failed for token: ' . $failure->target()->value());
                 }
             }
