@@ -104,6 +104,10 @@ class CheckinNotificationV2 extends Command
             // Buat pesan notifikasi
             $fcmTokens = $userFcmCollect->pluck('fcm_id')->toArray();
 
+            $fcmTokens = array_filter($fcmTokens, function($token) 
+            {
+                return is_string($token) && !empty($token);
+            });
             // Create the notification message
             $message = CloudMessage::new()
                 ->withNotification([
