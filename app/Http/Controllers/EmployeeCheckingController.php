@@ -162,7 +162,7 @@ class EmployeeCheckingController extends Controller
 
         if ($source == 'manual_checkin') 
         {
-            $lastScheduledCheckin = EmployeeChecking::where('user_id', $employeeChecking->user_id)->whereDate('scheduled_time', Carbon::today())->orderBy('updated_at', 'desc')->first();
+            $lastScheduledCheckin = EmployeeChecking::where('user_id', $employeeChecking->user_id)->where('is_active', false)->whereDate('scheduled_time', Carbon::today())->orderBy('updated_at', 'desc')->first();
     
             if ($lastScheduledCheckin) 
             {
