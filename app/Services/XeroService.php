@@ -137,7 +137,8 @@ class XeroService
                 ]
             ];
 
-            $this->xeroBos->contacts()->store($data);
+            // $this->xeroBos->contacts()->store($data);
+            $this->xeroBos->post('contacts', $data);
             
             return $this->xero->contacts()->where('EmailAddress', $customer->email)
             ->where('Name', $customer->name)
