@@ -172,7 +172,7 @@ class InvoiceController extends Controller
             return redirect()->to(route('invoice.index'))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
 
             DB::rollback();
             Log::error($th);
