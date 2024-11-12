@@ -938,27 +938,14 @@
         $('#service_fee').val(service_fee);
         $('#discount').val(discount);
         $("#charges").val(charges);
-        if(discount > 0)
-        {
-            let discountProduct = document.getElementById("discount").value;
-            if (discountProduct) 
-            {
-                document.getElementById("discount_show").value = discountProduct;
-                formatRupiahFormat(document.getElementById("discount_show"),"discount"); // Format default value
-            }
-        }
         
-        console.log(charges);
-        
-        if(charges > 0)
-        {
-            let chargesProduct = document.getElementById("charges").value;
-            if (chargesProduct) 
-            {
-                document.getElementById("charges_show").value = chargesProduct;
-                formatRupiahFormat(document.getElementById("charges_show"),"charges"); // Format default value
-            }
-        }
+        let discountProduct = document.getElementById("discount").value;
+        document.getElementById("discount_show").value = discountProduct;
+        formatRupiahFormat(document.getElementById("discount_show"),"discount"); // Format default value
+
+        let chargesProduct = document.getElementById("charges").value;
+        document.getElementById("charges_show").value = chargesProduct;
+        formatRupiahFormat(document.getElementById("charges_show"),"charges"); // Format default value
 
         calculation();
     }
