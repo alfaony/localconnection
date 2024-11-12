@@ -245,7 +245,7 @@ class XeroWebhookController extends Controller
     public function isCheckingInvoice($id)
     {
         $invoice = Invoice::where('slug',$id)->first();
-        dd($this->updateInvoiceFromXero($invoice->invoice_xero_id));
+        return $this->updateInvoiceFromXero($invoice->invoice_xero_id);
     }
 
     protected function updateInvoiceFromXero($invoiceId)
