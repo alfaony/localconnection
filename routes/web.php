@@ -75,12 +75,14 @@ use App\Http\Controllers\LoginController;
 */
 
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook']);
-Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
+Route::group(['middleware' => ['auth','web']], function()
+{ 
+  Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
+});
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-
-Route::group(['middleware' => ['auth','web', 'XeroAuthenticated','role.permission']], function(){
+Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
   Route::get('xero',function(){
 
     return redirect('/invoice')->with('xero',true);
@@ -107,6 +109,7 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('ho
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::get('invoice/history/{slug}', [InvoiceController::class, 'history'])->name('invoices.history');
+Route::get('xero/callback', [XeroController::class, 'callback'])->name('xero.callback');
 
 Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');
 

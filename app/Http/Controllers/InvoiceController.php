@@ -48,12 +48,15 @@ class InvoiceController extends Controller
      */
     public function index(Request $request)
     {
+
         // Ambil input pencarian dari request
         $search = $request->input('search');
         $order = $request->input('order') ?? 'desc';
         $status = $request->input('status');
         $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null; // Parse tanggal dari string ke Carbon
         $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
+        
+        $isConnect = $this->xeroService->isConnected();
 
         $invoice = Invoice::byCompany(Auth::user()->company_id)->byDateRange($start_date,$end_date)
         ->when($search, function ($query, $search) {
@@ -70,7 +73,7 @@ class InvoiceController extends Controller
 
         $searchByStatus = config('custom.status_invoice_search');
 
-        return view('invoice.index',compact('invoice','searchByStatus'));
+        return view('invoice.index',compact('invoice','searchByStatus','isConnect'));
     }
 
     /**
@@ -169,7 +172,7 @@ class InvoiceController extends Controller
             return redirect()->to(route('invoice.index'))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
 
             DB::rollback();
             Log::error($th);
@@ -325,7 +328,7 @@ class InvoiceController extends Controller
             // dd($th);    
             DB::rollback();
             Log::error($th);
-            return redirect()->to(route('invoice.index'))->with('false',true);
+            return redirect()->to(route('invoice.index'))->with('false',false);
         }
     }
 
@@ -689,7 +692,6 @@ class InvoiceController extends Controller
     {
         $contactXero = $this->xeroService->checkOrCreateContact($invoice->quote->customer);
         $invoiceXero = $this->xeroService->createInvoice($invoice, $contactXero);
-        
         $invoice->number_result = $invoiceXero['InvoiceNumber'];
         $invoice->invoice_xero_id = $invoiceXero['InvoiceID'];
         $invoice->contact_xero_id = $contactXero->ContactID;

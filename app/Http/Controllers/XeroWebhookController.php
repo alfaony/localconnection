@@ -16,17 +16,58 @@ use App\Schemas\ParamSchema;
 
 use Carbon\Carbon;
 
+use App\Services\XeroBos;
 class XeroWebhookController extends Controller
 {
+    protected $xeroBos;
+    public function __construct()
+    {
+        $this->xeroBos = new XeroBos();
+    }
     public function handleWebhook(Request $request)
     {
         // Ambil payload mentah dan Webhook Signing Key dari environment
+        $user = User::where('name','root')->first();
+        ApiLog::create([
+            'user_id' => $user->id,
+            'endpoint' => '/webhook/xero',
+            'method' => 'POST',
+            'request_payload' => json_encode($request->all()),
+            'response_payload' => json_encode(['error' => 'Invalid signature']),
+            'status_code' => 401,
+        ]);
         $payload = $request->getContent();
-        $xeroSigningKey = config('xero.webhookKey');
+        $webhookKey = "";
+
+        if (isset($payload['events'])) 
+        {   
+            $tenantId = $payload['tenantId'] ?? null;
+            if (!$tenantId) {
+                return response()->json(['error' => 'Tenant ID not found'], 400);
+            }
+
+            // Fetch companyId using tenantId from XeroToken
+            $company = XeroToken::where('tenant_id', $tenantId)->first();
+            if (!$company) {
+                return response()->json(['error' => 'Company not found'], 404);
+            }
+            $companyId = $company->company_id;
+
+            // Retrieve webhookKey from SettingCompany using companyId
+            $settingCompany = SettingCompany::where('company_id', $companyId)
+                                ->where('field_title', 'webhook_key')
+                                ->first();
+
+            if (!$settingCompany || empty($settingCompany->field_value)) {
+                return response()->json(['error' => 'Webhook key not found'], 400);
+            }
+
+            $webhookKey = $settingCompany->field_value;
+        }
+
+        $xeroSigningKey = $webhookKey ? $webhookKey : config('xero.webhookKey');
         $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $xeroSigningKey, true));
         $xeroSignature = $request->header('X-Xero-Signature');
-        $user = User::where('name','root')->first();
-
         // Verifikasi signature
         if ($calculatedSignature !== $xeroSignature) 
         {
@@ -54,7 +95,7 @@ class XeroWebhookController extends Controller
                 $invoiceId = $event['resourceId'];
                 if($invoiceId)
                 {           
-                    $xeroInvoice = Xero::invoices()->find($invoiceId);
+                    $xeroInvoice = $this->xeroBos->invoices()->find($invoiceId);
                     $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first(); 
                     if(isset($xeroInvoice) && $invoice)
                     {
@@ -81,12 +122,109 @@ class XeroWebhookController extends Controller
 
         return response()->json(['status' => 'success'], 200);
     }
+    // public function handleWebhook(Request $request)
+    // {
+    //     // Retrieve raw payload and Xero signature from headers
+    //     $payload = $request->getContent();
+    //     $xeroSignature = $request->header('X-Xero-Signature');
+        
+    //     // Decode the payload to check for "intent to receive"
+    //     $payloadData = json_decode($payload, true);
+
+    //     // Check if this is the "intent to receive" request (no events in payload)
+    //     if (empty($payloadData['events'])) {
+    //         // Return 200 status to confirm intent to receive
+    //         return response()->json(['status' => 'Intent to receive confirmed'], 200);
+    //     }
+
+    //     // Extract tenantId from payload
+    //     $tenantId = $payloadData['tenantId'] ?? null;
+    //     if (!$tenantId) {
+    //         return response()->json(['error' => 'Tenant ID not found'], 400);
+    //     }
+
+    //     // Fetch companyId using tenantId from XeroToken
+    //     $company = XeroToken::where('tenant_id', $tenantId)->first();
+    //     if (!$company) {
+    //         return response()->json(['error' => 'Company not found'], 404);
+    //     }
+    //     $companyId = $company->company_id;
+
+    //     // Retrieve webhookKey from SettingCompany using companyId
+    //     $settingCompany = SettingCompany::where('company_id', $companyId)
+    //                         ->where('field_title', 'webhook_key')
+    //                         ->first();
+
+    //     if (!$settingCompany || empty($settingCompany->field_value)) {
+    //         return response()->json(['error' => 'Webhook key not found'], 400);
+    //     }
+    //     $xeroSigningKey = $settingCompany->field_value;
+
+    //     // Calculate the signature
+    //     $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $xeroSigningKey, true));
+
+    //     // Verify the signature
+    //     if ($calculatedSignature !== $xeroSignature) 
+    //     {
+    //         Log::warning('Invalid Xero webhook signature');
+
+    //         // Log the error and return 401 Unauthorized
+    //         ApiLog::create([
+    //             'user_id' => $company->user_id ?? null,
+    //             'endpoint' => '/webhook/xero',
+    //             'method' => 'POST',
+    //             'request_payload' => json_encode($request->all()),
+    //             'response_payload' => json_encode(['error' => 'Invalid signature']),
+    //             'status_code' => 401,
+    //         ]);
+
+    //         return response()->json(['error' => 'Invalid signature'], 401);
+    //     }
+
+    //     // Process webhook events from Xero
+    //     $events = $payloadData['events'];
+
+    //     foreach ($events as $event) 
+    //     {
+    //         if ($event['eventType'] === 'UPDATE' && $event['eventCategory'] === 'INVOICE') {
+    //             $invoiceId = $event['resourceId'];
+    //             if ($invoiceId) 
+    //             {           
+    //                 $xeroInvoice = Xero::invoices()->find($invoiceId);
+    //                 $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first(); 
+    //                 if (isset($xeroInvoice) && $invoice) 
+    //                 {
+    //                     if ($xeroInvoice['Status'] == ParamSchema::DELETE) 
+    //                     {
+    //                         $this->deleteInvoice($invoice, $xeroInvoice);
+    //                     } 
+    //                     else 
+    //                     {
+    //                         $this->updateInvoiceFromXero($invoiceId);
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     // Log successful processing
+    //     ApiLog::create([
+    //         'user_id' => $company->user_id ?? null,
+    //         'endpoint' => '/webhook/xero',
+    //         'method' => 'POST',
+    //         'request_payload' => json_encode($request->all()),
+    //         'response_payload' => json_encode(['status' => 'success']),
+    //         'status_code' => 200,
+    //     ]);
+
+    //     return response()->json(['status' => 'success'], 200);
+    // }
 
     protected function updateInvoiceFromXeroStatus($invoiceId)
     {
         try {
             // Ambil detail invoice dari Xero menggunakan SDK atau API Xero
-            $xeroInvoice = Xero::invoices()->find($invoiceId);
+            $xeroInvoice = $this->xeroBos->invoices()->find($invoiceId);
 
             // Cari invoice di database berdasarkan `xero_invoice_id`
             $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first();
@@ -104,25 +242,26 @@ class XeroWebhookController extends Controller
     }
     
 
-    // public function isCheckingInvoice($id)
-    // {
-    //     $invoice = Invoice::where('slug',$id)->first();
-    //     dd($this->updateInvoiceFromXero($invoice->invoice_xero_id));
-    // }
+    public function isCheckingInvoice($id)
+    {
+        $invoice = Invoice::where('slug',$id)->first();
+        dd($this->updateInvoiceFromXero($invoice->invoice_xero_id));
+    }
 
     protected function updateInvoiceFromXero($invoiceId)
     {
         $form = array();
         try {
             $user = User::where('name','root')->first();
-            $xeroInvoice = Xero::invoices()->find($invoiceId);
             $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first();
+            $this->xeroBos->setCompanyPublic($invoice->userCreate->company_id);
+            $xeroInvoice = $this->xeroBos->get('Invoices/'.$invoiceId);
 
             // Add If
-            if($xeroInvoice && $invoice)
+            if($xeroInvoice['body']['Invoices'] && $invoice)
             {                
                 // Ambil detail invoice dari Xero menggunakan SDK atau API Xero
-
+                $xeroInvoice = $xeroInvoice['body']['Invoices'][0];
                 $findContact = $this->findOrCreateContact($invoice, $xeroInvoice['Contact']['Name'], $xeroInvoice['Contact']['EmailAddress']);
 
                 $product = array();
@@ -172,8 +311,8 @@ class XeroWebhookController extends Controller
                 }
 
                 $totalAll = ($totalProductPrice + $otherCharges) + $discount;
-                $serviceFeePercentage = $totalAll > 0 ? round(($serviceFee / $totalAll) * 100) : 0;
-
+                // $serviceFeePercentage = $totalAll > 0 ? round(($serviceFee / $totalAll) * 100) : 0;
+                $serviceFeePercentage = $serviceFee ?  ($serviceFee * 100) / $totalAll : 0;
                 // update invoice tax
                 $invoice->tax = $taxVariable;
                 $invoice->save();
@@ -210,6 +349,7 @@ class XeroWebhookController extends Controller
                 ]);
             }
         } catch (\Exception $e) {
+            // dd($e);
             ApiLog::create([
                 'user_id' => $user->id,
                 'endpoint' => '/webhook/xero',
@@ -376,7 +516,7 @@ class XeroWebhookController extends Controller
     protected function findTaxRate($TaxType)
     {
         // Coba temukan TaxRate yang ada dengan tarif pajak yang diminta
-        $taxRatesResponse = Xero::get('taxRates');
+        $taxRatesResponse = $this->xeroBos->get('taxRates');
         $taxRates = $taxRatesResponse['body']['TaxRates'];
 
         // Periksa apakah ada TaxRate dengan EffectiveRate yang sesuai
