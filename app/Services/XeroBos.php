@@ -7,11 +7,16 @@ use Dcblogdev\Xero\Models\XeroToken;
 use App\Models\SettingCompany;
 use Exception;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Dcblogdev\Xero\Actions\tokenExpiredAction;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use RuntimeException;
+
+use Dcblogdev\Xero\Resources\Contacts;
+use Dcblogdev\Xero\Resources\CreditNotes;
+use Dcblogdev\Xero\Resources\Invoices;
 
 class XeroBos
 {
@@ -25,6 +30,7 @@ class XeroBos
     protected string $clientId;
     protected string $clientSecret;
     protected string $redirectUri;
+    protected string $companyId;
 
     /**
      * Get the company ID from the session
@@ -40,25 +46,95 @@ class XeroBos
         }
         return $companyId;
     }
-
-    protected function setCompanyConfig(): void
+    public function setCompanyPublic($companyId)
     {
-        $companyId = Auth::user()->company_id;
-        $this->clientId = SettingCompany::byCompany($companyId)->where('field_title', 'client_id')->value('field_value');
-        $this->clientSecret = SettingCompany::byCompany($companyId)->where('field_title', 'client_secret')->value('field_value');
+        return $this->setCompanyConfig($companyId);
+    }
+    protected function setCompanyConfig($companyId = null): void
+    {
+        $this->companyId = $companyId ?? Auth::user()->company_id;
+        $this->clientId = SettingCompany::byCompany($this->companyId)->where('field_title', 'client_id')->value('field_value');
+        $this->clientSecret = SettingCompany::byCompany($this->companyId)->where('field_title', 'client_secret')->value('field_value');
         $this->redirectUri = config('xero.redirectUri');
 
         if (!$this->clientId || !$this->clientSecret || !$this->redirectUri) {
-            throw new Exception("Xero credentials not found for company ID {$companyId}");
+            throw new Exception("Xero credentials not found for company ID {$this->companyId}");
         }
     }
 
+    public function contacts(): Contacts
+    {
+        $this->setCompanyConfig();
+        return new Contacts;
+    }
+
+    public function creditnotes(): CreditNotes
+    {
+        $this->setCompanyConfig();
+        return new CreditNotes;
+    }
+
+    public function invoices(): Invoices
+    {
+        $this->setCompanyConfig();
+        return new Invoices;
+    }
     public function isConnected(): bool
     {
         $this->setCompanyConfig();
         return !($this->getTokenData() === null);
     }
 
+    public function __call(string $function, array $args)
+    {
+        $options = ['get', 'post', 'patch', 'put', 'delete'];
+        $path = $args[0] ?? '';
+        $data = $args[1] ?? [];
+        $raw = $args[2] ?? false;
+        $accept = $args[3] ?? 'application/json';
+        $headers = $args[4] ?? []; // Add a new line for custom headers
+
+        if (in_array($function, $options)) {
+            return $this->guzzle($function, $path, $data, $raw, $accept, $headers);
+        } else {
+            //request verb is not in the $options array
+            throw new RuntimeException($function.' is not a valid HTTP Verb');
+        }
+    }
+    protected function guzzle(string $type, string $request, array $data = [], bool $raw = false, string $accept = 'application/json', array $headers = []): array
+    {
+        if ($data === []) {
+            $data = null;
+        }
+ 
+        try {
+            $response = Http::withToken($this->getAccessToken())
+                ->withHeaders(array_merge(['Xero-tenant-id' => $this->getTenantId()], $headers))
+                ->accept($accept)
+                ->$type(self::$baseUrl.$request, $data)
+                ->throw();
+
+            return [
+                'body' => $raw ? $response->body() : $response->json(),
+                'headers' => $response->getHeaders(),
+            ];
+        } catch (RequestException $e) {
+            $response = json_decode($e->response->body());
+            throw new Exception($response->Detail ?? "Type: $response?->Type Message: $response?->Message Error Number: $response?->ErrorNumber");
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
+        }
+    }
+
+    public function getTenantId(): string
+    {
+        $token = $this->getTokenData();
+
+        $this->redirectIfNoToken($token);
+
+        return $token->tenant_id;
+    }
+    
     public function disconnect(): void
     {
         $this->setCompanyConfig();
@@ -163,7 +239,6 @@ class XeroBos
         if ($token->expires < now()->addMinutes(5)) {
             return $this->renewExpiringToken($token);
         }
-
         return $token->access_token;
     }
 
@@ -177,8 +252,10 @@ class XeroBos
         ];
 
         $result = $this->sendPost(self::$tokenUrl, $params);
+        
+        app(tokenExpiredAction::class)($result, $token);
         $this->storeToken($result, ['tenant_id' => $token->tenant_id]);
-
+        
         return $result['access_token'];
     }
 
@@ -210,7 +287,6 @@ class XeroBos
     {
         $this->setCompanyConfig();
         $companyId = $this->getCompanyId();
-
         $data = [
             'id_token' => $token['id_token'],
             'access_token' => config('xero.encrypt') ? Crypt::encryptString($token['access_token']) : $token['access_token'],
@@ -220,10 +296,32 @@ class XeroBos
             'scopes' => $token['scope'],
             'company_id' => $companyId,
         ];
-
-        $where = ['tenant_id' => $tenantId ?? $data['tenant_id'], 'company_id' => $companyId];
+        if(!isset($tenantId) && !isset($data['tenant_id']))
+        {
+            $companyId = $this->getCompanyId();
+            $tenantIdCheck = XeroToken::where('company_id', $companyId)->first();
+            if($companyId && $tenantIdCheck)
+            {
+                $tenantId = XeroToken::where('company_id', $companyId)->first()->tenant_id;
+            }
+        }
+        $where = [
+            'company_id' => $companyId,
+            'tenant_id' => $tenantId ?? $data['tenant_id']
+        ];
+    
         $data = array_merge($data, $tenantData);
-
-        return XeroToken::updateOrCreate($where, $data);
+    
+        // Check if a record already exists for the company
+        $existingToken = XeroToken::where('company_id', $companyId)->first();
+    
+        if ($existingToken) {
+            // Update the existing token
+            $existingToken->update($data);
+            return $existingToken;
+        }
+    
+        // Create a new token if none exists for the company
+        return XeroToken::create($data);
     }
 }

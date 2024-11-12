@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         'role.permission' => \App\Http\Middleware\RolePermission::class,
         'role.permission.api' => \App\Http\Middleware\ApiRolePermission::class,
         'ensure.xero.connected' => \App\Http\Middleware\EnsureXeroConnected::class,
+        'verify.xero.signature' => \App\Http\Middleware\VerifyXeroWebhookSignature::class,
     ];
 }

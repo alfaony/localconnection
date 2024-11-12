@@ -48,6 +48,7 @@ class InvoiceController extends Controller
      */
     public function index(Request $request)
     {
+
         // Ambil input pencarian dari request
         $search = $request->input('search');
         $order = $request->input('order') ?? 'desc';
@@ -171,7 +172,7 @@ class InvoiceController extends Controller
             return redirect()->to(route('invoice.index'))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
 
             DB::rollback();
             Log::error($th);
@@ -327,7 +328,7 @@ class InvoiceController extends Controller
             // dd($th);    
             DB::rollback();
             Log::error($th);
-            return redirect()->to(route('invoice.index'))->with('false',true);
+            return redirect()->to(route('invoice.index'))->with('false',false);
         }
     }
 
@@ -691,7 +692,6 @@ class InvoiceController extends Controller
     {
         $contactXero = $this->xeroService->checkOrCreateContact($invoice->quote->customer);
         $invoiceXero = $this->xeroService->createInvoice($invoice, $contactXero);
-        
         $invoice->number_result = $invoiceXero['InvoiceNumber'];
         $invoice->invoice_xero_id = $invoiceXero['InvoiceID'];
         $invoice->contact_xero_id = $contactXero->ContactID;
