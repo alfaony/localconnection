@@ -29,25 +29,23 @@ class VerifyXeroWebhookSignature
         }
 
         // Decode the payload to get tenantId
-        // $payloadData = json_decode($payload, true);
-        // $tenantId = $payloadData['events'][0]['tenantId'] ?? null;
+        $payloadData = json_decode($payload, true);
+        $tenantId = $payloadData['events'][0]['tenantId'] ?? null;
 
-        // if (!$tenantId) {
-        //     return $this->respondWithError('Tenant ID not found', $payload, $xeroSignature, 401);
-        // }
+        if (!$tenantId) {
+            return $this->respondWithError('Tenant ID not found', $payload, $xeroSignature, 401);
+        }
 
-        // // Find the company using the tenantId from XeroToken
-        // $company = DB::table('xero_tokens')->where('tenant_id', $tenantId)->first();
-        // if (!$company) {
-        //     return $this->respondWithError('Company not found', $payload, $xeroSignature, 401);
-        // }
+        // Find the company using the tenantId from XeroToken
+        $company = DB::table('xero_tokens')->where('tenant_id', $tenantId)->first();
+        if (!$company) {
+            return $this->respondWithError('Company not found', $payload, $xeroSignature, 401);
+        }
 
-        // // Get the webhook key for the company
-        // $webhookKey = SettingCompany::byCompany($company->company_id)
-        //     ->where('field_title', 'webhook_key')
-        //     ->value('field_value');
-
-        $webhookKey = 'RdSJuH2SbNUljo1cdR6jKnuRdw3l7yGZNcP5//GHaelTaJc/QcOM35Jt3rWXMSrOopA1rFpBULqg6+7LUnxG8Q==';
+        // Get the webhook key for the company
+        $webhookKey = SettingCompany::byCompany($company->company_id)
+            ->where('field_title', 'webhook_key')
+            ->value('field_value');
 
         if (!$webhookKey) {
             return $this->respondWithError('Webhook key not found', $payload, $xeroSignature, 401);
@@ -71,7 +69,6 @@ class VerifyXeroWebhookSignature
         ]);
 
         // Allow the request to proceed if the signature is valid
-        return response()->json(['status' => 'success'], 200);
         return $next($request);
     }
 
