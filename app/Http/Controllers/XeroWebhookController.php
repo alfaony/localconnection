@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\InvoiceProduct;
+use App\Models\SettingCompany;
 use Xero;
 use App\Schemas\ParamSchema;
 
@@ -24,50 +25,151 @@ class XeroWebhookController extends Controller
     {
         $this->xeroBos = new XeroBos();
     }
+
+    // Handle from Multi Company
+    // public function handleWebhook(Request $request)
+    // {
+    //     // Ambil payload mentah dan Webhook Signing Key dari environment
+    //     $user = User::where('name','root')->first();
+    //     $xeroSignature = $request->header('X-Xero-Signature');
+    //     $webhookKey = "";
+    //     $payloadOriginal = $request->getContent();
+    //     $payload = json_decode($payloadOriginal, true);
+        
+    //     if (isset($payloadData['events']) && !empty($payloadData['events']))
+    //     {   
+    //         $tenantId = $payload['events']['tenantId'] ?? null;
+    //         if (!$tenantId) {
+    //             return response()->json(['error' => 'Tenant ID not found'], 400);
+    //         }
+
+    //         // Fetch companyId using tenantId from XeroToken
+    //         $company = XeroToken::where('tenant_id', $tenantId)->first();
+    //         if (!$company) {
+    //             return response()->json(['error' => 'Company not found'], 404);
+    //         }
+    //         $companyId = $company->company_id;
+
+    //         // Retrieve webhookKey from SettingCompany using companyId
+    //         $settingCompany = SettingCompany::where('company_id', $companyId)
+    //                             ->where('field_title', 'webhook_key')
+    //                             ->first();
+
+    //         if (!$settingCompany || empty($settingCompany->field_value)) {
+    //             return response()->json(['error' => 'Webhook key not found'], 400);
+    //         }
+
+    //         $webhookKey = $settingCompany->field_value;
+    //     }
+    //     $xeroSigningKey = $webhookKey;
+
+    //     if($xeroSignature != null)
+    //     {
+    //         $calculatedSignature = base64_encode(hash_hmac('sha256', $payloadOriginal, $xeroSigningKey, true));
+    //         // Verifikasi signature
+    //         if ($calculatedSignature !== $xeroSignature) 
+    //         {
+    //             Log::warning('Invalid Xero webhook signature');
+    
+    //             // Log kesalahan
+    //             ApiLog::create([
+    //                 'user_id' => $user->id,
+    //                 'endpoint' => '/webhook/xero',
+    //                 'method' => 'POST',
+    //                 'request_payload' => json_encode($request->all()),
+    //                 'response_payload' => json_encode(['error' => 'Invalid signature']),
+    //                 'status_code' => 401,
+    //             ]);
+    
+    //             return response()->json(['error' => 'Invalid signature'], 401);
+    //         }
+    
+    //         // Proses event webhook dari Xero
+    //         $events = $payload['events'];
+    
+    //         foreach ($events as $event) 
+    //         {
+    //             if ($event['eventType'] === 'UPDATE' && $event['eventCategory'] === 'INVOICE') {
+    //                 $invoiceId = $event['resourceId'];
+    //                 if($invoiceId)
+    //                 {           
+    //                     $xeroInvoice = $this->xeroBos->invoices()->find($invoiceId);
+    //                     $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first(); 
+    //                     if(isset($xeroInvoice) && $invoice)
+    //                     {
+    //                         if($xeroInvoice['Status'] == ParamSchema::DELETE)
+    //                         {
+    //                             $this->deleteInvoice($invoice, $xeroInvoice);
+    //                         }else
+    //                         {
+    //                             $this->updateInvoiceFromXero($invoiceId);
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //         // Log sukses
+    //         ApiLog::create([
+    //             'user_id' => $user->id,
+    //             'endpoint' => '/webhook/xero',
+    //             'method' => 'POST',
+    //             'request_payload' => json_encode($request->all()),
+    //             'response_payload' => json_encode(['status' => 'success']),
+    //             'status_code' => 200,
+    //         ]);
+    
+    
+    //         return response()->json(['status' => 'success'], 200);
+    //     }else
+    //     {
+    //         $webhookKeyCompany = SettingCompany::where('field_title', 'webhook_key')->where('field_value','!=',"")->get();
+    //         foreach ($webhookKeyCompany as $key)
+    //         {
+    //             $calculatedSignature = base64_encode(hash_hmac('sha256', $payloadOriginal, $key, true));
+    //             // Verifikasi signature
+    //             if ($calculatedSignature === $xeroSignature) 
+    //             {
+    //                 Log::warning('Valid Xero webhook signature');
+        
+    //                 // Log kesalahan
+    //                 ApiLog::create([
+    //                     'user_id' => $user->id,
+    //                     'endpoint' => '/webhook/xero',
+    //                     'method' => 'POST',
+    //                     'request_payload' => json_encode($request->all()),
+    //                     'response_payload' => json_encode(['success' => 'success']),
+    //                     'status_code' => 200,
+    //                 ]);
+        
+    //                 return response()->json(['status' => 'success'], 200);
+    //             }
+    //         }
+    //         // Log kesalahan
+    //         ApiLog::create([
+    //             'user_id' => $user->id,
+    //             'endpoint' => '/webhook/xero',
+    //             'method' => 'POST',
+    //             'request_payload' => json_encode($request->all()),
+    //             'response_payload' => json_encode(['error' => 'Invalid signature']),
+    //             'status_code' => 401,
+    //         ]);
+    
+    //         return response()->json(['error' => 'Invalid signature'], 401);
+    //     }
+
+    //     return response()->json(['status' => 'success'], 200);
+    // }
+
+    // Handle from config
     public function handleWebhook(Request $request)
     {
         // Ambil payload mentah dan Webhook Signing Key dari environment
-        $user = User::where('name','root')->first();
-        ApiLog::create([
-            'user_id' => $user->id,
-            'endpoint' => '/webhook/xero',
-            'method' => 'POST',
-            'request_payload' => json_encode($request->all()),
-            'response_payload' => json_encode(['error' => 'Invalid signature']),
-            'status_code' => 401,
-        ]);
         $payload = $request->getContent();
-        $webhookKey = "";
-
-        if (isset($payload['events'])) 
-        {   
-            $tenantId = $payload['tenantId'] ?? null;
-            if (!$tenantId) {
-                return response()->json(['error' => 'Tenant ID not found'], 400);
-            }
-
-            // Fetch companyId using tenantId from XeroToken
-            $company = XeroToken::where('tenant_id', $tenantId)->first();
-            if (!$company) {
-                return response()->json(['error' => 'Company not found'], 404);
-            }
-            $companyId = $company->company_id;
-
-            // Retrieve webhookKey from SettingCompany using companyId
-            $settingCompany = SettingCompany::where('company_id', $companyId)
-                                ->where('field_title', 'webhook_key')
-                                ->first();
-
-            if (!$settingCompany || empty($settingCompany->field_value)) {
-                return response()->json(['error' => 'Webhook key not found'], 400);
-            }
-
-            $webhookKey = $settingCompany->field_value;
-        }
-
-        $xeroSigningKey = $webhookKey ? $webhookKey : config('xero.webhookKey');
+        $xeroSigningKey = config('xero.webhookKey');
         $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $xeroSigningKey, true));
         $xeroSignature = $request->header('X-Xero-Signature');
+        $user = User::where('name','root')->first();
+        
         // Verifikasi signature
         if ($calculatedSignature !== $xeroSignature) 
         {
@@ -95,7 +197,7 @@ class XeroWebhookController extends Controller
                 $invoiceId = $event['resourceId'];
                 if($invoiceId)
                 {           
-                    $xeroInvoice = $this->xeroBos->invoices()->find($invoiceId);
+                    $xeroInvoice = Xero::invoices()->find($invoiceId);
                     $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first(); 
                     if(isset($xeroInvoice) && $invoice)
                     {
@@ -122,103 +224,6 @@ class XeroWebhookController extends Controller
 
         return response()->json(['status' => 'success'], 200);
     }
-    // public function handleWebhook(Request $request)
-    // {
-    //     // Retrieve raw payload and Xero signature from headers
-    //     $payload = $request->getContent();
-    //     $xeroSignature = $request->header('X-Xero-Signature');
-        
-    //     // Decode the payload to check for "intent to receive"
-    //     $payloadData = json_decode($payload, true);
-
-    //     // Check if this is the "intent to receive" request (no events in payload)
-    //     if (empty($payloadData['events'])) {
-    //         // Return 200 status to confirm intent to receive
-    //         return response()->json(['status' => 'Intent to receive confirmed'], 200);
-    //     }
-
-    //     // Extract tenantId from payload
-    //     $tenantId = $payloadData['tenantId'] ?? null;
-    //     if (!$tenantId) {
-    //         return response()->json(['error' => 'Tenant ID not found'], 400);
-    //     }
-
-    //     // Fetch companyId using tenantId from XeroToken
-    //     $company = XeroToken::where('tenant_id', $tenantId)->first();
-    //     if (!$company) {
-    //         return response()->json(['error' => 'Company not found'], 404);
-    //     }
-    //     $companyId = $company->company_id;
-
-    //     // Retrieve webhookKey from SettingCompany using companyId
-    //     $settingCompany = SettingCompany::where('company_id', $companyId)
-    //                         ->where('field_title', 'webhook_key')
-    //                         ->first();
-
-    //     if (!$settingCompany || empty($settingCompany->field_value)) {
-    //         return response()->json(['error' => 'Webhook key not found'], 400);
-    //     }
-    //     $xeroSigningKey = $settingCompany->field_value;
-
-    //     // Calculate the signature
-    //     $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $xeroSigningKey, true));
-
-    //     // Verify the signature
-    //     if ($calculatedSignature !== $xeroSignature) 
-    //     {
-    //         Log::warning('Invalid Xero webhook signature');
-
-    //         // Log the error and return 401 Unauthorized
-    //         ApiLog::create([
-    //             'user_id' => $company->user_id ?? null,
-    //             'endpoint' => '/webhook/xero',
-    //             'method' => 'POST',
-    //             'request_payload' => json_encode($request->all()),
-    //             'response_payload' => json_encode(['error' => 'Invalid signature']),
-    //             'status_code' => 401,
-    //         ]);
-
-    //         return response()->json(['error' => 'Invalid signature'], 401);
-    //     }
-
-    //     // Process webhook events from Xero
-    //     $events = $payloadData['events'];
-
-    //     foreach ($events as $event) 
-    //     {
-    //         if ($event['eventType'] === 'UPDATE' && $event['eventCategory'] === 'INVOICE') {
-    //             $invoiceId = $event['resourceId'];
-    //             if ($invoiceId) 
-    //             {           
-    //                 $xeroInvoice = Xero::invoices()->find($invoiceId);
-    //                 $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first(); 
-    //                 if (isset($xeroInvoice) && $invoice) 
-    //                 {
-    //                     if ($xeroInvoice['Status'] == ParamSchema::DELETE) 
-    //                     {
-    //                         $this->deleteInvoice($invoice, $xeroInvoice);
-    //                     } 
-    //                     else 
-    //                     {
-    //                         $this->updateInvoiceFromXero($invoiceId);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     // Log successful processing
-    //     ApiLog::create([
-    //         'user_id' => $company->user_id ?? null,
-    //         'endpoint' => '/webhook/xero',
-    //         'method' => 'POST',
-    //         'request_payload' => json_encode($request->all()),
-    //         'response_payload' => json_encode(['status' => 'success']),
-    //         'status_code' => 200,
-    //     ]);
-
-    //     return response()->json(['status' => 'success'], 200);
-    // }
 
     protected function updateInvoiceFromXeroStatus($invoiceId)
     {
