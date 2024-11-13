@@ -100,6 +100,7 @@ class UserController extends Controller
         $user->start_time = $request->post('start_time');
         $user->end_time = $request->post('end_time');
         $user->rest_time = $request->post('rest_time');
+        $user->end_rest_time = $request->post('end_rest_time');
 
         if ($request->has('custom_rest_times')) 
         {
@@ -209,6 +210,7 @@ class UserController extends Controller
         $user->start_time = $request->post('start_time');
         $user->end_time = $request->post('end_time');
         $user->rest_time = $request->post('rest_time');
+        $user->end_rest_time = $request->post('end_rest_time');
 
         if ($request->has('custom_rest_times')) 
         {
