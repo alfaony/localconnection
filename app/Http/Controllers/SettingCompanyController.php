@@ -52,13 +52,6 @@ class SettingCompanyController extends Controller
             foreach ($settings as $setting) 
             {
                 $title = $setting->field_title;
-                if($title == "webhook_key")
-                {
-                    $fieldValue = $request->input($title);
-                    $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $fieldValue, true));
-                    dd($calculatedSignature);
-
-                }
                 if ($request->has($title)) 
                 {
                     $fieldValue = $request->input($title);
