@@ -32,7 +32,7 @@ class UserController extends Controller
         $companyAccess = false;
         $roleAccess = false;
         $divisions = Division::byCompany(Auth::user()->company_id)->get();
-
+        $dayofweek = config('custom.daysOfWeek');
         
         if(Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::HR)
         {
@@ -72,8 +72,7 @@ class UserController extends Controller
             $totalUser = User::where('delete_able',1)->count();
         }
 
-
-        return view('user.index',compact('user','totalUser','role','company', 'companyAccess', 'roleAccess','users', 'divisions'));
+        return view('user.index',compact('user','totalUser','role','company', 'companyAccess', 'roleAccess','users', 'divisions', 'dayofweek'));
     }
 
     /**
@@ -101,6 +100,12 @@ class UserController extends Controller
         $user->start_time = $request->post('start_time');
         $user->end_time = $request->post('end_time');
         $user->rest_time = $request->post('rest_time');
+
+        if ($request->has('custom_rest_times')) 
+        {
+            $user->custom_rest_times = $request->custom_rest_times;
+        }
+
         $user->save();
 
 
@@ -123,6 +128,8 @@ class UserController extends Controller
         $company = Company::orderBy('name','asc')->get();
         $divisions = Division::byCompany(Auth::user()->company_id)->get();
         $divisionsUser = $userEdit->divisions ? $userEdit->divisions->pluck('id')->toArray() : NULL ;
+        $dayofweek = config('custom.daysOfWeek');
+
 
         $companyAccess = false;
         $roleAccess = false;
@@ -168,7 +175,7 @@ class UserController extends Controller
         }
 
 
-        return view('user.index', compact('userEdit','user','totalUser','role', 'company', 'companyAccess', 'roleAccess','users', 'divisions','divisionsUser'));
+        return view('user.index', compact('userEdit','user','totalUser','role', 'company', 'companyAccess', 'roleAccess','users', 'divisions','divisionsUser', 'dayofweek'));
     }
 
     /**
@@ -202,6 +209,11 @@ class UserController extends Controller
         $user->start_time = $request->post('start_time');
         $user->end_time = $request->post('end_time');
         $user->rest_time = $request->post('rest_time');
+
+        if ($request->has('custom_rest_times')) 
+        {
+            $user->custom_rest_times = $request->custom_rest_times;
+        }
 
         $user->save();
 

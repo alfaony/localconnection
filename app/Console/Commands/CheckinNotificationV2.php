@@ -7,6 +7,7 @@ use App\Models\EmployeeChecking;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Exception\FirebaseException;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class CheckinNotificationV2 extends Command
@@ -103,6 +104,10 @@ class CheckinNotificationV2 extends Command
             // Buat pesan notifikasi
             $fcmTokens = $userFcmCollect->pluck('fcm_id')->toArray();
 
+            $fcmTokens = array_filter($fcmTokens, function($token) 
+            {
+                return is_string($token) && !empty($token);
+            });
             // Create the notification message
             $message = CloudMessage::new()
                 ->withNotification([
