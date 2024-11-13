@@ -95,7 +95,12 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <!-- Rest Time -->
                     <div class="form-group mt-2">
                         <label for="rest_time">Waktu Istirahat:</label>
-                        <input type="time" class="form-control" name="rest_time" id="rest_time" value="{{ old('rest_time') }}">
+                        <div class="input-group">
+                            <span class="input-group-text">Mulai</span>
+                            <input type="time" class="form-control" name="rest_time" id="rest_time" value="{{ old('rest_time') }}">
+                            <span class="input-group-text">Selesai</span>
+                            <input type="time" class="form-control" name="end_rest_time" id="end_rest_time" value="{{ old('end_rest_time') }}">
+                        </div>
                     </div>
                     <div class="form-group mt-3">
                         <label>Waktu Istirahat Khusus:</label>
@@ -229,7 +234,12 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <!-- Rest Time -->
                     <div class="form-group mt-2">
                         <label for="rest_time">Waktu Istirahat:</label>
-                        <input type="time" class="form-control" name="rest_time" id="rest_time" value="{{ old('rest_time') ?? @$userEdit->rest_time }}">
+                        <div class="input-group">
+                            <span class="input-group-text">Mulai</span>
+                            <input type="time" class="form-control" name="rest_time" id="rest_time" value="{{ old('rest_time') ?? @$userEdit->rest_time }}">
+                            <span class="input-group-text">Selesai</span>
+                            <input type="time" class="form-control" name="end_rest_time" id="end_rest_time" value="{{ old('end_rest_time') ?? @$userEdit->end_rest_time }}">
+                        </div>
                     </div>
                     <div class="form-group mt-4">
                         <label>Custom Rest Times:</label>
