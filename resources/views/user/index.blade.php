@@ -97,6 +97,19 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                         <label for="rest_time">Waktu Istirahat:</label>
                         <input type="time" class="form-control" name="rest_time" id="rest_time" value="{{ old('rest_time') }}">
                     </div>
+                    <div class="form-group mt-3">
+                        <label>Waktu Istirahat Khusus:</label>
+                        @foreach($dayofweek as $day => $value)
+                            <div class="input-group mt-2">
+                                <span class="input-group-text">{{ $day }}</span>
+                                <input type="time" class="form-control" name="custom_rest_times[{{ $value }}][start]" 
+                                    placeholder="Mulai" value="{{ old("custom_rest_times.$day.start") ?? @$userEdit->custom_rest_times[$value]['start'] }}">
+                                <span class="input-group-text">to</span>
+                                <input type="time" class="form-control" name="custom_rest_times[{{ $value }}][end]" 
+                                    placeholder="Selesai" value="{{ old("custom_rest_times.$day.end") ?? @$userEdit->custom_rest_times[$value]['end'] }}">
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
 
@@ -218,6 +231,19 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                         <label for="rest_time">Waktu Istirahat:</label>
                         <input type="time" class="form-control" name="rest_time" id="rest_time" value="{{ old('rest_time') ?? @$userEdit->rest_time }}">
                     </div>
+                    <div class="form-group mt-4">
+                        <label>Custom Rest Times:</label>
+                        @foreach($dayofweek as $day => $value)
+                            <div class="input-group mt-2">
+                                <span class="input-group-text">{{ $day }}</span>
+                                <input type="time" class="form-control" name="custom_rest_times[{{ $value }}][start]" 
+                                    placeholder="Start" value="{{ old("custom_rest_times.$value.start") ?? @$userEdit->custom_rest_times[$value]['start'] }}">
+                                <span class="input-group-text">to</span>
+                                <input type="time" class="form-control" name="custom_rest_times[{{ $value }}][end]" 
+                                    placeholder="End" value="{{ old("custom_rest_times.$value.end") ?? @$userEdit->custom_rest_times[$value]['end'] }}">
+                            </div>
+                        @endforeach
+                    </div>                    
                 </div>
             </div>
             @if($roleAccess)

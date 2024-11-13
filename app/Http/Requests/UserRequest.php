@@ -43,6 +43,9 @@ class UserRequest extends FormRequest
                 'start_time' => 'required_if:is_checkin,1|nullable|date_format:H:i',
                 'end_time' => 'required_if:is_checkin,1|nullable|date_format:H:i|after:start_time',
                 'rest_time' => 'required_if:is_checkin,1|nullable|date_format:H:i',
+                'custom_rest_times' => 'nullable|array',
+                'custom_rest_times.*.start' => 'nullable|date_format:H:i',
+                'custom_rest_times.*.end' => 'nullable|date_format:H:i|after:custom_rest_times.*.start'
             ];
         }else
         {
@@ -89,6 +92,9 @@ class UserRequest extends FormRequest
             'end_time.after' => 'Jam selesai harus setelah jam mulai.',
             'rest_time.required_if' => 'Waktu istirahat harus diisi jika check-in diaktifkan.',
             'rest_time.date_format' => 'Format waktu istirahat tidak valid. Gunakan format HH:mm.',
+            'custom_rest_times.*.start.date_format' => 'Format jam mulai tidak valid. Gunakan format HH:mm.',
+            'custom_rest_times.*.end.date_format' => 'Format jam selesai tidak valid. Gunakan format HH:mm.',
+            'custom_rest_times.*.end.after' => 'Jam selesai harus setelah jam mulai.',
         ];
     }
 }
