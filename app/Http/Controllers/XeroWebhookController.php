@@ -36,13 +36,14 @@ class XeroWebhookController extends Controller
             'response_payload' => json_encode(['error' => 'Invalid signature']),
             'status_code' => 401,
         ]);
-        $payload = $request->getContent();
         $xeroSignature = $request->header('X-Xero-Signature');
         $webhookKey = "";
-
+        $payloadOriginal = $request->getContent();
+        $payload = json_decode($payloadOriginal, true);
+        
         if (isset($payload['events'])) 
         {   
-            $tenantId = $payload['tenantId'] ?? null;
+            $tenantId = $payload['events']['tenantId'] ?? null;
             if (!$tenantId) {
                 return response()->json(['error' => 'Tenant ID not found'], 400);
             }
@@ -69,7 +70,7 @@ class XeroWebhookController extends Controller
 
         if($xeroSignature != null)
         {
-            $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $xeroSigningKey, true));
+            $calculatedSignature = base64_encode(hash_hmac('sha256', $payloadOriginal, $xeroSigningKey, true));
             // Verifikasi signature
             if ($calculatedSignature !== $xeroSignature) 
             {
@@ -89,7 +90,7 @@ class XeroWebhookController extends Controller
             }
     
             // Proses event webhook dari Xero
-            $events = json_decode($payload, true)['events'];
+            $events = $payload['events'];
     
             foreach ($events as $event) 
             {
@@ -129,11 +130,11 @@ class XeroWebhookController extends Controller
             $webhookKeyCompany = SettingCompany::where('field_title', 'webhook_key')->where('field_value','!=',"")->get();
             foreach ($webhookKeyCompany as $key)
             {
-                $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $key, true));
+                $calculatedSignature = base64_encode(hash_hmac('sha256', $payloadOriginal, $key, true));
                 // Verifikasi signature
                 if ($calculatedSignature === $xeroSignature) 
                 {
-                    Log::warning('Invalid Xero webhook signature');
+                    Log::warning('Valid Xero webhook signature');
         
                     // Log kesalahan
                     ApiLog::create([
@@ -160,6 +161,8 @@ class XeroWebhookController extends Controller
     
             return response()->json(['error' => 'Invalid signature'], 401);
         }
+
+        return response()->json(['status' => 'success'], 200);
     }
     // public function handleWebhook(Request $request)
     // {
