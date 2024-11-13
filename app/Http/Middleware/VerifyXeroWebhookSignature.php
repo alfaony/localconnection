@@ -6,7 +6,8 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\SettingCompany;
-use App\Models\XeroToken;
+use App\Models\WebhookLog;
+use Illuminate\Support\Facades\DB;
 
 class VerifyXeroWebhookSignature
 {
@@ -23,42 +24,77 @@ class VerifyXeroWebhookSignature
         $payload = $request->getContent();
         $xeroSignature = $request->header('X-Xero-Signature');
 
+        if (!$xeroSignature) {
+            return $this->respondWithError('Header x-xero-signature not found', $payload, $xeroSignature, 401);
+        }
+
         // Decode the payload to get tenantId
         $payloadData = json_decode($payload, true);
         $tenantId = $payloadData['tenantId'] ?? null;
 
         if (!$tenantId) {
-            Log::warning('Xero webhook received with missing tenant ID');
-            return response()->json(['error' => 'Tenant ID not found'], 400);
+            return $this->respondWithError('Tenant ID not found', $payload, $xeroSignature, 401);
         }
 
         // Find the company using the tenantId from XeroToken
-        $company = XeroToken::where('tenant_id', $tenantId)->first();
+        $company = DB::table('xero_tokens')->where('tenant_id', $tenantId)->first();
         if (!$company) {
-            Log::warning('Xero webhook received with unknown tenant ID');
-            return response()->json(['error' => 'Company not found'], 404);
+            return $this->respondWithError('Company not found', $payload, $xeroSignature, 401);
         }
 
         // Get the webhook key for the company
         $webhookKey = SettingCompany::byCompany($company->company_id)
-                        ->where('field_title', 'webhook_key')
-                        ->value('field_value');
+            ->where('field_title', 'webhook_key')
+            ->value('field_value');
 
         if (!$webhookKey) {
-            Log::warning('Xero webhook received without a configured webhook key');
-            return response()->json(['error' => 'Webhook key not found'], 400);
+            return $this->respondWithError('Webhook key not found', $payload, $xeroSignature, 401);
         }
 
         // Calculate the signature and validate it
         $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $webhookKey, true));
 
         // If signatures do not match, return a 401 Unauthorized response
-        if ($calculatedSignature !== $xeroSignature) {
-            Log::warning('Invalid Xero webhook signature');
-            return response()->json(['error' => 'Invalid signature'], 401);
+        if (!hash_equals($calculatedSignature, $xeroSignature)) {
+            return $this->respondWithError('Invalid signature', $payload, $xeroSignature, 401);
         }
+
+        WebhookLog::create([
+            'source' => 'Xero',
+            'signature' => $xeroSignature,
+            'headers' => json_encode($request->headers->all()),
+            'payload' => $payload,
+            'is_valid' => true,
+            'status' => 'processed',
+        ]);
 
         // Allow the request to proceed if the signature is valid
         return $next($request);
+    }
+
+    /**
+     * Handle error response and log webhook.
+     *
+     * @param  string  $message
+     * @param  string  $payload
+     * @param  string|null  $xeroSignature
+     * @param  int  $statusCode
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function respondWithError($message, $payload, $xeroSignature = null, $statusCode = 400)
+    {
+        Log::warning($message);
+
+        // Log webhook with error status
+        WebhookLog::create([
+            'source' => 'Xero',
+            'signature' => $xeroSignature,
+            'headers' => json_encode(request()->headers->all()),
+            'payload' => $payload,
+            'is_valid' => false,
+            'status' => $message,
+        ]);
+
+        return response()->json(['error' => $message], $statusCode);
     }
 }
