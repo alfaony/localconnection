@@ -74,7 +74,7 @@ use App\Http\Controllers\LoginController;
 |
 */
 
-Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook']);
+Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 Route::group(['middleware' => ['auth','web']], function()
 { 
   Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
