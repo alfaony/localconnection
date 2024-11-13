@@ -24,38 +24,30 @@ class VerifyXeroWebhookSignature
         $payload = $request->getContent();
         $xeroSignature = $request->header('X-Xero-Signature');
 
-        WebhookLog::create([
-            'source' => 'Xero',
-            'signature' => $xeroSignature,
-            'headers' => json_encode($request->headers->all()),
-            'payload' => $payload,
-            'is_valid' => true,
-            'status' => 'processed',
-        ]);
-        return response()->json(['status' => 'processed'], 200);
-
         if (!$xeroSignature) {
             return $this->respondWithError('Header x-xero-signature not found', $payload, $xeroSignature, 401);
         }
 
         // Decode the payload to get tenantId
-        $payloadData = json_decode($payload, true);
-        $tenantId = $payloadData['tenantId'] ?? null;
+        // $payloadData = json_decode($payload, true);
+        // $tenantId = $payloadData['events'][0]['tenantId'] ?? null;
 
-        if (!$tenantId) {
-            return $this->respondWithError('Tenant ID not found', $payload, $xeroSignature, 401);
-        }
+        // if (!$tenantId) {
+        //     return $this->respondWithError('Tenant ID not found', $payload, $xeroSignature, 401);
+        // }
 
-        // Find the company using the tenantId from XeroToken
-        $company = DB::table('xero_tokens')->where('tenant_id', $tenantId)->first();
-        if (!$company) {
-            return $this->respondWithError('Company not found', $payload, $xeroSignature, 401);
-        }
+        // // Find the company using the tenantId from XeroToken
+        // $company = DB::table('xero_tokens')->where('tenant_id', $tenantId)->first();
+        // if (!$company) {
+        //     return $this->respondWithError('Company not found', $payload, $xeroSignature, 401);
+        // }
 
-        // Get the webhook key for the company
-        $webhookKey = SettingCompany::byCompany($company->company_id)
-            ->where('field_title', 'webhook_key')
-            ->value('field_value');
+        // // Get the webhook key for the company
+        // $webhookKey = SettingCompany::byCompany($company->company_id)
+        //     ->where('field_title', 'webhook_key')
+        //     ->value('field_value');
+
+        $webhookKey = 'RdSJuH2SbNUljo1cdR6jKnuRdw3l7yGZNcP5//GHaelTaJc/QcOM35Jt3rWXMSrOopA1rFpBULqg6+7LUnxG8Q==';
 
         if (!$webhookKey) {
             return $this->respondWithError('Webhook key not found', $payload, $xeroSignature, 401);
