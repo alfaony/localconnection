@@ -17,8 +17,6 @@ class SettingCompanyController extends Controller
      */
     public function index()
     {
-        $webhookKeyCompany = SettingCompany::where('field_title', 'webhook_key')->where('field_value','!=',"")->get();
-        dd($webhookKeyCompany);
         $data = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
         $agreementTemplate = config('custom.agreementTemplate');
         return view('setting_company.createOrEdit',compact('data','agreementTemplate'));
