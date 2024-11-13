@@ -71,6 +71,7 @@ class VerifyXeroWebhookSignature
         ]);
 
         // Allow the request to proceed if the signature is valid
+        return response()->json(['status' => 'success'], 200);
         return $next($request);
     }
 

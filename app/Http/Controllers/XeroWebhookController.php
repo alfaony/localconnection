@@ -163,6 +163,7 @@ class XeroWebhookController extends Controller
     // Handle from config
     public function handleWebhook(Request $request)
     {
+        return response()->json(['status' => 'success'], 200);
         // Ambil payload mentah dan Webhook Signing Key dari environment
         $payload = $request->getContent();
         $xeroSigningKey = config('xero.webhookKey');
@@ -222,7 +223,6 @@ class XeroWebhookController extends Controller
             'status_code' => 200,
         ]);
 
-        return response()->json(['status' => 'success'], 200);
     }
 
     protected function updateInvoiceFromXeroStatus($invoiceId)
