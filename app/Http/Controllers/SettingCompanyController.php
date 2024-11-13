@@ -17,6 +17,8 @@ class SettingCompanyController extends Controller
      */
     public function index()
     {
+        $webhookKeyCompany = SettingCompany::where('field_title', 'webhook_key')->where('field_value','!=',"")->get();
+        dd($webhookKeyCompany);
         $data = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
         $agreementTemplate = config('custom.agreementTemplate');
         return view('setting_company.createOrEdit',compact('data','agreementTemplate'));
@@ -52,7 +54,13 @@ class SettingCompanyController extends Controller
             foreach ($settings as $setting) 
             {
                 $title = $setting->field_title;
+                if($title == "webhook_key")
+                {
+                    $fieldValue = $request->input($title);
+                    $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $fieldValue, true));
+                    dd($calculatedSignature);
 
+                }
                 if ($request->has($title)) 
                 {
                     $fieldValue = $request->input($title);
@@ -74,7 +82,7 @@ class SettingCompanyController extends Controller
             DB::commit();
             return redirect()->route('setting-company.index')->with('store',true);
         } catch (\Throwable $th) {
-            // dd($th);
+            dd($th);
             DB::rollback();
             Log::error($th);
             return redirect()->route('setting-company.index')->with('store',false);

@@ -37,6 +37,7 @@ class XeroWebhookController extends Controller
             'status_code' => 401,
         ]);
         $payload = $request->getContent();
+        $xeroSignature = $request->header('X-Xero-Signature');
         $webhookKey = "";
 
         if (isset($payload['events'])) 
@@ -64,15 +65,89 @@ class XeroWebhookController extends Controller
 
             $webhookKey = $settingCompany->field_value;
         }
+        $xeroSigningKey = $webhookKey;
 
-        $xeroSigningKey = $webhookKey ? $webhookKey : config('xero.webhookKey');
-        $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $xeroSigningKey, true));
-        $xeroSignature = $request->header('X-Xero-Signature');
-        // Verifikasi signature
-        if ($calculatedSignature !== $xeroSignature) 
+        if($xeroSignature != null)
         {
-            Log::warning('Invalid Xero webhook signature');
-
+            $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $xeroSigningKey, true));
+            // Verifikasi signature
+            if ($calculatedSignature !== $xeroSignature) 
+            {
+                Log::warning('Invalid Xero webhook signature');
+    
+                // Log kesalahan
+                ApiLog::create([
+                    'user_id' => $user->id,
+                    'endpoint' => '/webhook/xero',
+                    'method' => 'POST',
+                    'request_payload' => json_encode($request->all()),
+                    'response_payload' => json_encode(['error' => 'Invalid signature']),
+                    'status_code' => 401,
+                ]);
+    
+                return response()->json(['error' => 'Invalid signature'], 401);
+            }
+    
+            // Proses event webhook dari Xero
+            $events = json_decode($payload, true)['events'];
+    
+            foreach ($events as $event) 
+            {
+                if ($event['eventType'] === 'UPDATE' && $event['eventCategory'] === 'INVOICE') {
+                    $invoiceId = $event['resourceId'];
+                    if($invoiceId)
+                    {           
+                        $xeroInvoice = $this->xeroBos->invoices()->find($invoiceId);
+                        $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first(); 
+                        if(isset($xeroInvoice) && $invoice)
+                        {
+                            if($xeroInvoice['Status'] == ParamSchema::DELETE)
+                            {
+                                $this->deleteInvoice($invoice, $xeroInvoice);
+                            }else
+                            {
+                                $this->updateInvoiceFromXero($invoiceId);
+                            }
+                        }
+                    }
+                }
+            }
+            // Log sukses
+            ApiLog::create([
+                'user_id' => $user->id,
+                'endpoint' => '/webhook/xero',
+                'method' => 'POST',
+                'request_payload' => json_encode($request->all()),
+                'response_payload' => json_encode(['status' => 'success']),
+                'status_code' => 200,
+            ]);
+    
+    
+            return response()->json(['status' => 'success'], 200);
+        }else
+        {
+            $webhookKeyCompany = SettingCompany::where('field_title', 'webhook_key')->where('field_value','!=',"")->get();
+            foreach ($webhookKeyCompany as $key)
+            {
+                $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $key, true));
+                // Verifikasi signature
+                if ($calculatedSignature === $xeroSignature) 
+                {
+                    Log::warning('Invalid Xero webhook signature');
+        
+                    // Log kesalahan
+                    ApiLog::create([
+                        'user_id' => $user->id,
+                        'endpoint' => '/webhook/xero',
+                        'method' => 'POST',
+                        'request_payload' => json_encode($request->all()),
+                        'response_payload' => json_encode(['success' => 'success']),
+                        'status_code' => 200,
+                    ]);
+        
+                    return response()->json(['status' => 'success'], 200);
+                }
+            }
             // Log kesalahan
             ApiLog::create([
                 'user_id' => $user->id,
@@ -82,45 +157,9 @@ class XeroWebhookController extends Controller
                 'response_payload' => json_encode(['error' => 'Invalid signature']),
                 'status_code' => 401,
             ]);
-
+    
             return response()->json(['error' => 'Invalid signature'], 401);
         }
-
-        // Proses event webhook dari Xero
-        $events = json_decode($payload, true)['events'];
-
-        foreach ($events as $event) 
-        {
-            if ($event['eventType'] === 'UPDATE' && $event['eventCategory'] === 'INVOICE') {
-                $invoiceId = $event['resourceId'];
-                if($invoiceId)
-                {           
-                    $xeroInvoice = $this->xeroBos->invoices()->find($invoiceId);
-                    $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first(); 
-                    if(isset($xeroInvoice) && $invoice)
-                    {
-                        if($xeroInvoice['Status'] == ParamSchema::DELETE)
-                        {
-                            $this->deleteInvoice($invoice, $xeroInvoice);
-                        }else
-                        {
-                            $this->updateInvoiceFromXero($invoiceId);
-                        }
-                    }
-                }
-            }
-        }
-        // Log sukses
-        ApiLog::create([
-            'user_id' => $user->id,
-            'endpoint' => '/webhook/xero',
-            'method' => 'POST',
-            'request_payload' => json_encode($request->all()),
-            'response_payload' => json_encode(['status' => 'success']),
-            'status_code' => 200,
-        ]);
-
-        return response()->json(['status' => 'success'], 200);
     }
     // public function handleWebhook(Request $request)
     // {
