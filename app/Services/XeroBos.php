@@ -40,19 +40,15 @@ class XeroBos
      */
     protected function getCompanyId(): string
     {
-        $companyId = Session::get('company_id');
-        if (!$companyId) {
-            throw new Exception("Company ID not found in session");
-        }
-        return $companyId;
+        return $this->companyId ?? Auth::user()->company_id;
     }
     public function setCompanyPublic($companyId)
     {
-        return $this->setCompanyConfig($companyId);
+        $this->companyId = $companyId ?? $this->companyId ?? Auth::user()->company_id;
     }
-    protected function setCompanyConfig($companyId = null): void
+    protected function setCompanyConfig(): void
     {
-        $this->companyId = $companyId ?? Auth::user()->company_id;
+        $this->companyId = $this->getCompanyId();
         $this->clientId = SettingCompany::byCompany($this->companyId)->where('field_title', 'client_id')->value('field_value');
         $this->clientSecret = SettingCompany::byCompany($this->companyId)->where('field_title', 'client_secret')->value('field_value');
         $this->redirectUri = config('xero.redirectUri');
@@ -122,6 +118,7 @@ class XeroBos
             $response = json_decode($e->response->body());
             throw new Exception($response->Detail ?? "Type: $response?->Type Message: $response?->Message Error Number: $response?->ErrorNumber");
         } catch (Exception $e) {
+            dd($e);
             throw new Exception($e->getMessage());
         }
     }

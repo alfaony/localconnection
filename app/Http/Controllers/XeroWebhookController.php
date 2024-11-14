@@ -163,31 +163,8 @@ class XeroWebhookController extends Controller
     // Handle from config
     public function handleWebhook(Request $request)
     {
-        return response()->json(['status' => 'success'], 200);
-        // Ambil payload mentah dan Webhook Signing Key dari environment
         $payload = $request->getContent();
-        $xeroSigningKey = config('xero.webhookKey');
-        $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $xeroSigningKey, true));
-        $xeroSignature = $request->header('X-Xero-Signature');
         $user = User::where('name','root')->first();
-        
-        // Verifikasi signature
-        if ($calculatedSignature !== $xeroSignature) 
-        {
-            Log::warning('Invalid Xero webhook signature');
-
-            // Log kesalahan
-            ApiLog::create([
-                'user_id' => $user->id,
-                'endpoint' => '/webhook/xero',
-                'method' => 'POST',
-                'request_payload' => json_encode($request->all()),
-                'response_payload' => json_encode(['error' => 'Invalid signature']),
-                'status_code' => 401,
-            ]);
-
-            return response()->json(['error' => 'Invalid signature'], 401);
-        }
 
         // Proses event webhook dari Xero
         $events = json_decode($payload, true)['events'];
@@ -198,10 +175,13 @@ class XeroWebhookController extends Controller
                 $invoiceId = $event['resourceId'];
                 if($invoiceId)
                 {           
-                    $xeroInvoice = Xero::invoices()->find($invoiceId);
                     $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first(); 
-                    if(isset($xeroInvoice) && $invoice)
+                    $this->xeroBos->setCompanyPublic($invoice->userCreate->company_id);
+                    $xeroInvoice = $this->xeroBos->get('Invoices/'.$invoiceId);
+
+                    if($xeroInvoice['body']['Invoices'] && $invoice)
                     {
+                        $xeroInvoice = $xeroInvoice['body']['Invoices'][0];
                         if($xeroInvoice['Status'] == ParamSchema::DELETE)
                         {
                             $this->deleteInvoice($invoice, $xeroInvoice);
