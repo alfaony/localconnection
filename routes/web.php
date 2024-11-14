@@ -74,7 +74,7 @@ use App\Http\Controllers\LoginController;
 |
 */
 
-Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook']);
+Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
