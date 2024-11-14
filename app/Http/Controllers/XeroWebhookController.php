@@ -165,7 +165,7 @@ class XeroWebhookController extends Controller
     {
         $payload = $request->getContent();
         $user = User::where('name','root')->first();
-        
+
         // Proses event webhook dari Xero
         $events = json_decode($payload, true)['events'];
 
@@ -175,10 +175,13 @@ class XeroWebhookController extends Controller
                 $invoiceId = $event['resourceId'];
                 if($invoiceId)
                 {           
-                    $xeroInvoice = Xero::invoices()->find($invoiceId);
                     $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first(); 
-                    if(isset($xeroInvoice) && $invoice)
+                    $this->xeroBos->setCompanyPublic($invoice->userCreate->company_id);
+                    $xeroInvoice = $this->xeroBos->get('Invoices/'.$invoiceId);
+
+                    if($xeroInvoice['body']['Invoices'] && $invoice)
                     {
+                        $xeroInvoice = $xeroInvoice['body']['Invoices'][0];
                         if($xeroInvoice['Status'] == ParamSchema::DELETE)
                         {
                             $this->deleteInvoice($invoice, $xeroInvoice);
