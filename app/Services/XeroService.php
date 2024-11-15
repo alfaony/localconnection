@@ -114,7 +114,7 @@ class XeroService
     //         return redirect()->back()->with('error', 'Xero callback failed.');
     //     }
     // }
-
+  
     public function checkOrCreateContact($customer)
     {   
         $this->setXeroConfig();
@@ -170,11 +170,13 @@ class XeroService
         try {
             $invoiceXero = [
                 "Type" => "ACCREC",  // ACCREC for sales invoices
+                "Reference" => $invoice->reference ?? "",
+                "InvoiceNumber" => $invoice->number_result ?? "",
                 "Contact" => [
                     "ContactID" => $contact->ContactID // Use the contact ID from Xero
                 ],
-                "Date" => $invoice->start_date,
-                "DueDate" => $invoice->end_date,
+                "Date" => Carbon::parse($invoice->start_date)->format('Y-m-d'),
+                "DueDate" => Carbon::parse($invoice->end_date)->format('Y-m-d'),
                 "LineItems" => $lineItems, // Line items array from getLineItems method
                 "Status" => "DRAFT", // Invoice status
                 "LineAmountTypes" => (!empty($invoice->tax) && $invoice->tax > 0) ? "Exclusive" : "NoTax", 
@@ -218,6 +220,8 @@ class XeroService
         try {
             $data = [
                 "Type" => "ACCREC",  // ACCREC for sales invoices
+                "Reference" => $invoice->reference ?? "",
+                "InvoiceNumber" => $invoice->number_result ?? "",
                 "Contact" => [
                     "ContactID" => $invoice->contact_xero_id // Use the contact ID from Xero
                 ],
@@ -300,11 +304,61 @@ class XeroService
         }
     }
 
-    public function findInvoice($invoiceId)
+    public function findNumberInvoice($invoiceNumber)
     {
         $this->setXeroConfig();
-        return $this->xeroBos->invoices()->find($invoiceId);
+
+        try {
+            // Fetch invoices from Xero with optional filters
+            $response = $this->xeroBos->get('Invoices', ['InvoiceNumber' => $invoiceNumber]);
+
+            if (isset($response['body']['Invoices']) && count($response['body']['Invoices']) > 0) {
+                $invoices = $response['body']['Invoices'];
+
+                foreach ($invoices as $invoice) {
+                    // Check if the invoice number matches
+                    if ($invoice['InvoiceNumber'] === $invoiceNumber) {
+                        return false;
+                    }
+                }
+            }
+
+            // If no matching invoice found
+            return true;
+        } catch (\Exception $e) {
+            // Handle any API or connection errors
+            return false;
+        }
     }
+
+
+    public function findReferenceInvoice($reference)
+    {
+        $this->setXeroConfig();
+
+        try {
+            // Fetch invoices from Xero with optional filters
+            $response = $this->xeroBos->get('Invoices', ['Reference' => $reference]);
+
+            if (isset($response['body']['Invoices']) && count($response['body']['Invoices']) > 0) {
+                $invoices = $response['body']['Invoices'];
+
+                foreach ($invoices as $invoice) {
+                    // Check if the invoice number matches
+                    if ($invoice['Reference'] === $reference) {
+                        return false;
+                    }
+                }
+            }
+
+            // If no matching invoice found
+            return true;
+        } catch (\Exception $e) {
+            // Handle any API or connection errors
+            return false;
+        }
+    }
+
 
     protected function getLineItems($invoice, $quoteProduct)
     {

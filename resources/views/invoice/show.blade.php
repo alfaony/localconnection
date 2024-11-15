@@ -54,6 +54,22 @@
         
         <div class="row mt-3">
             <div class="col-2">
+                <label>Invoice Number:</label>
+            </div>
+            <div class="col-6">
+                <input type="text" disabled class="form-control" value="{{ @$invoice->number_result ?? old('number_result') }}" placeholder="Auto Generate By Xero" {{ @$invoice ? 'required' : '' }}>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-2">
+                <label>Reference:</label>
+            </div>
+            <div class="col-6">
+                <input type="text" disabled class="form-control" value="{{ @$invoice->reference ?? old('reference') }}" placeholder="Reference">
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-2">
                 <label>No Invoice:</label>
             </div>
             <div class="col-6">
