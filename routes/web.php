@@ -136,12 +136,15 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('manager/counting',[ManagerController::class,'counting'])->name('manager.counting');
   Route::resource('manager', ManagerController::class);
 
-  Route::resource('customer', CustomerController::class)->except(['create','show']);
+  Route::resource('customer', CustomerController::class)->except(['create']);
 
   Route::resource('product', ProductController::class)->except(['create','show']);
   Route::resource('product-category', ProductCategoryController::class);
 
   Route::delete('quote/destroyProduct/product/{QuoteProduct}',[QuoteController::class,'destroyProduct'])->name('quote.destroy.product');
+  Route::get('quote/export/{format}', [QuoteController::class, 'export'])->name('quote.export');
+  Route::get('quote/checkExportStatus', [QuoteController::class, 'checkExportStatus'])->name('quote.checkExportStatus');
+  Route::get('quote/clearsession', [QuoteController::class, 'clearsession'])->name('quote.clearsession');
   Route::get('quote/productPrice/counting',[QuoteController::class,'productPrice'])->name('quote.productPrice');
   Route::get('quote/select2', [QuoteController::class, 'select2'])->name('quote.select2');
   Route::get('quote/dataTableJson', [QuoteController::class, 'dataTableJson'])->name('quote.datatable');
@@ -151,6 +154,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('quote', QuoteController::class)->except(['show']);
 
   Route::delete('work-order/destroyProduct/product/{WorkOrderProduct}',[WorkOrderController::class,'destroyProduct'])->name('work-order.destroy.product');
+  Route::get('work-order/export/{format}', [WorkOrderController::class, 'export'])->name('work-order.export');
+  Route::get('work-order/checkExportStatus', [WorkOrderController::class, 'checkExportStatus'])->name('work-order.checkExportStatus');
+  Route::get('work-order/clearsession', [WorkOrderController::class, 'clearsession'])->name('work-order.clearsession');
   Route::get('work-order/dataTableJsonQuoteWithoutWorkOrder', [WorkOrderController::class, 'dataTableJsonQuoteWithoutWorkOrder'])->name('work-order.dataTableJsonQuoteWithoutWorkOrder');
   Route::get('work-order/createsuggest/{slug}', [WorkOrderController::class, 'createsuggest'])->name('work-order.createsuggest');
   Route::get('work-order/productPrice/counting', [WorkOrderController::class, 'productPrice'])->name('work-order.productPrice');
@@ -165,6 +171,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('agreement-letter/dataTableJson', [AgreementLetterController::class, 'dataTableJson'])->name('agreement-letter.datatable');
   Route::resource('agreement-letter', AgreementLetterController::class)->except(['show']);
   
+  Route::get('bast/export/{format}', [BastController::class, 'export'])->name('bast.export');
+  Route::get('bast/checkExportStatus', [BastController::class, 'checkExportStatus'])->name('bast.checkExportStatus');
+  Route::get('bast/clearsession', [BastController::class, 'clearsession'])->name('bast.clearsession');
   Route::get('bast/createsuggest/{slug}', [BastController::class, 'createsuggest'])->name('bast.createsuggest');
   Route::get('bast/dataTableJsonWorkOrderWithoutBast', [BastController::class, 'dataTableJsonWorkOrderWithoutBast'])->name('bast.dataTableJsonWorkOrderWithoutBast');
   Route::get('bast/downloadPdf/pdf/{slug}',[BastController::class,'downloadPdf'])->name('bast.download.pdf');

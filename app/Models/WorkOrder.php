@@ -108,4 +108,15 @@ class WorkOrder extends Model
     {
         return $query->whereDate('date', '>=', Carbon::now());
     }
+
+    public function scopeByUser($query, $userId)
+    {
+        if($userId)
+        {
+            return $query->whereHas('quote', function($query) use ($userId)
+            {
+                $query->where('customer_id',$userId);
+            });
+        }
+    }
 }
