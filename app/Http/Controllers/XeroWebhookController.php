@@ -304,6 +304,8 @@ class XeroWebhookController extends Controller
 
                 $form = 
                 [
+                    'Reference' => $xeroInvoice['Reference'],
+                    'number_result' => $xeroInvoice['InvoiceNumber'],
                     'start_date' => Carbon::parse($xeroInvoice['DateString'])->format('Y-m-d'),
                     'end_date' => Carbon::parse($xeroInvoice['DueDateString'])->format('Y-m-d'),
                     'contact' => $findContact,
@@ -390,7 +392,8 @@ class XeroWebhookController extends Controller
         try 
         {
             activity()->disableLogging();
-
+            $invoice->reference = $form['Reference'];
+            $invoice->number_result = $form['number_result'];
             $invoice->start_date = $form['start_date'] ?? Carbon::now();
             $invoice->end_date = $form['end_date'] ?? Carbon::now();
             $invoice->customer_id = $form['contact'] ;

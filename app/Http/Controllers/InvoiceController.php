@@ -112,6 +112,36 @@ class InvoiceController extends Controller
         try 
         {
             activity()->disableLogging();
+            if($request->number_result)
+            {
+                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('number_result',$request->number_result)->first();
+                if($invoice)
+                {
+                    return redirect()->back()->with('InvoiceNumber',true);
+                }
+
+                $check = $this->xeroService->findReferenceInvoice($request->number_result);
+                if($check == false)
+                {
+                    return redirect()->back()->with('InvoiceNumber',true);
+                }
+            }
+
+
+            if($request->reference)
+            {
+                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
+                if($invoice)
+                {
+                    return redirect()->back()->with('Reference',true);
+                }
+
+                $check = $this->xeroService->findReferenceInvoice($request->reference);
+                if($check == false)
+                {
+                    return redirect()->back()->with('Reference',true);
+                }
+            }
 
             $date = Carbon::now()->format('m/Y');
             $invoiceNumber = Invoice::byCompany(Auth::user()->company_id)->withTrashed()->max('invoice_number') + 1;
@@ -119,6 +149,8 @@ class InvoiceController extends Controller
             $quote = Quote::byCompany(Auth::user()->company_id)->where('id',$bast->project->workOrder->quote_id)->firstOrFail();
 
             $invoice = new Invoice();
+            $invoice->number_result = $request->post('number_result');
+            $invoice->reference = $request->post('reference');
             $invoice->date = Carbon::now()->format('Y-m-d');
             $invoice->bast_id = $request->post('bast');
             $invoice->start_date = $request->post('start_date') ?? Carbon::now();
@@ -172,7 +204,7 @@ class InvoiceController extends Controller
             return redirect()->to(route('invoice.index'))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
 
             DB::rollback();
             Log::error($th);
@@ -271,7 +303,8 @@ class InvoiceController extends Controller
             {
                 return redirect()->to(route('invoice.index'))->with('AUTHORISED',true);
             }
-
+            $invoice->number_result = $request->post('number_result');
+            $invoice->reference = $request->post('reference');
             $invoice->date = Carbon::now()->format('Y-m-d');
             $invoice->bast_id = $bast->id;
             $invoice->start_date = $request->post('start_date') ?? Carbon::now();
