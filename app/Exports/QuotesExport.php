@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Exports;
+
+use Illuminate\Support\Facades\Auth;
+
+use App\Models\Quote;
+use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+
+class QuotesExport implements FromQuery, WithMapping, WithHeadings, WithChunkReading
+{
+    use Exportable;
+
+    public function query()
+    {
+        return Quote::query()->byCompany(Auth::user()->company_id)->with('quoteProduct'); // Load related models if necessary
+    }
+
+    public function headings(): array
+    {
+        return [
+            'Quote Number', 'Total', 'Customer', 'budget_transition', 'Status',
+            // Add more columns as needed
+        ];
+    }   
+
+    public function map($quote): array
+    {
+        return [
+            $quote->number_result,
+            'Rp. '.number_format($quote->total,0,',','.'),
+            $quote->userCreate->name,
+            $quote->budget_transition,
+            $quote->status
+        ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 1000;
+    }
+}

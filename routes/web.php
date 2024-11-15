@@ -79,6 +79,10 @@ Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice'
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+Route::get('quote/export/{format}', [QuoteController::class, 'export'])->name('quote.export');
+Route::get('quote/checkExportStatus', [QuoteController::class, 'checkExportStatus'])->name('quote.checkExportStatus');
+Route::get('quote/clearsession', [QuoteController::class, 'clearsession'])->name('quote.clearsession');
+
 
 Route::group(['middleware' => ['auth','web', 'XeroAuthenticated','role.permission']], function(){
   Route::get('xero',function(){
