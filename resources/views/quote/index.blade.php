@@ -17,6 +17,9 @@
     @if(Session::get('delete'))
     <div class="alert alert-success mt-3">Berhasil Menghapus Quote</div>
     @endif
+    @if(Session::get('export'))
+    <div class="alert alert-success mt-3">Export Quote Berhasil</div>
+    @endif
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -34,9 +37,24 @@
 </div>
 <div class="container">    
     <!-- Tombol Tambah Pembelian Baru -->
-    @canAccess('create','quotes')
-    <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Quote Baru</button>
-    @endcanAccess
+    <div class="col-md-12 mt-3 mb-2">
+        @canAccess('create','quotes')
+        <button class="btn btn-primary" id="btnCreateSuplier"><i class="fa fa-plus"></i> Quote</button>
+        @endcanAccess
+        @canAccess('export','quotes')
+        @canAccess('checkExportStatus','quotes')
+        @canAccess('clearsession','quotes')
+        <a href="{{ route('quote.export', ['format' => 'xlsx']) }}" class="btn btn-success">
+            <i class="fa fa-file-excel"></i>
+        </a>
+        <a href="{{ route('quote.export', ['format' => 'csv']) }}" class="btn btn-primary">
+            <i class="fa fa-file-csv"></i>
+        </a>
+        @endcanAccess
+        @endcanAccess
+        @endcanAccess
+    </div>
+
     
     <!-- Search Bar -->
     <!-- <form action="{{ route('quote.index') }}" method="get">
@@ -56,6 +74,7 @@
             <tr>
                 <th>Nomor Quote</th>
                 <th>Total Quote</th>
+                <th>Customer</th>
                 <th>Status Peralihan</th>
                 <th>Status Quote</th>
                 <th>Aksi</th>
@@ -104,6 +123,36 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let isDownloaded = false; // Flag to prevent further requests after download
+
+        const checkExportStatus = () => {
+            if (isDownloaded) return; // Stop if already downloaded
+
+            fetch('{{ route('quote.checkExportStatus') }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ready) {
+                        isDownloaded = true; // Set flag to prevent further requests
+                        window.location.href = data.download_url; // Automatically trigger download
+
+                        // Clear session after download
+                        fetch('{{ route('quote.clearsession') }}')
+                            .then(() => console.log('Session cleared'))
+                            .catch(error => console.error('Error clearing session:', error));
+                    } else {
+                        setTimeout(checkExportStatus, 3000); // Retry every 3 seconds if not ready
+                    }
+                })
+                .catch(error => console.error('Error checking export status:', error));
+        };
+
+        // Start checking export status
+        checkExportStatus();
+    });
+</script>
+
 <script type="text/javascript">
     $(document).ready(function() {
         var table = $('#tableQuote').DataTable({
@@ -118,6 +167,7 @@
             columns: [
                 {data: 'number_result', name: 'number_result', orderable: false},
                 {data: 'total', name: 'total', orderable: false},
+                {data: 'customer.name', name: 'total', orderable: false},
                 {data: 'budget_transition', name: 'budget_transition', orderable: false},
                 {data: 'status', name: 'status', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},
