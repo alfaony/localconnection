@@ -41,12 +41,18 @@
         @canAccess('create','quotes')
         <button class="btn btn-primary" id="btnCreateSuplier"><i class="fa fa-plus"></i> Quote</button>
         @endcanAccess
+        @canAccess('export','quotes')
+        @canAccess('checkExportStatus','quotes')
+        @canAccess('clearsession','quotes')
         <a href="{{ route('quote.export', ['format' => 'xlsx']) }}" class="btn btn-success">
             <i class="fa fa-file-excel"></i>
         </a>
         <a href="{{ route('quote.export', ['format' => 'csv']) }}" class="btn btn-primary">
             <i class="fa fa-file-csv"></i>
         </a>
+        @endcanAccess
+        @endcanAccess
+        @endcanAccess
     </div>
 
     
