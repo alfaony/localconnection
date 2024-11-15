@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
+use App\Schemas\RoleSchema;
+use Illuminate\Support\Facades\Auth;
 
 class SalesAchievement extends Model
 {
@@ -62,7 +64,7 @@ class SalesAchievement extends Model
 
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId)
+        if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
             return $query->whereHas('user', function ($query) use ($companyId)
             {

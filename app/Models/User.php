@@ -240,7 +240,7 @@ class User extends Authenticatable
     }
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId)
+        if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
             return $query->where("company_id",$companyId);
         }
