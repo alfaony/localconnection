@@ -77,10 +77,10 @@
                         @canAccess('export','work_orders')
                         @canAccess('checkExportStatus','work_orders')
                         @canAccess('clearsession','work_orders')
-                        <a href="{{ route('quote.export', ['format' => 'xlsx']) }}" class="btn btn-success ml-2">
+                        <a href="{{ route('work-order.export', ['format' => 'xlsx']) }}" class="btn btn-success ml-2">
                             <i class="fa fa-file-excel"></i> Excel
                         </a>
-                        <a href="{{ route('quote.export', ['format' => 'csv']) }}" class="btn btn-primary ml-2">
+                        <a href="{{ route('work-order.export', ['format' => 'csv']) }}" class="btn btn-primary ml-2">
                             <i class="fa fa-file-csv"></i> CSV
                         </a>
                         @endcanAccess
@@ -161,7 +161,7 @@
                     if (data.ready) {
                         isDownloaded = true; // Set flag to prevent further requests
                         window.location.href = data.download_url; // Automatically trigger download
-
+                        
                         // Clear session after download
                         fetch('{{ route('work-order.clearsession') }}')
                             .then(() => console.log('Session cleared'))
