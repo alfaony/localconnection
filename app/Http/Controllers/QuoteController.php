@@ -603,8 +603,8 @@ class QuoteController extends Controller
         // Queue the export and store the job file name in session
         Excel::store(new QuotesExport(), $filename, 'public', $exportFormat);
 
+        $filename = "public/" . $filename;
         session(['export_filename_quote' => $filename]);
-        
         $filename = session('export_filename_quote');
 
         return redirect()->back()->with('export',true);
