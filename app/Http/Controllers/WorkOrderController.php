@@ -540,6 +540,7 @@ class WorkOrderController extends Controller
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
 
         Excel::store(new WorkOrderExport(), $filename, 'public', $exportFormat);
+        $filename = "public/" . $filename;
         session(['export_filename_workorder' => $filename]);
 
         return redirect()->back()->with('export', true);

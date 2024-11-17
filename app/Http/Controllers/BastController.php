@@ -530,6 +530,7 @@ class BastController extends Controller
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
 
         Excel::store(new BASTExport(), $filename, 'public', $exportFormat);
+        $filename = "public/" . $filename;
         session(['export_filename_bast' => $filename]);
 
         return redirect()->back()->with('export', true);
