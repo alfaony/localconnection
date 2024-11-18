@@ -10,6 +10,9 @@
         @if(Session::get('successEmail'))
         <div class="alert alert-success mt-3">Email Berhasil Dikirim</div>
         @endif
+        @if(Session::get('successEmail'))
+        <div class="alert alert-success mt-3">Email Berhasil Dikirim</div>
+        @endif
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul>
@@ -162,6 +165,7 @@
                             </tr>
                         </table>
                          <a href="{{ route('bast.download.pdf',$bast->slug) }}" class="btn btn-success mt-3"> <i class="fa fa-file-pdf"></i> Download BAST</a>
+                         <a href="{{ route('bast.show',$bast->slug) }}" class="btn btn-primary mt-3"> <i class="fa fa-eye"></i> Lihat BAST</a>
                     </div>
                 </div>
             </div>

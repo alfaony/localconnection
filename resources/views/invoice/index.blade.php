@@ -8,6 +8,9 @@
 
 @section('content')
 <div class="col-md-12">
+    @if(Session::get('export'))
+    <div class="alert alert-success mt-3">Berhasil Export Invoice</div>
+    @endif
     @if(Session::get('store'))
     <div class="alert alert-success mt-3">Berhasil Menambahkan Invoice</div>
     @endif
@@ -53,12 +56,9 @@
                     <a href="{{ route('invoice.index') }}" class="btn btn-secondary">Reset</a>
                 </div>
                 <div class="p-2">
-                    <input type="text" name="search" class="form-control" placeholder="Search" value="{{ request('search') }}">
-                </div>
-                <div class="p-2">
-                @php
-                    $order = request('order', 'desc');
-                @endphp
+                    @php
+                        $order = request('order', 'desc');
+                    @endphp
                     <select name="order" class="form-control">
                         <option value="asc" {{ $order == 'asc' ? 'selected' : '' }} >A - Z Created By</option>
                         <option value="desc" {{ $order == 'desc' ? 'selected' : '' }}>Z - A Created By</option>
@@ -73,126 +73,156 @@
                     </select>
                 </div>
                 <div class="p-2">
-                    <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="{{ request('start_date') && request('end_date') ? request('start_date').' - '.request('end_date') : '' }}">
-                    <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
-                    <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Tanggal" id="date_range" value="{{ request('start_date') && request('end_date') ? request('start_date').' - '.request('end_date') : '' }}">
+                        <div class="input-group-append">
+                            <input type="hidden" id="start_date" name="start_date" value="{{ request('start_date') }}">
+                            <input type="hidden" id="end_date" name="end_date" value="{{ request('end_date') }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="p-2">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Search" value="{{ request('search') }}">
+                    </div>
+                </div>
+
+            </div>
+            @canAccess('export','invoices')
+            @canAccess('checkExportStatus','invoices')
+            @canAccess('clearsession','invoices')
+            <div class="row mt-3">
+                <div class="col-md-12 text-right">
+                    <a href="{{ route('invoice.export', array_merge(['format' => 'excel'], request()->only('search', 'start_date', 'end_date', 'status', 'order'))) }}" class="btn btn-primary">
+                        <i class="fa fa-file-export"></i> Export Excle 
+                    </a>
+                    <a href="{{ route('invoice.export', array_merge(['format' => 'csv'], request()->only('search', 'start_date', 'end_date', 'status', 'order'))) }}" class="btn btn-primary">
+                        <i class="fa fa-file-csv"></i> Export Csv 
+                    </a>
                 </div>
             </div>
+            @endcanAccess
+            @endcanAccess
+            @endcanAccess
         </form>
         
         <!-- Tabel Pembelian -->
-        <table class="table table-bordered" id="">
-            <thead>
-                <tr>
-                    <th>Nomor Invoice</th>
-                    <th>BAST</th>
-                    <th>Status</th>
-                    <th>Total Invoice</th>
-                    <th>Status Connect</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($invoice as $a)
-                <tr>
-                    <td>{{ $a->number_result ?? '' }}</td>
-                    <td>
-                        {{ $a->bast->number_result }}
-                    </td>
-                    <td>
-                    @switch($a->status)
-                        @case('DRAFT')
-                            <span class="badge badge-secondary">DRAFT</span>
-                            @break
-
-                        @case('SUBMITTED')
-                            <span class="badge badge-warning">SUBMITTED</span>
-                            @break
-
-                        @case('AUTHORISED')
-                            <span class="badge badge-success">WAITING PAYMENT</span>
-                            @break
-
-                        @case('PAID')
-                            <span class="badge badge-success">PAID</span>
-                            @break
-
-                        @default
-                            <span class="badge badge-danger">{{ $a->status }}</span>
-                    @endswitch
-                    </td>
-                    <td>{{ 'Rp. '.number_format($a->total,0,',','.')  ?? 'Rp. 0' }}</td>
-                    <td>
-                        @if($a->connecting)
-                            <span class="badge bg-success">Connected</span>
-                        @else
-                            <span class="badge bg-danger">Not Connected</span>
-                        @endif
-                    </td>
-                    <td>
-                        {{ $a->start_date ? \Carbon\Carbon::parse($a->start_date)->format('d-m-Y') : '' }}
-                    </td>
-                    <td>
-                        {{ $a->end_date ? \Carbon\Carbon::parse($a->end_date)->format('d-m-Y') : '' }}
-                    </td>
-                    <td>
-                        <form method="post" action="{{ route('invoice.destroy', $a->slug) }}">
-                            @csrf
-                            @method('delete')
-
-                            <!-- Kebab menu (three dots) as the dropdown button -->
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-secondary btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <i class="fa fa-ellipsis-v"></i>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <!-- Dropdown items -->
-                                     @canAccess('history', 'invoices')
-                                    <a href="{{ route('invoices.history', $a->slug) }}" class="dropdown-item">
-                                        <i class="fa fa-history"></i> View History
-                                    </a>
-                                    @endcanAccess
-                                    @canAccess('downloadPdf', 'invoices')
-                                    <a href="{{ route('invoice.download.pdf', ['slug' => $a->slug]) }}" class="dropdown-item">
-                                        <i class="fa fa-file-pdf"></i> Download PDF
-                                    </a>
-                                    @endcanAccess
-                                    @canAccess('show', 'invoices')
-                                    <a href="{{ route('invoice.show', $a->slug) }}" class="dropdown-item">
-                                        <i class="fa fa-eye"></i> View
-                                    </a>
-                                    @endcanAccess
-                                    @if(($a->status != 'PAID') && ($a->status != 'DELETED') && ($a->status != 'VOID') && ($a->status != 'AUTHORISED'))
-                                    @canAccess('edit', 'invoices')
-                                    <a href="{{ route('invoice.edit', $a->slug) }}" class="dropdown-item">
-                                        <i class="fa fa-edit"></i> Edit
-                                    </a>
-                                    @endcanAccess
-                                    @canAccess('destroy', 'invoices')
-                                    <button type="submit" onclick="return window.confirm('{{ __('Apakah Anda Yakin?') }}')" class="dropdown-item text-danger">
-                                        <i class="fa fa-trash"></i> Delete
-                                    </button>
-                                    @endcanAccess
-                                    @endif
-                                </div>
-                            </div>
-                        </form>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="5">
-                        <center>Data Kosong</center>
-                    </td>
-                </tr>
-
-                @endforelse
-                <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
-            </tbody>
-        </table>
-        {{ $invoice->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+         <div class="table-responsive mt-2">
+             <table class="table table-bordered" id="">
+                 <thead>
+                     <tr>
+                         <th>Nomor Invoice</th>
+                         <th>BAST</th>
+                         <th>Status</th>
+                         <th>Total Invoice</th>
+                         <th>Status Connect</th>
+                         <th>Start Date</th>
+                         <th>End Date</th>
+                         <th>Aksi</th>
+                     </tr>
+                 </thead>
+                 <tbody>
+                     @forelse($invoice as $a)
+                     <tr>
+                         <td>{{ $a->number_result ?? '' }}</td>
+                         <td>
+                             {{ $a->bast->number_result }}
+                         </td>
+                         <td>
+                         @switch($a->status)
+                             @case('DRAFT')
+                                 <span class="badge badge-secondary">DRAFT</span>
+                                 @break
+     
+                             @case('SUBMITTED')
+                                 <span class="badge badge-warning">SUBMITTED</span>
+                                 @break
+     
+                             @case('AUTHORISED')
+                                 <span class="badge badge-success">WAITING PAYMENT</span>
+                                 @break
+     
+                             @case('PAID')
+                                 <span class="badge badge-success">PAID</span>
+                                 @break
+     
+                             @default
+                                 <span class="badge badge-danger">{{ $a->status }}</span>
+                         @endswitch
+                         </td>
+                         <td>{{ 'Rp. '.number_format($a->total,0,',','.')  ?? 'Rp. 0' }}</td>
+                         <td>
+                             @if($a->connecting)
+                                 <span class="badge bg-success">Connected</span>
+                             @else
+                                 <span class="badge bg-danger">Not Connected</span>
+                             @endif
+                         </td>
+                         <td>
+                             {{ $a->start_date ? \Carbon\Carbon::parse($a->start_date)->format('d-m-Y') : '' }}
+                         </td>
+                         <td>
+                             {{ $a->end_date ? \Carbon\Carbon::parse($a->end_date)->format('d-m-Y') : '' }}
+                         </td>
+                         <td>
+                             <form method="post" action="{{ route('invoice.destroy', $a->slug) }}">
+                                 @csrf
+                                 @method('delete')
+     
+                                 <!-- Kebab menu (three dots) as the dropdown button -->
+                                 <div class="btn-group">
+                                     <button type="button" class="btn btn-secondary btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                         <i class="fa fa-ellipsis-v"></i>
+                                     </button>
+                                     <div class="dropdown-menu dropdown-menu-right">
+                                         <!-- Dropdown items -->
+                                          @canAccess('history', 'invoices')
+                                         <a href="{{ route('invoices.history', $a->slug) }}" class="dropdown-item">
+                                             <i class="fa fa-history"></i> View History
+                                         </a>
+                                         @endcanAccess
+                                         @canAccess('downloadPdf', 'invoices')
+                                         <a href="{{ route('invoice.download.pdf', ['slug' => $a->slug]) }}" class="dropdown-item">
+                                             <i class="fa fa-file-pdf"></i> Download PDF
+                                         </a>
+                                         @endcanAccess
+                                         @canAccess('show', 'invoices')
+                                         <a href="{{ route('invoice.show', $a->slug) }}" class="dropdown-item">
+                                             <i class="fa fa-eye"></i> View
+                                         </a>
+                                         @endcanAccess
+                                         @if(($a->status != 'PAID') && ($a->status != 'DELETED') && ($a->status != 'VOID') && ($a->status != 'AUTHORISED'))
+                                         @canAccess('edit', 'invoices')
+                                         <a href="{{ route('invoice.edit', $a->slug) }}" class="dropdown-item">
+                                             <i class="fa fa-edit"></i> Edit
+                                         </a>
+                                         @endcanAccess
+                                         @canAccess('destroy', 'invoices')
+                                         <button type="submit" onclick="return window.confirm('{{ __('Apakah Anda Yakin?') }}')" class="dropdown-item text-danger">
+                                             <i class="fa fa-trash"></i> Delete
+                                         </button>
+                                         @endcanAccess
+                                         @endif
+                                     </div>
+                                 </div>
+                             </form>
+                         </td>
+                     </tr>
+                     @empty
+                     <tr>
+                         <td colspan="5">
+                             <center>Data Kosong</center>
+                         </td>
+                     </tr>
+     
+                     @endforelse
+                     <!-- ... Tambahkan baris lain sesuai kebutuhan ... -->
+                 </tbody>
+             </table>
+         </div>
+        <div class="d-flex justify-content-center">
+            {{ $invoice->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+        </div>
     </div>
 </div>
 
@@ -205,6 +235,34 @@
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    let isDownloaded = false; // Track if file has been downloaded
+
+    const checkExportStatus = () => {
+        if (isDownloaded) return; // Stop if already downloaded
+
+        fetch('{{ route('invoice.checkExportStatus') }}')
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                
+                if (data.ready) {
+                    isDownloaded = true; // Mark as downloaded
+                    window.location.href = data.download_url; // Trigger file download
+                    
+                    // Clear export session to prevent re-download on refresh
+                    fetch('{{ route('invoice.clearsession') }}');
+                } else {
+                    setTimeout(checkExportStatus, 3000); // Retry every 3 seconds
+                }
+            })
+            .catch(error => console.error('Error checking export status:', error));
+    };
+
+    checkExportStatus();
+});
+</script>
 <script type="text/javascript">
     $(document).ready(function() {
         var table = $('#tableQuote').DataTable({

@@ -21,7 +21,7 @@ class PermissionForMenuQuoteSentMailSeeder extends Seeder
     public function run()
     {   
 
-        $methods = ['sentMail'];
+        $methods = ['sentMail','export','checkExportStatus','clearsession'];
        
         $roles = Role::all();
 
