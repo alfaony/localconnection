@@ -63,7 +63,7 @@
                 <hr>
                 <div class="form-group">
                     <label for="pilihDataProyek" class="form-label">Periode</label>
-                    <input type="text" class="form-control" name="period" id="period" placeholder="Periode" value="{{ old('periode') ?? @$bast->periode }}">
+                    <input type="text" class="form-control" name="period" id="period" placeholder="Periode" value="{{ old('periode') ?? @$bast->period }}">
                 </div>
                 <div class="form-group">
                     <label for="purchaseOrder" class="form-label">No. Purchase Order</label>
@@ -79,6 +79,16 @@
                         <option value="" disabled selected>Pilih</option>
                         @foreach($signature as $a => $value)
                         <option value="{{ $a }}" {{ @$bast->customer_signature == $a ? 'selected' : '' }}>{{ $value }}</option>
+                        @endforeach
+                        <!-- Other options can be added here -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="signature">Template Format BAST</label>
+                    <select class="form-control select2" name="template" required>
+                        <option value="" disabled selected>Pilih</option>
+                        @foreach($template as $a => $value)
+                        <option value="{{ $a }}" {{ @$bast->template == $a ? 'selected' : '' }}>{{ $value }}</option>
                         @endforeach
                         <!-- Other options can be added here -->
                     </select>

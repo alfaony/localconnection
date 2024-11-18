@@ -733,7 +733,7 @@ class ReportProjectController extends Controller
             $today = Carbon::now()->format('d M Y');
             $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
 
-            $additionalPdf = PDF::loadView('bast.pdf_download', compact('bast', 'today','company'));
+            $additionalPdf = PDF::loadView('bast.'.$bast->template, compact('bast', 'today','company'));
 
             // Convert generated PDF to a string
             $additionalPdfContent = $additionalPdf->output();
