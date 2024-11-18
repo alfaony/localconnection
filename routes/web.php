@@ -77,13 +77,14 @@ use App\Http\Controllers\LoginController;
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
+
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
   Route::get('xero',function(){
-
+    
     return redirect('/invoice')->with('xero',true);
-  
+    
   });
   Route::delete('invoice/destroyProduct/product/{invoiceProduct}',[invoiceController::class,'destroyProduct'])->name('invoice.destroy.product');
   Route::get('invoice/productPrice/counting',[invoiceController::class,'productPrice'])->name('invoice.productPrice');
@@ -93,14 +94,15 @@ Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permi
   Route::get('invoice/counting',[invoiceController::class,'counting'])->name('invoice.counting');
   Route::get('invoice/productCounting/counting',[invoiceController::class,'productCounting'])->name('invoice.productCounting');
   Route::get('invoice/suggestionQuote/{id}/',[invoiceController::class,'suggestionQuote'])->name('invoice.suggestionQuote');
-
+  
+  Route::post('invoice/sentMail/{slug}', [InvoiceController::class, 'sentMail'])->name('invoice.sentMail');
   Route::resource('invoice', invoiceController::class);
 });
 
 
 Auth::routes([
-    'register' => false, // Registration Routes...
-  ]);
+  'register' => false, // Registration Routes...
+]);
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
@@ -285,7 +287,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('employee-checking/checkLastScheduledCheckin',[EmployeeCheckingController::class,'checkLastScheduledCheckin'])->name('employee-checking.checkLastScheduledCheckin');
   Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
   Route::resource('employee-checking', EmployeeCheckingController::class)->only(['index','update']);
-  Route::post('bast/sendBastEmail/{slug}', [BastController::class, 'sendBastEmail'])->name('bast.sendEmail');;
+  Route::post('bast/sendBastEmail/{slug}', [BastController::class, 'sendBastEmail'])->name('bast.sendEmail');
 });
 
 
