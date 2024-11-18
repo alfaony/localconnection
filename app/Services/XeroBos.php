@@ -118,7 +118,7 @@ class XeroBos
             $response = json_decode($e->response->body());
             throw new Exception($response->Detail ?? "Type: $response?->Type Message: $response?->Message Error Number: $response?->ErrorNumber");
         } catch (Exception $e) {
-            dd($e);
+            // dd($e);
             throw new Exception($e->getMessage());
         }
     }
