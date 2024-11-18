@@ -58,6 +58,7 @@ class BastController extends Controller
         }
 
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereHas('reportProject')->orderBy('created_at','desc')->get();
+        $template = config('custom.bast_template');
         $project = Project::byCompany(Auth::user()->company_id)
         ->whereHas('reportProject')
         ->whereDoesntHave('bast')
@@ -66,12 +67,13 @@ class BastController extends Controller
         $nomorBast = $this->bastNumber()['result'];
         $signature = config('custom.customerSignature');
 
-        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','signature','workOrder','selectedWorkOrder'));
+        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','signature','workOrder','selectedWorkOrder','template'));
     }
 
     public function create(Request $request)
     {
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)->whereHas('reportProject')->orderBy('created_at','desc')->get();
+        $template = config('custom.bast_template');
         $project = Project::byCompany(Auth::user()->company_id)
         //  ->whereHas('reportProject')
         ->whereDoesntHave('bast')
@@ -79,7 +81,7 @@ class BastController extends Controller
         $userCreate = Auth::user()->name;
         $nomorBast = $this->bastNumber()['result'];
         $signature = config('custom.customerSignature');
-        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','signature','workOrder'));
+        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','signature','workOrder','template'));
     }
 
     /**
@@ -97,7 +99,7 @@ class BastController extends Controller
     
     
             $number = $this->bastNumber();
-    
+            
             $bast->date = $request->input('date');
             $bast->basts_number = $number['number'];
             $bast->number_result = $number['result'];
@@ -107,6 +109,7 @@ class BastController extends Controller
             $bast->pic = $request->input('pic');
             $bast->customer_signature = $request->input('customer_signature');
             $bast->period = $request->input('period');
+            $bast->template = $request->input('template');
     
             $bast->user_created_id = Auth::user()->id;
             $bast->user_updated_id = Auth::user()->id;
@@ -142,6 +145,8 @@ class BastController extends Controller
     {
         
         $bast = Bast::where('slug',$slug)->firstOrFail();
+        $template = config('custom.bast_template');
+
 
         $project = Project::byCompany(Auth::user()->company_id)
         ->whereHas('reportProject')
@@ -157,7 +162,7 @@ class BastController extends Controller
         ->orWhere('id', $bast->work_order_id)
         ->orderBy('created_at','desc')->get();
 
-        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','bast','signature','workOrder'));
+        return view('bast.createOrEdit',compact('nomorBast','userCreate','project','bast','signature','workOrder', 'template'));
     }
 
     /**
@@ -230,7 +235,7 @@ class BastController extends Controller
         $nomorBast = $bast->number_result ?? '';
         $today = Carbon::now()->format('d M Y');
 
-        $pdf = PDF::loadView('bast.pdf_download', compact(
+        $pdf = PDF::loadView('bast'.$bast->template, compact(
             'bast','today','company'
         ));
 
@@ -260,6 +265,7 @@ class BastController extends Controller
             $bast->customer_signature = $request->input('customer_signature');
             $bast->period = $request->input('period');
             $bast->user_updated_id = Auth::user()->id;
+            $bast->template = $request->input('template');
     
             $bast->save();
             $this->updateBudget($project->work_order_id, $request->input('project'));
@@ -576,7 +582,7 @@ class BastController extends Controller
             $today = Carbon::now()->format('d M Y');
             $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
 
-            $additionalPdf = PDF::loadView('bast.pdf_download', compact('bast', 'today', 'company'));
+            $additionalPdf = PDF::loadView('bast.'.$bast->template, compact('bast', 'today', 'company'));
 
             // Convert generated PDF to a string
             $additionalPdfContent = $additionalPdf->output();
