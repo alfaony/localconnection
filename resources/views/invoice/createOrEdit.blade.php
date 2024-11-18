@@ -6,6 +6,12 @@
 
 @section('content')
 <div class="col-md-12">
+    @if(Session::get('InvoiceNumber'))
+    <div class="alert alert-danger mt-3">Number Invoice Telah Digunakan</div>
+    @endif
+    @if(Session::get('Reference'))
+    <div class="alert alert-danger mt-3">Reference Telah Digunakan</div>
+    @endif
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -46,6 +52,23 @@
                             <input type="text" id="sales" class="form-control" value="{{ $userCreate ?? '' }}" readonly>
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-2">
+                    <label>Invoice Number:</label>
+                </div>
+                <div class="col-6">
+                    <input type="text" name="number_result" id="invoice_number" class="form-control" value="{{ @$invoice->number_result ?? old('number_result') }}" placeholder="Auto Generate By Xero" {{ @$invoice ? 'required' : '' }}>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-2">
+                    <label>Reference:</label>
+                </div>
+                <div class="col-6">
+                    <input type="text" name="reference" id="reference" class="form-control" value="{{ @$invoice->reference ?? old('reference') }}" placeholder="Reference">
                 </div>
             </div>
             
@@ -938,27 +961,14 @@
         $('#service_fee').val(service_fee);
         $('#discount').val(discount);
         $("#charges").val(charges);
-        if(discount > 0)
-        {
-            let discountProduct = document.getElementById("discount").value;
-            if (discountProduct) 
-            {
-                document.getElementById("discount_show").value = discountProduct;
-                formatRupiahFormat(document.getElementById("discount_show"),"discount"); // Format default value
-            }
-        }
         
-        console.log(charges);
-        
-        if(charges > 0)
-        {
-            let chargesProduct = document.getElementById("charges").value;
-            if (chargesProduct) 
-            {
-                document.getElementById("charges_show").value = chargesProduct;
-                formatRupiahFormat(document.getElementById("charges_show"),"charges"); // Format default value
-            }
-        }
+        let discountProduct = document.getElementById("discount").value;
+        document.getElementById("discount_show").value = discountProduct;
+        formatRupiahFormat(document.getElementById("discount_show"),"discount"); // Format default value
+
+        let chargesProduct = document.getElementById("charges").value;
+        document.getElementById("charges_show").value = chargesProduct;
+        formatRupiahFormat(document.getElementById("charges_show"),"charges"); // Format default value
 
         calculation();
     }

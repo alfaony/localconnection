@@ -52,7 +52,6 @@ class SettingCompanyController extends Controller
             foreach ($settings as $setting) 
             {
                 $title = $setting->field_title;
-
                 if ($request->has($title)) 
                 {
                     $fieldValue = $request->input($title);
@@ -74,7 +73,7 @@ class SettingCompanyController extends Controller
             DB::commit();
             return redirect()->route('setting-company.index')->with('store',true);
         } catch (\Throwable $th) {
-            // dd($th);
+            dd($th);
             DB::rollback();
             Log::error($th);
             return redirect()->route('setting-company.index')->with('store',false);

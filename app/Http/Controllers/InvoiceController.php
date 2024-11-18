@@ -48,12 +48,15 @@ class InvoiceController extends Controller
      */
     public function index(Request $request)
     {
+
         // Ambil input pencarian dari request
         $search = $request->input('search');
         $order = $request->input('order') ?? 'desc';
         $status = $request->input('status');
         $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null; // Parse tanggal dari string ke Carbon
         $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
+        
+        $isConnect = $this->xeroService->isConnected();
 
         $invoice = Invoice::byCompany(Auth::user()->company_id)->byDateRange($start_date,$end_date)
         ->when($search, function ($query, $search) {
@@ -70,7 +73,7 @@ class InvoiceController extends Controller
 
         $searchByStatus = config('custom.status_invoice_search');
 
-        return view('invoice.index',compact('invoice','searchByStatus'));
+        return view('invoice.index',compact('invoice','searchByStatus','isConnect'));
     }
 
     /**
@@ -109,6 +112,36 @@ class InvoiceController extends Controller
         try 
         {
             activity()->disableLogging();
+            if($request->number_result)
+            {
+                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('number_result',$request->number_result)->first();
+                if($invoice)
+                {
+                    return redirect()->back()->with('InvoiceNumber',true);
+                }
+
+                $check = $this->xeroService->findReferenceInvoice($request->number_result);
+                if($check == false)
+                {
+                    return redirect()->back()->with('InvoiceNumber',true);
+                }
+            }
+
+
+            if($request->reference)
+            {
+                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
+                if($invoice)
+                {
+                    return redirect()->back()->with('Reference',true);
+                }
+
+                $check = $this->xeroService->findReferenceInvoice($request->reference);
+                if($check == false)
+                {
+                    return redirect()->back()->with('Reference',true);
+                }
+            }
 
             $date = Carbon::now()->format('m/Y');
             $invoiceNumber = Invoice::byCompany(Auth::user()->company_id)->withTrashed()->max('invoice_number') + 1;
@@ -116,6 +149,8 @@ class InvoiceController extends Controller
             $quote = Quote::byCompany(Auth::user()->company_id)->where('id',$bast->project->workOrder->quote_id)->firstOrFail();
 
             $invoice = new Invoice();
+            $invoice->number_result = $request->post('number_result');
+            $invoice->reference = $request->post('reference');
             $invoice->date = Carbon::now()->format('Y-m-d');
             $invoice->bast_id = $request->post('bast');
             $invoice->start_date = $request->post('start_date') ?? Carbon::now();
@@ -169,7 +204,7 @@ class InvoiceController extends Controller
             return redirect()->to(route('invoice.index'))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
 
             DB::rollback();
             Log::error($th);
@@ -268,7 +303,8 @@ class InvoiceController extends Controller
             {
                 return redirect()->to(route('invoice.index'))->with('AUTHORISED',true);
             }
-
+            $invoice->number_result = $request->post('number_result');
+            $invoice->reference = $request->post('reference');
             $invoice->date = Carbon::now()->format('Y-m-d');
             $invoice->bast_id = $bast->id;
             $invoice->start_date = $request->post('start_date') ?? Carbon::now();
@@ -325,7 +361,7 @@ class InvoiceController extends Controller
             // dd($th);    
             DB::rollback();
             Log::error($th);
-            return redirect()->to(route('invoice.index'))->with('false',true);
+            return redirect()->to(route('invoice.index'))->with('false',false);
         }
     }
 
@@ -689,7 +725,6 @@ class InvoiceController extends Controller
     {
         $contactXero = $this->xeroService->checkOrCreateContact($invoice->quote->customer);
         $invoiceXero = $this->xeroService->createInvoice($invoice, $contactXero);
-        
         $invoice->number_result = $invoiceXero['InvoiceNumber'];
         $invoice->invoice_xero_id = $invoiceXero['InvoiceID'];
         $invoice->contact_xero_id = $contactXero->ContactID;

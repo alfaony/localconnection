@@ -4,18 +4,18 @@ namespace App\Services;
 
 use LangleyFoxall\XeroLaravel\XeroApp;
 use League\OAuth2\Client\Token\AccessToken;
-use Dcblogdev\Xero\Facades\Xero;
-use Dcblogdev\Xero\Models\XeroToken;
 use Illuminate\Support\Facades\Log;
 use App\Models\ApiLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Product;
+use Illuminate\Support\Facades\Session;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use App\Schemas\ParamSchema;
 
+use App\Services\XeroBos;
 class XeroService
 {
     /**
@@ -24,34 +24,64 @@ class XeroService
      * @return \Illuminate\Http\RedirectResponse
      */
     protected $xero;
+    protected $xeroBos;
 
     /**
      * Constructor to initialize the XeroApp instance.
      */
+    // public function __construct()
+    // {
+    //     $token = XeroToken::first();
+    //     if ($token) 
+    //     {
+    //         $this->xeroBos->setTenantId($token->tenant_id);
+    //         if ($this->xeroBos->isConnected()) 
+    //         {
+    //             $this->xeroBos->getAccessToken($redirectWhenNotConnected = false);
+    //         }
+
+            // $this->xero = new XeroApp(
+            //     new AccessToken(['access_token' => $token->access_token]),
+            //     $token->tenant_id
+            // );
+
+    //     }
+    // }
     public function __construct()
     {
-        $token = XeroToken::first();
+        $this->xeroBos = new XeroBos();
+    }
+    protected function setXeroConfig()
+    {
+        $xeroBos = new XeroBos();
 
-        if ($token) 
+        $access = $xeroBos->getAccessToken();
+        if($access)
         {
-            Xero::setTenantId($token->tenant_id);
-            if (Xero::isConnected()) 
+            $token = $xeroBos->getTokenData();
+            if($xeroBos->isConnected())
             {
-                Xero::getAccessToken($redirectWhenNotConnected = false);
+                $xeroBos->getAccessToken($redirectWhenNotConnected = false);
             }
-
+            
             $this->xero = new XeroApp(
-                new AccessToken(['access_token' => $token->access_token]),
-                $token->tenant_id
-            );
-
+                    new AccessToken(['access_token' => $token->access_token]),
+                    $token->tenant_id
+                );
         }
+    }
+
+    public function isConnected()
+    {
+        $this->setXeroConfig();
+        return $this->xeroBos->isConnected();
     }
 
     public function connect()
     {
         try {
-            return Xero::connect();
+            $this->setXeroConfig();
+            return $this->xeroBos->connect();
         } catch (\Exception $e) {
             Log::error('Xero connection failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to connect to Xero.');
@@ -61,7 +91,8 @@ class XeroService
     public function disconnect()
     {
         try {
-            return Xero::connect();
+            $this->setXeroConfig();
+            return $this->xeroBos->disconnect();
         } catch (\Exception $e) {
             Log::error('Xero connection failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to connect to Xero.');
@@ -72,20 +103,21 @@ class XeroService
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function handleCallback()
-    {
-        try {
-            Xero::callback();
-            return redirect()->route('home')->with('success', 'Connected to Xero successfully!');
-        } catch (\Exception $e) {
-            Log::error('Xero callback failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Xero callback failed.');
-        }
-    }
-
+    // public function handleCallback()
+    // {
+    //     try {
+    //         $this->setXeroConfig();
+    //         $this->xeroBos->handleCallback();
+    //         return redirect()->route('home')->with('success', 'Connected to Xero successfully!');
+    //     } catch (\Exception $e) {
+    //         Log::error('Xero callback failed: ' . $e->getMessage());
+    //         return redirect()->back()->with('error', 'Xero callback failed.');
+    //     }
+    // }
+  
     public function checkOrCreateContact($customer)
     {   
-
+        $this->setXeroConfig();
         $existingContacts = $this->xero->contacts()->where('EmailAddress', $customer->email)
                                                  ->where('Name', $customer->name)
                                                  ->first();
@@ -105,7 +137,9 @@ class XeroService
                 ]
             ];
 
-            Xero::contacts()->store($data);
+            // $this->xeroBos->contacts()->store($data);
+            $this->xeroBos->post('contacts', $data);
+            
             return $this->xero->contacts()->where('EmailAddress', $customer->email)
             ->where('Name', $customer->name)
             ->first();
@@ -116,12 +150,14 @@ class XeroService
 
     public function createInvoice($invoice, $contact)
     {
+        $this->setXeroConfig();
+        
         if (!$contact || !isset($contact->ContactID)) {
             $invoice->connecting = false;
             $invoice->save();
             throw new \Exception('Invalid contact. Contact ID is missing.');
         }
-
+        
         // Prepare the line items for the invoice
         $quoteProduct = $invoice->invoiceProducts;
         $lineItems = $this->getLineItems($invoice,$quoteProduct);
@@ -134,27 +170,31 @@ class XeroService
         try {
             $invoiceXero = [
                 "Type" => "ACCREC",  // ACCREC for sales invoices
+                "Reference" => $invoice->reference ?? "",
+                "InvoiceNumber" => $invoice->number_result ?? "",
                 "Contact" => [
                     "ContactID" => $contact->ContactID // Use the contact ID from Xero
                 ],
-                "Date" => $invoice->start_date,
-                "DueDate" => $invoice->end_date,
+                "Date" => Carbon::parse($invoice->start_date)->format('Y-m-d'),
+                "DueDate" => Carbon::parse($invoice->end_date)->format('Y-m-d'),
                 "LineItems" => $lineItems, // Line items array from getLineItems method
                 "Status" => "DRAFT", // Invoice status
                 "LineAmountTypes" => (!empty($invoice->tax) && $invoice->tax > 0) ? "Exclusive" : "NoTax", 
             ];
             
             // Call Xero API to create the invoice
-            $response = Xero::invoices()->store($invoiceXero);
-
+            $response = $this->xeroBos->post('Invoices', $invoiceXero);
+            // $response = $this->xeroBos->invoices()->store($invoiceXero);
+            
             // Logging API request
             $invoice->connecting = true;
             $invoice->save();
             $this->logApiRequest('invoices', 'POST', $invoice, $response, 200);
-
-            return $response;
+            
+            return $response ? $response['body']['Invoices'][0] : null;
 
         } catch (\Exception $e) {
+            // dd($e);
             $invoice->connecting = false;
             $invoice->save();
             $this->logApiRequest('invoices', 'POST', $invoice, $e->getMessage(), 500);
@@ -166,6 +206,7 @@ class XeroService
 
     public function updateInvoice($invoice, $status = "DRAFT")
     {
+        $this->setXeroConfig();
         // Prepare the line items for the invoice
         $quoteProduct = $invoice->invoiceProducts;
 
@@ -179,6 +220,8 @@ class XeroService
         try {
             $data = [
                 "Type" => "ACCREC",  // ACCREC for sales invoices
+                "Reference" => $invoice->reference ?? "",
+                "InvoiceNumber" => $invoice->number_result ?? "",
                 "Contact" => [
                     "ContactID" => $invoice->contact_xero_id // Use the contact ID from Xero
                 ],
@@ -189,7 +232,8 @@ class XeroService
                 "LineAmountTypes" => (!empty($invoice->tax) && $invoice->tax > 0) ? "Exclusive" : "NoTax",
             ];
             
-            $response = Xero::invoices()->update($invoice->invoice_xero_id, $data);
+            // $response = $this->xeroBos->invoices()->update($invoice->invoice_xero_id, $data);
+            $response = $this->xeroBos->post('Invoices/' . $invoice->invoice_xero_id, $data);
 
             // Logging API request
             $this->logApiRequest('invoices/' . $invoice->invoice_xero_id, 'PUT', $data, $response, 200);
@@ -211,8 +255,9 @@ class XeroService
     }
     public function getInvoice($invoiceId)
     {
+        $this->setXeroConfig();
         try {
-            $pdfInvoice = Xero::get("invoices/{$invoiceId}", null, true, 'application/pdf');
+            $pdfInvoice = $this->xeroBos->get("invoices/{$invoiceId}", null, true, 'application/pdf');
                    // Nama file yang akan digunakan saat mendownload
             $fileName = "invoice_{$invoiceId}.pdf";
 
@@ -230,7 +275,7 @@ class XeroService
 
     public function deleteInvoice($invoice)
     {
-        
+        $this->setXeroConfig();   
         try {
             if (!$this->isCheckingInvoice($invoice)) 
             {
@@ -242,7 +287,7 @@ class XeroService
                 "Status" => $invoice->status == ParamSchema::AUTHORISED ? "VOIDED" : "DELETED"
             ];
 
-            $response = Xero::invoices()->update($invoice->invoice_xero_id, $data);
+            $response = $this->xeroBos->invoices()->update($invoice->invoice_xero_id, $data);
 
             $this->logApiRequest('Invoices', "delete", $invoice, $response, 200);
 
@@ -259,10 +304,61 @@ class XeroService
         }
     }
 
-    public function findInvoice($invoiceId)
+    public function findNumberInvoice($invoiceNumber)
     {
-        return Xero::invoices()->find($invoiceId);
+        $this->setXeroConfig();
+
+        try {
+            // Fetch invoices from Xero with optional filters
+            $response = $this->xeroBos->get('Invoices', ['InvoiceNumber' => $invoiceNumber]);
+
+            if (isset($response['body']['Invoices']) && count($response['body']['Invoices']) > 0) {
+                $invoices = $response['body']['Invoices'];
+
+                foreach ($invoices as $invoice) {
+                    // Check if the invoice number matches
+                    if ($invoice['InvoiceNumber'] === $invoiceNumber) {
+                        return false;
+                    }
+                }
+            }
+
+            // If no matching invoice found
+            return true;
+        } catch (\Exception $e) {
+            // Handle any API or connection errors
+            return false;
+        }
     }
+
+
+    public function findReferenceInvoice($reference)
+    {
+        $this->setXeroConfig();
+
+        try {
+            // Fetch invoices from Xero with optional filters
+            $response = $this->xeroBos->get('Invoices', ['Reference' => $reference]);
+
+            if (isset($response['body']['Invoices']) && count($response['body']['Invoices']) > 0) {
+                $invoices = $response['body']['Invoices'];
+
+                foreach ($invoices as $invoice) {
+                    // Check if the invoice number matches
+                    if ($invoice['Reference'] === $reference) {
+                        return false;
+                    }
+                }
+            }
+
+            // If no matching invoice found
+            return true;
+        } catch (\Exception $e) {
+            // Handle any API or connection errors
+            return false;
+        }
+    }
+
 
     protected function getLineItems($invoice, $quoteProduct)
     {
@@ -393,8 +489,8 @@ class XeroService
     {
         try {          
             $data['Items'] = $postItems;
-            $response = Xero::post('items', $data);
-    
+            $response = $this->xeroBos->post('items', $data);
+            
             // Logging API request
             $this->logApiRequest('items', 'POST', $data, $response, 200);
 
@@ -455,7 +551,7 @@ class XeroService
     protected function findOrCreateTaxRate($taxPercentage)
     {
         // Coba temukan TaxRate yang ada dengan tarif pajak yang diminta
-        $taxRatesResponse = Xero::get('taxRates');
+        $taxRatesResponse = $this->xeroBos->get('taxRates');
         $taxRates = $taxRatesResponse['body']['TaxRates'];
     
         // Periksa apakah ada TaxRate dengan EffectiveRate yang sesuai
@@ -482,7 +578,7 @@ class XeroService
         ];
         
         try {
-            $response = Xero::post('taxRates', $newTaxRate);
+            $response = $this->xeroBos->post('taxRates', $newTaxRate);
             if(isset($response['body']['TaxRates']))
             {
                 return $response['body']['TaxRates'][0]['TaxType'];
