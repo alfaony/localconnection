@@ -167,7 +167,7 @@
             columns: [
                 {data: 'number_result', name: 'number_result', orderable: false},
                 {data: 'total', name: 'total', orderable: false},
-                {data: 'customer.name', name: 'total', orderable: false},
+                {data: 'customer_name', name: 'customer_name', orderable: false},
                 {data: 'budget_transition', name: 'budget_transition', orderable: false},
                 {data: 'status', name: 'status', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},

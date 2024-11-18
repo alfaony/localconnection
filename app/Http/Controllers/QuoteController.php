@@ -572,6 +572,11 @@ class QuoteController extends Controller
             $status = $item->status == ParamSchema::OPEN ? 'badge badge-success' : 'badge badge-danger';
             $item->budget_transition = $item->budget_transition ? "<span class='badge $color'>Peralihan</span>" : "<span class='badge $color'>Baru</span>";
             $item->status = $item->status == ParamSchema::OPEN ? "<span class='badge $status'>Open</span>" : "<span class='badge $status'>Closed</span>";
+            if (isset($item->customer)) {
+                $item->customer_name = "<a href='" . route('customer.show', ['customer' => $item->customer->slug]) . "'>" . htmlspecialchars($item->customer->name) . "</a>";
+            } else {
+                $item->customer_name = '-';
+            }
         }
 
         return response()->json($data);
