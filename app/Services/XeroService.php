@@ -170,8 +170,6 @@ class XeroService
         try {
             $invoiceXero = [
                 "Type" => "ACCREC",  // ACCREC for sales invoices
-                "Reference" => $invoice->reference ?? "",
-                "InvoiceNumber" => $invoice->number_result ?? "",
                 "Contact" => [
                     "ContactID" => $contact->ContactID // Use the contact ID from Xero
                 ],
@@ -179,8 +177,18 @@ class XeroService
                 "DueDate" => Carbon::parse($invoice->end_date)->format('Y-m-d'),
                 "LineItems" => $lineItems, // Line items array from getLineItems method
                 "Status" => "DRAFT", // Invoice status
-                "LineAmountTypes" => (!empty($invoice->tax) && $invoice->tax > 0) ? "Exclusive" : "NoTax", 
+                "LineAmountTypes" => (!empty($invoice->tax) && $invoice->tax > 0) ? "Exclusive" : "NoTax",
             ];
+            
+            if (!empty($invoice->reference)) 
+            {
+                $invoiceXero['Reference'] = $invoice->reference;
+            }
+            
+            if (!empty($invoice->number_result)) 
+            {
+                $invoiceXero['InvoiceNumber'] = $invoice->number_result;
+            }
             
             // Call Xero API to create the invoice
             $response = $this->xeroBos->post('Invoices', $invoiceXero);

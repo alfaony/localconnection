@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use App\Models\Invoice;
 use App\Models\ApiLog;
@@ -425,6 +426,18 @@ class XeroWebhookController extends Controller
 
             $this->grandTotal($invoice);
             
+            if ($invoice->bast) 
+            {
+                // Gabungkan file BAST dengan invoice dari Xero
+                if ($invoice->bast->file_merge_path) 
+                {
+                    $mergedFilePath = $this->mergePdf($invoice, $invoice->bast->file_merge_path);
+                    
+                    // Simpan path hasil gabungan ke database
+                    $invoice->file_merge_path = $mergedFilePath;
+                    $invoice->save();
+                }
+            }
 
             activity()->enableLogging();
             activity()
@@ -520,5 +533,69 @@ class XeroWebhookController extends Controller
             }
         } 
 
+    }
+
+    public function mergePdf($invoice, $bastFilePath)
+    {
+        // Path relatif untuk file gabungan
+        $outputPath = "public/invoices/merged_invoice_{$invoice->number_result}.pdf";
+        
+        // Hapus file gabungan sebelumnya jika ada
+        if ($invoice->file_merge_path && Storage::exists($invoice->file_merge_path)) {
+            Storage::delete($invoice->file_merge_path);
+        }
+
+        // Unduh PDF dari Xero dan simpan sementara
+        $tempInvoicePdfPath = sys_get_temp_dir() . "/invoice_temp_{$invoice->id}.pdf";
+        $xeroInvoicePdf = $this->getInvoice($invoice);
+        file_put_contents($tempInvoicePdfPath, $xeroInvoicePdf);
+
+        // Gunakan FPDI untuk menggabungkan file
+        $pdf = new \setasign\Fpdi\Fpdi();
+
+        // Tambahkan halaman dari file invoice (PDF dari Xero) terlebih dahulu
+        $pageCount = $pdf->setSourceFile($tempInvoicePdfPath);
+        for ($i = 1; $i <= $pageCount; $i++) {
+            $tpl = $pdf->importPage($i);
+            $size = $pdf->getTemplateSize($tpl);
+            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+            $pdf->useTemplate($tpl);
+        }
+
+        // Tambahkan halaman dari file BAST
+        $pageCount = $pdf->setSourceFile(Storage::path($bastFilePath));
+        for ($i = 1; $i <= $pageCount; $i++) {
+            $tpl = $pdf->importPage($i);
+            $size = $pdf->getTemplateSize($tpl);
+            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+            $pdf->useTemplate($tpl);
+        }
+
+        // Simpan hasil gabungan ke storage public
+        if (!Storage::exists(dirname($outputPath))) {
+            Storage::makeDirectory(dirname($outputPath)); // Buat direktori jika belum ada
+        }
+        $mergedAbsolutePath = Storage::path($outputPath);
+        $pdf->Output($mergedAbsolutePath, 'F'); // Simpan file gabungan
+
+        // Hapus file sementara setelah selesai
+        if (file_exists($tempInvoicePdfPath)) {
+            unlink($tempInvoicePdfPath);
+        }
+
+        return $outputPath; // Kembalikan path relatif untuk disimpan di database
+    }
+
+    protected function getInvoice($invoice)
+    {
+        $this->xeroBos->setCompanyPublic($invoice->userCreate->company_id);
+        $pdfInvoice = $this->xeroBos->get("invoices/{$invoice->invoice_xero_id}", null, true, 'application/pdf');
+        // Nama file yang akan digunakan saat mendownload
+        $fileName = "invoice_{$invoice->invoice_xero_id}.pdf";
+
+        // Mengirimkan file PDF sebagai respons untuk di-download
+        return response($pdfInvoice['body'])
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
     }
 }
