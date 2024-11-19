@@ -146,7 +146,7 @@
                         </table>
                     </div>
                     <div class="col-md-12">
-                        <p>Bersamaan dengan surat pernyataan ini, pekerjaan dengan nomor purchase order diatas dengan rincian pekerjaan <strong>{{ $bast->project ? $bast->project->title : '' }}</strong> telah diselesaikan dengan baik dan pekerjaan tersebut telah kami serah terimakan kepada @if($bast->customer_signature == \App\Schemas\ParamSchema::PENANGGUNGJAWAB) {{ $bast->pic ?? '' }} @else {{ $bast->workOrder ? $bast->workOrder->quote->customer->{$bast->customer_signature} : '' }} @endif</p>
+                        <p>Bersamaan dengan surat pernyataan ini, pekerjaan dengan nomor purchase order diatas dengan rincian pekerjaan <strong>{{ $bast->project ? $bast->project->title : '' }}</strong> telah diselesaikan dengan baik dan pekerjaan tersebut telah kami serah terimakan kepada {{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</p>
                         <p>Laporan bisa di unduh di link berikut ini</p>
                         <ul>
                             @if($bast->project && $bast->project->reportProject && $bast->project->reportProject->reportedDetails)
