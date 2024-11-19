@@ -6,11 +6,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+
 
 use App\Http\Requests\InvoiceRequest;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\InvoiceExport;
 use Carbon\Carbon;
 
 use App\Helpers\Access;
+use App\Helpers\EmailNotifHelper;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
@@ -25,6 +30,7 @@ use App\Models\SettingCompany;
 use App\Models\DivisionBudget;
 use App\Models\Bast;
 use App\Models\Company;
+use App\Models\InvoiceEmailRecord;
 
 use App\Services\XeroService;
 
@@ -193,6 +199,18 @@ class InvoiceController extends Controller
             $this->updateQuote($invoice->quote_id);
             $this->generateXeroInvoice($invoice);
 
+            if ($invoice->bast) 
+            {
+                // Gabungkan file BAST dengan invoice dari Xero
+                if ($invoice->bast->file_merge_path) 
+                {
+                    $mergedFilePath = $this->mergePdf($invoice, $invoice->bast->file_merge_path);
+                    
+                    // Simpan path hasil gabungan ke database
+                    $invoice->file_merge_path = $mergedFilePath;
+                    $invoice->save();
+                }
+            }
             activity()->enableLogging();
             activity()
                 ->performedOn($invoice)
@@ -201,10 +219,10 @@ class InvoiceController extends Controller
                 ])])
                 ->log('Invoice Inserted');
             DB::commit();
-            return redirect()->to(route('invoice.index'))->with('store',true);
+            return redirect()->to(route('invoice.show', $invoice->slug))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
 
             DB::rollback();
             Log::error($th);
@@ -268,6 +286,9 @@ class InvoiceController extends Controller
         $status = config('custom.status_invoice');
 
 
+        $invoiceEmailRecords = InvoiceEmailRecord::where('invoice_id', $invoice->id)
+        ->orderBy('created_at', 'desc')
+        ->paginate(2);
         // Bast
         
         $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
@@ -276,7 +297,7 @@ class InvoiceController extends Controller
         $userCreate = $bast->userCreate ? $bast->userCreate->name : '';
         $nomorBast = $bast->number_result ?? '';
         $today = Carbon::now()->format('d M Y');
-        return view('invoice.show',compact('product','userCreate','nomorQuote','basts','date','invoice','status','nomorBast','company','bast','today'));
+        return view('invoice.show',compact('product','userCreate','nomorQuote','basts','date','invoice','status','nomorBast','company','bast','today','invoiceEmailRecords'));
     }
     
     /**
@@ -296,6 +317,38 @@ class InvoiceController extends Controller
             $status = $request->post('status');
 
             $invoice = Invoice::byCompany(Auth::user()->company_id)->where('id', $slug)->first();
+
+            if($request->number_result != $invoice->number_result)
+            {
+                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('number_result',$request->number_result)->first();
+                if($invoice)
+                {
+                    return redirect()->back()->with('InvoiceNumber',true);
+                }
+
+                $check = $this->xeroService->findReferenceInvoice($request->number_result);
+                if($check == false)
+                {
+                    return redirect()->back()->with('InvoiceNumber',true);
+                }
+            }
+
+
+            if($request->reference != $invoice->reference)
+            {
+                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
+                if($invoice)
+                {
+                    return redirect()->back()->with('Reference',true);
+                }
+
+                $check = $this->xeroService->findReferenceInvoice($request->reference);
+                if($check == false)
+                {
+                    return redirect()->back()->with('Reference',true);
+                }
+            }
+            
             $bast = Bast::byCompany(Auth::user()->company_id)->where('id',$request->post('bast'))->firstOrFail();
             $quote = Quote::byCompany(Auth::user()->company_id)->where('id',$bast->project->workOrder->quote_id)->firstOrFail();
             
@@ -347,6 +400,18 @@ class InvoiceController extends Controller
             $this->grandTotal($invoice);
             $this->xeroService->updateInvoice($invoice,$request->post('status'));
             
+            if ($invoice->bast) 
+            {
+                if ($invoice->bast->file_merge_path) 
+                {
+                    // Gabungkan file BAST dengan invoice dari Xero
+                    $mergedFilePath = $this->mergePdf($invoice, $invoice->bast->file_merge_path);
+                    
+                    // Simpan path hasil gabungan ke database
+                    $invoice->file_merge_path = $mergedFilePath;
+                    $invoice->save();
+                }
+            }
 
             activity()->enableLogging();
             activity()
@@ -356,7 +421,7 @@ class InvoiceController extends Controller
                 ])])
                 ->log('Invoice updated');
             DB::commit();
-            return redirect()->to(route('invoice.index'))->with('update',true);
+            return redirect()->to(route('invoice.show',$invoice->slug))->with('update',true);
         } catch (\Throwable $th) {
             // dd($th);    
             DB::rollback();
@@ -730,4 +795,209 @@ class InvoiceController extends Controller
         $invoice->contact_xero_id = $contactXero->ContactID;
         $invoice->save();
     }
+
+    /**
+     * Merge PDF
+     */
+    public function mergePdf($invoice, $bastFilePath)
+    {
+        // Path relatif untuk file gabungan
+        $outputPath = "public/invoices/merged_invoice_{$invoice->number_result}.pdf";
+
+        // Hapus file gabungan sebelumnya jika ada
+        if ($invoice->file_merge_path && Storage::exists($invoice->file_merge_path)) {
+            Storage::delete($invoice->file_merge_path);
+        }
+
+        // Unduh PDF dari Xero dan simpan sementara
+        $tempInvoicePdfPath = sys_get_temp_dir() . "/invoice_temp_{$invoice->id}.pdf";
+        $xeroInvoicePdf = $this->xeroService->getInvoice($invoice->invoice_xero_id); // Dapatkan PDF dari Xero
+        file_put_contents($tempInvoicePdfPath, $xeroInvoicePdf);
+
+        // Gunakan FPDI untuk menggabungkan file
+        $pdf = new \setasign\Fpdi\Fpdi();
+
+        // Tambahkan halaman dari file invoice (PDF dari Xero) terlebih dahulu
+        $pageCount = $pdf->setSourceFile($tempInvoicePdfPath);
+        for ($i = 1; $i <= $pageCount; $i++) {
+            $tpl = $pdf->importPage($i);
+            $size = $pdf->getTemplateSize($tpl);
+            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+            $pdf->useTemplate($tpl);
+        }
+
+        // Tambahkan halaman dari file BAST
+        $pageCount = $pdf->setSourceFile(Storage::path($bastFilePath));
+        for ($i = 1; $i <= $pageCount; $i++) {
+            $tpl = $pdf->importPage($i);
+            $size = $pdf->getTemplateSize($tpl);
+            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+            $pdf->useTemplate($tpl);
+        }
+
+        // Simpan hasil gabungan ke storage public
+        if (!Storage::exists(dirname($outputPath))) {
+            Storage::makeDirectory(dirname($outputPath)); // Buat direktori jika belum ada
+        }
+        $mergedAbsolutePath = Storage::path($outputPath);
+        $pdf->Output($mergedAbsolutePath, 'F'); // Simpan file gabungan
+
+        // Hapus file sementara setelah selesai
+        if (file_exists($tempInvoicePdfPath)) {
+            unlink($tempInvoicePdfPath);
+        }
+
+        return $outputPath; // Kembalikan path relatif untuk disimpan di database
+    }
+
+    /**
+     * Sent Mail
+     */
+    public function sentMail(Request $request, $slug)
+    {
+        $request->validate([
+            'to' => 'required|array',
+            'to.*' => 'email',
+            'cc' => 'nullable|array',
+            'cc.*' => 'email',
+            'subject' => 'required|string',
+            'content' => 'required|string',
+        ]);
+
+        try {
+            // Retrieve the BAST and the selected merged file
+            $invoice = Invoice::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            
+            $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+
+
+            // Retrieve the file path and ensure it exists
+            $filePath = Storage::path($invoice->file_merge_path);
+            if (!Storage::exists($invoice->file_merge_path)) {
+                return redirect()->back()->with('error', 'Selected file does not exist.');
+            }
+
+            // Send the email with the attachment
+            $data = 
+            [
+                'subject' => $request->subject,
+                'content' => $request->content,
+            ];
+
+            $nameFile = "INVOICE_".str_replace('/','-', $invoice->number_result). '.pdf';
+            $attachments = [
+                $filePath => $nameFile,
+            ];
+
+            $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+            $fromEmail = $smtpConfig['username'] ?? '';
+            $fromName = $smtpConfig['name'] ?? '';
+            $toEmails = $request->to;
+            $toNames = $request->to;
+            $ccEmails = $request->cc;
+            $subject = $request->subject;
+            $tamplate = "email.bast_email";
+            $companyId = Auth::user()->company_id;
+            
+            EmailNotifHelper::sentEmail(
+                $fromEmail,
+                $fromName,
+                $toEmails, 
+                $toNames, 
+                $subject,
+                $tamplate,
+                $data, 
+                $smtpConfig, 
+                $companyId, 
+                $ccEmails,
+                [],
+                $attachments
+            );
+
+            // Simpan record ke database
+            $invoiceEmailRecord = new InvoiceEmailRecord();
+            $invoiceEmailRecord->invoice_id = $invoice->id;
+            $invoiceEmailRecord->user_id = Auth::user()->id;
+            $invoiceEmailRecord->to = json_encode($request->to);
+            $invoiceEmailRecord->cc = json_encode($request->cc);
+            $invoiceEmailRecord->subject = $request->subject;
+            $invoiceEmailRecord->content = $request->content;
+            $invoiceEmailRecord->save();
+
+            return redirect()->back()->with('successEmail', true);
+        } catch (\Exception $e) {
+            // dd($e);
+            \Log::error('Failed to send BAST email: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to send the email.');
+        }
+    }
+
+    public function requestExport(Request $request)
+    {
+        // Generate a unique file name
+        $fileName = 'invoices_' . now()->timestamp . '.xlsx';
+
+        // Queue the export job
+        Excel::store(new InvoiceExport(), $fileName, 'public', \Maatwebsite\Excel\Excel::XLSX);
+
+        // Return the file name to the frontend
+        return response()->json(['file_name' => $fileName]);
+    }
+
+    public function export(Request $request, $format)
+    {
+        // Get filter parameters from the request
+        $filters = $request->only(['search', 'order', 'start_date', 'end_date', 'status']);
+        
+        // Generate a unique export filename
+        $filename = 'invoices_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
+    
+        // Choose the export format
+        $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
+    
+        // Store the export in the 'public' disk
+        Excel::store(new InvoiceExport($filters), $filename, 'public', $exportFormat);
+    
+        // Log the file path to verify storage location
+        Log::info("File stored at: " . Storage::path($filename));
+        $filename = "public/" . $filename;
+        // Save filename to session or pass it to the frontend
+        session(['export_filename_invoice' => $filename]);
+
+        return redirect()->to(Route('invoice.index'))->with('export', true);
+    }
+
+    public function checkExportStatus(Request $request)
+    {
+        // Retrieve the export filename from the session
+        $filename = session('export_filename_invoice');
+        
+        // dd($filename);
+        // Check if the file exists on the public disk
+        if ($filename && Storage::exists($filename)) {
+            // Provide the download URL if file exists
+            $downloadUrl = Storage::url($filename);
+            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        }
+    
+        return response()->json(['ready' => false, 'filename' => $filename]);
+    }
+
+    public function clearsession()
+    {
+        // Retrieve the export filename from the session
+        $filename = session('export_filename_invoice');
+
+        // Forget the session variable to prevent re-download on refresh
+        session()->forget('export_filename_invoice');
+
+        // Check if the file exists and delete it
+        if ($filename && Storage::exists($filename)) {
+            Storage::delete($filename);
+            Log::info("File deleted from storage: " . $filename);
+        }
+
+        return response()->json(['status' => 'export session cleared and file deleted']);
+    }
+
 }
