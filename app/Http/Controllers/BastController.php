@@ -235,7 +235,7 @@ class BastController extends Controller
         $nomorBast = $bast->number_result ?? '';
         $today = Carbon::now()->format('d M Y');
 
-        $pdf = PDF::loadView('bast'.$bast->template, compact(
+        $pdf = PDF::loadView('bast.'.$bast->template, compact(
             'bast','today','company'
         ));
 
