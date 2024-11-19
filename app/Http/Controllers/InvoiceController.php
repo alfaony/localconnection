@@ -8,7 +8,10 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
+
 use App\Http\Requests\InvoiceRequest;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\InvoiceExport;
 use Carbon\Carbon;
 
 use App\Helpers\Access;
@@ -219,7 +222,7 @@ class InvoiceController extends Controller
             return redirect()->to(route('invoice.show', $invoice->slug))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
 
             DB::rollback();
             Log::error($th);
@@ -796,7 +799,7 @@ class InvoiceController extends Controller
     /**
      * Merge PDF
      */
-    protected function mergePdf($invoice, $bastFilePath)
+    public function mergePdf($invoice, $bastFilePath)
     {
         // Path relatif untuk file gabungan
         $outputPath = "public/invoices/merged_invoice_{$invoice->number_result}.pdf";
@@ -928,4 +931,73 @@ class InvoiceController extends Controller
             return redirect()->back()->with('error', 'Failed to send the email.');
         }
     }
+
+    public function requestExport(Request $request)
+    {
+        // Generate a unique file name
+        $fileName = 'invoices_' . now()->timestamp . '.xlsx';
+
+        // Queue the export job
+        Excel::store(new InvoiceExport(), $fileName, 'public', \Maatwebsite\Excel\Excel::XLSX);
+
+        // Return the file name to the frontend
+        return response()->json(['file_name' => $fileName]);
+    }
+
+    public function export(Request $request, $format)
+    {
+        // Get filter parameters from the request
+        $filters = $request->only(['search', 'order', 'start_date', 'end_date', 'status']);
+        
+        // Generate a unique export filename
+        $filename = 'invoices_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
+    
+        // Choose the export format
+        $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
+    
+        // Store the export in the 'public' disk
+        Excel::store(new InvoiceExport($filters), $filename, 'public', $exportFormat);
+    
+        // Log the file path to verify storage location
+        Log::info("File stored at: " . Storage::path($filename));
+        $filename = "public/" . $filename;
+        // Save filename to session or pass it to the frontend
+        session(['export_filename_invoice' => $filename]);
+
+        return redirect()->to(Route('invoice.index'))->with('export', true);
+    }
+
+    public function checkExportStatus(Request $request)
+    {
+        // Retrieve the export filename from the session
+        $filename = session('export_filename_invoice');
+        
+        // dd($filename);
+        // Check if the file exists on the public disk
+        if ($filename && Storage::exists($filename)) {
+            // Provide the download URL if file exists
+            $downloadUrl = Storage::url($filename);
+            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        }
+    
+        return response()->json(['ready' => false, 'filename' => $filename]);
+    }
+
+    public function clearsession()
+    {
+        // Retrieve the export filename from the session
+        $filename = session('export_filename_invoice');
+
+        // Forget the session variable to prevent re-download on refresh
+        session()->forget('export_filename_invoice');
+
+        // Check if the file exists and delete it
+        if ($filename && Storage::exists($filename)) {
+            Storage::delete($filename);
+            Log::info("File deleted from storage: " . $filename);
+        }
+
+        return response()->json(['status' => 'export session cleared and file deleted']);
+    }
+
 }

@@ -87,6 +87,9 @@ Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permi
     
   });
   Route::delete('invoice/destroyProduct/product/{invoiceProduct}',[invoiceController::class,'destroyProduct'])->name('invoice.destroy.product');
+  Route::get('invoice/export/{format}', [InvoiceController::class, 'export'])->name('invoice.export');
+  Route::get('invoice/checkExportStatus', [InvoiceController::class, 'checkExportStatus'])->name('invoice.checkExportStatus');
+  Route::get('invoice/clearsession', [InvoiceController::class, 'clearsession'])->name('invoice.clearsession');
   Route::get('invoice/productPrice/counting',[invoiceController::class,'productPrice'])->name('invoice.productPrice');
   Route::get('invoice/select2', [invoiceController::class, 'select2'])->name('invoice.select2');
   Route::get('invoice/dataTableJson', [invoiceController::class, 'dataTableJson'])->name('invoice.datatable');
