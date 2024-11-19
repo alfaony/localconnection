@@ -50,7 +50,7 @@
                     <label class="col-sm-2 col-form-label">Pilih No. Quote</label>
                     <div class="col-sm-10">
                         @if(@$workOrder)
-                        <select name="quote" class="form-control select2" required>
+                        <select name="quote" class="form-control select2 selectQuote" required>
                             <option value="" disabled selected>Quote</option>
                             @foreach($quote as $a)
                             <option value="{{ $a->id }}" data-customer="{{ $a->customer ? $a->customer->name : '' }}" {{ @$workOrder->quote_id == $a->id ? 'selected' : '' }} >{{ $a->number_result  ?? ''}}</option>
@@ -58,7 +58,7 @@
                             <!-- Anda bisa menambahkan option lainnya di sini -->
                         </select>
                         @else
-                        <select name="quote" class="form-control select2 quoteSuggestion" id="select-quote-suggestion"required>
+                        <select name="quote" class="form-control select2 quoteSuggestion selectQuote" id="select-quote-suggestion"required>
                             <option value="" disabled selected>Quote</option>
                             @foreach($quote as $a)
                             <option value="{{ $a->id }}" data-customer="{{ $a->customer ? $a->customer->name : '' }}" {{ @$quoteSuggestion->id == $a->id ? 'selected' : '' }}>{{ $a->number_result  ?? ''}}</option>
@@ -341,11 +341,9 @@
         });
 
         
-        $('#selectQuote').on('select2:select', function(e) {
-            // Ambil data-customer dari opsi yang dipilih
-            // console.log(e);
-            var customerName = e.params.data.data.customer;
-            // Menampilkan nilai tersebut di elemen dengan id "customer"
+        $('.selectQuote').on('select2:select', function(e) {
+            var selectedOption = $(e.target).find('option:selected');
+            var customerName = selectedOption.data('customer');
             $("#customer").val(customerName);
         });
 
