@@ -120,14 +120,14 @@ class InvoiceController extends Controller
             activity()->disableLogging();
             if($request->number_result)
             {
-                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('number_result',$request->number_result)->first();
-                if($invoice)
+                $invoiceNumber = Invoice::byCompany(Auth::user()->company_id)->where('number_result',$request->number_result)->first();
+                if($invoiceNumber)
                 {
                     return redirect()->back()->with('InvoiceNumber',true);
                 }
 
-                $check = $this->xeroService->findReferenceInvoice($request->number_result);
-                if($check == false)
+                $checkInvoice = $this->xeroService->findNumberInvoice($request->number_result);
+                if($checkInvoice == false)
                 {
                     return redirect()->back()->with('InvoiceNumber',true);
                 }
@@ -136,14 +136,14 @@ class InvoiceController extends Controller
 
             if($request->reference)
             {
-                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
-                if($invoice)
+                $invoiceRef = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
+                if($invoiceRef)
                 {
                     return redirect()->back()->with('Reference',true);
                 }
 
-                $check = $this->xeroService->findReferenceInvoice($request->reference);
-                if($check == false)
+                $checkRef = $this->xeroService->findReferenceInvoice($request->reference);
+                if($checkRef == false)
                 {
                     return redirect()->back()->with('Reference',true);
                 }
@@ -326,8 +326,8 @@ class InvoiceController extends Controller
                     return redirect()->back()->with('InvoiceNumber',true);
                 }
 
-                $check = $this->xeroService->findReferenceInvoice($request->number_result);
-                if($check == false)
+                $checkInvoice = $this->xeroService->findNumberInvoice($request->number_result);
+                if($checkInvoice == false)
                 {
                     return redirect()->back()->with('InvoiceNumber',true);
                 }
@@ -341,8 +341,8 @@ class InvoiceController extends Controller
                     return redirect()->back()->with('Reference',true);
                 }
 
-                $check = $this->xeroService->findReferenceInvoice($request->reference);
-                if($check == false)
+                $checkRef = $this->xeroService->findReferenceInvoice($request->reference);
+                if($checkRef == false)
                 {
                     return redirect()->back()->with('Reference',true);
                 }
