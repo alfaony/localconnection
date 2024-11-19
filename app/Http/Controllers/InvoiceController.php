@@ -320,8 +320,8 @@ class InvoiceController extends Controller
 
             if($request->number_result != $invoice->number_result)
             {
-                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('number_result',$request->number_result)->first();
-                if($invoice)
+                $invoiceCheck = Invoice::byCompany(Auth::user()->company_id)->where('number_result',$request->number_result)->first();
+                if($invoiceCheck)
                 {
                     return redirect()->back()->with('InvoiceNumber',true);
                 }
@@ -333,11 +333,10 @@ class InvoiceController extends Controller
                 }
             }
 
-
             if($request->reference != $invoice->reference)
             {
-                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
-                if($invoice)
+                $invoiceCheckRef = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
+                if($invoiceCheckRef)
                 {
                     return redirect()->back()->with('Reference',true);
                 }
@@ -803,20 +802,20 @@ class InvoiceController extends Controller
     {
         // Path relatif untuk file gabungan
         $outputPath = "public/invoices/merged_invoice_{$invoice->number_result}.pdf";
-
+        
         // Hapus file gabungan sebelumnya jika ada
         if ($invoice->file_merge_path && Storage::exists($invoice->file_merge_path)) {
             Storage::delete($invoice->file_merge_path);
         }
-
+        
         // Unduh PDF dari Xero dan simpan sementara
         $tempInvoicePdfPath = sys_get_temp_dir() . "/invoice_temp_{$invoice->id}.pdf";
         $xeroInvoicePdf = $this->xeroService->getInvoice($invoice->invoice_xero_id); // Dapatkan PDF dari Xero
         file_put_contents($tempInvoicePdfPath, $xeroInvoicePdf);
-
+        
         // Gunakan FPDI untuk menggabungkan file
         $pdf = new \setasign\Fpdi\Fpdi();
-
+        
         // Tambahkan halaman dari file invoice (PDF dari Xero) terlebih dahulu
         $pageCount = $pdf->setSourceFile($tempInvoicePdfPath);
         for ($i = 1; $i <= $pageCount; $i++) {
