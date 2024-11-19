@@ -30,7 +30,7 @@
                         <div class="row">
                             <label for="date" class="col-sm-8 col-form-label text-right">Tanggal:</label>
                             <div class="col-sm-4">
-                                <input type="date" name="date" class="form-control" id="date" value="{{ old('date') ?? @$reportProject->date }}" required>
+                                <input type="date" name="date" class="form-control" id="date" value="{{ old('date') ?? @$reportProject->date ?? \Carbon\Carbon::today()->format('Y-m-d') }}" required>
                             </div>
                         </div>
                         <div class="row mt-2">

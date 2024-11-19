@@ -102,7 +102,7 @@ class EmployeeChecking extends Model
      */
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId)
+        if($companyId && Auth::user()->role->name != RoleSchema::ROOT) 
         {
             return $query->whereHas('user', function ($query) use ($companyId) 
             {

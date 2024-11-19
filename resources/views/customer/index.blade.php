@@ -132,6 +132,9 @@ $no = ($customer->currentPage() - 1) * $customer->perPage() + 1;
                             <form method="post" action="{{ route('customer.destroy',$a) }}">
                                 @csrf
                                 @method('delete')
+                                @canAccess('show','customers')
+                                <a href="{{ route('customer.show',$a->slug)}}" class="btn btn-success btn-sm"><i class="fa fa-eye"></i></a>
+                                @endcanAccess
                                 @canAccess('edit','customers')
                                 <a href="{{ route('customer.edit',$a->slug).'?nomor='.$no }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
                                 @endcanAccess

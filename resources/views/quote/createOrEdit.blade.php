@@ -31,7 +31,7 @@
                     <div class="form-group row">
                         <label for="date" class="col-sm-4 col-form-label text-right">Tanggal:</label>
                         <div class="col-sm-8">
-                            <input type="date" id="date" name="date" class="form-control" placeholder="2023-03-10" value="{{ old('date') ?? @$quote->date }}" required>
+                            <input type="date" id="date" name="date" class="form-control" placeholder="2023-03-10" value="{{ old('date') ?? @$quote->date ?? \Carbon\Carbon::today()->format('Y-m-d') }}" required>
                         </div>
                     </div>
                     <div class="form-group row">

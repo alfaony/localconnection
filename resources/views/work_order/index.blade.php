@@ -15,6 +15,9 @@
     @if(Session::get('delete'))
     <div class="alert alert-success mt-3">Surat Perintah Kerja Berhasil Terhapus</div>
     @endif
+    @if(Session::get('export'))
+    <div class="alert alert-success mt-3">Export Surat Perintah Kerja Berhasil</div>
+    @endif
     @if(Session::get('datanotfound'))
         <div class="alert alert-danger mt-3">Quote Tidak Ditemukan</div>
     @endif
@@ -66,6 +69,25 @@
                 @endcanAccess
             </div>
             <div class="card-body">
+                <div class="row mb-2">
+                    <div class="col-md-4">
+                        <div class="d-flex">
+                            <label for="">Export</label>
+                        </div>
+                        @canAccess('export','work_orders')
+                        @canAccess('checkExportStatus','work_orders')
+                        @canAccess('clearsession','work_orders')
+                        <a href="{{ route('work-order.export', ['format' => 'xlsx']) }}" class="btn btn-success ml-2">
+                            <i class="fa fa-file-excel"></i> Excel
+                        </a>
+                        <a href="{{ route('work-order.export', ['format' => 'csv']) }}" class="btn btn-primary ml-2">
+                            <i class="fa fa-file-csv"></i> CSV
+                        </a>
+                        @endcanAccess
+                        @endcanAccess
+                        @endcanAccess
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <!-- Tabel Pembelian -->
                     <table class="table table-bordered" id="datatableSpk">
@@ -126,7 +148,35 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let isDownloaded = false; // Flag to prevent further requests after download
 
+        const checkExportStatus = () => {
+            if (isDownloaded) return; // Stop if already downloaded
+
+            fetch('{{ route('work-order.checkExportStatus') }}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ready) {
+                        isDownloaded = true; // Set flag to prevent further requests
+                        window.location.href = data.download_url; // Automatically trigger download
+                        
+                        // Clear session after download
+                        fetch('{{ route('work-order.clearsession') }}')
+                            .then(() => console.log('Session cleared'))
+                            .catch(error => console.error('Error clearing session:', error));
+                    } else {
+                        setTimeout(checkExportStatus, 3000); // Retry every 3 seconds if not ready
+                    }
+                })
+                .catch(error => console.error('Error checking export status:', error));
+        };
+
+        // Start checking export status
+        checkExportStatus();
+    });
+</script>
 <script type="text/javascript">
     $(document).ready(function() {
         var table = $('#datatableSpk').DataTable({
