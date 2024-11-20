@@ -43,13 +43,14 @@ class VerifyXeroWebhookSignature
         }
 
         // Get the webhook key for the company
-        $webhookKey = SettingCompany::byCompany($company->company_id)
-            ->where('field_title', 'webhook_key')
-            ->value('field_value');
+        // $webhookKey = SettingCompany::byCompany($company->company_id)
+        //     ->where('field_title', 'webhook_key')
+        //     ->value('field_value');
 
-        if (!$webhookKey) {
-            return $this->respondWithError('Webhook key not found', $payload, $xeroSignature, 401);
-        }
+        // if (!$webhookKey) {
+        //     return $this->respondWithError('Webhook key not found', $payload, $xeroSignature, 401);
+        // }
+        $webhookKey = 'W6kviXZ/CpPjxASPcOYahCcenEc8Vix5R62PFTngMnJgD7j52Ca3cixUByEFcBnmxgLYLD1Xc1R1UC9pTzi58w==';
 
         // Calculate the signature and validate it
         $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $webhookKey, true));
