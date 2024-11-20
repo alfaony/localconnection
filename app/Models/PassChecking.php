@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Ramsey\Uuid\Uuid;
-
+use App\Schemas\RoleSchema;
 class PassChecking extends Model
 {
     use HasFactory, SoftDeletes;
@@ -57,12 +58,26 @@ class PassChecking extends Model
 
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId)
+        if(Auth::user()->role != RoleSchema::ROOT)
         {
-            return $query->whereHas('user', function ($query) use ($companyId) 
+            if(Auth::user()->role == RoleSchema::ADMIN || Auth::user()->role == RoleSchema::DIRECTOR || Auth::user()->role == RoleSchema::MANAGER)
             {
-                $query->where('company_id', $companyId);
-            });
+                if($companyId)
+                {
+                    return $query->whereHas('user', function ($query) use ($companyId) 
+                    {
+                        $query->where('company_id', $companyId);
+                    });
+                }
+            }else
+            {
+                return $query->where('user_id', Auth::user()->id);
+            }
         }
+    }
+
+    public function employeeChecking()
+    {
+        return $this->hasMany(EmployeeChecking::class);
     }
 }

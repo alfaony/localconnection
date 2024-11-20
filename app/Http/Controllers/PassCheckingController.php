@@ -13,7 +13,7 @@ class PassCheckingController extends Controller
 {
     public function index()
     {
-        $passCheckings = PassChecking::byCompany(Auth::user()->company_id)->with('user')->paginate(10);
+        $passCheckings = PassChecking::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->paginate(5);
         return view('pass_checkings.index', compact('passCheckings'));
     }
 
