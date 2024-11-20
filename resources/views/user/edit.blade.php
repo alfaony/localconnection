@@ -114,7 +114,7 @@
                         <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="**********" autocomplete="new-password">
                     </div>
                     @else
-                    @if(@$userEdit->id == @$userEditid)
+                    @if(@$userEdit->id == Auth::user()->id)
                     <div class="form-group">
                         <label for="oldPassword">Password Lama:</label>
                         <input type="password" id="oldPassword" name="oldPassword" class="form-control" placeholder="**********" autocomplete="off" >
