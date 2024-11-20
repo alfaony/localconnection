@@ -13,17 +13,19 @@ use Illuminate\Support\Facades\Auth;
 class InvoiceExport implements FromQuery, WithMapping, WithHeadings, ShouldQueue, WithChunkReading
 {
     protected $filters;
+    protected $company_id;
 
-    public function __construct($filters)
+    public function __construct($filters, $company_id)
     {
         $this->filters = $filters;
+        $this->company_id = $company_id;
     }
 
     public function query()
     {
         // Apply filters to the Invoice model
         $query = Invoice::query()
-            ->byCompany(Auth::user()->company_id); // Always filter by company ID
+            ->byCompany($this->company_id); // Always filter by company ID
 
         // Apply filters for `number_result`
         // if (!empty($this->filters['number_result'])) {

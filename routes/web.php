@@ -87,6 +87,7 @@ Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permi
     
   });
   Route::delete('invoice/destroyProduct/product/{invoiceProduct}',[invoiceController::class,'destroyProduct'])->name('invoice.destroy.product');
+  Route::get('invoice/history/{slug}', [InvoiceController::class, 'history'])->name('invoices.history');
   Route::get('invoice/export/{format}', [InvoiceController::class, 'export'])->name('invoice.export');
   Route::get('invoice/checkExportStatus', [InvoiceController::class, 'checkExportStatus'])->name('invoice.checkExportStatus');
   Route::get('invoice/clearsession', [InvoiceController::class, 'clearsession'])->name('invoice.clearsession');
@@ -110,8 +111,6 @@ Auth::routes([
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-Route::get('invoice/history/{slug}', [InvoiceController::class, 'history'])->name('invoices.history');
-Route::get('xero/callback', [XeroController::class, 'callback'])->name('xero.callback');
 
 Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');
 

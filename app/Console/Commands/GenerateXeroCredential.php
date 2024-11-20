@@ -76,14 +76,6 @@ class GenerateXeroCredential extends Command
 
                     $this->info("Successfully created field '{$key}' for company '{$company->name}'.");
                 } 
-                else 
-                {
-                    // Jika field sudah ada, lakukan update
-                    $fieldExists->field_value = $value;
-                    $fieldExists->save();
-
-                    $this->info("Successfully updated field '{$key}' for company '{$company->name}'.");
-                }
             }
         }
         return Command::SUCCESS;
