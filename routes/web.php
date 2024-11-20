@@ -62,6 +62,7 @@ use App\Http\Controllers\XeroController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\XeroWebhookController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\PassCheckingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,7 +74,7 @@ use App\Http\Controllers\LoginController;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
+Route::resource('pass-checking', PassCheckingController::class);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook']);
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
