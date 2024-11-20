@@ -59,7 +59,7 @@ class VerifyXeroWebhookSignature
         if (!hash_equals($calculatedSignature, $xeroSignature)) {
             return $this->respondWithError('Invalid signature', $payload, $xeroSignature, 401);
         }
-
+        
         WebhookLog::create([
             'source' => 'Xero',
             'signature' => $xeroSignature,
@@ -69,6 +69,7 @@ class VerifyXeroWebhookSignature
             'status' => 'processed',
         ]);
 
+        return response()->json(['success' => "ok"], 200);
         // Allow the request to proceed if the signature is valid
         return $next($request);
     }
