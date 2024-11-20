@@ -33,7 +33,7 @@ use App\Models\Company;
 use App\Models\InvoiceEmailRecord;
 
 use App\Services\XeroService;
-
+use App\Jobs\ExportInvoiceJob;
 
 class InvoiceController extends Controller
 {
@@ -953,12 +953,9 @@ class InvoiceController extends Controller
     
         // Choose the export format
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
-    
+        
         // Store the export in the 'public' disk
-        Excel::store(new InvoiceExport($filters), $filename, 'public', $exportFormat);
-    
-        // Log the file path to verify storage location
-        Log::info("File stored at: " . Storage::path($filename));
+        ExportInvoiceJob::dispatch($filters, $filename, $exportFormat, Auth::user()->company_id);
         $filename = "public/" . $filename;
         // Save filename to session or pass it to the frontend
         session(['export_filename_invoice' => $filename]);

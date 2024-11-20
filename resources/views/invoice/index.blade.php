@@ -9,7 +9,7 @@
 @section('content')
 <div class="col-md-12">
     @if(Session::get('export'))
-    <div class="alert alert-success mt-3">Berhasil Export Invoice</div>
+    <div class="alert alert-info mt-3">Export Invoice Sedang Diproses</div>
     @endif
     @if(Session::get('store'))
     <div class="alert alert-success mt-3">Berhasil Menambahkan Invoice</div>
@@ -235,34 +235,73 @@
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+@if(Session::get('export'))
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-    let isDownloaded = false; // Track if file has been downloaded
+        let isDownloaded = false; // Track if file has been downloaded
+        const loadingOverlay = document.createElement('div');
+        
+        // Add a loading overlay
+        loadingOverlay.innerHTML = `
+            <div id="loading-overlay" style="display: flex; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; color: white; font-size: 20px;">
+                <div>
+                    <div class="spinner-border text-light" role="status"></div>
+                    <p>Exporting your file, please wait...</p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(loadingOverlay);
 
-    const checkExportStatus = () => {
-        if (isDownloaded) return; // Stop if already downloaded
+        const checkExportStatus = () => {
+            if (isDownloaded) return; // Stop if already downloaded
 
-        fetch('{{ route('invoice.checkExportStatus') }}')
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-                
-                if (data.ready) {
-                    isDownloaded = true; // Mark as downloaded
-                    window.location.href = data.download_url; // Trigger file download
+            fetch('{{ route('invoice.checkExportStatus') }}')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
                     
-                    // Clear export session to prevent re-download on refresh
-                    fetch('{{ route('invoice.clearsession') }}');
-                } else {
-                    setTimeout(checkExportStatus, 3000); // Retry every 3 seconds
-                }
-            })
-            .catch(error => console.error('Error checking export status:', error));
-    };
+                    if (data.ready) {
+                        isDownloaded = true; // Mark as downloaded
 
-    checkExportStatus();
-});
+                        // Create a hidden download link to trigger download
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = data.download_url;
+                        downloadLink.style.display = 'none';
+                        downloadLink.download = ''; // Optional: specify a filename
+                        
+                        document.body.appendChild(downloadLink);
+                        
+                        // Add onload callback to clear session after download
+                        downloadLink.onclick = () => {
+                            // Clear export session AFTER file download starts
+                            fetch('{{ route('invoice.clearsession') }}')
+                                .then(() => {
+                                    // Hide the loading overlay
+                                    document.getElementById('loading-overlay').remove();
+                                })
+                                .catch(error => console.error('Error clearing session:', error));
+                        };
+
+                        // Trigger download
+                        downloadLink.click();
+
+                        // Remove the link element after triggering download
+                        document.body.removeChild(downloadLink);
+                    } else {
+                        setTimeout(checkExportStatus, 3000); // Retry every 3 seconds
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking export status:', error);
+                    // Hide loading overlay if error occurs
+                    document.getElementById('loading-overlay').remove();
+                });
+        };
+
+        checkExportStatus();
+    });
 </script>
+@endif
 <script type="text/javascript">
     $(document).ready(function() {
         var table = $('#tableQuote').DataTable({
