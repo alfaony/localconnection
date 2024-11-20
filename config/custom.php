@@ -91,5 +91,9 @@ return
           'AUTHORISED' => 'Waiting payment',
           'PAID' => 'Paid',
        ],
-
+       'bast_template' =>
+       [
+        'template1' => 'Template 1',
+        'template2' => 'Template 2',
+       ]
 ];
