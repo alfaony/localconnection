@@ -10,7 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
-
+use Illuminate\Support\Facades\Log;
 class ExportInvoiceJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -41,7 +41,7 @@ class ExportInvoiceJob implements ShouldQueue
             Excel::store(new InvoiceExport($this->filters, $this->company_id), $this->filename, 'public', $exportFormat);
             Log::info("File successfully stored at: " . Storage::url($this->filename));
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             Log::error("Error storing file: " . $e->getMessage());
         }
     }
