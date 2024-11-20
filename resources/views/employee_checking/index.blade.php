@@ -129,7 +129,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if(($checking->location_latitude && $checking->location_longitude) || ($checking->photo_path))
+                                        @if(!$checking->is_pass && ($checking->location_latitude && $checking->location_longitude) || ($checking->photo_path))
                                             <button type="button" class="btn btn-info btn-sm show-detail" 
                                                     data-toggle="modal" 
                                                     data-target="#detailModal{{ $checking->id }}" 
@@ -188,6 +188,9 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                        @elseif($checking->is_pass)
+                                            {{ dd($checking->passChecking) }}
+                                            {{ $checking->passChecking ? $checking->passChecking->name : "" }}
                                         @else
                                             <span class="text-muted">Tidak ada detail</span>
                                         @endif

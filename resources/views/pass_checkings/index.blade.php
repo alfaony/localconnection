@@ -53,7 +53,7 @@
                                 data-bs-toggle="modal"
                                 data-bs-target="#createEditModal"
                                 data-id="{{ $passChecking->id }}"
-                                data-user_id="{{ $passChecking->user_id }}"
+                                data-name="{{ $passChecking->name }}"
                                 data-date="{{ \Carbon\Carbon::parse($passChecking->date)->format('Y-m-d') }}"
                                 data-start_time="{{ \Carbon\Carbon::parse($passChecking->start_time)->format('H:i') }}"
                                 data-end_time="{{ \Carbon\Carbon::parse($passChecking->end_time)->format('H:i') }}"
@@ -76,7 +76,7 @@
         </table>
 
         <div class="d-flex justify-content-center">
-            {{ $passCheckings->links() }}
+            {{ $passCheckings->withQueryString()->links('vendor.pagination.bootstrap-4') }}
         </div>
     </div>
 </div>
@@ -96,22 +96,26 @@
                     <input type="hidden" name="id" id="passCheckingId">
 
                     <div class="mb-3">
-                        <label for="date" class="form-label">Date</label>
+                        <label for="date" class="form-label">Agenda</label>
+                        <input type="text" name="name" id="name" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Tanggal</label>
                         <input type="date" name="date" id="date" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="start_time" class="form-label">Start Time</label>
+                        <label for="start_time" class="form-label">Waktu Mulai</label>
                         <input type="time" name="start_time" id="start_time" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
-                        <label for="end_time" class="form-label">End Time</label>
+                        <label for="end_time" class="form-label">Waktu Mulai</label>
                         <input type="time" name="end_time" id="end_time" class="form-control" required>
                     </div>
-
                     <div class="mb-3">
-                        <label for="pictures" class="form-label">Pictures</label>
+                        <label for="pictures" class="form-label">Foto</label>
                         <input type="file" name="pictures[]" id="pictures" class="form-control" multiple accept="image/*">
                         <small class="form-text text-muted">You can upload multiple pictures.</small>
                     </div>
@@ -138,8 +142,8 @@
         createEditModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
             const id = button.getAttribute('data-id');
-            const user_id = button.getAttribute('data-user_id');
             const date = button.getAttribute('data-date');
+            const name = button.getAttribute('data-name');
             const start_time = button.getAttribute('data-start_time');
             const end_time = button.getAttribute('data-end_time');
 
@@ -151,14 +155,16 @@
                 form.action = `/pass-checking/${id}`;
                 form.querySelector('#formMethod').value = 'PUT';
                 form.querySelector('#passCheckingId').value = id;
-                form.querySelector('#user_id').value = user_id;
                 form.querySelector('#date').value = date;
+                form.querySelector('#date').min = date;
+                form.querySelector('#name').value = name;
                 form.querySelector('#start_time').value = start_time;
                 form.querySelector('#end_time').value = end_time;
             } else {
                 // Create mode
                 createEditModal.querySelector('.modal-title').textContent = 'Create Pass Checking';
                 form.action = '/pass-checking';
+                form.querySelector('#date').min = "{{ \Carbon\Carbon::now()->format('Y-m-d') }}";
                 form.querySelector('#formMethod').value = 'POST';
                 form.reset();
             }

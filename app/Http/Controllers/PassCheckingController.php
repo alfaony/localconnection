@@ -29,6 +29,7 @@ class PassCheckingController extends Controller
 
         PassChecking::create([
             'user_id' => Auth::user()->id,
+            'name' => $request->name,
             'date' => $request->date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
@@ -64,7 +65,8 @@ class PassCheckingController extends Controller
         }
 
         $passChecking->update([
-            'user_id' => $request->user_id,
+            'user_id' => Auth::user()->id,
+            'name' => $request->name,
             'date' => $request->date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
