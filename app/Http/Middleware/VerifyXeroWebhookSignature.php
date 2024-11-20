@@ -24,23 +24,23 @@ class VerifyXeroWebhookSignature
         $payload = $request->getContent();
         $xeroSignature = $request->header('X-Xero-Signature');
 
-        if (!$xeroSignature) {
-            return $this->respondWithError('Header x-xero-signature not found', $payload, $xeroSignature, 401);
-        }
+        // if (!$xeroSignature) {
+        //     return $this->respondWithError('Header x-xero-signature not found', $payload, $xeroSignature, 401);
+        // }
 
-        // Decode the payload to get tenantId
-        $payloadData = json_decode($payload, true);
-        $tenantId = $payloadData['events'][0]['tenantId'] ?? null;
+        // // Decode the payload to get tenantId
+        // $payloadData = json_decode($payload, true);
+        // $tenantId = $payloadData['events'][0]['tenantId'] ?? null;
 
-        if (!$tenantId) {
-            return $this->respondWithError('Tenant ID not found', $payload, $xeroSignature, 401);
-        }
+        // if (!$tenantId) {
+        //     return $this->respondWithError('Tenant ID not found', $payload, $xeroSignature, 401);
+        // }
 
-        // Find the company using the tenantId from XeroToken
-        $company = DB::table('xero_tokens')->where('tenant_id', $tenantId)->first();
-        if (!$company) {
-            return $this->respondWithError('Company not found', $payload, $xeroSignature, 401);
-        }
+        // // Find the company using the tenantId from XeroToken
+        // $company = DB::table('xero_tokens')->where('tenant_id', $tenantId)->first();
+        // if (!$company) {
+        //     return $this->respondWithError('Company not found', $payload, $xeroSignature, 401);
+        // }
 
         // Get the webhook key for the company
         // $webhookKey = SettingCompany::byCompany($company->company_id)
@@ -69,7 +69,7 @@ class VerifyXeroWebhookSignature
             'status' => 'processed',
         ]);
 
-        return response()->json(['success' => "ok"], 200);
+        return response()->json(['status' => 'success'], 200);
         // Allow the request to proceed if the signature is valid
         return $next($request);
     }
