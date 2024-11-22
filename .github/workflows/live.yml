@@ -87,9 +87,9 @@ jobs:
       with:
         host: "157.15.4.10"
         username: "devops"
-        password: ${{ secrets.SSH_PASSWORD }}
+        password: ${{ secrets.SSH_LIVE_PASSWORD }}
         port: 2018
         script: |
-          echo ${{ secrets.SSH_PASSWORD }} | sudo -S /usr/local/bin/supervisorctl reread
-          echo ${{ secrets.SSH_PASSWORD }} | sudo -S /usr/local/bin/supervisorctl update
-          echo ${{ secrets.SSH_PASSWORD }} | sudo -S /usr/local/bin/supervisorctl restart bos.keloola.com-worker:*
+          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S /usr/local/bin/supervisorctl reread
+          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S /usr/local/bin/supervisorctl update
+          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S /usr/local/bin/supervisorctl restart bos.keloola.com-worker:*
