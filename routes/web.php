@@ -80,6 +80,8 @@ Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice'
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+Route::get('project-dashboard/getVisions', [ProjectDashboardController::class, 'getVisions'])->name('visions');
+
 
 Route::group(['middleware' => ['auth','web', 'XeroAuthenticated','role.permission']], function(){
   Route::get('xero',function(){
@@ -261,6 +263,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('vision', VisionController::class);
   Route::resource('mission', MissionController::class)->except(['index', 'show', 'create', 'edit']);
 
+  Route::get('project-dashboard/getTotalCounts', [ProjectDashboardController::class, 'getTotalCounts'])->name('total-counts');
+  Route::get('project-dashboard/getOverdueTasks', [ProjectDashboardController::class, 'getOverdueTasks'])->name('overdue-tasks');
+  Route::get('project-dashboard/getUpcomingTasks', [ProjectDashboardController::class, 'getUpcomingTasks'])->name('upcoming-tasks');
   Route::get('project-dashboard/fetchusertask/{userId}/{filter}', [ProjectDashboardController::class, 'fetchusertask'])->name('fetchusertask');
   Route::get('project-dashboard', [ProjectDashboardController::class,'index'])->name('projectdashboard.index');
 
