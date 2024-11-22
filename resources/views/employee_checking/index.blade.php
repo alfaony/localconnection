@@ -47,12 +47,17 @@
     </div>
     <div class="card-body">
         <!-- Tab Navigation -->
-        <div class="row justify-content-start">
-            <div class="col-md-4">
+        <div class="d-flex justify-content-between">
+            <div>
                 <span class="form-control-plaintext text-muted">
                     Periode : {{ $start ? \Carbon\Carbon::parse($start)->format('d F Y') : '' }} - {{ $end ? \Carbon\Carbon::parse($end)->format('d F Y') : '' }}
                 </span>
             </div>
+            @canAccess('create','pass_checkings')
+            <div class="ml-auto">
+                <a class="btn btn-success" href="{{ route('pass-checking.index') }}"><i class="fa fa-plus"></i> Pass Checking</a>
+            </div>
+            @endcan
         </div>
         <ul class="nav nav-tabs" id="reportTab" role="tablist">
             <li class="nav-item">
