@@ -47,6 +47,13 @@ class EmployeeChecking extends Model
     }
 
     /**
+     * Belongs To Pass
+     */
+    public function passChecking()
+    {
+        return $this->belongsTo(PassChecking::class)->withTrashed();
+    }
+    /**
      * is today
      */
 
