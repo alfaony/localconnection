@@ -33,7 +33,7 @@ use App\Models\Company;
 use App\Models\InvoiceEmailRecord;
 
 use App\Services\XeroService;
-
+use App\Jobs\ExportInvoiceJob;
 
 class InvoiceController extends Controller
 {
@@ -120,14 +120,14 @@ class InvoiceController extends Controller
             activity()->disableLogging();
             if($request->number_result)
             {
-                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('number_result',$request->number_result)->first();
-                if($invoice)
+                $invoiceNumber = Invoice::byCompany(Auth::user()->company_id)->where('number_result',$request->number_result)->first();
+                if($invoiceNumber)
                 {
                     return redirect()->back()->with('InvoiceNumber',true);
                 }
 
-                $check = $this->xeroService->findReferenceInvoice($request->number_result);
-                if($check == false)
+                $checkInvoice = $this->xeroService->findNumberInvoice($request->number_result);
+                if($checkInvoice == false)
                 {
                     return redirect()->back()->with('InvoiceNumber',true);
                 }
@@ -136,14 +136,14 @@ class InvoiceController extends Controller
 
             if($request->reference)
             {
-                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
-                if($invoice)
+                $invoiceRef = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
+                if($invoiceRef)
                 {
                     return redirect()->back()->with('Reference',true);
                 }
 
-                $check = $this->xeroService->findReferenceInvoice($request->reference);
-                if($check == false)
+                $checkRef = $this->xeroService->findReferenceInvoice($request->reference);
+                if($checkRef == false)
                 {
                     return redirect()->back()->with('Reference',true);
                 }
@@ -243,7 +243,7 @@ class InvoiceController extends Controller
         $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
         $invoice = Invoice::where('slug', $slug)->firstOrFail();
 
-        if(($invoice->status == 'PAID') && ($invoice->status == 'DELETED') && ($invoice->status == 'VOID') && ($invoice->status == 'AUTHORISED'))
+        if(($invoice->status == 'PAID') || ($invoice->status == 'DELETED') || ($invoice->status == 'VOID') || ($invoice->status == 'AUTHORISED'))
         {
             return redirect()->to(route('invoice.index'))->with('AUTHORISED',true);
         }
@@ -320,30 +320,29 @@ class InvoiceController extends Controller
 
             if($request->number_result != $invoice->number_result)
             {
-                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('number_result',$request->number_result)->first();
-                if($invoice)
+                $invoiceCheck = Invoice::byCompany(Auth::user()->company_id)->where('number_result',$request->number_result)->first();
+                if($invoiceCheck)
                 {
                     return redirect()->back()->with('InvoiceNumber',true);
                 }
 
-                $check = $this->xeroService->findReferenceInvoice($request->number_result);
-                if($check == false)
+                $checkInvoice = $this->xeroService->findNumberInvoice($request->number_result);
+                if($checkInvoice == false)
                 {
                     return redirect()->back()->with('InvoiceNumber',true);
                 }
             }
 
-
             if($request->reference != $invoice->reference)
             {
-                $invoice = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
-                if($invoice)
+                $invoiceCheckRef = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
+                if($invoiceCheckRef)
                 {
                     return redirect()->back()->with('Reference',true);
                 }
 
-                $check = $this->xeroService->findReferenceInvoice($request->reference);
-                if($check == false)
+                $checkRef = $this->xeroService->findReferenceInvoice($request->reference);
+                if($checkRef == false)
                 {
                     return redirect()->back()->with('Reference',true);
                 }
@@ -352,7 +351,7 @@ class InvoiceController extends Controller
             $bast = Bast::byCompany(Auth::user()->company_id)->where('id',$request->post('bast'))->firstOrFail();
             $quote = Quote::byCompany(Auth::user()->company_id)->where('id',$bast->project->workOrder->quote_id)->firstOrFail();
             
-            if(($invoice->status == 'PAID') && ($invoice->status == 'DELETED') && ($invoice->status == 'VOID') && ($invoice->status == 'AUTHORISED'))
+            if(($invoice->status == 'PAID') || ($invoice->status == 'DELETED') || ($invoice->status == 'VOID') || ($invoice->status == 'AUTHORISED'))
             {
                 return redirect()->to(route('invoice.index'))->with('AUTHORISED',true);
             }
@@ -443,7 +442,7 @@ class InvoiceController extends Controller
         try 
         {
             $invoice = Invoice::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-            if(($invoice->status == 'PAID') && ($invoice->status == 'DELETED') && ($invoice->status == 'VOID') && ($invoice->status == 'AUTHORISED'))
+            if(($invoice->status == 'PAID') || ($invoice->status == 'DELETED') || ($invoice->status == 'VOID') || ($invoice->status == 'AUTHORISED'))
             {
                 return redirect()->to(route('invoice.index'))->with('AUTHORISED',true);
             }
@@ -803,20 +802,20 @@ class InvoiceController extends Controller
     {
         // Path relatif untuk file gabungan
         $outputPath = "public/invoices/merged_invoice_{$invoice->number_result}.pdf";
-
+        
         // Hapus file gabungan sebelumnya jika ada
         if ($invoice->file_merge_path && Storage::exists($invoice->file_merge_path)) {
             Storage::delete($invoice->file_merge_path);
         }
-
+        
         // Unduh PDF dari Xero dan simpan sementara
         $tempInvoicePdfPath = sys_get_temp_dir() . "/invoice_temp_{$invoice->id}.pdf";
         $xeroInvoicePdf = $this->xeroService->getInvoice($invoice->invoice_xero_id); // Dapatkan PDF dari Xero
         file_put_contents($tempInvoicePdfPath, $xeroInvoicePdf);
-
+        
         // Gunakan FPDI untuk menggabungkan file
         $pdf = new \setasign\Fpdi\Fpdi();
-
+        
         // Tambahkan halaman dari file invoice (PDF dari Xero) terlebih dahulu
         $pageCount = $pdf->setSourceFile($tempInvoicePdfPath);
         for ($i = 1; $i <= $pageCount; $i++) {
@@ -954,12 +953,9 @@ class InvoiceController extends Controller
     
         // Choose the export format
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
-    
+        
         // Store the export in the 'public' disk
-        Excel::store(new InvoiceExport($filters), $filename, 'public', $exportFormat);
-    
-        // Log the file path to verify storage location
-        Log::info("File stored at: " . Storage::path($filename));
+        ExportInvoiceJob::dispatch($filters, $filename, $exportFormat, Auth::user()->company_id);
         $filename = "public/" . $filename;
         // Save filename to session or pass it to the frontend
         session(['export_filename_invoice' => $filename]);

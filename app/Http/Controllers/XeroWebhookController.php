@@ -15,6 +15,7 @@ use App\Models\InvoiceProduct;
 use App\Models\SettingCompany;
 use Xero;
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
 
 use Carbon\Carbon;
 
@@ -165,7 +166,9 @@ class XeroWebhookController extends Controller
     public function handleWebhook(Request $request)
     {
         $payload = $request->getContent();
-        $user = User::where('name','root')->first();
+        $user = User::whereHas('role', function ($query) {
+            $query->where('name', RoleSchema::ROOT);
+        })->first();
 
         // Proses event webhook dari Xero
         $events = json_decode($payload, true)['events'];
@@ -238,7 +241,9 @@ class XeroWebhookController extends Controller
     {
         $form = array();
         try {
-            $user = User::where('name','root')->first();
+            $user = User::whereHas('role', function ($query) {
+                $query->where('name', RoleSchema::ROOT);
+            })->first();
             $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first();
             $this->xeroBos->setCompanyPublic($invoice->userCreate->company_id);
             $xeroInvoice = $this->xeroBos->get('Invoices/'.$invoiceId);
@@ -457,7 +462,9 @@ class XeroWebhookController extends Controller
 
             return true;
         } catch (\Throwable $th) {
-            $user = User::where('name','root')->first();
+            $user = User::whereHas('role', function ($query) {
+                $query->where('name', RoleSchema::ROOT);
+            })->first();
 
             ApiLog::create([
                 'user_id' => $user->id,

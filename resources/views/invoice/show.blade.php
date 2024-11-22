@@ -53,10 +53,11 @@
                         <a href="{{ route('invoice.index') }}" class="btn btn-info btn-sm">
                             <i class="fa fa-arrow-left"></i> Back to Invoice
                         </a>
-                        
+                        @if(($invoice->status != 'PAID') && ($invoice->status != 'DELETED') && ($invoice->status != 'VOID') && ($invoice->status != 'AUTHORISED'))
                         <a href="{{ route('invoice.edit', $invoice->slug) }}" class="btn btn-warning btn-sm">
                             <i class="fa fa-edit"></i> Edit Invoice
                         </a>
+                        @endif
                         <a href="{{ route('invoice.download.pdf', ['slug' => $invoice->slug]) }}" class="btn btn-success btn-sm">
                             <i class="fa fa-file-pdf"></i> Download Invoice
                         </a>
