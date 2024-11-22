@@ -17,6 +17,20 @@ class PassCheckingController extends Controller
         return view('pass_checkings.index', compact('passCheckings'));
     }
 
+    public function edit($id)
+    {
+        $editing = PassChecking::byCompany(Auth::user()->company_id)->findOrFail($id);
+        $passCheckings = PassChecking::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->paginate(5);
+
+        return view('pass_checkings.index', compact('editing', 'passCheckings'));
+    }
+
+    public function show($id)
+    {
+        $passChecking = PassChecking::findOrFail($id); // Fetch the record
+        return view('pass_checkings.show', compact('passChecking')); // Pass it to the view
+    }
+
     public function store(Request $request)
     {
         $pictures = [];
@@ -43,39 +57,48 @@ class PassCheckingController extends Controller
     {
         $passChecking = PassChecking::findOrFail($id);
 
-        $pictures = $passChecking->pictures ?? []; // Data akan otomatis menjadi array jika menggunakan casting
+        // Get the current pictures (ensure it's an array)
+        $pictures = $passChecking->pictures ?? [];
+
+        // Add new uploaded pictures to the array
         if ($request->hasFile('pictures')) {
             foreach ($request->file('pictures') as $file) {
-                $filePath = $file->store('public/pictures');
-                $pictures[] = Storage::url($filePath);
+                $filePath = $file->store('public/pictures'); // Store the file
+                $pictures[] = Storage::url($filePath); // Add the URL to the pictures array
             }
         }
-
-        // Hapus gambar lama jika diminta
-        if ($request->has('remove_pictures')) {
-            foreach ($request->remove_pictures as $remove) {
-                if (($key = array_search($remove, $pictures)) !== false) {
-                    $relativePath = str_replace(asset('storage'), 'public', $remove);
+        // dd($request->all());
+        // Remove specified pictures
+        if ($request->has('delete_pictures')) {
+            foreach ($request->delete_pictures as $removeIndex) {
+                if (isset($pictures[$removeIndex])) {
+                    // Convert URL to storage path
+                    $relativePath = str_replace(asset('storage'), 'public', $pictures[$removeIndex]);
+    
+                    // Delete the file from storage if it exists
                     if (Storage::exists($relativePath)) {
                         Storage::delete($relativePath);
                     }
-                    unset($pictures[$key]);
+    
+                    // Remove from the pictures array
+                    unset($pictures[$removeIndex]);
                 }
             }
         }
+        // dd("here");
 
+        // Update the Pass Checking record
         $passChecking->update([
             'user_id' => Auth::user()->id,
             'name' => $request->name,
             'date' => $request->date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
-            'pictures' => array_values($pictures), // Pastikan array terurut kembali
+            'pictures' => array_values($pictures), // Reset array indices
         ]);
 
-        return redirect()->route('pass-checking.index')->with('success', 'Pass Checking created successfully.');
+        return redirect()->route('pass-checking.index')->with('success', 'Pass Checking updated successfully.');
     }
-
 
     public function destroy(PassChecking $passChecking)
     {

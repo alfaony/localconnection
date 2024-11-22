@@ -47,62 +47,62 @@ class ProjectDashboardController extends Controller
                             ->orWhere('name', ParamSchema::NOTCOMPLATE);
                     });
                 },
-                'dailyTaskAssigns as doing_count' => function ($query) use ($today, $startDate, $endDate) {
-                    $query->where('end_date', '<', $today);
+                // 'dailyTaskAssigns as doing_count' => function ($query) use ($today, $startDate, $endDate) {
+                //     $query->where('end_date', '<', $today);
 
-                    if ($startDate && $endDate) {
-                        $query->whereBetween('end_date', [
-                            $startDate,
-                            $endDate
-                        ]);
-                    }
+                //     if ($startDate && $endDate) {
+                //         $query->whereBetween('end_date', [
+                //             $startDate,
+                //             $endDate
+                //         ]);
+                //     }
 
-                    $query->whereHas('taskStatus', function ($q) {
-                        $q->where('name', ParamSchema::DOING);
-                    });
-                },
-                'dailyTaskAssigns as in_review_count' => function ($query) use ($today, $startDate, $endDate) {
-                    $query->where('end_date', '<', $today);
+                //     $query->whereHas('taskStatus', function ($q) {
+                //         $q->where('name', ParamSchema::DOING);
+                //     });
+                // },
+                // 'dailyTaskAssigns as in_review_count' => function ($query) use ($today, $startDate, $endDate) {
+                //     $query->where('end_date', '<', $today);
 
-                    if ($startDate && $endDate) {
-                        $query->whereBetween('end_date', [
-                            $startDate,
-                            $endDate
-                        ]);
-                    }
+                //     if ($startDate && $endDate) {
+                //         $query->whereBetween('end_date', [
+                //             $startDate,
+                //             $endDate
+                //         ]);
+                //     }
 
-                    $query->whereHas('taskStatus', function ($q) {
-                        $q->where('name', ParamSchema::INREVIEW);
-                    });
-                },
-                'dailyTaskAssigns as todo_count' => function ($query) use ($today, $startDate, $endDate) {
-                    $query->where('end_date', '<', $today);
+                //     $query->whereHas('taskStatus', function ($q) {
+                //         $q->where('name', ParamSchema::INREVIEW);
+                //     });
+                // },
+                // 'dailyTaskAssigns as todo_count' => function ($query) use ($today, $startDate, $endDate) {
+                //     $query->where('end_date', '<', $today);
 
-                    if ($startDate && $endDate) {
-                        $query->whereBetween('end_date', [
-                            $startDate,
-                            $endDate
-                        ]);
-                    }
+                //     if ($startDate && $endDate) {
+                //         $query->whereBetween('end_date', [
+                //             $startDate,
+                //             $endDate
+                //         ]);
+                //     }
 
-                    $query->whereHas('taskStatus', function ($q) {
-                        $q->where('name', ParamSchema::TODO);
-                    });
-                },
-                'dailyTaskAssigns as not_complate_count' => function ($query) use ($today, $startDate, $endDate) {
-                    $query->where('end_date', '<', $today);
+                //     $query->whereHas('taskStatus', function ($q) {
+                //         $q->where('name', ParamSchema::TODO);
+                //     });
+                // },
+                // 'dailyTaskAssigns as not_complate_count' => function ($query) use ($today, $startDate, $endDate) {
+                //     $query->where('end_date', '<', $today);
 
-                    if ($startDate && $endDate) {
-                        $query->whereBetween('end_date', [
-                            $startDate,
-                            $endDate
-                        ]);
-                    }
+                //     if ($startDate && $endDate) {
+                //         $query->whereBetween('end_date', [
+                //             $startDate,
+                //             $endDate
+                //         ]);
+                //     }
 
-                    $query->whereHas('taskStatus', function ($q) {
-                        $q->where('name', ParamSchema::NOTCOMPLATE);
-                    });
-                }
+                //     $query->whereHas('taskStatus', function ($q) {
+                //         $q->where('name', ParamSchema::NOTCOMPLATE);
+                //     });
+                // }
             ])
             ->orderBy('daily_task_assigns_count', 'desc');
 
@@ -116,6 +116,7 @@ class ProjectDashboardController extends Controller
         }
 
         $overdueTasks = $overdueTasksQuery->get();
+        
 
         // Inisialisasi variabel untuk menyimpan total
         $totalCounts = [

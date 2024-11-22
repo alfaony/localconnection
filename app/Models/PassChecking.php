@@ -57,6 +57,14 @@ class PassChecking extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function employeeChecking()
+    {
+        return $this->hasMany(EmployeeChecking::class, 'pass_checking_id');
+    }
+    public function isDeleted()
+    {
+        return $this->employeeChecking()->count() > 0 ? false : true;
+    }
     public function scopeByCompany($query,$companyId)
     {
         if(Auth::user()->role != RoleSchema::ROOT)
@@ -75,10 +83,5 @@ class PassChecking extends Model
                 return $query->where('user_id', Auth::user()->id);
             }
         }
-    }
-
-    public function employeeChecking()
-    {
-        return $this->hasMany(EmployeeChecking::class);
     }
 }

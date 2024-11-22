@@ -13,6 +13,7 @@
 @section('content')
 <div class="card">
     <div class="card-body">
+        
         <form action="{{ route('employee-checking.index') }}" method="GET">
             <div class="row justify-content-end">
                 <div class="col-md-3">
@@ -189,8 +190,7 @@
                                                 </div>
                                             </div>
                                         @elseif($checking->is_pass)
-                                            {{ dd($checking->passChecking) }}
-                                            {{ $checking->passChecking ? $checking->passChecking->name : "" }}
+                                            <a href="{{ route('pass-checking.show', $checking->passChecking->id) }}">{{ $checking->passChecking ? $checking->passChecking->name : "" }}</a>
                                         @else
                                             <span class="text-muted">Tidak ada detail</span>
                                         @endif

@@ -51,7 +51,7 @@ class EmployeeChecking extends Model
      */
     public function passChecking()
     {
-        $this->belongsTo(PassChecking::class);
+        return $this->belongsTo(PassChecking::class)->withTrashed();
     }
     /**
      * is today

@@ -13,31 +13,135 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        <!-- Button to Open the Create Modal -->
-        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#createEditModal">
-            <i class="fa fa-plus"></i> Pass Checking
-        </button>
+        <!-- Form for Create and Edit -->
+         @canAccess('store','pass_checkings')
+         @canAccess('update','pass_checkings')
+        <form 
+            action="{{ @$editing ? route('pass-checking.update', @$editing->id) : route('pass-checking.store') }}" 
+            method="POST" 
+            enctype="multipart/form-data">
+            @csrf
+            @if(@$editing)
+                @method('PUT')
+            @endif
 
+            <h5>{{ @$editing ? 'Edit Pass Checking' : 'Create Pass Checking' }}</h5>
+            
+            <div class="mb-3">
+                <label for="name" class="form-label">Agenda</label>
+                <input 
+                    type="text" 
+                    name="name" 
+                    id="name" 
+                    class="form-control" 
+                    value="{{ old('name', @$editing->name ?? '') }}" 
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label for="date" class="form-label">Tanggal</label>
+                <input 
+                    type="date" 
+                    name="date" 
+                    id="date" 
+                    class="form-control" 
+                    value="{{ old('date', Carbon\Carbon::parse(@$editing->date)->format('Y-m-d') ??  '') }}" 
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label for="start_time" class="form-label">Waktu Mulai</label>
+                <input 
+                    type="time" 
+                    name="start_time" 
+                    id="start_time" 
+                    class="form-control" 
+                    value="{{ old('start_time', Carbon\Carbon::parse(@$editing->start_time)->format('H:i') ??  '') }}" 
+                    required
+                >
+            </div>
+
+            <div class="mb-3">
+                <label for="end_time" class="form-label">Waktu Selesai</label>
+                <input 
+                    type="time" 
+                    name="end_time" 
+                    id="end_time" 
+                    class="form-control" 
+                    value="{{ old('end_time', Carbon\Carbon::parse(@$editing->end_time)->format('H:i') ??  '') }}" 
+                    required
+                >
+            </div>
+
+            @if(@$editing && !empty(@$editing->pictures))
+                <div class="mb-3">
+                    <label class="form-label">Existing Pictures</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach(@$editing->pictures as $key => $picture)
+                            <div class="position-relative">
+                                <img src="{{ $picture }}" alt="Picture" class="img-thumbnail" width="100">
+                                <div class="form-check mt-2">
+                                    <input 
+                                        type="checkbox" 
+                                        name="delete_pictures[]" 
+                                        value="{{ $key }}" 
+                                        class="form-check-input"
+                                    >
+                                    <label class="form-check-label">Delete</label>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <div class="mb-3">
+                <label for="pictures" class="form-label">Upload Pictures</label>
+                <input 
+                    type="file" 
+                    name="pictures[]" 
+                    id="pictures" 
+                    class="form-control" 
+                    multiple 
+                    accept="image/*"
+                >
+                <small class="form-text text-muted">You can upload multiple pictures.</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                {{ @$editing ? 'Update' : 'Save' }}
+            </button>
+            <a href="{{ route('pass-checking.index') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+        @endcanAccess
+        @endcanAccess
+
+        <hr>
+
+        <!-- Pass Checking List -->
         <table class="table table-bordered">
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Name</th>
-                    <th>Date</th>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                    <th>Pictures</th>
-                    <th>Actions</th>
+                    <th>Agenda</th>
+                    <th>Tanggal</th>
+                    <th>Foto</th>
+                    <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($passCheckings as $passChecking)
                     <tr>
                         <td>{{ $loop->iteration + $passCheckings->firstItem() - 1 }}</td>
-                        <td>{{ $passChecking->user->name ?? 'N/A' }}</td>
-                        <td>{{ $passChecking->date ? \Carbon\Carbon::parse($passChecking->date)->format('d-m-Y') : '-' }}</td>
-                        <td>{{ $passChecking->start_time ? \Carbon\Carbon::parse($passChecking->start_time)->format('H:i:s') : '-' }}</td>
-                        <td>{{ $passChecking->end_time ? \Carbon\Carbon::parse($passChecking->end_time)->format('H:i:s') : '-' }}</td>
+                        <td>{{ $passChecking->name ?? 'N/A' }}</td>
+                        <td>
+                            {{ $passChecking->date ? \Carbon\Carbon::parse($passChecking->date)->format('d-m-Y') : '-' }}
+                            <br>
+                            {{ $passChecking->start_time ? \Carbon\Carbon::parse($passChecking->start_time)->format('H:i') : '-' }} -
+                            {{ $passChecking->end_time ? \Carbon\Carbon::parse($passChecking->end_time)->format('H:i') : '-' }}
+                        </td>
                         <td width="40%">
                             @if($passChecking->pictures)
                                 @foreach($passChecking->pictures as $picture)
@@ -48,28 +152,28 @@
                             @endif
                         </td>
                         <td>
-                            <button 
-                                class="btn btn-warning btn-sm"
-                                data-bs-toggle="modal"
-                                data-bs-target="#createEditModal"
-                                data-id="{{ $passChecking->id }}"
-                                data-name="{{ $passChecking->name }}"
-                                data-date="{{ \Carbon\Carbon::parse($passChecking->date)->format('Y-m-d') }}"
-                                data-start_time="{{ \Carbon\Carbon::parse($passChecking->start_time)->format('H:i') }}"
-                                data-end_time="{{ \Carbon\Carbon::parse($passChecking->end_time)->format('H:i') }}"
-                            >
+                            @canAccess('edit','pass_checkings')
+                            <a href="{{ route('pass-checking.edit', $passChecking->id) }}" class="btn btn-warning btn-sm">
                                 <i class="fa fa-edit"></i>
-                            </button>
+                            </a>
+                            @endcanAccess
+
+                            @canAccess('destroy','pass_checkings')
+                            @if($passChecking->isDeleted())
                             <form action="{{ route('pass-checking.destroy', $passChecking->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></button>
+                                <button class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">
+                                    <i class="fa fa-trash"></i>
+                                </button>
                             </form>
+                            @endif
+                            @endcanAccess
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center">No Pass Checkings Found</td>
+                        <td colspan="5" class="text-center">No Pass Checkings Found</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -80,95 +184,4 @@
         </div>
     </div>
 </div>
-
-<!-- Create/Edit Modal -->
-<div class="modal fade" id="createEditModal" tabindex="-1" aria-labelledby="createEditModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="createEditForm" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createEditModalLabel">Create Pass Checking</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="_method" id="formMethod" value="POST">
-                    <input type="hidden" name="id" id="passCheckingId">
-
-                    <div class="mb-3">
-                        <label for="date" class="form-label">Agenda</label>
-                        <input type="text" name="name" id="name" class="form-control" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="date" class="form-label">Tanggal</label>
-                        <input type="date" name="date" id="date" class="form-control" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="start_time" class="form-label">Waktu Mulai</label>
-                        <input type="time" name="start_time" id="start_time" class="form-control" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="end_time" class="form-label">Waktu Mulai</label>
-                        <input type="time" name="end_time" id="end_time" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="pictures" class="form-label">Foto</label>
-                        <input type="file" name="pictures[]" id="pictures" class="form-control" multiple accept="image/*">
-                        <small class="form-text text-muted">You can upload multiple pictures.</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endsection
-
-@section('css')
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-@endsection
-
-@section('js')
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const createEditModal = document.getElementById('createEditModal');
-        createEditModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const id = button.getAttribute('data-id');
-            const date = button.getAttribute('data-date');
-            const name = button.getAttribute('data-name');
-            const start_time = button.getAttribute('data-start_time');
-            const end_time = button.getAttribute('data-end_time');
-
-            const form = createEditModal.querySelector('#createEditForm');
-
-            if (id) {
-                // Edit mode
-                createEditModal.querySelector('.modal-title').textContent = 'Edit Pass Checking';
-                form.action = `/pass-checking/${id}`;
-                form.querySelector('#formMethod').value = 'PUT';
-                form.querySelector('#passCheckingId').value = id;
-                form.querySelector('#date').value = date;
-                form.querySelector('#date').min = date;
-                form.querySelector('#name').value = name;
-                form.querySelector('#start_time').value = start_time;
-                form.querySelector('#end_time').value = end_time;
-            } else {
-                // Create mode
-                createEditModal.querySelector('.modal-title').textContent = 'Create Pass Checking';
-                form.action = '/pass-checking';
-                form.querySelector('#date').min = "{{ \Carbon\Carbon::now()->format('Y-m-d') }}";
-                form.querySelector('#formMethod').value = 'POST';
-                form.reset();
-            }
-        });
-    });
-</script>
 @endsection
