@@ -43,6 +43,7 @@ class CheckinNotificationV2 extends Command
             $scheduleTime = Carbon::parse($checkin->scheduled_time)->format('H:i');
             $currentTime = Carbon::now()->tz('Asia/Jakarta')->format('H:i');
             $passCheckings = PassChecking::whereDate('date', Carbon::today())
+                            ->where('user_id', $checkin->user_id)
                             ->whereTime('start_time', '<=', $scheduleTime)
                             ->whereTime('end_time', '>=', $scheduleTime)
                             ->first();
