@@ -81,3 +81,15 @@ jobs:
         script: |
           cd /var/www/keloola-projects/bos.keloola.com
           echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S chown -R nginx:nginx storage bootstrap/cache
+
+    - name: Update Supervisor
+      uses: appleboy/ssh-action@master
+      with:
+        host: "157.15.4.10"
+        username: "devops"
+        password: ${{ secrets.SSH_LIVE_PASSWORD }}
+        port: 2018
+        script: |
+          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S supervisorctl reread
+          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S supervisorctl update
+          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S supervisorctl restart bos.keloola.com-worker:*

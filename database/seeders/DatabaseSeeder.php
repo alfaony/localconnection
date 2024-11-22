@@ -67,5 +67,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuQuoteExportSeeder::class);
         $this->call(PermissionForMenuWorkOrderSeeder::class);
         $this->call(PermissionForMenuQuoteSentMailSeeder::class);
+        $this->call(PermissionForPassCheckingSeeder::class);
     }
 }

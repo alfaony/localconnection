@@ -9,6 +9,7 @@ use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Exception\FirebaseException;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Models\PassChecking;
 
 class CheckinNotificationV2 extends Command
 {
@@ -41,8 +42,12 @@ class CheckinNotificationV2 extends Command
         {
             $scheduleTime = Carbon::parse($checkin->scheduled_time)->format('H:i');
             $currentTime = Carbon::now()->tz('Asia/Jakarta')->format('H:i');
-    
-            if($currentTime == $scheduleTime)
+            $passCheckings = PassChecking::whereDate('date', Carbon::today())
+                            ->whereTime('start_time', '<=', $scheduleTime)
+                            ->whereTime('end_time', '>=', $scheduleTime)
+                            ->first();
+
+            if($currentTime == $scheduleTime && !$passCheckings)
             {
                 
                 if($checkin->user->manual_checkin == false)
@@ -53,6 +58,14 @@ class CheckinNotificationV2 extends Command
                 {
                     $this->sendCheckinNotification($checkin, "It's been 30 minutes, time to check in", 'Please check-in now!');
                 }
+            }
+            elseif ($currentTime == $scheduleTime && $passCheckings) 
+            {
+                $checkin->is_active = false;
+                $checkin->is_completed = true;
+                $checkin->is_pass = true;
+                $checkin->pass_checking_id = $passCheckings->id;
+                $checkin->save();
             }
         }
 
