@@ -90,6 +90,6 @@ jobs:
         password: ${{ secrets.SSH_LIVE_PASSWORD }}
         port: 2018
         script: |
-          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S /usr/local/bin/supervisorctl reread
-          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S /usr/local/bin/supervisorctl update
-          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S /usr/local/bin/supervisorctl restart bos.keloola.com-worker:*
+          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S supervisorctl reread
+          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S supervisorctl update
+          echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S supervisorctl restart bos.keloola.com-worker:*
