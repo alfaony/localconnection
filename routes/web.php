@@ -62,6 +62,7 @@ use App\Http\Controllers\XeroController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\XeroWebhookController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\PassCheckingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -170,11 +171,12 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('work-order/dataTableJson', [WorkOrderController::class, 'dataTableJson'])->name('work-order.datatable');
   Route::get('work-order/productCounting/counting',[WorkOrderController::class,'productCounting'])->name('work-order.productCounting');
   Route::resource('work-order', WorkOrderController::class)->except(['show']);
-
+  
   Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');
   Route::get('agreement-letter/dataTableJson', [AgreementLetterController::class, 'dataTableJson'])->name('agreement-letter.datatable');
   Route::resource('agreement-letter', AgreementLetterController::class)->except(['show']);
   
+  Route::post('bast/sendBastEmail/{slug}', [BastController::class, 'sendBastEmail'])->name('bast.sendEmail');
   Route::get('bast/export/{format}', [BastController::class, 'export'])->name('bast.export');
   Route::get('bast/checkExportStatus', [BastController::class, 'checkExportStatus'])->name('bast.checkExportStatus');
   Route::get('bast/clearsession', [BastController::class, 'clearsession'])->name('bast.clearsession');
@@ -298,7 +300,9 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::get('employee-checking/checkLastScheduledCheckin',[EmployeeCheckingController::class,'checkLastScheduledCheckin'])->name('employee-checking.checkLastScheduledCheckin');
   Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
   Route::resource('employee-checking', EmployeeCheckingController::class)->only(['index','update']);
-  Route::post('bast/sendBastEmail/{slug}', [BastController::class, 'sendBastEmail'])->name('bast.sendEmail');
+
+  Route::resource('pass-checking', PassCheckingController::class);
+
 });
 
 

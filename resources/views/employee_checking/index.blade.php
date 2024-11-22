@@ -13,6 +13,7 @@
 @section('content')
 <div class="card">
     <div class="card-body">
+        
         <form action="{{ route('employee-checking.index') }}" method="GET">
             <div class="row justify-content-end">
                 <div class="col-md-3">
@@ -129,7 +130,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if(($checking->location_latitude && $checking->location_longitude) || ($checking->photo_path))
+                                        @if(!$checking->is_pass && ($checking->location_latitude && $checking->location_longitude) || ($checking->photo_path))
                                             <button type="button" class="btn btn-info btn-sm show-detail" 
                                                     data-toggle="modal" 
                                                     data-target="#detailModal{{ $checking->id }}" 
@@ -188,6 +189,8 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                        @elseif($checking->is_pass)
+                                            <a href="{{ route('pass-checking.show', $checking->passChecking->id) }}">{{ $checking->passChecking ? $checking->passChecking->name : "" }}</a>
                                         @else
                                             <span class="text-muted">Tidak ada detail</span>
                                         @endif
