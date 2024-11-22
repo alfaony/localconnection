@@ -102,5 +102,10 @@ return
          'Saturday' => 'saturday',
          'Sunday ' => 'sunday',
       ],
-
+      
+      'bast_template' =>
+      [
+       'template1' => 'Template 1',
+       'template2' => 'Template 2',
+      ]
 ];

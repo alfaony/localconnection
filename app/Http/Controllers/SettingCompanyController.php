@@ -52,7 +52,6 @@ class SettingCompanyController extends Controller
             foreach ($settings as $setting) 
             {
                 $title = $setting->field_title;
-
                 if ($request->has($title)) 
                 {
                     $fieldValue = $request->input($title);
