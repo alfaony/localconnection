@@ -55,7 +55,7 @@
             </div>
             @canAccess('create','pass_checkings')
             <div class="ml-auto">
-                <a class="btn btn-success" href="{{ route('pass-checking.index') }}"><i class="fa fa-plus"></i> Pass Checking</a>
+                <a class="btn btn-success" href="{{ route('pass-checking.index') }}"><i class="fa fa-list"></i> Pass Checking</a>
             </div>
             @endcan
         </div>
