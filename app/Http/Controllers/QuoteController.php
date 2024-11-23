@@ -14,6 +14,7 @@ use App\Exports\QuotesExport;
 use Carbon\Carbon;
 
 use App\Helpers\Access;
+use App\Jobs\ExportQuoteJob;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
@@ -606,7 +607,7 @@ class QuoteController extends Controller
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
 
         // Queue the export and store the job file name in session
-        Excel::store(new QuotesExport(), $filename, 'public', $exportFormat);
+        ExportQuoteJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
 
         $filename = "public/" . $filename;
         session(['export_filename_quote' => $filename]);

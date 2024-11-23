@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\BastExport;
+use App\Jobs\ExportBastJob;
 
 use App\Helpers\Access;
 use App\Helpers\InboxHelper;
@@ -535,7 +536,7 @@ class BastController extends Controller
         $filename = 'bast_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
 
-        Excel::store(new BASTExport(), $filename, 'public', $exportFormat);
+        ExportBastJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
         $filename = "public/" . $filename;
         session(['export_filename_bast' => $filename]);
 
