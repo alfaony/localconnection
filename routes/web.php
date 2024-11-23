@@ -275,6 +275,10 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('vision', VisionController::class);
   Route::resource('mission', MissionController::class)->except(['index', 'show', 'create', 'edit']);
 
+  Route::get('project-dashboard/getVisions', [ProjectDashboardController::class, 'getVisions'])->name('visions');
+  Route::get('project-dashboard/getTotalCounts', [ProjectDashboardController::class, 'getTotalCounts'])->name('total-counts');
+  Route::get('project-dashboard/getOverdueTasks', [ProjectDashboardController::class, 'getOverdueTasks'])->name('overdue-tasks');
+  Route::get('project-dashboard/getUpcomingTasks', [ProjectDashboardController::class, 'getUpcomingTasks'])->name('upcoming-tasks');
   Route::get('project-dashboard/fetchusertask/{userId}/{filter}', [ProjectDashboardController::class, 'fetchusertask'])->name('fetchusertask');
   Route::get('project-dashboard', [ProjectDashboardController::class,'index'])->name('projectdashboard.index');
 

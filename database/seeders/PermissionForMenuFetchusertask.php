@@ -21,7 +21,7 @@ class PermissionForMenuFetchusertask extends Seeder
     public function run()
     {   
 
-        $methods = ['fetchusertask'];
+        $methods = ['fetchusertask','getVisions','getOverdueTasks','getUpcomingTasks','getTotalCounts'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $manager = Role::where('name',RoleSchema::MANAGER)->first();
