@@ -11,9 +11,15 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 
 class BastExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading, ShouldQueue
 {
+    protected $company_id;
+
+    public function __construct($company_id)
+    {
+        $this->company_id = $company_id;
+    }
     public function query()
     {
-        return Bast::byCompany(auth()->user()->company_id)->with('workOrder')->orderBy('date', 'desc');
+        return Bast::byCompany($this->company_id)->with('workOrder')->orderBy('date', 'desc');
     }
 
     public function headings(): array

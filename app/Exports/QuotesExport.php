@@ -14,10 +14,15 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 class QuotesExport implements FromQuery, WithMapping, WithHeadings, WithChunkReading
 {
     use Exportable;
+    protected $company_id;
 
+    public function __construct($company_id)
+    {
+        $this->company_id = $company_id;
+    }
     public function query()
     {
-        return Quote::query()->byCompany(Auth::user()->company_id)->with('quoteProduct'); // Load related models if necessary
+        return Quote::query()->byCompany($this->company_id)->with('quoteProduct'); // Load related models if necessary
     }
 
     public function headings(): array

@@ -13,6 +13,7 @@ use App\Helpers\Access;
 
 use Carbon\Carbon;
 use App\Http\Requests\WorkOrderRequest;
+use App\Jobs\ExportWorkOrderJob;
 
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\WorkOrderExport;
@@ -539,7 +540,8 @@ class WorkOrderController extends Controller
         $filename = 'work_orders_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
 
-        Excel::store(new WorkOrderExport(), $filename, 'public', $exportFormat);
+
+        ExportWorkOrderJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
         $filename = "public/" . $filename;
         session(['export_filename_workorder' => $filename]);
 

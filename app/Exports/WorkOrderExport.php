@@ -11,9 +11,15 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 
 class WorkOrderExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading, ShouldQueue
 {
+    protected $company_id;
+
+    public function __construct($company_id)
+    {
+        $this->company_id = $company_id;
+    }
     public function query()
     {
-        return WorkOrder::byCompany(auth()->user()->company_id)->with('quote')->orderBy('work_order_number', 'desc');
+        return WorkOrder::byCompany($this->company_id)->with('quote')->orderBy('work_order_number', 'desc');
     }
 
     public function headings(): array
