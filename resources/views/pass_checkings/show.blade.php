@@ -47,16 +47,48 @@
                                     data-url="{{ $picture }}"
                                     onclick="console.log('Modal triggered');"
                                 >
-                                    <i class="fa fa-edit"></i> Update
+                                    <i class="fa fa-edit"></i>
                                 </button>
 
                                 <!-- Button to delete image -->
                                 <button 
-                                    class="btn btn-danger btn-sm"
+                                    class="btn btn-danger btn-sm mr-1"
                                     onclick="return confirm('Are you sure you want to delete this picture?') && deletePicture('{{ $key }}')"
                                 >
-                                    <i class="fa fa-trash"></i> Delete
+                                    <i class="fa fa-trash"></i>
                                 </button>
+                                <!-- Button to show image -->
+                                <button 
+                                    class="btn btn-info btn-sm mr-1"
+                                    data-toggle="modal" 
+                                    data-target="#showImageModal" 
+                                    data-url="{{ $picture }}"
+                                    onclick="showImage('{{ $picture }}')"
+                                >
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                    <!-- Show Image Modal -->
+                                    <div class="modal fade" id="showImageModal" tabindex="-1" role="dialog" aria-labelledby="showImageModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="showImageModalLabel">Show Image</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <img id="imageToShow" src="" alt="Image" class="img-fluid">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <script>
+                                    function showImage(url) {
+                                        document.getElementById('imageToShow').src = url;
+                                    }
+                                    </script>
                             </div>
                         </div>
                     @endforeach
