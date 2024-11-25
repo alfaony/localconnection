@@ -38,7 +38,6 @@
                     required
                 >
             </div>
-
             <div class="mb-3">
                 <label for="date" class="form-label">Tanggal</label>
                 <input 
@@ -47,8 +46,8 @@
                     id="date" 
                     class="form-control" 
                     value="{{ old('date', @$editing ? Carbon\Carbon::parse(@$editing->date)->format('Y-m-d') : date('Y-m-d') ) }}" 
-                    min="{{ @$editing ? '' : date('Y-m-d') }}" 
-                    required
+                    min="{{ @$editing ? Carbon\Carbon::parse(@$editing->date)->format('Y-m-d') : date('Y-m-d') }}" 
+                    @if(@$editing) {{ !@$editing->isDeleted() ? 'readonly' : 'required' }} @else {{'required'}}  @endif
                 >
             </div>
 
@@ -60,8 +59,8 @@
                     id="start_time" 
                     class="form-control" 
                     value="{{ old('start_time', Carbon\Carbon::parse(@$editing->start_time)->format('H:i') ??  '') }}" 
-                    min="{{ @$editing ? '' : date('H:i') }}"
-                    required
+                    min="{{ @$editing ? Carbon\Carbon::parse(@$editing->start_time)->format('H:i') : date('H:i') }}"
+                    @if(@$editing) {{ !@$editing->isDeleted() ? 'readonly' : 'required' }} @else {{'required'}}  @endif
                 >
             </div>
 
@@ -73,8 +72,8 @@
                     id="end_time" 
                     class="form-control" 
                     value="{{ old('end_time', Carbon\Carbon::parse(@$editing->end_time)->format('H:i') ??  '') }}" 
-                    min="{{ @$editing ? '' : date('H:i') }}"
-                    required
+                    min="{{ @$editing ? Carbon\Carbon::parse(@$editing->end_time)->format('H:i') : date('H:i') }}"
+                    @if(@$editing) {{ !@$editing->isDeleted() ? 'readonly' : 'required' }} @else {{'required'}}  @endif
                 >
             </div>
 
