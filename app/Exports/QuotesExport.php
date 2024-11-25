@@ -22,7 +22,7 @@ class QuotesExport implements FromQuery, WithMapping, WithHeadings, WithChunkRea
     }
     public function query()
     {
-        return Quote::query()->byCompany($this->company_id)->with('quoteProduct'); // Load related models if necessary
+        return Quote::query()->byCompany($this->company_id)->with('quoteProduct')->orderBy('quote_number', 'desc'); // Load related models if necessary
     }
 
     public function headings(): array
