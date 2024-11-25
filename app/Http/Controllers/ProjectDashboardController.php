@@ -174,49 +174,9 @@ class ProjectDashboardController extends Controller
         $beforeAday = Carbon::now()->subDays(1)->format('d/m/Y');
         $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : NULL ;
         $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : NULL ;
+        $defaultDivisi = Auth::user()->FirstDivision ? Auth::user()->FirstDivision->id : NULL;
 
-        // $visions = Vision::where('company_id', Auth::user()->company_id)
-        // ->with([
-        //     'missions.objectives.keyResults.dailyTasks'
-        // ])
-        // ->get()
-        // ->map(function ($vision) {
-        //     // Calculate total tasks for the vision
-        //     $vision->total_tasks = $vision->missions->sum(function ($mission) {
-        //         return $mission->objectives->sum(function ($objective) {
-        //             return $objective->keyResults->sum(function ($keyResult) {
-        //                 return $keyResult->dailyTasks->count();
-        //             });
-        //         });
-        //     });
-    
-        //     // Calculate total tasks for each mission
-        //     $vision->missions->each(function ($mission) {
-        //         $mission->total_tasks = $mission->objectives->sum(function ($objective) {
-        //             return $objective->keyResults->sum(function ($keyResult) {
-        //                 return $keyResult->dailyTasks->count();
-        //             });
-        //         });
-    
-        //         // Calculate total tasks for each objective
-        //         $mission->objectives->each(function ($objective) {
-        //             $objective->total_tasks = $objective->keyResults->sum(function ($keyResult) {
-        //                 return $keyResult->dailyTasks->count();
-        //             });
-    
-        //             // Calculate total tasks for each key result
-        //             $objective->keyResults->each(function ($keyResult) {
-        //                 $keyResult->total_tasks = $keyResult->dailyTasks->count();
-        //             });
-        //         });
-        //     });
-    
-        //     return $vision;
-        // });
-    
-
-        // dd($visions);
-        return view('report_project_tree.indexv2', compact('divisions','beforeAday','startDate','endDate'));
+        return view('report_project_tree.indexv2', compact('divisions','beforeAday','startDate','endDate','defaultDivisi'));
     }
 
     public function fetchusertask($userId, $filter, Request $request)

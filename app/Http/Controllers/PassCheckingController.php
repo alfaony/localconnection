@@ -56,7 +56,6 @@ class PassCheckingController extends Controller
     public function update(Request $request, $id)
     {
         $passChecking = PassChecking::findOrFail($id);
-
         // Get the current pictures (ensure it's an array)
         $pictures = $passChecking->pictures ?? [];
 
@@ -67,21 +66,41 @@ class PassCheckingController extends Controller
                 $pictures[] = Storage::url($filePath); // Add the URL to the pictures array
             }
         }
-        // dd($request->all());
+        
+        if ($request->has('key') && $request->hasFile('image')) 
+        {
+            $pictures = $passChecking->pictures;
+            $key = $request->input('key');
+    
+            if (isset($pictures[$key])) {
+                // Delete the old image
+                Storage::delete(str_replace(Storage::url(''), '', $pictures[$key]));
+    
+                // Save the new image
+                $newImage = $request->file('image')->store('public/pictures');
+                $pictures[$key] = Storage::url($newImage);
+            }
+    
+            $passChecking->pictures = $pictures;
+        }
         // Remove specified pictures
         if ($request->has('delete_pictures')) {
-            foreach ($request->delete_pictures as $removeIndex) {
-                if (isset($pictures[$removeIndex])) {
-                    // Convert URL to storage path
-                    $relativePath = str_replace(asset('storage'), 'public', $pictures[$removeIndex]);
-    
-                    // Delete the file from storage if it exists
-                    if (Storage::exists($relativePath)) {
-                        Storage::delete($relativePath);
+            $deletePictures = json_decode($request->input('delete_pictures'), true);
+            if (is_array($deletePictures)) 
+            {
+                foreach ($deletePictures as $removeIndex) {
+                    if (isset($pictures[$removeIndex])) {
+                        // Convert URL to storage path
+                        $relativePath = str_replace(asset('storage'), 'public', $pictures[$removeIndex]);
+        
+                        // Delete the file from storage if it exists
+                        if (Storage::exists($relativePath)) {
+                            Storage::delete($relativePath);
+                        }
+        
+                        // Remove from the pictures array
+                        unset($pictures[$removeIndex]);
                     }
-    
-                    // Remove from the pictures array
-                    unset($pictures[$removeIndex]);
                 }
             }
         }
@@ -90,10 +109,10 @@ class PassCheckingController extends Controller
         // Update the Pass Checking record
         $passChecking->update([
             'user_id' => Auth::user()->id,
-            'name' => $request->name,
-            'date' => $request->date,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
+            'name' => $request->name ?? $passChecking->name,
+            'date' => $request->date ?? $passChecking->date,
+            'start_time' => $request->start_time ?? $passChecking->start_time, 
+            'end_time' => $request->end_time ?? $passChecking->end_time,
             'pictures' => array_values($pictures), // Reset array indices
         ]);
 
