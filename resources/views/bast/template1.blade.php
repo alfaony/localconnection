@@ -23,14 +23,9 @@
             height: auto;
         }
         
-        header {
-            top: 0;
-            margin-bottom: 300px;
-        }
-
         footer {
             bottom: 0;
-            margin-top: 300px;
+            margin-top: 0px;
         }
 
         .header-image, .footer-image {
@@ -39,8 +34,7 @@
         }
 
         .content {
-            margin-top: 180px;
-            padding-bottom: 60px;
+            padding-bottom: 10px;
             padding-left: 20px;
             padding-right: 20px;
         }
@@ -64,47 +58,23 @@
         .noMargin {
             margin: 0;
         }
-
-        @media print {
-            .content {
-                margin-top: 180px;
-                padding-bottom: 60px;
-                padding-left: 20px;
-                padding-right: 20px;
-            }
-
-            header {
-                position: fixed;
-                top: 0;
-            }
-
-            footer {
-                position: fixed;
-                bottom: 0;
-                page-break-before: always;
-            }
-
-            @page {
-                margin: 0;
-            }
-
-            .card-body, .table-bordered {
-                page-break-inside: avoid;
-            }
-
-            .footer-container {
-                position: relative;
-                bottom: 0;
-                margin-top: 300px;
-                page-break-before: always;
-            }
+    </style>
+    <style>
+        body {
+            margin-top: 5cm;
+            margin-bottom: 2cm;
+        }
+        header {
+            position: fixed;
+            top: 0cm;
+            height: 6cm;
         }
     </style>
 </head>
 <body>
     @if(!empty($company['header']) && !empty($company['footer']))
     <header>
-        <img src="{{ public_path('storage/' . $company['header']) }}" alt="Company Logo" class="header-image" style="margin-bottom: 150px">
+        <img src="{{ public_path('storage/' . $company['header']) }}" alt="Company Logo" class="header-image">
     </header>
     <footer>
         <img src="{{ public_path('storage/' . $company['footer']) }}" alt="Company Footer" class="footer-image">
