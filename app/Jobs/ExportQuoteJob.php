@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Exports\WorkOrderExport;
+use App\Exports\QuotesExport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
@@ -37,7 +37,7 @@ class ExportQuoteJob implements ShouldQueue
     {
         $exportFormat = $this->format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
         try {
-            Excel::store(new WorkOrderExport($this->company_id), $this->filename, 'public', $exportFormat);
+            Excel::store(new QuotesExport($this->company_id), $this->filename, 'public', $exportFormat);
             Log::info("File successfully stored at: " . Storage::url($this->filename));
         } catch (\Exception $e) {
             // dd($e);
