@@ -78,27 +78,28 @@
             </div>
 
             @if(@$editing && !empty(@$editing->pictures))
-                <div class="mb-3">
-                    <label class="form-label">Existing Pictures</label>
-                    <div class="d-flex flex-wrap gap-2">
-                        @foreach(@$editing->pictures as $key => $picture)
-                            <div class="position-relative">
-                                <img src="{{ $picture }}" alt="Picture" class="img-thumbnail" width="100">
-                                <div class="form-check mt-2">
-                                    <input 
-                                        type="checkbox" 
-                                        name="delete_pictures[]" 
-                                        value="{{ $key }}" 
-                                        class="form-check-input"
-                                    >
-                                    <label class="form-check-label">Delete</label>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
+    <div class="mb-3">
+        <label class="form-label">Existing Pictures</label>
+        <div class="d-flex flex-wrap gap-2" id="pictures-container">
+            @foreach(@$editing->pictures as $key => $picture)
+                <div class="position-relative" id="picture-{{ $key }}">
+                    <img src="{{ $picture }}" alt="Picture" class="img-thumbnail" width="100px">
+                    <button 
+                        type="button" 
+                        class="btn btn-danger-custom btn-sm position-absolute top-0 end-0" 
+                        onclick="deletePicture('{{ $key }}', '{{ $picture }}')"
+                        style="border-radius: 50%;"
+                    >
+                        <i class="fa fa-trash"></i>
+                    </button>
                 </div>
-            @endif
+            @endforeach
+        </div>
+    </div>
+@endif
 
+<!-- Input untuk menyimpan daftar gambar yang dihapus -->
+<input type="hidden" name="delete_pictures" id="delete_pictures">
             <div class="mb-3">
                 <label for="pictures" class="form-label">Upload Pictures</label>
                 <input 
@@ -192,4 +193,42 @@
         </div>
     </div>
 </div>
+@endsection
+@section('js')
+<script>
+    let deletedPictures = []; // Array untuk menyimpan gambar yang dihapus
+    
+    function deletePicture(key, picture) {
+        // Tambahkan key gambar ke array deletedPictures
+        deletedPictures.push(key);
+        
+        // Update nilai input hidden dengan JSON dari array deletedPictures
+        document.getElementById('delete_pictures').value = JSON.stringify(deletedPictures);
+    
+        // Hapus elemen gambar dari tampilan
+        const pictureElement = document.getElementById(`picture-${key}`);
+        if (pictureElement) {
+            pictureElement.remove();
+        }
+    }
+</script>
+@endsection
+@section('css')
+<style>
+    .btn-danger-custom 
+    {
+        background-color: #dc3545;
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        cursor: pointer;
+    }
+
+    .btn-danger i {
+        font-size: 12px;
+    }
+</style>
 @endsection

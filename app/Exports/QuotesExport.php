@@ -28,7 +28,7 @@ class QuotesExport implements FromQuery, WithMapping, WithHeadings, WithChunkRea
     public function headings(): array
     {
         return [
-            'Quote Number', 'Total', 'Customer', 'budget_transition', 'Status',
+            'Quote Number', 'Total', 'Customer', 'budget_transition', 'Status','User',
             // Add more columns as needed
         ];
     }   
@@ -38,9 +38,10 @@ class QuotesExport implements FromQuery, WithMapping, WithHeadings, WithChunkRea
         return [
             $quote->number_result,
             'Rp. '.number_format($quote->total,0,',','.'),
-            $quote->userCreate->name,
-            $quote->budget_transition,
-            $quote->status
+            $quote->customer->name,
+            $quote->budget_transition ? 'Yes' : '',
+            $quote->status,
+            $quote->userCreate->name
         ];
     }
 
