@@ -46,7 +46,8 @@
                     name="date" 
                     id="date" 
                     class="form-control" 
-                    value="{{ old('date', Carbon\Carbon::parse(@$editing->date)->format('Y-m-d') ??  '') }}" 
+                    value="{{ old('date', @$editing ? Carbon\Carbon::parse(@$editing->date)->format('Y-m-d') : date('Y-m-d') ) }}" 
+                    min="{{ @$editing ? '' : date('Y-m-d') }}" 
                     required
                 >
             </div>
@@ -59,6 +60,7 @@
                     id="start_time" 
                     class="form-control" 
                     value="{{ old('start_time', Carbon\Carbon::parse(@$editing->start_time)->format('H:i') ??  '') }}" 
+                    min="{{ @$editing ? '' : date('H:i') }}"
                     required
                 >
             </div>
@@ -71,6 +73,7 @@
                     id="end_time" 
                     class="form-control" 
                     value="{{ old('end_time', Carbon\Carbon::parse(@$editing->end_time)->format('H:i') ??  '') }}" 
+                    min="{{ @$editing ? '' : date('H:i') }}"
                     required
                 >
             </div>
@@ -152,6 +155,12 @@
                             @endif
                         </td>
                         <td>
+                            @canAccess('show','pass_checkings')
+                            <a href="{{ route('pass-checking.show', $passChecking->id) }}" class="btn btn-info btn-sm">
+                                <i class="fa fa-eye"></i>
+                            </a>
+                            @endcanAccess
+
                             @canAccess('edit','pass_checkings')
                             <a href="{{ route('pass-checking.edit', $passChecking->id) }}" class="btn btn-warning btn-sm">
                                 <i class="fa fa-edit"></i>
