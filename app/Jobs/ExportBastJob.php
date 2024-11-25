@@ -40,7 +40,7 @@ class ExportBastJob implements ShouldQueue
             Excel::store(new BastExport($this->company_id), $this->filename, 'public', $exportFormat);
             Log::info("File successfully stored at: " . Storage::url($this->filename));
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             Log::error("Error storing file: " . $e->getMessage());
         }
     }
