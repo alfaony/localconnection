@@ -37,6 +37,7 @@
                     @foreach($passChecking->pictures as $key => $picture)
                         <div class="position-relative mr-2 mb-3" id="picture-{{ $key }}">
                             <img src="{{ $picture }}" alt="Picture" class="img-thumbnail" width="200">
+                            @canAccess('update','pass_checkings')
                             <div class="d-flex justify-content-center mt-2">
                                 <!-- Button to update image -->
                                 <button 
@@ -90,6 +91,7 @@
                                     }
                                     </script>
                             </div>
+                            @endcanAccess
                         </div>
                     @endforeach
                 @else
