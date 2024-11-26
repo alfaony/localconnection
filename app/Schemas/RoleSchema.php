@@ -19,4 +19,5 @@ class RoleSchema
     const DIRECTOR = 'Director';
     const MANAGER = 'Manager';
     const STAFF = 'Staff';
+    const SYSTEM = 'System Admin';
 }

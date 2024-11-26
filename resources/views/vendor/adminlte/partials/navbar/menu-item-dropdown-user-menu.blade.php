@@ -23,7 +23,7 @@
                  alt="{{ Auth::user()->email }}">
         @endif
         <span @if(config('adminlte.usermenu_image')) class="d-none d-md-inline" @else class="nav-link-email" @endif>
-            {{ Auth::user()->name }}
+            {!! Auth::user()->showName !!}
         </span>
     </a>
 
@@ -62,6 +62,22 @@
 
         {{-- User menu footer --}}
         <li class="user-footer">
+            @canAccess('create','kyes')
+            @canAccess('show','kyes')
+            @if(Auth::user()->kye)
+            <a href="{{ route('kye.show',Auth::user()->kye->id) }}" class="btn btn-default btn-flat btn-block">
+                <i class="fa fa-fw fa-file text-lightblue"></i>
+                Detail KYE
+            </a>
+            @else
+            <a href="{{ route('kye.create') }}" class="btn btn-default btn-flat btn-block">
+                <i class="fa fa-fw fa-plus text-lightblue"></i>
+                Aktivasi KYE
+            </a>
+            @endif
+            @endcanAccess
+            @endcanAccess
+            
                 @canAccess('profileUpdate','users')
                 <a href="{{ route('user.profileEdit',Auth::user()->slug) }}" class="btn btn-default btn-flat btn-block">
                     <i class="fa fa-fw fa-user text-lightblue"></i>

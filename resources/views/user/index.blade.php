@@ -335,7 +335,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             @forelse($user as $a)
             <tr>
                 <td>{{ $no++ }}</td>
-                <td>{{ $a->name }}</td>
+                <td>{!! $a->showName !!}</td>
                 <td>{{ $a->email }}</td>
                 <td> {{ $a->company ? $a->company->name : '' }} </td>
                 <td>{{ $a->approver ? $a->approver->name : "Belum Memiliki Pic Persetujuan" }}</td>
