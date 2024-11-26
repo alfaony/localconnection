@@ -37,8 +37,6 @@ class KyeRequest extends FormRequest
             'bank_account_name' => 'nullable|string|max:255',
             'bank_name' => 'nullable|string|max:255',
             'account_number' => 'nullable|string|max:50',
-            'approval_status' => 'required|in:pending,approved,rejected',
-            'approval_note' => 'nullable|string|max:255',
         ];
 
         return $rules;

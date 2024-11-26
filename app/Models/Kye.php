@@ -60,6 +60,16 @@ class Kye extends Model
         });
     }
 
+    public function isDestroy()
+    {
+        return $this->approval_status == 'approved' ? false : true;
+    }
+
+    public function isEdit()
+    {
+        return $this->user_id == Auth::user()->id ? true : false;
+    }
+
     // Relationship with User model
     public function user()
     {

@@ -27,6 +27,11 @@ class KyeController extends Controller
 
     public function create()
     {
+        if(Auth::user()->kye) 
+        {
+            return redirect()->route('kye.show', Auth::user()->kye->id)->with('error', 'Catatan KYE sudah ada.');
+        }
+
         return view('kye.createOrEdit');
     }
 
@@ -54,12 +59,13 @@ class KyeController extends Controller
             }
             
             $data['user_id'] = Auth::user()->id;
-            Kye::create($data);
+            $data['approval_status'] = 'pending';
+            $kye = Kye::create($data);
     
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil ditambahkan.');
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            return redirect()->route('kye.create')->with('error', 'Terjadi kesalahan saat menyimpan data KYE.');
         }
     }
 
@@ -85,39 +91,66 @@ class KyeController extends Controller
         $data = $request->validated();
 
         try {
-            //code...
-            if ($request->employee_photo) {
-                $data['employee_photo'] = $this->saveBase64Image($request->employee_photo, 'employee_photos');
-            }
-            if ($request->ktp_photo) {
-                $data['ktp_photo'] = $this->saveBase64Image($request->ktp_photo, 'ktp_photos');
-            }
-            if ($request->selfie_ktp) {
-                $data['selfie_ktp'] = $this->saveBase64Image($request->selfie_ktp, 'selfie_ktp_photos');
-            }
-            if ($request->ktp_family) {
-                $data['ktp_family'] = $this->saveBase64Image($request->ktp_family, 'ktp_family_photos');
-            }
-            if ($request->house_photo) {
-                $data['house_photo'] = $this->saveBase64Image($request->house_photo, 'house_photos');
-            }
-    
+            // Cek apakah ada input baru untuk setiap foto, jika tidak, gunakan foto yang sudah ada
+            $data['employee_photo'] = $request->employee_photo
+                ? $this->saveBase64ImageToStorage($request->employee_photo, 'employee_photos')
+                : $kye->employee_photo;
+
+            $data['ktp_photo'] = $request->ktp_photo
+                ? $this->saveBase64ImageToStorage($request->ktp_photo, 'ktp_photos')
+                : $kye->ktp_photo;
+
+            $data['selfie_ktp'] = $request->selfie_ktp
+                ? $this->saveBase64ImageToStorage($request->selfie_ktp, 'selfie_ktp_photos')
+                : $kye->selfie_ktp;
+
+            $data['ktp_family'] = $request->ktp_family
+                ? $this->saveBase64ImageToStorage($request->ktp_family, 'ktp_family_photos')
+                : $kye->ktp_family;
+
+            $data['house_photo'] = $request->house_photo
+                ? $this->saveBase64ImageToStorage($request->house_photo, 'house_photos')
+                : $kye->house_photo;
+
+            // Update data ke database
+            $data['approval_status'] = 'pending';
+
             $kye->update($data);
-    
+
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil diperbarui.');
         } catch (\Throwable $th) {
-            //throw $th;
-            // dd($th);
+            // Log error untuk debugging
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui data KYE.');
         }
     }
+
 
     // Delete KYE Record
     public function destroy($id)
     {
-        $kye = KYE::findOrFail($id);
+        $kye = KYE::byCompany(Auth::user()->company_id)->findOrFail($id);
         $kye->delete();
 
-        return redirect()->route('kye.create')->with('success', 'KYE record deleted successfully.');
+        return redirect()->back()->with('success', 'KYE record deleted successfully.');
+    }
+
+    public function approvement(Request $request, Kye $kye)
+    {
+        $request->validate([
+            'status' => 'required|in:approved,rejected',
+        ]);
+
+        try {
+            $kye->update(['approval_status' => $request->status, 'approval_note' => $request->approval_note]);
+
+            $message = $request->status === 'approved' 
+                ? 'Aktivasi berhasil disetujui.' 
+                : 'Aktivasi berhasil ditolak.';
+
+            return redirect()->route('kye.show', $kye)->with('success', $message);
+        } catch (\Exception $e) {
+            return redirect()->route('kye.show', $kye)->with('error', 'Terjadi kesalahan saat mengubah status.');
+        }
     }
 
     protected function saveBase64ImageToStorage($base64Image, $folder)

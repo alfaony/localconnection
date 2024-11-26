@@ -1,12 +1,17 @@
 @extends('adminlte::page')
 
-@section('title', 'Detail Aktivasi KYE')
+@section('title', 'Detail KYE')
 
 @section('content_header')
-    <h3>Detail Aktivasi KYE</h3>
+    <h3>Detail KYE</h3>
 @stop
 
 @section('content')
+    @if (session('error'))
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+    </div>
+    @endif
     @if (session('success'))
     <div class="alert alert-success">
         <i class="fas fa-check-circle"></i> {{ session('success') }}
@@ -118,13 +123,51 @@
             </div>
         </div>
 
+        @canAccess('approvement','kyes')
+        <form action="{{ route('kye.approvement', $kye->id) }}" method="POST" class="mt-3">
+        @csrf
+        @method('PATCH')
+            <div class="card mt-4">
+                <div class="card-header bg-warning text-white">
+                    <h4><i class="fas fa-check-circle"></i> Approval</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="approval_status"><i class="fas fa-clipboard-check"></i> Approval Status</label>
+                        <select name="status" id="approval_status" class="form-control" required>
+                            <option value="pending"
+                                {{ isset($kye) && $kye->approval_status === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="approved"
+                                {{ isset($kye) && $kye->approval_status === 'approved' ? 'selected' : '' }}>Approved
+                            </option>
+                            <option value="rejected"
+                                {{ isset($kye) && $kye->approval_status === 'rejected' ? 'selected' : '' }}>Rejected
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="approval_note"><i class="fas fa-sticky-note"></i> Approval Notes</label>
+                        <textarea name="approval_note" id="approval_note" rows="3" class="form-control"
+                            placeholder="Masukkan catatan">{{ $kye->approval_note ?? '' }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">
+                        <i class="fas fa-save"></i> Simpan
+                    </button>
+                </div>
+            </div>
+        </form>
+        @endcanAccess
+
         <div class="text-center mt-4">
             <a href="{{ route('kye.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
 
+            @canAccess('update','kyes')
             <a href="{{ route('kye.edit', $kye->id) }}" class="btn btn-outline-warning">
                 <i class="fas fa-edit"></i> Edit
             </a>
+            @endcanAccess
         </div>
 @stop

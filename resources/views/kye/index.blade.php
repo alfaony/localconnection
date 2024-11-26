@@ -56,12 +56,21 @@
                                         </span>
                                     </td>
                                     <td>
+                                        @canAccess('show','kyes')
                                         <a href="{{ route('kye.show', $kye->id) }}" class="btn btn-sm btn-info">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        @endcanAccess
+                                        @canAccess('update','kyes')
+                                        @if($kye->isEdit())
                                         <a href="{{ route('kye.edit', $kye->id) }}" class="btn btn-sm btn-warning">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        @endif
+                                        @endcanAccess
+
+                                        @canAccess('destroy','kyes')
+                                        @if($kye->isDestroy())
                                         <form action="{{ route('kye.destroy', $kye->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('DELETE')
@@ -70,6 +79,8 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
+                                        @endif
+                                        @endcanAccess
                                     </td>
                                 </tr>
                             @endforeach

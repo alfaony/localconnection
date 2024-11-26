@@ -79,8 +79,6 @@ use App\Http\Controllers\KyeController;
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
-Route::resource('kye', KyeController::class);
-
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
@@ -309,6 +307,8 @@ Route::group(['middleware' => ['auth','role.permission']], function()
 
   Route::resource('pass-checking', PassCheckingController::class);
 
+  Route::patch('kye/approvement/{kye}', [KyeController::class, 'approvement'])->name('kye.approvement');
+  Route::resource('kye', KyeController::class);
 });
 
 
