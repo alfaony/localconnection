@@ -63,6 +63,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\XeroWebhookController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PassCheckingController;
+use App\Http\Controllers\KyeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,6 +79,7 @@ use App\Http\Controllers\PassCheckingController;
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
+Route::resource('kye', KyeController::class);
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
