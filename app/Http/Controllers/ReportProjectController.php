@@ -764,15 +764,19 @@ class ReportProjectController extends Controller
             }
 
             // Merge the collected PDF files
-            foreach ($pdfFiles as $pdfFile) {
-                $pageCount = $mergedPdf->setSourceFile($pdfFile);
-
-                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                    $templateId = $mergedPdf->importPage($pageNo);
-                    $size = $mergedPdf->getTemplateSize($templateId);
-
-                    $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                    $mergedPdf->useTemplate($templateId);
+            foreach ($pdfFiles as $pdfFile) 
+            {
+                try {
+                    $pageCount = $mergedPdf->setSourceFile($pdfFile);
+                    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                        $templateId = $mergedPdf->importPage($pageNo);
+                        $size = $mergedPdf->getTemplateSize($templateId);
+                        $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                        $mergedPdf->useTemplate($templateId);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error("Error processing file {$pdfFile}: " . $e->getMessage());
+                    continue; // Skip this file
                 }
             }
 
