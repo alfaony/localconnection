@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\CustomerRequest;
 
 use App\Models\Customer;
+use App\Models\Quote;
+use App\Models\WorkOrder;
 
 class CustomerController extends Controller
 {
@@ -86,7 +88,10 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer)
     {
-        //
+        $quote = Quote::byCompany(Auth::user()->company_id)->where('customer_id',$customer->id)->orderBy('created_at','desc')->paginate(10);
+        $workOrders = WorkOrder::byCompany(Auth::user()->company_id)->byUser($customer->id)->paginate(10);
+    
+        return view('customer.show', compact('customer', 'quote', 'workOrders'));
     }
 
     /**

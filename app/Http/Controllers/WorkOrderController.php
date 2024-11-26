@@ -7,11 +7,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 use App\Helpers\Access;
 
 use Carbon\Carbon;
 use App\Http\Requests\WorkOrderRequest;
+use App\Jobs\ExportWorkOrderJob;
+
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\WorkOrderExport;
 
 use App\Models\WorkOrder;
 use App\Models\WorkOrderProduct;
@@ -525,5 +530,51 @@ class WorkOrderController extends Controller
             ->get();
             
     return response()->json($workOrder);
+    }
+
+    /**
+     * Expport Group Queue
+     */
+    public function export(Request $request, $format)
+    {
+        $filename = 'work_orders_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
+        $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
+
+
+        ExportWorkOrderJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
+        $filename = "public/" . $filename;
+        session(['export_filename_workorder' => $filename]);
+
+        return redirect()->back()->with('export', true);
+    }
+
+    public function checkExportStatus()
+    {
+        $filename = session('export_filename_workorder');
+
+        if ($filename && Storage::exists($filename)) {
+            // Provide the download URL if file exists
+            $downloadUrl = Storage::url($filename);
+            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        }
+    
+        return response()->json(['ready' => false,'filename' => $filename]);
+    }
+
+    public function clearsession()
+    {
+        // Retrieve the export filename from the session
+        $filename = session('export_filename_workorder');
+
+        // Forget the session variable to prevent re-download on refresh
+        session()->forget('export_filename_workorder');
+
+        // Check if the file exists and delete it
+        if ($filename && Storage::exists($filename)) {
+            Storage::delete($filename);
+            Log::info("File deleted from storage: " . $filename);
+        }
+
+        return redirect()->back()->with('export',true);
     }
 }

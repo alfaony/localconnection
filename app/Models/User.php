@@ -81,6 +81,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'custom_rest_times' => 'array', // This will automatically decode JSON into an array        
     ];
 
     protected $appends = ['point_checkin', 'today_percentage', 'point_percentage'];
@@ -240,7 +241,7 @@ class User extends Authenticatable
     }
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId)
+        if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
             return $query->where("company_id",$companyId);
         }

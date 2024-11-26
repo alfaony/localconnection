@@ -6,11 +6,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 use App\Http\Requests\QuoteRequest;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\QuotesExport;
 use Carbon\Carbon;
 
 use App\Helpers\Access;
+use App\Jobs\ExportQuoteJob;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
@@ -507,15 +511,15 @@ class QuoteController extends Controller
     {
         // Fetch data for the DataTable
         $query = Quote::query();
-        $query->byCompany(Auth::user()->company_id)->orderBy('quote_number', 'desc');
+        $query->with('customer')->byCompany(Auth::user()->company_id)->orderBy('quote_number', 'desc');
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['number_result', 'total', 'budget_transition', 'slug'];
 
         // Define searchable columns
-        $searchable = 
-        [
-            0 => 'number_result',
-            1 => 'total',
+        $searchable = [
+            'number_result',
+            'total',
+            'customer.name', // Relasi: mencari di dalam kolom work_order
         ];
 
         // define your bootstrap version (4 or 5)
@@ -558,7 +562,8 @@ class QuoteController extends Controller
         }
 
 
-        $response =  datatablesFormater($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+        $response =  datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+
 
         $data = $response->getData();
         foreach ($data->data as $index => $item) 
@@ -568,6 +573,11 @@ class QuoteController extends Controller
             $status = $item->status == ParamSchema::OPEN ? 'badge badge-success' : 'badge badge-danger';
             $item->budget_transition = $item->budget_transition ? "<span class='badge $color'>Peralihan</span>" : "<span class='badge $color'>Baru</span>";
             $item->status = $item->status == ParamSchema::OPEN ? "<span class='badge $status'>Open</span>" : "<span class='badge $status'>Closed</span>";
+            if (isset($item->customer)) {
+                $item->customer_name = "<a href='" . route('customer.show', ['customer' => $item->customer->slug]) . "'>" . htmlspecialchars($item->customer->name) . "</a>";
+            } else {
+                $item->customer_name = '-';
+            }
         }
 
         return response()->json($data);
@@ -587,6 +597,55 @@ class QuoteController extends Controller
                 
         return response()->json($quote);
      }
+     /**
+      * Export Group
+      */
+    public function export(Request $request, $format)
+    {
+        // Determine file name and format
+        $filename = 'quotes_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
+        $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
+
+        // Queue the export and store the job file name in session
+        ExportQuoteJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
+
+        $filename = "public/" . $filename;
+        session(['export_filename_quote' => $filename]);
+        $filename = session('export_filename_quote');
+
+        return redirect()->back()->with('export',true);
+    }
+
+    public function checkExportStatus()
+    {
+        $filename = session('export_filename_quote');
+
+        if ($filename && Storage::exists($filename)) {
+            // Provide the download URL if file exists
+            $downloadUrl = Storage::url($filename);
+            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        }
+    
+        return response()->json(['ready' => false,'filename' => $filename]);
+    }
+
+    public function clearsession()
+    {
+        // Retrieve the export filename from the session
+        $filename = session('export_filename_quote');
+
+        // Forget the session variable to prevent re-download on refresh
+        session()->forget('export_filename_quote');
+
+        // Check if the file exists and delete it
+        if ($filename && Storage::exists($filename)) {
+            Storage::delete($filename);
+            Log::info("File deleted from storage: " . $filename);
+        }
+
+        return redirect()->back()->with('export',true);
+    }
+
 
      private function adjustBudget($division_budget_id, $amount)
     {
