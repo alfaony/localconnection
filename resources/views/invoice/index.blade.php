@@ -126,7 +126,7 @@
                      <tr>
                          <td>{{ $a->number_result ?? '' }}</td>
                          <td>
-                             {{ $a->bast->number_result }}
+                             {{ $a->bast ? $a->bast->number_result : ""}}
                          </td>
                          <td>
                          @switch($a->status)
