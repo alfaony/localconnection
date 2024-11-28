@@ -91,9 +91,21 @@ return
           'AUTHORISED' => 'Waiting payment',
           'PAID' => 'Paid',
        ],
-       'bast_template' =>
+
+       'daysOfWeek' =>
        [
-        'template1' => 'Template 1',
-        'template2' => 'Template 2',
-       ]
+         'Monday' => 'monday',
+         'Tuesday' => 'tuesday',
+         'Wednesday' => 'wednesday',
+         'Thursday' => 'thursday',
+         'Friday' => 'friday',
+         'Saturday' => 'saturday',
+         'Sunday ' => 'sunday',
+      ],
+      
+      'bast_template' =>
+      [
+       'template1' => 'Template 1',
+       'template2' => 'Template 2',
+      ]
 ];

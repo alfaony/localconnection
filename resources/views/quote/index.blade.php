@@ -17,6 +17,9 @@
     @if(Session::get('delete'))
     <div class="alert alert-success mt-3">Berhasil Menghapus Quote</div>
     @endif
+    @if(Session::get('export'))
+    <div class="alert alert-info mt-3">Export Quote Sedang Diproses</div>
+    @endif
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -34,9 +37,24 @@
 </div>
 <div class="container">    
     <!-- Tombol Tambah Pembelian Baru -->
-    @canAccess('create','quotes')
-    <button class="btn btn-primary mb-3" id="btnCreateSuplier">Tambah Quote Baru</button>
-    @endcanAccess
+    <div class="col-md-12 mt-3 mb-2">
+        @canAccess('create','quotes')
+        <button class="btn btn-primary" id="btnCreateSuplier"><i class="fa fa-plus"></i> Quote</button>
+        @endcanAccess
+        @canAccess('export','quotes')
+        @canAccess('checkExportStatus','quotes')
+        @canAccess('clearsession','quotes')
+        <a href="{{ route('quote.export', ['format' => 'xlsx']) }}" class="btn btn-success">
+            <i class="fa fa-file-excel"></i>
+        </a>
+        <a href="{{ route('quote.export', ['format' => 'csv']) }}" class="btn btn-primary">
+            <i class="fa fa-file-csv"></i>
+        </a>
+        @endcanAccess
+        @endcanAccess
+        @endcanAccess
+    </div>
+
     
     <!-- Search Bar -->
     <!-- <form action="{{ route('quote.index') }}" method="get">
@@ -56,6 +74,7 @@
             <tr>
                 <th>Nomor Quote</th>
                 <th>Total Quote</th>
+                <th>Customer</th>
                 <th>Status Peralihan</th>
                 <th>Status Quote</th>
                 <th>Aksi</th>
@@ -104,6 +123,74 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+@if(Session::get('export'))
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let isDownloaded = false; // Track if file has been downloaded
+        const loadingOverlay = document.createElement('div');
+        
+        // Add a loading overlay
+        loadingOverlay.innerHTML = `
+            <div id="loading-overlay" style="display: flex; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; color: white; font-size: 20px;">
+                <div>
+                    <div class="spinner-border text-light" role="status"></div>
+                    <p>Exporting your file, please wait...</p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(loadingOverlay);
+
+        const checkExportStatus = () => {
+            if (isDownloaded) return; // Stop if already downloaded
+
+            fetch('{{ route('quote.checkExportStatus') }}')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    
+                    if (data.ready) {
+                        isDownloaded = true; // Mark as downloaded
+
+                        // Create a hidden download link to trigger download
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = data.download_url;
+                        downloadLink.style.display = 'none';
+                        downloadLink.download = ''; // Optional: specify a filename
+                        
+                        document.body.appendChild(downloadLink);
+                        
+                        // Add onload callback to clear session after download
+                        downloadLink.onclick = () => {
+                            // Clear export session AFTER file download starts
+                            fetch('{{ route('quote.clearsession') }}')
+                                .then(() => {
+                                    // Hide the loading overlay
+                                    document.getElementById('loading-overlay').remove();
+                                })
+                                .catch(error => console.error('Error clearing session:', error));
+                        };
+
+                        // Trigger download
+                        downloadLink.click();
+
+                        // Remove the link element after triggering download
+                        document.body.removeChild(downloadLink);
+                    } else {
+                        setTimeout(checkExportStatus, 3000); // Retry every 3 seconds
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking export status:', error);
+                    // Hide loading overlay if error occurs
+                    document.getElementById('loading-overlay').remove();
+                });
+        };
+
+        checkExportStatus();
+    });
+</script>
+@endif
+
 <script type="text/javascript">
     $(document).ready(function() {
         var table = $('#tableQuote').DataTable({
@@ -118,6 +205,7 @@
             columns: [
                 {data: 'number_result', name: 'number_result', orderable: false},
                 {data: 'total', name: 'total', orderable: false},
+                {data: 'customer_name', name: 'customer_name', orderable: false},
                 {data: 'budget_transition', name: 'budget_transition', orderable: false},
                 {data: 'status', name: 'status', orderable: false},
                 {data: 'action', name: 'action', orderable: false, searchable: false},

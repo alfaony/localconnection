@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\BastExport;
+use App\Jobs\ExportBastJob;
+
 use App\Helpers\Access;
 use App\Helpers\InboxHelper;
 
@@ -524,37 +528,50 @@ class BastController extends Controller
         }
     }
 
-    // Main controller method
-    // private function merge($bast)
-    // {
-    //     try {
-    //         // Get BAST by company and slug
-    //         $reportProject = $bast->project->reportProject;
+    /**
+     * Export Group
+     */
+    public function export(Request $request, $format)
+    {
+        $filename = 'bast_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
+        $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
 
-    //         if (!$reportProject) {
-    //             throw new \Exception('No report project found for the selected BAST.');
-    //         }
+        ExportBastJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
+        $filename = "public/" . $filename;
+        session(['export_filename_bast' => $filename]);
 
-    //         // Call the private method to handle PDF merging
-    //         $mergedFilePath = $this->mergePdfFiles($bast, $reportProject);
+        return redirect()->back()->with('export', true);
+    }
 
-    //         if ($mergedFilePath) 
-    //         {
-    //             // Save record to bast_file_merges table
+    public function checkExportStatus()
+    {
+        $filename = session('export_filename_bast');
 
-    //             return true;
-    //         }
+        if ($filename && Storage::exists($filename)) {
+            // Provide the download URL if file exists
+            $downloadUrl = Storage::url($filename);
+            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        }
+    
+        return response()->json(['ready' => false,'filename' => $filename]);
+    }
 
-    //         return false;
+    public function clearsession()
+    {
+        // Retrieve the export filename from the session
+        $filename = session('export_filename_bast');
 
-    //     } catch (\Exception $e) {
-    //         \Log::error('Failed to merge PDFs for BAST: ' . $e->getMessage());
-    //         return redirect()->back()->with('error', 'An error occurred while merging PDF files.');
-    //     } catch (\Throwable $th) {
-    //         \Log::error('Unexpected error in PDF merging: ' . $th->getMessage());
-    //         return redirect()->back()->with('error', 'An unexpected error occurred.');
-    //     }
-    // }
+        // Forget the session variable to prevent re-download on refresh
+        session()->forget('export_filename_bast');
+
+        // Check if the file exists and delete it
+        if ($filename && Storage::exists($filename)) {
+            Storage::delete($filename);
+            Log::info("File deleted from storage: " . $filename);
+        }
+
+        return redirect()->back()->with('export',true);
+    }
 
     // Private function to merge PDF files
     private function mergePdfFiles($bast, $reportProject)
@@ -680,4 +697,5 @@ class BastController extends Controller
 
         return true;
     }
+    
 }
