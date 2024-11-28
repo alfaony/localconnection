@@ -92,7 +92,7 @@ class ReportProjectController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ReportProjectRequest $request)
     {
         DB::beginTransaction();
         try {
@@ -155,7 +155,7 @@ class ReportProjectController extends Controller
         } catch (\Throwable $th) 
         {
             //throw $th;
-            dd($th);
+            // dd($th);
             Log::error($th);
             DB::rollback();
             return redirect()->to(route('report-project.index'))->with('store', false);
