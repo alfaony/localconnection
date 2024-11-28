@@ -43,7 +43,7 @@
                         <label for="birth_date"><i class="fas fa-birthday-cake"></i> Tempat & Tanggal Lahir</label>
                         <div class="input-group">
                             <input type="text" name="birth_place" id="birth_place" class="form-control"
-                                placeholder="Tempat Lahir" value="{{ @$kye->birth_place ?? '' }}" required>
+                                placeholder="Tempat Lahir" value="{{ @$kye->birth_place ?? old('birth_place') }}" required>
                             <input type="date" name="birth_date" id="birth_date" class="form-control"
                                 value="{{ @$kye->birth_date ? Carbon\Carbon::parse(@$kye->birth_date)->format('Y-m-d') : old('birth_date') }}" required>
                         </div>
@@ -153,7 +153,7 @@
                         <label for="google_maps"><i class="fas fa-map-marker-alt"></i> Shareloc Google Maps Rumah</label>
                         <div class="input-group">
                             <input type="text" name="google_maps" id="google_maps" class="form-control"
-                                placeholder="Masukkan lokasi" value="{{ @$kye->google_maps ?? '' }}">
+                                placeholder="Masukkan lokasi" value="{{ @$kye->google_maps ?? old('google_maps') }}">
                             <button type="button" class="btn btn-outline-secondary" onclick="fetchLocation()">
                                 <i class="fas fa-map-marker-alt"></i> Ambil Lokasi
                             </button>
@@ -180,7 +180,8 @@
                     </div>
                     <div class="form-group">
                         <label for="skck"><i class="fas fa-file-alt"></i> Surat Keterangan Catatan Kepolisian (SKCK)</label>
-                            <input type="file" name="skck" id="skck" class="form-control-file" {{ @$kye ? '' : 'required' }}>
+                            <input type="file" name="skck" id="skck" class="form-control-file" {{ @$kye ? '' : 'required' }}
+                                accept=".pdf,.jpeg,.jpg,.png,.gif,.bmp,.tiff,.svg">
                     </div>
                 </div>
             </div>

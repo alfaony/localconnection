@@ -30,7 +30,7 @@
                     <strong><i class="fas fa-camera"></i> Foto Karyawan:</strong>
                     <div class="mt-2">
                         @if ($kye->employee_photo)
-                            <img src="{{ asset( $kye->employee_photo) }}" alt="Employee Photo" class="img-thumbnail" width="150">
+                            <img src="{{ Storage::url($kye->employee_photo) }}" alt="Employee Photo" class="img-thumbnail">
                         @else
                             <p class="text-muted"><i class="fas fa-image"></i> Belum ada foto.</p>
                         @endif
@@ -40,7 +40,7 @@
                     <strong><i class="fas fa-id-card"></i> Foto KTP:</strong>
                     <div class="mt-2">
                         @if ($kye->ktp_photo)
-                            <img src="{{ asset( $kye->ktp_photo) }}" alt="KTP Photo" class="img-thumbnail" width="150">
+                            <img src="{{ Storage::url($kye->ktp_photo) }}" alt="KTP Photo" class="img-thumbnail">
                         @else
                             <p class="text-muted"><i class="fas fa-image"></i> Belum ada foto.</p>
                         @endif
@@ -50,7 +50,7 @@
                     <strong><i class="fas fa-camera"></i> Selfie dengan KTP:</strong>
                     <div class="mt-2">
                         @if ($kye->selfie_ktp)
-                            <img src="{{ asset( $kye->selfie_ktp) }}" alt="Selfie KTP" class="img-thumbnail" width="150">
+                            <img src="{{ Storage::url($kye->selfie_ktp) }}" alt="Selfie KTP" class="img-thumbnail">
                         @else
                             <p class="text-muted"><i class="fas fa-image"></i> Belum ada foto.</p>
                         @endif
@@ -60,7 +60,7 @@
                     <strong><i class="fas fa-id-card"></i> Foto KTP Orang Tua/Saudara:</strong>
                     <div class="mt-2">
                         @if ($kye->ktp_family)
-                            <img src="{{ asset( $kye->ktp_family) }}" alt="KTP Orang Tua/Saudara" class="img-thumbnail" width="150">
+                            <img src="{{ Storage::url($kye->ktp_family) }}" alt="KTP Orang Tua/Saudara" class="img-thumbnail" >
                         @else
                             <p class="text-muted"><i class="fas fa-image"></i> Belum ada foto.</p>
                         @endif
@@ -88,7 +88,7 @@
                     <strong><i class="fas fa-home"></i> Foto Rumah:</strong>
                     <div class="mt-2">
                         @if ($kye->house_photo)
-                            <img src="{{ asset( $kye->house_photo) }}" alt="House Photo" class="img-thumbnail" width="150">
+                            <img src="{{ Storage::url($kye->house_photo) }}" alt="House Photo" class="img-thumbnail">
                         @else
                             <p class="text-muted"><i class="fas fa-image"></i> Belum ada foto.</p>
                         @endif
