@@ -36,7 +36,7 @@
                     <div class="form-group">
                         <label for="full_name"><i class="fas fa-user"></i> Nama Lengkap</label>
                         <input type="text" name="full_name" id="full_name" class="form-control"
-                            placeholder="Masukkan nama lengkap" value="{{ @$kye->full_name ?? '' }}" required>
+                            placeholder="Masukkan nama lengkap" value="{{ @$kye->full_name ?? old('full_name') }}" required>
                     </div>
     
                     <div class="form-group">
@@ -45,14 +45,14 @@
                             <input type="text" name="birth_place" id="birth_place" class="form-control"
                                 placeholder="Tempat Lahir" value="{{ @$kye->birth_place ?? '' }}" required>
                             <input type="date" name="birth_date" id="birth_date" class="form-control"
-                                value="{{ @$kye->birth_date ? Carbon\Carbon::parse(@$kye->birth_date)->format('Y-m-d') : '' }}" required>
+                                value="{{ @$kye->birth_date ? Carbon\Carbon::parse(@$kye->birth_date)->format('Y-m-d') : old('birth_date') }}" required>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="address"><i class="fas fa-map-marker-alt"></i> Alamat Tempat Tinggal</label>
                         <textarea name="address" id="address" rows="3" class="form-control"
-                            placeholder="Masukkan alamat lengkap" required>{{ @$kye->address ?? '' }}</textarea>
+                            placeholder="Masukkan alamat lengkap" required>{{ @$kye->address ?? old('address') }}</textarea>
                     </div>
 
                     <div class="form-group">
@@ -77,7 +77,7 @@
                     <div class="form-group">
                         <label for="ktp_number"><i class="fas fa-id-card"></i> Nomor KTP/Paspor</label>
                         <input type="number" name="ktp_number" id="ktp_number" class="form-control"
-                            placeholder="Masukkan nomor KTP" value="{{ @$kye->ktp_number ?? '' }}" required>
+                            placeholder="Masukkan nomor KTP" value="{{ @$kye->ktp_number ?? old('ktp_number') }}" required>
                     </div>
 
                     <div class="form-group">
@@ -144,7 +144,7 @@
                     <div class="form-group">
                         <label for="npwp_number"><i class="fas fa-file-alt"></i> Nomor NPWP</label>
                         <input type="number" name="npwp_number" id="npwp_number" class="form-control"
-                            placeholder="Masukkan nomor NPWP" value="{{ @$kye->npwp_number ?? '' }}"
+                            placeholder="Masukkan nomor NPWP" value="{{ @$kye->npwp_number ?? old('npwp_number') }}"
                             {{ @$kye ? '' : 'required' }}
                             >
                     </div>
@@ -164,8 +164,8 @@
                         <label for="house_photo"><i class="fas fa-home"></i> Foto Rumah Saat Ini</label>
                         <input type="hidden" name="house_photo" id="house_photo">
                         <div class="d-flex align-items-center mt-2">
-                            <button type="button" class="btn btn-outline-primary btn-sm me-2"
-                                onclick="openCamera('house_photo', 'house_photo_preview')">
+                            <button type="button" id="house_photo_btn" class="btn btn-outline-primary btn-sm me-2"
+                                onclick="openCamera('house_photo', 'house_photo_preview'); this.disabled = true;">
                                 <i class="fas fa-camera"></i> Ambil Foto Rumah
                             </button>
                             <div id="house_photo_preview" class="ms-2">
@@ -194,49 +194,49 @@
                     <div class="form-group">
                         <label for="phone_number"><i class="fas fa-phone-alt"></i> Nomor Telepon</label>
                         <input type="tel" name="phone_number" id="phone_number" class="form-control" 
-                            placeholder="Masukkan nomor telepon" value="{{ @$kye->phone_number ?? '' }}" required>
+                            placeholder="Masukkan nomor telepon" value="{{ @$kye->phone_number ?? old('phone_number') }}" required>
                     </div>
 
                     <div class="form-group">
                         <label for="email"><i class="fas fa-envelope"></i> Email</label>
                         <input type="email" name="email" id="email" class="form-control" 
-                            placeholder="Masukkan email" value="{{ @$kye->email ?? '' }}" required>
+                            placeholder="Masukkan email" value="{{ @$kye->email ?? old('email') }}" required>
                     </div>
 
                     <div class="form-group">
                         <label for="imei_number"><i class="fas fa-mobile-alt"></i> Kode IMEI HP</label>
                         <input type="text" name="imei_number" id="imei_number" class="form-control" 
-                            placeholder="Masukkan kode IMEI HP" value="{{ @$kye->imei_number ?? '' }}">
+                            placeholder="Masukkan kode IMEI HP" value="{{ @$kye->imei_number ?? old('imei_number') }}">
                     </div>
 
                     <div class="form-group">
                         <label for="emergency_phone"><i class="fas fa-phone"></i> No. Telepon Darurat</label>
                         <input type="tel" name="emergency_phone" id="emergency_phone" class="form-control" 
-                            placeholder="Masukkan nomor telepon darurat" value="{{ @$kye->emergency_phone ?? '' }}">
+                            placeholder="Masukkan nomor telepon darurat" value="{{ @$kye->emergency_phone ?? old('emergency_phone') }}">
                     </div>
 
                     <div class="form-group">
                         <label for="emergency_contact"><i class="fas fa-user-friends"></i> Nama Contact Darurat</label>
                         <input type="text" name="emergency_contact" id="emergency_contact" class="form-control" 
-                            placeholder="Masukkan nama kontak darurat" value="{{ @$kye->emergency_contact ?? '' }}">
+                            placeholder="Masukkan nama kontak darurat" value="{{ @$kye->emergency_contact ?? old('emergency_contact') }}">
                     </div>
 
                     <div class="form-group">
                         <label for="bank_account_name"><i class="fas fa-university"></i> Nama Account Bank</label>
                         <input type="text" name="bank_account_name" id="bank_account_name" class="form-control" 
-                            placeholder="Masukkan nama pemilik rekening bank" value="{{ @$kye->bank_account_name ?? '' }}">
+                            placeholder="Masukkan nama pemilik rekening bank" value="{{ @$kye->bank_account_name ?? old('bank_account_name') }}">
                     </div>
 
                     <div class="form-group">
                         <label for="bank_name"><i class="fas fa-money-check-alt"></i> Nama Bank</label>
                         <input type="text" name="bank_name" id="bank_name" class="form-control" 
-                            placeholder="Masukkan nama bank" value="{{ @$kye->bank_name ?? '' }}">
+                            placeholder="Masukkan nama bank" value="{{ @$kye->bank_name ?? old('bank_name') }}">
                     </div>
 
                     <div class="form-group">
                         <label for="account_number"><i class="fas fa-credit-card"></i> No. Rekening</label>
                         <input type="text" name="account_number" id="account_number" class="form-control" 
-                            placeholder="Masukkan nomor rekening" value="{{ @$kye->account_number ?? '' }}">
+                            placeholder="Masukkan nomor rekening" value="{{ @$kye->account_number ?? old('account_number') }}">
                     </div>
                 </div>
             </div>
