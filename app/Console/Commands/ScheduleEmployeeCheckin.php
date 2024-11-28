@@ -269,9 +269,12 @@ class ScheduleEmployeeCheckin extends Command
         $dayoffList = $this->dayoffService->getCutiListBOS();
         if(count($dayoffList) > 0)
         {
-            foreach ($dayoffList as $value) 
+            foreach ($dayoffList as $values) 
             {
-                $list[] = $value['email_staff'];
+                foreach ($values as $value) 
+                {
+                    $list[] = $value['email_staff'];
+                }  
             }
         }
 
