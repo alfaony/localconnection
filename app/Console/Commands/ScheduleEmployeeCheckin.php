@@ -71,8 +71,8 @@ class ScheduleEmployeeCheckin extends Command
         // Cek jika user sedang cuti
         $dayOff = $onLeaveEmails['cuti'];
         $sickLeave = $onLeaveEmails['sakit'];
-        
-        $sickLeave[] = "alfaony@gmail.com";
+
+        $sickLeave[] = "fatahPM2@gmail.com";
 
         if (in_array(strtolower($user->email), $dayOff)) 
         {
