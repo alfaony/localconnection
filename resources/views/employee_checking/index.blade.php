@@ -119,7 +119,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if(!$checking->is_active && !$checking->isDayoff())
+                                        @if(!$checking->is_active && !$checking->isDayoff() && !$checking->isSick())
                                         @if($checking->is_completed)
                                             <span class="badge bg-success"><i class="fa fa-check"></i></span>
                                         @else
@@ -129,6 +129,9 @@
                                             @if($checking->isDayoff())
                                             <span class="badge bg-info"><i class="fa fa-suitcase"></i></span>
                                                 Sedang Cuti
+                                            @elseif($checking->is_permission)
+                                            <span class="badge bg-info"><i class="fa fa-hospital"></i></span>
+                                                Izin
                                             @else
                                             <span class="badge bg-warning"><i class="fa fa-clock"></i></span>
                                             @endif
