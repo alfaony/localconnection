@@ -72,7 +72,7 @@ class ScheduleEmployeeCheckin extends Command
         $dayOff = $onLeaveEmails['cuti'];
         $sickLeave = $onLeaveEmails['sakit'];
 
-        $sickLeave[] = strtolower("fatahPM2@gmail.com");
+        // $sickLeave[] = strtolower("fatahPM2@gmail.com");
 
         if (in_array(strtolower($user->email), $dayOff)) 
         {
