@@ -134,20 +134,20 @@ class InvoiceController extends Controller
             }
 
 
-            if($request->reference)
-            {
-                $invoiceRef = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
-                if($invoiceRef)
-                {
-                    return redirect()->back()->with('Reference',true);
-                }
+            // if($request->reference)
+            // {
+            //     $invoiceRef = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
+            //     if($invoiceRef)
+            //     {
+            //         return redirect()->back()->with('Reference',true);
+            //     }
 
-                $checkRef = $this->xeroService->findReferenceInvoice($request->reference);
-                if($checkRef == false)
-                {
-                    return redirect()->back()->with('Reference',true);
-                }
-            }
+            //     $checkRef = $this->xeroService->findReferenceInvoice($request->reference);
+            //     if($checkRef == false)
+            //     {
+            //         return redirect()->back()->with('Reference',true);
+            //     }
+            // }
 
             $date = Carbon::now()->format('m/Y');
             $invoiceNumber = Invoice::byCompany(Auth::user()->company_id)->withTrashed()->max('invoice_number') + 1;
@@ -333,20 +333,20 @@ class InvoiceController extends Controller
                 }
             }
 
-            if($request->reference != $invoice->reference)
-            {
-                $invoiceCheckRef = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
-                if($invoiceCheckRef)
-                {
-                    return redirect()->back()->with('Reference',true);
-                }
+            // if($request->reference != $invoice->reference)
+            // {
+            //     $invoiceCheckRef = Invoice::byCompany(Auth::user()->company_id)->where('reference',$request->reference)->first();
+            //     if($invoiceCheckRef)
+            //     {
+            //         return redirect()->back()->with('Reference',true);
+            //     }
 
-                $checkRef = $this->xeroService->findReferenceInvoice($request->reference);
-                if($checkRef == false)
-                {
-                    return redirect()->back()->with('Reference',true);
-                }
-            }
+            //     $checkRef = $this->xeroService->findReferenceInvoice($request->reference);
+            //     if($checkRef == false)
+            //     {
+            //         return redirect()->back()->with('Reference',true);
+            //     }
+            // }
             
             $bast = Bast::byCompany(Auth::user()->company_id)->where('id',$request->post('bast'))->firstOrFail();
             $quote = Quote::byCompany(Auth::user()->company_id)->where('id',$bast->project->workOrder->quote_id)->firstOrFail();

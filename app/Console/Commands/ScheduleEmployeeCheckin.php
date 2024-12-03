@@ -239,7 +239,7 @@ class ScheduleEmployeeCheckin extends Command
             $restEnd = Carbon::createFromTimeString($customRestTime['end']);
         } else {
             $restStart = Carbon::createFromTimeString($user->rest_time ?? '12:00');
-            $restEnd = $restStart->copy()->addHour();
+            $restEnd = Carbon::createFromTimeString($user->end_rest_time ?? '13:00');
         }
 
         do {
