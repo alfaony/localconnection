@@ -123,6 +123,7 @@
             </div>
         </div>
 
+        @if($kye->isEdit())
         @canAccess('approvement','kyes')
         <form action="{{ route('kye.approvement', $kye->id) }}" method="POST" class="mt-3">
         @csrf
@@ -135,14 +136,9 @@
                     <div class="form-group">
                         <label for="approval_status"><i class="fas fa-clipboard-check"></i> Approval Status</label>
                         <select name="status" id="approval_status" class="form-control" required>
-                            <option value="pending"
-                                {{ isset($kye) && $kye->approval_status === 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="approved"
-                                {{ isset($kye) && $kye->approval_status === 'approved' ? 'selected' : '' }}>Approved
-                            </option>
-                            <option value="rejected"
-                                {{ isset($kye) && $kye->approval_status === 'rejected' ? 'selected' : '' }}>Rejected
-                            </option>
+                            @foreach($status as $key => $value)
+                            <option value="{{ $key }}"  {{ isset($kye) && $kye->approval_status === $key ? 'selected' : '' }}>{{ $value }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -158,16 +154,20 @@
             </div>
         </form>
         @endcanAccess
+        @endif
+
 
         <div class="text-center mt-4">
             <a href="{{ route('kye.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
 
+            @if($kye->isEdit())
             @canAccess('update','kyes')
             <a href="{{ route('kye.edit', $kye->id) }}" class="btn btn-outline-warning">
                 <i class="fas fa-edit"></i> Edit
             </a>
             @endcanAccess
+            @endif
         </div>
 @stop
