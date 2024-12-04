@@ -68,7 +68,7 @@ class Invoice extends Model
     // Relasi ke model User
     public function userCreate(): BelongsTo
     {
-        return $this->belongsTo(User::class,'user_created_id');
+        return $this->belongsTo(User::class,'user_created_id')->withTrashed();
     }
 
     // Relasi ke model BAST

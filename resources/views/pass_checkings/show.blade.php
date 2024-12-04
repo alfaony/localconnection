@@ -1,15 +1,15 @@
 @extends('adminlte::page')
 
-@section('title', 'Show Pass Checkings')
+@section('title', 'Show Pass Check-In')
 
 @section('content_header')
-    <h1>Pass Checkings {{ $passChecking->name }}</h1>
+    <h1>Pass Check-In {{ $passChecking->name }}</h1>
 @endsection
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h5 class="card-title">Pass Checking Details</h5>
+        <h5 class="card-title">Pass Check-In Details</h5>
     </div>
     <div class="card-body">
         <div class="mb-3">

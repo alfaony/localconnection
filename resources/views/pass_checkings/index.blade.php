@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Pass Checkings')
+@section('title', 'Pass Check-In')
 
 @section('content_header')
-    <h1>Pass Checkings</h1>
+    <h1>Pass Check-In</h1>
 @endsection
 
 @section('content')
@@ -25,7 +25,7 @@
                 @method('PUT')
             @endif
 
-            <h5>{{ @$editing ? 'Edit Pass Checking' : 'Create Pass Checking' }}</h5>
+            <h5>{{ @$editing ? 'Edit Pass Check-In' : 'Create Pass Check-In' }}</h5>
             
             <div class="mb-3">
                 <label for="name" class="form-label">Agenda</label>
@@ -59,7 +59,7 @@
                     id="start_time" 
                     class="form-control" 
                     value="{{ old('start_time', Carbon\Carbon::parse(@$editing->start_time)->format('H:i') ??  '') }}" 
-                    min="{{ @$editing ? Carbon\Carbon::parse(@$editing->start_time)->format('H:i') : date('H:i') }}"
+
                     @if(@$editing) {{ !@$editing->isDeleted() ? 'readonly' : 'required' }} @else {{'required'}}  @endif
                 >
             </div>
@@ -72,36 +72,36 @@
                     id="end_time" 
                     class="form-control" 
                     value="{{ old('end_time', Carbon\Carbon::parse(@$editing->end_time)->format('H:i') ??  '') }}" 
-                    min="{{ @$editing ? Carbon\Carbon::parse(@$editing->end_time)->format('H:i') : date('H:i') }}"
+
                     @if(@$editing) {{ !@$editing->isDeleted() ? 'readonly' : 'required' }} @else {{'required'}}  @endif
                 >
             </div>
 
             @if(@$editing && !empty(@$editing->pictures))
-    <div class="mb-3">
-        <label class="form-label">Existing Pictures</label>
-        <div class="d-flex flex-wrap gap-2" id="pictures-container">
-            @foreach(@$editing->pictures as $key => $picture)
-                <div class="position-relative" id="picture-{{ $key }}">
-                    <img src="{{ $picture }}" alt="Picture" class="img-thumbnail" width="100px">
-                    <button 
-                        type="button" 
-                        class="btn btn-danger-custom btn-sm position-absolute top-0 end-0" 
-                        onclick="deletePicture('{{ $key }}', '{{ $picture }}')"
-                        style="border-radius: 50%;"
-                    >
-                        <i class="fa fa-trash"></i>
-                    </button>
+                <div class="mb-3">
+                    <label class="form-label">Existing Pictures</label>
+                    <div class="d-flex flex-wrap gap-2" id="pictures-container">
+                        @foreach(@$editing->pictures as $key => $picture)
+                            <div class="position-relative" id="picture-{{ $key }}">
+                                <img src="{{ $picture }}" alt="Picture" class="img-thumbnail" width="100px">
+                                <button 
+                                    type="button" 
+                                    class="btn btn-danger-custom btn-sm position-absolute top-0 end-0" 
+                                    onclick="deletePicture('{{ $key }}', '{{ $picture }}')"
+                                    style="border-radius: 50%;"
+                                >
+                                    <i class="fa fa-trash"></i>
+                                </button>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
-            @endforeach
-        </div>
-    </div>
-@endif
+            @endif
 
-<!-- Input untuk menyimpan daftar gambar yang dihapus -->
-<input type="hidden" name="delete_pictures" id="delete_pictures">
+            <!-- Input untuk menyimpan daftar gambar yang dihapus -->
+            <input type="hidden" name="delete_pictures" id="delete_pictures">
             <div class="mb-3">
-                <label for="pictures" class="form-label">Upload Pictures</label>
+                <label for="pictures" class="form-label">Unggah Pictures</label>
                 <input 
                     type="file" 
                     name="pictures[]" 
@@ -195,6 +195,34 @@
 </div>
 @endsection
 @section('js')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateField = document.getElementById('date');
+        const startTimeField = document.getElementById('start_time');
+        const endTimeField = document.getElementById('end_time');
+
+        const setMinTime = () => {
+            const currentDate = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const currentTime = now.toTimeString().split(':').slice(0, 2).join(':');
+
+            if (dateField.value === currentDate) {
+                startTimeField.min = currentTime;
+                endTimeField.min = startTimeField.value || currentTime;
+            } else {
+                startTimeField.min = '';
+                endTimeField.min = startTimeField.value || '';
+            }
+        };
+
+        dateField.addEventListener('change', setMinTime);
+        startTimeField.addEventListener('input', () => {
+            endTimeField.min = startTimeField.value;
+        });
+
+        setMinTime();
+    });
+</script>
 <script>
     let deletedPictures = []; // Array untuk menyimpan gambar yang dihapus
     
