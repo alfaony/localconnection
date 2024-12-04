@@ -180,18 +180,21 @@ class XeroWebhookController extends Controller
                 if($invoiceId)
                 {           
                     $invoice = Invoice::where('invoice_xero_id', $invoiceId)->first(); 
-                    $this->xeroBos->setCompanyPublic($invoice->userCreate->company_id);
-                    $xeroInvoice = $this->xeroBos->get('Invoices/'.$invoiceId);
-
-                    if($xeroInvoice['body']['Invoices'] && $invoice)
+                    if($invoice)
                     {
-                        $xeroInvoice = $xeroInvoice['body']['Invoices'][0];
-                        if($xeroInvoice['Status'] == ParamSchema::DELETE)
+                        $this->xeroBos->setCompanyPublic($invoice->userCreate->company_id);
+                        $xeroInvoice = $this->xeroBos->get('Invoices/'.$invoiceId);
+    
+                        if($xeroInvoice['body']['Invoices'] && $invoice)
                         {
-                            $this->deleteInvoice($invoice, $xeroInvoice);
-                        }else
-                        {
-                            $this->updateInvoiceFromXero($invoiceId);
+                            $xeroInvoice = $xeroInvoice['body']['Invoices'][0];
+                            if($xeroInvoice['Status'] == ParamSchema::DELETE)
+                            {
+                                $this->deleteInvoice($invoice, $xeroInvoice);
+                            }else
+                            {
+                                $this->updateInvoiceFromXero($invoiceId);
+                            }
                         }
                     }
                 }
