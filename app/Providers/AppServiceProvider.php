@@ -70,6 +70,7 @@ class AppServiceProvider extends ServiceProvider
             $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
             $managementCompanyMenu = 
             [
+                'kyes',
                 'national_holidays',
                 'employee_checkings',
                 'letter_submissions',
@@ -370,7 +371,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Invoice',
                     'route' => 'invoice.index',
                     'icon' => 'fa fa-file-invoice',
-                ]
+                ],
+                'kyes' => [
+                    'text' => 'Know Your Employee (KYE)',
+                    'route' => 'kye.index',
+                    'icon' => 'fa fa-id-card',
+                ],
             ];
 
             foreach ($listMenu as $role) 

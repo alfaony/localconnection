@@ -150,13 +150,18 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="google_maps"><i class="fas fa-map-marker-alt"></i> Shareloc Google Maps Rumah</label>
-                        <div class="input-group">
+                    <label for="google_maps"><i class="fas fa-map-marker-alt"></i> Shareloc Google Maps Rumah</label>
+                        <div class="input-group mb-3">
                             <input type="text" name="google_maps" id="google_maps" class="form-control"
-                                placeholder="Masukkan lokasi" value="{{ @$kye->google_maps ?? old('google_maps') }}">
+                                placeholder="Masukkan lokasi atau koordinat (latitude,longitude)" 
+                                value="{{ @$kye->google_maps ?? old('google_maps') }}">
                             <button type="button" class="btn btn-outline-secondary" onclick="fetchLocation()">
                                 <i class="fas fa-map-marker-alt"></i> Ambil Lokasi
                             </button>
+                        </div>
+                        <div id="map-preview" class="mt-3" style="display: none;">
+                            <iframe id="google-maps-iframe" width="100%" height="300" frameborder="0" style="border:0"
+                                src="" allowfullscreen></iframe>
                         </div>
                     </div>
 
@@ -402,22 +407,57 @@ function closeModal() {
         cameraModal.remove();
     }
 }
+    // Function to fetch the user's current location (geolocation API)
+ // Fetch the user's current location
+ function fetchLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const location = `${lat},${lng}`;
 
-function fetchLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            position => {
-                const {
-                    latitude,
-                    longitude
-                } = position.coords;
-                document.getElementById('google_maps').value = `${latitude},${longitude}`;
-            },
-            error => alert('Lokasi tidak ditemukan: ' + error.message)
-        );
-    } else {
-        alert('Browser tidak mendukung geolocation.');
-    }
-}
+                        // Fill the input field with the fetched location
+                        document.getElementById('google_maps').value = location;
+
+                        // Show the Google Maps preview
+                        showMapPreview(location);
+                    },
+                    (error) => {
+                        alert('Tidak dapat mengambil lokasi. Silakan coba lagi.');
+                    }
+                );
+            } else {
+                alert('Geolocation tidak didukung di browser ini.');
+            }
+        }
+
+        // Function to update the map preview iframe
+        function showMapPreview(location) {
+            const mapPreview = document.getElementById('map-preview');
+            const mapIframe = document.getElementById('google-maps-iframe');
+
+            // Update iframe source
+            mapIframe.src = `https://www.google.com/maps?q=${location}&output=embed`;
+
+            // Display the map preview container
+            mapPreview.style.display = 'block';
+        }
+
+        // Event listener to update map preview on manual input change
+        document.getElementById('google_maps').addEventListener('input', function () {
+            const location = this.value;
+            if (location.includes(',')) {
+                showMapPreview(location);
+            }
+        });
+
+        // Show map preview if input is already filled (e.g., for editing existing data)
+        window.onload = function () {
+            const googleMapsInput = document.getElementById('google_maps').value;
+            if (googleMapsInput.includes(',')) {
+                showMapPreview(googleMapsInput);
+            }
+        };
 </script>
 @stop
