@@ -72,7 +72,7 @@ class ReportProject extends Model
     
     public function reportProjectDetail()
     {
-        return $this->hasMany(ReportProjectDetail::class);
+        return $this->hasMany(ReportProjectDetail::class)->orderBy('order');
     }
 
     public function reportedDetails()

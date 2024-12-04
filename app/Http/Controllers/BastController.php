@@ -629,16 +629,20 @@ class BastController extends Controller
 
             // Merge the collected PDF files
             foreach ($pdfFiles as $pdfFile) {
-                $pageCount = $mergedPdf->setSourceFile($pdfFile);
-
-                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                    $templateId = $mergedPdf->importPage($pageNo);
-                    $size = $mergedPdf->getTemplateSize($templateId);
-
-                    $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                    $mergedPdf->useTemplate($templateId);
+                try {
+                    $pageCount = $mergedPdf->setSourceFile($pdfFile);
+                    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                        $templateId = $mergedPdf->importPage($pageNo);
+                        $size = $mergedPdf->getTemplateSize($templateId);
+                        $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                        $mergedPdf->useTemplate($templateId);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error("Error processing file {$pdfFile}: " . $e->getMessage());
+                    continue; // Skip this file
                 }
             }
+            
 
             // Create the final merged PDF path
             $finalFileName = 'merged_' . str_replace('/', '_', $bast->number_result) . '.pdf';
@@ -657,6 +661,7 @@ class BastController extends Controller
             return true;
         } catch (\Exception $e) {
             \Log::error('Error in merging PDF files: ' . $e->getMessage());
+            // dd($e);
             return false;
         }
     }
