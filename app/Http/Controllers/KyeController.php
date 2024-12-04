@@ -64,12 +64,28 @@ class KyeController extends Controller
             $data['approval_status'] = 'pending';
             $kye = Kye::create($data);
             
+            $user = User::findOrFail($kye->user_id);
             if($request->ktp_photo) 
             {
-                $user = User::findOrFail($kye->user_id);
                 $user->id_card_image = $data['ktp_photo'];
-                $user->save(); 
             }
+
+            if($request->address) 
+            {
+                $user->address = $data['address'];
+            }
+
+            if($request->npwp_number) 
+            {
+                $user->npwp_number = $data['npwp_number'];
+            }
+
+            if($request->npwp_number) 
+            {
+                $user->npwp_number = $data['npwp_number'];
+            }
+            
+            $user->save(); 
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil ditambahkan.');
         } catch (\Throwable $th) {
             //throw $th;
@@ -81,6 +97,10 @@ class KyeController extends Controller
     public function edit($id)
     {
         $kye = KYE::findOrFail($id);
+        if(!$kye->isEdit())
+        {
+            return redirect()->route('kye.show',$kye->id)->with('error', 'KYE Tidak dapat di Ubah.');
+        }
         return view('kye.createOrEdit', compact('kye'));
     }
     
@@ -90,7 +110,9 @@ class KyeController extends Controller
     public function show($id)
     {
         $kye = KYE::findOrFail($id);
-        return view('kye.show', compact('kye'));
+        $status = config('custom.status_kye');
+
+        return view('kye.show', compact('kye','status'));
     }
 
     // Update KYE Data
@@ -167,8 +189,32 @@ class KyeController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('kye.show', $kye)->with('error', 'Terjadi kesalahan saat mengubah status.');
         }
-    }
+    }   
 
+    //**Verivy Email */
+    public function verifyemail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $email = $request->input('email');
+        $currentUserId = $request->input('current_user_id');
+
+        // Cek apakah email sudah digunakan oleh user lain
+        $exists = Kye::where('email', $email)->byCompany(Auth::user()->company_id)
+            ->when($currentUserId, function ($query) use ($currentUserId) {
+                $query->where('id', '!=', $currentUserId);
+            })
+            ->exists();
+
+        if ($exists) 
+        {
+            return response()->json(['message' => 'Email sudah digunakan.'], 422);
+        }
+
+        return response()->json(['message' => 'Email tersedia.'], 200);
+    }
     protected function saveBase64ImageToStorage($base64Image, $folder)
     {
         $fileName = uniqid() . '.png';

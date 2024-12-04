@@ -67,19 +67,12 @@ class Kye extends Model
 
     public function isEdit()
     {
-        if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN)
+        if($this->approval_status != 'approved')
         {
-            
-            return true;   
+            return true;
         }else
         {
-            if($this->approval_status != 'approved')
-            {
-                return $this->user_id == Auth::user()->id ? true : false;
-            }else
-            {
-                return false;
-            }
+            return false;
         }
     }
 

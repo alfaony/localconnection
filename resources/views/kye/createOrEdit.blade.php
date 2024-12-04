@@ -206,7 +206,10 @@
                     <div class="form-group">
                         <label for="email"><i class="fas fa-envelope"></i> Email</label>
                         <input type="email" name="email" id="email" class="form-control" 
-                            placeholder="Masukkan email" value="{{ @$kye->email ?? old('email') }}" required>
+                            placeholder="Masukkan email" value="{{ @$kye->email ?? old('email') }}" required
+                            oninput="verifyEmail(this.value)">
+                        <input type="hidden" id="current_user_id" value="{{ @$kye->id }}">
+                        <small id="email-error" class="text-danger d-none"></small>
                     </div>
 
                     <div class="form-group">
@@ -305,6 +308,52 @@
     });
 </script>
 @endif
+@canAccess('verifyemail','kyes')
+<script>
+    function verifyEmail(email) {
+    const currentUserId = document.getElementById('current_user_id').value;
+    const emailErrorElement = document.getElementById('email-error');
+
+    // Lakukan request ke server untuk validasi email
+    if (email) {
+        $.ajax({
+            url: '{{ route('kye.verify.email') }}', // URL endpoint untuk validasi
+            method: 'POST',
+            data: {
+                email: email,
+                current_user_id: currentUserId,
+                _token: '{{ csrf_token() }}',
+            },
+            success: function (response) {
+                // Jika validasi berhasil, sembunyikan pesan error
+                console.log(response);
+                
+                emailErrorElement.textContent = '';
+                emailErrorElement.classList.add('d-none');
+            },
+            error: function (xhr) {
+                // Jika validasi gagal, tampilkan pesan error
+                console.log(xhr);
+
+                const response = xhr.responseJSON;
+                if (response && response.message) {
+                    emailErrorElement.textContent = response.message;
+                    emailErrorElement.classList.remove('d-none');
+                }
+            }
+        });
+    }
+}
+
+$('form').on('submit', function (e) {
+    const emailErrorElement = document.getElementById('email-error');
+    if (!emailErrorElement.classList.contains('d-none')) {
+        e.preventDefault();
+        alert('Harap perbaiki email sebelum menyimpan.');
+    }
+});
+</script>
+@endcanAccess
 <script>
 let currentStream;
 
