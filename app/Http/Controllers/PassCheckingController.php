@@ -56,6 +56,22 @@ class PassCheckingController extends Controller
             'pictures.*.max' => 'Ukuran gambar tidak boleh lebih dari 2 MB.',
         ]);
         
+        // Cek overlap jadwal pada hari yang sama
+        $existingSchedules = PassChecking::where('date', $request->date)->where('user_id', Auth::user()->id)
+        ->where(function ($query) use ($request) {
+            $query->whereBetween('start_time', [$request->start_time, $request->end_time])
+                ->orWhereBetween('end_time', [$request->start_time, $request->end_time])
+                ->orWhere(function ($query) use ($request) {
+                    $query->where('start_time', '<=', $request->start_time)
+                        ->where('end_time', '>=', $request->end_time);
+                });
+        })
+        ->exists();
+
+        if ($existingSchedules) {
+            return redirect()->back()->withErrors(['start_time' => 'Waktu yang dipilih bertabrakan dengan jadwal lain pada hari yang sama.'])->withInput();
+        }
+
         $pictures = [];
         if ($request->hasFile('pictures')) {
             foreach ($request->file('pictures') as $file) {
@@ -78,6 +94,21 @@ class PassCheckingController extends Controller
 
     public function update(Request $request, $id)
     {
+        $existingSchedules = PassChecking::where('id', '!=', $id)->where('date', $request->date)->where('user_id', Auth::user()->id)
+        ->where(function ($query) use ($request) {
+            $query->whereBetween('start_time', [$request->start_time, $request->end_time])
+                ->orWhereBetween('end_time', [$request->start_time, $request->end_time])
+                ->orWhere(function ($query) use ($request) {
+                    $query->where('start_time', '<=', $request->start_time)
+                        ->where('end_time', '>=', $request->end_time);
+                });
+        })
+        ->exists();
+
+        if ($existingSchedules) {
+            return redirect()->back()->withErrors(['start_time' => 'Waktu yang dipilih bertabrakan dengan jadwal lain pada hari yang sama.'])->withInput();
+        }
+
         $passChecking = PassChecking::findOrFail($id);
         // Get the current pictures (ensure it's an array)
         $pictures = $passChecking->pictures ?? [];
