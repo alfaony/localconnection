@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kye;
+use App\Models\User;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\KyeRequest;
@@ -61,7 +63,13 @@ class KyeController extends Controller
             $data['user_id'] = Auth::user()->id;
             $data['approval_status'] = 'pending';
             $kye = Kye::create($data);
-    
+            
+            if($request->ktp_photo) 
+            {
+                $user = User::findOrFail($kye->user_id);
+                $user->id_card_image = $data['ktp_photo'];
+                $user->save(); 
+            }
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil ditambahkan.');
         } catch (\Throwable $th) {
             //throw $th;
@@ -112,6 +120,13 @@ class KyeController extends Controller
                 ? $this->saveBase64ImageToStorage($request->house_photo, 'house_photos')
                 : $kye->house_photo;
 
+            if($request->ktp_photo) 
+            {
+                $user = User::findOrFail($kye->user_id);
+                $user->id_card_image = $data['ktp_photo'];
+                $user->save(); 
+            }
+            
             // Update data ke database
             $data['approval_status'] = 'pending';
 
@@ -119,6 +134,7 @@ class KyeController extends Controller
 
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil diperbarui.');
         } catch (\Throwable $th) {
+            // dd($th);
             // Log error untuk debugging
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui data KYE.');
         }
