@@ -79,7 +79,7 @@ class Kye extends Model
     // Relationship with User model
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function scopeByCompany($query,$companyId)
