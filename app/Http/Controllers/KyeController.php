@@ -67,7 +67,8 @@ class KyeController extends Controller
             
             if ($request->skck) 
             {
-                $data['skck'] = $request->file('skck')->store('skck_files');
+                $data['skck'] = 'skck_files/' . uniqid() . '.' . $request->file('skck')->extension();
+                Storage::put('public/' . $data['skck'], file_get_contents($request->file('skck')->getRealPath()));
             }
 
             $data['user_id'] = Auth::user()->id;
@@ -157,6 +158,16 @@ class KyeController extends Controller
             $data['house_photo'] = $request->house_photo
                 ? $this->saveBase64ImageToStorage($request->house_photo, 'house_photos')
                 : $kye->house_photo;
+            if ($request->skck) 
+            {
+                if (isset($kye->skck)) 
+                {
+                    Storage::delete('public/' . $kye->skck);
+                }
+                
+                $data['skck'] = 'skck_files/' . uniqid() . '.' . $request->file('skck')->extension();
+                Storage::put('public/' . $data['skck'], file_get_contents($request->file('skck')->getRealPath()));
+            }
 
             $user = User::findOrFail($kye->user_id);
             // Update data ke database
@@ -190,10 +201,6 @@ class KyeController extends Controller
             }
             $user->save(); 
             
-            if ($request->skck) 
-            {
-                $data['skck'] = $request->file('skck')->store('skck_files');
-            }
             
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil diperbarui.');
         } catch (\Throwable $th) {
