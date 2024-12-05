@@ -4,11 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Kye;
 use App\Models\User;
+use App\Models\SettingCompany;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Requests\KyeRequest;
 use Illuminate\Support\Facades\Storage;
+
+use App\Http\Requests\KyeRequest;
+use App\Schemas\RoleSchema;
+
+use App\Helpers\InboxHelper;
+use App\Helpers\EmailNotifHelper;
 class KyeController extends Controller
 {
     // Show Create Form
@@ -201,7 +207,8 @@ class KyeController extends Controller
             }
             $user->save(); 
             
-            
+            $this->sendNotification($kye, 'update', Auth::user()->company_id);
+
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil diperbarui.');
         } catch (\Throwable $th) {
             // dd($th);
@@ -233,8 +240,12 @@ class KyeController extends Controller
                 ? 'Aktivasi berhasil disetujui.' 
                 : 'Aktivasi berhasil ditolak.';
 
+            $approvement = $request->status === 'approved' ? 'approve' : 'notapprove';
+            $this->sendNotification($kye, $approvement, Auth::user()->company_id,true,$request->approval_note);
+
             return redirect()->route('kye.show', $kye)->with('success', $message);
         } catch (\Exception $e) {
+            dd($e);
             return redirect()->route('kye.show', $kye)->with('error', 'Terjadi kesalahan saat mengubah status.');
         }
     }   
@@ -277,13 +288,13 @@ class KyeController extends Controller
         return $filePath; // Return the file path as is
     }
 
-    private function sendNotification($reportProject, $timeNotify, $companyId, $approval = null,  $notes = null)
+    private function sendNotification($kye, $timeNotify, $companyId, $approval = null,  $notes = null)
     {
         $data = [
-            'work_order' => $reportProject->workOrder->number_result,
-            'project' => $reportProject->project->title,
-            'user_create' => $reportProject->userCreate->name,
-            'created_at' => Carbon::parse($reportProject->created_at)->format('d-m-Y'),
+            'full_name' => $kye->full_name,
+            'birth_place' => $kye->birth_place,
+            'birth_date' => $kye->birth_date,
+            'address' => $kye->address,
             'notes' => $notes
         ];
         
@@ -314,9 +325,9 @@ class KyeController extends Controller
             if($lead) $toEmails[] = $lead->email;
         }else
         {
-            $toEmails[] = $reportProject->userCreate->email;
-            $toUserId[] = $reportProject->userCreate->id;
-            $toNames[] = $reportProject->userCreate->name;
+            $toEmails[] = $kye->user->email;
+            $toUserId[] = $kye->user->id;
+            $toNames[] = $kye->user->name;
             $ccEmails = [Auth::user()->email];
         }
 
@@ -324,34 +335,34 @@ class KyeController extends Controller
         $fromEmail = $smtpConfig['username'] ?? '';
         $fromName = $smtpConfig['name'] ?? '';
 
-        $directUrl = route('report-project.show', $reportProject->slug);
+        $directUrl = route('kye.show', $kye->id);
         $data['url'] = $directUrl;
 
         switch ($timeNotify) 
         {
             case "store":
-                $subject = 'Laporan Proyek Baru untuk Persetujuan';
-                $tamplate = 'email.notif_create_report_project';
+                $subject = 'Penganjuan KYE Baru untuk Persetujuan';
+                $tamplate = 'email.notif_create_kye';
 
                 $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
 
             case "update":
-                $subject = 'Notifikasi Pembaruan Laporan Proyek – Revisi Telah Diupload';
-                $tamplate = 'email.notif_create_report_project';
+                $subject = 'Pembaruan KYE telah di Revisi';
+                $tamplate = 'email.notif_create_kye';
 
                 $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
 
             case "approve":
-                $subject = 'Anggaran '.$budget->name.' Disetujui';
-                $tamplate = 'email.notif_budget_approval';
+                $subject = 'Pengajuan KYE telah disetujui';
+                $tamplate = 'email.notif_approve_kye';
                 $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
 
             case "notapprove":
-                $subject = 'Laporan Proyek – Revisi Diperlukan';
-                $tamplate = 'email.notif_decline_report_project';
+                $subject = 'Pengajuan KYE telah ditolak';
+                $tamplate = 'email.notif_declined_kye';
 
                 $this->sentInbox($toUserId,$subject, $directUrl);
                 break;
@@ -359,6 +370,7 @@ class KyeController extends Controller
 
         $data['title'] = $subject;
         
+        // dd($ccEmails);
         // Email Helper Notification
          EmailNotifHelper::sentEmail(
             $fromEmail,
