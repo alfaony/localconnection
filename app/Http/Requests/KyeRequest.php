@@ -26,7 +26,7 @@ class KyeRequest extends FormRequest
             'birth_place' => 'required|string|max:255',
             'birth_date' => 'required|date',
             'address' => 'required|string',
-            'ktp_number' => 'required|string|max:16',
+            'ktp_number' => 'required|string|max:20',
             'npwp_number' => 'nullable|string|max:20',
             'google_maps' => 'nullable|string|max:255',
             'phone_number' => 'required|string|max:20',

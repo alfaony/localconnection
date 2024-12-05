@@ -60,11 +60,27 @@ class KyeController extends Controller
                 $data['house_photo'] = $this->saveBase64ImageToStorage($request->house_photo, 'house_photos');
             }
             
+            if ($request->skck) 
+            {
+                $data['skck'] = $request->file('skck')->store('skck_files');
+            }
+            
+            if ($request->skck) 
+            {
+                $data['skck'] = $request->file('skck')->store('skck_files');
+            }
+
             $data['user_id'] = Auth::user()->id;
             $data['approval_status'] = 'pending';
             $kye = Kye::create($data);
             
             $user = User::findOrFail($kye->user_id);
+
+            if($request->ktp_number)
+            {
+                $user->id_card = $data['ktp_number'];
+            }
+            
             if($request->ktp_photo) 
             {
                 $user->id_card_image = $data['ktp_photo'];
@@ -142,18 +158,43 @@ class KyeController extends Controller
                 ? $this->saveBase64ImageToStorage($request->house_photo, 'house_photos')
                 : $kye->house_photo;
 
-            if($request->ktp_photo) 
-            {
-                $user = User::findOrFail($kye->user_id);
-                $user->id_card_image = $data['ktp_photo'];
-                $user->save(); 
-            }
-            
+            $user = User::findOrFail($kye->user_id);
             // Update data ke database
             $data['approval_status'] = 'pending';
-
+            
             $kye->update($data);
+            
+            if($request->ktp_number)
+            {
+                $user->id_card = $data['ktp_number'];
+            }
+            
+            if($request->ktp_photo) 
+            {
+                $user->id_card_image = $data['ktp_photo'];
+            }
 
+            if($request->address) 
+            {
+                $user->address = $data['address'];
+            }
+
+            if($request->npwp_number) 
+            {
+                $user->npwp_number = $data['npwp_number'];
+            }
+
+            if($request->npwp_number) 
+            {
+                $user->npwp_number = $data['npwp_number'];
+            }
+            $user->save(); 
+            
+            if ($request->skck) 
+            {
+                $data['skck'] = $request->file('skck')->store('skck_files');
+            }
+            
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil diperbarui.');
         } catch (\Throwable $th) {
             // dd($th);
@@ -227,6 +268,119 @@ class KyeController extends Controller
         Storage::put("public/$filePath", $imageData);
 
         return $filePath; // Return the file path as is
+    }
+
+    private function sendNotification($reportProject, $timeNotify, $companyId, $approval = null,  $notes = null)
+    {
+        $data = [
+            'work_order' => $reportProject->workOrder->number_result,
+            'project' => $reportProject->project->title,
+            'user_create' => $reportProject->userCreate->name,
+            'created_at' => Carbon::parse($reportProject->created_at)->format('d-m-Y'),
+            'notes' => $notes
+        ];
+        
+        $toEmails = [];
+        $toUserId = [];
+        $toNames = [];
+        
+        if(!$approval)
+        {
+            $ccEmails = [Auth::user()->email];
+            $usersAdmin = User::where('company_id',Auth::user()->company_id)->whereHas('role', function($q){
+                $q->where('name',RoleSchema::ADMIN);
+            })->get();
+
+            if($usersAdmin->isEmpty())
+            {
+                return false;
+            }
+
+            $lead = User::byCompany(Auth::user()->company_id)->where('id',Auth::user()->approvement_user_id)->first();
+            foreach ($usersAdmin as $user) 
+            {
+                $toEmails[] = $user->email;
+                $toUserId[] = $user->id;
+                $toNames[] = $user->name;
+            }
+
+            if($lead) $toEmails[] = $lead->email;
+        }else
+        {
+            $toEmails[] = $reportProject->userCreate->email;
+            $toUserId[] = $reportProject->userCreate->id;
+            $toNames[] = $reportProject->userCreate->name;
+            $ccEmails = [Auth::user()->email];
+        }
+
+        $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $fromEmail = $smtpConfig['username'] ?? '';
+        $fromName = $smtpConfig['name'] ?? '';
+
+        $directUrl = route('report-project.show', $reportProject->slug);
+        $data['url'] = $directUrl;
+
+        switch ($timeNotify) 
+        {
+            case "store":
+                $subject = 'Laporan Proyek Baru untuk Persetujuan';
+                $tamplate = 'email.notif_create_report_project';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "update":
+                $subject = 'Notifikasi Pembaruan Laporan Proyek – Revisi Telah Diupload';
+                $tamplate = 'email.notif_create_report_project';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "approve":
+                $subject = 'Anggaran '.$budget->name.' Disetujui';
+                $tamplate = 'email.notif_budget_approval';
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+
+            case "notapprove":
+                $subject = 'Laporan Proyek – Revisi Diperlukan';
+                $tamplate = 'email.notif_decline_report_project';
+
+                $this->sentInbox($toUserId,$subject, $directUrl);
+                break;
+        }
+
+        $data['title'] = $subject;
+        
+        // Email Helper Notification
+         EmailNotifHelper::sentEmail(
+            $fromEmail,
+            $fromName,
+            $toEmails, 
+            $toNames, 
+            $subject,
+            $tamplate,
+            $data, 
+            $smtpConfig, 
+            $companyId, 
+            $ccEmails
+        );
+    }
+
+    private function sentInbox($to,$message,$directUrl)
+    {
+        foreach ($to as $key => $value) 
+        {
+            $inboxHelper = new InboxHelper();
+            $inboxHelper->sent(
+                $value, 
+                Auth::user()->id, 
+                $message, 
+                $directUrl
+            );
+        }
+
+        return;
     }
 
 }

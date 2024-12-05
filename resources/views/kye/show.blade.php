@@ -94,6 +94,19 @@
                         @endif
                     </div>
                 </div>
+
+                <div class="mt-3">
+                    <strong><i class="fas fa-file-alt"></i> File SKCK:</strong>
+                    <div class="mt-2">
+                        @if ($kye->skck)
+                            <a href="{{ Storage::url($kye->skck) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-download"></i> Unduh File SKCK
+                            </a>
+                        @else
+                            <p class="text-muted"><i class="fas fa-file"></i> Belum ada file.</p>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -123,7 +136,6 @@
             </div>
         </div>
 
-        @if($kye->isEdit())
         @canAccess('approvement','kyes')
         <form action="{{ route('kye.approvement', $kye->id) }}" method="POST" class="mt-3">
         @csrf
@@ -154,7 +166,6 @@
             </div>
         </form>
         @endcanAccess
-        @endif
 
 
         <div class="text-center mt-4">
