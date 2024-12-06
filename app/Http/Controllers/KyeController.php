@@ -83,6 +83,11 @@ class KyeController extends Controller
             
             $user = User::findOrFail($kye->user_id);
 
+            if($request->full_name)
+            {
+                $user->name = $data['full_name'];
+            }
+            
             if($request->ktp_number)
             {
                 $user->id_card = $data['ktp_number'];
@@ -181,6 +186,11 @@ class KyeController extends Controller
             
             $kye->update($data);
             
+            if($request->full_name)
+            {
+                $user->name = $data['full_name'];
+            }
+
             if($request->ktp_number)
             {
                 $user->id_card = $data['ktp_number'];
@@ -245,7 +255,7 @@ class KyeController extends Controller
 
             return redirect()->route('kye.show', $kye)->with('success', $message);
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             return redirect()->route('kye.show', $kye)->with('error', 'Terjadi kesalahan saat mengubah status.');
         }
     }   
