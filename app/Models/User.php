@@ -246,19 +246,22 @@ class User extends Authenticatable
                     $query->where('is_active', false)
                           ->where('is_completed', true)
                           ->where('is_dayoff', false)
+                          ->where('is_permission', false)
                           ->whereDate('created_at', $today);
                 },
                 'employeeCheckings as total_successful_checkins' => function ($query) use ($start, $end) {
                     $query->where('is_active', false)
                           ->where('is_completed', true)
-                          ->where('is_dayoff', false);
+                          ->where('is_dayoff', false)
+                          ->where('is_permission', false);
                     if ($start && $end) {
                         $query->whereBetween('created_at', [$start, $end]);
                     }
                 },
                 'employeeCheckings as total_days' => function ($query) use ($start, $end) {
                     $query->select(DB::raw('COUNT(DISTINCT DATE(created_at))'))
-                          ->where('is_dayoff', false);
+                          ->where('is_dayoff', false)
+                          ->where('is_permission', false);
                     if ($start && $end) {
                         $query->whereBetween('created_at', [$start, $end]);
                     }
