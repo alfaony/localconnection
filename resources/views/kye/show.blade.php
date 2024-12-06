@@ -23,7 +23,7 @@
             </div>
             <div class="card-body">
                 <p><strong><i class="fas fa-user"></i> Nama Lengkap:</strong> {{ $kye->full_name }}</p>
-                <p><strong><i class="fas fa-birthday-cake"></i> Tempat & Tanggal Lahir:</strong> {{ $kye->birth_place }}, {{ $kye->birth_date }}</p>
+                <p><strong><i class="fas fa-birthday-cake"></i> Tempat & Tanggal Lahir:</strong> {{ $kye->birth_place }}, {{ \Carbon\Carbon::parse($kye->birth_date)->format('d-M-Y') }}</p>
                 <p><strong><i class="fas fa-map-marker-alt"></i> Alamat:</strong> {{ $kye->address }}</p>
                 <p><strong><i class="fas fa-id-card"></i> Nomor KTP:</strong> {{ $kye->ktp_number }}</p>
                 <div>
