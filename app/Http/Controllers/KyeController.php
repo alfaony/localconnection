@@ -372,7 +372,7 @@ class KyeController extends Controller
         
         // dd($ccEmails);
         // Email Helper Notification
-         EmailNotifHelper::sentEmail(
+         dd(EmailNotifHelper::sentEmail(
             $fromEmail,
             $fromName,
             $toEmails, 
@@ -383,7 +383,7 @@ class KyeController extends Controller
             $smtpConfig, 
             $companyId, 
             $ccEmails
-        );
+        ));
     }
 
     private function sentInbox($to,$message,$directUrl)
