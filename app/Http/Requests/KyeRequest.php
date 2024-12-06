@@ -30,7 +30,7 @@ class KyeRequest extends FormRequest
             'npwp_number' => 'nullable|string|max:20',
             'google_maps' => 'nullable|string|max:255',
             'phone_number' => 'required|string|max:20',
-            'email' => 'required|email|max:255|unique:kyes,email,' . ($this->kye->id ?? null),
+            'email' => 'required|email|max:255',
             'imei_number' => 'nullable|string|max:50',
             'emergency_phone' => 'nullable|string|max:20',
             'emergency_contact' => 'nullable|string|max:255',

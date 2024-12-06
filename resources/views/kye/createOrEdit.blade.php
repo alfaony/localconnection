@@ -184,7 +184,7 @@
                     </div>
                     <div class="form-group">
                         <label for="skck"><i class="fas fa-file-alt"></i> Surat Keterangan Catatan Kepolisian (SKCK)</label>
-                            <input type="file" name="skck" id="skck" class="form-control-file" {{ @$kye ? '' : 'required' }}
+                            <input type="file" name="skck" id="skck" class="form-control-file"
                                 accept=".pdf,.jpeg,.jpg,.png,.gif,.bmp,.tiff,.svg">
                     </div>
                 </div>
