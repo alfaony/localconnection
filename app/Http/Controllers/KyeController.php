@@ -303,7 +303,7 @@ class KyeController extends Controller
         $data = [
             'full_name' => $kye->full_name,
             'birth_place' => $kye->birth_place,
-            'birth_date' => $kye->birth_date,
+            'birth_date' => \Carbon\Carbon::parse($kye->birth_date)->format('d-M-Y'),
             'address' => $kye->address,
             'notes' => $notes
         ];
@@ -332,13 +332,23 @@ class KyeController extends Controller
                 $toNames[] = $user->name;
             }
 
-            if($lead) $toEmails[] = $lead->email;
         }else
         {
             $toEmails[] = $kye->user->email;
             $toUserId[] = $kye->user->id;
             $toNames[] = $kye->user->name;
-            $ccEmails = [Auth::user()->email];
+            // $ccEmails = [Auth::user()->email];
+
+            $usersAdmin = User::where('company_id',Auth::user()->company_id)->whereHas('role', function($q){
+                $q->where('name',RoleSchema::ADMIN);
+            })->get();
+            
+            $ccEmails = [];
+
+            foreach ($usersAdmin as $user) 
+            {
+                $ccEmails[] = $user->email;
+            }
         }
 
         $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
