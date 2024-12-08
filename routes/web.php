@@ -76,7 +76,7 @@ use App\Http\Controllers\KyeController;
 |
 */
 
-Route::post('kye/verifyemail', [KyeController::class, 'verifyemail'])->name('kye.verify.email');
+
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
