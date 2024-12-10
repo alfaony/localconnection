@@ -186,28 +186,31 @@
                     <div class="card-body">
                         <h5>Laporan Proyek</h5>
                         <p>No Report: {{ $bast->project->reportProject->number_result }}</p>
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Nama</th>
-                                    <th>Link</th>
-                                    <th>File</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($bast->project->reportProject->reportProjectDetail as $index => $detail)
-                                <tr>
-                                    <td>{{ $loop->iteration }}</td>
-                                    <td>{{ $detail->name }}</td>
-                                    <td>{{ $detail->link }}</td>
-                                    <td>
-                                        <a href="{{ Storage::url('reports/' . $detail->file) }}" class="btn btn-sm btn-primary" download><i class="fa fa-download"></i></a>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama</th>
+                                        <th>Link</th>
+                                        <th>File</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($bast->project->reportProject->reportProjectDetail as $index => $detail)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $detail->name }}</td>
+                                        <td>{{ $detail->link }}</td>
+                                        <td>
+                                            <a href="{{ Storage::url('reports/' . $detail->file) }}" class="btn btn-sm btn-primary" download><i class="fa fa-download"></i></a>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <a href="{{ route('report-project.show',$bast->project->reportProject->slug) }}" class="btn btn-success mt-3"><i class="fa fa-eye"></i> Show</a>
                         <a href="{{ route('report-project.downloadall', ['slug' => $bast->project->reportProject->slug]) }}" class="btn btn-success mt-3"><i class="fa fa-download"></i> Download All</a>
                     </div>
                 </div>
