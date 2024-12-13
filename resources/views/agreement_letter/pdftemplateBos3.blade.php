@@ -252,7 +252,7 @@
                             PARA PIHAK sepakat dan setuju bahwa pembayaran yang telah dilakukan tidak dapat dikembalikan dan seluruh pembayaran dilakukan di awal sebelum penggunaan layanan dimulai. Seluruh biaya administrasi perjanjian ini ditanggung oleh PIHAK KEDUA.
                         </li>
                         <li>
-                            PARA PIHAK sepakat biaya yang dikenakan untuk layanan virtual office {{ $agreementLetter->rent_count }} terhitung sejak {{ $agreementLetter->rent_start_duration_id_no_day }} hingga {{ $agreementLetter->rent_end_duration_id_no_day }} adalah sebesar {{ 'Rp. '.number_format($agreementLetter->quote->total,0,',','.') }}. Pemotongan pajak penghasilan pasal 4 ayat 2, dapat dilakukan dengan memberikan bukti potong dari PIHAK KEDUA kepada PIHAK PERTAMA . Apabila dalam kurun waktu 3 bukaln sejak terjadi pemotongan dan tidak diberikan bukti potong, maka PIHAK PERTAMA berhak menagihkan kembali kekurangan pembayaran tersebut kepada PIHAK KEDUA. 
+                            PARA PIHAK sepakat biaya yang dikenakan untuk layanan virtual office {{ $agreementLetter->rent_count }} terhitung sejak {{ $agreementLetter->rent_start_duration_id_no_day }} hingga {{ $agreementLetter->rent_end_duration_id_no_day }} adalah sebesar {{ 'Rp. '.number_format($agreementLetter->quote->total,0,',','.') }}. Pemotongan pajak penghasilan pasal 4 ayat 2, dapat dilakukan dengan memberikan bukti potong dari PIHAK KEDUA kepada PIHAK PERTAMA . Apabila dalam kurun waktu 3 bulan sejak terjadi pemotongan dan tidak diberikan bukti potong, maka PIHAK PERTAMA berhak menagihkan kembali kekurangan pembayaran tersebut kepada PIHAK KEDUA. 
                         </li>
                     </ol>
                 </div>
