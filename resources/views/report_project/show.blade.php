@@ -66,7 +66,7 @@
                         @foreach(@$reportProject->reportProjectDetail as $index => $a)
                         <tr>
                             <td width="5%">{{ $no++ }}</td>
-                            <td width="30%">
+                            <td width="auto">
                                 <input type="text" class="form-control" value="{{ $a->name }}" readonly>
                             </td>
                             <td width="5%">
@@ -77,7 +77,7 @@
                                 @endif
                             </td>
                             <td width="30%">
-                                <a href="{{ $a->link }}" target="_blank">{{ $a->link }}</a>
+                                <a href="{{ $a->link }}" target="_blank"> Report Link</a>
                             </td>
                             <td>
                                 <a href="{{ Storage::url('reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-download"></i></a>
