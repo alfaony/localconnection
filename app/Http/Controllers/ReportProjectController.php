@@ -120,6 +120,7 @@ class ReportProjectController extends Controller
             for ($i = 0; $i < count($name); $i++) 
             {
                 $reportProjectDetail = new ReportProjectDetail;
+                $reportProjectDetail->order = $i+1;                
                 $reportProjectDetail->name = $name[$i];
                 $reportProjectDetail->is_report = $is_report[$i];
                 $reportProjectDetail->link = $link[$i];
@@ -243,6 +244,7 @@ class ReportProjectController extends Controller
                 if(!$id)
                 {
                     $reportProjectDetail = new ReportProjectDetail;
+                    $reportProjectDetail->order = $i+1;                
                     $reportProjectDetail->is_report = $is_report[$i];
                     $reportProjectDetail->name = $name[$i];
                     $reportProjectDetail->link = $link[$i];
@@ -567,7 +569,7 @@ class ReportProjectController extends Controller
         // Membuat ZIP
         $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
-            foreach ($reportProject->reportProjectDetail as $detail) {
+            foreach ($reportProject->reportProjectDetail->sortBy('order') as $detail) {
                 $filePath = storage_path('app/public/reports/' . $detail->file);
                 if (file_exists($filePath)) {
                     $zip->addFile($filePath, $detail->file);
@@ -762,15 +764,19 @@ class ReportProjectController extends Controller
             }
 
             // Merge the collected PDF files
-            foreach ($pdfFiles as $pdfFile) {
-                $pageCount = $mergedPdf->setSourceFile($pdfFile);
-
-                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                    $templateId = $mergedPdf->importPage($pageNo);
-                    $size = $mergedPdf->getTemplateSize($templateId);
-
-                    $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                    $mergedPdf->useTemplate($templateId);
+            foreach ($pdfFiles as $pdfFile) 
+            {
+                try {
+                    $pageCount = $mergedPdf->setSourceFile($pdfFile);
+                    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                        $templateId = $mergedPdf->importPage($pageNo);
+                        $size = $mergedPdf->getTemplateSize($templateId);
+                        $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                        $mergedPdf->useTemplate($templateId);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error("Error processing file {$pdfFile}: " . $e->getMessage());
+                    continue; // Skip this file
                 }
             }
 

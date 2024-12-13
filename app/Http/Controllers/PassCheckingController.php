@@ -33,6 +33,45 @@ class PassCheckingController extends Controller
 
     public function store(Request $request)
     {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'date' => 'required|date|after_or_equal:today',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'pictures.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ], [
+            'name.required' => 'Nama agenda harus diisi.',
+            'name.string' => 'Nama agenda harus berupa teks.',
+            'name.max' => 'Nama agenda tidak boleh lebih dari 255 karakter.',
+            'date.required' => 'Tanggal harus diisi.',
+            'date.date' => 'Tanggal tidak valid.',
+            'date.after_or_equal' => 'Tanggal harus hari ini atau setelahnya.',
+            'start_time.required' => 'Waktu mulai harus diisi.',
+            'start_time.date_format' => 'Format waktu mulai tidak valid. Gunakan format HH:mm.',
+            'end_time.required' => 'Waktu selesai harus diisi.',
+            'end_time.date_format' => 'Format waktu selesai tidak valid. Gunakan format HH:mm.',
+            'end_time.after' => 'Waktu selesai harus setelah waktu mulai.',
+            'pictures.*.image' => 'File yang diunggah harus berupa gambar.',
+            'pictures.*.mimes' => 'Gambar harus memiliki format jpeg, png, atau jpg.',
+            'pictures.*.max' => 'Ukuran gambar tidak boleh lebih dari 2 MB.',
+        ]);
+        
+        // Cek overlap jadwal pada hari yang sama
+        $existingSchedules = PassChecking::where('date', $request->date)->where('user_id', Auth::user()->id)
+        ->where(function ($query) use ($request) {
+            $query->whereBetween('start_time', [$request->start_time, $request->end_time])
+                ->orWhereBetween('end_time', [$request->start_time, $request->end_time])
+                ->orWhere(function ($query) use ($request) {
+                    $query->where('start_time', '<=', $request->start_time)
+                        ->where('end_time', '>=', $request->end_time);
+                });
+        })
+        ->exists();
+
+        if ($existingSchedules) {
+            return redirect()->back()->withErrors(['start_time' => 'Waktu yang dipilih bertabrakan dengan jadwal lain pada hari yang sama.'])->withInput();
+        }
+
         $pictures = [];
         if ($request->hasFile('pictures')) {
             foreach ($request->file('pictures') as $file) {
@@ -55,6 +94,21 @@ class PassCheckingController extends Controller
 
     public function update(Request $request, $id)
     {
+        $existingSchedules = PassChecking::where('id', '!=', $id)->where('date', $request->date)->where('user_id', Auth::user()->id)
+        ->where(function ($query) use ($request) {
+            $query->whereBetween('start_time', [$request->start_time, $request->end_time])
+                ->orWhereBetween('end_time', [$request->start_time, $request->end_time])
+                ->orWhere(function ($query) use ($request) {
+                    $query->where('start_time', '<=', $request->start_time)
+                        ->where('end_time', '>=', $request->end_time);
+                });
+        })
+        ->exists();
+
+        if ($existingSchedules) {
+            return redirect()->back()->withErrors(['start_time' => 'Waktu yang dipilih bertabrakan dengan jadwal lain pada hari yang sama.'])->withInput();
+        }
+
         $passChecking = PassChecking::findOrFail($id);
         // Get the current pictures (ensure it's an array)
         $pictures = $passChecking->pictures ?? [];
