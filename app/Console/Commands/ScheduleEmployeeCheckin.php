@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\NationalHoliday;
 use App\Models\EmployeeChecking;
@@ -302,19 +303,25 @@ class ScheduleEmployeeCheckin extends Command
     protected function listDayoffEmployee()
     {
         $list = [];
-        $dayoffList = $this->dayoffService->getCutiListBOS();
-        if(count($dayoffList) > 0)
-        {
-            foreach ($dayoffList as $values) 
+        try {
+            $dayoffList = $this->dayoffService->getCutiListBOS();
+            if(count($dayoffList) > 0)
             {
-                foreach ($values as $value) 
+                foreach ($dayoffList as $values) 
                 {
-                    $list[] = $value['email_staff'];
-                }  
+                    foreach ($values as $value) 
+                    {
+                        $list[] = $value['email_staff'];
+                    }  
+                }
             }
+    
+            return $list;
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th->getMessage());
+            return [];
         }
-
-        return $list;
     }
 
 }
