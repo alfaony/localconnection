@@ -335,9 +335,10 @@ class ScheduleEmployeeCheckin extends Command
         $list = [];
         $listPermission = [];
 
-        $dayoffList = $this->dayoffService->getCutiListBOS();
-        if(count($dayoffList) > 0)
+        $dayoffListService = $this->dayoffService->getCutiListBOS();
+        if(!$dayoffListService['error'] && count($dayoffList) > 0)
         {
+            $dayoffList = $dayoffListService['data'];
             foreach ($dayoffList['cuti'] as $value) 
             {
                 $list[] = strtolower($value['email_staff']);
@@ -348,13 +349,20 @@ class ScheduleEmployeeCheckin extends Command
                 $listPermission[] = strtolower($value['email_staff']);
             } 
             
+            return 
+            [
+                'cuti' => $list,
+                'sakit' => $listPermission
+            ];
+        }else
+        {
+            return 
+            [
+                'cuti' => $list,
+                'sakit' => $listPermission
+            ];
         }
 
-        return 
-        [
-            'cuti' => $list,
-            'sakit' => $listPermission
-        ];
     }
 
 }
