@@ -165,7 +165,7 @@
                             PIHAK PERTAMA berhak memutus perjanjian ini secara sepihak, apabila PIHAK KEDUA tidak melakukan pembayaran atau mengalami keterlambatan pembayaran maksimal 1 bulan.
                         </li>
                         <li>
-                            PIHAK PERTMA berhak memutus perjanjian ini secara Sepihak, apabila PIHAK KEDUA diduga terlibat dalam aktifitas yang menlanggar hukum pidana pasal 264, 362, 372, 378 KUHP, dan termasuk tindak pidana khusus korupsi, tindak pidana terkait obat dan zat terlarang serta pencucian uang di Indonesia, sesuai dengan pernyataan / peringatan dari pihak pengadilan negeri maupun kepolisian di Indonesia maupun Internasional. 
+                            PIHAK PERTAMA berhak memutus perjanjian ini secara Sepihak, apabila PIHAK KEDUA diduga terlibat dalam aktifitas yang menlanggar hukum pidana pasal 264, 362, 372, 378 KUHP, dan termasuk tindak pidana khusus korupsi, tindak pidana terkait obat dan zat terlarang serta pencucian uang di Indonesia, sesuai dengan pernyataan / peringatan dari pihak pengadilan negeri maupun kepolisian di Indonesia maupun Internasional. 
                         </li>
                         <li>
                             PIHAK PERTAMA berhak mengetahui isi paket barang yang akan dititipkan oleh PIHAK KEDUA/KLIEN PIHAK KEDUA. 
@@ -252,7 +252,7 @@
                             PARA PIHAK sepakat dan setuju bahwa pembayaran yang telah dilakukan tidak dapat dikembalikan dan seluruh pembayaran dilakukan di awal sebelum penggunaan layanan dimulai. Seluruh biaya administrasi perjanjian ini ditanggung oleh PIHAK KEDUA.
                         </li>
                         <li>
-                            PARA PIHAK sepakat biaya yang dikenakan untuk layanan virtua office {{ $agreementLetter->rent_count }} terhitung sejak {{ $agreementLetter->rent_start_duration_id_no_day }} hingga {{ $agreementLetter->rent_end_duration_id_no_day }} adalah sebesar {{ 'Rp. '.number_format($agreementLetter->quote->total,0,',','.') }}. Pemotongan pajak penghasilan pasal 4 ayat 2, dapat dilakukan dengan memberikan bukti potong dari PIHAK KEDUA kepada PIHAK PERTAMA . Apabila dalam kurun waktu 3 bukaln sejak terjadi pemotongan dan tidak diberikan bukti potong, maka PIHAK PERTAMA berhak menagihkan kembali kekurangan pembayaran tersebut kepada PIHAK KEDUA. 
+                            PARA PIHAK sepakat biaya yang dikenakan untuk layanan virtual office {{ $agreementLetter->rent_count }} terhitung sejak {{ $agreementLetter->rent_start_duration_id_no_day }} hingga {{ $agreementLetter->rent_end_duration_id_no_day }} adalah sebesar {{ 'Rp. '.number_format($agreementLetter->quote->total,0,',','.') }}. Pemotongan pajak penghasilan pasal 4 ayat 2, dapat dilakukan dengan memberikan bukti potong dari PIHAK KEDUA kepada PIHAK PERTAMA . Apabila dalam kurun waktu 3 bulan sejak terjadi pemotongan dan tidak diberikan bukti potong, maka PIHAK PERTAMA berhak menagihkan kembali kekurangan pembayaran tersebut kepada PIHAK KEDUA. 
                         </li>
                     </ol>
                 </div>
