@@ -28,7 +28,10 @@ class DayoffService
             // Check if the request was successful
             if ($response->successful()) 
             {
-                return $response->json(); // Return the response as JSON
+                return [
+                    'error' => false,
+                    'data' => $response->json(), // Return the response as JSON
+                ];
             }
 
             // Handle response errors

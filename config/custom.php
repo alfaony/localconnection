@@ -107,5 +107,11 @@ return
       [
        'template1' => 'Template 1',
        'template2' => 'Template 2',
-      ]
+      ],
+
+      'status_kye' => 
+      [
+         'approved' => "Approved",
+         'rejected' => 'Rejected'
+      ],
 ];

@@ -70,31 +70,47 @@ class ScheduleEmployeeCheckin extends Command
     private function scheduleCheckinForUser($user, $onLeaveEmails = [])
     {
         // Cek jika user sedang cuti
-        if (!in_array($user->email, $onLeaveEmails)) {
-            // $checkinTimes = $this->generateRandomCheckinTimes($user->start_time, $user->end_time, $user->rest_time);
-            $checkinTimes = $this->generateRandomCheckinTimesUser($user);
-            foreach ($checkinTimes as $time) 
-            {
-                // Simpan di database lokal
-                $local = $this->saveLocal($user, $time);
-            }
-        }else
+        $dayOff = $onLeaveEmails['cuti'];
+        $sickLeave = $onLeaveEmails['sakit'];
+
+        // $sickLeave[] = strtolower("fatahPM2@gmail.com");
+
+        if (in_array(strtolower($user->email), $dayOff)) 
         {
             $time = 
             [
                 'checkin_time' => Carbon::now(),
                 'timeout_time' => Carbon::now(),
             ];
-            $local = $this->saveLocal($user, $time, true);
+            $local = $this->saveLocal($user, $time, "dayoff");
+        }
+        elseif(in_array(strtolower($user->email), $sickLeave))
+        {
+            $time = 
+            [
+                'checkin_time' => Carbon::now(),
+                'timeout_time' => Carbon::now(),
+            ];
+            $local = $this->saveLocal($user, $time, "sick");
+        }
+        else
+        {
+            $checkinTimes = $this->generateRandomCheckinTimes($user->start_time, $user->end_time, $user->rest_time);
+            $checkinTimes = $this->generateRandomCheckinTimesUser($user);
+            foreach ($checkinTimes as $time) 
+            {
+                // Simpan di database lokal
+                $local = $this->saveLocal($user, $time);
+            }
         }
 
     }
 
-    private function saveLocal($user, $time, $isOnLeave = false)
+    private function saveLocal($user, $time, $statusLeave = null)
     {
         $firstDivision = $this->findFirstDivision($user);
         
-        if($isOnLeave)
+        if($statusLeave == "dayoff")
         {
             return EmployeeChecking::create([
                 'user_id' => $user->id,
@@ -105,7 +121,21 @@ class ScheduleEmployeeCheckin extends Command
                 'is_active' => false,
                 'is_completed' => false,
             ]);
-        }else
+        }
+        else if($statusLeave == "sick")
+        {
+            return EmployeeChecking::create([
+                'user_id' => $user->id,
+                'division_id' => $firstDivision->id,
+                'scheduled_time' => $time['checkin_time'],
+                'scheduled_timeout' => $time['timeout_time'],
+                'is_dayoff' => false,
+                'is_active' => false,
+                'is_completed' => false,
+                'is_permission' => true,
+            ]); 
+        }
+        else
         {
             if(!$user->manual_checkin) 
             {
@@ -303,26 +333,36 @@ class ScheduleEmployeeCheckin extends Command
     protected function listDayoffEmployee()
     {
         $list = [];
-        return $list;
-        // try {
-        //     $dayoffList = $this->dayoffService->getCutiListBOS();
-        //     if (is_array($dayoffList) && count($dayoffList) > 0) 
-        //     {
-        //         foreach ($dayoffList as $values) 
-        //         {
-        //             foreach ($values as $value) 
-        //             {
-        //                 $list[] = $value['email_staff'];
-        //             }  
-        //         }
-        //     }
-    
-        //     return $list;
-        // } catch (\Throwable $th) {
-        //     //throw $th;
-        //     Log::error($th->getMessage());
-        //     return [];
-        // }
+        $listPermission = [];
+
+        $dayoffListService = $this->dayoffService->getCutiListBOS();
+        if (isset($dayoffListService['data']) && !$dayoffListService['error'] && count($dayoffListService['data']) > 0)
+        {
+            $dayoffList = $dayoffListService['data'];
+            foreach ($dayoffList['cuti'] as $value) 
+            {
+                $list[] = strtolower($value['email_staff']);
+            } 
+            
+            foreach ($dayoffList['sakit'] as $value) 
+            {
+                $listPermission[] = strtolower($value['email_staff']);
+            } 
+            
+            return 
+            [
+                'cuti' => $list,
+                'sakit' => $listPermission
+            ];
+        }else
+        {
+            return 
+            [
+                'cuti' => $list,
+                'sakit' => $listPermission
+            ];
+        }
+
     }
 
 }

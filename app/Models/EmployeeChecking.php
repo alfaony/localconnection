@@ -20,6 +20,7 @@ class EmployeeChecking extends Model
         'scheduled_timeout',
         'checkin_start_time',
         'is_active',
+        'is_permission',
         'is_completed',
         'is_dayoff',
         'photo_path',
@@ -71,6 +72,15 @@ class EmployeeChecking extends Model
       {
         return $this->is_dayoff;
       }
+
+      /**
+       * Sick
+       */
+
+       public function isSick()
+       {
+        return $this->is_permission;
+       }
     /**
      * Scope untuk memfilter jadwal yang aktif
      */
