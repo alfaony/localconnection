@@ -111,6 +111,11 @@
 
                         <div id="collapseOverdue" class="collapse show" aria-labelledby="headingOverdue" data-parent="#tasksAccordion">
                             <div class="card-body">
+                                <div id="spinnerOverdue" class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                                    <div class="spinner-border" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
                                 <canvas id="overdueTasksChart"></canvas>
                             </div>
                         </div>
@@ -127,6 +132,11 @@
                         </div>
                         <div id="collapseUpcoming" class="collapse" aria-labelledby="headingUpcoming" data-parent="#tasksAccordion">
                             <div class="card-body">
+                                <div id="spinnerUpcoming" class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                                    <div class="spinner-border" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </div>
                                 <canvas id="upcomingTasksChart"></canvas>
                             </div>
                         </div>
@@ -154,6 +164,11 @@
         </div>
         <div id="collapseVisions" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
             <div class="card-body">
+                <div id="spinnerVisions" class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
                 <div id="visionAccordion">
                     <!-- Vision details dynamically populated -->
                 </div>
@@ -204,7 +219,9 @@
         const upcomingTasksChartContainer = document.getElementById('upcomingTasksChart').getContext('2d');
         let overdueTasksChart; // Declare a variable to hold the chart instance
         let upcomingTasksChart; // Declare a variable to hold the chart instance
-        const loader = document.getElementById('loader');
+        const loaderOverdue = document.getElementById('spinnerOverdue');
+        const loaderUpcoming = document.getElementById('spinnerUpcoming');
+        const loaderVisions = document.getElementById('spinnerVisions');
 
         const apiEndpoints = {
             totalCounts: "{{ route('total-counts') }}",
@@ -221,7 +238,9 @@
         };
 
         const updateDashboard = async () => {
-            loader.style.display = 'block';
+            loaderOverdue.style.display = 'block';
+            loaderUpcoming.style.display = 'block';
+            loaderVisions.style.display = 'block';
             const params = {
                 division_id: document.querySelector('#division_id').value,
                 start_date: document.querySelector('#start_date').value,
@@ -284,7 +303,7 @@
                     }
                 });
             }
-
+            loaderOverdue.classList.add('d-none'); // Menyembunyikan spinner overdue
 
             const upcomingTasks = await fetchData(apiEndpoints.upcomingTasks, params);
             if (upcomingTasks) {
@@ -323,6 +342,7 @@
                     }
                 });
             }
+            loaderUpcoming.classList.add('d-none'); // Menyembunyikan spinner upcoming
 
             const visions = await fetchData(apiEndpoints.visions);
             if (visions) 
@@ -423,8 +443,7 @@
                     </div>
                 `).join('');
             }
-            
-            loader.style.display = 'none';
+            loaderVisions.classList.add('d-none'); // Menyembunyikan spinner visions
         };
 
         function getStatusIcon(taskStatusName) {
