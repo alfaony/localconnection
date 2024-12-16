@@ -303,25 +303,26 @@ class ScheduleEmployeeCheckin extends Command
     protected function listDayoffEmployee()
     {
         $list = [];
-        try {
-            $dayoffList = $this->dayoffService->getCutiListBOS();
-            if (is_array($dayoffList) && count($dayoffList) > 0) 
-            {
-                foreach ($dayoffList as $values) 
-                {
-                    foreach ($values as $value) 
-                    {
-                        $list[] = $value['email_staff'];
-                    }  
-                }
-            }
+        return $list;
+        // try {
+        //     $dayoffList = $this->dayoffService->getCutiListBOS();
+        //     if (is_array($dayoffList) && count($dayoffList) > 0) 
+        //     {
+        //         foreach ($dayoffList as $values) 
+        //         {
+        //             foreach ($values as $value) 
+        //             {
+        //                 $list[] = $value['email_staff'];
+        //             }  
+        //         }
+        //     }
     
-            return $list;
-        } catch (\Throwable $th) {
-            //throw $th;
-            Log::error($th->getMessage());
-            return [];
-        }
+        //     return $list;
+        // } catch (\Throwable $th) {
+        //     //throw $th;
+        //     Log::error($th->getMessage());
+        //     return [];
+        // }
     }
 
 }
