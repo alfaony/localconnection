@@ -1,76 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Berita Acara Serah Terima - {{ $bast->number ?? '' }}</title>
     <link rel="stylesheet" href="{{ public_path('vendor/adminlte/dist/css/adminlte.min.css') }}">
     <link rel="stylesheet" href="{{ public_path('vendor/adminlte/plugins/bootstrap/css/bootstrap.min.css') }}">
     <style>
-        /* General font size */
-        body, html {
-            font-size: 12px; /* Smaller default font size */
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-        }
+    /* General font size */
+    body,
+    html {
+        font-size: 12px;
+        /* Smaller default font size */
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+    }
 
-        header, footer {
-            width: 100%;
-            position: fixed;
-            left: 0;
-            right: 0;
-            height: auto;
-        }
-        
-        footer {
-            bottom: 0;
-            margin-top: 0px;
-        }
+    header,
+    footer {
+        width: 100%;
+        position: fixed;
+        left: 0;
+        right: 0;
+        height: auto;
+    }
 
-        .header-image, .footer-image {
-            width: 100%;
-            display: block;
-        }
+    footer {
+        bottom: 0;
+        margin-top: 0px;
+    }
 
-        .content {
-            padding-bottom: 10px;
-            padding-left: 20px;
-            padding-right: 20px;
-        }
+    .header-image,
+    .footer-image {
+        width: 100%;
+        display: block;
+    }
 
-        .table-bordered {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px; /* Smaller font specifically for tables */
-            page-break-inside: avoid;
-        }
+    .content {
+        padding-bottom: 10px;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
 
-        .table-bordered th, .table-bordered td {
-            border: 1px solid #dee2e6;
-            padding: 6px;
-        }
+    .table-bordered {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+        /* Smaller font specifically for tables */
+        page-break-inside: avoid;
+    }
 
-        .mt-5, .mt-3 {
-            margin-top: 1.5rem !important;
-        }
+    .table-bordered th,
+    .table-bordered td {
+        border: 1px solid #dee2e6;
+        padding: 6px;
+    }
 
-        .noMargin {
-            margin: 0;
-        }
+    .mt-5,
+    .mt-3 {
+        margin-top: 1.5rem !important;
+    }
+
+    .noMargin {
+        margin: 0;
+    }
     </style>
     <style>
-        body {
-            margin-top: 5cm;
-            margin-bottom: 2cm;
-        }
-        header {
-            position: fixed;
-            top: 0cm;
-            height: 6cm;
-        }
+    body {
+        margin-top: 5cm;
+        margin-bottom: 2cm;
+    }
+
+    header {
+        position: fixed;
+        top: 0cm;
+        height: 6cm;
+    }
     </style>
 </head>
+
 <body>
     @if(!empty($company['header']) && !empty($company['footer']))
     <header>
@@ -80,7 +90,7 @@
         <img src="{{ public_path('storage/' . $company['footer']) }}" alt="Company Footer" class="footer-image">
     </footer>
     @endif
-    
+
     <div class="content">
         <div class="card" id="printThis">
             <div class="card-body" id="printItem">
@@ -116,27 +126,31 @@
                         </table>
                     </div>
                     <div class="col-md-12">
-                        <p>Bersamaan dengan surat pernyataan ini, pekerjaan dengan nomor purchase order diatas dengan rincian pekerjaan:</p>
+                        <p>Bersamaan dengan surat pernyataan ini, pekerjaan dengan nomor purchase order diatas dengan
+                            rincian pekerjaan:</p>
                         <p><strong>{{ $bast->project ? $bast->project->title : '' }}</strong></p>
                         <p><strong>{{ $bast->period ? "Period ".$bast->period : '' }}</strong></p>
                         <p>Telah diselesaikan dengan baik. Laporan bisa di unduh di link berikut ini</p>
                         <ul>
-                            @if($bast->project && $bast->project->reportProject && $bast->project->reportProject->reportedDetails)
-                                @foreach($bast->project->reportProject->reportedDetails as $a)
-                                    <li>
-                                        {{ $a->name }} - <a href="{{ $a->url }}" class="text-primary">{{ $a->url }}</a>
-                                    </li>
-                                @endforeach
+                            @if($bast->project && $bast->project->reportProject &&
+                            $bast->project->reportProject->reportedDetails)
+                            @foreach($bast->project->reportProject->reportedDetails as $a)
+                            <li>
+                                {{ $a->name }} - <a href="{{ $a->url }}" class="text-primary">{{ $a->url }}</a>
+                            </li>
+                            @endforeach
                             @endif
                         </ul>
                     </div>
                 </div>
                 <div class="mt-3">
+                    @if(!$bast->signature)
                     <table style="width: 100%; text-align: center;">
                         <tr>
                             <td style="width: 50%; vertical-align: top;">
                                 <p style="margin-bottom: 10px;">TTD</p>
-                                <img src="{{ public_path('logo/paraf.png') }}" alt="Signature" style="width:auto; height:100px; margin-bottom: 10px;">
+                                <img src="{{ public_path('logo/paraf.png') }}" alt="Signature"
+                                    style="width:auto; height:100px; margin-bottom: 10px;">
                                 <p>{{ $company['director'] ?? '' }}</p>
                             </td>
 
@@ -144,17 +158,66 @@
                                 <p style="margin-bottom: 10px;">Diterima,</p>
                                 <div style="margin: 60px 0;"></div>
                                 @if($bast->customer_signature == \App\Schemas\ParamSchema::PENANGGUNGJAWAB)
-                                    <p class="noMargin">{{ $bast->pic ?? '' }}</p>
+                                <p class="noMargin">{{ $bast->pic ?? '' }}</p>
                                 @else
-                                    <p class="noMargin">{{ $bast->workOrder ? $bast->workOrder->quote->customer->{$bast->customer_signature} : '' }}</p>
+                                <p class="noMargin">
+                                    {{ $bast->workOrder ? $bast->workOrder->quote->customer->{$bast->customer_signature} : '' }}
+                                </p>
                                 @endif
                                 <p>{{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}</p>
                             </td>
                         </tr>
                     </table>
+                    @else
+                    @if($bast->signature)
+                    <table style="width: 35%; float: left; text-align: center; border-collapse: collapse; margin-bottom: 20px; border: none;">
+                        <tr>
+                            <td style="text-align: center;" colspan="2">
+                                {{ $company['name'] ?? '' }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center;" colspan="2">
+                            <img src="{{ public_path('logo/paraf.png') }}" alt="Signature"
+                            style="width:auto; height:100px; margin-bottom: 10px;">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center;" colspan="2"><strong><u>{{ $company['director'] ?? '' }}</u></strong></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center;" colspan="2">Directur</td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 65%; float: right; text-align: center;">
+                        <tr>
+                            <td style="text-align: center;" colspan="{{ count(json_decode($bast->signature_data, true)) }}">
+                                {{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}
+                            </td>
+                        </tr>
+                        <tr>
+                            @foreach (json_decode($bast->signature_data, true) as $index => $signature)
+                            <td style="height: 110px;"></td>
+                            @endforeach
+                        </tr>
+                        <tr>
+                            @foreach (json_decode($bast->signature_data, true) as $index => $signature)
+                            <th style="text-decoration: underline;">{{ $signature['section_name'] }}</th>
+                            @endforeach
+                        </tr>
+                        <tr>
+                            @foreach (json_decode($bast->signature_data, true) as $index => $signature)
+                            <td>{{ $signature['pic_name'] }}</td>
+                            @endforeach
+                        </tr>
+                    </table>
+                    @endif
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 </body>
+
 </html>
