@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Ramsey\Uuid\Uuid;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
@@ -175,11 +176,36 @@ class User extends Authenticatable
         return $this->hasMany(UserSalary::class);
     }
 
+    public function kye()
+    {
+        return $this->hasOne(Kye::class);
+    }
     public function getLastSalaryAttribute()
     {
         return $this->salary()->latest()->first();
     }
 
+    public function showName(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if ($this->kye) {
+                    switch ($this->kye->approval_status) {
+                        case 'approved':
+                            return $this->name . ' <i class="fa fa-check-circle text-primary"></i>';
+                        case 'pending':
+                            return $this->name . ' <i class="fa fa-clock text-warning"></i>';
+                        case 'rejected':
+                            return $this->name . ' <i class="fa fa-times-circle text-white"></i>';
+                        default:
+                            return $this->name;
+                    }
+                }
+
+                return $this->name; // Jika tidak ada KYE
+            }
+        );
+    }
     public function getPointCheckinAttribute()
     {
         $totalCheckins = $this->total_successful_checkins ?? 0;
@@ -220,19 +246,22 @@ class User extends Authenticatable
                     $query->where('is_active', false)
                           ->where('is_completed', true)
                           ->where('is_dayoff', false)
+                          ->where('is_permission', false)
                           ->whereDate('created_at', $today);
                 },
                 'employeeCheckings as total_successful_checkins' => function ($query) use ($start, $end) {
                     $query->where('is_active', false)
                           ->where('is_completed', true)
-                          ->where('is_dayoff', false);
+                          ->where('is_dayoff', false)
+                          ->where('is_permission', false);
                     if ($start && $end) {
                         $query->whereBetween('created_at', [$start, $end]);
                     }
                 },
                 'employeeCheckings as total_days' => function ($query) use ($start, $end) {
                     $query->select(DB::raw('COUNT(DISTINCT DATE(created_at))'))
-                          ->where('is_dayoff', false);
+                          ->where('is_dayoff', false)
+                          ->where('is_permission', false);
                     if ($start && $end) {
                         $query->whereBetween('created_at', [$start, $end]);
                     }
