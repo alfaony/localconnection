@@ -42,7 +42,7 @@ class UpdateDailyTasksMITUser extends Command
                 $tasks = DailyTask::whereHas('taskStatus', function ($query) {
                     $query->where('name', ParamSchema::INREVIEW);
                 })
-                ->whereDate('end_date', '<', Carbon::create(2024, 12, 1))
+                ->whereDate('end_date', '<', Carbon::create(2024, 12, 13))
                 ->where(function ($query) {
                     $query->whereHas('user.divisions', function ($query) {
                         $query->where('name', 'LIKE', 'MIT%');
