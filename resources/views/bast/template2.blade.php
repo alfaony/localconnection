@@ -156,45 +156,30 @@
                     </table>
                     @else
                     @if($bast->signature)
-                    <table style="width: 35%; float: left; text-align: center; border-collapse: collapse; margin-bottom: 20px; border: none;">
+                    <table style="width: 100%; float: left; text-align: center; margin-bottom: 20px;">
                         <tr>
-                            <td style="text-align: center;" colspan="2">
+                            <td style="text-align: center; width: 25%;">
                                 {{ $company['name'] ?? '' }}
                             </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: center;" colspan="2">
-                            <img src="{{ public_path('logo/paraf.png') }}" alt="Signature"
-                            style="width:auto; height:100px; margin-bottom: 10px;">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: center;" colspan="2"><strong><u>{{ $company['director'] ?? '' }}</u></strong></td>
-                        </tr>
-                        <tr>
-                            <td style="text-align: center;" colspan="2">Directur</td>
-                        </tr>
-                    </table>
-
-                    <table style="width: 65%; float: right; text-align: center;">
-                        <tr>
                             <td style="text-align: center;" colspan="{{ count(json_decode($bast->signature_data, true)) }}">
                                 {{ $bast->workOrder ? $bast->workOrder->quote->customer->name : '' }}
                             </td>
                         </tr>
                         <tr>
+                            <td style="text-align: center; width: 25%;">
+                                <img src="{{ public_path('logo/paraf.png') }}" alt="Signature"
+                                style="width:auto; height:100px; margin-bottom: 10px;">
+                            </td>
+                        <tr>
+                            <td style="text-align: center; width: 20%;"><strong><u>{{ $company['director'] ?? '' }}</u></strong></td>
                             @foreach (json_decode($bast->signature_data, true) as $index => $signature)
-                            <td style="height: 110px;"></td>
+                            <th style="text-decoration: underline;">{{ $signature['pic_name'] }}</th>
                             @endforeach
                         </tr>
                         <tr>
+                            <td style="text-align: center; width: 25%;">Directur</td>
                             @foreach (json_decode($bast->signature_data, true) as $index => $signature)
-                            <th style="text-decoration: underline;">{{ $signature['section_name'] }}</th>
-                            @endforeach
-                        </tr>
-                        <tr>
-                            @foreach (json_decode($bast->signature_data, true) as $index => $signature)
-                            <td>{{ $signature['pic_name'] }}</td>
+                            <td>{{ $signature['section_name'] }}</td>
                             @endforeach
                         </tr>
                     </table>
