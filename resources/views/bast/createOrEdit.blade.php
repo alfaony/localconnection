@@ -164,7 +164,7 @@
 <script>
 $(document).ready(function() {
     const MAX_ROWS = 4;
-    const MIN_ROWS = 1;
+    const MIN_ROWS = 2;
 
     // Show/Hide Table Signature Container
      $('#enableTableSignature').on('change', function () {
@@ -174,6 +174,7 @@ $(document).ready(function() {
                 console.log("hereee");
                 
                 addSignatureRow(0); // Tambahkan baris pertama jika belum ada data
+                addSignatureRow(); // Tambahkan baris pertama jika belum ada data
             }
         } else {
             $('#tableSignatureContainer').hide();
@@ -193,8 +194,18 @@ $(document).ready(function() {
 
     // Remove Signature Row
     $(document).on('click', '.remove-signature-row', function() {
-        $(this).closest('.signature-row').remove();
-        updateInputNames();
+        rowCountRel = $('#signatureInputs .signature-row').length;
+        rowCount = rowCountRel - 1;
+        
+        if (rowCount < MIN_ROWS) 
+        {
+            Swal.fire('Error', `You must add at least ${MIN_ROWS} row(s).`, 'warning');
+            return false;
+        }else
+        {
+            $(this).closest('.signature-row').remove();
+            updateInputNames();
+        }
     });
 
     // Add Signature Row Function
