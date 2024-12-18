@@ -76,7 +76,7 @@ class EmployeeCheckingController extends Controller
                 // Ambil data dengan pagination
                 $employeeCheckings = $query->orderByRaw('DATE(updated_at) DESC') // Urutkan tanggal secara menurun
                 ->orderByRaw('is_active = false') // Pindahkan is_active=false ke bawah
-                ->orderBy('updated_at', 'desc') // Urutkan berdasarkan updated_at
+                ->orderBy('scheduled_time', 'desc') // Urutkan berdasarkan updated_at
                 ->paginate(10);
                 break;
             case 'point_checkin':                
