@@ -108,10 +108,12 @@
                         </thead>
                         <tbody>
                             
-                            @forelse($employeeCheckings as $checking)
+                            @forelse($employeeCheckings as $index => $checking)
                                 <tr>
                                     <td>{{ $checking->user->name }}</td>
                                     <td>
+                                        {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('H:i:s') : '' }}
+                                        
                                         @if(!$checking->is_active && !$checking->isDayoff())
                                             {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
                                         @else
@@ -204,6 +206,10 @@
                                         @endif
                                     </td>
                                     @if($manualCheck['manual_checkin'])
+                                    @php
+                                        // Ambil objek setelahnya jika ada
+                                        $nextChecking = $employeeCheckings[$index + 1] ?? null;
+                                    @endphp
                                     @if($checking->user_id == Auth::user()->id)
                                     <td>
                                         @if(!$checking->is_active)
@@ -214,11 +220,15 @@
                                             @endif
                                         @else
                                             @if($checking->isToday())
-                                            @if($checking->user_id == Auth::user()->id)
-                                            <button class="btn btn-info btn-sm" type="button"
-                                                onclick="checkLastScheduledCheckin('{{ $checking->id }}', {{ $manualCheck['requires_photo'] ? 'true' : 'false' }}, {{ $manualCheck['requires_location'] ? 'true' : 'false' }})" >
-                                                <i class="fa fa-pencil"></i> Manual Check-In
-                                            </button> 
+                                            @if($checking->user_id == Auth::user()->id)                    
+                                                @if($checking->is_active && (!$nextChecking || !$nextChecking->is_active))
+                                                    <button class="btn btn-info btn-sm" type="button"
+                                                        onclick="checkLastScheduledCheckin('{{ $checking->id }}', {{ $manualCheck['requires_photo'] ? 'true' : 'false' }}, {{ $manualCheck['requires_location'] ? 'true' : 'false' }})" >
+                                                        <i class="fa fa-pencil"></i> Manual Check-In
+                                                    </button>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
                                             @else
                                                 <span class="badge bg-danger"><i class="fa fa-times"></i></span>
                                             @endif
