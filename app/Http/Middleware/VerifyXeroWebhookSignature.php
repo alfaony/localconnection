@@ -50,6 +50,14 @@ class VerifyXeroWebhookSignature
                 return $this->respondWithError('Webhook key not found', $payload, $xeroSignature, 401);
             }else
             {
+                $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $webhookKey, true));
+
+                // If signatures do not match, return a 401 Unauthorized response
+                if (!hash_equals($calculatedSignature, $xeroSignature)) 
+                {
+                    return $this->respondWithError('Invalid signature', $payload, $xeroSignature, 401);
+                }
+
                 return response()->json(['status' => 'success'], 200);
             }
         }else
