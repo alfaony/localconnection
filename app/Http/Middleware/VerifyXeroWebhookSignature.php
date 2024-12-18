@@ -30,6 +30,23 @@ class VerifyXeroWebhookSignature
 
         // Decode the payload to get tenantId
         $payloadData = json_decode($payload, true);
+        
+        // Sent TO Retrive
+        if (empty($payloadData['events'])) 
+        {
+            $data = SettingCompany::where('menu','xero')->where('field_title','webhook_key')->where('field_value','!=','')->get();
+            foreach ($data as $value) 
+            {
+                $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $value->field_value, true));
+                if (hash_equals($calculatedSignature, $xeroSignature)) 
+                {
+                    return response()->json(['status' => 'success'], 200);
+                }
+            }
+
+            return $this->respondWithError('Header x-xero-signature not found', $payload, $xeroSignature, 401);
+        }
+
         $tenantId = $payloadData['events'][0]['tenantId'] ?? null;
 
         if (!$tenantId) {
