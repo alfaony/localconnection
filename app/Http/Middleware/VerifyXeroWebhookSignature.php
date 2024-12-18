@@ -34,17 +34,24 @@ class VerifyXeroWebhookSignature
         // Sent TO Retrive
         if (empty($payloadData['events'])) 
         {
+            $webhookKey = null;
             $data = SettingCompany::where('menu','xero')->where('field_title','webhook_key')->where('field_value','!=','')->get();
             foreach ($data as $value) 
             {
                 $calculatedSignature = base64_encode(hash_hmac('sha256', $payload, $value->field_value, true));
                 if (hash_equals($calculatedSignature, $xeroSignature)) 
                 {
-                    return response()->json(['status' => 'success'], 200);
+                    $webhookKey = $value->field_value;
+                    break;
                 }
             }
-
-            return $this->respondWithError('Header x-xero-signature not found', $payload, $xeroSignature, 401);
+            if($webhookKey == null)
+            {
+                return $this->respondWithError('Webhook key not found', $payload, $xeroSignature, 401);
+            }else
+            {
+                return response()->json(['status' => 'success'], 200);
+            }
         }else
         {
             $tenantId = $payloadData['events'][0]['tenantId'] ?? null;
