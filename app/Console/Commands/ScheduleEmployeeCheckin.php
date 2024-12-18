@@ -363,7 +363,6 @@ class ScheduleEmployeeCheckin extends Command
             ];
         }
 
-
     }
 
 }
