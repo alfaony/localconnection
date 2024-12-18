@@ -100,7 +100,7 @@ class BastController extends Controller
         try {
             $bast = new Bast();
             $project = Project::byCompany(Auth::user()->company_id)->where('id',$request->post('project'))->firstOrFail();
-    
+            $signature = $request->input('enableTableSignature') ? true : false;
     
             $number = $this->bastNumber();
             
@@ -114,10 +114,16 @@ class BastController extends Controller
             $bast->customer_signature = $request->input('customer_signature');
             $bast->period = $request->input('period');
             $bast->template = $request->input('template');
+            $bast->signature = $signature;
     
             $bast->user_created_id = Auth::user()->id;
             $bast->user_updated_id = Auth::user()->id;
             
+            if ($signature && $request->has('table_signature')) 
+            {
+                $bast->signature_data = json_encode($request->input('table_signature'));
+            }
+
             $bast->save();
             $this->updateBudget($project->work_order_id, $request->input('project'));
     
@@ -258,7 +264,8 @@ class BastController extends Controller
     {
         $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $project = Project::byCompany(Auth::user()->company_id)->where('id',$request->post('project'))->firstOrFail();
-        
+        $signature = $request->input('enableTableSignature') ? true : false;
+
         DB::beginTransaction();
         try {
             $bast->date = $request->input('date');
@@ -270,7 +277,13 @@ class BastController extends Controller
             $bast->period = $request->input('period');
             $bast->user_updated_id = Auth::user()->id;
             $bast->template = $request->input('template');
+            $bast->signature = $signature;
     
+            if ($signature && $request->has('table_signature')) 
+            {
+                $bast->signature_data = json_encode($request->input('table_signature'));
+            }
+
             $bast->save();
             $this->updateBudget($project->work_order_id, $request->input('project'));
             if($bast->project->reportProject)

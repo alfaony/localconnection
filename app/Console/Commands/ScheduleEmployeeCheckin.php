@@ -363,6 +363,11 @@ class ScheduleEmployeeCheckin extends Command
             ];
         }
 
+        return 
+        [
+            'cuti' => $list,
+            'sakit' => $listPermission
+        ];
     }
 
 }
