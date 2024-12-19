@@ -112,8 +112,6 @@
                                 <tr>
                                     <td>{{ $checking->user->name }}</td>
                                     <td>
-                                        {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('H:i:s') : '' }}
-                                        
                                         @if(!$checking->is_active && !$checking->isDayoff())
                                             {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
                                         @else
@@ -135,7 +133,11 @@
                                             <span class="badge bg-info"><i class="fa fa-hospital"></i></span>
                                                 Izin
                                             @else
-                                            <span class="badge bg-warning"><i class="fa fa-clock"></i></span>
+                                                @if($checking->isToday())
+                                                    <span class="badge bg-warning"><i class="fa fa-clock"></i></span>
+                                                @else
+                                                    <span class="badge bg-danger"><i class="fa fa-times"></i></span>
+                                                @endif
                                             @endif
                                         @endif
                                     </td>
@@ -449,7 +451,9 @@
             url: "{{ route('employee-checking.checkLastScheduledCheckin') }}",
             type: 'GET',
             success: function(response) {
-                if (response) {
+                let status = response.status;
+                let message = response.message;
+                if (status) {
                     // Jika responsnya 'true', izinkan membuka modal
                     setCheckinId(id, requiresPhoto, requiresLocation);
                 } else {
@@ -457,7 +461,7 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'Check-in Gagal',
-                        text: 'Anda harus menunggu 30 menit sebelum melakukan check-in manual berikutnya.',
+                        text: message,
                         timer: 3000,
                         timerProgressBar: true,
                         showConfirmButton: false

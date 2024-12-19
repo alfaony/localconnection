@@ -274,29 +274,35 @@ class EmployeeCheckingController extends Controller
      */
     public function checkLastScheduledCheckin(Request $request)
     {
-        $user = Auth::user(); // Atau ambil user berdasarkan $userId
+        $user = Auth::user();
 
         if ($user) {
-            $lastScheduledCheckin = EmployeeChecking::where('user_id', $user->id)->where('is_active', false)->whereDate('scheduled_time', Carbon::today())->orderBy('updated_at', 'desc')->first();
-    
-            if ($lastScheduledCheckin) 
-            {
+            $currentCheckinTime = Carbon::now();
+            $lastScheduledCheckin = EmployeeChecking::where('user_id', $user->id)
+                ->where('is_active', false)
+                ->whereDate('scheduled_time', Carbon::today())
+                ->orderBy('updated_at', 'desc')
+                ->first();
+
+            if ($currentCheckinTime->hour <= 8 || $currentCheckinTime->hour >= 17) {
+                return response()->json(['status' => false, 'message' => 'Check-in hanya diizinkan antara jam 8 pagi dan 5 sore'], 200);
+            }
+
+            if ($lastScheduledCheckin) {
                 $lastCheckinTime = Carbon::parse($lastScheduledCheckin->scheduled_time);
-                $currentCheckinTime = Carbon::now();
                 $timeDifference = $currentCheckinTime->diffInMinutes($lastCheckinTime);
 
-                if ($timeDifference < 30) 
-                {
-                    return response()->json(false, 200);
-                }else
-                {
-                    return response()->json(true, 200);
+                if ($timeDifference < 30) {
+                    return response()->json(['status' => false, 'message' => 'Anda harus menunggu 30 menit sebelum melakukan check-in manual berikutnya'], 200);
+                } else {
+                    return response()->json(['status' => true, 'message' => 'Check-in diizinkan'], 200);
                 }
-            }else
-            {
-                return response()->json(true, 200);
+            } else {
+                return response()->json(['status' => true, 'message' => 'Check-in diizinkan'], 200);
             }
         }
+
+        return response()->json(['status' => false, 'message' => 'Pengguna tidak ditemukan'], 400);
     }
     /**
      * 
