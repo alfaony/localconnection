@@ -20,7 +20,7 @@ class KyeRequest extends FormRequest
             'employee_photo' => [$isUpdate ? 'nullable' : 'required', new Base64Image()],
             'ktp_photo' => [$isUpdate ? 'nullable' : 'required', new Base64Image()],
             'selfie_ktp' => [$isUpdate ? 'nullable' : 'required', new Base64Image()],
-            'ktp_family' => [$isUpdate ? 'nullable' : 'required', new Base64Image()],
+            'ktp_family' => [$isUpdate ? 'nullable' : 'required'],
             'house_photo' => [$isUpdate ? 'nullable' : 'required', new Base64Image()],
             'full_name' => 'required|string|max:255',
             'birth_place' => 'required|string|max:255',
