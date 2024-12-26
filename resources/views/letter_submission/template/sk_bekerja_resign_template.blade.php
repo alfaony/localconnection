@@ -63,8 +63,63 @@
     </div>
     <!-- Download Button -->
     <div class="col-12 text-center mt-3">
-        <button type="button" id="downloadQuote" class="btn btn-success"><i class="fa fa-file-pdf"></i>
-            {{__('Download')}}</button>
+        <!-- Download Button -->
+        <button type="button" id="downloadQuote" class="btn btn-success mb-3">
+            <i class="fa fa-file-pdf"></i> {{ __('Download') }}
+        </button>
+
+        <!-- Approve/Decline Form -->
+        @if(!isset($letterSubmission->is_approved))
+        @if(is_null($letterSubmission->status) || $letterSubmission->status == 1)
+        @canAccess('approvement', 'letter_submissions')
+        <form action="{{ route('letter-submission.approvement') }}" method="POST" id="bulk-action-form" class="d-inline">
+            @csrf
+            @method('PATCH')
+            <input type="hidden" name="selected_ids[]" value="{{ $letterSubmission->id }}">
+
+            <div class="d-flex justify-content-center">
+                <!-- Approve Button -->
+                <button type="submit" class="btn btn-success mx-2" name="action" value="approve">
+                    <i class="fa fa-check"></i> Approve
+                </button>
+                <!-- Decline Button -->
+                <button type="button" class="btn btn-danger mx-2" data-bs-toggle="modal" data-bs-target="#declineModal">
+                    <i class="fa fa-times"></i> Decline
+                </button>
+            </div>
+        </form>
+        @endcanAccess
+        @endif
+        @endif
+    </div>
+    <!-- Modal for inputting the reason for rejection -->
+    <div class="modal fade" id="declineModal" tabindex="-1" aria-labelledby="declineModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="declineModalLabel">Alasan Penolakan</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">Tutup</button>
+        </div>
+        <div class="modal-body">
+            <form id="declineForm" action="{{ route('letter-submission.approvement') }}" method="POST">
+            @csrf
+            @method('PATCH')
+            <input type="hidden" name="action" value="decline">
+            <input type="hidden" name="selected_ids[]" value="{{ $letterSubmission->id }}">
+
+            <div class="form-group">
+                <label for="modal-reason">Alasan Penolakan:</label>
+                <input type="text" name="notes[{{ $letterSubmission->id }}]" id="modal-reason" class="form-control" required>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="submit" class="btn btn-danger">Decline</button>
+            </div>
+            </form>
+        </div>
+        </div>
+    </div>
     </div>
 @endsection
 
