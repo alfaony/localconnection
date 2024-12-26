@@ -59,9 +59,9 @@ class KyeController extends Controller
             if ($request->selfie_ktp) {
                 $data['selfie_ktp'] = $this->saveBase64ImageToStorage($request->selfie_ktp, 'selfie_ktp_photos');
             }
-            if ($request->ktp_family) {
-                $data['ktp_family'] = $this->saveBase64ImageToStorage($request->ktp_family, 'ktp_family_photos');
-            }
+            // if ($request->ktp_family) {
+            //     $data['ktp_family'] = $this->saveBase64ImageToStorage($request->ktp_family, 'ktp_family_photos');
+            // }
             if ($request->house_photo) {
                 $data['house_photo'] = $this->saveBase64ImageToStorage($request->house_photo, 'house_photos');
             }
@@ -71,6 +71,12 @@ class KyeController extends Controller
                 $data['skck'] = $request->file('skck')->store('skck_files');
             }
             
+            if ($request->ktp_family) 
+            {
+                $data['ktp_family'] = 'ktp_family/' . uniqid() . '.' . $request->file('ktp_family')->getClientOriginalExtension();
+                Storage::put('public/' . $data['ktp_family'], file_get_contents($request->file('ktp_family')->getRealPath()));
+            }
+
             if ($request->skck) 
             {
                 $data['skck'] = 'skck_files/' . uniqid() . '.' . $request->file('skck')->extension();
@@ -117,6 +123,7 @@ class KyeController extends Controller
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil ditambahkan.');
         } catch (\Throwable $th) {
             //throw $th;
+            dd($th);
             return redirect()->route('kye.create')->with('error', 'Terjadi kesalahan saat menyimpan data KYE.');
         }
     }
@@ -162,9 +169,9 @@ class KyeController extends Controller
                 ? $this->saveBase64ImageToStorage($request->selfie_ktp, 'selfie_ktp_photos')
                 : $kye->selfie_ktp;
 
-            $data['ktp_family'] = $request->ktp_family
-                ? $this->saveBase64ImageToStorage($request->ktp_family, 'ktp_family_photos')
-                : $kye->ktp_family;
+            // $data['ktp_family'] = $request->ktp_family
+            //     ? $this->saveBase64ImageToStorage($request->ktp_family, 'ktp_family_photos')
+            //     : $kye->ktp_family;
 
             $data['house_photo'] = $request->house_photo
                 ? $this->saveBase64ImageToStorage($request->house_photo, 'house_photos')
@@ -178,6 +185,16 @@ class KyeController extends Controller
                 
                 $data['skck'] = 'skck_files/' . uniqid() . '.' . $request->file('skck')->extension();
                 Storage::put('public/' . $data['skck'], file_get_contents($request->file('skck')->getRealPath()));
+            }
+
+            if ($request->ktp_family) 
+            {
+                if (isset($kye->ktp_family)) 
+                {
+                    Storage::delete('public/' . $kye->ktp_family);
+                }
+                $data['ktp_family'] = 'ktp_family/' . uniqid() . '.' . $request->file('ktp_family')->getClientOriginalExtension();
+                Storage::put('public/' . $data['ktp_family'], file_get_contents($request->file('ktp_family')->getRealPath()));
             }
 
             $user = User::findOrFail($kye->user_id);
@@ -221,7 +238,7 @@ class KyeController extends Controller
 
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil diperbarui.');
         } catch (\Throwable $th) {
-            // dd($th);
+            dd($th);
             // Log error untuk debugging
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui data KYE.');
         }
