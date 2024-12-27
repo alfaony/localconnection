@@ -92,7 +92,7 @@
                                         @break
 
                                     @default
-                                        <span class="badge badge-danger">{{ $a->status }}</span>
+                                        <span class="badge badge-danger">{{ $invoice->status }}</span>
                                 @endswitch
                             </p>
                         </div>
