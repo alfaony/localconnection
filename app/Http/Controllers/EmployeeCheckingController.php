@@ -286,6 +286,7 @@ class EmployeeCheckingController extends Controller
 
             if ($currentCheckinTime->hour < 8 || $currentCheckinTime->hour > 17) {
                 return response()->json(['status' => false, 'message' => 'Check-in hanya diizinkan antara jam 08:00 dan 17:00'], 200);
+            }
 
             if ($lastScheduledCheckin) {
                 $lastCheckinTime = Carbon::parse($lastScheduledCheckin->scheduled_time);
