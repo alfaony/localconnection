@@ -116,7 +116,7 @@
                                             {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
                                         @else
                                             {{ $checking->created_at ? \Carbon\Carbon::parse($checking->created_at)->locale('id')->translatedFormat('F d,y') : '' }}
-                                            @if($manualCheck['manual_checkin'])
+                                            @if($manualCheck['manual_checkin'] && !$checking->isToday())
                                             <br>
                                             <span class="badge bg-primary">
                                                 Waktu Check-In : {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('H:i:s') : '' }}
