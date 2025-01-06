@@ -124,18 +124,15 @@
                         <label for="ktp_family">
                             <i class="fas fa-id-card"></i> Foto KTP Orang Tua/Saudara
                         </label>
-                        <input type="hidden" name="ktp_family" id="ktp_family">
+                        <input type="file" name="ktp_family" id="ktp_family" class="form-control-file"
+                            accept=".jpeg,.jpg,.png" onchange="compressAndPreviewImage();" required>
                         <div class="d-flex align-items-center mt-2">
-                            <button type="button" id="ktp_family_btn" class="btn btn-outline-primary btn-sm me-3"
-                                onclick="openCamera('ktp_family', 'ktp_family_preview'); this.disabled = true;">
-                                <i class="fas fa-camera"></i> Ambil Foto
-                            </button>
                             <div id="ktp_family_preview">
                                 @if(@$kye->ktp_family)
-                                <img src="{{ asset('storage/' . @$kye->ktp_family) }}" alt="KTP Orang Tua/Saudara"
+                                <img id="photo-preview" src="{{ asset('storage/' . @$kye->ktp_family) }}" alt="KTP Orang Tua/Saudara"
                                     class="img-thumbnail mt-2" width="120">
                                 @else
-                                <p class="text-muted mb-0"><i class="fas fa-image"></i> Belum ada foto.</p>
+                                <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-fluid mt-3"/>
                                 @endif
                             </div>
                         </div>
@@ -261,6 +258,54 @@
 </div>
 @stop
 @section('js')
+<script>
+function compressAndPreviewImage() {
+    const fileInput = document.getElementById('ktp_family');
+    const preview = document.getElementById('photo-preview');
+
+    if (!fileInput.files[0]) {
+        preview.src = "";
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(fileInput.files[0]);
+    reader.onload = function (event) {
+        const imgElement = document.createElement("img");
+        imgElement.src = event.target.result;
+        imgElement.onload = function (e) {
+            const canvas = document.createElement("canvas");
+            const MAX_WIDTH = 300; // Define the maximum width of the image
+
+            const scaleSize = MAX_WIDTH / e.target.width;
+            canvas.width = MAX_WIDTH;
+            canvas.height = e.target.height * scaleSize;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(e.target, 0, 0, canvas.width, canvas.height);
+            ctx.canvas.toBlob((blob) => {
+                const file = new File([blob], "compressed_image.jpg", {
+                    type: 'image/jpeg',
+                    quality: 0.8 // Lowering the quality to reduce file size
+                });
+
+                // Update the file input with the compressed image file
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+
+                // Update the preview image
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onloadend = function () {
+                    preview.src = reader.result;
+                    preview.style.display = 'block';
+                }
+            }, 'image/jpeg', 0.6); // Lowering quality setting here
+        }
+    }
+}
+</script>
 @if(!@$kye)
 <script>
     document.getElementById('submitBtn').addEventListener('click', function(event) {

@@ -107,7 +107,7 @@
                                 <td>{{ $a->date }}</td>
                                 <td>{{ $a->total ? "Rp. ". number_format($a->total,0,',','.') : "Rp. 0" }}</td>
                                 <td>
-                                    @if($a->status == "Open")
+                                    @if($a->status == "open")
                                     <span class='badge badge badge-success'>Open</span>
                                     @else
                                     <span class='badge badge badge-danger'>Closed</span>
