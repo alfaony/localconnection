@@ -43,8 +43,8 @@ class GenerateRekeningNumber extends Command
         
         $companies = Company::all();
         $menu = 'bank';
-        $fields = ['rekening_number' => '','atas_nama' => '','nama_bank' => '','cabang_bank' => ''];
-        $afiliateCompany = ['affiliate_company' => ''];
+        $fields = ['rekening_number' => null,'atas_nama' => null,'nama_bank' => null,'cabang_bank' => null];
+        $afiliateCompany = ['affiliate_company' => null];
         foreach ($companies as $company) 
         {
             // Mencari user dengan role admin atau root pada setiap perusahaan
