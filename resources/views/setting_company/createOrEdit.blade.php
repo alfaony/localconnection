@@ -128,6 +128,14 @@
                                     <span class="text-danger text-sm">{{ $message }}</span>
                                     @enderror
                                 </div>
+                                
+                                <div class="form-group">
+                                    <label for="affiliate_company">Affiliate Company</label>
+                                    <input type="text" name="affiliate_company" class="form-control" value="{{ old('affiliate_company', isset($data['affiliate_company']) ? $data['affiliate_company'] : '') }}">
+                                    @error('affiliate_company')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
 
                                 <div class="form-group">
                                     <label for="file_nib">Upload File NIB</label>
@@ -267,7 +275,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-header" id="headingXero">
+                    <div class="card">
+                        <div class="card-header" id="headingXero">
                             <h2 class="mb-0">
                                 <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseXero" aria-expanded="true" aria-controls="collapseXero">
                                     Xero Credential
@@ -302,6 +311,52 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header" id="headingRekening">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseRekening" aria-expanded="false" aria-controls="collapseRekening">
+                                    Rekening
+                                </button>
+                            </h2>
+                        </div>
+
+                        <div id="collapseRekening" class="collapse" aria-labelledby="headingRekening" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="rekening_number">Nomor Rekening</label>
+                                    <input type="text" name="rekening_number" class="form-control" value="{{ old('rekening_number', isset($data['rekening_number']) ? $data['rekening_number'] : '') }}">
+                                    @error('rekening_number')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+    
+                                <div class="form-group">
+                                    <label for="atas_nama">Nama Pemilik Rekening (opsional)</label>
+                                    <input type="text" name="atas_nama" class="form-control" placeholder="opsional, kosongkan jika nama atas nama sama dengan nama perusahaan" value="{{ old('atas_nama', isset($data['atas_nama']) ? $data['atas_nama'] : '') }}">
+                                    @error('atas_nama')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+    
+                                <div class="form-group">
+                                    <label for="nama_bank">Nama Bank</label>
+                                    <input type="text" name="nama_bank" class="form-control" value="{{ old('nama_bank', isset($data['nama_bank']) ? $data['nama_bank'] : '') }}">
+                                    @error('nama_bank')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="cabang_bank">Cabang Bank</label>
+                                    <input type="text" name="cabang_bank" class="form-control" value="{{ old('cabang_bank', isset($data['cabang_bank']) ? $data['cabang_bank'] : '') }}">
+                                    @error('cabang_bank')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
