@@ -292,7 +292,19 @@ class XeroWebhookController extends Controller
                         {
                             $product[] = [
                                 'code' => $value['ItemCode'],
-                                'product' => $this->findOrCreateProduct($invoice, $value['ItemCode'], $value['UnitAmount']),
+                                'product' => $this->findOrCreateProduct($invoice, $value['ItemCode'], $value['UnitAmount'], $value),
+                                'description' => $value['Description'],
+                                'qty' => $value['Quantity'],
+                                'price' => $value['UnitAmount'],
+                                'lineAmount' => $value['LineAmount'],
+                            ];
+
+                            $totalProductPrice += $value['LineAmount'];
+                        }
+                        elseif ($value['Description'] != ParamSchema::ADDTIONALCHARGES && $value['Description'] != ParamSchema::SERVICEFEE && $value['Description'] != ParamSchema::DISCOUNT) 
+                        {
+                            $product[] = [
+                                'product' => $this->findOrCreateProduct($invoice, null, $value['UnitAmount'], $value ,true),
                                 'description' => $value['Description'],
                                 'qty' => $value['Quantity'],
                                 'price' => $value['UnitAmount'],
@@ -330,6 +342,23 @@ class XeroWebhookController extends Controller
                     'total' => $xeroInvoice['Total'],
                 ];
 
+                if (!empty($xeroInvoice['Payments']) && isset($xeroInvoice['Payments'][0]['Date'])) {
+                    $rawDate = $xeroInvoice['Payments'][0]['Date'];
+                
+                    // Check if the date is in `/Date(...)` format
+                    if (preg_match('/\/Date\((\d+)(?:[+-]\d+)?\)\//', $rawDate, $matches)) {
+                        $timestamp = $matches[1] / 1000; // Convert milliseconds to seconds
+                        $form['payment_date'] = Carbon::createFromTimestamp($timestamp);
+                    } else {
+                        // If the date is in ISO 8601 format or any other valid format
+                        $form['payment_date'] = Carbon::parse($rawDate);
+                    }
+                } else 
+                {
+                    // Handle cases where no payments or date is available
+                    $form['payment_date'] = null; // or throw an exception if necessary
+                }
+                
                 
                 return $this->updateInvoice($invoice, $form);
             }
@@ -375,21 +404,47 @@ class XeroWebhookController extends Controller
         return $findCustoner->id;
     }
 
-    protected function findOrCreateProduct($invoice, $code, $amount)
+    protected function findOrCreateProduct($invoice, $code, $amount, $productXero = null, $productDescription = false)
     {
-        $product = Product::byCompany($invoice->userCreate->company_id)->where('xero_code', $code)->first();
-        if(!$product)
+        if(!$productDescription)
         {
-            $maxNumber = Product::byCompany($invoice->userCreate->company_id)->max('number');
-            $nextNumber = $maxNumber ? $maxNumber + 1 : 1;
+            $product = Product::byCompany($invoice->userCreate->company_id)->where('xero_code', $code)->first();
+            if(!$product)
+            {
+                $maxNumber = Product::byCompany($invoice->userCreate->company_id)->max('number');
+                $nextNumber = $maxNumber ? $maxNumber + 1 : 1;
+    
+                $product = new Product();
+                $product->number = $nextNumber;
+                $product->name = isset($productXero['Item']['Name']) ? $productXero['Item']['Name'] : $productXero['Description'];
+                $product->xero_code = $code;
+                $product->price_sell = $amount;
+                $product->price_buy = 0;
+                $product->method_count = "Item Xero";
+                $product->user_created_id = $invoice->userCreate->id;
+                $product->user_updated_id = $invoice->userCreate->id;
+                $product->save();
+            }
+        }else
+        {
+            $product = Product::byCompany($invoice->userCreate->company_id)->where('name',$productXero['Description'])->first();
+            if(!$product)
+            {
+                $maxNumber = Product::byCompany($invoice->userCreate->company_id)->max('number');
+                $nextNumber = $maxNumber ? $maxNumber + 1 : 1;
+    
+                $product = new Product();
+                $product->number = $nextNumber;
+                $product->name = isset($productXero['Item']['Name']) ? $productXero['Item']['Name'] : $productXero['Description'];
+                $product->xero_code = $code;
+                $product->price_sell = $amount;
+                $product->price_buy = 0;
+                $product->method_count = "Product From Xero";
+                $product->user_created_id = $invoice->userCreate->id;
+                $product->user_updated_id = $invoice->userCreate->id;
+                $product->save();
+            }
 
-            $product = new Product();
-            $product->number = $nextNumber;
-            $product->xero_code = $code;
-            $product->price_sale = $amount;
-            $product->user_created_id = $invoice->userCreate->id;
-            $product->user_updated_id = $invoice->userCreate->id;
-            $product->save();
         }
 
         return $product->id;
