@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
 use App\Models\Invoice;
 use App\Models\ApiLog;
 use App\Models\User;
@@ -603,7 +605,7 @@ class XeroWebhookController extends Controller
     public function mergePdf($invoice, $bastFilePath)
     {
         // Path relatif untuk file gabungan
-        $outputPath = "public/invoices/merged_invoice_{$invoice->number_result}.pdf";
+        $outputPath = "public/invoices/merged_invoice_{$invoice->number_result}_".date('YmdHis').'_'.Str::random(5).".pdf";
         
         // Hapus file gabungan sebelumnya jika ada
         if ($invoice->file_merge_path && Storage::exists($invoice->file_merge_path)) {
