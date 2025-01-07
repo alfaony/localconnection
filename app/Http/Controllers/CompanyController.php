@@ -58,11 +58,13 @@ class CompanyController extends Controller
             $fieldEmail = ['clock_in' => '08:00','reward_point_conversion' => '500','late_point'=>-10,'on_time_poin'=>0,'host' => '','port' => '','username' => '','password' => '','encryption'=> '','sent_time'=>'','sent_time_status'=>''];
             $fieldHeadLetter = ['header' => '', 'footer' => ''];
             $fieldXero = ['client_id' => '', 'client_secret' => '', 'webhook_key' => ''];
+            $fieldBank = ['rekening_number' => '','atas_nama' => '','nama_bank' => '','cabang_bank' => ''];
     
             foreach ($fieldProfile as $key => $value) 
             {
                 $field = new SettingCompany();
                 $field->user_id = $user->id;
+                $field->menu="profile";
                 $field->field_title = $key;
                 $field->field_value = $value;
                 $field->save();        
@@ -72,6 +74,7 @@ class CompanyController extends Controller
             {
                 $field = new SettingCompany();
                 $field->user_id = $user->id;
+                $field->menu="email";
                 $field->field_title = $key;
                 $field->field_value = $value;
                 $field->save();        
@@ -81,6 +84,7 @@ class CompanyController extends Controller
             {
                 $field = new SettingCompany();
                 $field->user_id = $user->id;
+                $field->menu="asset_head_letter";
                 $field->field_title = $key;
                 $field->field_value = $value;
                 $field->save();        
@@ -90,6 +94,17 @@ class CompanyController extends Controller
             {
                 $field = new SettingCompany();
                 $field->user_id = $user->id;
+                $field->menu="xero";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldBank as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="bank";
                 $field->field_title = $key;
                 $field->field_value = $value;
                 $field->save();        

@@ -165,7 +165,7 @@
       <h1 class="text-center" id="spkBorder">Kesepakatan Surat Pesanan</h1>
 
       <ul class="list-group mt-4">
-          <li class="list-group-item">1. Pihak Penjual adalah <strong>{{ $company['name'] ?? '' }}</strong> dan perusahaan afiliasinya. Dan Pihak Pembeli adalah <strong>perusahaan / perorangan</strong> penerima surat penawaran ini (Quotation). Pihak Pembeli sepakat untuk membeli sesuai pesanan yang tertera diatas kepada Pihak Penjual.</li>
+          <li class="list-group-item">1. Pihak Penjual adalah <strong>{{ $company['name'] ?? '' }}</strong> dan {{ isset($company['affiliate_company']) ? $company['affiliate_company'] : 'perusahaan afiliasinya' }}. Dan Pihak Pembeli adalah <strong>perusahaan / perorangan</strong> penerima surat penawaran ini (Quotation). Pihak Pembeli sepakat untuk membeli sesuai pesanan yang tertera diatas kepada Pihak Penjual dan silahkan melakukan pembayaran {{ isset($company['rekening_number']) ? "nomor rekening ".$company['rekening_number'] : ''  }}, {{ isset($company['nama_bank']) ? "Bank ".$company['nama_bank'] : ''  }}, {{ isset($company['cabang_bank']) ? "Cabang ".$company['cabang_bank'] : ''  }}.</li>
           <li class="list-group-item">2. Pihak Pembeli sepakat untuk melakukan pembayaran 14 hari sejak diterimanya invoice ( surat tagihan ) dari Pihak Penjual.</li>
           <li class="list-group-item">3. Bukti Pemotongan Pajak PPH23, agar dilampirkan kepada Finance02@brightcorporation.biz</li>
           <li class="list-group-item">4. Pembatalan Faktur Pajak / perubahan faktur pajak maksimal dilakukan 1 minggu sejak diterimanya faktur tersebut oleh pihak pembeli.</li>
