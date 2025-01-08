@@ -44,4 +44,3 @@ class DeleteProductBos1 extends Command
         }
     }
 }
-
