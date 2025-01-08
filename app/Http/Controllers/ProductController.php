@@ -146,15 +146,15 @@ class ProductController extends Controller
     {
         $product = Product::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         // Cek apakah produk masih digunakan di tabel lain
-        $isUsed = $product->quoteProducts()->exists() ||
-        $product->workOrderProducts()->exists() ||
-        $product->purchases()->exists() ||
-        $product->invoiceProducts()->exists();
+        // $isUsed = $product->quoteProducts()->exists() ||
+        // $product->workOrderProducts()->exists() ||
+        // $product->purchases()->exists() ||
+        // $product->invoiceProducts()->exists();
 
-        if ($isUsed) 
-        {
-            return redirect()->back()->with('error', 'Produk tidak dapat dihapus karena masih digunakan.');
-        }
+        // if ($isUsed) 
+        // {
+        //     return redirect()->back()->with('error', 'Produk tidak dapat dihapus karena masih digunakan.');
+        // }
         
         $product->delete();
         return redirect()->back()->with('delete',true);
