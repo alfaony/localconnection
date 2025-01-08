@@ -111,7 +111,12 @@
                         @foreach($product->groupBy('category.name') as $category => $group)
                             <optgroup class="select2-result-selectable" label="{{ $category ?? 'Other' }}">
                                 @foreach($group as $item)
-                                    <option value="{{ $item->id }}" data-key="{{ $a->id }}" data-methodcount="{{ $a->method_count }}" {{ $a->product_id == $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                                    @if($item->deleted_at && $item->id == $a->product_id)
+                                        <option value="{{ $item->id }}" data-key="{{ $a->id }}" data-methodcount="{{ $a->method_count }}" {{ $a->product_id == $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                                    @endif
+                                    @if(!$item->deleted_at)
+                                        <option value="{{ $item->id }}" data-key="{{ $a->id }}" data-methodcount="{{ $a->method_count }}" {{ $a->product_id == $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
+                                    @endif
                                 @endforeach
                             </optgroup>
                         @endforeach
@@ -434,7 +439,14 @@ $(document).ready(function() {
             projectOptions += `<optgroup label="${category}">`;
             products.forEach(function (product) {
                 var isSelected = product.id == defaultProductId ? 'selected' : '';
-                projectOptions += `<option value="${product.id}" data-key="${indexKeys}" ${isSelected}>${product.name} </option>`;
+                if(!product.deleted_at)
+                {
+                    projectOptions += `<option value="${product.id}" data-key="${indexKeys}" ${isSelected}>${product.name}</option>`;
+                }
+                if(product.deleted_at && product.id == defaultProductId)
+                {
+                    projectOptions += `<option value="${product.id}" data-key="${indexKeys}" ${isSelected}>${product.name}</option>`;
+                }
             });
             projectOptions += `</optgroup>`;
         });

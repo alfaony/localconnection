@@ -21,9 +21,33 @@ class ProductController extends Controller
     {
         $order = 'desc'; if($request->order == 'asc') { $order = 'asc'; }
 
-        $product = Product::byCompany(Auth::user()->company_id)->where('name','like', '%' . $request->get('product') . '%')
-        ->OrderBy('created_at',$order)->paginate(10);
-        $productCategory = ProductCategory::byCompany(Auth::user()->company_id)->OrderBy('name','asc')->get();
+        // Filter berdasarkan status penggunaan
+        $filter = $request->get('filter', 'all'); // Default 'all'
+        
+        // Query produk utama
+        $query = Product::byCompany(Auth::user()->company_id)
+            ->where('name', 'like', '%' . $request->get('product') . '%');
+
+        if ($filter === 'used') 
+        {
+            $query->where(function ($q) {
+                $q->whereHas('quoteProducts')
+                    ->orWhereHas('workOrderProducts')
+                    ->orWhereHas('purchases')
+                    ->orWhereHas('invoiceProducts');
+            });
+        } elseif ($filter === 'unused') {
+            $query->whereDoesntHave('quoteProducts')
+                ->whereDoesntHave('workOrderProducts')
+                ->whereDoesntHave('purchases')
+                ->whereDoesntHave('invoiceProducts');
+        }
+
+        $product = $query->orderBy('created_at', $order)->paginate(10);
+
+        $productCategory = ProductCategory::byCompany(Auth::user()->company_id)
+            ->orderBy('name', 'asc')
+            ->get();
 
         $totalProduct = Product::byCompany(Auth::user()->company_id)->count();
 
@@ -121,6 +145,17 @@ class ProductController extends Controller
     public function destroy($slug)
     {
         $product = Product::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        // Cek apakah produk masih digunakan di tabel lain
+        $isUsed = $product->quoteProducts()->exists() ||
+        $product->workOrderProducts()->exists() ||
+        $product->purchases()->exists() ||
+        $product->invoiceProducts()->exists();
+
+        if ($isUsed) 
+        {
+            return redirect()->back()->with('error', 'Produk tidak dapat dihapus karena masih digunakan.');
+        }
+        
         $product->delete();
         return redirect()->back()->with('delete',true);
     }

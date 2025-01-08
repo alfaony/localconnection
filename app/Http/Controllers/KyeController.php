@@ -238,7 +238,7 @@ class KyeController extends Controller
 
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil diperbarui.');
         } catch (\Throwable $th) {
-            dd($th);
+            // dd($th);
             // Log error untuk debugging
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui data KYE.');
         }

@@ -29,6 +29,13 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
             </ul>
         </div>
     @endif
+    @if (session('error'))
+        <div class="alert alert-danger">
+            <ul>
+                <li>{{ session('error') }}</li>
+            </ul>
+        </div>
+    @endif
 </div>
 
 
@@ -93,6 +100,13 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
                     </div>
                     <div class="p-2">
                         <input type="text" name="product" class="form-control" placeholder="Search">
+                    </div>
+                    <div class="p-2">
+                        <select id="filter" name="filter" class="form-control">
+                            <option value="all" {{ request('filter') == 'all' ? 'selected' : '' }}>All Product</option>
+                            <option value="used" {{ request('filter') == 'used' ? 'selected' : '' }}>Product Digunakan</option>
+                            <option value="unused" {{ request('filter') == 'unused' ? 'selected' : '' }}>Product Tidak Digunakan</option>
+                        </select>
                     </div>
                     <div class="p-2">
                     @php

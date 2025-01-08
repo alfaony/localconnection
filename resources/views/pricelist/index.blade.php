@@ -23,17 +23,19 @@
                     </select>
                 </div>
             </div>
-            <table class="table table-bordered" id="tablePricelist">
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>Kategori Produk</th>
-                        <th>Harga</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-bordered" id="tablePricelist">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Kategori Produk</th>
+                            <th>Harga</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -129,6 +131,31 @@
         border: none;
         border-radius: 5px;
         cursor: pointer;
+    }
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100% !important; /* Memastikan tabel mengisi kontainer */
+        table-layout: auto; /* Mencegah pemadatan kolom */
+    }
+    .table-responsive 
+    {
+        max-height: 400px; /* Atur tinggi maksimal */
+        overflow-y: auto; /* Aktifkan scrolling vertikal */
+        overflow-x: hidden; /* Sembunyikan scroll horizontal */
+    }
+</style>
+<style>
+    #tablePricelist th, #tablePricelist td {
+        white-space: nowrap; /* Mencegah teks turun ke bawah */
+    }
+
+    #tablePricelist th:nth-child(3), #tablePricelist td:nth-child(3) {
+        width: 150px; /* Atur lebar kolom Harga */
+        text-align: right; /* Rapi ke kanan */
     }
 </style>
 @stop
