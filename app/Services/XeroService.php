@@ -380,7 +380,7 @@ class XeroService
                 if(!$item->product->xero_code)
                 {
                     // Mendapatkan nilai max dari row $product->number
-                    $maxNumber = Product::byCompany($invoice->userCreate->company_id)->max('number');
+                    $maxNumber = Product::withTrashed()->byCompany($invoice->userCreate->company_id)->max('number');
                     $nextNumber = $maxNumber ? $maxNumber + 1 : 1;
 
                     // Membuat kode berdasarkan nama perusahaan user dan nomor produk

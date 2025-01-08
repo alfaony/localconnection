@@ -48,7 +48,7 @@ class SuplierController extends Controller
         $nomor = $request->get('nomor');
         $project = Project::byRole()->whereDoesntHave('suplier')->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::now()->format('Y-m-d');
-        $product = Product::byCompany(Auth::user()->company_id)->with('category')->get();
+        $product = Product::withTrashed()->byCompany(Auth::user()->company_id)->with('category')->get();
 
 
         return view('suplier.createOrEdit',compact('nomor','project','dateCreate','product'));
@@ -140,7 +140,7 @@ class SuplierController extends Controller
         $suplier = Suplier::where('slug', $slug)->firstOrFail();
         $project = Project::byRole()->whereDoesntHave('suplier')->orWhere('id', $suplier->project_id)->orderBy('created_at', 'desc')->get();
         $dateCreate = Carbon::parse($suplier->created_at)->format('Y-m-d');
-        $product = Product::byCompany(Auth::user()->company_id)->with('category')->get();
+        $product = Product::withTrashed()->byCompany(Auth::user()->company_id)->with('category')->get();
 
 
         return view('suplier.createOrEdit',compact('suplier','nomor','project','dateCreate','product'));   
@@ -282,12 +282,12 @@ class SuplierController extends Controller
                 $price = $suplierProduct->price;
             }else
             {
-                $product = Product::find($productId);
+                $product = Product::withTrashed()->find($productId);
                 $price = $product->price_buy ?? 0;
             }
         }else
         {
-            $product = Product::find($productId);
+            $product = Product::withTrashed()->find($productId);
             $price = $product->price_buy ?? 0;
         }
 

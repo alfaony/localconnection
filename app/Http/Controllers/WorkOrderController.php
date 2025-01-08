@@ -47,7 +47,7 @@ class WorkOrderController extends Controller
             return redirect()->to(route('work_order.index'))->with('datanotfound',true);
         }
 
-        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $product = Product::withTrashed()->with('category')->byCompany(Auth::user()->company_id)->get();
         $quote = Quote::ByCompany(Auth::user()->company_id)->whereDoesntHave('workOrder')->orderBy('created_at','desc')->get();
 
         $userCreate = Auth::user()->name;
@@ -62,7 +62,7 @@ class WorkOrderController extends Controller
      */
     public function create()
     {   
-        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $product = Product::withTrashed()->with('category')->byCompany(Auth::user()->company_id)->get();
         $quote = Quote::ByCompany(Auth::user()->company_id)->whereDoesntHave('workOrder')->orderBy('created_at','desc')->get();
 
         $userCreate = Auth::user()->name;
@@ -147,7 +147,7 @@ class WorkOrderController extends Controller
     public function edit($slug)
     {
         // dd($slug);
-        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $product = Product::withTrashed()->with('category')->byCompany(Auth::user()->company_id)->get();
         
         $workOrder = WorkOrder::where('slug', $slug)->firstOrFail();
         $quote = Quote::ByCompany(Auth::user()->company_id)->whereDoesntHave('workOrder')->orWhere('id',$workOrder->quote_id)->orderBy('created_at','desc')->get();
@@ -195,7 +195,7 @@ class WorkOrderController extends Controller
     public function downloadPdf($slug)
     {
         // dd($slug);
-        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $product = Product::withTrashed()->byCompany(Auth::user()->company_id)->get();
         $quote = Quote::byCompany(Auth::user()->company_id)->get();
         
         $workOrder = WorkOrder::where('slug', $slug)->firstOrFail();
@@ -352,12 +352,12 @@ class WorkOrderController extends Controller
                 $price = $workOrderProduct->price_buy;
             }else
             {
-                $product = Product::find($productId);
+                $product = Product::withTrashed()->find($productId);
                 $price = $product->price_buy;
             }
         }else
         {
-            $product = Product::find($productId);
+            $product = Product::withTrashed()->find($productId);
             $price = $product->price_buy;
         }
 

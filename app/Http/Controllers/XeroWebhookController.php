@@ -410,7 +410,7 @@ class XeroWebhookController extends Controller
     {
         if(!$productDescription)
         {
-            $product = Product::byCompany($invoice->userCreate->company_id)->where('xero_code', $code)->first();
+            $product = Product::withTrashed()->byCompany($invoice->userCreate->company_id)->where('xero_code', $code)->first();
             if(!$product)
             {
                 $maxNumber = Product::byCompany($invoice->userCreate->company_id)->max('number');
@@ -429,10 +429,10 @@ class XeroWebhookController extends Controller
             }
         }else
         {
-            $product = Product::byCompany($invoice->userCreate->company_id)->where('name',$productXero['Description'])->first();
+            $product = Product::withTrashed()->byCompany($invoice->userCreate->company_id)->where('name',$productXero['Description'])->first();
             if(!$product)
             {
-                $maxNumber = Product::byCompany($invoice->userCreate->company_id)->max('number');
+                $maxNumber = Product::withTrashed()->byCompany($invoice->userCreate->company_id)->max('number');
                 $nextNumber = $maxNumber ? $maxNumber + 1 : 1;
     
                 $product = new Product();

@@ -81,7 +81,37 @@ class Product extends Model
     {
         return 'slug';
     }
+    /**
+     * Relasi ke tabel QuoteProduct (Produk dalam Penawaran)
+     */
+    public function quoteProducts()
+    {
+        return $this->hasMany(QuoteProduct::class, 'product_id');
+    }
 
+    /**
+     * Relasi ke tabel WorkOrderProduct (Produk dalam Work Order)
+     */
+    public function workOrderProducts()
+    {
+        return $this->hasMany(WorkOrderProduct::class, 'product_id');
+    }
+
+    /**
+     * Relasi ke tabel Purchase (Produk dalam Pembelian)
+     */
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class, 'product_id');
+    }
+
+    /**
+     * Relasi ke tabel InvoiceProduct (Produk dalam Faktur)
+     */
+    public function invoiceProducts()
+    {
+        return $this->hasMany(InvoiceProduct::class, 'product_id');
+    }
     public function user()
     {
         return $this->belongsTo(User::class,'user_created_id')->withTrashed();
