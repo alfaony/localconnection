@@ -201,7 +201,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             </tr>
             @empty
             <tr>
-                <td colspan="3">
+                <td colspan="9">
                     <center>Data Kosong</center>
                 </td>
             </tr>

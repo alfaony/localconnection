@@ -35,6 +35,9 @@ class ProjectController extends Controller
                 $query->where('title', 'like', $searchTerm)
                     ->orWhereHas('workOrder', function ($query) use ($searchTerm) {
                         $query->where('number_result', 'like', $searchTerm);
+                    })
+                    ->orWhereHas('user', function ($query) use ($searchTerm) {
+                        $query->where('name', 'like', $searchTerm);
                     });
             })
             ->orderBy('created_at', $order);
