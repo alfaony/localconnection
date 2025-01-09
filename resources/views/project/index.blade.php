@@ -158,6 +158,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                 <th>Progress</th>
                 <th>Nomor SPK</th>
                 <th>Total SPK</th>
+                <th>Pic</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -177,6 +178,9 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                 </td>
                 <td>{{ $a->workOrder ? $a->workOrder->number_result : '' }}</td>
                 <td>{{ $a->workOrder ? 'Rp. '.number_format($a->workOrder->total,0,',','.') : '' }}</td>
+                <td>
+                    {{ $a->user ? $a->user->name : '' }}
+                </td>
                 <td>
                     <form method="post" action="{{ route('project.destroy',$a) }}">
                         @csrf
