@@ -48,7 +48,7 @@ class CheckinNotificationV2 extends Command
                             ->whereTime('end_time', '>=', $scheduleTime)
                             ->first();
 
-            if($currentTime == $scheduleTime && !$passCheckings)
+            if($currentTime == $scheduleTime && !$passCheckings && $checkin->user)
             {
                 
                 if($checkin->user->manual_checkin == false)
