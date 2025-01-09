@@ -15,6 +15,9 @@ class AgreementLetter extends Model
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
+    protected $casts = [
+        'custom_fields' => 'array', // Agar otomatis dikonversi ke array saat diakses
+    ];
 
     protected static function boot()
     {
@@ -63,6 +66,11 @@ class AgreementLetter extends Model
     public function quote()
     {
         return $this->belongsTo(Quote::class)->withTrashed();
+    }
+
+    public function templateAgreement()
+    {
+        return $this->belongsTo(TemplateAgreement::class,'template_agreement_id');
     }
 
     public function getRentStartDurationIdAttribute()

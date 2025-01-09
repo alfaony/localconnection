@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
+use NumberFormatter;
 
 class Quote extends Model
 {
@@ -85,6 +86,22 @@ class Quote extends Model
         return $this->hasOne(Invoice::class);
     }
 
+    public function getTotalTerbilangAttribute()
+    {
+        return $this->convertToWords($this->total);
+    }
+
+    // Fungsi untuk mengonversi angka ke teks (bahasa Indonesia)
+    private function convertToWords($number)
+    {
+        if (!is_numeric($number)) {
+            return "Nol";
+        }
+
+        // Gunakan NumberFormatter untuk bahasa Indonesia
+        $formatter = new NumberFormatter('id_ID', NumberFormatter::SPELLOUT);
+        return ucfirst($formatter->format($number)) . " rupiah";
+    }
     public function getQuoteNumberResultAttribute()
     {
         $date = Carbon::parse($this->created_at)->format('m/Y');
