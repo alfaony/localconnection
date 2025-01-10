@@ -108,7 +108,7 @@
                         mencakup peringatan tertulis, denda, atau bahkan pemutusan kontrak sewa.
                     </p>
 
-                    <p class="text-center mb-2"><strong>PASAL 4</strong></p>
+                    <p class="text-center mb-2"><strong>PASAL 3</strong></p>
                     <ol>
                         <li>
                             <Strong>Sanksi Pelanggaran</Strong></br>
