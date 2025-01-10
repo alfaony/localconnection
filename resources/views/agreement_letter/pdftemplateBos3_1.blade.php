@@ -57,20 +57,15 @@
                                     <td>No. KTP</td>
                                     <td>: {{ isset($agreementLetter->custom_fields['custom_nik']) ? e($agreementLetter->custom_fields['custom_nik']) : '-' }}</td>
                                 </tr>
-                                <tr>
-                                    <td colspan="2">
-                                        <p>Selanjutnya disebut sebagai PIHAK KEDUA.</p>
-                                    </td>
-                                </tr>
                             </tbody>
                         </table>
                     </div>
 
                     <p class="text-justify">
-                        Dalam hal ini pihak dengan ini menerangkan bahwa <strong>PIHAK PERTAMA</strong> selaku pemilik sah telah
+                        Dalam hal ini pihak dengan ini menerangkan bahwa <strong>PIHAK PERTAMA selaku pemilik sah telah
                             setuju untuk menyewakan kepada PIHAK KEDUA</strong> berupa sebuah kamar kosan yang terletak
                         di {{ $agreementLetter ? $agreementLetter->rent_address : '' }},
-                        Senilai <strong>{{ number_format($agreementLetter->quote->total, 0, ',', '.') }},- ( {{ $agreementLetter->quote->total_terbilang }} )</strong> masa sewa {{ $agreementLetter->rent_count }}
+                        Senilai <strong>Rp. {{ number_format($agreementLetter->quote->total, 0, ',', '.') }},- ( {{ $agreementLetter->quote->total_terbilang }} )</strong> masa sewa {{ $agreementLetter->rent_count }}
                     </p>
 
                     <p class="text-center mb-2"><strong>PASAL 1</strong></p>
@@ -78,7 +73,7 @@
                         <li><strong>PIHAK PERTAMA</strong> dengan ini menyewakan sebagian ruangan kepada Pihak Kedua
                             untuk digunakan sebagai tempat tinggal (kos) selama jangka waktu tertentu sesuai dengan
                             ketentuan dalam perjanjian ini.</li>
-                        <li><strong>PIHAK KEDUA</strong> wajib membayar sewa sebesar<strong> {{ number_format($agreementLetter->quote->total, 0, ',', '.') }},-</strong>
+                        <li><strong>PIHAK KEDUA</strong> wajib membayar sewa sebesar<strong>Rp. {{ number_format($agreementLetter->quote->total, 0, ',', '.') }},-</strong>
                             setiap bulan paling lambat pada tanggal setiap bulannya.</li>
                     </ol>
 
