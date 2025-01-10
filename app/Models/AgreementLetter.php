@@ -72,7 +72,10 @@ class AgreementLetter extends Model
     {
         return $this->belongsTo(TemplateAgreement::class,'template_agreement_id');
     }
-
+    public function getCustomField($key, $default = '-')
+    {
+        return $this->custom_fields[$key] ?? $default;
+    }
     public function getRentStartDurationIdAttribute()
     {
         $date = Carbon::parse($this->rent_start_duration)->locale('id');

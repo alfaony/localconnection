@@ -19,67 +19,62 @@
                             <strong>PERJANJIAN SEWA MENYEWA</strong>
                         </p>
                         <p class="text-center mb-3"><strong>
-
-                                UNIT GUDANGPLUS
+                                UNIT {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }}
                             </strong></p>
                     </div>
-
-                    <p class="mt-3 mb-2">Perjanjian Sewa Menyewa Unit Gudangplus, yang untuk selanjutnya disebut dengan
-                        “Perjanjian” ini dibuat dan disetujui pada <strong>07 Januari 2025</strong> oleh dan antara:</p>
-
+                    <p class="mt-3 mb-2">Perjanjian Sewa Menyewa Unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }}, yang untuk selanjutnya disebut dengan
+                        “Perjanjian” ini dibuat dan disetujui pada <strong>{{ \Carbon\Carbon::parse($agreementLetter->date)->format('d F Y') }}</strong> oleh dan antara:</p>
                     <table class="table table-bordered">
                         <thead class="thead-dark">
                             <tr>
-                                <th colspan="2" class="text-left">OBJEK SEWA (Unit Self Storage)</th>
+                                <th colspan="2" class="text-left">OBJEK SEWA (Unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }})</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>Tipe</strong></p>
-                                    <p class="mb-0">(3m3) H.11</p>
+                                    <p class="mb-0">{{ isset($agreementLetter->custom_fields['custom_type']) ? e($agreementLetter->custom_fields['custom_type']) : '-' }}</p>
                                 </td>
                                 <td>
                                     <p class="mb-0"><strong>Tanggal Mulai Sewa</strong></p>
-                                    <p class="mb-0">06 Januari 2025</p>
+                                    <p class="mb-0">{{ \Carbon\Carbon::parse($agreementLetter->rent_start_duration)->format('d F Y') }}</p>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>Dimensi (PxLxT)</strong></p>
-                                    <p class="mb-0">1.40m x 1.10m x 1.98m (3m3)</p>
+                                    <p class="mb-0">{{ isset($agreementLetter->custom_fields['custom_length']) ? e($agreementLetter->custom_fields['custom_length']) : '-' }} x {{ isset($agreementLetter->custom_fields['custom_width']) ? e($agreementLetter->custom_fields['custom_width']) : '-' }} x {{ isset($agreementLetter->custom_fields['custom_height']) ? e($agreementLetter->custom_fields['custom_height']) : '-' }}</p>
                                 </td>
                                 <td>
                                     <p class="mb-0"><strong>Lama Sewa</strong></p>
-                                    <p class="mb-0">1 Bulan</p>
+                                    <p class="mb-0">{{ $agreementLetter->rent_count }}</p>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>Nomor Unit</strong></p>
-                                    <p class="mb-0">F1 3A</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_type') }}</p>
                                 </td>
                                 <td>
                                     <p class="mb-0"><strong>Tanggal Selesai Sewa</strong></p>
-                                    <p class="mb-0">06 Februari 2025</p>
+                                    <p class="mb-0">{{ \Carbon\Carbon::parse($agreementLetter->rent_end_duration)->format('d F Y') }}</p>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>Lokasi</strong></p>
-                                    <p class="mb-0">Jl. Surya Grand Cisoka No.6 Blok F1 - 3A, Cibugel, Cisoka, Tangerang
-                                        Regency,
-                                        Banten 15730</p>
+                                    <p class="mb-0">{{ $agreementLetter->rent_address }}</p>
                                 </td>
                                 <td>
                                     <p class="mb-0"><strong>Biaya Sewa</strong></p>
-                                    <p class="mb-0">Rp. 520.000</p>
+                                    <p class="mb-0">Rp. {{ number_format($agreementLetter->quote->total, 0, ',', '.') }}</p>
                                 </td>
                             </tr>
                         </tbody>
                         <thead class="thead-dark">
                             <tr>
-                                <th colspan="2" class="text-left"><strong>PIHAK PERTAMA</strong> (Penyedia Gudangplus)
+                                <th colspan="2" class="text-left"><strong>PIHAK PERTAMA</strong> (Penyedia {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }})
                                 </th>
                             </tr>
                         </thead>
@@ -87,20 +82,17 @@
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>Nama Perusahaan</strong></p>
-                                    <p class="mb-0">CV Office Plus (Gudangplus)</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_provider_company') }}</p>
                                 </td>
                                 <td>
                                     <p class="mb-0"><strong>No Telepon</strong></p>
-                                    <p class="mb-0">No Telepon</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_provider_phone') }}</p>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="w-50" rowspan="2">
                                     <p class="mb-0"><strong>Alamat</strong></p>
-                                    <p class="mb-0">Ruko Garden Shopping Arcade,
-                                        Tanjung Duren Selatan, Grogol
-                                        Petamburan, Kota Adm. Jakarta
-                                        Barat, DKI Jakarta 11470</p>
+                                    <p class="mb-0">{{ $agreementLetter->rent_address }}</p>
                                 </td>
                                 <td style="background-color: #e5e5e5;">
                                     <p class="mb-0"><strong>Atas Nama</strong></p>
@@ -109,73 +101,73 @@
                             <tr>
                                 <td>
                                     <p class="mb-0"><strong>Nama</strong></p>
-                                    <p class="mb-0">Eddy Yansen</p>
+                                    <p class="mb-0">{{ $company['name'] }}</p>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>Email PIC</strong></p>
-                                    <p class="mb-0">CV Office Plus (Gudangplus)</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_provider_email') }}</p>
                                 </td>
                                 <td>
-                                    <p class="mb-0"><strong>No Telepon</strong></p>
-                                    <p class="mb-0">No Telepon</p>
+                                    <p class="mb-0"><strong>Jabatan</strong></p>
+                                    <p class="mb-0">Direktur</p>
                                 </td>
                             </tr>
                         </tbody>
                         <thead class="thead-dark">
                             <tr>
-                                <th colspan="2" class="text-left"><strong>PIHAK KEDUA</strong> (Penyewa Gudangplus)</th>
+                                <th colspan="2" class="text-left"><strong>PIHAK KEDUA</strong> (Penyewa {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }})</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>Nama Perusahaan</strong></p>
-                                    <p class="mb-0">-</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_tenant_company') }}</p>
                                 </td>
                                 <td>
                                     <p class="mb-0"><strong>No Telp
                                             Perusahaan</strong></p>
-                                    <p class="mb-0">0</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_tenant_phone') }}</p>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>NPWP Perusahaan</strong></p>
-                                    <p class="mb-0"><strong>90.962.149.2-429.000</strong></p>
+                                    <p class="mb-0"><strong>{{ $agreementLetter->getCustomField('custom_tenant_npwp') }}</strong></p>
                                 </td>
                                 <td>
                                     <p class="mb-0"><strong>Alamat</strong></p>
-                                    <p class="mb-0">Jl.kebumen no.1 menteng jakpus</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_tenant_address') }}</p>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>Nama PIC</strong></p>
-                                    <p class="mb-0">Deinara Permata</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_pic_name') }}</p>
                                 </td>
                             </tr>
 
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>Jabatan PIC</strong></p>
-                                    <p class="mb-0">Pemilik</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_pic_position') }}</p>
                                 </td>
                                 <td>
                                     <p class="mb-0"><strong>No Telp PIC</strong></p>
-                                    <p class="mb-0">877-8899-9919</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_pic_phone') }}</p>
                                 </td>
                             </tr>
 
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>NIK</strong></p>
-                                    <p class="mb-0">3273225907940004</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_pic_nik') }}</p>
                                 </td>
                                 <td>
                                     <p class="mb-0"><strong>Email PIC</strong></p>
-                                    <p class="mb-0">loysdeinara@gmail.com</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_pic_email') }}</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -188,13 +180,12 @@
                     </p>
                     <ul>
                         <li>
-                            Bahwa <strong>PIHAK PERTAMA</strong> adalah pemilik unit Gudangplus yang beralamat di
-                            Jalan Surya Grand Cisoka No 3 Blok F1. Cibugel Cisoka Kabupaten Tangerang
-                            15730
+                            Bahwa <strong>PIHAK PERTAMA</strong> adalah pemilik unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} yang beralamat di
+                            {{ $agreementLetter->rent_address ?? "-" }}
                         </li>
 
                         <li>
-                            Bahwa <strong>PIHAK PERTAMA</strong> bermaksud menyewakan unit Gudangplus kepada Pihak
+                            Bahwa <strong>PIHAK PERTAMA</strong> bermaksud menyewakan unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} kepada Pihak
                             Kedua, dan <strong>PIHAK KEDUA</strong> berkeinginan menyewa unit Gudang kepada Pihak
                             Pertama.
                         </li>
@@ -223,7 +214,7 @@
                             mengikatkan dirinya untuk membayar sejumlah uang atas unit sewaan.
                         </li>
                         <li>
-                            Gudangplus adalah gudang milik <strong>PIHAK PERTAMA</strong> yang diperuntukan untuk
+                            {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} adalah gudang milik <strong>PIHAK PERTAMA</strong> yang diperuntukan untuk
                             penyimpanan barang
                         </li>
                         <li>
@@ -250,10 +241,9 @@
                     <p class="text-center mb-0">PASAL 3</p>
                     <p class="text-center mb-2">JANGKA WAKTU SEWA</p>
                     <p class="mb-0">
-                        Perjanjian ini berlaku untuk jangka waktu selama 1 bulan terhitung sejak tanggal <strong>06
-                            Januari 2025</strong>
+                        Perjanjian ini berlaku untuk jangka waktu selama {{ $agreementLetter->rent_count }} terhitung sejak tanggal <strong>{{ \Carbon\Carbon::parse($agreementLetter->rent_start_duration)->format('d F Y') }}</strong>
                         sampai
-                        dengan 06 Februari 2025 dan setelah jangka waktu tersebut berakhir, apabila <strong>PIHAK
+                        dengan <strong>{{ \Carbon\Carbon::parse($agreementLetter->rent_end_duration)->format('d F Y') }}</strong> dan setelah jangka waktu tersebut berakhir, apabila <strong>PIHAK
                             KEDUA</strong>
                         bermaksud
                         untuk memperbarui perjanjian sewa menyewa, maka <strong>PIHAK KEDUA</strong> wajib melakukan
@@ -266,7 +256,7 @@
                     <p class="mb-0">
                         <strong>PIHAK KEDUA</strong> dan <strong>PIHAK PERTAMA</strong> sepakat bahwa segala biaya
                         berkaitan dengan Sewa Menyewa Unit
-                        Gudangplus serta mekanisme pembayarannya adalah sebagaimana diatur dalam LAMPIRAN 1 Perjanjian,
+                        {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} serta mekanisme pembayarannya adalah sebagaimana diatur dalam LAMPIRAN 1 Perjanjian,
                         yang merupakan satu kesatuan yang tidak terpisahkan dari Perjanjian ini.
                     </p>
 
@@ -287,12 +277,11 @@
                     </p>
                     <ol>
                         <li>
-                            Unit Gudang terletak di JL Surya Grand Cisoka No 3A blok F1 Cibugel Cisoka
-                            Kabupaten Tangerang 15730
+                            Unit Gudang terletak di {{ $agreementLetter->rent_address ?? "-" }}
                         </li>
                         <li>
-                            Unit Gudang dengan ukuran panjang <strong>1.40m</strong>, Lebar <strong>1.10m</strong>, dan
-                            tinggi <strong>1.98m</strong>
+                            Unit Gudang dengan ukuran panjang <strong>{{  $agreementLetter->getCustomField('custom_length') }}</strong>, Lebar <strong>{{  $agreementLetter->getCustomField('custom_width') }}</strong>, dan
+                            tinggi <strong>{{  $agreementLetter->getCustomField('custom_height') }}</strong>
                         </li>
                         <li>
                             Unit Gudang disewakan atas nama <strong>PIHAK KEDUA</strong> untuk digunakan sebagai tempat
@@ -307,22 +296,22 @@
                     <p class="text-center mb-2">PENGGUNAAN OBJEK SEWA</p>
                     <ol>
                         <li>
-                            <strong>PIHAK KEDUA</strong> mempergunakan unit Gudangplus dengan tujuan untuk menyimpan
+                            <strong>PIHAK KEDUA</strong> mempergunakan unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} dengan tujuan untuk menyimpan
                             barang-barang pribadi dan/atau bisnis.
                         </li>
                         <li>
-                            <strong>PIHAK KEDUA</strong> dilarang menggunakan Unit Gudangplus untuk aktivitas bekerja di
-                            dalamnya. Unit Gudangplus hanya boleh digunakan untuk penyimpanan barang.
+                            <strong>PIHAK KEDUA</strong> dilarang menggunakan Unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} untuk aktivitas bekerja di
+                            dalamnya. Unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} hanya boleh digunakan untuk penyimpanan barang.
                         </li>
                         <li>
-                            <strong>PIHAK KEDUA</strong> diberikan maksimal waktu berdiam di dalam Unit Gudangplus
+                            <strong>PIHAK KEDUA</strong> diberikan maksimal waktu berdiam di dalam Unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }}
                             selama
                             3 jam dalam sekali kunjungan.
                         </li>
                         <li>
                             <strong>PIHAK KEDUA</strong> berkewajiban untuk menjaga kebersihan, kemananan, ketertiban
                             dan
-                            ketentraman lingkungan Gudangplus.
+                            ketentraman lingkungan {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }}.
                         </li>
                     </ol>
 
@@ -332,7 +321,7 @@
                         <li>
                             <strong>PIHAK PERTAMA</strong> akan menyerahkan Objek Sewa Kepada <strong>PIHAK
                                 KEDUA</strong> pada tanggal
-                            06 Januari 2025.
+                            {{ \Carbon\Carbon::parse($agreementLetter->rent_start_duration)->format('d F Y') }}.
                         </li>
                         <li>
                             Serah terima akan dilakukan dengan suatu Berita Acara Serah Terima yang
@@ -364,7 +353,7 @@
                         <li>
                             <strong>PIHAK PERTAMA</strong> menyediakan sistem keamanan CCTV yang dipantau 24 jam untuk
                             memantau
-                            aktivitas di area Gudangplus
+                            aktivitas di area {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }}
                         </li>
                         <li>
                             <strong>PIHAK PERTAMA</strong> menyediakan alarm kebakaran dan sistem pemadam kebakaran
@@ -396,12 +385,12 @@
                             yang terutang.
                         </li>
                         <li>
-                            <strong>PIHAK PERTAMA</strong> berkewajiban menyerahkan Unit Gudangplus dalam kondisi baik
+                            <strong>PIHAK PERTAMA</strong> berkewajiban menyerahkan Unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} dalam kondisi baik
                             kepada <strong>PIHAK KEDUA</strong>.
                         </li>
                         <li>
                             <strong>PIHAK PERTAMA</strong> bertanggung jawab atas perawatan dan keamanan fasilitas
-                            Gudangplus secara umum.
+                            {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} secara umum.
                         </li>
                     </ol>
                     <p class="text-left mb-0 mt-0">
@@ -409,7 +398,7 @@
                     </p>
                     <ol>
                         <li>
-                            <strong>PIHAK KEDUA</strong> berhak menggunakan Unit Gudangplus untuk keperluan
+                            <strong>PIHAK KEDUA</strong> berhak menggunakan Unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} untuk keperluan
                             penyimpanan barang pribadi atau komersial.
                         </li>
                         <li>
@@ -419,7 +408,7 @@
                         <li>
                             <strong>PIHAK KEDUA</strong> bertanggung jawab atas kondisi barang yang disimpan di dalam
                             Unit
-                            Gudangplus
+                            {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }}
                         </li>
                     </ol>
 
@@ -462,13 +451,13 @@
                         <li>
                             <strong>PIHAK KEDUA</strong> tidak dibenarkan untuk mengubah struktur dan instalasi dari
                             unit
-                            Gudangplus. Yang dimaksudkan dengan struktur adalah sistem konstruksi bangunan
+                            {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }}. Yang dimaksudkan dengan struktur adalah sistem konstruksi bangunan
                             yang menunjang berdirinya unit self storage tersebut, seperti: pondasi, balok, kolom,
                             lantai, dan dinding.
                         </li>
                         <li>
                             <strong>PIHAK KEDUA</strong> dilarang menyimpan barang-barang berbahaya dan beracun dalam
-                            Unit Gudangplus, seperti gas, bahan peledak, kembang api, pestisida, senjata,
+                            Unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }}, seperti gas, bahan peledak, kembang api, pestisida, senjata,
                             material beracun, atau bahan ilegal lainnya.
                         </li>
                         <li>
@@ -478,14 +467,14 @@
                         </li>
                         <li>
                             <strong>PIHAK KEDUA</strong> dilarang menyimpan barang cair yang bersifat rawan tumpah dan
-                            berpotensi merusak unit Gudangplus maupun barang-barang lain di sekitarnya.
+                            berpotensi merusak unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} maupun barang-barang lain di sekitarnya.
                         </li>
                         <li>
                             <strong>PIHAK KEDUA</strong> dilarang menyebabkan gangguan atau kebisingan yang dapat
                             memicu alarm kebakaran tanpa alasan yang sah.
                         </li>
                         <li>
-                            <strong>PIHAK KEDUA</strong> dilarang menggunakan unit Gudangplus untuk aktivitas yang
+                            <strong>PIHAK KEDUA</strong> dilarang menggunakan unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} untuk aktivitas yang
                             ilegal
                             atau membahayakan keselamatan dan dapat menyebabkan pengakhiran Perjanjian
                             secara seketika.
@@ -495,7 +484,7 @@
                     <p class="text-center mb-0">PASAL 13</p>
                     <p class="text-center mb-2">JAMINAN</p>
                     <p>
-                        <strong>PIHAK PERTAMA</strong> menjamin bahwa unit Gudangplus yang disewakan tersebut di atas
+                        <strong>PIHAK PERTAMA</strong> menjamin bahwa unit {{ isset($agreementLetter->custom_fields['custom_unit']) ? e($agreementLetter->custom_fields['custom_unit']) : '-' }} yang disewakan tersebut di atas
                         adalah hak miliknya dan bebas dari segala tuntutan hukum dan persoalan-persoalan yang
                         dapat mengganggu <strong>PIHAK KEDUA</strong> atas penggunaannya selama jangka waktu berlakunya
                         surat perjanjian ini. Segala kerugian yang timbul akibat kelalaian <strong>PIHAK

@@ -38,7 +38,7 @@ class AgreementLetterController extends Controller
         $selectTemplate = TemplateAgreement::where('is_active',true)->where('template_name',$agreementTemplate)->get();
         $userCreate = Auth::user()->name;
         $nomorAgreementLetter = $this->agreementLetterNumber()['result'];
-        return view('agreement_letter.createOrEdit'.$agreementTemplate,compact('userCreate','nomorAgreementLetter','selectTemplate'));
+        return view('agreement_letter.createOrEdit'.$agreementTemplate,compact('userCreate','nomorAgreementLetter','selectTemplate','company'));
     }
 
     /**
@@ -49,10 +49,9 @@ class AgreementLetterController extends Controller
      */
     public function store(AgreementLetterRequest $request)
     {
-        $customFieldData = [
-            'custom_' => $request->custom_br_bp,
-            'custom_nik' => $request->custom_nik,
-        ];
+        $customFieldData = collect($request->all())
+        ->filter(fn($value, $key) => strpos($key, 'custom_') === 0)
+        ->toArray();
 
         $agreementLetter = new AgreementLetter();
         $nomorAgreementLetter = $this->agreementLetterNumber();
@@ -105,7 +104,7 @@ class AgreementLetterController extends Controller
         $userCreate = $agreementLetter->userCreate ? $agreementLetter->userCreate->name : '';
         $nomorAgreementLetter = $agreementLetter->number_result ?? '';
 
-        return view('agreement_letter.createOrEdit'.$agreementTemplate,compact('userCreate','nomorAgreementLetter','agreementLetter','selectTemplate'));
+        return view('agreement_letter.createOrEdit'.$agreementTemplate,compact('userCreate','nomorAgreementLetter','agreementLetter','selectTemplate','company'));
     }
 
 
@@ -170,10 +169,9 @@ class AgreementLetterController extends Controller
      */
     public function update(AgreementLetterRequest $request, $slug)
     {
-        $customFieldData = [
-            'custom_br_bp' => $request->custom_br_bp,
-            'custom_nik' => $request->custom_nik,
-        ];
+        $customFieldData = collect($request->all())
+        ->filter(fn($value, $key) => strpos($key, 'custom_') === 0)
+        ->toArray();
 
         $agreementLetter = AgreementLetter::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $agreementLetter->date = $request->input('date');
