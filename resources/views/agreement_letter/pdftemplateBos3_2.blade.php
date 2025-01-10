@@ -38,7 +38,7 @@
                                 </td>
                                 <td>
                                     <p class="mb-0"><strong>Tanggal Mulai Sewa</strong></p>
-                                    <p class="mb-0">{{ \Carbon\Carbon::parse($agreementLetter->rent_start_duration)->format('d F Y') }}</p>
+                                    <p class="mb-0">{{ \Carbon\Carbon::parse($agreementLetter->rent_start_duration)->locale('id')->translatedFormat('d F Y') }}</p>
                                 </td>
                             </tr>
                             <tr>
@@ -54,11 +54,11 @@
                             <tr>
                                 <td class="w-50">
                                     <p class="mb-0"><strong>Nomor Unit</strong></p>
-                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_type') }}</p>
+                                    <p class="mb-0">{{ $agreementLetter->getCustomField('custom_unit_number') }}</p>
                                 </td>
                                 <td>
                                     <p class="mb-0"><strong>Tanggal Selesai Sewa</strong></p>
-                                    <p class="mb-0">{{ \Carbon\Carbon::parse($agreementLetter->rent_end_duration)->format('d F Y') }}</p>
+                                    <p class="mb-0">{{ \Carbon\Carbon::parse($agreementLetter->rent_end_duration)->locale('id')->translatedFormat('d F Y') }}</p>
                                 </td>
                             </tr>
                             <tr>
@@ -101,7 +101,7 @@
                             <tr>
                                 <td>
                                     <p class="mb-0"><strong>Nama</strong></p>
-                                    <p class="mb-0">{{ $company['name'] }}</p>
+                                    <p class="mb-0">{{ $company['director'] }}</p>
                                 </td>
                             </tr>
                             <tr>
@@ -206,8 +206,8 @@
                     </p>
                     <ol>
                         <li>
-                            Perjanjian adalah Perjanjian Sewa Menyewa antara <strong>PIHAK PERTAMA</strong> dan PIHAK
-                            KEDUA yaitu persetujuan dimana <strong>PIHAK PERTAMA</strong> selaku pemberi sewa
+                            Perjanjian adalah Perjanjian Sewa Menyewa antara <strong>PIHAK PERTAMA</strong> dan <strong>PIHAK
+                            KEDUA</strong> yaitu persetujuan dimana <strong>PIHAK PERTAMA</strong> selaku pemberi sewa
                             mengikatkan dirinya untuk mengalihkan kuasa atas suatu unit self storage untuk
                             dipergunakan kepada <strong>PIHAK KEDUA</strong> dan <strong>PIHAK KEDUA</strong> selaku
                             penerima sewa
@@ -218,8 +218,8 @@
                             penyimpanan barang
                         </li>
                         <li>
-                            Biaya sewa adalah biaya yang harus dibayarkan <strong>PIHAK KEDUA</strong> kepada PIHAK
-                            PERTAMA atas penyewaan barang.
+                            Biaya sewa adalah biaya yang harus dibayarkan <strong>PIHAK KEDUA</strong> kepada <strong>PIHAK
+                            PERTAMA</strong> atas penyewaan barang.
                         </li>
                         <li>
                             Sengketa adalah segala perselisihan yang berkaitan dengan perjanjian, termasuk tapi
@@ -230,7 +230,7 @@
                     <p class="text-center mb-0">PASAL 2</p>
                     <p class="text-center mb-2">RUANG LINGKUP SEWA MENYEWA</p>
                     <p class="mb-0">
-                        <strong>Para Pihak</strong> dengan ini setuju bahwa <strong>PIHAK PERTAMA</strong> akan
+                        Para Pihak dengan ini setuju bahwa <strong>PIHAK PERTAMA</strong> akan
                         memberikan sewa dalam hal
                         ini
                         Unit Self Storage kepada <strong>PIHAK KEDUA</strong> sesuai dengan syarat dan kondisi yang
@@ -241,9 +241,9 @@
                     <p class="text-center mb-0">PASAL 3</p>
                     <p class="text-center mb-2">JANGKA WAKTU SEWA</p>
                     <p class="mb-0">
-                        Perjanjian ini berlaku untuk jangka waktu selama {{ $agreementLetter->rent_count }} terhitung sejak tanggal <strong>{{ \Carbon\Carbon::parse($agreementLetter->rent_start_duration)->format('d F Y') }}</strong>
+                        Perjanjian ini berlaku untuk jangka waktu selama {{ $agreementLetter->rent_count }} terhitung sejak tanggal <strong>{{ \Carbon\Carbon::parse($agreementLetter->rent_start_duration)->locale('id')->translatedFormat('d F Y') }}</strong>
                         sampai
-                        dengan <strong>{{ \Carbon\Carbon::parse($agreementLetter->rent_end_duration)->format('d F Y') }}</strong> dan setelah jangka waktu tersebut berakhir, apabila <strong>PIHAK
+                        dengan <strong>{{ \Carbon\Carbon::parse($agreementLetter->rent_end_duration)->locale('id')->translatedFormat('d F Y') }}</strong> dan setelah jangka waktu tersebut berakhir, apabila <strong>PIHAK
                             KEDUA</strong>
                         bermaksud
                         untuk memperbarui perjanjian sewa menyewa, maka <strong>PIHAK KEDUA</strong> wajib melakukan
@@ -412,7 +412,7 @@
                         </li>
                     </ol>
 
-                    <p class="text-center mb-0">PASAL 10</p>
+                    <p class="text-center mb-0">PASAL 11</p>
                     <p class="text-center mb-2"><strong>KETERLAMBATAN PEMBAYARAN</strong></p>
                     <ol>
                         <li>
@@ -433,7 +433,7 @@
                         </li>
                     </ol>
 
-                    <p class="text-center mb-0">PASAL 11</p>
+                    <p class="text-center mb-0">PASAL 12</p>
                     <p class="text-center mb-2"><strong>LARANGAN LARANGAN</strong></p>
                     <ol>
                         <li>
@@ -445,8 +445,8 @@
                         </li>
                         <li>
                             <strong>PIHAK KEDUA</strong> tidak dibenarkan sama sekali untuk mengalihkan hak atau
-                            menyewakan kepada PIHAK KETIGA tanpa izin serta persetujuan dari PIHAK
-                            PERTAMA.
+                            menyewakan kepada PIHAK KETIGA tanpa izin serta persetujuan dari <strong>PIHAK
+                            PERTAMA.</strong>
                         </li>
                         <li>
                             <strong>PIHAK KEDUA</strong> tidak dibenarkan untuk mengubah struktur dan instalasi dari
@@ -495,8 +495,8 @@
                     <p class="text-center mb-0">PASAL 14</p>
                     <p class="text-center mb-2">FORCE MAJEURE</p>
                     <p class="text-justify mt-0 mb-0">
-                        Yang dinamakan force majeure adalah hal-hal yang terjadi di luar kekuasaan PIHAK
-                        PERTAMA, seperti:
+                        Yang dinamakan force majeure adalah hal-hal yang terjadi di luar kekuasaan <strong>PIHAK
+                        PERTAMA</strong>, seperti:
                     </p>
                     <ol class="mb-5">
                         <li>
