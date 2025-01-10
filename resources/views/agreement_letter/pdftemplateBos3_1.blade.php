@@ -67,7 +67,7 @@
                     </div>
 
                     <p class="text-justify">
-                        Dalam hal ini pihak dengan ini menerangkan bahwa <strong>PIHAK PERTAMA selaku pemilik sah telah
+                        Dalam hal ini pihak dengan ini menerangkan bahwa <strong>PIHAK PERTAMA</strong> selaku pemilik sah telah
                             setuju untuk menyewakan kepada PIHAK KEDUA</strong> berupa sebuah kamar kosan yang terletak
                         di {{ $agreementLetter ? $agreementLetter->rent_address : '' }},
                         Senilai <strong>{{ number_format($agreementLetter->quote->total, 0, ',', '.') }},- ( {{ $agreementLetter->quote->total_terbilang }} )</strong> masa sewa {{ $agreementLetter->rent_count }}
