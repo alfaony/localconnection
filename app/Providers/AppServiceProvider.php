@@ -57,17 +57,20 @@ class AppServiceProvider extends ServiceProvider
             ];
 
             $managementCompanyArray = array();
+            $managementCompanyArray = array();
             $managementSalesArray = array();
             $managementObArray = array();
             $equipmentMenuArray = array();
             $taskMenuArray = array();
             $securityMenuArray = array();
             $productivityMenuArray = array();
+            $warehouseMenuArray = array();
 
             $equipmentMenu = ['devices','equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
             $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
+            $warehouseMenu = ['warehouses'];
             $managementCompanyMenu = 
             [
                 'kyes',

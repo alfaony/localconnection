@@ -64,6 +64,7 @@ use App\Http\Controllers\XeroWebhookController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PassCheckingController;
 use App\Http\Controllers\KyeController;
+use App\Http\Controllers\WarehouseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -312,6 +313,8 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::post('kye/verifyemail', [KyeController::class, 'verifyemail'])->name('kye.verify.email');
   Route::patch('kye/approvement/{kye}', [KyeController::class, 'approvement'])->name('kye.approvement');
   Route::resource('kye', KyeController::class);
+  
+  Route::resource('warehouse', WarehouseController::class);
 });
 
 
