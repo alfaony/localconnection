@@ -380,6 +380,11 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'kye.index',
                     'icon' => 'fa fa-id-card',
                 ],
+                'warehouses' => [
+                    'text' => 'Manajemen Gudang',
+                    'route' => 'warehouse.index',
+                    'icon' => 'fa fa-warehouse',
+                ],
             ];
 
             foreach ($listMenu as $role) 
@@ -446,6 +451,14 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($warehouseMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($warehouseMenuArray,$menus[$role]);
+                }
+            }
+
             $managementSalesMenu = 
             [
                 'text'    => 'Manajemen Penjualan',
@@ -488,6 +501,11 @@ class AppServiceProvider extends ServiceProvider
                 'submenu' => $securityMenuArray
             ];
 
+            $warehouseMenu = [
+                'text'      => 'Daftar Gudang',
+                'submenu'   => $warehouseMenuArray
+            ];
+
             if($managementCompanyMenu['submenu'] )
             {
                 $event->menu->add($managementCompanyMenu);
@@ -521,6 +539,11 @@ class AppServiceProvider extends ServiceProvider
             if($securityMenu['submenu'] )
             {
                 $event->menu->add($securityMenu);
+            }
+
+            if($warehouseMenu['submenu'] )
+            {
+                $event->menu->add($warehouseMenu);
             }
             
         });
