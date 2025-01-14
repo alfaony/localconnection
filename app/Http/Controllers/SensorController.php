@@ -10,7 +10,7 @@ class SensorController extends Controller
 {
     public function index()
     {
-        $sensors = Sensor::with('user')->paginate(10);
+        $sensors = Sensor::byCompany(Auth::user()->company_id)->with('user')->paginate(10);
         $sensorType = config('custom.sensorType');
 
         return view('sensor.index', compact('sensors', 'sensorType'));
@@ -39,7 +39,7 @@ class SensorController extends Controller
 
     public function edit(Sensor $sensor)
     {
-        $sensors = Sensor::with('user')->paginate(10);
+        $sensors = Sensor::byCompany(Auth::user()->company_id)->with('user')->paginate(10);
         $sensorType = config('custom.sensorType');
 
         return view('sensor.index', compact('sensor', 'sensors', 'sensorType'));
@@ -60,7 +60,6 @@ class SensorController extends Controller
     public function destroy(Sensor $sensor)
     {
         $sensor->delete();
-
         return redirect()->route('sensor.index')->with('delete', true);
     }
 }
