@@ -36,7 +36,10 @@ class Sensor extends Model
     {
         if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
-            return $query->where("company_id",$companyId);
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
         }
     }
 }

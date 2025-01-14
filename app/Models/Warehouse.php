@@ -33,11 +33,19 @@ class Warehouse extends Model
         return $this->belongsTo(WarehouseType::class, 'warehouse_type_id');
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class)->withTrashed();
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
-            return $query->where("company_id",$companyId);
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
         }
     }
 }
