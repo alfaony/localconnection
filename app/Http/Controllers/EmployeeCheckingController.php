@@ -220,8 +220,8 @@ class EmployeeCheckingController extends Controller
 
         if($source == 'manual_checkin')
         {
-            $employeeChecking->scheduled_time = Carbon::now();
-            $employeeChecking->scheduled_timeout = Carbon::now();
+            // $employeeChecking->scheduled_time = Carbon::now();
+            // $employeeChecking->scheduled_timeout = Carbon::now();
             $employeeChecking->checkin_start_time = Carbon::now();
         }
         $employeeChecking->save();
