@@ -70,7 +70,7 @@ class AppServiceProvider extends ServiceProvider
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
             $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
-            $warehouseMenu = ['warehouses'];
+            $warehouseMenu = ['warehouses','sensors'];
             $managementCompanyMenu = 
             [
                 'kyes',
@@ -384,6 +384,11 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Manajemen Gudang',
                     'route' => 'warehouse.index',
                     'icon' => 'fa fa-warehouse',
+                ],
+                'sensors' => [
+                    'text' => 'Sensor',
+                    'route' => 'sensor.index',
+                    'icon' => 'fa fa-microchip',
                 ],
             ];
 
