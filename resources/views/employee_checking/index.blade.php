@@ -108,28 +108,16 @@
                         </thead>
                         <tbody>
                             
-                            @forelse($employeeCheckings as $index => $checking)
+                            @forelse($employeeCheckings as $checking)
                                 <tr>
                                     <td>{{ $checking->user->name }}</td>
                                     <td>
                                         @if(!$checking->is_active && !$checking->isDayoff())
                                             {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
-                                            @if($manualCheck['manual_checkin'])
-                                            <br>
-                                            <span class="badge bg-primary">
-                                                Waktu Check-In : {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('H:i:s') : '' }}
-                                            </span>
-                                            @endif
                                         @else
                                             {{ $checking->created_at ? \Carbon\Carbon::parse($checking->created_at)->locale('id')->translatedFormat('F d,y') : '' }}
-                                            @if($manualCheck['manual_checkin'])
-                                            <br>
-                                            <span class="badge bg-primary">
-                                                Waktu Check-In : {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('H:i:s') : '' }}
-                                            </span>
-                                            @endif
                                         @endif
-                                    </td>   
+                                    </td>
                                     <td>
                                         @if(!$checking->is_active && !$checking->isDayoff() && !$checking->isSick())
                                         @if($checking->is_completed)
@@ -145,11 +133,7 @@
                                             <span class="badge bg-info"><i class="fa fa-hospital"></i></span>
                                                 Izin
                                             @else
-                                                @if($checking->isToday())
-                                                    <span class="badge bg-warning"><i class="fa fa-clock"></i></span>
-                                                @else
-                                                    <span class="badge bg-danger"><i class="fa fa-times"></i></span>
-                                                @endif
+                                            <span class="badge bg-warning"><i class="fa fa-clock"></i></span>
                                             @endif
                                         @endif
                                     </td>
@@ -220,10 +204,6 @@
                                         @endif
                                     </td>
                                     @if($manualCheck['manual_checkin'])
-                                    @php
-                                        // Ambil objek setelahnya jika ada
-                                        $nextChecking = $employeeCheckings[$index + 1] ?? null;
-                                    @endphp
                                     @if($checking->user_id == Auth::user()->id)
                                     <td>
                                         @if(!$checking->is_active)
@@ -234,15 +214,11 @@
                                             @endif
                                         @else
                                             @if($checking->isToday())
-                                            @if($checking->user_id == Auth::user()->id)                    
-                                                @if($checking->is_active && (!$nextChecking || !$nextChecking->is_active))
-                                                    <button class="btn btn-info btn-sm" type="button"
-                                                        onclick="checkLastScheduledCheckin('{{ $checking->id }}', {{ $manualCheck['requires_photo'] ? 'true' : 'false' }}, {{ $manualCheck['requires_location'] ? 'true' : 'false' }})" >
-                                                        <i class="fa fa-pencil"></i> Manual Check-In
-                                                    </button>
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
+                                            @if($checking->user_id == Auth::user()->id)
+                                            <button class="btn btn-info btn-sm" type="button"
+                                                onclick="checkLastScheduledCheckin('{{ $checking->id }}', {{ $manualCheck['requires_photo'] ? 'true' : 'false' }}, {{ $manualCheck['requires_location'] ? 'true' : 'false' }})" >
+                                                <i class="fa fa-pencil"></i> Manual Check-In
+                                            </button> 
                                             @else
                                                 <span class="badge bg-danger"><i class="fa fa-times"></i></span>
                                             @endif
@@ -463,9 +439,7 @@
             url: "{{ route('employee-checking.checkLastScheduledCheckin') }}",
             type: 'GET',
             success: function(response) {
-                let status = response.status;
-                let message = response.message;
-                if (status) {
+                if (response) {
                     // Jika responsnya 'true', izinkan membuka modal
                     setCheckinId(id, requiresPhoto, requiresLocation);
                 } else {
@@ -473,7 +447,7 @@
                     Swal.fire({
                         icon: 'error',
                         title: 'Check-in Gagal',
-                        text: message,
+                        text: 'Anda harus menunggu 30 menit sebelum melakukan check-in manual berikutnya.',
                         timer: 3000,
                         timerProgressBar: true,
                         showConfirmButton: false
