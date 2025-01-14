@@ -15,7 +15,7 @@ class Zone extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['id', 'warehouse_id', 'name'];
+    protected $fillable = ['id', 'warehouse_id', 'name','user_id'];
     public $incrementing = false;
     protected $keyType = 'uuid';
 
@@ -29,12 +29,12 @@ class Zone extends Model
     }
     public function warehouse()
     {
-        return $this->belongsTo(Warehouse::class)->withTrashed();
+        return $this->belongsTo(Warehouse::class,'warehouse_id');
     }
 
     public function sensors(): BelongsToMany
     {
-        return $this->belongsToMany(Sensor::class, 'sensor_zone');
+        return $this->belongsToMany(Sensor::class, 'sensor_zone')->withPivot('sensor_code','value');
     }
 
     public function user()

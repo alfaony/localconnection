@@ -7,6 +7,8 @@
 @include('components.alert')
 
 <!-- Form Tambah/Edit Zone -->
+@canAccess('store','zones')
+@canAccess('update','zones')
 <div class="card shadow mb-4 mt-3">
     <div class="card-header bg-primary text-white text-center">
         <h5>{{ isset($zone) ? 'Edit Zone' : 'Tambah Zone' }}</h5>
@@ -48,10 +50,10 @@
 
             <div id="sensorContainer">
                 @if(isset($zone) && $zone->sensors->count() > 0)
-                @foreach($zone->sensors as $sensor)
-                <div class="sensor-row row mb-2">
-                    <div class="col-md-5">
-                        <select name="sensors[{{ $loop->index }}][id]" class="form-control sensor-select" required>
+                @foreach($zone->sensors as $index => $sensor)
+                <div class="sensor-row row align-items-center mb-2">
+                    <div class="col-md-3">
+                        <select name="sensors[{{ $index }}][id]" class="form-control sensor-select select2" data-index="{{ $index }}" required>
                             <option value="">Pilih Sensor</option>
                             @foreach($sensors as $sensorOption)
                             <option value="{{ $sensorOption->id }}" data-type="{{ $sensorOption->type }}"
@@ -61,12 +63,27 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-5">
-                        <input type="text" name="sensors[{{ $loop->index }}][value]" class="form-control sensor-value"
-                            value="{{ old('sensors.' . $loop->index . '.value', $sensor->pivot->value) }}" required>
+                    <div class="col-md-3">
+                        <input type="text" name="sensors[{{ $index }}][sensor_code]" class="form-control"
+                            value="{{ $sensor->pivot->sensor_code }}" >
                     </div>
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-danger remove-sensor">❌</button>
+                    <div class="col-md-3 sensor-value-container" id="sensor-value-container-{{ $index }}">
+                        @if($sensor->type === 'integer')
+                        <input type="number" name="sensors[{{ $index }}][value]" class="form-control"
+                            value="{{ $sensor->pivot->value }}" required>
+                        @elseif($sensor->type === 'boolean')
+                        <select name="sensors[{{ $index }}][value]" class="form-control" required>
+                            <option value="true" {{ $sensor->pivot->value == 'true' ? 'selected' : '' }}>True</option>
+                            <option value="false" {{ $sensor->pivot->value == 'false' ? 'selected' : '' }}>False
+                            </option>
+                        </select>
+                        @else
+                        <input type="text" name="sensors[{{ $index }}][value]" class="form-control"
+                            value="{{ $sensor->pivot->value }}" required>
+                        @endif
+                    </div>
+                    <div class="col-md-1 text-center">
+                        <button type="button" class="btn btn-sm btn-danger remove-sensor"><i class="fa fa-trash"></i></button>
                     </div>
                 </div>
                 @endforeach
@@ -82,6 +99,8 @@
         </form>
     </div>
 </div>
+@endcanAccess
+@endcanAccess
 
 <!-- Daftar Zone -->
 <div class="card shadow">
@@ -107,15 +126,20 @@
                     <td>{{ $zone->warehouse->name }}</td>
                     <td>{{ $zone->sensors->pluck('name')->join(', ') }}</td>
                     <td>
+                        @canAccess('edit','zones')
                         <a href="{{ route('zone.edit', $zone->id) }}" class="btn btn-sm btn-info">
                             ✏️ Edit
                         </a>
+                        @endcanAccess
+
+                        @canAccess('destroy','zones')
                         <form action="{{ route('zone.destroy', $zone->id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
                             <button onclick="return confirm('Hapus Zone ini?')" type="submit"
-                                class="btn btn-sm btn-danger">🗑 Hapus</button>
+                                class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
                         </form>
+                        @endcanAccess
                     </td>
                 </tr>
                 @endforeach
@@ -125,28 +149,27 @@
 </div>
 @stop
 @section('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
+$(document).ready(function () {
+    $('.select2').select2();
+});
 document.addEventListener("DOMContentLoaded", function() {
-    let sensorCount = {
-        {
-            isset($zone) ? $zone - > sensors - > count() : 0
-        }
-    };
+    let sensorContainer = document.getElementById("sensorContainer");
 
     document.getElementById("addSensorBtn").addEventListener("click", function() {
-        addSensorRow();
+        var key = generateRandomString(4);
+        addSensorRow(key);
     });
 
-    function addSensorRow() {
-        let container = document.getElementById("sensorContainer");
+    function addSensorRow(index) {
         let row = document.createElement("div");
-        row.className = "sensor-row row mb-2";
-
-        row.setAttribute("data-index", sensorCount); // Pastikan semua input memiliki index yang sama
+        row.className = "sensor-row row align-items-center mb-2";
+        row.setAttribute("data-index", index);
 
         row.innerHTML = `
             <div class="col-md-3">
-                <select name="sensors[${sensorCount}][id]" class="form-control sensor-select" required>
+                <select name="sensors[${index}][id]" class="form-control sensor-select select2" data-index="${index}" required>
                     <option value="">Pilih Sensor</option>
                     @foreach($sensors as $sensor)
                         <option value="{{ $sensor->id }}" data-type="{{ $sensor->type }}">{{ $sensor->name }} ({{ $sensor->type }})</option>
@@ -154,64 +177,92 @@ document.addEventListener("DOMContentLoaded", function() {
                 </select>
             </div>
             <div class="col-md-3">
-                <input type="text" name="sensors[${sensorCount}][sensor_code]" class="form-control" placeholder="Masukkan code sensor" required>
+                <input type="text" name="sensors[${index}][sensor_code]" class="form-control" placeholder="Masukkan kode sensor">
             </div>
-            <div class="col-md-2">
-                <input type="text" name="sensors[${sensorCount}][value]" class="form-control sensor-value" required>
+            <div class="col-md-3 sensor-value-container" id="sensor-value-container-${index}">
+                <!-- Nilai sensor akan diinject di sini -->
             </div>
-            <div class="col-md-1">
-                <button type="button" class="btn btn-danger remove-sensor"><i class="fa fa-trash"></i></button>
+            <div class="col-md-1 text-center">
+                <button type="button" class="btn btn-sm btn-danger remove-sensor"><i class="fa fa-trash"></i></button>
             </div>
         `;
 
-        container.appendChild(row);
-        sensorCount++;
-        attachEventListeners();
+        sensorContainer.appendChild(row);
+        $(".select2").select2(); // **Re-inisialisasi Select2**
     }
 
-    function attachEventListeners() {
-        document.querySelectorAll(".remove-sensor").forEach(button => {
-            button.addEventListener("click", function() {
-                this.closest(".sensor-row").remove();
-            });
-        });
+    // **Event Delegation untuk Select2**
+    $(document).on("select2:select", ".sensor-select", function() {
+        
+        let selectedOption = this.options[this.selectedIndex];
+        let sensorType = selectedOption.getAttribute("data-type");
+        let index = this.getAttribute("data-index"); // Ambil index yang benar
+        let valueContainer = document.getElementById(`sensor-value-container-${index}`);
 
-        document.querySelectorAll(".sensor-select").forEach(select => {
-            select.addEventListener("change", function() {
-                let selectedOption = this.options[this.selectedIndex];
-                let sensorType = selectedOption.getAttribute("data-type");
-                let index = this.closest(".sensor-row").getAttribute("data-index");
-                let valueInput = document.querySelector(`[name="sensors[${index}][value]"]`);
+        console.log("Sensor Type:", sensorType, "Index:", index, "Value Container:", valueContainer);
+        
+        valueContainer.innerHTML = ""; // Reset isi sebelumnya
 
-                if (sensorType === "integer") {
-                    let newInput = document.createElement("input");
-                    newInput.type = "number";
-                    newInput.className = "form-control sensor-value";
-                    newInput.name = `sensors[${index}][value]`;
-                    newInput.placeholder = "Masukkan angka";
-                    valueInput.replaceWith(newInput);
-                } else if (sensorType === "boolean") {
-                    let newSelect = document.createElement("select");
-                    newSelect.className = "form-control sensor-value";
-                    newSelect.name = `sensors[${index}][value]`;
-                    newSelect.innerHTML = `
-                <option value="true">True</option>
-                <option value="false">False</option>
+        if (sensorType === "integer") {
+            valueContainer.innerHTML = `
+                <input type="number" name="sensors[${index}][value]" class="form-control sensor-value" placeholder="Masukkan angka" required>
             `;
-                    valueInput.replaceWith(newSelect);
-                } else {
-                    let newInput = document.createElement("input");
-                    newInput.type = "text";
-                    newInput.className = "form-control sensor-value";
-                    newInput.name = `sensors[${index}][value]`;
-                    newInput.placeholder = "Masukkan teks";
-                    valueInput.replaceWith(newInput);
-                }
-            });
-        });
-    }
+        } else if (sensorType === "boolean") {
+            valueContainer.innerHTML = `
+                <select name="sensors[${index}][value]" class="form-control sensor-value select2" required>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                </select>
+            `;
+            $(".select2").select2(); // Pastikan Select2 tetap berfungsi setelah inject HTML
+        } else {
+            valueContainer.innerHTML = `
+                <input type="text" name="sensors[${index}][value]" class="form-control sensor-value" placeholder="Masukkan teks" required>
+            `;
+        }
+    });
 
-    attachEventListeners();
+    // **Event Delegation untuk hapus sensor**
+    $(document).on("click", ".remove-sensor", function() {
+        $(this).closest(".sensor-row").remove();
+    });
 });
+
+// **Fungsi Generate Random String**
+function generateRandomString(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+}
 </script>
+@stop
+@section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+}
+
+.container {
+    background-color: #fff;
+    border-radius: 5px;
+}
+
+.select2-selection__rendered {
+    line-height: 31px !important;
+}
+
+.select2-container .select2-selection--single {
+    height: 35px !important;
+}
+
+.select2-selection__arrow {
+    height: 34px !important;
+}
+</style>
 @stop
