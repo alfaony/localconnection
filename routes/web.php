@@ -319,8 +319,8 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('kye', KyeController::class);
   
   Route::resource('warehouse', WarehouseController::class);
+  Route::resource('sensor', SensorController::class);
 });
-Route::resource('sensor', SensorController::class);
 Route::resource('zone', ZoneController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
