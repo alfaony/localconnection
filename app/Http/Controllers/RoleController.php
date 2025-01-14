@@ -89,6 +89,7 @@ class RoleController extends Controller
             'roles',
             'pass_checkings',
             'warehouses',
+            'sensors',
         ];
 
         $checked = array_merge($mainMenus);
@@ -207,6 +208,7 @@ class RoleController extends Controller
                 'roles',
                 'pass_checkings',
                 'warehouses',
+                'sensors',
             ];
         $checked = array_merge($mainMenus);
 
@@ -285,6 +287,7 @@ class RoleController extends Controller
                 'roles',
                 'pass_checkings',
                 'warehouses',
+                'sensors',
             ];
         
         $checked = array_merge($mainMenus);

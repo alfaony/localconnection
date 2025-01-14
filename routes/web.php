@@ -66,6 +66,8 @@ use App\Http\Controllers\PassCheckingController;
 use App\Http\Controllers\KyeController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\SensorController;
+use App\Http\Controllers\ZoneController;
+
 
 
 /*
@@ -319,6 +321,7 @@ Route::group(['middleware' => ['auth','role.permission']], function()
   Route::resource('warehouse', WarehouseController::class);
 });
 Route::resource('sensor', SensorController::class);
+Route::resource('zone', ZoneController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
