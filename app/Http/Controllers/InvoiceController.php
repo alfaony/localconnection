@@ -41,6 +41,7 @@ class InvoiceController extends Controller
     /**
      * 
      * Xero For Service
+     * xero service
      */
     protected $xeroService;
 
