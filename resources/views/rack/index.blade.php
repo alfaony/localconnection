@@ -31,7 +31,7 @@
                     <div class="form-group mb-3">
                         <label class="form-label">Zone:</label>
                         <select name="zone_id" class="form-control select2" required>
-                            @foreach ($racks as $zone)
+                            @foreach ($zones as $zone)
                             <option value="{{ $zone->id }}"
                                 {{ isset($rack) && $rack->zone_id == $zone->id ? 'selected' : '' }}>
                                 {{ $zone->name }}
@@ -60,7 +60,8 @@
                 <div class="sensor-row row align-items-center mb-2">
                     <input type="hidden" name="sensors[{{ $index }}][id]" value="{{ $sensor->pivot->id ?? '' }}">
                     <div class="col-md-3">
-                        <select name="sensors[{{ $index }}][sensor_id]" class="form-control sensor-select select2" data-index="{{ $index }}" required>
+                        <select name="sensors[{{ $index }}][sensor_id]" class="form-control sensor-select select2"
+                            data-index="{{ $index }}" required>
                             <option value="">Pilih Sensor</option>
                             @foreach($sensors as $sensorOption)
                             <option value="{{ $sensorOption->id }}" data-type="{{ $sensorOption->type }}"
@@ -72,7 +73,7 @@
                     </div>
                     <div class="col-md-3">
                         <input type="text" name="sensors[{{ $index }}][sensor_code]" class="form-control"
-                            value="{{ $sensor->pivot->sensor_code }}" >
+                            value="{{ $sensor->pivot->sensor_code }}">
                     </div>
                     <div class="col-md-3 sensor-value-container" id="sensor-value-container-{{ $index }}">
                         @if($sensor->type === 'integer')
@@ -90,7 +91,8 @@
                         @endif
                     </div>
                     <div class="col-md-1 text-center">
-                        <button type="button" class="btn btn-sm btn-danger remove-sensor"><i class="fa fa-trash"></i></button>
+                        <button type="button" class="btn btn-sm btn-danger remove-sensor"><i
+                                class="fa fa-trash"></i></button>
                     </div>
                 </div>
                 @endforeach
@@ -110,8 +112,24 @@
 
 <!-- Daftar Rack -->
 <div class="card shadow">
-    <div class="card-header bg-success text-white text-center">
-        <h5>Daftar Rack</h5>
+    <div class="card-header bg-success text-white">
+        <div class="row align-items-center">
+            <!-- Bagian Judul -->
+            <div class="col-md-9 col-sm-12 text-center text-md-start">
+                <h5 class="mb-0">Daftar Rak</h5>
+            </div>
+
+            <!-- Bagian Form Pencarian -->
+            <div class="col-md-3 col-sm-12">
+                <form method="GET" action="{{ route('warehouse.index') }}">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="search" class="form-control" placeholder="Search..."
+                            value="{{ request('search') }}">
+                        <button class="btn btn-light px-3 btn-sm ml-2" type="submit">🔍 Cari</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
     <div class="card-body">
         <table class="table table-striped table-bordered">
@@ -158,7 +176,7 @@
 @section('js')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
-$(document).ready(function () {
+$(document).ready(function() {
     $('.select2').select2();
 });
 document.addEventListener("DOMContentLoaded", function() {
@@ -200,14 +218,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // **Event Delegation untuk Select2**
     $(document).on("select2:select", ".sensor-select", function() {
-        
+
         let selectedOption = this.options[this.selectedIndex];
         let sensorType = selectedOption.getAttribute("data-type");
         let index = this.getAttribute("data-index"); // Ambil index yang benar
         let valueContainer = document.getElementById(`sensor-value-container-${index}`);
 
         console.log("Sensor Type:", sensorType, "Index:", index, "Value Container:", valueContainer);
-        
+
         valueContainer.innerHTML = ""; // Reset isi sebelumnya
 
         if (sensorType === "integer") {

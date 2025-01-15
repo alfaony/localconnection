@@ -12,7 +12,21 @@ class WarehouseController extends Controller
 {
     public function index()
     {
-        $warehouses = Warehouse::byCompany(Auth::user()->company_id)->with('warehouseType')->paginate(10);
+        $query = Warehouse::byCompany(Auth::user()->company_id)->with('warehouseType');
+
+        // Cek apakah ada input pencarian
+        if ($search = request('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('location', 'LIKE', "%{$search}%")
+                  ->orWhereHas('warehouseType', function ($q) use ($search) {
+                      $q->where('name', 'LIKE', "%{$search}%"); // Cari berdasarkan tipe gudang
+                  });
+            });
+        }
+        
+        // Paginasi hasil
+        $warehouses = $query->paginate(10);
         $warehouse_types = WarehouseType::all();
 
         return view('warehouse.index', compact('warehouses', 'warehouse_types'));

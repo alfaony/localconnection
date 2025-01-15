@@ -15,7 +15,28 @@ class RackController extends Controller
 {
     public function index()
     {
-        $racks = Rack::byCompany(Auth::user()->company_id)->with('zone', 'sensors')->paginate(10);
+        $query = Rack::byCompany(Auth::user()->company_id)->with('zone', 'sensors');
+
+        if ($search = request('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%") // Cari berdasarkan Nama Rack
+                ->orWhereHas('zone', function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%"); // Cari berdasarkan Nama Zone
+                })
+                ->orWhereHas('sensors', function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%") // Cari berdasarkan Nama Sensor
+                        ->orWhere(function ($query) use ($search) {
+                            $query->whereRaw("EXISTS (
+                                SELECT 1 FROM rack_sensor
+                                WHERE rack_sensor.sensor_id = sensors.id
+                                AND (rack_sensor.sensor_code LIKE ? OR rack_sensor.value LIKE ?)
+                            )", ["%{$search}%", "%{$search}%"]);
+                        });
+                });
+            });
+        }
+
+        $racks = $query->paginate(10);
         $zones = Zone::byCompany(Auth::user()->company_id)->get();
         $sensors = Sensor::byCompany(Auth::user()->company_id)->get();
 

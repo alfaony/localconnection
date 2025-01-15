@@ -16,7 +16,30 @@ class ZoneController extends Controller
 {
     public function index()
     {
-        $zones = Zone::byCompany(Auth::user()->company_id)->paginate(10);
+        $query = Zone::byCompany(Auth::user()->company_id)->with('warehouse', 'sensors');
+
+        if ($search = request('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%") // Cari berdasarkan Nama Rack
+                  ->orWhereHas('warehouse', function ($q) use ($search) {
+                      $q->where('name', 'LIKE', "%{$search}%"); // Cari berdasarkan Nama Zone
+                  })
+                  ->orWhereHas('sensors', function ($q) use ($search) {
+                      $q->where('name', 'LIKE', "%{$search}%") // Cari berdasarkan Nama Sensor
+                        ->orWhere(function ($query) use ($search) {
+                            $query->whereRaw("EXISTS (
+                                SELECT 1 FROM sensor_zone
+                                WHERE sensor_zone.sensor_id = sensors.id
+                                AND (sensor_zone.sensor_code LIKE ? OR sensor_zone.value LIKE ?)
+                            )", ["%{$search}%", "%{$search}%"]);
+                        });
+                  });
+            });
+        }
+        
+        $zones = $query->paginate(10);
+        
+        $zones = $query->paginate(10);
         $warehouses = Warehouse::byCompany(Auth::user()->company_id)->get();
         $sensors = Sensor::byCompany(Auth::user()->company_id)->get();
 

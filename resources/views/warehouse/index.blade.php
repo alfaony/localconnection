@@ -113,8 +113,24 @@
 
 <!-- Daftar Gudang -->
 <div class="card shadow">
-    <div class="card-header bg-success text-white text-center">
-        <h5>Daftar Gudang</h5>
+    <div class="card-header bg-success text-white">
+        <div class="row align-items-center">
+            <!-- Bagian Judul -->
+            <div class="col-md-9 col-sm-12 text-center text-md-start">
+                <h5 class="mb-0">Daftar Gudang</h5>
+            </div>
+
+            <!-- Bagian Form Pencarian -->
+            <div class="col-md-3 col-sm-12">
+                <form method="GET" action="{{ route('warehouse.index') }}">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="search" class="form-control" placeholder="Search..."
+                            value="{{ request('search') }}">
+                        <button class="btn btn-light px-3 btn-sm ml-2" type="submit">🔍 Cari</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
     <div class="card-body">
         <table class="table table-striped table-bordered">
@@ -147,7 +163,8 @@
                         <form action="{{ route('warehouse.destroy', $warehouse->id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
-                            <button onclick="return confirm('Apakah Anda yakin ingin menghapus gudang ini?')" type="submit" class="btn btn-sm btn-danger">🗑 Hapus</button>
+                            <button onclick="return confirm('Apakah Anda yakin ingin menghapus gudang ini?')"
+                                type="submit" class="btn btn-sm btn-danger">🗑 Hapus</button>
                         </form>
                         @endcanAccess
                     </td>
