@@ -105,14 +105,14 @@
                     <td>
                          @canAccess('update','sensors')
                         <a href="{{ route('sensor.edit', $sensor->id) }}" class="btn btn-sm btn-info">
-                            ✏️ Edit
+                            <i class="fa fa-edit"></i>
                         </a>
                         @endcanAccess
                         @canAccess('destroy','sensors')
                         <form action="{{ route('sensor.destroy', $sensor->id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
-                            <button onclick="return confirm('Apakah Anda yakin ingin menghapus sensor ini?')" type="submit" class="btn btn-sm btn-danger">🗑 Hapus</button>
+                            <button onclick="return confirm('Apakah Anda yakin ingin menghapus sensor ini?')" type="submit" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
                         </form>
                         @endcanAccess
                     </td>

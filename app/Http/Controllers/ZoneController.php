@@ -57,9 +57,12 @@ class ZoneController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'warehouse_id' => 'required|exists:warehouses,id',
             'name' => 'required|string|max:255',
-            'sensors' => 'array',
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'sensors' => 'nullable|array',
+            'sensors.*.sensor_id' => 'nullable|exists:sensors,id|required_with:sensors.*.sensor_id',
+            'sensors.*.sensor_code' => 'nullable|string|max:255',
+            'sensors.*.value' => 'nullable|string|max:255|required_with:sensors.*.value',
         ]);
 
         DB::beginTransaction();
@@ -98,8 +101,8 @@ class ZoneController extends Controller
     public function edit(Zone $zone)
     {
         $zones = Zone::with(['warehouse', 'sensors'])->paginate(10);
-        $warehouses = Warehouse::all();
-        $sensors = Sensor::all();
+        $warehouses = Warehouse::byCompany(Auth::user()->company_id)->get();
+        $sensors = Sensor::byCompany(Auth::user()->company_id)->get();
         return view('zone.index', compact('zones', 'zone', 'warehouses', 'sensors'));
     }
 
@@ -113,9 +116,9 @@ class ZoneController extends Controller
                 'warehouse_id' => 'required|exists:warehouses,id',
                 'sensors' => 'nullable|array',
                 'sensors.*.id' => 'nullable|exists:sensor_zone,id',
-                'sensors.*.sensor_id' => 'required|exists:sensors,id',
+                'sensors.*.sensor_id' => 'nullable|exists:sensors,id|required_with:sensors.*.sensor_id',
                 'sensors.*.sensor_code' => 'nullable|string|max:255',
-                'sensors.*.value' => 'nullable|string|max:255',
+                'sensors.*.value' => 'nullable|string|max:255|required_with:sensors.*.value',
             ]);
 
             // Ambil Zone yang akan diperbarui
@@ -136,27 +139,30 @@ class ZoneController extends Controller
             $sensorsToDelete = array_diff($existingSensors, $requestSensorIds);
 
             $newSensors = [];
-            foreach ($request->sensors as $sensor) 
+            if($request->sensors)
             {
-                $pivotId = $sensor['id'] ?? null;
-                $sensorId = $sensor['sensor_id'];
-                $sensorCode = $sensor['sensor_code'];
-                $sensorValue = $sensor['value'];
-
-                if (isset($existingSensors[$pivotId])) {
-                    SensorZone::where('id', $pivotId)->update([
-                        'sensor_id' => $sensorId,
-                        'sensor_code' => $sensorCode,
-                        'value' => $sensorValue,
-                    ]);
-                } else 
+                foreach ($request->sensors as $sensor) 
                 {
-                    // ✅ Sensor baru, tambahkan ke array untuk insert
-                    $newSensors[] = [
-                        'sensor_id' => $sensorId,
-                        'sensor_code' => $sensorCode,
-                        'value' => $sensorValue,
-                    ];
+                    $pivotId = $sensor['id'] ?? null;
+                    $sensorId = $sensor['sensor_id'];
+                    $sensorCode = $sensor['sensor_code'];
+                    $sensorValue = $sensor['value'];
+    
+                    if (isset($existingSensors[$pivotId])) {
+                        SensorZone::where('id', $pivotId)->update([
+                            'sensor_id' => $sensorId,
+                            'sensor_code' => $sensorCode,
+                            'value' => $sensorValue,
+                        ]);
+                    } else 
+                    {
+                        // ✅ Sensor baru, tambahkan ke array untuk insert
+                        $newSensors[] = [
+                            'sensor_id' => $sensorId,
+                            'sensor_code' => $sensorCode,
+                            'value' => $sensorValue,
+                        ];
+                    }
                 }
             }
 
@@ -174,6 +180,7 @@ class ZoneController extends Controller
             DB::commit();
             return redirect()->route('zone.index')->with('update', true);
         } catch (\Exception $e) {
+            // dd($e);
             // dd($e);
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());

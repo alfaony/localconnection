@@ -155,7 +155,7 @@
                     <td>
                         @canAccess('store','warehouses')
                         <a href="{{ route('warehouse.edit', $warehouse->id) }}" class="btn btn-sm btn-info">
-                            ✏️ Edit
+                            <i class="fa fa-edit"></i> Edit
                         </a>
                         @endcanAccess
 

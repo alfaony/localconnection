@@ -50,11 +50,14 @@ class RackController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'zone_id' => 'required|exists:zones,id',
+        $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'zone_id' => 'required|exists:zones,id',
             'sensors' => 'nullable|array',
+            'sensors.*.sensor_id' => 'required_with:sensors.*.sensor_id|nullable|exists:sensors,id',
+            'sensors.*.sensor_code' => 'nullable|string|max:255',
+            'sensors.*.value' => 'nullable|string|max:255',
         ]);
 
         $rack = Rack::create([
@@ -89,8 +92,8 @@ class RackController extends Controller
                 'zone_id' => 'required|exists:zones,id',
                 'sensors' => 'nullable|array',
                 'sensors.*.id' => 'nullable|exists:rack_sensor,id', // ID dari pivot table
-                'sensors.*.sensor_id' => 'required|exists:sensors,id',
-                'sensors.*.sensor_code' => 'nullable|string|max:255',
+                'sensors.*.sensor_id' => 'required_with:sensors.*.sensor_code|nullable|exists:sensors,id',
+                'sensors.*.sensor_code' => 'required_with:sensors.*.value|nullable|string|max:255',
                 'sensors.*.value' => 'nullable|string|max:255',
             ]);
 
@@ -116,30 +119,33 @@ class RackController extends Controller
 
             //  Proses Insert & Update Sensor
             $newSensors = [];
-            foreach ($request->sensors as $sensor) 
+            if($request->sensors)
             {
-                $pivotId = $sensor['id'] ?? null;
-                $sensorId = $sensor['sensor_id'];
-                $sensorCode = $sensor['sensor_code'];
-                $sensorValue = $sensor['value'];
-
-                if ($pivotId && isset($existingSensors[$pivotId])) {
-                    //  Sensor sudah ada, lakukan update
-                    RackSensor::where('id', $pivotId)->update([
-                        'sensor_id' => $sensorId,
-                        'sensor_code' => $sensorCode,
-                        'value' => $sensorValue,
-                    ]);
-                } else {
-                    //  Sensor baru, tambahkan ke array untuk insert
-                    $newSensors[] = [
-                        'rack_id' => $rack->id,
-                        'sensor_id' => $sensorId,
-                        'sensor_code' => $sensorCode,
-                        'value' => $sensorValue,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
+                foreach ($request->sensors as $sensor) 
+                {
+                    $pivotId = $sensor['id'] ?? null;
+                    $sensorId = $sensor['sensor_id'];
+                    $sensorCode = $sensor['sensor_code'];
+                    $sensorValue = $sensor['value'];
+    
+                    if ($pivotId && isset($existingSensors[$pivotId])) {
+                        //  Sensor sudah ada, lakukan update
+                        RackSensor::where('id', $pivotId)->update([
+                            'sensor_id' => $sensorId,
+                            'sensor_code' => $sensorCode,
+                            'value' => $sensorValue,
+                        ]);
+                    } else {
+                        //  Sensor baru, tambahkan ke array untuk insert
+                        $newSensors[] = [
+                            'rack_id' => $rack->id,
+                            'sensor_id' => $sensorId,
+                            'sensor_code' => $sensorCode,
+                            'value' => $sensorValue,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
                 }
             }
 

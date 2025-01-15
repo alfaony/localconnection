@@ -44,8 +44,7 @@
 
             <div class="form-group mb-3">
                 <label class="form-label">Deskripsi:</label>
-                <textarea name="description" class="form-control" rows="2"
-                    required>{{ isset($rack) ? $rack->description : '' }}</textarea>
+                <textarea name="description" class="form-control" rows="2" >{{ isset($rack) ? $rack->description : '' }}</textarea>
             </div>
 
             <!-- Pilih Sensor (Dynamically Added) -->

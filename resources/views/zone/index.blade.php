@@ -148,7 +148,7 @@
                     <td>
                         @canAccess('edit','zones')
                         <a href="{{ route('zone.edit', $zone->id) }}" class="btn btn-sm btn-info">
-                            ✏️ Edit
+                            <i class="fa fa-edit"></i>
                         </a>
                         @endcanAccess
 
