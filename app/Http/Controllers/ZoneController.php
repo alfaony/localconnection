@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Zone;
-use App\Models\Warehouse;
 use App\Models\Sensor;
+use App\Models\Warehouse;
+use App\Models\SensorZone;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,7 +52,7 @@ class ZoneController extends Controller
             {
                 foreach ($request->sensors as $sensor) {
                     $sensorData[] = [
-                        'sensor_id' => $sensor['id'],
+                        'sensor_id' => $sensor['sensor_id'],
                         'sensor_code' => $sensor['sensor_code'],
                         'value' => $sensor['value'],
                     ];
@@ -64,7 +65,7 @@ class ZoneController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan: ' . $th->getMessage());
         }
 
 
@@ -88,14 +89,14 @@ class ZoneController extends Controller
                 'name' => 'required|string|max:255',
                 'warehouse_id' => 'required|exists:warehouses,id',
                 'sensors' => 'nullable|array',
-                'sensors.*.id' => 'required|exists:sensors,id',
+                'sensors.*.id' => 'nullable|exists:sensor_zone,id',
+                'sensors.*.sensor_id' => 'required|exists:sensors,id',
                 'sensors.*.sensor_code' => 'nullable|string|max:255',
-                'sensors.*.value' => 'required',
+                'sensors.*.value' => 'nullable|string|max:255',
             ]);
 
-            // dd("here");
             // Ambil Zone yang akan diperbarui
-            $zone = Zone::findOrFail($id);
+            $zone = Zone::byCompany(Auth::user()->company_id)->findOrFail($id);
             
             // Update data Zone
             $zone->update([
@@ -103,26 +104,51 @@ class ZoneController extends Controller
                 'warehouse_id' => $request->warehouse_id,
             ]);
 
-            // Hapus semua sensor yang terkait dengan zone ini
-        $zone->sensors()->detach();
 
-        // Siapkan array untuk relasi baru
-        $syncData = [];
+            $existingSensors = $zone->sensors()->pluck('sensor_zone.id', 'sensor_zone.id')->toArray();
+            $existingSensors = array_map('strval', $existingSensors); // Ubah semua ID ke string
 
-        if ($request->has('sensors')) {
-            foreach ($request->sensors as $sensor) {
-                $syncData[$sensor['id']] = [
-                    'sensor_code' => $sensor['sensor_code'],
-                    'value' => $sensor['value'],
-                ];
+            $requestSensorIds = collect($request->sensors)->pluck('id')->map(fn($id) => (string) $id)->toArray(); // Ubah ke string
+
+            $sensorsToDelete = array_diff($existingSensors, $requestSensorIds);
+
+            $newSensors = [];
+            foreach ($request->sensors as $sensor) 
+            {
+                $pivotId = $sensor['id'] ?? null;
+                $sensorId = $sensor['sensor_id'];
+                $sensorCode = $sensor['sensor_code'];
+                $sensorValue = $sensor['value'];
+
+                if (isset($existingSensors[$pivotId])) {
+                    SensorZone::where('id', $pivotId)->update([
+                        'sensor_id' => $sensorId,
+                        'sensor_code' => $sensorCode,
+                        'value' => $sensorValue,
+                    ]);
+                } else 
+                {
+                    // ✅ Sensor baru, tambahkan ke array untuk insert
+                    $newSensors[] = [
+                        'sensor_id' => $sensorId,
+                        'sensor_code' => $sensorCode,
+                        'value' => $sensorValue,
+                    ];
+                }
             }
-        }
 
-        // Tambahkan sensor baru dengan pivot data
-        $zone->sensors()->attach($syncData);
+            // 6️⃣ Insert sensor baru
+            if (!empty($newSensors)) {
+                $zone->sensors()->attach($newSensors);
+            }
 
+            // Tambahkan sensor baru dengan pivot data
+            if (!empty($sensorsToDelete)) 
+            {
+                $sensorsToDelete = SensorZone::whereIn('id', $sensorsToDelete)->delete();
+            }
+            
             DB::commit();
-
             return redirect()->route('zone.index')->with('update', true);
         } catch (\Exception $e) {
             // dd($e);

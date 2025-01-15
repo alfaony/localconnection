@@ -3,21 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Ramsey\Uuid\Uuid;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+
 use App\Schemas\RoleSchema;
-
-
-class Zone extends Model
+use Ramsey\Uuid\Uuid;
+class Rack extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['id', 'warehouse_id', 'name','user_id'];
+    protected $fillable = ['id', 'zone_id', 'name', 'description'];
     public $incrementing = false;
-    protected $keyType = 'uuid';
+    protected $keyType = 'string';
 
     protected static function boot()
     {
@@ -27,14 +25,18 @@ class Zone extends Model
             $model->id = Uuid::uuid4()->toString();
         });
     }
-    public function warehouse()
+
+    public function zone()
     {
-        return $this->belongsTo(Warehouse::class,'warehouse_id');
+        return $this->belongsTo(Zone::class, 'zone_id');
     }
 
-    public function sensors(): BelongsToMany
+    public function sensors()
     {
-        return $this->belongsToMany(Sensor::class, 'sensor_zone')->withPivot('sensor_code','value','id')->whereNull('sensor_zone.deleted_at'); // Hanya ambil sensor yang aktif
+        return $this->belongsToMany(Sensor::class, 'rack_sensor')
+            ->withPivot('sensor_code', 'value', 'id')
+            ->withTimestamps()
+            ->whereNull('rack_sensor.deleted_at');
     }
 
     public function user()

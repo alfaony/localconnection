@@ -1,45 +1,51 @@
 @extends('adminlte::page')
 
-@section('title', 'Manajemen Zone')
+@section('title', 'Manajemen Rack')
 
 @section('content')
 <!-- Notifikasi -->
 @include('components.alert')
 
-<!-- Form Tambah/Edit Zone -->
-@canAccess('store','zones')
-@canAccess('update','zones')
+<!-- Form Tambah/Edit Rack -->
+@canAccess('store', 'racks')
+@canAccess('update', 'racks')
 <div class="card shadow mb-4 mt-3">
     <div class="card-header bg-primary text-white text-center">
-        <h5>{{ isset($zone) ? 'Edit Zone' : 'Tambah Zone' }}</h5>
+        <h5>{{ isset($rack) ? 'Edit Rack' : 'Tambah Rack' }}</h5>
     </div>
     <div class="card-body">
-        <form action="{{ isset($zone) ? route('zone.update', $zone->id) : route('zone.store') }}" method="POST">
+        <form action="{{ isset($rack) ? route('rack.update', $rack->id) : route('rack.store') }}" method="POST">
             @csrf
-            @if(isset($zone))
+            @if(isset($rack))
             @method('PUT')
             @endif
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group mb-3">
-                        <label class="form-label">Nama Zone:</label>
+                        <label class="form-label">Nama Rack:</label>
                         <input type="text" name="name" class="form-control"
-                            value="{{ isset($zone) ? $zone->name : '' }}" required>
+                            value="{{ isset($rack) ? $rack->name : '' }}" required>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group mb-3">
-                        <label class="form-label">Warehouse:</label>
-                        <select name="warehouse_id" class="form-control" required>
-                            @foreach ($warehouses as $warehouse)
-                            <option value="{{ $warehouse->id }}"
-                                {{ isset($zone) && $zone->warehouse_id == $warehouse->id ? 'selected' : '' }}>
-                                {{ $warehouse->name }}
+                        <label class="form-label">Zone:</label>
+                        <select name="zone_id" class="form-control select2" required>
+                            @foreach ($racks as $zone)
+                            <option value="{{ $zone->id }}"
+                                {{ isset($rack) && $rack->zone_id == $zone->id ? 'selected' : '' }}>
+                                {{ $zone->name }}
                             </option>
                             @endforeach
                         </select>
                     </div>
                 </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="form-label">Deskripsi:</label>
+                <textarea name="description" class="form-control" rows="2"
+                    required>{{ isset($rack) ? $rack->description : '' }}</textarea>
             </div>
 
             <!-- Pilih Sensor (Dynamically Added) -->
@@ -49,12 +55,11 @@
             </div>
 
             <div id="sensorContainer">
-                @if(isset($zone) && $zone->sensors->count() > 0)
-                @foreach($zone->sensors as $index => $sensor)
+                @if(isset($rack) && $rack->sensors->count() > 0)
+                @foreach($rack->sensors as $index => $sensor)
                 <div class="sensor-row row align-items-center mb-2">
                     <input type="hidden" name="sensors[{{ $index }}][id]" value="{{ $sensor->pivot->id ?? '' }}">
                     <div class="col-md-3">
-                        
                         <select name="sensors[{{ $index }}][sensor_id]" class="form-control sensor-select select2" data-index="{{ $index }}" required>
                             <option value="">Pilih Sensor</option>
                             @foreach($sensors as $sensorOption)
@@ -92,10 +97,9 @@
                 @endif
             </div>
 
-
             <div class="text-right">
                 <button type="submit" class="btn btn-primary">
-                    {{ isset($zone) ? '💾 Simpan Perubahan' : '➕ Tambah Zone' }}
+                    {{ isset($rack) ? '💾 Simpan Perubahan' : '➕ Tambah Rack' }}
                 </button>
             </div>
         </form>
@@ -104,10 +108,10 @@
 @endcanAccess
 @endcanAccess
 
-<!-- Daftar Zone -->
+<!-- Daftar Rack -->
 <div class="card shadow">
     <div class="card-header bg-success text-white text-center">
-        <h5>Daftar Zone</h5>
+        <h5>Daftar Rack</h5>
     </div>
     <div class="card-body">
         <table class="table table-striped table-bordered">
@@ -115,30 +119,30 @@
                 <tr class="text-center">
                     <th>#</th>
                     <th>Nama</th>
-                    <th>Warehouse</th>
+                    <th>Zone</th>
                     <th>Sensor</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($zones as $zone)
+                @foreach ($racks as $rack)
                 <tr class="text-center">
                     <td>{{ $loop->iteration }}</td>
-                    <td>{{ $zone->name }}</td>
-                    <td>{{ $zone->warehouse->name }}</td>
-                    <td>{{ $zone->sensors->pluck('name')->join(', ') }}</td>
+                    <td>{{ $rack->name }}</td>
+                    <td>{{ $rack->zone->name }}</td>
+                    <td>{{ $rack->sensors->pluck('name')->join(', ') }}</td>
                     <td>
-                        @canAccess('edit','zones')
-                        <a href="{{ route('zone.edit', $zone->id) }}" class="btn btn-sm btn-info">
-                            ✏️ Edit
+                        @canAccess('edit','racks')
+                        <a href="{{ route('rack.edit', $rack->id) }}" class="btn btn-sm btn-info">
+                            <i class="fa fa-edit"></i>
                         </a>
                         @endcanAccess
 
-                        @canAccess('destroy','zones')
-                        <form action="{{ route('zone.destroy', $zone->id) }}" method="POST" class="d-inline">
+                        @canAccess('destroy','racks')
+                        <form action="{{ route('rack.destroy', $rack->id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
-                            <button onclick="return confirm('Hapus Zone ini?')" type="submit"
+                            <button onclick="return confirm('Hapus Rack ini?')" type="submit"
                                 class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
                         </form>
                         @endcanAccess
@@ -150,6 +154,7 @@
     </div>
 </div>
 @stop
+
 @section('js')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
