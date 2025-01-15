@@ -55,9 +55,22 @@ class RackController extends Controller
             'description' => 'nullable|string',
             'zone_id' => 'required|exists:zones,id',
             'sensors' => 'nullable|array',
-            'sensors.*.sensor_id' => 'required_with:sensors.*.sensor_id|nullable|exists:sensors,id',
+            'sensors.*.sensor_id' => 'required_with:sensors.*.sensor_id|exists:sensors,id',
             'sensors.*.sensor_code' => 'nullable|string|max:255',
-            'sensors.*.value' => 'nullable|string|max:255',
+            'sensors.*.value' => 'required_with:sensors.*',
+        ], [
+            'name.required' => 'Nama Rack harus diisi',
+            'name.string' => 'Nama Rack harus berupa string',
+            'name.max' => 'Nama Rack maksimal 255 karakter',
+            'description.string' => 'Deskripsi harus berupa string',
+            'zone_id.required' => 'ID Zona harus diisi',
+            'zone_id.exists' => 'ID Zona tidak ditemukan',
+            'sensors.array' => 'Sensor harus berupa array',
+            'sensors.*.sensor_id.exists' => 'ID Sensor tidak ditemukan',
+            'sensors.*.sensor_id.required_with' => 'ID Sensor harus diisi jika Sensor Code dan Value diisi',
+            'sensors.*.sensor_code.string' => 'Sensor Code harus berupa string',
+            'sensors.*.sensor_code.max' => 'Sensor Code maksimal 255 karakter',
+            'sensors.*.value.required_with' => 'Value harus diisi',
         ]);
 
         $rack = Rack::create([
@@ -92,9 +105,23 @@ class RackController extends Controller
                 'zone_id' => 'required|exists:zones,id',
                 'sensors' => 'nullable|array',
                 'sensors.*.id' => 'nullable|exists:rack_sensor,id', // ID dari pivot table
-                'sensors.*.sensor_id' => 'required_with:sensors.*.sensor_code|nullable|exists:sensors,id',
-                'sensors.*.sensor_code' => 'required_with:sensors.*.value|nullable|string|max:255',
-                'sensors.*.value' => 'nullable|string|max:255',
+                'sensors.*.sensor_id' => 'required_with:sensors.*.sensor_id|exists:sensors,id',
+                'sensors.*.sensor_code' => 'nullable|string|max:255',
+                'sensors.*.value' => 'required_with:sensors.*',
+            ], [
+                'name.required' => 'Nama Rack harus diisi',
+                'name.string' => 'Nama Rack harus berupa string',
+                'name.max' => 'Nama Rack maksimal 255 karakter',
+                'description.string' => 'Deskripsi harus berupa string',
+                'zone_id.required' => 'ID Zona harus diisi',
+                'zone_id.exists' => 'ID Zona tidak ditemukan',
+                'sensors.array' => 'Sensor harus berupa array',
+                'sensors.*.id.exists' => 'ID Sensor Zone tidak ditemukan',
+                'sensors.*.sensor_id.required_with' => 'ID Sensor harus diisi jika Sensor Code dan Value diisi',
+                'sensors.*.sensor_id.exists' => 'ID Sensor tidak ditemukan',
+                'sensors.*.sensor_code.string' => 'Sensor Code harus berupa string',
+                'sensors.*.sensor_code.max' => 'Sensor Code maksimal 255 karakter',
+                'sensors.*.value.required_with' => 'Value harus diisi',
             ]);
 
             //  Ambil Rack yang akan diperbarui

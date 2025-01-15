@@ -120,7 +120,7 @@
 
             <!-- Bagian Form Pencarian -->
             <div class="col-md-3 col-sm-12">
-                <form method="GET" action="{{ route('warehouse.index') }}">
+                <form method="GET" action="{{ route('rack.index') }}">
                     <div class="input-group input-group-sm">
                         <input type="text" name="search" class="form-control" placeholder="Search..."
                             value="{{ request('search') }}">

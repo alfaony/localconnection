@@ -62,7 +62,19 @@ class ZoneController extends Controller
             'sensors' => 'nullable|array',
             'sensors.*.sensor_id' => 'nullable|exists:sensors,id|required_with:sensors.*.sensor_id',
             'sensors.*.sensor_code' => 'nullable|string|max:255',
-            'sensors.*.value' => 'nullable|string|max:255|required_with:sensors.*.value',
+            'sensors.*.value' => 'required_with:sensors.*',
+        ], [
+            'name.required' => 'Nama Zona harus diisi',
+            'name.string' => 'Nama Zona harus berupa string',
+            'name.max' => 'Nama Zona maksimal 255 karakter',
+            'warehouse_id.required' => 'ID Warehouse harus diisi',
+            'warehouse_id.exists' => 'ID Warehouse tidak ditemukan',
+            'sensors.array' => 'Sensor harus berupa array',
+            'sensors.*.sensor_id.exists' => 'ID Sensor tidak ditemukan',
+            'sensors.*.sensor_id.required_with' => 'ID Sensor harus diisi jika Sensor Code dan Value diisi',
+            'sensors.*.sensor_code.string' => 'Sensor Code harus berupa string',
+            'sensors.*.sensor_code.max' => 'Sensor Code maksimal 255 karakter',
+            'sensors.*.value.required_with' => 'Value harus diisi',
         ]);
 
         DB::beginTransaction();
@@ -109,17 +121,31 @@ class ZoneController extends Controller
     public function update(Request $request, $id)
     {
         DB::beginTransaction();
+        // Validasi Data
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'sensors' => 'nullable|array',
+            'sensors.*.id' => 'nullable|exists:sensor_zone,id',
+            'sensors.*.sensor_id' => 'required_with:sensors.*.sensor_id|exists:sensors,id',
+            'sensors.*.sensor_code' => 'nullable|string|max:255',
+            'sensors.*.value' => 'required_with:sensors.*',
+        ], [
+            'name.required' => 'Nama Zona harus diisi',
+            'name.string' => 'Nama Zona harus berupa string',
+            'name.max' => 'Nama Zona maksimal 255 karakter',
+            'warehouse_id.required' => 'ID Warehouse harus diisi',
+            'warehouse_id.exists' => 'ID Warehouse tidak ditemukan',
+            'sensors.array' => 'Sensor harus berupa array',
+            'sensors.*.id.exists' => 'ID Sensor Zone tidak ditemukan',
+            'sensors.*.sensor_id.required_with' => 'ID Sensor harus diisi jika Sensor Code dan Value diisi',
+            'sensors.*.sensor_id.exists' => 'ID Sensor tidak ditemukan',
+            'sensors.*.sensor_code.string' => 'Sensor Code harus berupa string',
+            'sensors.*.sensor_code.max' => 'Sensor Code maksimal 255 karakter',
+            'sensors.*.value.required_with' => 'Value harus diisi',
+        ]);
+
         try {
-            // Validasi Data
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'warehouse_id' => 'required|exists:warehouses,id',
-                'sensors' => 'nullable|array',
-                'sensors.*.id' => 'nullable|exists:sensor_zone,id',
-                'sensors.*.sensor_id' => 'nullable|exists:sensors,id|required_with:sensors.*.sensor_id',
-                'sensors.*.sensor_code' => 'nullable|string|max:255',
-                'sensors.*.value' => 'nullable|string|max:255|required_with:sensors.*.value',
-            ]);
 
             // Ambil Zone yang akan diperbarui
             $zone = Zone::byCompany(Auth::user()->company_id)->findOrFail($id);
@@ -166,7 +192,6 @@ class ZoneController extends Controller
                 }
             }
 
-            // 6️⃣ Insert sensor baru
             if (!empty($newSensors)) {
                 $zone->sensors()->attach($newSensors);
             }
