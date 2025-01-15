@@ -143,8 +143,8 @@
                 <tr class="text-center">
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $zone->name }}</td>
-                    <td>{{ $zone->warehouse->name }}</td>
-                    <td>{{ $zone->sensors->pluck('name')->join(', ') }}</td>
+                    <td>{{ $zone->warehouse ? $zone->warehouse->name : '-' }}</td>
+                    <td>{{ $zone->sensors ? $zone->sensors->pluck('name')->join(', ') : '-' }}</td>
                     <td>
                         @canAccess('edit','zones')
                         <a href="{{ route('zone.edit', $zone->id) }}" class="btn btn-sm btn-info">

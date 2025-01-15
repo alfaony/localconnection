@@ -146,8 +146,8 @@
                 <tr class="text-center">
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $rack->name }}</td>
-                    <td>{{ $rack->zone->name }}</td>
-                    <td>{{ $rack->sensors->pluck('name')->join(', ') }}</td>
+                    <td>{{ $rack->zone ? $rack->zone->name : '-' }}</td>
+                    <td>{{ $rack->sensors ? $rack->sensors->pluck('name')->join(', ') : '-' }}</td>
                     <td>
                         @canAccess('edit','racks')
                         <a href="{{ route('rack.edit', $rack->id) }}" class="btn btn-sm btn-info">
