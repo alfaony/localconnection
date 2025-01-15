@@ -50,7 +50,7 @@ class RackController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'zone_id' => 'required|exists:zones,id',
