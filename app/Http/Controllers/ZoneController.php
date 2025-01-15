@@ -112,7 +112,7 @@ class ZoneController extends Controller
 
     public function edit(Zone $zone)
     {
-        $zones = Zone::with(['warehouse', 'sensors'])->paginate(10);
+        $zones = Zone::byCompany(Auth::user()->company_id)->with(['warehouse', 'sensors'])->paginate(10);
         $warehouses = Warehouse::byCompany(Auth::user()->company_id)->get();
         $sensors = Sensor::byCompany(Auth::user()->company_id)->get();
         return view('zone.index', compact('zones', 'zone', 'warehouses', 'sensors'));
