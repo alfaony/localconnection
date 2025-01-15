@@ -51,7 +51,21 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <option value="{{ $division->id }}">{{ $division->name }}</option>
                 @endforeach
             </select>
+            <div class="form-group mt-2">
+    <label>Gunakan IP Tertentu:</label>
 
+    <!-- Checkbox Enable IP Filtering -->
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="use_ip_restriction" name="use_ip_restriction" value="1">
+        <label class="form-check-label" for="use_ip_restriction">Aktifkan Restriksi IP</label>
+    </div>
+
+    <!-- Container untuk Input IP -->
+    <div id="ipRestrictionContainer" class="mt-3" style="display: none;">
+        <button type="button" class="btn btn-success btn-sm mb-2" id="addIpBtn">➕ Tambah IP</button>
+        <div id="ipInputs"></div>
+    </div>
+</div>
             <div class="form-group mt-2 mb-1">
                 <label for="checkin-settings">Setting Check-In:</label>
                 
@@ -373,6 +387,55 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <!-- Script to toggle dependent options -->
+ <script>
+    document.addEventListener("DOMContentLoaded", function () {
+    let ipCheckbox = document.getElementById("use_ip_restriction");
+    let ipContainer = document.getElementById("ipRestrictionContainer");
+    let ipInputsContainer = document.getElementById("ipInputs");
+    let addIpButton = document.getElementById("addIpBtn");
+
+    // Fungsi menambahkan input IP baru
+    function addIPInput() {
+        let newInput = document.createElement("div");
+        newInput.className = "input-group mb-2 ip-input-group";
+        newInput.innerHTML = `
+            <input type="text" class="form-control" name="ip_addresses[]" placeholder="Masukkan IP Address" required>
+            <button type="button" class="btn btn-danger remove-ip ml-2 btn-sm"><i class="fa fa-trash"></i></button>
+        `;
+        ipInputsContainer.appendChild(newInput);
+
+        // Tambahkan event listener untuk menghapus input
+        newInput.querySelector(".remove-ip").addEventListener("click", function () {
+            newInput.remove();
+            checkRemainingIPs();
+        });
+    }
+
+    // Cek apakah ada input IP, jika tidak, checkbox otomatis nonaktif
+    function checkRemainingIPs() {
+        if (ipInputsContainer.children.length === 0) {
+            ipCheckbox.checked = false;
+            ipContainer.style.display = "none";
+        }
+    }
+
+    // Event listener untuk checkbox
+    ipCheckbox.addEventListener("change", function () {
+        if (this.checked) {
+            ipContainer.style.display = "block";
+            if (ipInputsContainer.children.length === 0) {
+                addIPInput(); // Tambahkan satu input saat checkbox diaktifkan
+            }
+        } else {
+            ipContainer.style.display = "none";
+            ipInputsContainer.innerHTML = ""; // Hapus semua input jika checkbox dinonaktifkan
+        }
+    });
+
+    // Event listener untuk tombol tambah input IP
+    addIpButton.addEventListener("click", addIPInput);
+});
+ </script>
 <script>
     function toggleAdditionalSettings() 
     {
