@@ -36,7 +36,7 @@
         </div>
         <div class="offset-md-6 col-md-4">
             <label>Tanggal:</label>
-            <input type="date" name="date" class="form-control" value="{{ $dateNow }}" min="{{ $dateCreate }}" required>
+            <input type="date" name="date" class="form-control" value="{{ $dateNow }}" required>
         </div>
     </div>
 
