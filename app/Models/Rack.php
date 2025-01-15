@@ -23,6 +23,7 @@ class Rack extends Model
 
         static::creating(function ($model) {
             $model->id = Uuid::uuid4()->toString();
+            $model->user_id = Auth::user()->id;
         });
     }
 
