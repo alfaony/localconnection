@@ -108,22 +108,49 @@ class AgreementLetter extends Model
     {
         $rentStart = Carbon::parse($this->rent_start_duration);
         $rentEnd = Carbon::parse($this->rent_end_duration);
-
-        $diffInYears = $rentStart->diffInYears($rentEnd);
-        $diffInMonths = $rentStart->diffInMonths($rentEnd) % 12;
-
-        $result = '';
-
+    
+        $diff = $rentStart->diff($rentEnd);
+    
+        $diffInYears = $diff->y; // Tahun
+        $diffInMonths = $diff->m; // Bulan
+        $diffInDays = $diff->d; // Hari
+    
+        $result = [];
+    
         if ($diffInYears > 0) {
-            $result .= $diffInYears . ' tahun ';
+            $result[] = $diffInYears . ' tahun';
         }
-
+    
         if ($diffInMonths > 0) {
-            $result .= $diffInMonths . ' bulan';
+            $result[] = $diffInMonths . ' bulan';
         }
-
-        return $result;
+    
+        if ($diffInDays > 0) {
+            $result[] = $diffInDays . ' hari';
+        }
+    
+        return implode(' ', $result);
     }
+    // public function getRentCountAttribute()
+    // {
+    //     $rentStart = Carbon::parse($this->rent_start_duration);
+    //     $rentEnd = Carbon::parse($this->rent_end_duration);
+
+    //     $diffInYears = $rentStart->diffInYears($rentEnd);
+    //     $diffInMonths = $rentStart->diffInMonths($rentEnd) % 12;
+
+    //     $result = '';
+
+    //     if ($diffInYears > 0) {
+    //         $result .= $diffInYears . ' tahun ';
+    //     }
+
+    //     if ($diffInMonths > 0) {
+    //         $result .= $diffInMonths . ' bulan';
+    //     }
+
+    //     return $result;
+    // }
 
     public function scopeByCompany($query,$companyId)
     {
