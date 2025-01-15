@@ -52,20 +52,20 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 @endforeach
             </select>
             <div class="form-group mt-2">
-    <label>Gunakan IP Tertentu:</label>
+                <label>Gunakan IP Tertentu:</label>
 
-    <!-- Checkbox Enable IP Filtering -->
-    <div class="form-check">
-        <input type="checkbox" class="form-check-input" id="use_ip_restriction" name="use_ip_restriction" value="1">
-        <label class="form-check-label" for="use_ip_restriction">Aktifkan Restriksi IP</label>
-    </div>
+                <!-- Checkbox Enable IP Filtering -->
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="use_ip_restriction" name="use_ip_restriction" value="1">
+                    <label class="form-check-label" for="use_ip_restriction">Aktifkan Restriksi IP</label>
+                </div>
 
-    <!-- Container untuk Input IP -->
-    <div id="ipRestrictionContainer" class="mt-3" style="display: none;">
-        <button type="button" class="btn btn-success btn-sm mb-2" id="addIpBtn">➕ Tambah IP</button>
-        <div id="ipInputs"></div>
-    </div>
-</div>
+                <!-- Container untuk Input IP -->
+                <div id="ipRestrictionContainer" class="mt-3" style="display: none;">
+                    <button type="button" class="btn btn-success btn-sm mb-2" id="addIpBtn">➕ Tambah IP</button>
+                    <div id="ipInputs"></div>
+                </div>
+            </div>
             <div class="form-group mt-2 mb-1">
                 <label for="checkin-settings">Setting Check-In:</label>
                 
@@ -205,6 +205,30 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <option value="{{ $division->id }}" {{ isset($divisionsUser) && in_array($division->id, $divisionsUser) ? 'selected' : '' }}>{{ $division->name }}</option>
                 @endforeach
             </select>
+            <div class="form-group mt-2">
+                <label>Gunakan IP Tertentu:</label>
+
+                <!-- Checkbox Enable IP Filtering -->
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="use_ip_restriction" name="use_ip_restriction" value="1" {{ @$userEdit->use_ip_restriction ? 'checked' : '' }}>
+                    <label class="form-check-label" for="use_ip_restriction">Aktifkan Restriksi IP</label>
+                </div>
+
+                <!-- Container untuk Input IP -->
+                <div id="ipRestrictionContainer" class="mt-3" style="display: {{ @$userEdit->use_ip_restriction ? 'block' : 'none' }}">
+                    <button type="button" class="btn btn-success btn-sm mb-2" id="addIpBtn">➕ Tambah IP</button>
+                    <div id="ipInputs">
+                        @if(@$userEdit->ip_addresses)
+                            @foreach (json_decode(@$userEdit->ip_addresses) as $ip)
+                                <div class="input-group mb-2 ip-input-group">
+                                    <input type="text" class="form-control" name="ip_addresses[]" value="{{ $ip }}">
+                                    <button type="button" class="btn btn-danger remove-ip ml-2 btn-sm"><i class="fa fa-trash"></i></button>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
+                </div>
+            </div>
             <div class="form-group mt-2 mb-1">
                 <label for="checkin-settings">Setting Check-In:</label>
                 

@@ -82,7 +82,8 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'custom_rest_times' => 'array', // This will automatically decode JSON into an array        
+        'custom_rest_times' => 'array', // This will automatically decode JSON into an array   
+        'ip_addresses' => 'array',   
     ];
 
     protected $appends = ['point_checkin', 'today_percentage', 'point_percentage'];

@@ -92,6 +92,8 @@ class UserController extends Controller
         $user->password = bcrypt($request->post('password'));
         $user->approvement_user_id = $request->post('approvement_user_id') ?? NULL;
 
+        $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
+        $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
         // Checkin
         $user->is_checkin = $request->post('is_checkin', 0); // Default 0 jika tidak dicentang
         $user->manual_checkin = $request->post('manual_checkin', 0);
@@ -201,6 +203,9 @@ class UserController extends Controller
 
         $divisions = $request->input('divisions');
         $user->divisions()->sync($divisions);
+
+        $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
+        $user->ip_addresses = $request->has('ip_addresses') ? json_encode($request->ip_addresses) : NULL;
 
         // Checkin
         $user->is_checkin = $request->post('is_checkin', 0); // Default 0 jika tidak dicentang

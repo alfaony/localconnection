@@ -117,7 +117,7 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');
 
-Route::group(['middleware' => ['auth','role.permission']], function()
+Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   // Xero Setting
   Route::get('xero/connect', [XeroController::class,'connect']);
