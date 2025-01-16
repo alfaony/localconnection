@@ -57,17 +57,20 @@ class AppServiceProvider extends ServiceProvider
             ];
 
             $managementCompanyArray = array();
+            $managementCompanyArray = array();
             $managementSalesArray = array();
             $managementObArray = array();
             $equipmentMenuArray = array();
             $taskMenuArray = array();
             $securityMenuArray = array();
             $productivityMenuArray = array();
+            $warehouseMenuArray = array();
 
             $equipmentMenu = ['devices','equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
             $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
+            $warehouseMenu = ['sensors','warehouses','zones','racks'];
             $managementCompanyMenu = 
             [
                 'kyes',
@@ -377,6 +380,27 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'kye.index',
                     'icon' => 'fa fa-id-card',
                 ],
+                'warehouses' => [
+                    'text' => 'Manajemen Gudang',
+                    'route' => 'warehouse.index',
+                    'icon' => 'fa fa-warehouse',
+                ],
+                'sensors' => [
+                    'text' => 'Sensor',
+                    'route' => 'sensor.index',
+                    'icon' => 'fa fa-microchip',
+                ],
+                'zones' => [
+                    'text' => 'Zone',
+                    'route' => 'zone.index',
+                    'icon' => 'fa fa-box',
+                ],
+
+                'racks' => [
+                    'text' => 'Rack',
+                    'route' => 'rack.index',
+                    'icon' => 'fa fa-list',
+                ],
             ];
 
             foreach ($listMenu as $role) 
@@ -443,6 +467,14 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($warehouseMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($warehouseMenuArray,$menus[$role]);
+                }
+            }
+
             $managementSalesMenu = 
             [
                 'text'    => 'Manajemen Penjualan',
@@ -485,6 +517,11 @@ class AppServiceProvider extends ServiceProvider
                 'submenu' => $securityMenuArray
             ];
 
+            $warehouseMenu = [
+                'text'      => 'Daftar Gudang',
+                'submenu'   => $warehouseMenuArray
+            ];
+
             if($managementCompanyMenu['submenu'] )
             {
                 $event->menu->add($managementCompanyMenu);
@@ -518,6 +555,11 @@ class AppServiceProvider extends ServiceProvider
             if($securityMenu['submenu'] )
             {
                 $event->menu->add($securityMenu);
+            }
+
+            if($warehouseMenu['submenu'] )
+            {
+                $event->menu->add($warehouseMenu);
             }
             
         });

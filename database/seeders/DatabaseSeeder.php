@@ -69,5 +69,10 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuQuoteSentMailSeeder::class);
         $this->call(PermissionForPassCheckingSeeder::class);
         $this->call(PermissionForKyeSeeder::class);
+        $this->call(PermissionForWarehouse::class);
+        $this->call(PermissionForMenuSensorsSeeder::class);
+        $this->call(PermissionForMenuZoneSeeder::class);
+        $this->call(PermissionForMenuRackSeeder::class);
+        $this->call(WarehouseTypeSeeder::class);
     }
 }
