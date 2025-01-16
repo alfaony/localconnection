@@ -31,7 +31,7 @@ class IpRestriction
                     abort(403, 'Gagal mendapatkan IP publik');
                 }
 
-                $currentIp = $clientIp != "" ? $clientIp : $response->json()['ip'];
+                $currentIp = $response->json()['ip'];
             } catch (\Exception $e) {
                 abort(403, 'Gagal mendapatkan IP publik');
             }
