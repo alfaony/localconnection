@@ -31,6 +31,13 @@ class IpRestriction
                     abort(403, 'Gagal mendapatkan IP publik');
                 }
 
+                dd([
+                    'CF-Connecting-IP' => request()->header('CF-Connecting-IP'),
+                    'X-Real-IP' => request()->header('X-Real-IP'),
+                    'X-Forwarded-For' => explode(',', request()->header('X-Forwarded-For'))[0],
+                    'request()->ip()' => request()->ip(),
+                    'web' => $response->json()['ip']
+                ]);
                 $currentIp = $clientIp != "" ? $clientIp : $response->json()['ip'];
             } catch (\Exception $e) {
                 abort(403, 'Gagal mendapatkan IP publik');
