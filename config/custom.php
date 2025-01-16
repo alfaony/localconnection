@@ -114,4 +114,10 @@ return
          'approved' => "Approved",
          'rejected' => 'Rejected'
       ],
+
+      'sensorType' => 
+      [
+         'boolean' => 'On / Off',
+         'integer' => 'Angka',
+      ]
 ];

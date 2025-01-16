@@ -46,7 +46,7 @@ class QuoteController extends Controller
      */
     public function create(Request $request)
     {
-        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $product = Product::withTrashed()->with('category')->byCompany(Auth::user()->company_id)->get();
         $customer = Customer::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $date = Carbon::now()->format('m/Y');
@@ -161,7 +161,7 @@ class QuoteController extends Controller
      */
     public function edit($slug,Request $request)
     {
-        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $product = Product::withTrashed()->with('category')->byCompany(Auth::user()->company_id)->get();
         $customer = Customer::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $quote = Quote::where('slug', $slug)->firstOrFail();
         $leadsFrom  = config('custom.leads_from');
@@ -409,12 +409,12 @@ class QuoteController extends Controller
                 $price = $quoteProduct->price_sell;
             }else
             {
-                $product = Product::find($productId);
+                $product = Product::withTrashed()->find($productId);
                 $price = $product->price_sell;
             }
         }else
         {
-            $product = Product::find($productId);
+            $product = Product::withTrashed()->find($productId);
             $price = $product->price_sell;
         }
 
@@ -464,7 +464,7 @@ class QuoteController extends Controller
      */
     public function downloadPdf($slug)
     {
-        $product = Product::byCompany(Auth::user()->company_id)->get();
+        $product = Product::withTrashed()->byCompany(Auth::user()->company_id)->get();
         $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
         $customer = Customer::byCompany(Auth::user()->company_id)->get();
         $quote = Quote::where('slug', $slug)->firstOrFail();

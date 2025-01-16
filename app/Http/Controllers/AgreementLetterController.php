@@ -11,6 +11,7 @@ use App\Helpers\Access;
 use App\Models\AgreementLetter;
 use App\Models\Quote;
 use App\Models\SettingCompany;
+use App\Models\TemplateAgreement;
 
 // commnet
 class AgreementLetterController extends Controller
@@ -34,10 +35,10 @@ class AgreementLetterController extends Controller
     {
         $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
         $agreementTemplate = $company['template_perjanjian'];
-
+        $selectTemplate = TemplateAgreement::where('is_active',true)->where('template_name',$agreementTemplate)->get();
         $userCreate = Auth::user()->name;
         $nomorAgreementLetter = $this->agreementLetterNumber()['result'];
-        return view('agreement_letter.createOrEdit'.$agreementTemplate,compact('userCreate','nomorAgreementLetter'));
+        return view('agreement_letter.createOrEdit'.$agreementTemplate,compact('userCreate','nomorAgreementLetter','selectTemplate','company'));
     }
 
     /**
@@ -48,6 +49,10 @@ class AgreementLetterController extends Controller
      */
     public function store(AgreementLetterRequest $request)
     {
+        $customFieldData = collect($request->all())
+        ->filter(fn($value, $key) => strpos($key, 'custom_') === 0)
+        ->toArray();
+
         $agreementLetter = new AgreementLetter();
         $nomorAgreementLetter = $this->agreementLetterNumber();
 
@@ -73,6 +78,9 @@ class AgreementLetterController extends Controller
 
         $agreementLetter->user_created_id = Auth::user()->id;
         $agreementLetter->user_updated_id = Auth::user()->id;
+        $agreementLetter->template_agreement_id = $request->input('template_agreement_id');
+        
+        $agreementLetter->custom_fields = $customFieldData;
 
         $agreementLetter->save();
 
@@ -90,12 +98,13 @@ class AgreementLetterController extends Controller
         // $quote = Quote::orderBy('created_at','desc')->get();
         $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
         $agreementTemplate = $company['template_perjanjian'];
+        $selectTemplate = TemplateAgreement::where('is_active',true)->where('template_name',$agreementTemplate)->get();
 
         $agreementLetter = AgreementLetter::where('slug',$slug)->first();
         $userCreate = $agreementLetter->userCreate ? $agreementLetter->userCreate->name : '';
         $nomorAgreementLetter = $agreementLetter->number_result ?? '';
 
-        return view('agreement_letter.createOrEdit'.$agreementTemplate,compact('userCreate','nomorAgreementLetter','agreementLetter'));
+        return view('agreement_letter.createOrEdit'.$agreementTemplate,compact('userCreate','nomorAgreementLetter','agreementLetter','selectTemplate','company'));
     }
 
 
@@ -140,7 +149,14 @@ class AgreementLetterController extends Controller
         $month = $bulan_indonesia[$monthNumber];
         $yearToRomawi = $this->toRomawi($yearGenerate);
         
-
+        if($agreementLetter->templateAgreement)
+        {
+            $agreementTemplate = $agreementLetter->templateAgreement->template_agreement;
+        }else
+        {
+            $agreementTemplate = TemplateAgreement::where('is_default',true)->where('is_active',true)->where('template_name',$agreementTemplate)->first()->template_agreement;
+        }
+        
         return view('agreement_letter.pdf'.$agreementTemplate,compact('quote','userCreate','nomorAgreementLetter','agreementLetter', 'month', 'year', 'date' ,'company' ,'monthNumber','dateNow', 'yearToRomawi', 'dateNowWithoutDay'));
     }
 
@@ -153,6 +169,10 @@ class AgreementLetterController extends Controller
      */
     public function update(AgreementLetterRequest $request, $slug)
     {
+        $customFieldData = collect($request->all())
+        ->filter(fn($value, $key) => strpos($key, 'custom_') === 0)
+        ->toArray();
+
         $agreementLetter = AgreementLetter::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $agreementLetter->date = $request->input('date');
         $agreementLetter->quote_id = $request->input('quote');
@@ -170,6 +190,9 @@ class AgreementLetterController extends Controller
         $agreementLetter->commission_name = $request->input('commission_name');
         $agreementLetter->commission_phone = $request->input('commission_phone');
         $agreementLetter->commission_address = $request->input('commission_address');
+        $agreementLetter->template_agreement_id = $request->input('template_agreement_id');
+
+        $agreementLetter->custom_fields = $customFieldData;
         
         $agreementLetter->user_updated_id = Auth::user()->id;
 

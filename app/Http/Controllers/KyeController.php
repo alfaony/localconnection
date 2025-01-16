@@ -22,7 +22,7 @@ class KyeController extends Controller
     {
         $search = $request->input('search');
 
-        $kyeRecords = Kye::when($search, function ($query, $search) {
+        $kyeRecords = Kye::byCompany(Auth::user()->company_id)->when($search, function ($query, $search) {
                 $query->where('full_name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('ktp_number', 'like', "%{$search}%");
@@ -123,7 +123,7 @@ class KyeController extends Controller
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil ditambahkan.');
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             return redirect()->route('kye.create')->with('error', 'Terjadi kesalahan saat menyimpan data KYE.');
         }
     }
@@ -238,7 +238,7 @@ class KyeController extends Controller
 
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil diperbarui.');
         } catch (\Throwable $th) {
-            dd($th);
+            // dd($th);
             // Log error untuk debugging
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui data KYE.');
         }

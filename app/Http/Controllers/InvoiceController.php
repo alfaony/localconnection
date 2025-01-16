@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 
 use App\Http\Requests\InvoiceRequest;
@@ -40,6 +41,7 @@ class InvoiceController extends Controller
     /**
      * 
      * Xero For Service
+     * xero service
      */
     protected $xeroService;
 
@@ -89,7 +91,7 @@ class InvoiceController extends Controller
      */
     public function create(Request $request)
     {
-        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $product = Product::withTrashed()->with('category')->byCompany(Auth::user()->company_id)->get();
         $customer = Customer::byCompany(Auth::user()->company_id)->orderBy('created_at','desc')->get();
         $userCreate = Auth::user()->name;
         $date = Carbon::now()->format('m/Y');
@@ -240,7 +242,7 @@ class InvoiceController extends Controller
      */
     public function edit($slug,Request $request)
     {
-        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $product = Product::withTrashed()->with('category')->byCompany(Auth::user()->company_id)->get();
         $invoice = Invoice::where('slug', $slug)->firstOrFail();
 
         if(($invoice->status == 'PAID') || ($invoice->status == 'DELETED') || ($invoice->status == 'VOID') || ($invoice->status == 'AUTHORISED'))
@@ -270,7 +272,7 @@ class InvoiceController extends Controller
 
      public function show($slug)
     {
-        $product = Product::with('category')->byCompany(Auth::user()->company_id)->get();
+        $product = Product::withTrashed()->with('category')->byCompany(Auth::user()->company_id)->get();
         $invoice = Invoice::where('slug', $slug)->firstOrFail();
 
         $basts = Bast::byCompany(Auth::user()->company_id)
@@ -558,12 +560,12 @@ class InvoiceController extends Controller
                 $price = $quoteProduct->price_sell;
             }else
             {
-                $product = Product::find($productId);
+                $product = Product::withTrashed()->find($productId);
                 $price = $product->price_sell;
             }
         }else
         {
-            $product = Product::find($productId);
+            $product = Product::withTrashed()->find($productId);
             $price = $product->price_sell;
         }
 
@@ -801,7 +803,7 @@ class InvoiceController extends Controller
     public function mergePdf($invoice, $bastFilePath)
     {
         // Path relatif untuk file gabungan
-        $outputPath = "public/invoices/merged_invoice_{$invoice->number_result}.pdf";
+        $outputPath = "public/invoices/merged_invoice_{$invoice->number_result}_".date('YmdHis').'_'.Str::random(5).".pdf";
         
         // Hapus file gabungan sebelumnya jika ada
         if ($invoice->file_merge_path && Storage::exists($invoice->file_merge_path)) {

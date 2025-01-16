@@ -207,7 +207,7 @@ class XeroService
             $invoice->save();
             $this->logApiRequest('invoices', 'POST', $invoice, $e->getMessage(), 500);
             Log::error('Xero invoice creation failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Xero invoice creation failed.');
+            throw new \Exception('Xero invoice creation failed.');
         }
     }
 
@@ -380,7 +380,7 @@ class XeroService
                 if(!$item->product->xero_code)
                 {
                     // Mendapatkan nilai max dari row $product->number
-                    $maxNumber = Product::byCompany($invoice->userCreate->company_id)->max('number');
+                    $maxNumber = Product::withTrashed()->byCompany($invoice->userCreate->company_id)->max('number');
                     $nextNumber = $maxNumber ? $maxNumber + 1 : 1;
 
                     // Membuat kode berdasarkan nama perusahaan user dan nomor produk
@@ -393,38 +393,39 @@ class XeroService
                     $item->product->xero_code = $xeroChecking;
                     $item->product->save();
 
-                    $postItems[] = 
-                    [
-                        "ItemID" => $item->product->id,
-                        "Code" => $xeroCode,
-                        "Description" => Str::limit(strip_tags($item->product->description),350,''),
-                        "Name"=> Str::limit($item->product->name,45,''),
-                        "PurchaseDetails"=> [
+                    if (!collect($postItems)->contains('ItemID', $item->product->id)) 
+                    {
+                        $postItems[] = [
+                            "ItemID" => $item->product->id,
+                            "Code" => $item->product->xero_code ?: $xeroCode,
+                            "Description" => Str::limit(strip_tags($item->product->description), 350, ''),
+                            "Name"=> Str::limit($item->product->name, 45, ''),
+                            "PurchaseDetails"=> [
                                 "UnitPrice"=> $item->product->price_buy,
-                        ],
-                        "SalesDetails"=> 
-                        [
-                            "UnitPrice"=> $item->product->price_sell,
-                        ],
-                    ];
+                            ],
+                            "SalesDetails"=> [
+                                "UnitPrice"=> $item->product->price_sell,
+                            ],
+                        ];
+                    }
                 }else{
                     $isExistsItem = $this->xero->items()->where('Code', $item->product->xero_code)->first();
                     if(!$isExistsItem)
                     {
-                        $postItems[] = 
-                        [
-                            "ItemID" => $item->product->id,
-                            "Code" => $item->product->xero_code,
-                            "Description" => Str::limit(strip_tags($item->product->description),350,''),
-                            "Name"=> Str::limit($item->product->name,45,''),
-                            "PurchaseDetails"=> [
+                        if (!collect($postItems)->contains('ItemID', $item->product->id)) {
+                            $postItems[] = [
+                                "ItemID" => $item->product->id,
+                                "Code" => $item->product->xero_code ?: $xeroCode,
+                                "Description" => Str::limit(strip_tags($item->product->description), 350, ''),
+                                "Name"=> Str::limit($item->product->name, 45, ''),
+                                "PurchaseDetails"=> [
                                     "UnitPrice"=> $item->product->price_buy,
-                            ],
-                            "SalesDetails"=> 
-                            [
-                                "UnitPrice"=> $item->product->price_sell,
-                            ],
-                        ];
+                                ],
+                                "SalesDetails"=> [
+                                    "UnitPrice"=> $item->product->price_sell,
+                                ],
+                            ];
+                        }
                     }
                 }
                 $taxType = $this->findOrCreateTaxRate($invoice->tax) ?? "OUTPUT"; // Ambil TaxType berdasarkan nilai pajak di invoice

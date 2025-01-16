@@ -15,6 +15,9 @@ class AgreementLetter extends Model
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
+    protected $casts = [
+        'custom_fields' => 'array', // Agar otomatis dikonversi ke array saat diakses
+    ];
 
     protected static function boot()
     {
@@ -65,6 +68,14 @@ class AgreementLetter extends Model
         return $this->belongsTo(Quote::class)->withTrashed();
     }
 
+    public function templateAgreement()
+    {
+        return $this->belongsTo(TemplateAgreement::class,'template_agreement_id');
+    }
+    public function getCustomField($key, $default = '-')
+    {
+        return $this->custom_fields[$key] ?? $default;
+    }
     public function getRentStartDurationIdAttribute()
     {
         $date = Carbon::parse($this->rent_start_duration)->locale('id');
@@ -97,22 +108,49 @@ class AgreementLetter extends Model
     {
         $rentStart = Carbon::parse($this->rent_start_duration);
         $rentEnd = Carbon::parse($this->rent_end_duration);
-
-        $diffInYears = $rentStart->diffInYears($rentEnd);
-        $diffInMonths = $rentStart->diffInMonths($rentEnd) % 12;
-
-        $result = '';
-
+    
+        $diff = $rentStart->diff($rentEnd);
+    
+        $diffInYears = $diff->y; // Tahun
+        $diffInMonths = $diff->m; // Bulan
+        $diffInDays = $diff->d; // Hari
+    
+        $result = [];
+    
         if ($diffInYears > 0) {
-            $result .= $diffInYears . ' tahun ';
+            $result[] = $diffInYears . ' tahun';
         }
-
+    
         if ($diffInMonths > 0) {
-            $result .= $diffInMonths . ' bulan';
+            $result[] = $diffInMonths . ' bulan';
         }
-
-        return $result;
+    
+        if ($diffInDays > 0) {
+            $result[] = $diffInDays . ' hari';
+        }
+    
+        return implode(' ', $result);
     }
+    // public function getRentCountAttribute()
+    // {
+    //     $rentStart = Carbon::parse($this->rent_start_duration);
+    //     $rentEnd = Carbon::parse($this->rent_end_duration);
+
+    //     $diffInYears = $rentStart->diffInYears($rentEnd);
+    //     $diffInMonths = $rentStart->diffInMonths($rentEnd) % 12;
+
+    //     $result = '';
+
+    //     if ($diffInYears > 0) {
+    //         $result .= $diffInYears . ' tahun ';
+    //     }
+
+    //     if ($diffInMonths > 0) {
+    //         $result .= $diffInMonths . ' bulan';
+    //     }
+
+    //     return $result;
+    // }
 
     public function scopeByCompany($query,$companyId)
     {
