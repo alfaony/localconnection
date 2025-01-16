@@ -187,6 +187,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         <!-- Update -->
         @elseif(@$userEdit)
         @canAccess('update','users')
+        <p id="penggunaNo"></p>
         <form action="{{ route('user.update',$userEdit) }}" method="post">
         @method('put')
             @csrf
@@ -219,7 +220,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <button type="button" class="btn btn-success btn-sm mb-2" id="addIpBtn">➕ Tambah IP</button>
                     <div id="ipInputs">
                         @if(@$userEdit->ip_addresses)
-                            @foreach (json_decode(@$userEdit->ip_addresses) as $ip)
+                            @foreach (@$userEdit->ip_addresses as $ip)
                                 <div class="input-group mb-2 ip-input-group">
                                     <input type="text" class="form-control" name="ip_addresses[]" value="{{ $ip }}">
                                     <button type="button" class="btn btn-danger remove-ip ml-2 btn-sm"><i class="fa fa-trash"></i></button>
@@ -412,6 +413,12 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <!-- Script to toggle dependent options -->
  <script>
+    document.getElementById("ipInputs").addEventListener("click", function (e) 
+    {
+        if (e.target && e.target.classList.contains("remove-ip")) {
+            e.target.closest(".ip-input-group").remove();
+        }
+    })
     document.addEventListener("DOMContentLoaded", function () {
     let ipCheckbox = document.getElementById("use_ip_restriction");
     let ipContainer = document.getElementById("ipRestrictionContainer");
@@ -503,14 +510,6 @@ $totalUser = $totalUser + 1; // Get the total number of projects
     {
         let nomor = "{{ $totalUser }}";
         document.getElementById('penggunaNo').innerHTML = "No Pengguna :"+nomor;
-
-
-        let getPrice = document.getElementById("budget").value;
-        if (getPrice)
-        {
-            document.getElementById("budget_show").value = getPrice;
-            formatRupiahFormat(document.getElementById("budget_show"),"budget"); // Format default value
-        }
 
     });
     function formatRupiahFormat(input, inputNonFormat)

@@ -110,7 +110,7 @@ class UserController extends Controller
         }
 
         $user->save();
-
+        
 
         $divisions = $request->input('divisions');
         if ($divisions) {
@@ -205,7 +205,7 @@ class UserController extends Controller
         $user->divisions()->sync($divisions);
 
         $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
-        $user->ip_addresses = $request->has('ip_addresses') ? json_encode($request->ip_addresses) : NULL;
+        $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
 
         // Checkin
         $user->is_checkin = $request->post('is_checkin', 0); // Default 0 jika tidak dicentang
