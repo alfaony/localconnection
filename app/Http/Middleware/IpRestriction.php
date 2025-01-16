@@ -18,7 +18,7 @@ class IpRestriction
         if ($user->use_ip_restriction) {
 
             //  Ambil daftar IP yang diizinkan dari database
-            $allowedIps = json_decode($user->ip_addresses ?? '[]', true);
+            $allowedIps = $user->ip_addresses ?? [];
 
             //  Ambil IP saat ini dari API ipify
             try {
