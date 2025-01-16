@@ -113,7 +113,7 @@
                                     <td>{{ $checking->user->name }}</td>
                                     <td>
                                         @if(!$checking->is_active && !$checking->isDayoff())
-                                            {{ $checking->checkin_start_time ? \Carbon\Carbon::parse($checking->checkin_start_time)->locale('id')->translatedFormat('F d,y H:i:s') : '' }}
+                                            {{ $checking->checkin_start_time ? \Carbon\Carbon::parse($checking->checkin_start_time)->locale('id')->translatedFormat('F d,y H:i:s') : \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y') }}
                                             @if($manualCheck['manual_checkin'])
                                             <br>
                                             <span class="badge bg-primary">
@@ -121,7 +121,7 @@
                                             </span>
                                             @endif
                                         @else
-                                            {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y') : '' }}
+                                            {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y') : \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y') }}
                                             @if($manualCheck['manual_checkin'])
                                             <br>
                                             <span class="badge bg-primary">
