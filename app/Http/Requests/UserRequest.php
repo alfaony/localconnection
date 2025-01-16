@@ -30,6 +30,7 @@ class UserRequest extends FormRequest
         if(!$userId)
         {
             return [
+                'ip_addresses.*' => 'nullable|ip',
                 'name'  =>  'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
                 'role' => 'required|uuid|exists:roles,id',
@@ -52,6 +53,7 @@ class UserRequest extends FormRequest
         {
             // $user = User::where('slug',$userId)->first();
             $rules = [
+                'ip_addresses.*' => 'nullable|ip',
                 'name'  =>  'required|string|max:255',
                 'email' => 'required|email|unique:users,email,' . $userId->id,
                 'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
@@ -99,6 +101,7 @@ class UserRequest extends FormRequest
             'custom_rest_times.*.start.date_format' => 'Format jam mulai tidak valid. Gunakan format HH:mm.',
             'custom_rest_times.*.end.date_format' => 'Format jam selesai tidak valid. Gunakan format HH:mm.',
             'custom_rest_times.*.end.after' => 'Jam selesai harus setelah jam mulai.',
+            'ip_addresses.*.ip' => 'Alamat IP tidak valid.',
         ];
     }
 }
