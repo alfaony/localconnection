@@ -22,22 +22,13 @@ class IpRestriction
 
             //  Ambil IP saat ini dari API ipify
             try {
-                $clientIp = request()->header('CF-Connecting-IP') // Jika menggunakan Cloudflare
-            ?? request()->header('X-Real-IP')    // Jika Nginx diatur untuk menggunakan X-Real-IP
-            ?? explode(',', request()->header('X-Forwarded-For'))[0] // Ambil IP pertama dari daftar
-            ?? request()->ip(); // Fallback ke Laravel default
+                $clientIp = request()->header('X-Real-IP') ?? explode(',', request()->header('X-Forwarded-For'))[0] ?? NULL;
                 $response = Http::get('https://api64.ipify.org?format=json');
-                if ($response->failed()) {
+                if ($response->failed() && empty($clientIp)) 
+                {
                     abort(403, 'Gagal mendapatkan IP publik');
                 }
 
-                dd([
-                    'CF-Connecting-IP' => request()->header('CF-Connecting-IP'),
-                    'X-Real-IP' => request()->header('X-Real-IP'),
-                    'X-Forwarded-For' => explode(',', request()->header('X-Forwarded-For'))[0],
-                    'request()->ip()' => request()->ip(),
-                    'web' => $response->json()['ip']
-                ]);
                 $currentIp = $clientIp != "" ? $clientIp : $response->json()['ip'];
             } catch (\Exception $e) {
                 abort(403, 'Gagal mendapatkan IP publik');
