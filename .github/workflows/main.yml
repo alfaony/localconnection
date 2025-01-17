@@ -21,7 +21,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: 2018
         script: |
-          cd /var/www/keloola-projects/dev-bos.keloola.com
+          cd /var/www/keloola-projects/bos.keloola.xyz
           echo ${{ secrets.SSH_PASSWORD }} | sudo -S chown -R devops:devops storage bootstrap/cache
           
     - name: Git Pull
@@ -32,7 +32,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: 2018
         script: |
-          cd /var/www/keloola-projects/dev-bos.keloola.com
+          cd /var/www/keloola-projects/bos.keloola.xyz
           git pull origin develop
 
     - name: Install Dependencies
@@ -43,7 +43,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: 2018
         script: |
-          cd /var/www/keloola-projects/dev-bos.keloola.com
+          cd /var/www/keloola-projects/bos.keloola.xyz
           php /home/devops/composer.phar update --no-interaction --prefer-dist --optimize-autoloader --no-dev --ignore-platform-reqs
 
     - name: Run Migrations
@@ -54,7 +54,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: 2018
         script: |
-          cd /var/www/keloola-projects/dev-bos.keloola.com
+          cd /var/www/keloola-projects/bos.keloola.xyz
           php artisan migrate
 
     - name: Clear Cache
@@ -65,7 +65,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: 2018
         script: |
-          cd /var/www/keloola-projects/dev-bos.keloola.com
+          cd /var/www/keloola-projects/bos.keloola.xyz
           php artisan optimize:clear
           php artisan config:clear
           php artisan view:clear
@@ -79,7 +79,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: 2018
         script: |
-          cd /var/www/keloola-projects/dev-bos.keloola.com
+          cd /var/www/keloola-projects/bos.keloola.xyz
           echo ${{ secrets.SSH_PASSWORD }} | sudo -S chown -R nginx:nginx storage bootstrap/cache
 
     - name: Update Supervisor
