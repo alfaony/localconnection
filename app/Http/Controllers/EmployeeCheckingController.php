@@ -166,7 +166,7 @@ class EmployeeCheckingController extends Controller
     
             if ($lastScheduledCheckin) 
             {
-                $lastCheckinTime = Carbon::parse($lastScheduledCheckin->scheduled_time);
+                $lastCheckinTime = Carbon::parse($lastScheduledCheckin->checkin_start_time);
                 $currentCheckinTime = Carbon::now();
                 $timeDifference = $currentCheckinTime->diffInMinutes($lastCheckinTime);
     
