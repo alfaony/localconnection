@@ -13,14 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('districts', function (Blueprint $table) {
+        Schema::create('countries', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('city_id');
-            $table->string('name', 100);
+            $table->string('name');
             $table->timestamps();
             $table->softDeletes();
-
-            $table->foreign('city_id')->references('id')->on('cities');
         });
     }
 
@@ -31,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('districts');
+        Schema::dropIfExists('countries');
     }
 };

@@ -15,9 +15,12 @@ return new class extends Migration
     {
         Schema::create('provinces', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('country_id');
             $table->string('name');
             $table->timestamps();
             $table->softDeletes();
+
+            $table->foreign('country_id')->references('id')->on('countries');
         });
     }
 
