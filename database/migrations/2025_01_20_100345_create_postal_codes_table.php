@@ -14,13 +14,13 @@ return new class extends Migration
     public function up()
     {
         Schema::create('postal_codes', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('district_id');
-            $table->string('postal_code', 10)->unique();
+            $table->id();
+            $table->unsignedBigInteger('subdistrict_id');
+            $table->string('postal_code', 20);
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('district_id')->references('id')->on('districts')->onDelete('cascade');
+            $table->foreign('subdistrict_id')->references('id')->on('subdistricts')->onDelete('cascade');
         });
     }
 

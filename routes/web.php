@@ -68,6 +68,14 @@ use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\SensorController;
 use App\Http\Controllers\ZoneController;
 use App\Http\Controllers\RackController;
+use App\Http\Controllers\ShippingRateController;
+use App\Http\Controllers\ProviderController;
+use App\Http\Controllers\WilayahController;
+use App\Http\Controllers\ProvinceController;
+use App\Http\Controllers\DistrictController;
+use App\Http\Controllers\SubdistrictController;
+use App\Http\Controllers\PostalCodeController;
+use App\Http\Controllers\CityController;
 
 
 
@@ -323,7 +331,37 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('sensor', SensorController::class);
   Route::resource('zone', ZoneController::class);
   Route::resource('rack', RackController::class);
+  
+  Route::post('shipping-rate/validateCsv', [ShippingRateController::class, 'validateCsv'])->name('shipping-rate.validateCsv');
+  Route::post('shipping-rate/import', [ShippingRateController::class, 'import'])->name('shipping-rate.import');
+  Route::get('shipping-rate/progress/{batchId}', [ShippingRateController::class, 'progress'])->name('shipping-rate.progress');
+  Route::post('shipping-rate/checkDuplicate', [ShippingRateController::class, 'checkDuplicate'])->name('shipping-rate.checkDuplicate');
+  Route::get('shipping-rate/dataTableJson', [ShippingRateController::class, 'dataTableJson'])->name('shipping-rate.dataTableJson');
+  Route::resource('shipping-rate', ShippingRateController::class);
+    
+  Route::resource('provider', ProviderController::class);
+  
+  Route::get('city/select2', [CityController::class, 'select2'])->name('city.select2');
+  Route::get('district/select2', [DistrictController::class, 'select2'])->name('district.select2');
+  Route::get('wilayah/select2', [WilayahController::class, 'select2'])->name('wilayah.select2');
+  
+  Route::get('province/dataTableJson', [ProvinceController::class, 'dataTableJson'])->name('province.dataTableJson');
+  Route::get('city/dataTableJson', [CityController::class, 'dataTableJson'])->name('city.dataTableJson');
+  Route::get('district/dataTableJson', [DistrictController::class, 'dataTableJson'])->name('district.dataTableJson');
+  Route::get('subdistrict/dataTableJson', [SubdistrictController::class, 'dataTableJson'])->name('subdistrict.dataTableJson');
+  Route::get('postal-code/dataTableJson', [PostalCodeController::class, 'dataTableJson'])->name('postal-code.dataTableJson');
+  
+  Route::resources([
+      'province' => ProvinceController::class,
+      'city' => CityController::class,
+      'district' => DistrictController::class,
+      'subdistrict' => SubdistrictController::class,
+      'postal-code' => PostalCodeController::class,
+  ]);
 });
+
+
+
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

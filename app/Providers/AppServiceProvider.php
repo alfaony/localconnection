@@ -65,12 +65,17 @@ class AppServiceProvider extends ServiceProvider
             $securityMenuArray = array();
             $productivityMenuArray = array();
             $warehouseMenuArray = array();
+            $shippingMenuArray = array();
+            $wilayahMenuArray = array();
 
             $equipmentMenu = ['devices','equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
             $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
             $warehouseMenu = ['sensors','warehouses','zones','racks'];
+            $shippingMenu = ['service_types','providers','shipping_rates'];
+            $wilayahMenu = ['provinces','cities','districts','subdistricts','postal_codes'];
+
             $managementCompanyMenu = 
             [
                 'kyes',
@@ -401,6 +406,48 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'rack.index',
                     'icon' => 'fa fa-list',
                 ],
+                'providers' => [
+                    'text' => 'Provider Shipping',
+                    'route' => 'provider.index',
+                    'icon' => 'fa fa-truck',
+                ],
+                'provinces' => [
+                    'text' => 'Provinsi',
+                    'route' => 'province.index',
+                    'icon' => 'fa fa-map',
+                ],
+                'cities' => [
+                    'text' => 'Kabupaten/Kota',
+                    'route' => 'city.index',
+                    'icon' => 'fa fa-city',
+                ],
+                'districts' => [
+                    'text' => 'Kecamatan',
+                    'route' => 'district.index',
+                    'icon' => 'fa fa-map-marker-alt',
+                ],
+                'subdistricts' => [
+                    'text' => 'Kelurahan',
+                    'route' => 'subdistrict.index',
+                    'icon' => 'fa fa-map-signs',
+                ],
+                'postal_codes' => [
+                    'text' => 'Kode Pos',
+                    'route' => 'postal-code.index',
+                    'icon' => 'fa fa-envelope',
+                ],
+                'shipping_types' => [
+                    'text' => 'Jenis Pengiriman',
+                    'route' => 'shipping-type.index',
+                    'icon' => 'fa fa-shipping-fast',
+                ],
+
+                'shipping_rates' => [
+                    'text' => 'Tarif Pengiriman',
+                    'route' => 'shipping-rate.index',
+                    'icon' => 'fa fa-dollar-sign',
+                ],
+
             ];
 
             foreach ($listMenu as $role) 
@@ -475,6 +522,23 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+
+            foreach ($shippingMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($shippingMenuArray,$menus[$role]);
+                }
+            }
+
+            foreach ($wilayahMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($wilayahMenuArray,$menus[$role]);
+                }
+            }
+
             $managementSalesMenu = 
             [
                 'text'    => 'Manajemen Penjualan',
@@ -522,6 +586,16 @@ class AppServiceProvider extends ServiceProvider
                 'submenu'   => $warehouseMenuArray
             ];
 
+            $shippingMenu = [
+                'text'      => 'Manajemen Pengiriman',
+                'submenu'   => $shippingMenuArray
+            ];
+
+            $wilayahMenu = [
+                'text'      => 'Wilayah',
+                'submenu'   => $wilayahMenuArray    
+            ];
+
             if($managementCompanyMenu['submenu'] )
             {
                 $event->menu->add($managementCompanyMenu);
@@ -561,7 +635,16 @@ class AppServiceProvider extends ServiceProvider
             {
                 $event->menu->add($warehouseMenu);
             }
-            
+
+            if($shippingMenu['submenu'] )
+            {
+                $event->menu->add($shippingMenu);
+            }
+
+            if($wilayahMenu['submenu'] )
+            {
+                $event->menu->add($wilayahMenu);
+            }
         });
 
         // die;

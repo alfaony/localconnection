@@ -13,15 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('cities', function (Blueprint $table) {
+        Schema::create('subdistricts', function (Blueprint $table) {
             $table->id();
-            $table->boolean('is_default')->default(false);
-            $table->unsignedBigInteger('province_id');
+            $table->unsignedBigInteger('district_id');
             $table->string('name', 100);
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('province_id')->references('id')->on('provinces')->onDelete('cascade');
+            $table->foreign('district_id')->references('id')->on('districts');
         });
     }
 
@@ -32,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('cities');
+        Schema::dropIfExists('subdistricts');
     }
 };

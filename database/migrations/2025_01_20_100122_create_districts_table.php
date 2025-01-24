@@ -14,8 +14,9 @@ return new class extends Migration
     public function up()
     {
         Schema::create('districts', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('city_id');
+            $table->id();
+            $table->boolean('is_default')->default(false);
+            $table->unsignedBigInteger('city_id');
             $table->string('name', 100);
             $table->timestamps();
             $table->softDeletes();

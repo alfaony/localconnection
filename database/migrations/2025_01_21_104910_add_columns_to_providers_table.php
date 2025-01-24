@@ -13,14 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('provinces', function (Blueprint $table) {
-            $table->id();
-            $table->boolean('is_default')->default(false);
-            $table->foreignId('country_id')->constrained('countries');
-            $table->string('name');
-            $table->timestamps();
-            $table->softDeletes();
-
+        Schema::table('providers', function (Blueprint $table) {
+            $table->string('contact_info')->nullable()->after('description');
+            $table->string('email')->nullable()->after('contact_info');
         });
     }
 
@@ -31,6 +26,9 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('provinces');
+        Schema::table('providers', function (Blueprint $table) {
+            $table->dropColumn('contact_info');
+            $table->dropColumn('email');
+        });
     }
 };

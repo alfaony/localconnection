@@ -13,15 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('cities', function (Blueprint $table) {
+        Schema::create('import_progress', function (Blueprint $table) {
             $table->id();
-            $table->boolean('is_default')->default(false);
-            $table->unsignedBigInteger('province_id');
-            $table->string('name', 100);
+            $table->string('batch_id')->unique();
+            $table->unsignedBigInteger('processed')->default(0);
+            $table->unsignedBigInteger('total')->default(0);
             $table->timestamps();
-            $table->softDeletes();
-
-            $table->foreign('province_id')->references('id')->on('provinces')->onDelete('cascade');
         });
     }
 
@@ -32,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('cities');
+        Schema::dropIfExists('import_progress');
     }
 };
