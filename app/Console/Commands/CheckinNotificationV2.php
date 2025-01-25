@@ -66,6 +66,7 @@ class CheckinNotificationV2 extends Command
                 $checkin->is_completed = true;
                 $checkin->is_pass = true;
                 $checkin->pass_checking_id = $passCheckings->id;
+                $checkin->checkin_start_time = Carbon::now();
                 $checkin->save();
             }
         }
