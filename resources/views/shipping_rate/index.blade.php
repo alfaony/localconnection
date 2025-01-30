@@ -672,5 +672,22 @@ function formatRupiahFormat(input, inputNonFormat) {
     background: #555;
 }
 </style>
-
+<style>
+    .select2-selection__rendered 
+    {
+        line-height: 31px !important;
+    }
+    .select2-container .select2-selection--single 
+    {
+        height: 35px !important;
+    }
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+    .ql-container 
+    {
+        min-height: 150px;
+        height: auto;
+    }
+</style>
 @stop
