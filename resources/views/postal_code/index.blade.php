@@ -61,9 +61,9 @@
                 <tr>
                     <th>#</th>
                     <th>Kode Pos</th>
+                    <th>Kelurahan</th>
                     <th>Kecamatan</th>
-                    <th>Kabupaten</th>
-                    <th>Kota</th>
+                    <th>Kabupaten / Kota</th>
                     <th>Provinsi</th>
                     <th>Aksi</th>
                 </tr>
