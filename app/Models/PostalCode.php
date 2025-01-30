@@ -12,16 +12,24 @@ class PostalCode extends Model
 
     protected $fillable = ['id', 'subdistrict_id', 'postal_code', 'created_at', 'updated_at'];
 
-    public function getFullNameAttribute()
+    public function shippingRatesAsOrigin()
     {
-        return "{$this->postal_code} - {$this->subdistrict->name} - {$this->subdistrict->district->name} - {$this->subdistrict->district->city->name} - {$this->subdistrict->district->city->province->name}";
+        return $this->hasMany(ShippingRate::class, 'origin_id');
+    }
+    
+    public function shippingRatesAsDestination()
+    {
+        return $this->hasMany(ShippingRate::class, 'destination_id');
     }
     public function subdistrict()
     {
         return $this->belongsTo(Subdistrict::class, 'subdistrict_id')->withTrashed();
     }
 
-    
+    public function getFullNameAttribute()
+    {
+        return "{$this->postal_code} - {$this->subdistrict->name} - {$this->subdistrict->district->name} - {$this->subdistrict->district->city->name} - {$this->subdistrict->district->city->province->name}";
+    }
     public function getComplateNameAttribute()
     {
         $province = $this->subdistrict->district->city->province;

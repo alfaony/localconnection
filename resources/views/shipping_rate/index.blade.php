@@ -164,17 +164,7 @@
         </div>
         @endcanAccess
 
-        <!-- DataTable -->
-        <style>
-        #shippingRateTable_wrapper {
-            overflow-x: auto;
-        }
-
-        .sorting {
-            width: 100%;
-        }
-        </style>
-        <div style="overflow-x: scroll; white-space: nowrap;" class="table-responsive" >
+        <div style="overflow-x: auto;">
             <table id="shippingRateTable" class="table table-striped table-bordered table-hover">
                 <thead class="bg-light">
                     <tr>
@@ -522,42 +512,75 @@ $(document).ready(function() {
     const table = $('#shippingRateTable').DataTable({
         processing: true,
         serverSide: true,
+        scrollX: true, // Pastikan ini di-set ke true
+        autoWidth: false, // Pastikan autoWidth di-disable
         ajax: "{{ route('shipping-rate.dataTableJson') }}",
+        columnDefs: 
+        [
+            { width: '50px', targets: 0 },  // Provider
+            { width: '50px', targets: 1 },  // Tipe Layanan
+            { width: '200px', targets: 2 },  // Asal
+            { width: '200px', targets: 3 },  // Tujuan
+            { width: '120px', targets: 4 },  // Berat Dasar
+            { width: '150px', targets: 5 },  // Harga Dasar
+            { width: '150px', targets: 6 },  // Berat Selanjutnya
+            { width: '180px', targets: 7 },  // Harga Berat Selanjutnya
+            { width: '120px', targets: 8 },  // Estimasi
+            { width: '100px', targets: 9 }   // Aksi
+        ],
         columns: [{
                 data: 'provider.name',
-                name: 'provider.name'
+                name: 'provider.name',
+                orderable: false,
+                searchable: false
             },
             {
                 data: 'service_type.name',
-                name: 'service_type.name'
+                name: 'service_type.name',
+                orderable: false,
+                searchable: false
             },
             {
                 data: 'origin',
-                name: 'origin'
+                name: 'origin',
+                orderable: false,
+                searchable: false
             },
             {
                 data: 'destination',
-                name: 'destination'
+                name: 'destination',
+                orderable: false,
+                searchable: false
             },
             {
                 data: 'base_weight',
-                name: 'base_weight'
+                name: 'base_weight',
+                orderable: false,
+                searchable: false
             },
             {
                 data: 'base_price',
-                name: 'base_price'
+                name: 'base_price',
+                orderable: false,
+                searchable: false
             },
             {
                 data: 'additional_weight',
-                name: 'additional_weight'
+                name: 'additional_weight',
+                orderable: false,
+                searchable: false
             },
             {
                 data: 'additional_price',
-                name: 'additional_price'
+                name: 'additional_price',
+                orderable: false,
+                searchable: false
             },
             {
                 data: 'delivery_time',
-                name: 'delivery_time'
+                name: 'delivery_time',
+                orderable: false,
+                searchable: false
             },
             {
                 data: 'action',
@@ -621,60 +644,33 @@ function formatRupiahFormat(input, inputNonFormat) {
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <style>
-    #shippingRateTable_wrapper {
-        overflow-x: auto;
-    }
-
-    #shippingRateTable {
-        width: 100%; /* Pastikan tabel menggunakan lebar penuh */
-        white-space: nowrap; /* Hindari pemotongan teks */
-    }
-
-    .dataTables_scroll {
-        overflow-x: auto;
-        display: block;
-    }
-</style>
-<style>
-.d-none {
-    display: none;
+    /* Pastikan header tabel tetap visible saat di-scroll */
+.dataTables_scrollHeadInner 
+{
+    width: 100% !important;
 }
 
-.card-header {
-    background-color: #007bff;
-    color: #fff;
+.dataTables_scrollHead table {
+    width: 100% !important;
 }
 
-.table th,
-.table td {
-    vertical-align: middle;
+/* Styling scrollbar */
+::-webkit-scrollbar {
+    height: 8px;
 }
 
-.dataTables_wrapper .dataTables_length,
-.dataTables_wrapper .dataTables_filter {
-    margin-bottom: 1rem;
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
 }
 
-.form-label {
-    font-weight: bold;
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 </style>
-<style>
-.select2-selection__rendered {
-    line-height: 31px !important;
-}
 
-.select2-container .select2-selection--single {
-    height: 35px !important;
-}
-
-.select2-selection__arrow {
-    height: 34px !important;
-}
-
-.ql-container {
-    min-height: 150px;
-    height: auto;
-}
-</style>
 @stop
