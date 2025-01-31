@@ -158,7 +158,7 @@
                 </div>
                 <div class="d-flex justify-content-end mt-4">
                     <button type="reset" id="cancelImport" class="btn btn-secondary me-2">Batal</button>
-                    <button type="submit" id="importButton" class="btn btn-warning ml-2">Upload & Import</button>
+                    <button type="submit" id="importButton" class="btn btn-warning ml-2" disabled>Upload & Import</button>
                 </div>
             </form>
         </div>
@@ -233,23 +233,33 @@ document.getElementById('importFile').addEventListener('change', function(e) {
             document.getElementById('importButton').disabled = false;
         },
         error: function(xhr) {
+            document.getElementById('importButton').disabled = true;
             if (xhr.status === 422) {
-                // console.log(xhr.responseJSON);
-                let errorMessage = `Gagal memvalidasi file:\n`;
-                if (xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                }
+                let errorMessage = "Gagal memvalidasi file. Periksa kembali:\n";
 
-                let errors = xhr.responseJSON.errors || [];
-                errors.forEach(err => {
-                    errorMessage += `<li>${error}</li`;
-                });
+            // Jika ada pesan error utama dari server
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage += `<strong>${xhr.responseJSON.message}</strong><br>`;
+            }
 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Kesalahan Validasi',
-                    text: errorMessage,
+            // Tangkap error validasi dari response
+            let errors = xhr.responseJSON.errors || {};
+            let errorList = '<ul class="text-left">'; // Agar lebih rapi dalam list
+
+            Object.keys(errors).forEach(key => {
+                errors[key].forEach(error => { 
+                    errorList += `<li>${error}</li>`;  
                 });
+            });
+
+            errorList += '</ul>';
+
+            // Tampilkan error dalam modal alert dengan Swal
+            Swal.fire({
+                icon: 'error',
+                title: 'Kesalahan Validasi',
+                html: errorMessage + errorList, // Menggunakan `html` agar mendukung format list
+            });
             } else {
                 console.log(xhr);
 
