@@ -27,7 +27,7 @@ class GenerateServiceType extends Command
      */
     public function handle()
     {
-        $data = ['Reguler', 'One Day','Ekonomi', 'Kargo'];
+        $data = ['Reguler', 'One Day','Ekonomi', 'Kargo', 'Darat', 'Laut'];
         foreach ($data as $key => $value) 
         {
             \App\Models\ServiceType::updateOrCreate([

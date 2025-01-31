@@ -163,9 +163,18 @@
             </form>
         </div>
         @endcanAccess
-
-        <div style="overflow-x: auto;">
-            <table id="shippingRateTable" class="table table-striped table-bordered table-hover">
+        <form method="GET" action="{{ route('shipping-rate.index') }}" class="mb-3">
+            <div class="input-group">
+                <input type="text" name="search" class="form-control" placeholder="Cari Provider, Kota, atau Harga" value="{{ request()->search }}">
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-secondary">
+                        <i class="fas fa-search"></i> Cari
+                    </button>
+                </div>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table id="" class="table table-striped table-bordered table-hover">
                 <thead class="bg-light">
                     <tr>
                         <th>Provider</th>
@@ -180,7 +189,48 @@
                         <th>Aksi</th>
                     </tr>
                 </thead>
+                <tbody>
+                    @foreach($shippingRates as $index => $rate)
+                        <tr>
+                            <td class="align-middle text-center">{{ $rate->provider->name ?? '-' }}</td>
+                            <td class="align-middle text-center">{{ $rate->serviceType->name ?? '-' }}</td>
+                            <td class="align-middle">
+                                <strong>{{ $rate->origin->full_name }}</strong>
+                            </td>
+                            <td class="align-middle">
+                                <strong>{{ $rate->destination->full_name }}</strong>
+                            </td>
+                            <td class="align-middle text-center">{{ $rate->base_weight }}</td>
+                            <td class="align-middle text-right">Rp {{ number_format($rate->base_price, 0, ',', '.') }}</td>
+                            <td class="align-middle text-center">{{ $rate->additional_weight ?? '-' }}</td>
+                            <td class="align-middle text-right">Rp {{ number_format($rate->additional_price, 0, ',', '.') }}</td>
+                            <td class="align-middle text-center">{{ $rate->delivery_time }}</td>
+                            <td class="align-middle text-center">
+                                @canAccess('edit','shipping_rates')
+                                <a href="{{ route('shipping-rate.edit', $rate->id) }}" class="btn btn-warning btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                @endcanAccess
+
+                                @canAccess('destroy','shipping_rates')
+                                <form action="{{ route('shipping-rate.destroy', $rate->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Apakah Anda yakin ingin menghapus?')" title="Hapus">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                                @endcanAccess
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
             </table>
+        </div>
+        <!-- Pagination -->
+        <div class="d-flex justify-content-center mt-3">
+            {{ $shippingRates->withQueryString()->links('vendor.pagination.bootstrap-4') }}
         </div>
     </div>
 </div>
@@ -698,6 +748,18 @@ function formatRupiahFormat(input, inputNonFormat) {
     {
         min-height: 150px;
         height: auto;
+    }
+</style>
+<style>
+    /* Membuat tabel dapat di-scroll secara horizontal jika terlalu lebar */
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .table th, .table td {
+        white-space: nowrap; /* Mencegah wrapping teks dalam tabel */
+    }
+    .btn-sm {
+        padding: 4px 8px;
     }
 </style>
 @stop

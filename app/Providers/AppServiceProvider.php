@@ -73,7 +73,7 @@ class AppServiceProvider extends ServiceProvider
             $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
             $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
             $warehouseMenu = ['sensors','warehouses','zones','racks'];
-            $shippingMenu = ['service_types','providers','shipping_rates'];
+            $shippingMenu = ['service_types','providers','shipping_rates','shipping_calculations'];
             $wilayahMenu = ['provinces','cities','districts','subdistricts','postal_codes'];
 
             $managementCompanyMenu = 
@@ -446,6 +446,11 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Tarif Pengiriman',
                     'route' => 'shipping-rate.index',
                     'icon' => 'fa fa-dollar-sign',
+                ],
+                'shipping_calculations' => [
+                    'text' => 'Hitung Pengiriman',
+                    'route' => 'shipping-calculation.index',
+                    'icon' => 'fa fa-calculator',
                 ],
 
             ];
