@@ -247,135 +247,146 @@
 @canAccess('progress','shipping_rates')
 @canAccess('checkDuplicate','shipping_rates')
 <script>
-document.getElementById('importFile').addEventListener('change', function(e) {
-    const formData = new FormData();
-    const file = e.target.files[0];
+    document.getElementById('importFile').addEventListener('change', function(e) {
+        const formData = new FormData();
+        const file = e.target.files[0];
 
-    if (!file) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Tidak ada file yang dipilih.',
-        });
-        return;
-    }
-
-    formData.append('import_file', file);
-
-    // Kirim file untuk validasi
-    $.ajax({
-        url: "{{ route('shipping-rate.validateCsv') }}",
-        method: 'POST',
-        data: formData,
-        processData: false,
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        contentType: false,
-        success: function(response) {
-            Swal.fire({
-                icon: 'success',
-                title: response.message,
-                text: 'File valid. Anda dapat melanjutkan proses import.',
-            });
-
-            // Enable tombol "Import" setelah validasi berhasil
-            document.getElementById('importButton').disabled = false;
-        },
-        error: function(xhr) {
-            document.getElementById('importButton').disabled = true;
-            if (xhr.status === 422) {
-                let errorMessage = "Gagal memvalidasi file. Periksa kembali:\n";
-
-            // Jika ada pesan error utama dari server
-            if (xhr.responseJSON && xhr.responseJSON.message) {
-                errorMessage += `<strong>${xhr.responseJSON.message}</strong><br>`;
-            }
-
-            // Tangkap error validasi dari response
-            let errors = xhr.responseJSON.errors || {};
-            let errorList = '<ul class="text-left">'; // Agar lebih rapi dalam list
-
-            Object.keys(errors).forEach(key => {
-                errors[key].forEach(error => { 
-                    errorList += `<li>${error}</li>`;  
-                });
-            });
-
-            errorList += '</ul>';
-
-            // Tampilkan error dalam modal alert dengan Swal
+        if (!file) {
             Swal.fire({
                 icon: 'error',
-                title: 'Kesalahan Validasi',
-                html: errorMessage + errorList, // Menggunakan `html` agar mendukung format list
+                title: 'Error',
+                text: 'Tidak ada file yang dipilih.',
             });
-            } else {
-                console.log(xhr);
+            return;
+        }
 
+        formData.append('import_file', file);
+
+        // Kirim file untuk validasi
+        $.ajax({
+            url: "{{ route('shipping-rate.validateCsv') }}",
+            method: 'POST',
+            data: formData,
+            processData: false,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            contentType: false,
+            success: function(response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: response.message,
+                    text: 'File valid. Anda dapat melanjutkan proses import.',
+                });
+
+                // Enable tombol "Import" setelah validasi berhasil
+                document.getElementById('importButton').disabled = false;
+            },
+            error: function(xhr) {
+                document.getElementById('importButton').disabled = true;
+                if (xhr.status === 422) {
+                    let errorMessage = "Gagal memvalidasi file. Periksa kembali:\n";
+
+                // Jika ada pesan error utama dari server
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage += `<strong>${xhr.responseJSON.message}</strong><br>`;
+                }
+
+                // Tangkap error validasi dari response
+                let errors = xhr.responseJSON.errors || {};
+                let errorList = '<ul class="text-left">'; // Agar lebih rapi dalam list
+
+                Object.keys(errors).forEach(key => {
+                    errors[key].forEach(error => { 
+                        errorList += `<li>${error}</li>`;  
+                    });
+                });
+
+                errorList += '</ul>';
+
+                // Tampilkan error dalam modal alert dengan Swal
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    text: 'Terjadi kesalahan saat memvalidasi file.',
+                    title: 'Kesalahan Validasi',
+                    html: errorMessage + errorList, // Menggunakan `html` agar mendukung format list
                 });
-            }
-        },
-    });
-});
-
-$(document).ready(function() {
-    // Toggle Import Form
-    $('#toggleImportForm').on('click', function() {
-        $('#importFormContainer').toggleClass('d-none');
-        $('#createOrEditForm').addClass('d-none');
-    });
-
-    $('#cancelImport').on('click', function() {
-        $('#importFormContainer').addClass('d-none');
-        $('#importForm').trigger('reset');
-        $('#progressBarContainer').addClass('d-none');
-    });
-
-    // Handle Import Submit
-    $('#importForm').on('submit', function(e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-        $('#progressBarContainer').removeClass('d-none');
-        $('#progressBar').css('width', '0%').text('0%');
-
-        $.ajax({
-            url: "{{ route('shipping-rate.import') }}",
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
-            success: function(response) {
-                if (response.batch_id) {
-                    // Memulai pengecekan progres jika batch_id tersedia
-                    checkProgress(response.batch_id);
                 } else {
+                    console.log(xhr);
+
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Gagal memulai proses pengunggahan file.',
+                        text: 'Terjadi kesalahan saat memvalidasi file.',
                     });
-                    $('#progressBarContainer').addClass('d-none');
                 }
-            },
-            error: function() {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Gagal mengunggah atau memproses file.',
-                });
-                $('#progressBarContainer').addClass('d-none');
             },
         });
     });
 
-    // Check Progress
-    function checkProgress(batchId) {
+    $(document).ready(function() {
+        // Toggle Import Form
+        $('#toggleImportForm').on('click', function() {
+            $('#importFormContainer').toggleClass('d-none');
+            $('#createOrEditForm').addClass('d-none');
+        });
+
+        $('#cancelImport').on('click', function() {
+            $('#importFormContainer').addClass('d-none');
+            $('#importForm').trigger('reset');
+            $('#progressBarContainer').addClass('d-none');
+        });
+
+        // Handle Import Submit
+        $('#importForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            $('#progressBarContainer').removeClass('d-none');
+            $('#progressBar').css('width', '0%').text('0%');
+
+            $.ajax({
+                url: "{{ route('shipping-rate.import') }}",
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    if (response.batch_id) {
+                        // Memulai pengecekan progres jika batch_id tersedia
+                        checkProgress(response.batch_id);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Gagal memulai proses pengunggahan file.',
+                        });
+                        $('#progressBarContainer').addClass('d-none');
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal mengunggah atau memproses file.',
+                    });
+                    $('#progressBarContainer').addClass('d-none');
+                },
+            });
+        });
+
+        // Check Progress
+    });
+
+    document.addEventListener('DOMContentLoaded', function () 
+    {
+        let batchId = "{{ session('import_batch_id') }}";
+        if (batchId) {
+            checkProgress(batchId);
+        }
+    });
+
+    function checkProgress(batchId) 
+    {
         const url = `{{ route('shipping-rate.progress', ':id') }}`.replace(':id', batchId);
 
         $.get(url, function(response) {
@@ -388,6 +399,7 @@ $(document).ready(function() {
                 console.log(response);
                 
             if (response.errors) {
+                $('#progressBarContainer').removeClass('d-none');
                 $('#importErrors').removeClass('d-none');
                 response.errors.forEach(error => {
                     $('#errorList').append(`<li>Line :${error.row}: Error :${error.error}</li>`);
@@ -411,7 +423,6 @@ $(document).ready(function() {
             $('#progressBarContainer').addClass('d-none');
         });
     }
-});
 </script>
 @endcanAccess
 @endcanAccess
@@ -461,6 +472,8 @@ $(document).ready(function() {
                 $('#shippingRateTable').DataTable().ajax.reload(); // Reload table
             },
             error: function(xhr) {
+                console.log(xhr);
+                
                 if (xhr.status === 422) {
                     // Show validation errors
                     let errors = xhr.responseJSON.errors;

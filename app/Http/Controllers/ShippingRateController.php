@@ -344,6 +344,8 @@ class ShippingRateController extends Controller
         $file = $request->file('import_file');
         $batchId = Str::uuid();
 
+        session(['import_batch_id' => $batchId]);
+
         // Parse CSV
         $data = array_map('str_getcsv', file($file->getRealPath()));
         $headers = array_map('trim', $data[0]);
@@ -372,6 +374,10 @@ class ShippingRateController extends Controller
     public function progress($batchId)
     {
         $progress = ImportProgress::where('batch_id', $batchId)->firstOrFail();
+        if ($progress->processed >= $progress->total) 
+        {
+            session()->forget('import_batch_id');
+        }
         return response()->json([
             'errors' => json_decode($progress->errors, true) ?? [],
             'processed' => $progress->processed,
