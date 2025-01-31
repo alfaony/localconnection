@@ -76,6 +76,7 @@ use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\SubdistrictController;
 use App\Http\Controllers\PostalCodeController;
 use App\Http\Controllers\CityController;
+use App\Http\Controllers\ShippingCalculationController;
 
 
 
@@ -360,8 +361,11 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   ]);
 });
 
-
-
+Route::get('shipping-calculation/detail', [ShippingCalculationController::class, 'detail'])->name('shipping-calculation.detail');
+Route::get('shipping-calculation', [ShippingCalculationController::class, 'index'])->name('shipping-calculation.index');
+Route::get('shipping-calculation/searchRates', [ShippingCalculationController::class, 'searchRates'])->name('shipping-calculation.searchRates');
+Route::get('shipping-calculation/select2Origin', [ShippingCalculationController::class, 'select2Origin'])->name('shipping-calculation.select2Origin');
+Route::get('shipping-calculation/select2Destination', [ShippingCalculationController::class, 'select2Destination'])->name('shipping-calculation.select2Destination');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

@@ -54,4 +54,15 @@ class ShippingRate extends Model
     {
         return $this->belongsTo(PostalCode::class, 'destination_id');
     }
+
+    public function getFactorVolumetricAttribute()
+    {
+        $factorVolumetric = $this->serviceType->providers()
+            ->where('provider_id', $this->provider_id)
+            ->first()
+            ->pivot
+            ->factor_volumetric;
+
+        return $factorVolumetric === null || $factorVolumetric == 0.0 ? 1000 : $factorVolumetric;
+    }
 }
