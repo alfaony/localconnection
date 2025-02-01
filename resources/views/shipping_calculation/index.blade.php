@@ -313,13 +313,13 @@ $(document).ready(function() {
                                     <!-- Berat & Tarif -->
                                     <div class="col-md-4">
                                         <span class="badge bg-secondary">Berat Dasar: ${rate.base_weight} Kg</span>
-                                        <h5 class="text-success mt-2">${formatRupiah(rate.base_price, 'Rp. ')}</h5>
-                                        <small class="text-muted">Tambahan ${rate.additional_weight} Kg: ${formatRupiah(rate.additional_price, 'Rp. ')}</small>
+                                        <h5 class="text-success mt-2">${formatRupiah(rate.base_price ?? 0, 'Rp. ')}</h5>
+                                        <small class="text-muted">Tambahan ${rate.additional_weight} Kg: ${formatRupiah(rate.additional_price ?? 0, 'Rp. ')}</small>
                                     </div>
 
                                     <!-- Tarif CBM & Estimasi -->
                                     <div class="col-md-2">
-                                        <span class="badge bg-warning">Tarif CBM: ${formatRupiah(rate.rate_per_cbm, 'Rp. ')}</span>
+                                        <span class="badge bg-warning">Tarif CBM: ${formatRupiah(rate.rate_per_cbm ?? 0, 'Rp. ')}</span>
                                         <h6 class="text-muted mt-2">
                                             <i class="fas fa-clock"></i> ${rate.delivery_time}
                                         </h6>
@@ -328,7 +328,7 @@ $(document).ready(function() {
                                     <!-- Estimasi Harga -->
                                     <div class="col-md-2">
                                         <h6 class="text-success mt-2">
-                                            <i class="fas fa-calculator"></i> Estimasi: ${formatRupiah(rate.estimated_price, 'Rp. ')}
+                                            <i class="fas fa-calculator"></i> Estimasi: ${formatRupiah(rate.estimated_price ?? 0, 'Rp. ')}
                                         </h6>
                                     </div>
 
@@ -359,6 +359,7 @@ $(document).ready(function() {
 
     $(document).on('click', '.add-to-cart', function() {
         let rate = $(this).data('rate');
+        
         let weight = $('#weight').val();
         let volume = $('#volume').val();
         let height = $('#height').val();
@@ -370,6 +371,7 @@ $(document).ready(function() {
             url: "{{ route('shipping-calculation.detail') }}",
             type: "GET",
             data: {
+                rate_id: rate.id,
                 origin_id: rate.origin_id,
                 destination_id: rate.destination_id,
                 weight: weight,
@@ -416,9 +418,7 @@ $(document).ready(function() {
         let total = 0;
         $('#cartItems').empty();
 
-        cart.forEach((item, index) => {
-            console.log(item);
-            
+        cart.forEach((item, index) => {            
             total += parseFloat(item.estimated_price);
             
             let cartItem = `

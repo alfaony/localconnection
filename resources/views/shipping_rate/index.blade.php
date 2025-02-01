@@ -391,6 +391,7 @@
 
         $.get(url, function(response) {
             const progress = Math.round(response.progress || 0);
+            $('#progressBarContainer').removeClass('d-none');
             $('#progressBar').css('width', `${progress}%`).text(`${progress}%`);
 
             if (progress < 100) {
@@ -399,7 +400,6 @@
                 console.log(response);
                 
             if (response.errors) {
-                $('#progressBarContainer').removeClass('d-none');
                 $('#importErrors').removeClass('d-none');
                 response.errors.forEach(error => {
                     $('#errorList').append(`<li>Line :${error.row}: Error :${error.error}</li>`);

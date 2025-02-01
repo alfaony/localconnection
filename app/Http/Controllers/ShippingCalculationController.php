@@ -191,6 +191,20 @@ class ShippingCalculationController extends Controller
         $destination = PostalCode::with(['subdistrict.district.city.province'])
             ->where('id', $request->destination_id)
             ->first();
+        
+        $rate = ShippingRate::find($request->rate_id);
+        $estimatedPrice = $this->calculateEstimatedPrice(
+                $rate->base_weight, 
+                $rate->base_price, 
+                $rate->additional_weight, 
+                $rate->additional_price, 
+                $rate->rate_per_cbm, 
+                $rate->factor_volumetric, 
+                $request->weight, 
+                $request->height, 
+                $request->width, 
+                $request->length
+            );
 
         return response()->json([
             'origin' => $origin ? $origin->subdistrict->district->city->name : null,
@@ -199,7 +213,8 @@ class ShippingCalculationController extends Controller
             'volume' => $request->volume,
             'height' => $request->height,
             'width' => $request->width,
-            'length' => $request->length
+            'length' => $request->length,
+            'estimatedPrice' => $estimatedPrice
         ]);
     }
 }
