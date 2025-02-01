@@ -182,6 +182,8 @@ class ImportShippingRatesJob implements ShouldQueue
             }
         } catch (\Throwable $th) {
             // Debug jika terjadi masalah
+            dd($th);
+            Log::error($th);
             throw $th;
         }
     }
