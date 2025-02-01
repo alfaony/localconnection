@@ -286,6 +286,8 @@ $(document).ready(function() {
         let resultsGrid = $('#resultsGrid');
         resultsGrid.empty(); // Clear previous results
 
+        $('#loading').removeClass('d-none'); // Show loading indicator
+
         $.ajax({
             url: "{{ route('shipping-calculation.searchRates') }}",
             type: 'GET',
@@ -293,6 +295,8 @@ $(document).ready(function() {
             success: function(response) {
                 let resultsGrid = $('#resultsGrid');
                 resultsGrid.empty();
+                
+                $('#loading').addClass('d-none'); // Hide loading indicator after results are processed
 
                 if (response.rates.length > 0) {
                     $('#resultsSection').removeClass('d-none');
