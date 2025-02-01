@@ -78,8 +78,8 @@ class ImportShippingRatesJob implements ShouldQueue
                             'base_price' => $row['Harga Berat Dasar'],
                             'additional_weight' => $row['Berat Selanjutnya'],
                             'additional_price' => $row['Harga Berat Selanjutnya'],
-                            'rate_per_cbm' => $row['Harga Per Volume'],
-                            'delivery_time' => $row['Waktu Pengiriman'],
+                            'rate_per_cbm' => !empty($row['Harga Per Volume']) ? $row['Harga Per Volume'] : null,
+                            'delivery_time' => !empty($row['Waktu Pengiriman']) ? $row['Waktu Pengiriman'] : null,
                         ]);
                     } else {
                         ImportProgress::where('batch_id', $this->batchId)->increment('total_import');
@@ -93,8 +93,8 @@ class ImportShippingRatesJob implements ShouldQueue
                             'base_price' => $row['Harga Berat Dasar'],
                             'additional_weight' => $row['Berat Selanjutnya'],
                             'additional_price' => $row['Harga Berat Selanjutnya'],
-                            'rate_per_cbm' => !empty($row['Harga Per Volume']) ? $row['Harga Per Volume'] : null, // ✅ Cek nilai kosong
-                            'delivery_time' => $row['Waktu Pengiriman'],
+                            'rate_per_cbm' => !empty($row['Harga Per Volume']) ? $row['Harga Per Volume'] : null,
+                            'delivery_time' => !empty($row['Waktu Pengiriman']) ? $row['Waktu Pengiriman'] : null,
                         ]);
                     }
                 } else {
