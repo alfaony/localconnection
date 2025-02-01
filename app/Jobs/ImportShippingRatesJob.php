@@ -24,25 +24,29 @@ class ImportShippingRatesJob implements ShouldQueue
     protected $batchId;
     protected $providerId;
     protected $serviceTypeId;
+    protected $startingRow;
 
-    public function __construct(array $chunk, string $batchId, $providerId, $serviceTypeId)
+    public function __construct(array $chunk, string $batchId, $providerId, $serviceTypeId, $startingRow)
     {
         $this->chunk = $chunk;
         $this->batchId = $batchId;
         $this->providerId = $providerId;
         $this->serviceTypeId = $serviceTypeId;
+        $this->startingRow = $startingRow;
     }
 
     public function handle()
     {
-        $count = 1;
+        // $count = 1;
         foreach ($this->chunk as $index => $row) {
             try {
+                $count = $this->startingRow + $index + 1; // Hitung row berdasarkan chunk
+
                 $originId = $this->findPostalCodeId($row['Kode Pos Asal'], $row['Kecamatan Asal'], $row['Kabupaten/Kota Asal'], $row['Provinsi Asal']);
                 $destinationId = $this->findPostalCodeId($row['Kode Pos Tujuan'], $row['Kecamatan Tujuan'], $row['Kabupaten/Kota Tujuan'], $row['Provinsi Tujuan']);
                 
                 // Row
-                $count = $count + 1;
+                // $count = $count + 1;
 
                 if ($originId && $destinationId) 
                 {
@@ -210,6 +214,22 @@ class ImportShippingRatesJob implements ShouldQueue
                     $postal->defaultSubdistrict 
                 ) {
                     return $postal->defaultSubdistrict->defaultPostalCode->id ?? null; 
+                }
+            }
+            
+            if ($province && $city && $district) 
+            {
+                $postal = District::whereRaw('UPPER(name) LIKE ?', ["%$district%"])
+                ->whereHas('city', function ($q) use ($city) {
+                    $q->whereRaw('UPPER(name) LIKE ?', ["%$city%"]);
+                })
+                ->first();
+                    if 
+                    (
+                        $postal && $postal->defaultSubdistrict
+                    ) 
+                    {
+                    return $postal->defaultSubdistrict->defaultPostalCode->id ?? null;
                 }
             }
         }

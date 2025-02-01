@@ -62,7 +62,7 @@ class ShippingRateController extends Controller
         ->orderBy('created_at', 'desc')
         ->paginate(10);
 
-        // dd($this->findPostalCodeId("","TELAGA","GORONTALO","GORONTALO"));
+        // dd($this->findPostalCodeId("","CEMPAKA PUTIH","JAKARTA PUSAT","DKI JAKARTA"));
         return view('shipping_rate.index', compact('providers', 'serviceTypes', 'districts','shippingRates'));
     }
 
@@ -363,9 +363,10 @@ class ShippingRateController extends Controller
             'total' => count($parsedData),
             'processed' => 0,
         ]);
-
+        $startingRow = 1;
         foreach ($chunks as $chunk) {
-            ImportShippingRatesJob::dispatch($chunk, $batchId, $request->provider_id, $request->service_type_id);
+            ImportShippingRatesJob::dispatch($chunk, $batchId, $request->provider_id, $request->service_type_id, $startingRow);
+            $startingRow += count($chunk); // Tambah nomor baris yang diproses
         }
 
         return response()->json(['message' => 'File is being processed', 'batch_id' => $batchId]);
@@ -376,7 +377,11 @@ class ShippingRateController extends Controller
         $progress = ImportProgress::where('batch_id', $batchId)->firstOrFail();
         if ($progress->processed >= $progress->total) 
         {
-            session()->forget('import_batch_id');
+            if (session()->has('import_batch_id')) {
+                session()->forget('import_batch_id');
+                session()->save(); // Pastikan perubahan tersimpan
+            }
+            cache()->forget('import_batch_id'); // Hapus cache setelah proses selesai
         }
         return response()->json([
             'errors' => json_decode($progress->errors, true) ?? [],
@@ -443,21 +448,21 @@ class ShippingRateController extends Controller
                     return $postal->defaultSubdistrict->defaultPostalCode->id ?? null; 
                 }
             }
-             // if ($province && $city && $district) 
-            // {
-            //     $postal = District::whereRaw('UPPER(name) LIKE ?', ["%$district%"])
-            //     ->whereHas('city', function ($q) use ($city) {
-            //         $q->whereRaw('UPPER(name) LIKE ?', ["%$city%"]);
-            //     })
-            //     ->first();
-            //         if 
-            //         (
-            //             $postal && $postal->defaultSubdistrict
-            //         ) 
-            //         {
-            //         return $postal->defaultSubdistrict->defaultPostalCode->id ?? null;
-            //     }
-            // }
+             if ($province && $city && $district) 
+            {
+                $postal = District::whereRaw('UPPER(name) LIKE ?', ["%$district%"])
+                ->whereHas('city', function ($q) use ($city) {
+                    $q->whereRaw('UPPER(name) LIKE ?', ["%$city%"]);
+                })
+                ->first();
+                    if 
+                    (
+                        $postal && $postal->defaultSubdistrict
+                    ) 
+                    {
+                    return $postal->defaultSubdistrict->defaultPostalCode->id ?? null;
+                }
+            }
             // // Prioritas 1: Cari berdasarkan Province, City, dan District
             // if ($province && $city && $district) 
             // {
