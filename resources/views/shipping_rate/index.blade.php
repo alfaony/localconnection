@@ -400,12 +400,14 @@
                 console.log(response);
                 
             if (response.errors) {
+                $('#progressBarContainer').addClass('d-none');
                 $('#importErrors').removeClass('d-none');
                 response.errors.forEach(error => {
                     $('#errorList').append(`<li>Line :${error.row}: Error :${error.error}</li>`);
                 });
                 $('#shippingRateTable').DataTable().ajax.reload();
             } else {
+                $('#progressBarContainer').addClass('d-none');
                 $('#shippingRateTable').DataTable().ajax.reload();
                 Swal.fire({
                     icon: 'success',
