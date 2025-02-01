@@ -130,7 +130,7 @@ class ImportShippingRatesJob implements ShouldQueue
                 }
                 ImportProgress::where('batch_id', $this->batchId)->increment('processed');
             } catch (\Throwable $e) {
-                // dd($e);
+                dd($e);
                 $progress = ImportProgress::where('batch_id', $this->batchId)->first();
                 if ($progress) 
                 {
@@ -182,7 +182,7 @@ class ImportShippingRatesJob implements ShouldQueue
             }
         } catch (\Throwable $th) {
             // Debug jika terjadi masalah
-            dd($th);
+            // dd($th);
             Log::error($th);
             throw $th;
         }
