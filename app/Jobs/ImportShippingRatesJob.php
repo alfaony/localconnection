@@ -93,7 +93,7 @@ class ImportShippingRatesJob implements ShouldQueue
                             'base_price' => $row['Harga Berat Dasar'],
                             'additional_weight' => $row['Berat Selanjutnya'],
                             'additional_price' => $row['Harga Berat Selanjutnya'],
-                            'rate_per_cbm' => $row['Harga Per Volume'],
+                            'rate_per_cbm' => !empty($row['Harga Per Volume']) ? $row['Harga Per Volume'] : null, // ✅ Cek nilai kosong
                             'delivery_time' => $row['Waktu Pengiriman'],
                         ]);
                     }
