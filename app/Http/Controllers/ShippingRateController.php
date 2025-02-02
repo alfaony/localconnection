@@ -27,43 +27,43 @@ class ShippingRateController extends Controller
     {
         $providers = Provider::all();
         $serviceTypes = ServiceType::all();
-        $districts = District::all();
+        // $districts = District::all();
 
-        $search = $request->input('search');
+        // $search = $request->input('search');
 
 
-        $shippingRates = ShippingRate::with([
-            'provider',
-            'serviceType',
-            'origin.subdistrict.district.city.province',
-            'destination.subdistrict.district.city.province'
-        ])
-        ->when($search, function ($query) use ($search) {
-            $query->whereHas('provider', function ($q) use ($search) {
-                $q->where('name', 'LIKE', "%$search%");
-            })
-            ->orWhereHas('serviceType', function ($q) use ($search) {
-                $q->where('name', 'LIKE', "%$search%");
-            })
-            ->orWhereHas('origin.subdistrict.district.city', function ($q) use ($search) {
-                $q->where('name', 'LIKE', "%$search%");
-            })
-            ->orWhereHas('origin.subdistrict.district.city.province', function ($q) use ($search) {
-                $q->where('name', 'LIKE', "%$search%");
-            })
-            ->orWhereHas('destination.subdistrict.district.city', function ($q) use ($search) {
-                $q->where('name', 'LIKE', "%$search%");
-            })
-            ->orWhereHas('destination.subdistrict.district.city.province', function ($q) use ($search) {
-                $q->where('name', 'LIKE', "%$search%");
-            })
-            ->orWhere('base_price', 'LIKE', "%$search%");
-        })
-        ->orderBy('created_at', 'desc')
-        ->paginate(10);
+        // $shippingRates = ShippingRate::with([
+        //     'provider',
+        //     'serviceType',
+        //     'origin.subdistrict.district.city.province',
+        //     'destination.subdistrict.district.city.province'
+        // ])
+        // ->when($search, function ($query) use ($search) {
+        //     $query->whereHas('provider', function ($q) use ($search) {
+        //         $q->where('name', 'LIKE', "%$search%");
+        //     })
+        //     ->orWhereHas('serviceType', function ($q) use ($search) {
+        //         $q->where('name', 'LIKE', "%$search%");
+        //     })
+        //     ->orWhereHas('origin.subdistrict.district.city', function ($q) use ($search) {
+        //         $q->where('name', 'LIKE', "%$search%");
+        //     })
+        //     ->orWhereHas('origin.subdistrict.district.city.province', function ($q) use ($search) {
+        //         $q->where('name', 'LIKE', "%$search%");
+        //     })
+        //     ->orWhereHas('destination.subdistrict.district.city', function ($q) use ($search) {
+        //         $q->where('name', 'LIKE', "%$search%");
+        //     })
+        //     ->orWhereHas('destination.subdistrict.district.city.province', function ($q) use ($search) {
+        //         $q->where('name', 'LIKE', "%$search%");
+        //     })
+        //     ->orWhere('base_price', 'LIKE', "%$search%");
+        // })
+        // ->orderBy('created_at', 'desc')
+        // ->paginate(10);
 
         // dd($this->findPostalCodeId("","CEMPAKA PUTIH","JAKARTA PUSAT","DKI JAKARTA"));
-        return view('shipping_rate.index', compact('providers', 'serviceTypes', 'districts','shippingRates'));
+        return view('shipping_rate.index', compact('providers', 'serviceTypes'));
     }
 
     public function create()
@@ -155,14 +155,14 @@ class ShippingRateController extends Controller
             'serviceType.name',
             'origin.postal_code',
             'destination.postal_code',
-            // 'origin.na',
-            // 'destination.subdistrict.name',
-            // 'origin.subdistrict.district.name',
-            // 'destination.subdistrict.district.name',
-            // 'origin.subdistrict.district.city.name',
-            // 'destination.subdistrict.district.city.name',
-            // 'origin.subdistrict.district.city.province.name',
-            // 'destination.subdistrict.district.city.province.name',
+            'origin.subdistrict.name',
+            'destination.subdistrict.name',
+            'origin.subdistrict.district.name',
+            'destination.subdistrict.district.name',
+            'origin.subdistrict.district.city.name',
+            'destination.subdistrict.district.city.name',
+            'origin.subdistrict.district.city.province.name',
+            'destination.subdistrict.district.city.province.name',
         ];
 
         // Define bootstrap version (4 or 5)

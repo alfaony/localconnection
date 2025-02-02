@@ -48,18 +48,11 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">Kode Pos</h3>
-        <form action="{{ route('postal-code.index') }}" method="GET" class="d-flex align-items-center">
-            <input type="text" name="search" class="form-control me-2" placeholder="Search by Postal Code, Subdistrict, District, City, Province" value="{{ request()->query('search') }}">
-            <button type="submit" class="btn btn-primary btn-sm ml-2">
-                <i class="fas fa-search"></i>
-            </button>
-        </form>
     </div>
     <div class="card-body">
-        <table class="table table-bordered table-hover">
+        <table id="postalCodesTable" class="table table-bordered table-hover">
             <thead class="thead-dark">
                 <tr>
-                    <th>#</th>
                     <th>Kode Pos</th>
                     <th>Kelurahan</th>
                     <th>Kecamatan</th>
@@ -68,6 +61,7 @@
                     <th>Aksi</th>
                 </tr>
             </thead>
+            {{-- 
             <tbody>
                 @forelse($postalCodes as $index => $postalCode)
                     <tr>
@@ -96,11 +90,14 @@
                     </tr>
                 @endforelse
             </tbody>
+            --}}
         </table>
     </div>
+    {{-- 
     <div class="card-footer">
         {{ $postalCodes->withQueryString()->links('vendor.pagination.bootstrap-4') }}
     </div>
+    --}}
 </div>
 @stop
 
@@ -139,21 +136,22 @@
     });
 </script>
 <script>
-    // $(document).ready(function () {
-    //     // Initialize DataTable
-    //     $('#postalCodesTable').DataTable({
-    //         processing: true,
-    //         serverSide: true,
-    //         ajax: '{{ route('postal-code.dataTableJson') }}',
-    //         columns: [
-    //             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-    //             { data: 'postal_code', name: 'postal_code' },
-    //             { data: 'subdistrict.name', name: 'subdistrict.name' },
-    //             { data: 'subdistrict.district.name', name: 'subdistrict.district.name' },
-    //             { data: 'action', name: 'action', orderable: false, searchable: false },
-    //         ],
-    //         order: [[1, 'asc']],
-    //     });
-    // });
+    $(document).ready(function () {
+        // Initialize DataTable
+        $('#postalCodesTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: '{{ route('postal-code.dataTableJson') }}',
+            columns: [
+                { data: 'postal_code', name: 'postal_code', orderable: false },
+                { data: 'subdistrict.name', name: 'subdistrict.name', orderable: false },
+                { data: 'subdistrict.district.name', name: 'subdistrict.district.name', orderable: false },
+                { data: 'subdistrict.district.city.name', name: 'subdistrict.district.city.name', orderable: false },
+                { data: 'subdistrict.district.city.province.name', name: 'subdistrict.district.city.province.name', orderable: false },
+                { data: 'action', name: 'action', orderable: false, searchable: false },
+            ],
+            order: [[1, 'asc']],
+        });
+    });
 </script>
 @stop

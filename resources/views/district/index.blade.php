@@ -59,6 +59,7 @@
                     <th>Default Kelurahan</th>
                     <th>Nama ( Kecamatan ) </th>
                     <th>Kabupaten \ Kota</th>
+                    <th>Provinsi</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -120,10 +121,14 @@
             ajax: '{{ route('district.dataTableJson') }}',
             columns: 
             [
-                { data: 'default_subdistrict.name', name: 'default_subdistrict.name', orderable: false },
-                { data: 'name', name: 'name', orderable: false },
-                { data: 'city.name', name: 'city.name', orderable: false },
+                { data: 'default_subdistrict.name', name: 'default_subdistrict.name', orderable: true },
+                { data: 'name', name: 'name', orderable: true },
+                { data: 'city.name', name: 'city.name', orderable: true },
+                { data: 'city.province.name', name: 'city.province.name', orderable: true },
                 { data: 'action', name: 'action', orderable: false, searchable: false },
+            ],
+            columnDefs: [
+                { targets: 1, orderData: [0, 1] },
             ],
         });
     });

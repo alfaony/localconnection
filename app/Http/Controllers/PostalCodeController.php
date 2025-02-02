@@ -37,33 +37,33 @@ class PostalCodeController extends Controller
         return view('postal_code.index', compact('postalCodes', 'search','subdistricts'));
     }
 
-    // public function dataTableJson()
-    // {
-    //     $query = PostalCode::with('subdistrict','subdistrict.district','subdistrict.district.city')->orderBy('created_at', 'desc');
+    public function dataTableJson()
+    {
+        $query = PostalCode::with('subdistrict','subdistrict.district','subdistrict.district.city','subdistrict.district.city.province')->orderBy('created_at', 'desc');
 
-    //     $columnNames = ['postal_code','created_at'];
-    //     $searchable = ['postal_code','created_at'];
-    //     $bootstrap = 4;
+        $columnNames = ['postal_code','created_at'];
+        $searchable = ['postal_code','subdistrict.name','subdistrict.district.name','subdistrict.district.city.name','subdistrict.district.city.province.name'];
+        $bootstrap = 4;
 
-    //     $actionButtons = [
-    //         [
-    //             'name' => 'Edit',
-    //             'route' => 'postal-code.edit',
-    //             'id' => true,
-    //         ],
-    //         [
-    //             'name' => 'Delete',
-    //             'route' => 'postal-code.destroy',
-    //             'id' => true,
-    //         ],
-    //     ];
+        $actionButtons = [
+            [
+                'name' => 'Edit',
+                'route' => 'postal-code.edit',
+                'id' => true,
+            ],
+            [
+                'name' => 'Delete',
+                'route' => 'postal-code.destroy',
+                'id' => true,
+            ],
+        ];
 
-    //     $response = datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
+        $response = datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
 
-    //     $data = $response->getData();
+        $data = $response->getData();
 
-    //     return response()->json($data);
-    // }
+        return response()->json($data);
+    }
 
     public function create()
     {

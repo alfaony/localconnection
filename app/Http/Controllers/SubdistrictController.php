@@ -17,10 +17,10 @@ class SubdistrictController extends Controller
 
     public function dataTableJson()
     {
-        $query = Subdistrict::with('district','district.city','district.city.province')->orderBy('created_at', 'desc');
+        $query = Subdistrict::with('district','district.city','district.city.province');
 
-        $columnNames = ['name', 'created_at'];
-        $searchable = ['name', 'district.name'];
+        $searchable = ['name', 'district.name', 'district.city.name', 'district.city.province.name'];
+        $columnNames = ['name','created_at','district.created_at','district.city.created_at','district.city.province.created_at'];
         $bootstrap = 4;
 
         $actionButtons = [];

@@ -50,7 +50,9 @@
             <thead>
                 <tr>
                     <th>Nama (Kelurahan)</th>
-                    <th>Lokasi Lengkap</th>
+                    <th>Kecamatan</th>
+                    <th>Kabupaten \ Kota</th>
+                    <th>Provinsi</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -109,7 +111,9 @@
             ajax: '{{ route('subdistrict.dataTableJson') }}',
             columns: [
                 { data: 'name', name: 'name' },
-                { data: 'full_location', name: 'full_location' },
+                { data: 'district.name', name: 'district.name', orderable: false },
+                { data: 'district.city.name', name: 'district.city.name', orderable: false },
+                { data: 'district.city.province.name', name: 'district.city.province.name', orderable: false },
                 { data: 'action', name: 'action', orderable: false, searchable: false },
             ],
             order: [[1, 'asc']],

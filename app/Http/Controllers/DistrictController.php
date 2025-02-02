@@ -19,10 +19,10 @@ class DistrictController extends Controller
 
     public function dataTableJson()
     {
-        $query = District::with(['city.province', 'defaultSubdistrict'])->orderBy('created_at', 'desc');
+        $query = District::with(['city.province', 'defaultSubdistrict']);
 
-        $columnNames = ['name', 'city.name'];
         $searchable = ['name', 'city.name', 'city.province.name'];
+        $columnNames = ['name', 'city.name', 'city.province.name'];
         $bootstrap = 4;
 
         $actionButtons = [];
