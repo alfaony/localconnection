@@ -158,7 +158,7 @@
                 </div>
                 <div class="d-flex justify-content-end mt-4">
                     <button type="reset" id="cancelImport" class="btn btn-secondary me-2">Batal</button>
-                    <button type="submit" id="importButton" class="btn btn-warning ml-2" disabled>Upload & Import</button>
+                    <button type="submit" id="importButton" class="btn btn-warning ml-2" disabled onclick="return confirm('Anda yakin ingin mengimport data? Data yang diimport tidak dapat dihapus.')">Upload & Import</button>
                 </div>
             </form>
         </div>
@@ -349,7 +349,8 @@
             const progress = Math.round(response.progress || 0);
             $('#progressBarContainer').removeClass('d-none');
             $('#progressBar').css('width', `${progress}%`).text(`${progress}%`);
-
+            $('#importFile').prop('disabled', true);
+            
             if (progress < 100) {
                 setTimeout(() => checkProgress(batchId), 1000);
             }else {

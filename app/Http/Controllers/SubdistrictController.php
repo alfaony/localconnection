@@ -11,8 +11,7 @@ class SubdistrictController extends Controller
 {
     public function index()
     {
-        $districts = District::all();
-        return view('subdistrict.index', compact('districts'));
+        return view('subdistrict.index');
     }
 
     public function dataTableJson()

@@ -13,8 +13,7 @@ class DistrictController extends Controller
 {
     public function index()
     {
-        $cities = City::all();
-        return view('district.index', compact('cities'));
+        return view('district.index');
     }
 
     public function dataTableJson()
@@ -78,10 +77,9 @@ class DistrictController extends Controller
 
     public function edit(District $district)
     {
-        $cities = City::all();
         $listSubdistrict = $district->subdistricts()->get();
 
-        return view('district.index', compact('district', 'cities','listSubdistrict'));
+        return view('district.index', compact('district','listSubdistrict'));
     }
 
     public function update(Request $request, District $district)
