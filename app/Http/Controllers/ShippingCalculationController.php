@@ -61,8 +61,8 @@ class ShippingCalculationController extends Controller
             $rate->length = $request->length;
             $rate->weight = $request->weight;
             $rate->estimated_price = $estimatedPrice;
-        }
-        $rates = $rates->sortBy('estimated_price');
+        }    
+        $rates = array_values($rates->sortBy('estimated_price')->toArray());
         
         return response()->json(['rates' => $rates]);
     }

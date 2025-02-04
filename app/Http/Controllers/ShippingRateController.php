@@ -138,7 +138,7 @@ class ShippingRateController extends Controller
     {
         $shippingRate->delete();
 
-        return redirect()->route('shipping-rate.index')->with('success', 'Data berhasil dihapus.');
+        return redirect()->route('shipping-rate.index')->with('delete', true);
     }
 
     public function dataTableJson()
@@ -229,12 +229,14 @@ class ShippingRateController extends Controller
             'origin_id' => 'required|exists:postal_codes,id',
             'destination_id' => 'required|exists:postal_codes,id',
             'provider_id' => 'required|exists:providers,id',
+            'service_type_id' => 'required|exists:service_types,id',
         ]);
 
         // Query untuk memeriksa kombinasi
         $exists = ShippingRate::where('origin_id', $validated['origin_id'])
             ->where('destination_id', $validated['destination_id'])
-            ->where('provider_id', $validated['provider_id']);
+            ->where('provider_id', $validated['provider_id'])
+            ->where('service_type_id', $validated['service_type_id']);
 
         // Kecualikan jika sedang mengedit data
         if ($id) {

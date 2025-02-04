@@ -469,9 +469,10 @@ $(document).ready(function() {
         const providerId = $('#provider_id').val();
         const originId = $('#origin_id').val();
         const destinationId = $('#destination_id').val();
+        const service_type_id = $('#service_type_id').val();
 
         // Pastikan ketiga field sudah diisi
-        if (providerId && originId && destinationId) {
+        if (providerId && originId && destinationId && service_type_id) {
             $.ajax({
                 url: "{{ route('shipping-rate.checkDuplicate') }}",
                 method: 'POST',
@@ -479,6 +480,7 @@ $(document).ready(function() {
                     provider_id: providerId,
                     origin_id: originId,
                     destination_id: destinationId,
+                    service_type_id:service_type_id,
                     _token: $('meta[name="csrf-token"]').attr('content'),
                 },
                 success: function(response) {

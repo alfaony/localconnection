@@ -57,12 +57,13 @@ class ShippingRate extends Model
 
     public function getFactorVolumetricAttribute()
     {
-        $factorVolumetric = $this->serviceType->providers()
+        $pivot = $this->serviceType->providers()
             ->where('provider_id', $this->provider_id)
             ->first()
-            ->pivot
-            ->factor_volumetric;
-
-        return $factorVolumetric === null || $factorVolumetric == 0.0 ? 6000 : $factorVolumetric;
+            ->pivot ?? null;
+            
+        return $pivot && $pivot->factor_volumetric !== null && $pivot->factor_volumetric > 0
+            ? $pivot->factor_volumetric
+            : 4000;
     }
 }
