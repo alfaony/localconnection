@@ -168,6 +168,10 @@
                 @endforeach
             </tbody>
         </table>
+        <div class="d-flex justify-content-center mt-2">
+            {{ $racks->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+            <!-- Pagination -->
+        </div>
     </div>
 </div>
 @stop

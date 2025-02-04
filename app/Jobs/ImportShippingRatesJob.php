@@ -59,23 +59,23 @@ class ImportShippingRatesJob implements ShouldQueue
 
                     if ($check) 
                     {
-                        $progress = ImportProgress::where('batch_id', $this->batchId)->first();
-                        if ($progress) 
-                        {
-                            // Ambil error yang sudah ada
-                            $currentErrors = json_decode($progress->errors, true) ?? [];
+                        // $progress = ImportProgress::where('batch_id', $this->batchId)->first();
+                        // if ($progress) 
+                        // {
+                        //     // Ambil error yang sudah ada
+                        //     $currentErrors = json_decode($progress->errors, true) ?? [];
 
-                            // Tambahkan error baru
-                            $currentErrors[] = 
-                            [
-                                'row' => $count, // Nomor baris
-                                "error" => "Duplikasi District " . $row['Kecamatan Tujuan'] . ", City: " . $row['Kabupaten/Kota Tujuan']. ", Province: " . $row['Provinsi Tujuan'] . " Save District: ".$check->destination->subdistrict->district->name . ", City: " . $check->destination->subdistrict->district->city->name . ", Province: " . $check->destination->subdistrict->district->city->province->name,
-                            ];
+                        //     // Tambahkan error baru
+                        //     $currentErrors[] = 
+                        //     [
+                        //         'row' => $count, // Nomor baris
+                        //         "error" => "Duplikasi District " . $row['Kecamatan Tujuan'] . ", City: " . $row['Kabupaten/Kota Tujuan']. ", Province: " . $row['Provinsi Tujuan'] . " Save District: ".$check->destination->subdistrict->district->name . ", City: " . $check->destination->subdistrict->district->city->name . ", Province: " . $check->destination->subdistrict->district->city->province->name,
+                        //     ];
 
-                            // Simpan kembali ke kolom `errors`
-                            $progress->errors = json_encode($currentErrors);
-                            $progress->save();
-                        }
+                        //     // Simpan kembali ke kolom `errors`
+                        //     $progress->errors = json_encode($currentErrors);
+                        //     $progress->save();
+                        // }
 
                         $check->update([
                             'base_weight' => $row['Berat Dasar'],
