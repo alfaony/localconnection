@@ -292,7 +292,7 @@ $(document).ready(function() {
                 resultsGrid.empty();
                 
                 $('#loading').addClass('d-none'); // Hide loading indicator after results are processed
-
+                
                 if (response.rates.length > 0) {
                     $('#resultsSection').removeClass('d-none');
 

@@ -100,7 +100,7 @@ class ShippingRateController extends Controller
             'base_price' => 'required|numeric|min:1',
             'additional_weight' => 'nullable|numeric|min:1',
             'additional_price' => 'nullable|numeric|min:1',
-            'rate_per_cbm' => 'nullable|numeric|min:1',
+            'rate_per_cbm' => 'nullable|numeric|min:0',
             'delivery_time' => 'nullable|string|max:255',
         ]);
     }

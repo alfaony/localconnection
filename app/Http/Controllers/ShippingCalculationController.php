@@ -63,7 +63,7 @@ class ShippingCalculationController extends Controller
             $rate->estimated_price = $estimatedPrice;
         }
         $rates = $rates->sortBy('estimated_price');
-
+        
         return response()->json(['rates' => $rates]);
     }
 
@@ -90,10 +90,11 @@ class ShippingCalculationController extends Controller
             $width = (int) $width;
 
             $weight = ($length * $width * $height) / $factorVolumetric;
-
+            $weight = (float) $weight;
             if($ratePerCbm > 0)
             {
                 $estimatedPrice = $weight * $ratePerCbm;
+                $estimatedPrice = (int) $estimatedPrice;
             }else
             {
                 $weight = ceil($weight);

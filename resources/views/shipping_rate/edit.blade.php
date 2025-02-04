@@ -116,7 +116,7 @@
                     <label for="rate_per_cbm" class="form-label">Harga Per CBM</label>
                     <input type="text" id="rate_per_cbm_show" class="form-control" placeholder="Contoh: Rp 50.000"
                         value="{{'Rp. '.number_format($shippingRate->rate_per_cbm ?? 0, 0, ',', '.') }}"
-                        oninput="formatRupiahFormat(this,'rate_per_cbm')" required>
+                        oninput="formatRupiahFormat(this,'rate_per_cbm')">
                     <input type="hidden" name="rate_per_cbm" id="rate_per_cbm" class="form-control"
                         value="{{ $shippingRate->rate_per_cbm }}" />
                 </div>
