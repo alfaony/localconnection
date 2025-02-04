@@ -63,6 +63,6 @@ class ShippingRate extends Model
             ->pivot
             ->factor_volumetric;
 
-        return $factorVolumetric === null || $factorVolumetric == 0.0 ? 1000 : $factorVolumetric;
+        return $factorVolumetric === null || $factorVolumetric == 0.0 ? 6000 : $factorVolumetric;
     }
 }

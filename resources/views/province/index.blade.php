@@ -45,7 +45,7 @@
             @if(isset($province) && count($defaultCity) != 0)
             <div class="mb-3">
                 <label for="default_city" class="form-label">Default Kota</label>
-                <select name="default_city" id="default_city" class="form-control select2" required>
+                <select name="default_city_id" id="default_city" class="form-control select2" required>
                     <option value="" disabled {{ !$province->defaultCity ? 'selected' : '' }}>Tidak</option>
                     @foreach($defaultCity as $city)
                         <option value="{{ $city->id }}" {{ $province->default_city_id == $city->id ? 'selected' : '' }}>

@@ -116,12 +116,6 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-12">
-                                            <div class="alert alert-info py-2 mb-0">
-                                                <i class="fas fa-info-circle mr-2"></i>
-                                                Volume: <span id="volumeDisplay">0</span> m³ (CBM)
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -259,6 +253,7 @@ $(document).ready(function() {
         if ($(this).is(':checked')) {
             $('#volumeInputs').removeClass('d-none');
             $('#weight').removeAttr('required');
+            $('#weight').val('');
             $('#weightGroup').addClass('d-none');
         } else 
         {
@@ -364,12 +359,6 @@ $(document).ready(function() {
     $(document).on('click', '.add-to-cart', function() {
         let rate = $(this).data('rate');
         
-        let weight = $('#weight').val();
-        let volume = $('#volume').val();
-        let height = $('#height').val();
-        let width = $('#width').val();
-        let length = $('#length').val();
-
         $.ajax(
             {
             url: "{{ route('shipping-calculation.detail') }}",
@@ -378,11 +367,10 @@ $(document).ready(function() {
                 rate_id: rate.id,
                 origin_id: rate.origin_id,
                 destination_id: rate.destination_id,
-                weight: weight,
-                volume: volume,
-                height: height,
-                width: width,
-                length: length
+                weight: rate.weight,
+                height: rate.height,
+                width: rate.width,
+                length: rate.length
             },
             success: function(response) {
                 console.log(response); 
@@ -391,7 +379,6 @@ $(document).ready(function() {
                     rate.origin = response.origin;
                     rate.destination = response.destination;
                     rate.weight = response.weight;
-                    rate.volume = response.volume;
                     rate.height = response.height;
                     rate.width = response.width;
                     rate.length = response.length;
@@ -424,7 +411,11 @@ $(document).ready(function() {
 
         cart.forEach((item, index) => {            
             total += parseFloat(item.estimated_price);
-            
+            let inforVolume = item.length && item.width && item.height ? `
+                        <small class="text-muted d-block">
+                            <i class="fas fa-cube"></i> Volume: ${item.length} x ${item.width} x ${item.height} cm
+                        </small>
+            ` : '';
             let cartItem = `
            <li class="list-group-item">
                 <div class="d-flex justify-content-between">
@@ -436,6 +427,7 @@ $(document).ready(function() {
                         <small class="text-muted d-block text-truncate cart-location">
                             <i class="fas fa-map-marker-alt"></i> ${item.origin} ➝ ${item.destination}
                         </small>
+                        ${inforVolume}
                         <small class="text-muted d-block">
                             <i class="fas fa-weight"></i> Berat: ${item.weight} Kg
                         </small>

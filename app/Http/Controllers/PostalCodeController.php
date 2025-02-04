@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PostalCode;
 use App\Models\Subdistrict;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PostalCodeController extends Controller
 {
@@ -74,7 +75,7 @@ class PostalCodeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'postal_code' => 'required|string|max:10',
+            'postal_code' => 'required|string|max:10|unique:postal_codes,postal_code',
             'subdistrict_id' => 'required|exists:subdistricts,id',
         ]);
 
@@ -113,19 +114,26 @@ class PostalCodeController extends Controller
         return view('postal_code.index', compact('postalCode', 'subdistricts', 'postalCodes'));
     }
 
-    public function update(Request $request, PostalCode $postalcode)
+    public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'postal_code' => 'required|string|max:10',
+            'postal_code' => [
+                'required',
+                'string',
+                'max:10',
+                Rule::unique('postal_codes')->ignore($request->route('postal_code')), // Mengecualikan dirinya sendiri saat update
+            ],
             'subdistrict_id' => 'required|exists:subdistricts,id',
         ]);
 
+        $postalcode = PostalCode::find($id);
         $postalcode->update($validated);
         return redirect()->route('postal-code.index')->with('update', true);
     }
 
-    public function destroy(PostalCode $postalcode)
+    public function destroy($id)
     {
+        $postalcode = PostalCode::find($id);
         $postalcode->delete();
         return redirect()->route('postal-code.index')->with('delete', true);
     }

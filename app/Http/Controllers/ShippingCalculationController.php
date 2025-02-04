@@ -42,22 +42,6 @@ class ShippingCalculationController extends Controller
         // Hitung Estimasi Harga
         foreach ($rates as $rate) {
             $estimatedPrice = 0;
-            // if ($request->filled('weight')) 
-            // {
-            //     if ($request->weight <= $rate->base_weight) {
-            //         // Jika berat masih dalam batas berat dasar
-            //         $estimatedPrice = $rate->base_price;
-            //     } else {
-            //         // Hitung harga tambahan jika berat lebih dari base_weight
-            //         $extraWeight = ceil(($request->weight - $rate->base_weight) / $rate->additional_weight);
-            //         $estimatedPrice = $rate->base_price + ($extraWeight * $rate->additional_price);
-            //     }
-            // }
-
-            // if ($request->filled('width') && $request->filled('height') && $request->filled('length')) {
-            //     $volume = ($request->length * $request->width * $request->height) / $rate->factor_volumetric;
-            //     $estimatedPrice = $request->volume * $rate->rate_per_cbm;
-            // }
             $estimatedPrice = $this->calculateEstimatedPrice(
                 $rate->base_weight, 
                 $rate->base_price, 
@@ -72,8 +56,13 @@ class ShippingCalculationController extends Controller
             );
 
             // Tambahkan estimasi harga ke dalam response
+            $rate->height = $request->height;
+            $rate->width = $request->width;
+            $rate->length = $request->length;
+            $rate->weight = $request->weight;
             $rate->estimated_price = $estimatedPrice;
         }
+        $rates = $rates->sortBy('estimated_price');
 
         return response()->json(['rates' => $rates]);
     }
@@ -82,6 +71,8 @@ class ShippingCalculationController extends Controller
     {   
         if ($weight) 
         {
+            $weight = (int) $weight;
+
             if ($weight <= $baseWeight) {
                 // Jika berat masih dalam batas berat dasar
                 $estimatedPrice = $basePrice;
@@ -94,7 +85,12 @@ class ShippingCalculationController extends Controller
         
         if($height && $width && $length)
         {
+            $length = (int) $length;
+            $height = (int) $height;
+            $width = (int) $width;
+
             $weight = ($length * $width * $height) / $factorVolumetric;
+
             if($ratePerCbm > 0)
             {
                 $estimatedPrice = $weight * $ratePerCbm;
@@ -205,12 +201,18 @@ class ShippingCalculationController extends Controller
                 $request->width, 
                 $request->length
             );
+        if($request->filled('weight'))
+        {
+            $weight = ceil($request->weight);
+        }else
+        {
+            $weight = $request->length * $request->width * $request->height / $rate->factor_volumetric;
+        }
 
         return response()->json([
             'origin' => $origin ? $origin->subdistrict->district->city->name : null,
             'destination' => $destination ? $destination->subdistrict->district->name : null,
-            'weight' => $request->weight,
-            'volume' => $request->volume,
+            'weight' => $weight,
             'height' => $request->height,
             'width' => $request->width,
             'length' => $request->length,

@@ -87,6 +87,7 @@ class DistrictController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'city_id' => 'required|exists:cities,id',
+            'default_subdistrict_id' => 'nullable|exists:subdistricts,id',
         ]);
 
         $district->update($validated);
