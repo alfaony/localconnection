@@ -382,6 +382,9 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <form method="post" action="{{ route('user.destroy',$a) }}">
                         @csrf
                         @method('delete')
+                        @canAccess('edit_profile_all_user','users')
+                        <a href="{{ route('user.profileEdit', $a->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-user"></i></a>
+                        @endcanAccess
                         @canAccess('edit','users')
                         <a href="{{ route('user.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
                         @endcanAccess
