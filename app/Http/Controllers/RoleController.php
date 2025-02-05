@@ -91,6 +91,10 @@ class RoleController extends Controller
             'warehouses',
             'sensors',
             'racks',
+            'wilayahs',
+            'providers','shipping_rates',
+            'provinces','cities','districts','subdistricts','postal_codes',
+            'shipping_calculations'
         ];
 
         $checked = array_merge($mainMenus);
@@ -211,6 +215,10 @@ class RoleController extends Controller
                 'warehouses',
                 'sensors',
                 'racks',
+                'wilayahs',
+                'providers','shipping_rates',
+                'provinces','cities','districts','subdistricts','postal_codes',
+                'shipping_calculations'
             ];
         $checked = array_merge($mainMenus);
 
@@ -291,6 +299,10 @@ class RoleController extends Controller
                 'warehouses',
                 'sensors',
                 'racks',
+                'wilayahs',
+                'providers','shipping_rates',
+                'provinces','cities','districts','subdistricts','postal_codes',
+                'shipping_calculations'
             ];
         
         $checked = array_merge($mainMenus);

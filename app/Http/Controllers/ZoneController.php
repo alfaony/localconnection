@@ -39,7 +39,6 @@ class ZoneController extends Controller
         
         $zones = $query->paginate(10);
         
-        $zones = $query->paginate(10);
         $warehouses = Warehouse::byCompany(Auth::user()->company_id)->get();
         $sensors = Sensor::byCompany(Auth::user()->company_id)->get();
 
