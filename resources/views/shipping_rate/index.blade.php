@@ -152,6 +152,7 @@
                         role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%
                     </div>
                 </div>
+                <button type="button" class="btn btn-danger mt-3 d-none" id="buttonProgress" onclick="clearImport()">Clear</button>
                 <div id="importSuccess" class="alert alert-success d-none mt-3"></div>
                 <div id="importErrors" class="alert alert-danger d-none mt-3">
                     <h5>Kesalahan pada Baris:</h5>
@@ -367,6 +368,7 @@
 
                 $('#importSuccess').html(`Import Selesai! Total data yang diimport: ${response.total_import} baris dari total ${response.total} baris.`);
                 $('#shippingRateTable').DataTable().ajax.reload();
+                $('#buttonProgress').removeClass('d-none');
             } else {
                 $('#progressBarContainer').addClass('d-none');
                 $('#shippingRateTable').DataTable().ajax.reload();
@@ -385,6 +387,17 @@
             });
             $('#progressBarContainer').addClass('d-none');
         });
+    }
+
+    function clearImport()
+    {
+        $('#progressBarContainer').addClass('d-none');
+        $('#importSuccess').addClass('d-none');
+        $('#importErrors').addClass('d-none');
+        $('#buttonProgress').addClass('d-none');
+
+        $('#importFile').prop('disabled', true);
+        $('#importButton').prop('disabled', false);
     }
 </script>
 @endcanAccess
