@@ -61,8 +61,8 @@ class ShippingRateController extends Controller
         // })
         // ->orderBy('created_at', 'desc')
         // ->paginate(10);
-
-        // dd($this->findPostalCodeId("","CEMPAKA PUTIH","JAKARTA PUSAT","DKI JAKARTA"));
+        // Line :966: Error :Destination tidak ditemukan Data District: TANJUNG JABUNG BARAT, City: TANJUNG JABUNG BARAT, Province: JAMBI
+        // dd($this->findPostalCodeId("","TANJUNG JABUNG BARAT","TANJUNG JABUNG BARAT","JAMBI"));
         return view('shipping_rate.index', compact('providers', 'serviceTypes'));
     }
 
@@ -423,19 +423,22 @@ class ShippingRateController extends Controller
             }
         } catch (\Throwable $th) {
             // Debug jika terjadi masalah
+            // dd($th);
+            Log::error($th);
             throw $th;
         }
     }
 
     private function proviceCityDistrict($province, $city, $district)
     {
-        $checkDistrict = District::where('name', '=', strtoupper($district))->first();        
+        $checkDistrict = District::where('name', 'LIKE', "%{$district}%")->first() ?? Subdistrict::where('name', 'LIKE', "%{$district}%")->first() ?? NULL;        
         // city && District
         if($checkDistrict)
         {
             if ($province && $city && $district) 
             {
-                $postal = District::whereRaw('UPPER(name) = ?', [strtoupper($district)])
+                
+                $postal = District::whereRaw('UPPER(name) LIKE ?', ["%{$district}%"])
                     ->whereHas('city', function ($q) use ($city, $province) {
                         $q->whereRaw('UPPER(name) LIKE ?', ["%$city%"])
                         ->whereHas('province', function ($q) use ($province) {
@@ -451,9 +454,10 @@ class ShippingRateController extends Controller
                     return $postal->defaultSubdistrict->defaultPostalCode->id ?? null; 
                 }
             }
-             if ($province && $city && $district) 
+            
+            if ($province && $city && $district) 
             {
-                $postal = District::whereRaw('UPPER(name) LIKE ?', ["%$district%"])
+                $postal = District::where('name', 'LIKE', "%{$district}%")
                 ->whereHas('city', function ($q) use ($city) {
                     $q->whereRaw('UPPER(name) LIKE ?', ["%$city%"]);
                 })
@@ -466,49 +470,32 @@ class ShippingRateController extends Controller
                     return $postal->defaultSubdistrict->defaultPostalCode->id ?? null;
                 }
             }
-            // // Prioritas 1: Cari berdasarkan Province, City, dan District
-            // if ($province && $city && $district) 
-            // {
-            //     $postal = Province::whereHas('cities', function ($q) use ($city, $district) {
-            //         $q->whereRaw('UPPER(name) LIKE ?', ["%$city%"])
-            //         ->whereHas('districts', function ($q) use ($district) {
-            //             $q->whereRaw('UPPER(name) LIKE ?', ["%$district%"]);
-            //         });
-            //     })
-            //     ->with('defaultCity.defaultDistrict.defaultSubdistrict.defaultPostalCode')
-            //     ->whereRaw('UPPER(name) LIKE ?', ["%$province%"])
-            //     ->first();
-                
-            //     if (
-            //         $postal &&
-            //         $postal->defaultCity &&
-            //         $postal->defaultCity->defaultDistrict &&
-            //         $postal->defaultCity->defaultDistrict->defaultSubdistrict
-            //         // && $postal->defaultCity->defaultDistrict->defaultSubdistrict->defaultPostalCode
-            //     ) {
-            //         // dd("postal 1 : ", $postal);
-            //         return $postal->defaultCity->defaultDistrict->defaultSubdistrict->defaultPostalCode->id ?? null;
-            //     }
-            // }
-    
-            // // Prioritas 2: Cari berdasarkan Province dan City
-            // if ($province && $city && $district) 
-            // {
-            //     $postal = District::whereRaw('UPPER(name) LIKE ?', ["%$district%"])
-            //         ->with(['defaultSubdistrict.defaultPostalCode'])
-            //         ->first();
-                    
-            //         if (
-            //             $postal &&
-            //             $postal->defaultSubdistrict 
-            //             // &&
-            //             // $postal->defaultSubdistrict->defaultPostalCode
-            //         ) {
-            //         // dd("postal 3 : ", $postal);
-            //         return $postal->defaultSubdistrict->defaultPostalCode->id;
-            //     }
-            // }
 
+            
+            if ($province && $city && $district) 
+            {
+                $postal = Subdistrict::whereRaw('UPPER(name) LIKE ?', ["%{$district}%"])
+                ->whereHas('district.city', function ($q) use ($city) {
+                    $q->whereRaw('UPPER(name) LIKE ?', ["%$city%"]);
+                })
+                ->whereHas('district.city.province', function ($q) use ($province) {
+                    $q->whereRaw('UPPER(name) LIKE ?', ["%$province%"]);
+                })
+                ->with('defaultPostalCode')
+                ->first();
+                    if 
+                    (
+                        $postal && $postal->defaultPostalCode
+                    ) 
+                    {
+                    return $postal->defaultPostalCode->id ?? null;
+                }
+            }
+
+        }
+        if($district == $city)
+        {
+            return $this->proviceCity($province, $city);
         }
 
         return null;
@@ -550,24 +537,7 @@ class ShippingRateController extends Controller
                 return $postal->defaultDistrict->defaultSubdistrict->defaultPostalCode->id;
             }
         }
-
-        // Prioritas 2: Cari berdasarkan Province saja
-        // if ($province) {
-        //     $postal = Province::whereRaw('UPPER(name) LIKE ?', ["%$province%"])
-        //         ->with(['defaultCity.defaultDistrict.defaultSubdistrict.defaultPostalCode'])
-        //         ->first();
-
-        //     if (
-        //         $postal &&
-        //         $postal->defaultCity &&
-        //         $postal->defaultCity->defaultDistrict &&
-        //         $postal->defaultCity->defaultDistrict->defaultSubdistrict &&
-        //         $postal->defaultCity->defaultDistrict->defaultSubdistrict->defaultPostalCode
-        //     ) {
-        //         return $postal->defaultCity->defaultDistrict->defaultSubdistrict->defaultPostalCode->id;
-        //     }
-        // }
-
+        
         return null;
     }
 }

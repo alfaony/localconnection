@@ -59,6 +59,7 @@ class ImportShippingRatesJob implements ShouldQueue
 
                     if ($check) 
                     {
+                        ImportProgress::where('batch_id', $this->batchId)->increment('total_import');
                         // $progress = ImportProgress::where('batch_id', $this->batchId)->first();
                         // if ($progress) 
                         // {
@@ -194,12 +195,13 @@ class ImportShippingRatesJob implements ShouldQueue
 
     private function proviceCityDistrict($province, $city, $district)
     {
-        $checkDistrict = District::where('name', 'LIKE', "%{$district}%")->first();        
+        $checkDistrict = District::where('name', 'LIKE', "%{$district}%")->first() ?? Subdistrict::where('name', 'LIKE', "%{$district}%")->first() ?? NULL;        
         // city && District
         if($checkDistrict)
         {
             if ($province && $city && $district) 
             {
+                
                 $postal = District::whereRaw('UPPER(name) LIKE ?', ["%{$district}%"])
                     ->whereHas('city', function ($q) use ($city, $province) {
                         $q->whereRaw('UPPER(name) LIKE ?', ["%$city%"])
@@ -232,6 +234,32 @@ class ImportShippingRatesJob implements ShouldQueue
                     return $postal->defaultSubdistrict->defaultPostalCode->id ?? null;
                 }
             }
+
+            
+            if ($province && $city && $district) 
+            {
+                $postal = Subdistrict::whereRaw('UPPER(name) LIKE ?', ["%{$district}%"])
+                ->whereHas('district.city', function ($q) use ($city) {
+                    $q->whereRaw('UPPER(name) LIKE ?', ["%$city%"]);
+                })
+                ->whereHas('district.city.province', function ($q) use ($province) {
+                    $q->whereRaw('UPPER(name) LIKE ?', ["%$province%"]);
+                })
+                ->with('defaultPostalCode')
+                ->first();
+                    if 
+                    (
+                        $postal && $postal->defaultPostalCode
+                    ) 
+                    {
+                    return $postal->defaultPostalCode->id ?? null;
+                }
+            }
+
+        }
+        if($district == $city)
+        {
+            return $this->proviceCity($province, $city);
         }
 
         return null;
