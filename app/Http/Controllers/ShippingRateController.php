@@ -389,6 +389,7 @@ class ShippingRateController extends Controller
             'errors' => json_decode($progress->errors, true) ?? [],
             'processed' => $progress->processed,
             'total' => $progress->total,
+            'total_import' => $progress->total_import,
             'progress' => ($progress->total > 0) ? ($progress->processed / $progress->total) * 100 : 0,
         ]);
     }
