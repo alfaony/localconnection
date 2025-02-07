@@ -396,8 +396,8 @@
         $('#importErrors').addClass('d-none');
         $('#buttonProgress').addClass('d-none');
 
-        $('#importFile').prop('disabled', true);
-        $('#importButton').prop('disabled', false);
+        $('#importFile').prop('disabled', false);
+        $('#importButton').prop('disabled', true);
     }
 </script>
 @endcanAccess
