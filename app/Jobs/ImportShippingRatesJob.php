@@ -59,6 +59,7 @@ class ImportShippingRatesJob implements ShouldQueue
 
                     if ($check) 
                     {
+                        ImportProgress::where('batch_id', $this->batchId)->increment('total_import');
                         // $progress = ImportProgress::where('batch_id', $this->batchId)->first();
                         // if ($progress) 
                         // {
