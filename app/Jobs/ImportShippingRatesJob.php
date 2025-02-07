@@ -194,13 +194,13 @@ class ImportShippingRatesJob implements ShouldQueue
 
     private function proviceCityDistrict($province, $city, $district)
     {
-        $checkDistrict = District::where('name', '=', strtoupper($district))->first();        
+        $checkDistrict = District::where('name', 'LIKE', "%{$district}%")->first();        
         // city && District
         if($checkDistrict)
         {
             if ($province && $city && $district) 
             {
-                $postal = District::whereRaw('UPPER(name) = ?', [strtoupper($district)])
+                $postal = District::whereRaw('UPPER(name) LIKE ?', ["%{$district}%"])
                     ->whereHas('city', function ($q) use ($city, $province) {
                         $q->whereRaw('UPPER(name) LIKE ?', ["%$city%"])
                         ->whereHas('province', function ($q) use ($province) {
@@ -219,7 +219,7 @@ class ImportShippingRatesJob implements ShouldQueue
             
             if ($province && $city && $district) 
             {
-                $postal = District::whereRaw('UPPER(name) LIKE ?', ["%$district%"])
+                $postal = District::where('name', 'LIKE', "%{$district}%")
                 ->whereHas('city', function ($q) use ($city) {
                     $q->whereRaw('UPPER(name) LIKE ?', ["%$city%"]);
                 })

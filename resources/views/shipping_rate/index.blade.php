@@ -152,6 +152,7 @@
                         role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%
                     </div>
                 </div>
+                <div id="importSuccess" class="alert alert-success d-none mt-3"></div>
                 <div id="importErrors" class="alert alert-danger d-none mt-3">
                     <h5>Kesalahan pada Baris:</h5>
                     <ul id="errorList"></ul>
@@ -358,10 +359,13 @@
                 
             if (response.errors) {
                 $('#progressBarContainer').addClass('d-none');
+                $('#importSuccess').removeClass('d-none');
                 $('#importErrors').removeClass('d-none');
                 response.errors.forEach(error => {
                     $('#errorList').append(`<li>Line :${error.row}: Error :${error.error}</li>`);
                 });
+
+                $('#importSuccess').html(`Import Selesai! Total data yang diimport: ${response.total_import} baris dari total ${response.total} baris.`);
                 $('#shippingRateTable').DataTable().ajax.reload();
             } else {
                 $('#progressBarContainer').addClass('d-none');
