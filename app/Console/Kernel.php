@@ -9,6 +9,8 @@ use App\Models\SettingCompany;
 use App\Models\Company;
 use App\Models\EmployeeChecking;
 use Carbon\Carbon;
+use App\Models\FineTune;
+use App\Services\ServiceOpenAi;
 
 class Kernel extends ConsoleKernel
 {
@@ -20,9 +22,15 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-
+        // Menjadwalkan job untuk mengecek status FileTune setiap 10 menit
+        $schedule->call(function () {
+            $this->checkFileTuneStatus();
+        })->timezone('Asia/Jakarta')
+        ->everyMinute()
+        // ->everyTenMinutes()
+    ;
         // Tetapkan zona waktu Asia/Jakarta
-
+        
         // Jadwalkan pekerjaan 'project:reccuring' setiap hari pada pukul 00:00
         $schedule->command('project:reccuring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
@@ -77,6 +85,29 @@ class Kernel extends ConsoleKernel
         //         ->timezone('Asia/Jakarta')
         //         ->dailyAt($checkinDeactivateTime->format('H:i'));
         // }
+    }
+
+    protected function checkFileTuneStatus()
+    {
+        // Ambil semua FileTune dengan status 'active' false
+        $fineTunes = FineTune::where('active', false)->get();
+
+        foreach ($fineTunes as $fineTune) 
+        {
+            // Mengambil fineTuneId dari FileTune
+            $fineTuneId = $fineTune->fine_tune_id;
+            $service = new ServiceOpenAi();
+
+
+            // Memanggil API untuk mengecek status fine-tuning
+            $response = $service->retriveFineTune($fineTuneId);
+            if($response->original && $response->original['response'] && $response->original['response']['status'] == "succeeded")
+            {
+                $fineTune->update(['active' => true, 'status' => 'succeeded']);
+            }
+
+            return true;
+        }
     }
 
     /**

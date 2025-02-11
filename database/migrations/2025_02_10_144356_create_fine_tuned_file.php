@@ -13,14 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('fine_tuned_models', function (Blueprint $table) {
+        Schema::create('fine_tune_files', function (Blueprint $table) {
             $table->id();
-            $table->string('table_name');
-            $table->string('model_id')->nullable();
+            $table->foreignId('fine_tune_table_id')->constrained('fine_tune_tables')->onDelete('cascade');
+            $table->foreignId('fine_tune_id')->constrained('fine_tunes')->onDelete('cascade');
+            $table->uuid('company_id')->nullable(true);
             $table->string('filename')->nullable();
             $table->string('file_path')->nullable();
-            $table->uuid('company_id')->nullable(true);
             $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
         });
@@ -33,6 +34,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('fine_tuned_models');
+        Schema::dropIfExists('fine_tune_files');
     }
 };

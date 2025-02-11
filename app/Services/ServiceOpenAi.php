@@ -34,7 +34,7 @@ class ServiceOpenAi
         }
     }
 
-    public function fineTuneOpenAi($filePath, $table, $user)
+    public function fineTuneOpenAi($filePath, $table, $user, $findFineTune)
     {
 
         try {
@@ -45,10 +45,8 @@ class ServiceOpenAi
                     'file_path' => $filePath
                 ], 400);
             }
-            // ** Kirim file JSONL ke OpenAI dengan multipart/form-data**
-            $uploadResponse = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-            ])->asMultipart()->post($this->apiUrl . "/chatgpt-fine-tune", [
+            $params = 
+            [
                 [
                     'name'     => 'file',
                     'contents' => fopen($filePath, 'r'),
@@ -61,19 +59,55 @@ class ServiceOpenAi
                 [
                     'name'     => 'table',
                     'contents' => $table
-                ]
-            ]);
+                ]    
+            ];
+
+            if($findFineTune)
+            {
+                $params[] = 
+                [
+                    'name'     => 'model',
+                    'contents' => $findFineTune->fine_tune_model
+                ];
+            }
+
+            // ** Kirim file JSONL ke OpenAI dengan multipart/form-data**
+            $uploadResponse = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+            ])->asMultipart()->post($this->apiUrl . "/chatgpt-fine-tune", $params);
 
             $fineTuneData = $uploadResponse->json();
-
-            $this->logApiRequest('fine-tune', 'POST', ['filePath' => $filePath, 'table' => $table], $uploadResponse, 200, $user);
+            
+            $this->logApiRequest('fine-tune', 'POST', ['filePath' => $filePath, 'table' => $table, 'model' => $model ?? NULL], $uploadResponse, 200, $user);
 
             return response()->json([
                 'status' => 'Fine-tuning started successfully!',
-                'fine_tune_id' => $fineTuneData['fine_tune_id'] ?? [],
+                'response' => $fineTuneData ?? [],
             ]);
         } catch (\Throwable $th) {
             $this->logApiRequest('fine-tune', 'POST', ['filePath' => $filePath, 'table' => $table], $th->getMessage(), 500, $user);
+
+            return response()->json([
+                'error' => 'An unexpected error occurred.',
+                'details' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function retriveFineTune($fineTuneId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+            ])->get($this->apiUrl."/chatgpt-retriveFineTune/". $fineTuneId);
+            
+            return response()->json([
+                'status' => 'Fine Tunning Retrived successfully!',
+                'response' => $response->json()['data']  ?? NULL 
+            ]);
+
+        } catch (\Exception $e) {
+            $this->logApiRequest('fine-tune', 'POST', ['fineTuneId' => $fineTuneId], $th->getMessage(), 500, $user);
 
             return response()->json([
                 'error' => 'An unexpected error occurred.',

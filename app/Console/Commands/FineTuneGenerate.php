@@ -11,19 +11,21 @@ use App\Models\Invoice;
 use App\Models\Quote;
 use App\Models\WorkOrder;
 use App\Models\Company;
+use App\Models\FineTuneTable;
+use App\Models\FineTune;
+use App\Models\FineTuneFile;
 use App\Services\ServiceOpenAi;
 use App\Schemas\RoleSchema;
 
 class FineTuneGenerate extends Command
 {
-    protected $signature = 'finetune:generate';
+    protected $signature = 'generate:fine-tune';
     protected $description = 'Generate fine-tune dataset and send it to OpenAI Microservice';
     
     public function handle()
     {
-        $tables = ['quotes','work_orders'];
+        $tables = FineTuneTable::all();
         $service = new ServiceOpenAi();
-
 
         $responses = [];
         $companies = Company::where("name",'BOS 1')->get();
@@ -37,36 +39,59 @@ class FineTuneGenerate extends Command
                     $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]);
                 })
                 ->first();
+                $tableData = $table;
+                $table = $table->name;
 
                 $this->info("Processing table: $table");
     
                 // 1. Generate JSONL file with chunking
                 $filePath = $this->prepareFineTuneData($table, $company);
-    
+                
+                // Fine $model
+                $findFineTune = FineTune::where('company_id', $company->id)->where('fine_tune_table_id', $tableData->id)->where('active', true)->first();
+
                 // 2. Send JSONL file to Microservice
-                $responsesData = $service->fineTuneOpenAi($filePath, $table, $user);
+                $responsesData = $service->fineTuneOpenAi($filePath, $table, $user, $findFineTune);
                 
                 $responses = $responsesData->original ?? null;
-                if (isset($responses['fine_tune_id'])) {
-                    // 3. Save Fine-Tune ID to Database
-                    DB::table('fine_tuned_models')->updateOrInsert(
-                        [
+                if (isset($responses['response']['fine_tune_id'])) 
+                {
+                    if(!isset($responses['response']['fine_tune_id']['error']))
+                    {
+                        // 3. Save Fine-Tune ID to Database
+                        $fineTune = FineTune::create([
+                            'fine_tune_id' => $responses['response']['fine_tune_id']['id'],
+                            'fine_tune_table_id' => $tableData->id,
                             'company_id' => $company->id,
-                            'table_name' => $table // ✅ Kondisi WHERE
-                        ],
-                        [
-                            'filename' => $responses['fine_tune_id']['filename'],
-                            'file_path' => $filePath,
-                            'model_id' => $responses['fine_tune_id']['id'], // ✅ Data yang akan diperbarui
-                            'updated_at' => now()
-                        ]
-                    );
-    
-                    Log::info("Fine-tuned model ID saved for $table: " . $responses['fine_tune_id']['id'] ?? NULL);
+                            'fine_tune_model' => $responses['response']['fine_tune_id']['model'],
+                            'status' => $responses['response']['fine_tune_id']['status'],
+                        ]);
+                    }
                 }
+
+                if(isset($responses['response']['file_id']))
+                {
+                    // 4. Save File ID to Database
+                    if(!isset($responses['response']['file_id']['error']))
+                    {
+                        $fineTuneFile = FineTuneFile::create([
+                            'fine_tune_table_id' => $tableData->id,
+                            'fine_tune_file_id' => $responses['response']['file_id']['id'],
+                            'fine_tune_id' => $fineTune->id ?? NULL,
+                            'company_id' => $company->id,
+                            'status' => $responses['response']['file_id']['status'],
+                            'file_path' => $filePath
+                        ]);
+                    }
+                }
+
+                dd("successs");
+
             }
-    
+            
+            dd("here");
             $this->info('Fine-tuning process completed!');
+
         }
     }
 
