@@ -13,6 +13,7 @@ use App\Models\Company;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\SettingCompany;
+use App\Models\AssetType;
 
 class CompanyController extends Controller
 {
@@ -100,6 +101,16 @@ class CompanyController extends Controller
                 $field->save();        
             }
 
+            foreach ($fieldOnlinePajak as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu = "online_pajak";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+            
             foreach ($fieldBank as $key => $value) 
             {
                 $field = new SettingCompany();
@@ -108,6 +119,15 @@ class CompanyController extends Controller
                 $field->field_title = $key;
                 $field->field_value = $value;
                 $field->save();        
+            }
+
+            $Assetfields = ['Kartu Akses','⁠Kunci gembok','Kunci pintu','Kunci motor','Kunci mobil','Kunci lemari','Kunci brangkas','Kunci ruangan','kunci Lain'];
+            foreach ($Assetfields as $key => $value) 
+            {
+                $asset = new AssetType();
+                $asset->name = $value;
+                $asset->user_id = $user->id;
+                $asset->save();
             }
 
             DB::commit();
