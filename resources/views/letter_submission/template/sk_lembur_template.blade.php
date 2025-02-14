@@ -42,14 +42,14 @@ $user = $letterSubmission->user;
                     lampiran surat keputusan ini.</p>
                 <p><strong>Pasal 2</strong> Pelaksanaan lembur akan dilakukan pada <br>
                     Tanggal {{ isset($fieldData['tanggal_lembur']) ? \Carbon\Carbon::parse($fieldData['tanggal_lembur'])->format('d/m/Y') : '' }} dari Pukul {{ isset($fieldData['jam_lembur_start']) ? $fieldData['jam_lembur_start'] : '' }} hingga Pukul {{ isset($fieldData['jam_lembur_end']) ? $fieldData['jam_lembur_end'] : '' }}, <br>
-                    dengan durasi lembur maksimal 8 Jam per hari.
+                    dengan durasi lembur maksimal <strong><u>8 Jam</u></strong> per hari.
                 </p>
                 <p><strong>Pasal 3</strong> Setiap karyawan yang melaksanakan lembur akan mendapatkan kompensasi sesuai
                     dengan peraturan perusahaan yang berlaku yaitu maksimal Rp 200.000 / hari.</p>
             </div>
 
             <div class="footer text-left mt-5">
-                <p>Jakarta, {{ $date ?? "" }}</p>
+                <p><strong>Jakarta, {{ $date ?? "" }}</strong></p>
                 @if($letterSubmission->is_approved == 1)
                 <img src="{{ asset('logo/paraf.png') }}" class="img-fluid" alt="Signature" style="height:150px">
                 @else
