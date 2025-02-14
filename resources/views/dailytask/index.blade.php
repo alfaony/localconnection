@@ -311,6 +311,7 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script>
+<script src="https://unpkg.com/browser-image-compression/dist/browser-image-compression.js"></script>
 @canAccess('show','dailytasks')
 <script>
     $(document).on('click', '.show-popup-btn', function() {
@@ -593,29 +594,58 @@
 </script>
 @endcanAccess
 <script>
-    // Use event delegation to ensure the change event is handled even when mediaReport is rendered dynamically
-    $(document).on('change', '#mediaReport', function() {
-        
-        var maxFileSize = 1 * 1024 * 1024; // 1MB in bytes
+    $(document).on('change', '#mediaReport', async function(event) {
+
+        var maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
         var files = this.files;
         var validFiles = [];
 
+        // Loop through selected files
         for (var i = 0; i < files.length; i++) {
             if (files[i].size > maxFileSize) {
-                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus. Batas maksimal 1 Mb');
+                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus. Batas maksimal 10 MB');
             } else {
-                validFiles.push(files[i]);
+                if (files[i].type.startsWith('image/')) {
+                    // Compress the image if it's an image file
+                    try {
+                        const compressedFile = await compressImage(files[i]);
+                        validFiles.push(compressedFile);
+                    } catch (error) {
+                        console.error('Error during image compression:', error);
+                    }
+                } else {
+                    // Non-image files are added without compression
+                    validFiles.push(files[i]);
+                }
             }
         }
 
-        // Clear the input and add back the valid files
+        // Clear the input and add back the valid files (compressed or original)
         $(this).val('');
         var dataTransfer = new DataTransfer();
         for (var j = 0; j < validFiles.length; j++) {
             dataTransfer.items.add(validFiles[j]);
         }
         this.files = dataTransfer.files;
+
+        console.log("Valid files after processing:", validFiles);
     });
+
+    // Function to compress image using the browser-image-compression library
+    async function compressImage(file) {
+        const options = {
+            maxSizeMB: 1, // Max size 1MB for the compressed image
+            maxWidthOrHeight: 1024, // Set max width or height to 1024px
+            useWebWorker: true // Enable Web Worker for better performance
+        };
+
+        const compressedBlob = await imageCompression(file, options);
+        console.log(`Compressed ${file.name} from ${file.size / 1024 / 1024}MB to ${compressedBlob.size / 1024 / 1024}MB`);
+
+        // Convert the compressed Blob back into a File
+        const compressedFile = new File([compressedBlob], file.name, { type: file.type });
+        return compressedFile;
+    }
 </script>
 @canAccess('approvement','dailytasks')
 <script>
