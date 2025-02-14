@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CompanyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
-
+use Illuminate\Support\Facades\Log
 use App\Schemas\RoleSchema;
 
 use App\Models\Company;
@@ -60,6 +59,9 @@ class CompanyController extends Controller
             $fieldHeadLetter = ['header' => '', 'footer' => ''];
             $fieldXero = ['client_id' => '', 'client_secret' => '', 'webhook_key' => ''];
             $fieldBank = ['rekening_number' => null,'atas_nama' => null,'nama_bank' => null,'cabang_bank' => null];
+
+            // non Setting
+            $Assetfields = ['Kartu Akses','⁠Kunci gembok','Kunci pintu','Kunci motor','Kunci mobil','Kunci lemari','Kunci brangkas','Kunci ruangan','kunci Lain'];
     
             foreach ($fieldProfile as $key => $value) 
             {
@@ -100,16 +102,6 @@ class CompanyController extends Controller
                 $field->field_value = $value;
                 $field->save();        
             }
-
-            foreach ($fieldOnlinePajak as $key => $value) 
-            {
-                $field = new SettingCompany();
-                $field->user_id = $user->id;
-                $field->menu = "online_pajak";
-                $field->field_title = $key;
-                $field->field_value = $value;
-                $field->save();        
-            }
             
             foreach ($fieldBank as $key => $value) 
             {
@@ -121,7 +113,6 @@ class CompanyController extends Controller
                 $field->save();        
             }
 
-            $Assetfields = ['Kartu Akses','⁠Kunci gembok','Kunci pintu','Kunci motor','Kunci mobil','Kunci lemari','Kunci brangkas','Kunci ruangan','kunci Lain'];
             foreach ($Assetfields as $key => $value) 
             {
                 $asset = new AssetType();
