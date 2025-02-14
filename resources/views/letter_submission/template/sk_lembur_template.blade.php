@@ -41,7 +41,7 @@ $user = $letterSubmission->user;
                 <p><strong>Pasal 1</strong> Menugaskan kerja lembur kepada karyawan yang namanya tercantum dalam
                     lampiran surat keputusan ini.</p>
                 <p><strong>Pasal 2</strong> Pelaksanaan lembur akan dilakukan pada <br>
-                    Tanggal {{ isset($fieldData['tanggal_lembur']) ? \Carbon\Carbon::parse($fieldData['tanggal_lembur'])->format('d/m/Y') : '' }} dari Pukul {{ isset($fieldData['jam_lembur_start']) ? $fieldData['jam_lembur_start'] : '' }} hingga Pukul {{ isset($fieldData['jam_lembur_end']) ? $fieldData['jam_lembur_end'] : '' }}, <br>
+                    Tanggal {{ isset($fieldData['tanggal_lembur_start']) ? \Carbon\Carbon::parse($fieldData['tanggal_lembur_start'])->format('d/m/Y') : '' }} hingga {{ isset($fieldData['tanggal_lembur_end']) ? \Carbon\Carbon::parse($fieldData['tanggal_lembur_end'])->format('d/m/Y') : '' }} dari Pukul {{ isset($fieldData['jam_lembur_start']) ? $fieldData['jam_lembur_start'] : '' }} hingga {{ isset($fieldData['jam_lembur_end']) ? $fieldData['jam_lembur_end'] : '' }}, <br>
                     dengan durasi lembur maksimal <strong><u>8 Jam</u></strong> per hari.
                 </p>
                 <p><strong>Pasal 3</strong> Setiap karyawan yang melaksanakan lembur akan mendapatkan kompensasi sesuai
