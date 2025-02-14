@@ -393,7 +393,11 @@ class LetterSubmissionController extends Controller
                     {
                         isset($letterSubmission->convert_field['salary']) ? $this->updateSalary($letterSubmission->convert_field['salary'], $letterSubmission) : null;
                     }
-                    
+                
+                    if(($status == ParamSchema::APPROVE) && ($letterSubmission->letterType->is_ending))
+                    {
+                        $this->isEnding($letterSubmission->letterType->id, $letterSubmission->user);
+                    }
                     $this->sendNotification($letterSubmission, $action, Auth::user()->company_id, true);
                 }
                 
@@ -420,10 +424,9 @@ class LetterSubmissionController extends Controller
         $positions = Position::byCompany(Auth::user()->company_id)->where('id',$name)->first();
         return $positions;
     }
-
-    protected function updateProfile($request, $user)
+    protected function isEnding($letter_type_id, $user)
     {
-        $letterType = LetterType::findOrFail($request->letter_type_id);
+        $letterType = LetterType::findOrFail($letter_type_id);
         
         if($letterType->is_ending)
         {
@@ -435,6 +438,23 @@ class LetterSubmissionController extends Controller
                 $lastPosition->save();
             }
         }
+
+        return true;
+    }
+    protected function updateProfile($request, $user)
+    {
+        // $letterType = LetterType::findOrFail($request->letter_type_id);
+        
+        // if($letterType->is_ending)
+        // {
+        //     $this->updateStatus(ParamSchema::NONSTAFF,$user->id);
+        //     $lastPosition = $user->last_position;
+        //     if($lastPosition)
+        //     {
+        //         $lastPosition->end_date = Carbon::now();
+        //         $lastPosition->save();
+        //     }
+        // }
 
         if($request->name || $request->address || $request->id_card)
         {

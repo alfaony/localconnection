@@ -853,8 +853,55 @@
                     $("#form_template").html(form);
                     generateThriveEditor("description");
                     break;
+                case 'sk_lembur_template':
+                    form = `
+                        <div class="letter-template">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="col-md-12 mb-3">
+                                        <label for="no_surat">Nomor Surat <span class="text-danger">*</span></label>
+                                        <input type="text" name="no_surat" id="no_surat" 
+                                            value="{{ old('no_surat') ?? '' }}" 
+                                            class="form-control" 
+                                            required>
+                                    </div>
 
-                    
+                                    <!-- Tanggal Lembur -->
+                                    <div class="col-md-12 mb-3">
+                                        <label for="tanggal_lembur">Tanggal Lembur <span class="text-danger">*</span></label>
+                                        <input type="date" name="tanggal_lembur" id="tanggal_lembur"
+                                            value="{{ old('tanggal_lembur') ?? '' }}"
+                                            class="form-control"
+                                            required>
+                                    </div>
+
+                                    <!-- Jam Lembur -->
+                                    <div class="col-md-12 mb-3">
+                                        <label>Jam Lembur <span class="text-danger">*</span></label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <input type="time" name="jam_lembur_start" 
+                                                    value="{{ old('jam_lembur_start') ?? '' }}"
+                                                    class="form-control"
+                                                    placeholder="Mulai"
+                                                    required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="time" name="jam_lembur_end" 
+                                                    value="{{ old('jam_lembur_end') ?? '' }}"
+                                                    class="form-control"
+                                                    placeholder="Selesai"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        `;
+                    $("#form_template").html(form);
+                    break;                    
                 default:
                     break;
             }

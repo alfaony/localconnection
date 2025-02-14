@@ -703,6 +703,55 @@
                 </div>
             </div>
             @endif
+
+            @if($template == "sk_lembur_template")
+            <div class="form-row" id="sk_lembur_template" style="display:none;">
+                <div class="col-md-12">
+                    <div class="card scrollable-div" id="printThis">
+                        <div class="card-body">
+                            <div class="col-md-12 mb-3">
+                                <label for="no_surat">Nomor Surat <span class="text-danger">*</span></label>
+                                <input type="text" name="no_surat" id="no_surat" 
+                                    value="{{ (isset($fieldData['no_surat'])) ? $fieldData['no_surat'] : '' }}"
+                                    class="form-control" 
+                                    required>
+                            </div>
+    
+                            <!-- Tanggal Lembur -->
+                            <div class="col-md-12 mb-3">
+                                <label for="tanggal_lembur">Tanggal Lembur <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal_lembur" id="tanggal_lembur"
+                                    value="{{ (isset($fieldData['tanggal_lembur'])) ? $fieldData['tanggal_lembur'] : '' }}"
+                                    class="form-control"
+                                    required>
+                            </div>
+    
+                            <!-- Jam Lembur -->
+                            <div class="col-md-12 mb-3">
+                                <label>Jam Lembur <span class="text-danger">*</span></label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input type="time" name="jam_lembur_start" 
+                                            value="{{ (isset($fieldData['jam_lembur_start'])) ? $fieldData['jam_lembur_start'] : '' }}"
+                                            class="form-control"
+                                            placeholder="Mulai"
+                                            required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="time" name="jam_lembur_end" 
+                                            value="{{ (isset($fieldData['jam_lembur_end'])) ? $fieldData['jam_lembur_end'] : '' }}"
+                                            class="form-control"
+                                            placeholder="Selesai"
+                                            required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
         </div>
 
     </div>
