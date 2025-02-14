@@ -29,10 +29,10 @@ class GenerateFineTuneTable extends Command
     public function handle()
     {
         $fineTuneTables = [
-            'quotes',
-            'work_orders'
+            'products',
+            'logistics'
         ];
-    
+        
         foreach ($fineTuneTables as $data) 
         {
             FineTuneTable::firstOrCreate(
