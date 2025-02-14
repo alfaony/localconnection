@@ -9,7 +9,7 @@ $user = $letterSubmission->user;
     <div class="card scrollable-div" id="printThis">
         <div class="card-body">
             <div class="text-center">
-                <h2>SURAT KEPUTUSAN LEMBUR</h2>
+                <h4>SURAT KEPUTUSAN LEMBUR</h4>
                 @if(isset($fieldData['no_surat']))
                 <p class="mt-3"><strong>Nomor:</strong> {{ (isset($fieldData['no_surat'])) ? $fieldData['no_surat'] : '' }}</p>
                 @endif
