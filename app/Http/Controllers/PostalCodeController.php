@@ -75,7 +75,7 @@ class PostalCodeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'postal_code' => 'required|string|max:10|unique:postal_codes,postal_code',
+            'postal_code' => 'required|string|max:10',
             'subdistrict_id' => 'required|exists:subdistricts,id',
         ]);
 
@@ -117,12 +117,7 @@ class PostalCodeController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'postal_code' => [
-                'required',
-                'string',
-                'max:10',
-                Rule::unique('postal_codes')->ignore($request->route('postal_code')), // Mengecualikan dirinya sendiri saat update
-            ],
+            'postal_code' => 'required|string|max:10',
             'subdistrict_id' => 'required|exists:subdistricts,id',
         ]);
 

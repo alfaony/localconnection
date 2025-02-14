@@ -373,7 +373,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="media">Upload</label>
-                                    <input type="file" id="mediaReport" name="media[]" class="form-control" multiple>
+                                    <input type="file" name="media[]" class="form-control mediaInput" multiple>
                                 </div>
                                 <button type="submit" class="btn btn-primary">Simpan Laporan</button>
                             </form>
@@ -798,7 +798,7 @@
                         </div>
                         <div class="form-group">
                             <label for="media">Upload Media</label>
-                            <input type="file" id="mediaInput" name="media[]" class="form-control" multiple>
+                            <input type="file" id="mediaInput" name="media[]" class="form-control mediaInput" multiple>
                         </div>
                     </div>
                     <input type="hidden" name="status" value="file_report">
@@ -827,7 +827,7 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="media">Upload Media</label>
-                            <input type="file" id="mediaInput" name="media[]" class="form-control" multiple>
+                            <input type="file" id="mediaInput1" name="media[]" class="form-control mediaInput" multiple>
                         </div>
                     </div>
                     <input type="hidden" name="status" value="file_task">
@@ -1002,6 +1002,7 @@
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/browser-image-compression/dist/browser-image-compression.js"></script>
 <script>
     $(document).ready(function() 
     {
@@ -1090,28 +1091,28 @@
         this.files = dataTransfer.files;
     });
 
-    $('#mediaInput').on('change', function() 
-    {
-        var maxFileSize = 1 * 1024 * 1024; // 5MB in bytes
-        var files = this.files;
-        var validFiles = [];
+    // $('#mediaInput').on('change', function() 
+    // {
+    //     var maxFileSize = 1 * 1024 * 1024; // 5MB in bytes
+    //     var files = this.files;
+    //     var validFiles = [];
 
-        for (var i = 0; i < files.length; i++) {
-            if (files[i].size > maxFileSize) {
-                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus. Batas maksimal 1 Mb');
-            } else {
-                validFiles.push(files[i]);
-            }
-        }
+    //     for (var i = 0; i < files.length; i++) {
+    //         if (files[i].size > maxFileSize) {
+    //             alert('File ' + files[i].name + ' terlalu besar dan akan dihapus. Batas maksimal 1 Mb');
+    //         } else {
+    //             validFiles.push(files[i]);
+    //         }
+    //     }
 
-        // Clear the input and add back the valid files
-        $(this).val('');
-        var dataTransfer = new DataTransfer();
-        for (var j = 0; j < validFiles.length; j++) {
-            dataTransfer.items.add(validFiles[j]);
-        }
-        this.files = dataTransfer.files;
-    });
+    //     // Clear the input and add back the valid files
+    //     $(this).val('');
+    //     var dataTransfer = new DataTransfer();
+    //     for (var j = 0; j < validFiles.length; j++) {
+    //         dataTransfer.items.add(validFiles[j]);
+    //     }
+    //     this.files = dataTransfer.files;
+    // });
 </script>
 <script>
 $(document).ready(function() {
@@ -1202,6 +1203,60 @@ $(document).ready(function() {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     });
+</script>
+<script>
+    $(document).on('change', '.mediaInput', async function(event) {
+
+        var maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
+        var files = this.files;
+        var validFiles = [];
+
+        // Loop through selected files
+        for (var i = 0; i < files.length; i++) {
+            if (files[i].size > maxFileSize) {
+                alert('File ' + files[i].name + ' terlalu besar dan akan dihapus. Batas maksimal 10 MB');
+            } else {
+                if (files[i].type.startsWith('image/')) {
+                    // Compress the image if it's an image file
+                    try {
+                        const compressedFile = await compressImage(files[i]);
+                        validFiles.push(compressedFile);
+                    } catch (error) {
+                        console.error('Error during image compression:', error);
+                    }
+                } else {
+                    // Non-image files are added without compression
+                    validFiles.push(files[i]);
+                }
+            }
+        }
+
+        // Clear the input and add back the valid files (compressed or original)
+        $(this).val('');
+        var dataTransfer = new DataTransfer();
+        for (var j = 0; j < validFiles.length; j++) {
+            dataTransfer.items.add(validFiles[j]);
+        }
+        this.files = dataTransfer.files;
+
+        console.log("Valid files after processing:", validFiles);
+    });
+
+    // Function to compress image using the browser-image-compression library
+    async function compressImage(file) {
+        const options = {
+            maxSizeMB: 1, // Max size 1MB for the compressed image
+            maxWidthOrHeight: 1024, // Set max width or height to 1024px
+            useWebWorker: true // Enable Web Worker for better performance
+        };
+
+        const compressedBlob = await imageCompression(file, options);
+        console.log(`Compressed ${file.name} from ${file.size / 1024 / 1024}MB to ${compressedBlob.size / 1024 / 1024}MB`);
+
+        // Convert the compressed Blob back into a File
+        const compressedFile = new File([compressedBlob], file.name, { type: file.type });
+        return compressedFile;
+    }
 </script>
 @endsection
 

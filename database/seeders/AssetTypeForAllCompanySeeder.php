@@ -25,7 +25,7 @@ class AssetTypeForAllCompanySeeder extends Seeder
         $admin = Role::where('name',RoleSchema::ADMIN)->first();
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $company = Company::all();
-        $fields = ['kunci','Kartu Akses','Laptop'];
+        $fields = ['kunci','Kartu Akses','⁠Kunci gembok','Kunci pintu','Kunci motor','Kunci mobil','Kunci lemari','Kunci brangkas','Kunci ruangan'];
         
         foreach ($company as $a) 
         {
@@ -43,10 +43,13 @@ class AssetTypeForAllCompanySeeder extends Seeder
                 $assets = AssetType::byCompany($a->id)->where('name',$value)->first();
                 if(!$assets)
                 {
-                    $asset = new AssetType();
-                    $asset->name = $value;
-                    $asset->user_id = $user->id;
-                    $asset->save();
+                    if($user)
+                    {
+                        $asset = new AssetType();
+                        $asset->name = $value;
+                        $asset->user_id = $user->id;
+                        $asset->save();
+                    }
                 }else
                 {
                     $assets->name = $value;
