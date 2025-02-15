@@ -16,55 +16,61 @@
 
         <!-- Buttons -->
         <div class="text-center mb-4">
+            @canAccess('ask','ask_bos')
             <button id="askButton" class="btn btn-outline-primary me-3">
                 <i class="fas fa-question-circle"></i> Ask Questions
             </button>
+            @endcanAccess
+
+            @canAccess('makeDesition','ask_bos')
             <button id="decisionButton" class="btn btn-outline-secondary">
                 <i class="fas fa-balance-scale"></i> Make Decision
             </button>
+            @endcanAccess
         </div>
 
         <!-- Checkbox Filters -->
         <div class="mb-4 d-flex justify-content-center flex-wrap">
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="webSearch" value="Web Search">
+                <input class="form-check-input" type="checkbox" id="webSearch" value="Web Search" disabled>
                 <label class="form-check-label" for="webSearch">Web Search</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="finance" value="Finance">
-                <label class="form-check-label" for="finance">Finance</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="stock" value="Stok Barang" >
-                <label class="form-check-label" for="stock">Stok Barang</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="location" value="Lokasi">
-                <label class="form-check-label" for="location">Lokasi</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="logistics" value="Logistik">
+                <input class="form-check-input" type="checkbox" id="logistics" value="Logistik" disabled>
                 <label class="form-check-label" for="logistics">Logistik</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="project" value="Project">
+                <input class="form-check-input" type="checkbox" id="finance" value="Finance" disabled>
+                <label class="form-check-label" for="finance">Finance</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="stock" value="Stok Barang" disabled>
+                <label class="form-check-label" for="stock">Stok Barang</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="location" value="Lokasi" disabled>
+                <label class="form-check-label" for="location">Lokasi</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="project" value="Project" disabled>
                 <label class="form-check-label" for="project">Project</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="marketing" value="Marketing">
+                <input class="form-check-input" type="checkbox" id="marketing" value="Marketing" disabled>
                 <label class="form-check-label" for="marketing">Marketing</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="salesQuote" value="Sales Quote">
+                <input class="form-check-input" type="checkbox" id="salesQuote" value="Sales Quote" disabled>
                 <label class="form-check-label" for="salesQuote">Sales Quote</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" id="bigData" value="Big Data">
+                <input class="form-check-input" type="checkbox" id="bigData" value="Big Data" disabled>
                 <label class="form-check-label" for="bigData">Big Data</label>
             </div>
         </div>
 
         <!-- Results -->
+         @canAccess('checkResponse','ask_bos')
         <div id="resultSection" class="mt-5">
             <h3 class="text-primary mb-3">Hasil Analisis</h3>
             <ul class="list-group">
@@ -73,20 +79,73 @@
                 <li class="list-group-item"><b>Execution Score:</b> <span id="executionScoreResult">-</span></li>
             </ul>
         </div>
+        @endcanAccess
+    </div>
+</div>
+<!-- Modal for Make Decision -->
+<div class="modal fade" id="makeDecisionModal" tabindex="-1" aria-labelledby="makeDecisionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="makeDecisionModalLabel">Make Decision</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="decisionForm">
+                    <div class="mb-3">
+                        <label for="responsible" class="form-label">Responsible</label>
+                        <select class="form-select selectModal2" id="responsible" name="responsible" required>
+                            <option value="">Choose Responsible User</option>
+                            <!-- Populate with users from backend -->
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" {{ !$user->back_ground_verified ? 'disabled' : '' }}>{{ $user->name }} </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="accountable" class="form-label">Accountable</label>
+                        <select class="form-select selectModal2" id="accountable" name="accountable" required>
+                            <option value="">Choose Accountable User</option>
+                            <!-- Populate with users from backend -->
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" {{ !$user->back_ground_verified ? 'disabled' : '' }}>{{ $user->name }} </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="consult" class="form-label">Consult</label>
+                        <select class="form-select selectModal2" id="consult" name="consult" >
+                            <option value="">Choose Consult User</option>
+                            <!-- Populate with users from backend -->
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" {{ !$user->back_ground_verified ? 'disabled' : '' }}>{{ $user->name }} </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" id="closeModal">Close</button>
+                <button type="button" class="btn btn-primary" id="submitDecisionButton">Submit Decision</button>
+            </div>
+        </div>
     </div>
 </div>
 @stop
-
-@section('css')
-<style>
-    .form-check-inline {
-        margin-right: 15px;
-    }
-</style>
-@stop
-
 @section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
+    $(document).ready(function () {
+        $('.selectModal2').select2({
+            dropdownParent: '#makeDecisionModal',
+            width: '100%',
+            placeholder: 'Pilih',
+            allowClear: true
+        });
+    });
     document.addEventListener('DOMContentLoaded', function () {
         const askButton = document.getElementById('askButton');
         const decisionButton = document.getElementById('decisionButton');
@@ -100,14 +159,73 @@
             document.getElementById('trustScoreResult').innerText = `${Math.floor(Math.random() * 100)} / 100`;
             document.getElementById('executionScoreResult').innerText = `${Math.floor(Math.random() * 100)} / 100`;
         });
-
-        decisionButton.addEventListener('click', function () {
-            alert('Make Decision Clicked! (Implement logic here)');
-        });
     });
-    document.addEventListener('DOMContentLoaded', function () {
+
+    document.addEventListener('DOMContentLoaded', function () 
+    {
+        const decisionButton = document.getElementById('decisionButton');
+        const submitDecisionButton = document.getElementById('submitDecisionButton');
         const askButton = document.getElementById('askButton');
-        
+
+
+        // Show Modal when "Make Decision" is clicked
+        decisionButton.addEventListener('click', function () {
+            const modal = new bootstrap.Modal(document.getElementById('makeDecisionModal'));
+            modal.show();
+        });
+
+        // Handle the submission of the decision form
+        submitDecisionButton.addEventListener('click', function () 
+        {            
+            const responsible = document.getElementById('responsible').value;
+            const accountable = document.getElementById('accountable').value;
+            const consult = document.getElementById('consult').value;
+            const question = document.getElementById('questionInput').value;
+
+            document.getElementById('analysisResult').innerText = "Sedang memproses...";
+            document.getElementById('trustScoreResult').innerText = "-";
+            document.getElementById('executionScoreResult').innerText = "-";
+
+            if (!question.trim()) {
+                alert('Silakan masukkan pertanyaan sebelum mengirim.');
+                return;
+            }
+
+            // Check if all fields are selected
+            if (!responsible || !accountable ) 
+            {
+                alert('Please select Responsible, Accountable, and Consult.');
+                return;
+            }
+
+            // Example: Send the data to the server
+            fetch("{{ route('ask.makeDesition') }}", 
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    question:question,
+                    responsible: responsible,
+                    accountable: accountable,
+                    consult: consult
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'processing') {
+                    document.getElementById('closeModal').click();         
+                    checkResponse(); // Jalankan polling untuk mengambil hasil
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById('analysisResult').innerText = "Terjadi kesalahan saat memproses.";
+            });
+        });
+
         askButton.addEventListener('click', function () {
             const question = document.getElementById('questionInput').value;
             const selectedFilters = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(el => el.value);
@@ -148,8 +266,8 @@
                 .then(data => {
                     if (data.status !== 'waiting') {
                         document.getElementById('analysisResult').innerText = data.analysis;
-                        document.getElementById('trustScoreResult').innerText = `${data.trust_score} / 100`;
-                        document.getElementById('executionScoreResult').innerText = `${data.execution_score} / 100`;
+                        document.getElementById('trustScoreResult').innerText = `${data.trust_score} `;
+                        document.getElementById('executionScoreResult').innerText = `${data.execution_score}`;
                     } else {
                         checkResponse(); // Cek kembali jika belum selesai
                     }
@@ -159,4 +277,53 @@
         }
     });
 </script>
+@stop
+
+@section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+<style>
+    .form-check-inline {
+        margin-right: 15px;
+    }
+    body {
+        font-family: Arial, sans-serif;
+        /* padding: 20px; */
+        background-color: #f4f4f4;
+    }
+
+    .container {
+        background-color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+
+    hr {
+        border: 1px solid black;
+        border-radius: 5px;
+    }
+
+    .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+</style>
 @stop

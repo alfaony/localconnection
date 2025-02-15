@@ -193,7 +193,7 @@
                                 <div class="card-body">
                                     <!-- Latar Belakang -->
                                     <div class="form-group">
-                                        <label for="latar_belakang">Latar Belakang</label>
+                                        <label for="latar_belakang">Pendidikan</label>
                                         <input type="text" class="thriveEditor" data-ids="background" name="background"
                                             id="description_background" placeholder="Deskripsi"
                                             value="{{ $userEdit->background }}">

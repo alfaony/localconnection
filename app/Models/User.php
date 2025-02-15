@@ -137,6 +137,17 @@ class User extends Authenticatable
         return $this->divisions->first();
     }
     
+    public function getBackGroundVerifiedAttribute()
+    {
+        $existingAchievements = json_decode($this->achievement, true) ?? [];
+        $existingFailures = json_decode($this->failure, true) ?? [];
+
+        return !empty($this->background)
+            && !empty($this->experience)
+            && !empty($this->skill)
+            && !empty($existingAchievements)
+            && !empty($existingFailures);
+    }
     public function userPosition()
     {
         return $this->hasMany(UserPosition::class);

@@ -4,6 +4,8 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use App\Models\ApiLog;
+use App\Models\User;
+use App\Schemas\RoleSchema;
 
 class ServiceOpenAi
 {
@@ -26,7 +28,11 @@ class ServiceOpenAi
             [
                 'prompt' => $prompt,
             ]);
+            $user = User::whereHas('role', function ($query) {
+                $query->where('name', RoleSchema::ROOT);
+            })->first();
 
+            $this->logApiRequest('/chatgpt-text', 'POST', $prompt, $response, 200, $user);
 
             return $response->json()['response'] ?? 'Tidak ada jawaban.';
         } catch (\Exception $e) {
