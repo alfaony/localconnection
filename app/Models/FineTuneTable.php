@@ -14,19 +14,4 @@ class FineTuneTable extends Model
         'name',
     ];
 
-    /**
-     * Get the fine_tuned_files for the FineTune.
-     */
-    public function fineTunedFiles()
-    {
-        return $this->hasMany(FineTuneFile::class);
-    }
-
-    /**
-     * Get the file_tunes for the FineTune.
-     */
-    public function fileTunes()
-    {
-        return $this->hasMany(FileTune::class);
-    }
 }

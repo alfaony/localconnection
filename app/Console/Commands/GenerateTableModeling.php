@@ -12,8 +12,6 @@ use App\Models\Quote;
 use App\Models\WorkOrder;
 use App\Models\Company;
 use App\Models\FineTuneTable;
-use App\Models\FineTune;
-use App\Models\FineTuneFile;
 use App\Services\ServiceOpenAi;
 use App\Schemas\RoleSchema;
 use App\Models\Product;

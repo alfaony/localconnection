@@ -99,6 +99,8 @@ class AskBosController extends Controller
         $prompt .= "Analisa berdasarkan latar belakang dan pengalaman dia: \n";
         $prompt .= "Analisa berdasarkan tingkat kepercayaan dan possibility benar: \n";
         $prompt .= "Berikan nilai score final: trust score 0 - 100. \n";
+        $prompt .= "Analisa berdasarkan logika keputusan terbaik. terdapat minimal 15 pointers berupa pertimbangan, dan bagaimana cara naikin trust score jika nilai trust score di bawah 75.\n";
+        
         $prompt .= "Tuliskan hasil analisa dalam format json seperti berikut: \n";
         $prompt .= "- Analysis: [Hasil analisis]\n";
         $prompt .= "- trust_score: [Nilai trust score dalam angka, 0-100]\n";
@@ -144,7 +146,7 @@ class AskBosController extends Controller
             
         }
 
-
+        $prompt .= "Buatkan analisa berdasarkan fakta, data yg ditemukan di internet juga. Analisa berdasarkan logika keputusan terbaik. Buatkan minimal 15 pointers berupa pertimbangan, dan bagaimana cara naikin trust score dan execution score ke 99 jika nilai trust score dan execution score di bawah 70.\n";
         $prompt .= "Jawablah dengan format : Trust Score 0 - 100 dengan mengamati kelengkapan informasi yang sudah dimiliki. Pekerjaan ini akan diserahkan kepada, sesuai dengan prinsip management RACI, analisa kesesuaian dan kemampuan pelaku dan hitung 0-100 execution score.\n";
 
         if($request->accountable)
@@ -187,7 +189,6 @@ class AskBosController extends Controller
         {
             $prompt .= "Consult : Tidak Ada\n";
         }
-        
         $prompt .= "Tuliskan hasil analisa dalam format json seperti berikut: \n";
         $prompt .= "- Analysis: [Hasil analisis]\n";
         $prompt .= "- trust_score: [Nilai trust score dalam angka, 0-100]\n";

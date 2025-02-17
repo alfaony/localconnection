@@ -30,6 +30,7 @@ class ProcessOpenAiQuery implements ShouldQueue
         $prompt = $this->question;
         $answer = $openAiService->askOpenAi($prompt);
 
+        dd($answer);
         $cleanJsonString = stripslashes($answer);
 
         $data = json_decode($cleanJsonString, true);
