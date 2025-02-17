@@ -10,8 +10,8 @@ $user = $letterSubmission->user;
         <div class="card-body">
             <div class="text-center">
                 <h4>SURAT KEPUTUSAN LEMBUR</h4>
-                @if(isset($fieldData['no_surat']))
-                <p class="mt-3"><strong>Nomor:</strong> {{ (isset($fieldData['no_surat'])) ? $fieldData['no_surat'] : '' }}</p>
+                @if($letterSubmission->number_result)
+                <p class="mt-3"><strong>Nomor:</strong> {{ $letterSubmission->number_result }}</p>
                 @endif
             </div>
             <div class="text-left mb-4">

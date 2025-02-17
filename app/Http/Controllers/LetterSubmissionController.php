@@ -123,11 +123,17 @@ class LetterSubmissionController extends Controller
                 Storage::put($filePath, file_get_contents($file->getRealPath()));
                 $fieldData['file'] = $filePath;
             }
+            
+            $number = $this->makeNumber();
+
             $letterSubmission = new LetterSubmission();
             $letterSubmission->letter_type_id = $request->letter_type_id;
             $letterSubmission->status = NULL;
             $letterSubmission->user_id = Auth::id();
             $letterSubmission->field = json_encode($fieldData);
+
+            $letterSubmission->number_result = $number['number_result'];
+            $letterSubmission->letter_number = $number['letter_number'];
             
             $letterType = LetterType::findOrFail($request->letter_type_id);
             
@@ -278,7 +284,13 @@ class LetterSubmissionController extends Controller
                 // $letterSubmission->reason = NULL;
                 $this->sendNotification($letterSubmission, 'update', Auth::user()->company_id);
             }
-
+            if(!$letterSubmission->number_result  && !$letterSubmission->letter_number)
+            {
+                $letterNumber = $this->makeNumber();
+    
+                $letterSubmission->number_result = $letterNumber['number_result'];
+                $letterSubmission->letter_number = $letterNumber['letter_number'];
+            }
             // Simpan perubahan
             $letterSubmission->save();
 
@@ -661,5 +673,18 @@ class LetterSubmissionController extends Controller
         }
 
         return;
+    }
+
+    // make number
+    private function makeNumber()
+    {
+        $date = Carbon::now()->format('m/Y');
+        $letterNumber = LetterSubmission::byCompany(Auth::user()->company_id)->withTrashed()->max('letter_number') + 1;
+        $numberResult = $letterNumber.'/'.$date;
+
+        return [
+            'number_result' => $numberResult ?? 0,
+            'letter_number' => $letterNumber ?? 0
+        ];
     }
 }

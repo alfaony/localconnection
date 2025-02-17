@@ -711,10 +711,10 @@
                         <div class="card-body">
                             <div class="col-md-12 mb-3">
                                 <label for="no_surat">Nomor Surat <span class="text-danger">*</span></label>
-                                <input type="text" name="no_surat" id="no_surat" 
-                                    value="{{ (isset($fieldData['no_surat'])) ? $fieldData['no_surat'] : '' }}"
+                                <input type="text" 
+                                    value="{{ $letterSubmission->number_result ?? '' }}"
                                     class="form-control" 
-                                    required>
+                                    disabled>
                             </div>
     
                             <!-- Tanggal Lembur -->

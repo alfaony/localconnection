@@ -858,14 +858,6 @@
                         <div class="letter-template">
                             <div class="card">
                                 <div class="card-body">
-                                    <div class="col-md-12 mb-3">
-                                        <label for="no_surat">Nomor Surat <span class="text-danger">*</span></label>
-                                        <input type="text" name="no_surat" id="no_surat" 
-                                            value="{{ old('no_surat') ?? '' }}" 
-                                            class="form-control" 
-                                            required>
-                                    </div>
-
                                     <!-- Tanggal Lembur -->
                                     <div class="col-md-12 mb-3">
                                         <label for="tanggal_lembur">Tanggal Lembur <span class="text-danger">*</span></label>
