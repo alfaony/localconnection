@@ -123,11 +123,17 @@ class LetterSubmissionController extends Controller
                 Storage::put($filePath, file_get_contents($file->getRealPath()));
                 $fieldData['file'] = $filePath;
             }
+            
+            $number = $this->makeNumber();
+
             $letterSubmission = new LetterSubmission();
             $letterSubmission->letter_type_id = $request->letter_type_id;
             $letterSubmission->status = NULL;
             $letterSubmission->user_id = Auth::id();
             $letterSubmission->field = json_encode($fieldData);
+
+            $letterSubmission->number_result = $number['number_result'];
+            $letterSubmission->letter_number = $number['letter_number'];
             
             $letterType = LetterType::findOrFail($request->letter_type_id);
             
@@ -278,7 +284,13 @@ class LetterSubmissionController extends Controller
                 // $letterSubmission->reason = NULL;
                 $this->sendNotification($letterSubmission, 'update', Auth::user()->company_id);
             }
-
+            if(!$letterSubmission->number_result  && !$letterSubmission->letter_number)
+            {
+                $letterNumber = $this->makeNumber();
+    
+                $letterSubmission->number_result = $letterNumber['number_result'];
+                $letterSubmission->letter_number = $letterNumber['letter_number'];
+            }
             // Simpan perubahan
             $letterSubmission->save();
 
@@ -393,7 +405,11 @@ class LetterSubmissionController extends Controller
                     {
                         isset($letterSubmission->convert_field['salary']) ? $this->updateSalary($letterSubmission->convert_field['salary'], $letterSubmission) : null;
                     }
-                    
+                
+                    if(($status == ParamSchema::APPROVE) && ($letterSubmission->letterType->is_ending))
+                    {
+                        $this->isEnding($letterSubmission->letterType->id, $letterSubmission->user);
+                    }
                     $this->sendNotification($letterSubmission, $action, Auth::user()->company_id, true);
                 }
                 
@@ -420,10 +436,9 @@ class LetterSubmissionController extends Controller
         $positions = Position::byCompany(Auth::user()->company_id)->where('id',$name)->first();
         return $positions;
     }
-
-    protected function updateProfile($request, $user)
+    protected function isEnding($letter_type_id, $user)
     {
-        $letterType = LetterType::findOrFail($request->letter_type_id);
+        $letterType = LetterType::findOrFail($letter_type_id);
         
         if($letterType->is_ending)
         {
@@ -435,6 +450,23 @@ class LetterSubmissionController extends Controller
                 $lastPosition->save();
             }
         }
+
+        return true;
+    }
+    protected function updateProfile($request, $user)
+    {
+        // $letterType = LetterType::findOrFail($request->letter_type_id);
+        
+        // if($letterType->is_ending)
+        // {
+        //     $this->updateStatus(ParamSchema::NONSTAFF,$user->id);
+        //     $lastPosition = $user->last_position;
+        //     if($lastPosition)
+        //     {
+        //         $lastPosition->end_date = Carbon::now();
+        //         $lastPosition->save();
+        //     }
+        // }
 
         if($request->name || $request->address || $request->id_card)
         {
@@ -641,5 +673,18 @@ class LetterSubmissionController extends Controller
         }
 
         return;
+    }
+
+    // make number
+    private function makeNumber()
+    {
+        $date = Carbon::now()->format('m/Y');
+        $letterNumber = LetterSubmission::byCompany(Auth::user()->company_id)->withTrashed()->max('letter_number') + 1;
+        $numberResult = $letterNumber.'/'.$date;
+
+        return [
+            'number_result' => $numberResult ?? 0,
+            'letter_number' => $letterNumber ?? 0
+        ];
     }
 }

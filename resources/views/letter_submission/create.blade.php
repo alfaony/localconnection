@@ -853,8 +853,59 @@
                     $("#form_template").html(form);
                     generateThriveEditor("description");
                     break;
+                case 'sk_lembur_template':
+                    form = `
+                        <div class="letter-template">
+                            <div class="card">
+                                <div class="card-body">
+                                    <!-- Tanggal Lembur -->
+                                    <div class="col-md-12 mb-3">
+                                        <label for="tanggal_lembur">Tanggal Lembur <span class="text-danger">*</span></label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <input type="date" name="tanggal_lembur_start" id="tanggal_lembur_start"
+                                                    value="{{ old('tanggal_lembur_start') ?? '' }}"
+                                                    class="form-control"
+                                                    required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="date" name="tanggal_lembur_end" id="tanggal_lembur_end"
+                                                    value="{{ old('tanggal_lembur_end') ?? '' }}"
+                                                    class="form-control"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                    
+                                    <!-- Jam Lembur -->
+                                    <div class="col-md-12 mb-3">
+                                        <label>Jam Lembur <span class="text-danger">*</span></label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <input type="time" name="jam_lembur_start" 
+                                                    value="{{ old('jam_lembur_start') ?? '' }}"
+                                                    class="form-control"
+                                                    placeholder="Mulai"
+                                                    required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <input type="time" name="jam_lembur_end" 
+                                                    value="{{ old('jam_lembur_end') ?? '' }}"
+                                                    class="form-control"
+                                                    placeholder="Selesai"
+                                                    required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        `;
+                    $("#form_template").html(form);
+
+                    addFormValidation();
+                    break;                    
                 default:
                     break;
             }
@@ -890,6 +941,52 @@
         // Update 'salary' input with non-formatted number
         document.getElementById(inputNonFormat).value = parseInt(numStr);
     }
+</script>
+<script>
+    
+function addFormValidation() 
+{
+    const tanggalStart = document.getElementById('tanggal_lembur_start');
+    const tanggalEnd = document.getElementById('tanggal_lembur_end');
+    const jamStart = document.getElementsByName('jam_lembur_start')[0];
+    const jamEnd = document.getElementsByName('jam_lembur_end')[0];
+
+    // Listen for changes on tanggal_start and tanggal_end
+    tanggalStart.addEventListener('change', validateDates);
+    tanggalEnd.addEventListener('change', validateDates);
+
+    jamStart.addEventListener('focusout', validateTimes);
+    jamEnd.addEventListener('focusout', validateTimes);
+
+    // Validate the dates and times
+    function validateDates() {
+        // If the start date is the same as the end date
+        if (tanggalStart.value === tanggalEnd.value) {
+            jamEnd.setAttribute('min', jamStart.value); // Set the min value for end time
+        } else {
+            jamEnd.removeAttribute('min'); // Remove the min restriction if dates are different
+        }
+
+        // Synchronize tanggalEnd with tanggalStart if not already set
+        if (tanggalEnd.value === '') {
+            tanggalEnd.value = tanggalStart.value;
+        }
+    }
+
+    function validateTimes() {
+        // If the dates are the same and end time is before or equal to start time
+        console.log(jamEnd.value);
+        console.log(jamStart.value);
+        
+        if (jamEnd.value && jamStart.value && tanggalStart.value === tanggalEnd.value && jamEnd.value <= jamStart.value) {
+            alert('Jam selesai tidak boleh sama atau lebih awal dari jam mulai!');
+            jamEnd.value = ''; // Reset the end time field
+        } else if (jamEnd.value && jamStart.value && tanggalStart.value !== tanggalEnd.value && jamEnd.value === jamStart.value) {
+            alert('Jam selesai tidak boleh sama dengan jam mulai ketika tanggal lembur berbeda!');
+            jamEnd.value = ''; // Reset the end time field
+        }
+    }
+}
 </script>
 @endsection
 
