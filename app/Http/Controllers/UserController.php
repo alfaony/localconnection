@@ -136,7 +136,6 @@ class UserController extends Controller
         $dayofweek = config('custom.daysOfWeek');
 
 
-
         $companyAccess = false;
         $roleAccess = false;
 

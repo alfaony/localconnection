@@ -9,7 +9,6 @@ use App\Models\SettingCompany;
 use App\Models\Company;
 use App\Models\EmployeeChecking;
 use Carbon\Carbon;
-use App\Services\ServiceOpenAi;
 
 class Kernel extends ConsoleKernel
 {
@@ -22,8 +21,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
 
+
         // Tetapkan zona waktu Asia/Jakarta
-        
         // Jadwalkan pekerjaan 'project:reccuring' setiap hari pada pukul 00:00
         $schedule->command('project:reccuring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
