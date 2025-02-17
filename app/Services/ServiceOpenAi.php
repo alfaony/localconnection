@@ -11,11 +11,13 @@ class ServiceOpenAi
 {
     protected $apiUrl;
     protected $apiKey;
+    protected  $model;
 
     public function __construct()
     {
         $this->apiUrl = env('KELOOLA_OPENAI_API_URL') ?? "https://keloola-integration-ai.test/api";
         $this->apiKey = env('KELOOLA_OPENAI_TOKEN');
+        $this->model = env('KELOOLA_OPENAI_MODEL') ?? "gpt-3.5-turbo";
     }
 
     public function askOpenAi($prompt)
@@ -27,6 +29,7 @@ class ServiceOpenAi
             ])->post($this->apiUrl."/chatgpt-text", 
             [
                 'prompt' => $prompt,
+                'model' => $this->model
             ]);
             $user = User::whereHas('role', function ($query) {
                 $query->where('name', RoleSchema::ROOT);
