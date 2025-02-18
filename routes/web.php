@@ -77,6 +77,7 @@ use App\Http\Controllers\SubdistrictController;
 use App\Http\Controllers\PostalCodeController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\ShippingCalculationController;
+use App\Http\Controllers\AskBosController;
 
 
 
@@ -365,6 +366,11 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('shipping-calculation/searchRates', [ShippingCalculationController::class, 'searchRates'])->name('shipping-calculation.searchRates');
   Route::get('shipping-calculation/select2Origin', [ShippingCalculationController::class, 'select2Origin'])->name('shipping-calculation.select2Origin');
   Route::get('shipping-calculation/select2Destination', [ShippingCalculationController::class, 'select2Destination'])->name('shipping-calculation.select2Destination');
+  
+  Route::get('ask-bos',[AskBosController::class,'index'])->name('ask-bos.index');
+  Route::get('ask-bos/checkResponse', [AskBosController::class, 'checkResponse'])->name('check.response');
+  Route::post('ask-bos/ask', [AskBosController::class, 'ask'])->name('ask.bos');
+  Route::post('ask-bos/makeDesition', [AskBosController::class, 'makeDesition'])->name('ask.makeDesition');
 });
 
 

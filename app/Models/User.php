@@ -137,6 +137,17 @@ class User extends Authenticatable
         return $this->divisions->first();
     }
     
+    public function getBackGroundVerifiedAttribute()
+    {
+        $existingAchievements = json_decode($this->achievement, true) ?? [];
+        $existingFailures = json_decode($this->failure, true) ?? [];
+
+        return !empty($this->background)
+            && !empty($this->experience)
+            && !empty($this->skill)
+            && !empty($existingAchievements)
+            && !empty($existingFailures);
+    }
     public function userPosition()
     {
         return $this->hasMany(UserPosition::class);
@@ -171,7 +182,14 @@ class User extends Authenticatable
             ->latest('created_at')  // Assuming you want the latest based on 'created_at'/
             ->first() : "";
     }
-
+    public function getAchievementDecodeAttribute()
+    {
+        return json_decode($this->achievement, true) ?? [];
+    }
+    public function getFailureDecodeAttribute($value)
+    {
+        return json_decode($this->failure, true) ?? [];
+    }
     public function salary()
     {
         return $this->hasMany(UserSalary::class);

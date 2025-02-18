@@ -21,8 +21,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
 
-        // Tetapkan zona waktu Asia/Jakarta
 
+        // Tetapkan zona waktu Asia/Jakarta
         // Jadwalkan pekerjaan 'project:reccuring' setiap hari pada pukul 00:00
         $schedule->command('project:reccuring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
@@ -78,6 +78,7 @@ class Kernel extends ConsoleKernel
         //         ->dailyAt($checkinDeactivateTime->format('H:i'));
         // }
     }
+
 
     /**
      * Register the commands for the application.

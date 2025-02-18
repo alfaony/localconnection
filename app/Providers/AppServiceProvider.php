@@ -79,6 +79,7 @@ class AppServiceProvider extends ServiceProvider
             $managementCompanyMenu = 
             [
                 'kyes',
+                'ask_bos',
                 'national_holidays',
                 'employee_checkings',
                 'letter_submissions',
@@ -452,7 +453,11 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'shipping-calculation.index',
                     'icon' => 'fa fa-calculator',
                 ],
-
+                'ask_bos' => [
+                    'text' => 'Tanya Bos',
+                    'route' => 'ask-bos.index',
+                    'icon' => 'fa fa-comments',
+                ],
             ];
 
             foreach ($listMenu as $role) 

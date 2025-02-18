@@ -17,6 +17,8 @@ use App\Models\Company;
 use App\Models\Division;
 use App\Models\UserStatus;
 
+use App\Helpers\Access;
+
 use App\Rules\MatchOldPassword;
 use Carbon\Carbon;
 class UserController extends Controller
@@ -247,13 +249,13 @@ class UserController extends Controller
     {
         $userEdit = User::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         $userApps = UserStatus::where('user_id', $userEdit->id)->orderby('last_scheduled_checkin','desc')->paginate(5);
-
+        $permissionEditProfile = Access::can('edit_profile_all_user','users');
         
-        if($userEdit->id != Auth::user()->id)
+        if(($userEdit->id != Auth::user()->id) && !$permissionEditProfile)
         {
             return redirect()->back();
         }
-        return view('user.edit', compact('userEdit','userApps'));
+        return view('user.edit', compact('userEdit','userApps','permissionEditProfile'));
     }
 
     /**
@@ -265,10 +267,18 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
             'oldPassword' => ['nullable', new MatchOldPassword],
+            'background' => 'nullable|string',
+            'experience' => 'nullable|string',
+            'skill' => 'nullable|string',
+            'achievement' => 'nullable|array',
+            'failure' => 'nullable|array',
         ]);
 
         $user = User::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-        if($user->id != Auth::user()->id)
+        $permissionEditProfile = Access::can('edit_profile_all_user','users');
+
+        
+        if($user->id != Auth::user()->id && !$permissionEditProfile)
         {
             return redirect()->back();
         }
@@ -291,6 +301,30 @@ class UserController extends Controller
             // $user = Auth::user();
             $user->id_card_image = $filePath;
         }
+        
+        // **Update Background, Experience, Skill**
+        $user->background = $request->post('background');
+        $user->experience = $request->post('experience');
+        $user->skill = $request->post('skill');
+
+        // **Achievement & Failure**
+        $newAchievements = $request->post('achievement', []);
+        $newFailures = $request->post('failure', []);
+
+        // Ambil data lama dari database
+        $existingAchievements = json_decode($user->achievement, true) ?? [];
+        $existingFailures = json_decode($user->failure, true) ?? [];
+
+        if (Access::can('edit_profile_all_user','users')) 
+        {
+            // Jika ROOT atau ADMIN, izinkan update penuh
+            $user->achievement = json_encode($newAchievements);
+            $user->failure = json_encode($newFailures);
+        } else {
+            // Role lain hanya boleh menambahkan, tidak bisa menghapus
+            $user->achievement = json_encode(array_unique(array_merge($existingAchievements, $newAchievements)));
+            $user->failure = json_encode(array_unique(array_merge($existingFailures, $newFailures)));
+        }
 
         if($request->post('oldPassword'))
         {
@@ -311,7 +345,13 @@ class UserController extends Controller
 
         $user->save();
 
-        return redirect()->to(route('home'))->with('updateProfile',true);   
+        if(Access::can('edit_profile_all_user','users'))
+        {
+            return redirect()->to(route('user.index'))->with('update',true);
+        }else
+        {
+            return redirect()->to(route('home'))->with('updateProfile',true);   
+        }
     }
 
     public function updatefcm(Request $request)
