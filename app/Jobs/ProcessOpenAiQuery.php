@@ -36,7 +36,7 @@ class ProcessOpenAiQuery implements ShouldQueue
         
         // Simpan ke cache atau database jika diperlukan
         cache()->put("ai_response_{$this->userId}", [
-            'analysis' => $data['Analysis'],
+            'analysis' => $data['Analysis']  ?? "Not found Analysis",
             'trust_score' => $data['trust_score'] ?? 0,
             'execution_score' => $data['execution_score'] ?? 0,
         ], now()->addMinutes(10));

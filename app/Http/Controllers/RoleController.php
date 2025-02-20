@@ -94,7 +94,8 @@ class RoleController extends Controller
             'wilayahs',
             'providers','shipping_rates',
             'provinces','cities','districts','subdistricts','postal_codes',
-            'shipping_calculations'
+            'shipping_calculations',
+            'ask_bos',
         ];
 
         $checked = array_merge($mainMenus);
@@ -218,7 +219,8 @@ class RoleController extends Controller
                 'wilayahs',
                 'providers','shipping_rates',
                 'provinces','cities','districts','subdistricts','postal_codes',
-                'shipping_calculations'
+                'shipping_calculations',
+                'ask_bos',
             ];
         $checked = array_merge($mainMenus);
 
@@ -302,7 +304,8 @@ class RoleController extends Controller
                 'wilayahs',
                 'providers','shipping_rates',
                 'provinces','cities','districts','subdistricts','postal_codes',
-                'shipping_calculations'
+                'shipping_calculations',
+                'ask_bos',
             ];
         
         $checked = array_merge($mainMenus);
