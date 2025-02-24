@@ -96,6 +96,7 @@ class RoleController extends Controller
             'provinces','cities','districts','subdistricts','postal_codes',
             'shipping_calculations',
             'ask_bos',
+            'decisions',
         ];
 
         $checked = array_merge($mainMenus);
@@ -221,6 +222,7 @@ class RoleController extends Controller
                 'provinces','cities','districts','subdistricts','postal_codes',
                 'shipping_calculations',
                 'ask_bos',
+                'decisions',
             ];
         $checked = array_merge($mainMenus);
 
@@ -306,6 +308,7 @@ class RoleController extends Controller
                 'provinces','cities','districts','subdistricts','postal_codes',
                 'shipping_calculations',
                 'ask_bos',
+                'decisions',
             ];
         
         $checked = array_merge($mainMenus);
