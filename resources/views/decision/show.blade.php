@@ -88,7 +88,7 @@
             <div class="card-header" id="headingThree">
                 <h2 class="mb-0">
                     <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                        Profil yang Bertanggung Jawab
+                        Profil yang Bertanggung Jawab (Pelaku)
                     </button>
                 </h2>
             </div>
@@ -113,7 +113,7 @@
             <div class="card-header" id="headingTwo">
                 <h2 class="mb-0">
                     <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                        Profil yang Bertanggung Jawab
+                        Profil yang Bertanggung Jawab (PIC)
                     </button>
                 </h2>
             </div>
