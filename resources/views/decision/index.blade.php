@@ -64,53 +64,15 @@
                     <td>{{ $a->question }}</td>
                     <td style="white-space: nowrap;">
                         @canAccess('update','decisions')
-                        <button class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#shareModal-{{$a->id}}" data-url="{{ route('decision.show', $a) }}">
+                        <button class="btn btn-secondary btn-sm" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#shareModal" 
+                                data-id="{{ $a->id }}"
+                                data-url="{{ route('decision.show', $a) }}"
+                                data-urlupdate="{{ route('decision.update', $a) }}"
+                                data-users="{{ json_encode(json_decode($a->user_sharing ?? '[]')) }}">
                             <i class="fa fa-share-alt"></i>
                         </button>
-                        <!-- Modal -->
-                        <!-- Modal Share -->
-                        <div class="modal fade" id="shareModal-{{$a->id}}" tabindex="-1" role="dialog" aria-labelledby="shareModalLabel" aria-hidden="true">
-                            <div class="modal-dialog" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="shareModalLabel">Bagikan Keputusan</h5>
-                                        <button type="button" class="close btnCloseModal" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <!-- Input URL -->
-                                        <div class="form-group">
-                                            <label for="decisionLink">Link:</label>
-                                            <div class="input-group">
-                                                <input type="text" class="form-control" id="decisionLink" readonly value="{{ route('decision.show', $a) }}">
-                                                <div class="input-group-append">
-                                                    <button class="btn btn-outline-secondary copyLinkBtn" id="copyLinkBtn">Copy Link</button>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Multi-Select User (Select2) -->
-                                            <form action="{{ route('decision.update',$a->id) }}" method="POST">
-                                            @csrf
-                                            @method('PUT')
-                                            <div class="form-group">
-                                                <label for="users">Bagikan ke User:</label>
-                                                <div class="input-group">
-                                                <select class="form-control select2" id="users" name="users[]" multiple="multiple" style="width: 100%;">
-                                                    @foreach($users as $user)
-                                                    <option value="{{ $user->id }}" {{ in_array($user->id, json_decode($a->user_sharing ?? '[]')) ? 'selected' : '' }}>{{ $user->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                </div>
-                                            </div>
-
-                                            <button class="btn-model-click btn btn-primary" >Perbarui Sharing</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         @endcanAccess
                         <!-- end Model -->
                         @canAccess('show','decisions')
@@ -142,88 +104,108 @@
         </div>
     </div>
 </div>
+<!-- Modal Share (Hanya satu modal yang digunakan) -->
+<div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shareModalLabel">Bagikan Keputusan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Input URL -->
+                <div class="form-group">
+                    <label for="decisionLink">Link:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="decisionLink" readonly>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" id="copyLinkBtn">Copy Link</button>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Multi-Select User (Select2) -->
+                <form action="" method="POST" id="shareForm">
+                    @csrf
+                    @method('PUT')
+                    <div class="form-group">
+                        <label for="users">Bagikan ke User:</label>
+                        <div class="input-group">
+                            <select class="form-control select2" id="users" name="users[]" multiple="multiple" style="width: 100%;">
+                                <!-- Opsi ini akan diisi melalui JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Perbarui Sharing</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @stop
 @section('js')
 <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
-    $(document).ready(function() {
-        // Inisialisasi Select2
-        $('.select2').select2({
-            dropdownParent: '.modal',
-            placeholder: "Pilih user",
+$(document).ready(function() {
+    // Inisialisasi Select2
+    $('.select2').select2({
+        placeholder: "Pilih pengguna untuk dibagikan",
+        allowClear: true
+    });
+
+    // Menangani klik tombol untuk mengisi modal dengan data dinamis
+    $('#shareModal').on('show.bs.modal', function(event) {
+        var button = $(event.relatedTarget); // Tombol yang diklik
+        var url = button.data('url'); // Mendapatkan URL
+        var urlupdate = button.data('urlupdate'); // Mendapatkan URL untuk update
+        var id = button.data('id'); // Mendapatkan ID keputusan
+        var selectedUserIds = button.data('users'); // Mendapatkan ID pengguna yang dipilih (array JSON)
+
+        // Mengisi link di modal
+        $('#decisionLink').val(url); // Menampilkan link dalam input readonly
+
+        // Mengatur form action untuk memperbarui keputusan
+        $('#shareForm').attr('action', urlupdate); // Atur action form sesuai ID
+
+        var users = @json($users); // Mengambil data pengguna dari PHP dalam format JSON
+
+        // Menyiapkan elemen select2
+        var select2Element = $('#users');
+
+        // Mengosongkan opsi yang ada sebelumnya dan menambahkan opsi dinamis
+        select2Element.empty();
+
+        // Menggunakan data users untuk membuat opsi dalam select2
+        users.forEach(function(user) {
+            var isSelected = selectedUserIds.includes(user.id); // Memeriksa apakah user sudah dipilih
+            var option = new Option(user.name, user.id, isSelected, isSelected);
+            select2Element.append(option); // Menambahkan opsi ke select2
+        });
+
+        // Menandai nilai yang sudah dipilih di select2
+        select2Element.val(selectedUserIds).trigger('change');
+        
+        // Menginisialisasi select2
+        select2Element.select2({
+            placeholder: "Pilih pengguna untuk dibagikan",
             allowClear: true
         });
-
-        // Set URL ketika modal dibuka
-        $('#shareModal').on('show.bs.modal', function(event) {
-            let button = $(event.relatedTarget);
-            let url = button.data('url');
-
-            $('#decisionLink').val(url);
-        });
-
-        // Copy URL ke clipboard
-        $('.copyLinkBtn').on('click', function() {
-            let copyText = document.getElementById("decisionLink");
-            copyText.select();
-            document.execCommand("copy");
-            
-            $(".btnCloseModal").click();
-        });
-
     });
-</script>
-<script>
-    $(document).ready(function () 
-    {
-        $('.select2').select2({
-            width: '100%',
-        });
 
-        let price_buy = document.getElementById("price_buy").value;
-        if (price_buy) 
-        {
-            document.getElementById("price_buy_show").value = price_buy;
-            formatRupiahFormat(document.getElementById("price_buy_show"),"price_buy"); // Format default value
-        }
-
-        let price_sell = document.getElementById("price_sell").value;
-        if (price_sell) 
-        {
-            document.getElementById("price_sell_show").value = price_sell;
-            formatRupiahFormat(document.getElementById("price_sell_show"),"price_sell"); // Format default value
-        }
+    // Tombol untuk menyalin link
+    $('#copyLinkBtn').on('click', function() {
+        var decisionLink = document.getElementById('decisionLink');
+        decisionLink.select();
+        decisionLink.setSelectionRange(0, 99999); // Untuk perangkat mobile
+        document.execCommand('copy');
     });
-    function formatRupiahFormat(input, inputNonFormat) 
-    {
-        let numStr = input.value.toString().replace(/[^,\d]/g, '');
-        let split = numStr.split(',');
-        let sisa = split[0].length % 3;
-        let rupiah = split[0].substr(0, sisa);
-        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-        if (ribuan) {
-            let separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-
-        rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
-
-        if (numStr === "" || parseInt(numStr) === 0) {
-            input.value = '';
-            numStr = 0;
-        } else {
-            // Menghapus angka 0 di depan jika input diawali dengan 0
-            rupiah = rupiah.replace(/^0+/, '');
-            input.value = 'Rp '+rupiah;
-        }
-
-        // Update 'salary' input with non-formatted number
-        document.getElementById(inputNonFormat).value = parseInt(numStr);
-    }
+});
 </script>
 @stop
 @section('css')

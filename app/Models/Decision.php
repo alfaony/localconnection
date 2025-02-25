@@ -47,21 +47,34 @@ class Decision extends Model
 
 
 
-    public function scopeByCompany($query,$companyId)
+    public function scopeByCompany($query,$companyId, $search = null)
     {
         if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
             if(Auth::user()->role->name == RoleSchema::ADMIN)
             {
-                return $query->whereHas('user', function ($query) use ($companyId)
+                return $query->whereHas('user', function ($query) use ($companyId, $search)
                 {
-                    $query->where('company_id', $companyId);
+                    $query->where('company_id', $companyId)
+                        ->when(isset($search), function ($query) use ($search) {
+                            $query->where(function ($q) use ($search) {
+                                $q->where('question', 'LIKE', "%{$search}%")
+                                    ->orWhere('answer', 'LIKE', "%{$search}%");
+                            });
+                        });
                 });
             }else
             {
-                return $query->where(function ($q) use ($companyId) {
+                // dd("here");
+                return $query->where(function ($q) use ($search) {
                     $q->where('user_create_id', Auth::user()->id)
-                      ->orWhereJsonContains('user_sharing', Auth::user()->id);
+                      ->orWhereJsonContains('user_sharing', Auth::user()->id)
+                      ->when(isset($search), function ($query) use ($search) {
+                          $query->where(function ($q) use ($search) {
+                              $q->where('question', 'LIKE', "%{$search}%")
+                                ->orWhere('answer', 'LIKE', "%{$search}%");
+                          });
+                      });
                 });
             }
         }

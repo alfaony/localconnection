@@ -20,9 +20,9 @@ class DecisionController extends Controller
         $search = $request->query('search');
         $users = User::byCompany(Auth::user()->company_id)->get();
 
-        $decisions = Decision::byCompany(Auth::user()->company_id)
-                            ->where('question','LIKE',"%{$search}%")
-                            ->orWhere('answer','LIKE',"%{$search}%")
+        $decisions = Decision::byCompany(Auth::user()->company_id, $search)
+                            // ->where('question','LIKE',"%{$search}%")
+                            // ->orWhere('answer','LIKE',"%{$search}%")
                             ->paginate(10);
         return view('decision.index', compact('decisions','users'));
     }
