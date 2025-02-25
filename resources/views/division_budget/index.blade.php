@@ -48,11 +48,11 @@
             <tbody>
                 @foreach($divisionBudgets as $budget)
                 <tr>
-                    <td>{{ $budget->name }}</td>
-                    <td>{{ $budget->division->name }}</td>
-                    <td>{{ 'Rp. '.number_format($budget->initial_budget,0,',','.') }}</td>
-                    <td>{{ 'Rp. '.number_format($budget->amount,0,',','.') }}</td>
-                    <td>{{ $budget->budget_usage_percentage }}%</td>
+                    <td>{{ $budget->name ?? "" }}</td>
+                    <td>{{ $budget->division ? $budget->division->name : "" }}</td>
+                    <td>{{ $budget->initial_budget ? 'Rp. '.number_format($budget->initial_budget,0,',','.') : ""}}</td>
+                    <td>{{ $budget->amount ? 'Rp. '.number_format($budget->amount,0,',','.') : ""}}</td>
+                    <td>{{ $budget->budget_usage_percentage ."%" ?? "0%"}}</td>
                     <td>
                         @if(is_null($budget->is_approved))
                             @if($approval)
