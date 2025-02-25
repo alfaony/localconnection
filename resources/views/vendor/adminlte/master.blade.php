@@ -147,6 +147,66 @@
             });
         }
     </script>
+    @canAccess('index','ask_bos')
+    @if (!request()->is('ask-bos'))
+    <a href="{{ route('ask-bos.index') }}" class="floating-btn" title="Tanya BOS">
+        <i class="fa fa-question-circle"></i>
+        <span class="floating-text">ASK BOS</span>
+    </a>
+
+    <style>
+        .floating-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: #fff;
+            width: auto;
+            height: 60px;
+            border-radius: 30px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1050;
+        }
+
+        .floating-btn i {
+            font-size: 24px;
+        }
+
+        .floating-btn .floating-text {
+            display: block;
+            font-size: 16px;
+        }
+
+        /* Hover effect */
+        .floating-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        /* Untuk tampilan mobile, hanya tampil ikon saja */
+        @media (max-width: 480px) {
+            .floating-btn {
+                width: 60px;
+                height: 60px;
+                justify-content: center;
+                padding: 0;
+            }
+
+            .floating-btn .floating-text {
+                display: none;
+            }
+        }
+    </style>
+    @endif
+    @endcanAccess
     <footer class="main-footer" >
         <strong>Copyright © 2020-2023 Thrive IT Solution</strong>
     </footer>

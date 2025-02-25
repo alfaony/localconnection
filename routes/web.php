@@ -78,6 +78,8 @@ use App\Http\Controllers\PostalCodeController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\ShippingCalculationController;
 use App\Http\Controllers\AskBosController;
+use App\Http\Controllers\DecisionController;
+
 
 
 
@@ -371,6 +373,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('ask-bos/checkResponse', [AskBosController::class, 'checkResponse'])->name('check.response');
   Route::post('ask-bos/ask', [AskBosController::class, 'ask'])->name('ask.bos');
   Route::post('ask-bos/makeDesition', [AskBosController::class, 'makeDesition'])->name('ask.makeDesition');
+  
+  Route::put('decision/approvement/{id}', [DecisionController::class, 'approvement'])->name('decision.approvement');
+Route::resource('decision', DecisionController::class)->except(['create']);
 });
 
 

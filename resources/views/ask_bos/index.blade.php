@@ -71,14 +71,34 @@
 
         <!-- Results -->
          @canAccess('checkResponse','ask_bos')
-        <div id="resultSection" class="mt-5">
-            <h3 class="text-primary mb-3">Hasil Analisis</h3>
-            <ul class="list-group">
-                <li class="list-group-item"><b>Analisis:</b> <span id="analysisResult">-</span></li>
-                <li class="list-group-item"><b>Trust Score:</b> <span id="trustScoreResult">-</span></li>
-                <li class="list-group-item"><b>Execution Score:</b> <span id="executionScoreResult">-</span></li>
-            </ul>
-        </div>
+         <form action="{{ route('decision.store') }}" method="post">
+            @csrf
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="resultSection" class="mt-5">
+                        <h3 class="text-primary mb-3">Hasil Analisa</h3>
+        
+                        <input type="hidden" name="responsible" id="responsibleResult" />
+                        <input type="hidden" name="accountable" id="accountableResult" />
+                        <input type="hidden" name="consult" id="consultResult" />
+                        <input type="hidden" name="question" id="questionResult"/>
+                        <input type="hidden" name="analysisResult" id="analysisResultSave"/>
+                        <input type="hidden" name="trustScoreResult" id="trustScoreResultSave"/>
+                        <input type="hidden" name="executionScoreResult" id="executionScoreResultSave"/>
+        
+                        <ul class="list-group">
+                            <li class="list-group-item"><b>Analisis:</b> <span id="analysisResult">-</span></li>
+                            <li class="list-group-item"><b>Trust Score:</b> <span id="trustScoreResult">-</span></li>
+                            <li class="list-group-item"><b>Execution Score:</b> <span id="executionScoreResult">-</span></li>
+                        </ul>
+                    </div>
+                     @canAccess('store','decisions')
+                    <div class="d-flex justify-content-end mt-2">
+                        <button type="submit" id="submitDecision" class="btn btn-primary" style="display:none;" onclick="return confirm('Yakin ingin menyimpan keputusan?')">Simpan</button>
+                    </div>
+                    @endcanAccess
+                </div>
+        </form>
         @endcanAccess
     </div>
 </div>
@@ -93,6 +113,7 @@
                 </button>
             </div>
             <div class="modal-body">
+                @canAccess('store','decisions')
                 <form id="decisionForm">
                     <div class="mb-3">
                         <label for="responsible" class="form-label">Responsible</label>
@@ -125,6 +146,7 @@
                         </select>
                     </div>
                 </form>
+                @endcanAccess
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" id="closeModal">Close</button>
@@ -166,7 +188,8 @@
         const decisionButton = document.getElementById('decisionButton');
         const submitDecisionButton = document.getElementById('submitDecisionButton');
         const askButton = document.getElementById('askButton');
-
+        
+        document.getElementById('submitDecision').style.display = 'none';
 
         // Show Modal when "Make Decision" is clicked
         decisionButton.addEventListener('click', function () {
@@ -182,9 +205,17 @@
             const consult = document.getElementById('consult').value;
             const question = document.getElementById('questionInput').value;
 
+            document.getElementById('questionResult').value = '';
+            document.getElementById('responsibleResult').value = '';
+            document.getElementById('accountableResult').value = '';
+            document.getElementById('consultResult').value = '';
+            document.getElementById('analysisResultSave').value = '';
+            document.getElementById('trustScoreResultSave').value = '';
+            document.getElementById('executionScoreResultSave').value = '';
+
             document.getElementById('analysisResult').innerText = "Sedang memproses...";
-            document.getElementById('trustScoreResult').innerText = "-";
-            document.getElementById('executionScoreResult').innerText = "-";
+            document.getElementById('trustScoreResult').innerText = "";
+            document.getElementById('executionScoreResult').innerText = "";
 
             if (!question.trim()) {
                 alert('Silakan masukkan pertanyaan sebelum mengirim.');
@@ -197,6 +228,11 @@
                 alert('Please select Responsible, Accountable, and Consult.');
                 return;
             }
+            
+            document.getElementById('questionResult').value = question;
+            document.getElementById('responsibleResult').value = responsible;
+            document.getElementById('accountableResult').value = accountable;
+            document.getElementById('consultResult').value = consult;
 
             // Example: Send the data to the server
             fetch("{{ route('ask.makeDesition') }}", 
@@ -230,14 +266,21 @@
             const question = document.getElementById('questionInput').value;
             const selectedFilters = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(el => el.value);
 
+            document.getElementById('questionResult').value = '';
+            document.getElementById('responsibleResult').value = '';
+            document.getElementById('accountableResult').value = '';
+            document.getElementById('consultResult').value = '';
+
             if (!question.trim()) {
                 alert('Silakan masukkan pertanyaan sebelum mengirim.');
                 return;
             }
 
             document.getElementById('analysisResult').innerText = "Sedang memproses...";
-            document.getElementById('trustScoreResult').innerText = "-";
-            document.getElementById('executionScoreResult').innerText = "-";
+            document.getElementById('trustScoreResult').innerText = "";
+            document.getElementById('executionScoreResult').innerText = "";
+
+            document.getElementById('questionResult').value = question;
 
             fetch("{{ route('ask.bos') }}", {
                 method: "POST",
@@ -259,6 +302,7 @@
             });
         });
 
+        let retryCount = 0;
         function checkResponse() {
             setTimeout(() => {
                 fetch("{{ route('check.response') }}")
@@ -268,12 +312,26 @@
                         document.getElementById('analysisResult').innerText = data.analysis;
                         document.getElementById('trustScoreResult').innerText = `${data.trust_score} `;
                         document.getElementById('executionScoreResult').innerText = `${data.execution_score}`;
-                    } else {
+                        
+                        document.getElementById('analysisResultSave').value = data.analysis;
+                        document.getElementById('trustScoreResultSave').value = `${data.trust_score} `;
+                        document.getElementById('executionScoreResultSave').value = `${data.execution_score}`;
+
+                        if (data.trust_score !== 0 && data.execution_score !== 0) 
+                        {
+                            const submitDecision = document.getElementById('submitDecision');
+                            submitDecision.style.display = 'block';
+                        }
+                    } else if (retryCount < 8) 
+                    {
+                        retryCount += 1;
                         checkResponse(); // Cek kembali jika belum selesai
+                    } else {
+                        document.getElementById('analysisResult').innerText = "Terjadi kesalahan saat memproses. Silakan coba lagi nanti.";
                     }
                 })
                 .catch(error => console.error("Error fetching response:", error));
-            }, 3000); // Polling setiap 3 detik
+            }, 2000); // Polling setiap 3 detik
         }
     });
 </script>

@@ -78,8 +78,9 @@ class AppServiceProvider extends ServiceProvider
 
             $managementCompanyMenu = 
             [
-                'kyes',
                 'ask_bos',
+                'decisions',
+                'kyes',
                 'national_holidays',
                 'employee_checkings',
                 'letter_submissions',
@@ -457,6 +458,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Tanya Bos',
                     'route' => 'ask-bos.index',
                     'icon' => 'fa fa-comments',
+                ],
+                'decisions' => 
+                [
+                    'text' => 'Keputusan',
+                    'route' => 'decision.index',
+                    'icon' => 'fa fa-balance-scale',
                 ],
             ];
 
