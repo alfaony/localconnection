@@ -322,7 +322,7 @@
                             const submitDecision = document.getElementById('submitDecision');
                             submitDecision.style.display = 'block';
                         }
-                    } else if (retryCount < 6) 
+                    } else if (retryCount < 8) 
                     {
                         retryCount += 1;
                         checkResponse(); // Cek kembali jika belum selesai
