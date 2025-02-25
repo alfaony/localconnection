@@ -42,7 +42,7 @@ class UpdateDailyTasks extends Command
                 $tasks = DailyTask::whereHas('taskStatus', function ($query) {
                     $query->where('name', ParamSchema::INREVIEW);
                 })
-                ->whereDate('end_date', '<=', Carbon::create(2024, 9, 6))
+                ->whereDate('end_date', '<=', Carbon::create(2025, 2, 5))
                 ->get();
     
                 foreach ($tasks as $task) {
