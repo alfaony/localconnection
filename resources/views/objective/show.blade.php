@@ -3,7 +3,7 @@
 @section('title', 'Objective Details')
 
 @section('content_header')
-    <h1>Objective Details - {{ $objective->name }}</h1>
+    <h1>Objective Details - {{ $objective->name ?? '' }}</h1>
 @stop
 
 @section('content')
