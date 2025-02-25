@@ -16,12 +16,12 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ route('objective.index') }}">Objective</a></li>
-            <li class="breadcrumb-item active" aria-current="page"> {{ $objective->name }}</li>
+            <li class="breadcrumb-item active" aria-current="page"> {{ $objective->name ?? '' }}</li>
         </ol>
     </nav>
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">Key Results for {{ $objective->name }}</h5>
+            <h5 class="card-title">Key Results for {{ $objective->name ?? '' }}</h5>
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
@@ -37,9 +37,9 @@
                     <tbody>
                         @foreach($objective->keyResults as $keyResult)
                             <tr>
-                                <td>{{ $keyResult->result }}</td>
-                                <td>{{ $keyResult->dateShow }}</td>
-                                <td>{{ $keyResult->dailyTasks->count() }}</td>
+                                <td>{{ $keyResult->result ?? ""}}</td>
+                                <td>{{ $keyResult->dateShow ?? ""}}</td>
+                                <td>{{ $keyResult->dailyTasks->count() ?? ""}}</td>
                                 @canAccess('show','objectives')
                                 <td>
                                     <a href="{{ route('objective.showtask', $keyResult->slug) }}" class="btn btn-sm btn-info"><i class="fa fa-eye"></i> Tugas</a>
