@@ -158,7 +158,4 @@
 @section('js')
 <!-- ✅ Pastikan jQuery Dimuat Terlebih Dahulu -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- ✅ Pastikan Bootstrap JS Dimuat Setelah jQuery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
 @stop
