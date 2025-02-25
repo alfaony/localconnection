@@ -92,9 +92,11 @@
                             <li class="list-group-item"><b>Execution Score:</b> <span id="executionScoreResult">-</span></li>
                         </ul>
                     </div>
+                     @canAccess('store','decisions')
                     <div class="d-flex justify-content-end mt-2">
-                        <button type="submit" id="submitDecision" class="btn btn-primary" style="display:none;">Simpan</button>
+                        <button type="submit" id="submitDecision" class="btn btn-primary" style="display:none;" onclick="return confirm('Yakin ingin menyimpan keputusan?')">Simpan</button>
                     </div>
+                    @endcanAccess
                 </div>
         </form>
         @endcanAccess
