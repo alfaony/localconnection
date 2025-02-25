@@ -38,8 +38,8 @@
         <tbody>
         @foreach($objectives as $objective)
             <tr>
-                <td>{{ $objective->name }}</td>
-                <td>{{ $objective->division->name }}</td>
+                <td>{{ $objective->name ?? ""}}</td>
+                <td>{{ $objective->division ? $objective->division->name : "" }}</td>
                 <td>{{ $objective->dateShow }}</td>
                 <td>
                     @canAccess('show','objectives')

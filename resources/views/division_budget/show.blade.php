@@ -16,18 +16,18 @@
 </div>
 <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
-        <h3 class="card-title">{{ $divisionBudget->name }}</h3>
+        <h3 class="card-title">{{ $divisionBudget->name ?? "" }}</h3>
     </div>
     <div class="card-body">
         <div class="row mb-4">
             <div class="col-md-6">
-                <p><strong>Divisi:</strong> {{ $divisionBudget->division->name }}</p>
-                <p><strong>Nama Anggaran:</strong> {{ $divisionBudget->name }}</p>
-                <p><strong>Persentase Penyerapan:</strong> {{ $divisionBudget->budget_usage_percentage }}%</p>
+                <p><strong>Divisi:</strong> {{ $divisionBudget->division ? $divisionBudget->division->name  : ""}}</p>
+                <p><strong>Nama Anggaran:</strong> {{ $divisionBudget->name ?? ""}}</p>
+                <p><strong>Persentase Penyerapan:</strong> {{ $divisionBudget->budget_usage_percentage ."%" ?? ""}}</p>
             </div>
             <div class="col-md-6">
-                <p><strong>Anggaran Awal:</strong> Rp {{ number_format($divisionBudget->initial_budget, 0, ',', '.') }}</p>
-                <p><strong>Sisa Anggaran:</strong> Rp {{ number_format($divisionBudget->amount, 0, ',', '.') }}</p>
+                <p><strong>Anggaran Awal:</strong>  {{ $divisionBudget->initial_budget ? 'Rp. '.number_format($divisionBudget->initial_budget, 0, ',', '.') : "" }}</p>
+                <p><strong>Sisa Anggaran:</strong>  {{ $divisionBudget->amount ? "Rp. ".number_format($divisionBudget->amount, 0, ',', '.') : ""}}</p>
             </div>
             <div class="col-md-12">
                 <h6><Strong>Deskripsi</Strong></h6>
@@ -48,7 +48,7 @@
                 <tbody>
                     @foreach($divisionBudget->quotes as $quote)
                     <tr>
-                        <td>{{ $quote->number_result }}</td>
+                        <td>{{ $quote->number_result ?? "" }}</td>
                         <td>Rp {{ number_format($quote->total, 0, ',', '.') }}</td>
                         <td>
                             <a target="_blank" href="{{ route('quote.download.pdf', $quote->slug) }}" class="btn btn-sm btn-primary">
