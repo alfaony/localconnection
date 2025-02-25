@@ -19,7 +19,7 @@ class PermissionForMenuDecisionSeeder extends Seeder
      */
     public function run()
     {
-        $invoices = ['index','store','update','delete','approvement','show'];
+        $invoices = ['index','store','update','destroy','approvement','show'];
 
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $admin = Role::where('name',RoleSchema::ADMIN)->first();

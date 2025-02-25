@@ -190,7 +190,7 @@ class AskBosController extends Controller
             $prompt .= "Consult : Tidak Ada\n";
         }
         $prompt .= "Tuliskan hasil analisa dalam format json seperti berikut: \n";
-        $prompt .= "- Analysis: [Hasil analisis dalam bentuk string HTML format]\n";
+        $prompt .= "- Analysis: [Hasil analisis]\n";
         $prompt .= "- trust_score: [Nilai trust score dalam angka, 0-100]\n";
         $prompt .= "- execution_score: [Nilai  Execution Score dalam angka, 0-100]\n";
 

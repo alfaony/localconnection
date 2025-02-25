@@ -375,7 +375,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('ask-bos/makeDesition', [AskBosController::class, 'makeDesition'])->name('ask.makeDesition');
   
   Route::put('decision/approvement/{id}', [DecisionController::class, 'approvement'])->name('decision.approvement');
-  Route::resource('decision', DecisionController::class)->except(['create']);
+Route::resource('decision', DecisionController::class)->except(['create']);
 });
 
 

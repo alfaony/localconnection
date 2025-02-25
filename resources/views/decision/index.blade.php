@@ -117,11 +117,11 @@
                         <a href="{{ route('decision.show',$a) }}" class="btn btn-primary btn-sm"><i class="fa fa-eye"></i></a>
                         @endcanAccess
 
-                        @canAccess('delete','decisions')
+                        @canAccess('destroy','decisions')
                         @if(!$a->is_approve)
                         <form method="post" action="{{ route('decision.destroy',$a) }}" style="display: inline;">
                             @csrf
-                            @method('delete')
+                            @method('DELETE')
                             @canAccess('destroy','products')
                             <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
                             @endcanAccess

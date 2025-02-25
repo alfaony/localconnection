@@ -315,8 +315,11 @@
                         document.getElementById('trustScoreResultSave').value = `${data.trust_score} `;
                         document.getElementById('executionScoreResultSave').value = `${data.execution_score}`;
 
-                        const submitDecision = document.getElementById('submitDecision');
-                        submitDecision.style.display = 'block';
+                        if (data.trust_score !== 0 && data.execution_score !== 0) 
+                        {
+                            const submitDecision = document.getElementById('submitDecision');
+                            submitDecision.style.display = 'block';
+                        }
                     } else if (retryCount < 6) 
                     {
                         retryCount += 1;

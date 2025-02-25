@@ -52,6 +52,7 @@
 </div>
 
 <div class="row mt-3">
+    @if($decision->user)
     <div class="col-md-3">
         <div class="card">
             <div class="card-header" id="headingOne">
@@ -75,6 +76,8 @@
             </div>
         </div>
     </div>
+    @endif
+    @if($decision->userResponsible)
     <div class="col-md-3">
         <div class="card">
             <div class="card-header" id="headingThree">
@@ -98,6 +101,8 @@
             </div>
         </div>
     </div>
+    @endif
+    @if($decision->userAccount)
     <div class="col-md-3">
         <div class="card">
             <div class="card-header" id="headingTwo">
@@ -121,7 +126,9 @@
             </div>
         </div>
     </div>
+    @endif
 
+    @if($decision->userConsult)
     <div class="col-md-3">
         <div class="card">
             <div class="card-header" id="headingFour">
@@ -145,6 +152,7 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 @stop
 @section('js')
