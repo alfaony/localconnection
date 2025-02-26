@@ -7,8 +7,8 @@ use App\Models\DailyTask;
 use App\Models\TaskStatus;
 use Illuminate\Support\Facades\DB;
 use App\Models\DailyTaskStatusRecord;
-use App\Models\DailyTaskMessage;
 use Illuminate\Support\Facades\Log;
+use App\Models\DailyTaskMessage;
 use Carbon\Carbon;
 use App\Schemas\ParamSchema;
 
@@ -98,7 +98,6 @@ class UpdateTask extends Command
             return $this->info("Points updated and tasks marked as complete successfully!");
         } catch (\Exception $e) {
             // Jika ada error, lakukan rollback otomatis
-            dd($e);
             DB::rollBack();
             Log::error($e->getMessage());
 
