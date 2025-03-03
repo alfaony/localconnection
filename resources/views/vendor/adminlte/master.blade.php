@@ -155,40 +155,49 @@
     </a>
 
     <style>
-        .floating-btn {
+       .floating-btn 
+       {
             position: fixed;
             bottom: 20px;
             right: 20px;
             background-color: #007bff;
             color: #fff;
-            width: auto;
-            height: 60px;
-            border-radius: 30px;
-            padding: 0 20px;
+            height: 50px;
+            border-radius: 25px;
+            padding: 0 15px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-            transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
+            gap: 8px;
+            box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease-in-out;
             text-decoration: none;
-            font-size: 18px;
+            font-size: 14px;
             font-weight: bold;
             z-index: 1050;
+            white-space: nowrap;
+            opacity: 0.9;
         }
 
         .floating-btn i {
-            font-size: 24px;
+            font-size: 20px;
         }
 
         .floating-btn .floating-text {
             display: block;
-            font-size: 16px;
+            font-size: 13px;
         }
 
-        /* Hover effect */
+        /* Hover effect yang lebih smooth */
         .floating-btn:hover {
-            background-color: #0056b3;
-            transform: scale(1.05);
+            background-color:rgb(255, 255, 255);
+            transform: translateY(-2px);
+            box-shadow: 0px 5px 12px rgba(0, 0, 0, 0.4);
+            opacity: 1;
+        }
+
+        /* Efek klik (Active) */
+        .floating-btn:active {
+            transform: translateY(0px) scale(0.97);
         }
 
         /* Untuk tampilan mobile, hanya tampil ikon saja */
