@@ -295,7 +295,7 @@
                 <label for="point">Poin</label>
                 <input type="number" name="point" class="form-control" value="{{ $dailytask->point }}">
             </div>
-            <div class="d-flex justify-content-end">
+            <div class="d-flex justify-content-start">
                 <button type="button" id="submitApprovement" class="btn btn-success mt-3">Simpan Tugas</button>
                 @if($dailytaskNext)
                 <button type="button" id="submitAndContinue" data-next-id="{{ $dailytaskNext->id }}"class="btn btn-success mt-3 ml-1">Simpan Tugas dan Lanjutkan</button>
