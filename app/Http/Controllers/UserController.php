@@ -36,7 +36,18 @@ class UserController extends Controller
         $divisions = Division::byCompany(Auth::user()->company_id)->get();
         $dayofweek = config('custom.daysOfWeek');
         
-        if(Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::HR)
+        if(Auth::user()->role->name == RoleSchema::ROOT)
+        {
+            $companyAccess = true;
+            $roleAccess = true;
+
+            $role = Role::get();
+            $user = User::where('email','like', '%' . $request->get('email') . '%')
+                    ->OrderBy('name','asc')->paginate(10);
+            $users = User:: get();
+
+            $totalUser = User::where('delete_able',1)->count();
+        }else
         {
             $roleAccess = true;
 
@@ -48,30 +59,6 @@ class UserController extends Controller
             $users = User::byCompany(Auth::user()->company_id)->get();
 
             $totalUser = User::byCompany(Auth::user()->company_id)->where('delete_able',1)->count();
-        }
-        elseif((Auth::user()->role->name != RoleSchema::ADMIN && Auth::user()->role->name != RoleSchema::ROOT))
-        {
-            $role = Role::where('name','!=',RoleSchema::ROOT)->get();
-            $user = User::byCompany(Auth::user()->company_id)->where('delete_able',1)
-                ->where('email','like', '%' . $request->get('email') . '%')
-                ->where('id',Auth::user()->id)
-                ->OrderBy('name','asc')->paginate(10);
-            $users = User::byCompany(Auth::user()->company_id)->get();
-
-            $totalUser = User::byCompany(Auth::user()->company_id)->where('delete_able',1)->where('id',[Auth::user()->id])->count();
-
-        }
-        else
-        {
-            $companyAccess = true;
-            $roleAccess = true;
-
-            $role = Role::get();
-            $user = User::where('email','like', '%' . $request->get('email') . '%')
-                    ->OrderBy('name','asc')->paginate(10);
-            $users = User:: get();
-
-            $totalUser = User::where('delete_able',1)->count();
         }
 
         return view('user.index',compact('user','totalUser','role','company', 'companyAccess', 'roleAccess','users', 'divisions', 'dayofweek'));
@@ -140,7 +127,17 @@ class UserController extends Controller
         $roleAccess = false;
 
 
-        if(Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::HR)
+        if(Auth::user()->role->name == RoleSchema::ROOT)
+        {
+            $companyAccess = true;
+            $roleAccess = true;
+
+            $role = Role::get();
+            $user = User::OrderBy('name','asc')->paginate(10);
+            $users = User:: get();
+
+            $totalUser = User::where('delete_able',1)->count();
+        }else
         {
             $roleAccess = true;
 
@@ -151,32 +148,6 @@ class UserController extends Controller
             $users = User::byCompany(Auth::user()->company_id)->get();
 
             $totalUser = User::byCompany(Auth::user()->company_id)->where('delete_able',1)->count();
-        }
-        elseif((Auth::user()->role->name != RoleSchema::ADMIN && Auth::user()->role->name != RoleSchema::ROOT))
-        {
-            $role = Role::where('name','!=',RoleSchema::ROOT)->get();
-            $user = User::where('delete_able',1)
-                ->byCompany(Auth::user()->company_id)
-                ->where('id',Auth::user()->id)
-                ->OrderBy('name','asc')->paginate(10);
-            $totalUser = User::where('delete_able',1)->byCompany(Auth::user()->company_id)->where('id',Auth::user()->id)->count();
-            $users = User::byCompany(Auth::user()->company_id)->get();
-
-        }
-        else
-        {
-            // if($userEdit->role->name != RoleSchema::ROOT)
-            // {
-                $companyAccess = true;
-                $roleAccess = true;
-            // }
-
-            $role = Role::get();
-            $users = User::get();
-
-            $user = User::where('delete_able',1)
-            ->OrderBy('name','asc')->paginate(10);
-            $totalUser = User::where('delete_able',1)->count();
         }
 
 

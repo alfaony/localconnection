@@ -47,9 +47,10 @@ class UpdateTask extends Command
             $weeksAgo = (int) $this->option('subweek');
             
             // Validasi input email dan status
-            if (!$userEmail || !$taskStatusFrom || !$taskStatusTo || !$weeksAgo) {
+            if (!$userEmail || !$taskStatusFrom || !$taskStatusTo ) {
                 return $this->error("You must provide email, status, and subweek values.");
             }
+            dd($weeksAgo);
 
             // Hitung tanggal batas berdasarkan minggu yang diberikan
             $endDate = Carbon::now()->subWeeks($weeksAgo);
