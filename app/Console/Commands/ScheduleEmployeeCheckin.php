@@ -52,7 +52,7 @@ class ScheduleEmployeeCheckin extends Command
         foreach ($users as $user) 
         {
             $customRestTime = $user->custom_rest_times[$thisDay] ?? null;
-            if (true && isset($customRestTime) && !$customRestTime['start'] && !$customRestTime['end'])
+            if ($today->isWeekend() && isset($customRestTime) && !$customRestTime['start'] && !$customRestTime['end'])
             {
                 $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
             }else
