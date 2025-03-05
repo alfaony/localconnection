@@ -29,16 +29,11 @@ class ScheduleEmployeeCheckin extends Command
     public function handle()
     {
         $today = Carbon::today();
+        $thisDay = Str::lower(Carbon::today()->format('l')); // Mendapatkan nama hari saat ini (misalnya, "Monday")
         
         // 1. Cek jika hari ini adalah hari libur nasional
         if ($this->isNationalHoliday($today)) {
             $this->info("Hari ini adalah hari libur nasional. Tidak ada jadwal check-in.");
-            return;
-        }
-        
-        // 2. Cek jika hari ini adalah akhir pekan (Sabtu/Minggu)
-        if ($today->isWeekend()) {
-            $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
             return;
         }
         
@@ -54,8 +49,16 @@ class ScheduleEmployeeCheckin extends Command
         ->get();
         
 
-        foreach ($users as $user) {
-            $this->scheduleCheckinForUser($user, $onLeaveEmails);
+        foreach ($users as $user) 
+        {
+            $customRestTime = $user->custom_rest_times[$thisDay] ?? null;
+            if (true && isset($customRestTime) && !$customRestTime['start'] && !$customRestTime['end'])
+            {
+                $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
+            }else
+            {
+                $this->scheduleCheckinForUser($user, $onLeaveEmails);
+            }
         }
         
         $this->info("Jadwal check-in selesai dibuat dan disimpan di Firebase serta database lokal.");
@@ -95,7 +98,7 @@ class ScheduleEmployeeCheckin extends Command
         }
         else
         {
-            $checkinTimes = $this->generateRandomCheckinTimes($user->start_time, $user->end_time, $user->rest_time);
+            // $checkinTimes = $this->generateRandomCheckinTimes($user->start_time, $user->end_time, $user->rest_time);
             $checkinTimes = $this->generateRandomCheckinTimesUser($user);
             foreach ($checkinTimes as $time) 
             {
