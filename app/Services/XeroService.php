@@ -225,6 +225,8 @@ class XeroService
             throw new \Exception('Invoice is not valid.');
         }
         
+        $existingLineItem = $this->getLineItemsExisting($invoice, $lineItems);
+
         try {
             $data = [
                 "Type" => "ACCREC",  // ACCREC for sales invoices
@@ -235,7 +237,7 @@ class XeroService
                 ],
                 "Date" => Carbon::parse($invoice->start_date)->format('Y-m-d'),
                 "DueDate" => Carbon::parse($invoice->end_date)->format('Y-m-d'),
-                "LineItems" => $lineItems, // Line items array from getLineItems method
+                "LineItems" => $existingLineItem, // Line items array from getLineItems method
                 "Status" => $status, // Invoice status
                 "LineAmountTypes" => (!empty($invoice->tax) && $invoice->tax > 0) ? "Exclusive" : "NoTax",
             ];
@@ -490,6 +492,37 @@ class XeroService
             $this->createProductItem($postItems);       
         }
         
+        return $lineItems;
+    }
+
+    protected function getLineItemsExisting($invoiceId, $lineItems)
+    {
+        $xeroInvoice = $this->xeroBos->get('Invoices/'.$invoiceId->invoice_xero_id);
+        $invoice = $xeroInvoice['body']['Invoices'][0]['LineItems'];
+
+        // Looping untuk update lineItems berdasarkan invoice dari Xero
+        foreach ($lineItems as &$lineItem) {
+            foreach ($invoice as $invItem) {
+                // Jika ItemCode sama, update AccountCode dan TaxType
+                if (isset($lineItem['ItemCode']) && isset($invItem['ItemCode']) && $lineItem['ItemCode'] === $invItem['ItemCode']) {
+                    $lineItem['AccountCode'] = $invItem['AccountCode'];
+                    $lineItem['TaxType'] = $invItem['TaxType'];
+                    break; // Tidak perlu lanjut jika sudah ditemukan
+                }
+            }
+
+            // Jika tidak memiliki ItemCode tetapi Description sama dengan ParamSchema::ADDTIONALCHARGES
+            if (!isset($lineItem['ItemCode']) && isset($lineItem['Description']) && $lineItem['Description'] === ParamSchema::ADDTIONALCHARGES) {
+                foreach ($invoice as $invItem) {
+                    if (isset($invItem['Description']) && in_array($invItem['Description'], [ParamSchema::SERVICEFEE, ParamSchema::ADDTIONALCHARGES, ParamSchema::DISCOUNT])) {
+                        $lineItem['AccountCode'] = $invItem['AccountCode'];
+                        $lineItem['TaxType'] = $invItem['TaxType'];
+                        break; // Tidak perlu lanjut jika sudah ditemukan
+                    }
+                }
+            }
+        }
+
         return $lineItems;
     }
 
