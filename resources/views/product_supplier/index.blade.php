@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Pemasok Produk')
+@section('title', 'Supplier Produk')
 
 @section('content_header')
-    <h1>Pemasok Produk</h1>
+    <h1>Supplier Produk</h1>
 @stop
 
 @section('content')
