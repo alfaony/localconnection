@@ -79,6 +79,8 @@ use App\Http\Controllers\CityController;
 use App\Http\Controllers\ShippingCalculationController;
 use App\Http\Controllers\AskBosController;
 use App\Http\Controllers\DecisionController;
+use App\Http\Controllers\SupplierCategoryController;
+use App\Http\Controllers\ProductSupplierController;
 
 
 
@@ -375,7 +377,13 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('ask-bos/makeDesition', [AskBosController::class, 'makeDesition'])->name('ask.makeDesition');
   
   Route::put('decision/approvement/{id}', [DecisionController::class, 'approvement'])->name('decision.approvement');
-Route::resource('decision', DecisionController::class)->except(['create']);
+  Route::resource('decision', DecisionController::class)->except(['create']);
+
+  Route::resource('supplier-category', SupplierCategoryController::class);
+  
+  Route::get('product-supplier/importProgress/{batchId}', [ProductSupplierController::class, 'importProgress']);
+  Route::post('product-supplier/import', [ProductSupplierController::class, 'import'])->name('product-supplier.import');
+  Route::resource('product-supplier', ProductSupplierController::class);
 });
 
 

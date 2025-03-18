@@ -82,5 +82,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForAskBosSeeder::class);
         $this->call(LetterTypeSkLemburSeeder::class);
         $this->call(PermissionForMenuDecisionSeeder::class);
+        $this->call(PermissionForMenuProductSupplier::class);
+        $this->call(PermissionForMenuSupplierCategory::class);
     }
 }
