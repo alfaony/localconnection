@@ -79,6 +79,7 @@ use App\Http\Controllers\CityController;
 use App\Http\Controllers\ShippingCalculationController;
 use App\Http\Controllers\AskBosController;
 use App\Http\Controllers\DecisionController;
+use App\Http\Controllers\PartnershipAgreementController;
 
 
 
@@ -375,9 +376,11 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('ask-bos/makeDesition', [AskBosController::class, 'makeDesition'])->name('ask.makeDesition');
   
   Route::put('decision/approvement/{id}', [DecisionController::class, 'approvement'])->name('decision.approvement');
-Route::resource('decision', DecisionController::class)->except(['create']);
-});
+  Route::resource('decision', DecisionController::class)->except(['create']);
 
+  Route::get('partnership-agreement/downloadPdf/{id}',[PartnershipAgreementController::class,'downloadPdf'])->name('partnership-agreement.downloadPdf');
+  Route::resource('partnership-agreement', PartnershipAgreementController::class);
+});
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
