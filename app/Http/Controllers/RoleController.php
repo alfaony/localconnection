@@ -98,6 +98,7 @@ class RoleController extends Controller
             'ask_bos',
             'decisions',
             'kyes',
+            'partnership_agreements',
         ];
 
         $checked = array_merge($mainMenus);
@@ -225,6 +226,7 @@ class RoleController extends Controller
                 'ask_bos',
                 'decisions',
                 'kyes',
+                'partnership_agreements',
             ];
         $checked = array_merge($mainMenus);
 
@@ -312,6 +314,7 @@ class RoleController extends Controller
                 'ask_bos',
                 'decisions',
                 'kyes',
+                'partnership_agreements',
             ];
         
         $checked = array_merge($mainMenus);

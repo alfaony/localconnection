@@ -81,6 +81,7 @@ class AppServiceProvider extends ServiceProvider
                 'ask_bos',
                 'decisions',
                 'kyes',
+                'partnership_agreements',
                 'national_holidays',
                 'employee_checkings',
                 'letter_submissions',
@@ -464,6 +465,11 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Keputusan',
                     'route' => 'decision.index',
                     'icon' => 'fa fa-balance-scale',
+                ],
+                'partnership_agreements' => [
+                    'text' => 'Perjanjian Partnership',
+                    'route' => 'partnership-agreement.index',
+                    'icon' => 'fa fa-handshake',
                 ],
             ];
 
