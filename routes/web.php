@@ -136,8 +136,9 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');
 
-Route::get('partnership-agreement/share/{id}',[PartnershipAgreementController::class,'share'])->name('partnership-agreement.share');
 Route::get('partnership-agreement/sharePdf/{id}',[PartnershipAgreementController::class,'sharePdf'])->name('partnership-agreement.sharePdf');
+Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementController::class,'signatureShare'])->name('partnership-agreement.signatureShare');
+
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
@@ -381,9 +382,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('decision/approvement/{id}', [DecisionController::class, 'approvement'])->name('decision.approvement');
   Route::resource('decision', DecisionController::class)->except(['create']);
   
+  Route::get('partnership-agreement/share/{id}',[PartnershipAgreementController::class,'share'])->name('partnership-agreement.share');
   Route::get('partnership-agreement/downloadPdf/{id}',[PartnershipAgreementController::class,'downloadPdf'])->name('partnership-agreement.downloadPdf');
   Route::put('partnership-agreement/approvement/{id}',[PartnershipAgreementController::class,'approvement'])->name('partnership-agreement.approvement');
-  Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementController::class,'signatureShare'])->name('partnership-agreement.signatureShare');
   Route::put('partnership-agreement/signature/{id}',[PartnershipAgreementController::class,'signature'])->name('partnership-agreement.signature');
   Route::post('partnership-agreement/submit/{id}',[PartnershipAgreementController::class,'submit'])->name('partnership-agreement.submit');
   Route::resource('partnership-agreement', PartnershipAgreementController::class);
