@@ -115,23 +115,26 @@
                 </tr>
             </table>
 
-            <div class="row mt-5 mb-1 text-center">
-                <div class="col-5">
+            <div class="row mt-5 mb-5">
+                <div class="col-5 text-center">
                     <p class=" ">
                         Pelanggan/Customer
                     </p>
                 </div>
+            </div>
 
-                <!-- Margin TTD -->
-                <div class="offset-2 col-11 mb-1 mt-1">
-                @if($agreement->getSignature(1))
+            <div class="row mt-5 mb-5">
+                <div class="col-5 text-center">
+                    @if($agreement->getSignature(1))
                     <img src="{{ Storage::url('public/'.$agreement->getSignature(1)->signature) }}" class="img-thumbnail img-signature">
-                @else
+                    @else
                     <div style="min-height: 80px; "></div>
-                @endif
+                    @endif
                 </div>
+            </div>
 
-                <div class="col-5">
+            <div class="row mt-5 mb-5">
+                <div class="col-5 text-center">
                     <p class=" ">
                         <strong>{{ $agreement->getFields(" nama") }}</strong>
                     </p>

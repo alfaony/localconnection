@@ -309,7 +309,7 @@ class PartnershipAgreementController extends Controller
                 $signaturePath = 'signatures/' . uniqid() . '.png';
                 file_put_contents(storage_path('app/public/' . $signaturePath), $imageData);
             }
-            $partnershipAgreement = PartnershipAgreement::byCompany(Auth::user()->company_id)->findOrFail($id);
+            $partnershipAgreement = PartnershipAgreement::findOrFail($id);
     
             // Proceed to store the rest of the data (e.g., save the KTP path, signature path, etc.)
             // Example: save the data in the database
@@ -320,7 +320,7 @@ class PartnershipAgreementController extends Controller
             $agreement->order = $partnershipAgreement->getNextSignatureNumber();
             $agreement->save();
 
-            $partnershiResent = PartnershipAgreement::byCompany(Auth::user()->company_id)->findOrFail($id);
+            $partnershiResent = PartnershipAgreement::findOrFail($id);
             $partnershiResent->status = $partnershiResent->getApprove() ? 'onreview' : 'signature';
             $partnershiResent->save();
             

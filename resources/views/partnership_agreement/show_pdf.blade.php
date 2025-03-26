@@ -46,7 +46,7 @@
             <div class="card-header">
                 <div class="d-flex justify-content-between">
                     <h3 class="card-title">Form Dokumen {{ $agreement->getTransalateSignature() ?? "" }}</h3>
-                    @canAccess('signatureShare','partnership_agreements')
+                    @canAccess('share','partnership_agreements')
                     <div class="col-md-auto">
                         <button type="button" class="btn btn-info" data-toggle="modal" data-target="#modal-share">
                             <i class="fa fa-share-alt"></i> Share
