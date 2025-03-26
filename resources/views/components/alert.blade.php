@@ -20,6 +20,30 @@
 </div>
 @endif
 
+@if(Session::has('submit'))
+<div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    <strong>Berhasil!</strong> Berhasil di Submit.
+</div>
+@endif
+
+@if(Session::has('sign'))
+<div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    <strong>Berhasil!</strong> Berhasil di Sign.
+</div>
+@endif
+
+@if(Session::has('approved'))
+<div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    <strong>Berhasil!</strong> Data berhasil di Setujui.
+</div>
+@endif
+
+@if(Session::has('rejected'))
+<div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+    <strong>Berhasil!</strong> Data berhasil di Tolak.
+</div>
+@endif
+
 @if ($errors->any())
 <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
     <strong>Kesalahan!</strong> Periksa kembali input Anda.
@@ -28,6 +52,5 @@
         <li>{{ $error }}</li>
         @endforeach
     </ul>
-
 </div>
 @endif

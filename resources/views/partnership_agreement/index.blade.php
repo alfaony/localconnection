@@ -54,7 +54,7 @@
                                     <td class="align-middle">{{ $agreement->type->name }}</td>
                                     <td class="align-middle text-center">{{ $agreement->number_result }}</td>
                                     <td class="align-middle text-center">
-                                        <span class="badge badge-pill {{ $agreement->status == 'active' ? 'badge-success' : 'badge-secondary' }}">
+                                        <span class="badge badge-pill {{ $agreement->status_badge }}">
                                             {{ ucfirst($agreement->status) }}
                                         </span>
                                     </td>
@@ -80,11 +80,13 @@
                                         <a href="{{ route('partnership-agreement.edit', $agreement) }}" class="btn btn-sm btn-warning mr-1" title="Edit"><i class="fas fa-edit"></i></a>
                                         @endcanAccess
                                         @canAccess('destroy','partnership_agreements')
+                                        @if($agreement->isPermission('delete'))
                                         <form action="{{ route('partnership-agreement.destroy', $agreement) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus dokumen ini?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger" title="Hapus"><i class="fas fa-trash-alt"></i></button>
                                         </form>
+                                        @endif
                                         @endcanAccess
                                     </td>
                                 </tr>

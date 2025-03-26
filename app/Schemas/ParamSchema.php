@@ -104,4 +104,14 @@ class ParamSchema
     const PENANGGUNGJAWAB = "penanggung_jawab";
 
     const TARGET_CHECKIN = 10;
+
+    const DRAF = "draft";
+
+    const SUBMIT = "submit";
+
+    const SIGNATURE = "signature";
+
+    const ONREVIEW = "onreview";
+
+    const REJECTED = "rejected";
 }

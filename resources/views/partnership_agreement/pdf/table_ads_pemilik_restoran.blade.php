@@ -1334,8 +1334,21 @@
         </div>
     </div>
 
-    <div class="row" style="min-height: 80px; ">
-
+    <div class="row mt-5 mb-5">
+        <div class="col-5 text-justify">
+            @if($agreement->getSignature(1))
+            <img src="{{ Storage::url('public/'.$agreement->getSignature(1)->signature) }}" class="img-thumbnail img-signature">
+            @else
+            <div style="min-height: 80px; "></div>
+            @endif
+        </div>
+        <div class="offset-2 col-5 text-justify">
+            @if($agreement->getSignature(2))
+                <img src="{{ Storage::url('public/'.$agreement->getSignature(2)->signature) }}" class="img-thumbnail img-signature">
+            @else
+                <div style="min-height: 80px; "></div>
+            @endif
+        </div>
     </div>
 
     <div class="row mt-5 mb-5">

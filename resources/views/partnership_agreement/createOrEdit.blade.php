@@ -44,7 +44,7 @@
                                     <option value="">-- Pilih Jenis Dokumen --</option>
                                     @foreach($types as $type)
                                         <option value="{{ $type->id }}" 
-                                            {{ (isset($partnershipAgreement) && $partnershipAgreement->partnership_agreement_type_id == $type->id) || $type->name_format == 'perjanjian_berlangganan_internet' ? 'selected' : '' }} 
+                                            {{ (isset($partnershipAgreement) && $partnershipAgreement->partnership_agreement_type_id == $type->id) ? 'selected' : '' }} 
                                             data-type="{{ $type->name_format }}">
                                             {{ ucfirst(str_replace('_', ' ', $type->name)) }}
                                         </option>

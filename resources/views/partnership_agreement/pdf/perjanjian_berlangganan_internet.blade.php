@@ -123,7 +123,12 @@
                 </div>
 
                 <!-- Margin TTD -->
-                <div class="offset-2 col-11 mb-1 mt-1" style="min-height: 80px; ">
+                <div class="offset-2 col-11 mb-1 mt-1">
+                @if($agreement->getSignature(1))
+                    <img src="{{ Storage::url('public/'.$agreement->getSignature(1)->signature) }}" class="img-thumbnail img-signature">
+                @else
+                    <div style="min-height: 80px; "></div>
+                @endif
                 </div>
 
                 <div class="col-5">

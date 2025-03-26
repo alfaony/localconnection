@@ -21,7 +21,7 @@ class PermissionForMenuPartnershipAgreement extends Seeder
     public function run()
     {   
 
-        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2', 'showtask','downloadPdf','submit','signature'];
+        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2', 'showtask','downloadPdf','submit','signature','approvement','approvementall','signatureShare'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $admin = Role::where('name',RoleSchema::ADMIN)->first();
@@ -39,8 +39,13 @@ class PermissionForMenuPartnershipAgreement extends Seeder
                 'table' => 'partnership_agreements',
                 'model' => 'PartnershipAgreement',
                 'guard_name' => 'web'
-            ]);
-
+            ]); 
+            if (in_array($method,['approvement','approvementall'])) 
+            {
+                PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
+            }
             //assign role & permission
             PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
             PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);

@@ -13,6 +13,7 @@ class PartnershipAgreementType extends Model
     protected $fillable = [
         'name',
         'name_format',
+        'count_signature'
     ];
 }
 

@@ -1,27 +1,11 @@
-@extends('adminlte::page')
+@extends('adminlte::master')
 
-@section('content')
-<div class="row">
+@section('body')
+<div class="row pr-5 pl-5">
     <div class="col-md-12 mt-3">
         @include('components.alert')
     </div>
-    <div class="col-md-12">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('partnership-agreement.index') }}">Perjanjian Kemitraan</a></li>
-            <li class="breadcrumb-item active">{{ $agreement->type->name}}</li>
-        </ol>
-    </div>
-    @if($agreement->isPermission('messageReject') && $agreement->reason)
-    <div class="col-md-12 mt-3">
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Catatan :</strong> {{ $agreement->reason }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    </div>
-    @endif
+
     @if(view()->exists('partnership_agreement.pdf.' . $agreement->type->name_format))
     <div class="card scrollable" id="printThis">
         @include('partnership_agreement.pdf.' . $agreement->type->name_format, ['agreement' => $agreement])
@@ -36,32 +20,28 @@
     </div>
     @endif
 </div>
-
 @if(view()->exists('partnership_agreement.pdf.' . $agreement->type->name_format))
 @if($agreement->isPermission('signature'))
-@canAccess('signature','partnership_agreements')
-<div class="row">
+<div class="row pr-5 pl-5">
     <div class="col-md-12 mt-3">
         <div class="card card-primary">
             <div class="card-header">
                 <div class="d-flex justify-content-between">
                     <h3 class="card-title">Form Dokumen {{ $agreement->getTransalateSignature() ?? "" }}</h3>
-                    @canAccess('signatureShare','partnership_agreements')
-                    <div class="col-md-auto">
-                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#modal-share">
-                            <i class="fa fa-share-alt"></i> Share
-                        </button>
-                    </div>
-                    @endcanAccess
+
                 </div>
 
             </div>
-            <form action="{{ route('partnership-agreement.signature', $agreement->id) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('partnership-agreement.signatureShare', $agreement->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="card-body row">
                     <div class="col-md-6 mb-2 mr-5">
                          <!-- KTP Upload Field -->
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" class="form-control" name="password" placeholder="Enter password to protect link" require>
+                        </div>
                          <div class="form-group">
                              <label>Upload KTP</label>
                              <div class="custom-file">
@@ -123,139 +103,11 @@
         </div>
     </div>
 </div>
-@endcanAccess
 @endif
 @endif
-
-@if(view()->exists('partnership_agreement.pdf.' . $agreement->type->name_format))
-@if($agreement->isPermission('approvement'))
-@canAccess('approvement','partnership_agreements')
-<div class="row">
-    <div class="col-md-12">
-        <div class="card card-primary">
-            <div class="card-header">
-                <h3 class="card-title">Approval Form</h3>
-            </div>
-            <div class="card-body">
-                <!-- Display Signature Details -->
-                <h4>Signatures</h4>
-                <table class="table table-bordered table-striped">
-                    <tbody>
-                        @foreach($agreement->signature as $signature)
-                            <tr>
-                                <td colspan="2">{{ $signature->getTransalateSignature() }}</td>        
-                            </tr>
-                            <tr>
-                                <!-- Displaying the KTP Image -->
-                                <td>
-                                    @if($signature->image_ktp)
-                                        <img src="{{ Storage::url($signature->image_ktp) }}" alt="KTP Image" width="250" class="img-thumbnail">
-                                    @else
-                                        <span>No KTP Image</span>
-                                    @endif
-                                </td>
-
-                                <!-- Displaying the Signature Image -->
-                                <td>
-                                    @if($signature->signature)
-                                        <img src="{{ Storage::url($signature->signature) }}" alt="Signature Image" width="250" class="img-thumbnail">
-                                    @else
-                                        <span>No Signature Image</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-
-                <!-- Approval Form -->
-                <form action="{{ route('partnership-agreement.approvement', $agreement->id) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="form-group">
-                        <label for="approval_status">Approval / Decline</label>
-                        <select class="form-control" name="approval_status" id="approval_status" required>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Declined</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="reason">Reason</label>
-                        <textarea class="form-control" name="reason" id="reason" rows="4" ></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-@endcanAccess
-@endif
-@endif
-
-@if(view()->exists('partnership_agreement.pdf.' . $agreement->type->name_format))
-<div class="d-flex align-items-center justify-content-center">
-    <!-- Penambahan class text-center dan mt-3 -->
-     @if($agreement->isPermission('edit'))
-     @canAccess('edit','partnership_agreements')
-        <a href="{{ route('partnership-agreement.edit',$agreement->id) }}" class="btn btn-warning mb-2 mr-2">
-            <i class="fa fa-edit"></i>Edit
-        </a>
-    @endcanAccess
-    @endif
-    
-    @if($agreement->isPermission('submit'))
-        <form action="{{ route('partnership-agreement.submit', $agreement->id) }}" method="POST">
-            @csrf
-            <button type="submit" class="btn btn-success mb-2 mr-2"
-                onclick="return confirm('Apakah Anda yakin format dokumen ini sudah sesuai untuk di tanda tangani?')">
-                <i class="fa fa-file-signature"></i> Submit</button>
-        </form>
-    @endif
-    
-    @if($agreement->isPermission('download'))
-        <button type="button" id="downloadWorkOrder" class="btn btn-info mb-2 mr-2"><i class="fa fa-file-pdf"></i> Download</button>
-    @endif
-</div>
-@endif
-
-@canAccess('signatureShare','partnership_agreements')
-<div class="modal fade" id="modal-share" tabindex="-1" role="dialog" aria-labelledby="modal-shareLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modal-shareLabel">Share Document</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form id="shareForm" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" class="form-control" id="sharePassword" name="password" placeholder="Enter password to protect link" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="shareLink">Document Link</label>
-                        <input type="text" class="form-control" id="shareLink" readonly>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary" id="submitShareForm">Share Link</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endcanAccess
-
 @stop
 
-@section('js')
+@section('adminlte_js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
@@ -264,61 +116,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
-<script>
-$(document).ready(function() {
-    // Trigger form submission via AJAX when "Share Link" button is clicked
-    $('#shareForm').on('submit', function(e) {
-        e.preventDefault();
-        // Disable button to prevent multiple clicks
-        $("").prop('disabled', true).text('Sharing...');
-
-        // Collect form data
-        var password = $('#sharePassword').val();
-        var id = "{{ $agreement->id }}";  // Using the agreement's slug
-
-        // Prepare data to send
-        var formData = {
-            password: password,
-            _token: '{{ csrf_token() }}', // Include CSRF token
-        };
-
-        let url = "{{ route('partnership-agreement.share',':id') }}";
-        url = url.replace(':id', id);
-
-        $.ajax({
-            url : url,
-            method: 'GET',
-            data: formData,
-            success: function(response) {
-                console.log(response);
-                
-                if (response.success) 
-                {
-                    $("#shareLink").val(response.url);
-
-                    var copyText = document.getElementById('shareLink');
-                    copyText.style.background = 'green';
-                    copyText.style.color = 'white';
-                    copyText.select();
-                    document.execCommand('copy');
-                    alert('Link copied to clipboard');
-
-                } else {
-                    alert('Error: ' + response.message);
-                }
-                // Re-enable the button
-                $('#submitShareForm').prop('disabled', false).text('Share Link');
-            },
-            error: function(xhr, status, error) {
-                // Handle errors
-                alert('Something went wrong. Please try again.');
-                $('#submitShareForm').prop('disabled', false).text('Share Link');
-            }
-        });
-    });
-});
-</script>
-
 <script>
     // Signature Pad Initialization
     let signaturePad = null;
@@ -417,7 +214,7 @@ function prinsts() {
 }
 </script>
 @stop
-@section('css')
+@section('adminlte_css')
 <!-- Select2 CSS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <style>
@@ -521,5 +318,9 @@ hr {
     overflow: auto;
     border: 1px solid #ccc;
 }
+.main-footer 
+{
+    display: none;
+}mi
 </style>
 @stop
