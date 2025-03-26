@@ -21,7 +21,7 @@ class PermissionForMenuPartnershipAgreement extends Seeder
     public function run()
     {   
 
-        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2', 'showtask','downloadPdf','submit','signature','approvement','approvementall','signatureShare'];
+        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2', 'showtask','downloadPdf','submit','signature','approvement','approvementall','share'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $admin = Role::where('name',RoleSchema::ADMIN)->first();
