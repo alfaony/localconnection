@@ -67,6 +67,7 @@ class AppServiceProvider extends ServiceProvider
             $warehouseMenuArray = array();
             $shippingMenuArray = array();
             $wilayahMenuArray = array();
+            $productMenuArray = array();
 
             $equipmentMenu = ['devices','equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
@@ -75,12 +76,14 @@ class AppServiceProvider extends ServiceProvider
             $warehouseMenu = ['sensors','warehouses','zones','racks'];
             $shippingMenu = ['providers','shipping_rates','shipping_calculations'];
             $wilayahMenu = ['provinces','cities','districts','subdistricts','postal_codes'];
+            $productMenu = ['pricelists','products','product_suppliers','supplier_categories'];
 
             $managementCompanyMenu = 
             [
                 'ask_bos',
                 'decisions',
                 'kyes',
+                'partnership_agreements',
                 'national_holidays',
                 'employee_checkings',
                 'letter_submissions',
@@ -93,7 +96,7 @@ class AppServiceProvider extends ServiceProvider
             $managementSalesMenu = 
             [
                 'managers',
-                'products',
+                // 'products',
                 'product_categories',
                 'customers',
                 'quotes',
@@ -465,6 +468,22 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'decision.index',
                     'icon' => 'fa fa-balance-scale',
                 ],
+                'partnership_agreements' => 
+                [
+                    'text' => 'Perjanjian Partnership',
+                    'route' => 'partnership-agreement.index',
+                    'icon' => 'fa fa-handshake',
+                ],
+                'product_suppliers' => [
+                    'text' => 'Data Supplier',
+                    'route' => 'product-supplier.index',
+                    'icon' => 'fa fa-briefcase',
+                ],
+                'supplier_categories' => [
+                    'text' => 'Kategori Supplier',
+                    'route' => 'supplier-category.index',
+                    'icon' => 'fa fa-list',
+                ],
             ];
 
             foreach ($listMenu as $role) 
@@ -556,6 +575,14 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($productMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($productMenuArray,$menus[$role]);
+                }
+            }
+
             $managementSalesMenu = 
             [
                 'text'    => 'Manajemen Penjualan',
@@ -613,9 +640,20 @@ class AppServiceProvider extends ServiceProvider
                 'submenu'   => $wilayahMenuArray    
             ];
 
+            $productMenu = [
+                'text'      => 'Manajemen Produk',
+                'submenu'   => $productMenuArray    
+            ];
+
+
             if($managementCompanyMenu['submenu'] )
             {
                 $event->menu->add($managementCompanyMenu);
+            }
+
+            if($productMenu['submenu'] )
+            {
+                $event->menu->add($productMenu);
             }
             
             if($managementSalesMenu['submenu'] )

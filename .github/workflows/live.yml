@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
     - name: Checkout code
@@ -16,10 +16,10 @@ jobs:
     - name: Open Ownership
       uses: appleboy/ssh-action@master
       with:
-        host: "157.15.4.27"
+        host: "172.16.12.129"
         username: "devops"
         password: ${{ secrets.SSH_LIVE_PASSWORD }}
-        port: 5906
+        port: 22
         script: |
           cd /var/www/keloola-projects/bos.keloola.com
           echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S chown -R devops:devops storage bootstrap/cache
@@ -27,10 +27,10 @@ jobs:
     - name: Git Pull
       uses: appleboy/ssh-action@master
       with:
-        host: "157.15.4.27"
+        host: "172.16.12.129"
         username: "devops"
         password: ${{ secrets.SSH_LIVE_PASSWORD }}
-        port: 5906
+        port: 22
         script: |
           cd /var/www/keloola-projects/bos.keloola.com
           git pull origin main
@@ -38,10 +38,10 @@ jobs:
     - name: Install Dependencies
       uses: appleboy/ssh-action@master
       with:
-        host: "157.15.4.27"
+        host: "172.16.12.129"
         username: "devops"
         password: ${{ secrets.SSH_LIVE_PASSWORD }}
-        port: 5906
+        port: 22
         script: |
           cd /var/www/keloola-projects/bos.keloola.com
           php /home/devops/composer.phar update --no-interaction --prefer-dist --optimize-autoloader --no-dev --ignore-platform-reqs
@@ -49,10 +49,10 @@ jobs:
     - name: Run Migrations
       uses: appleboy/ssh-action@master
       with:
-        host: "157.15.4.27"
+        host: "172.16.12.129"
         username: "devops"
         password: ${{ secrets.SSH_LIVE_PASSWORD }}
-        port: 5906
+        port: 22
         script: |
           cd /var/www/keloola-projects/bos.keloola.com
           echo "yes" | php artisan migrate
@@ -60,10 +60,10 @@ jobs:
     - name: Clear Cache
       uses: appleboy/ssh-action@master
       with:
-        host: "157.15.4.27"
+        host: "172.16.12.129"
         username: "devops"
         password: ${{ secrets.SSH_LIVE_PASSWORD }}
-        port: 5906
+        port: 22
         script: |
           cd /var/www/keloola-projects/bos.keloola.com
           php artisan optimize:clear
@@ -74,10 +74,10 @@ jobs:
     - name: Close Ownership
       uses: appleboy/ssh-action@master
       with:
-        host: "157.15.4.27"
+        host: "172.16.12.129"
         username: "devops"
         password: ${{ secrets.SSH_LIVE_PASSWORD }}
-        port: 5906
+        port: 22
         script: |
           cd /var/www/keloola-projects/bos.keloola.com
           echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S chown -R nginx:nginx storage bootstrap/cache
@@ -85,10 +85,10 @@ jobs:
     - name: Update Supervisor
       uses: appleboy/ssh-action@master
       with:
-        host: "157.15.4.27"
+        host: "172.16.12.129"
         username: "devops"
         password: ${{ secrets.SSH_LIVE_PASSWORD }}
-        port: 5906
+        port: 22
         script: |
           echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S supervisorctl reread
           echo ${{ secrets.SSH_LIVE_PASSWORD }} | sudo -S supervisorctl update
