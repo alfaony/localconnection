@@ -1,0 +1,48 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Role;
+use App\Models\Permission;
+use App\Models\PermissionRole;
+use App\Schemas\RoleSchema;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+class PermissionForMenuSupplierCategory extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        $supCategory = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'import','export','importProgress','exportProgress'];
+        $root = Role::where('name',RoleSchema::ROOT)->first();
+        $admin = Role::where('name',RoleSchema::ADMIN)->first();
+        $procurement = Role::where('name',RoleSchema::PROCUREMENT)->first();
+        $manager = Role::where('name',RoleSchema::MANAGER)->first();
+
+        foreach ($supCategory as $method) 
+        {
+            // create permision
+            $permission = Permission::firstOrCreate([
+                'name' => ucwords($method).' Supplier Category',
+            ],[
+                'method' => $method,
+                'table' => 'supplier_categories',
+                'model' => 'SupplierCategory',
+                'guard_name' => 'web'
+            ]);
+
+            //assign role & permission
+            PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $procurement->id, 'permission_id' => $permission->id]);
+            PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
+        }
+    }
+}
+

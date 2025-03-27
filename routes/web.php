@@ -80,6 +80,8 @@ use App\Http\Controllers\ShippingCalculationController;
 use App\Http\Controllers\AskBosController;
 use App\Http\Controllers\DecisionController;
 use App\Http\Controllers\PartnershipAgreementController;
+use App\Http\Controllers\SupplierCategoryController;
+use App\Http\Controllers\ProductSupplierController;
 
 
 
@@ -388,6 +390,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('partnership-agreement/signature/{id}',[PartnershipAgreementController::class,'signature'])->name('partnership-agreement.signature');
   Route::post('partnership-agreement/submit/{id}',[PartnershipAgreementController::class,'submit'])->name('partnership-agreement.submit');
   Route::resource('partnership-agreement', PartnershipAgreementController::class);
+
+  Route::resource('supplier-category', SupplierCategoryController::class);
+  
+  Route::get('product-supplier/importProgress/{batchId}', [ProductSupplierController::class, 'importProgress']);
+  Route::post('product-supplier/import', [ProductSupplierController::class, 'import'])->name('product-supplier.import');
+  Route::resource('product-supplier', ProductSupplierController::class);
 });
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
