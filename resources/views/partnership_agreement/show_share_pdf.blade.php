@@ -247,7 +247,22 @@ function prinsts() {
    .small-text 
     {
         text-align: justify;
-        font-size: 0.6rem;
+        font-size: 0.79rem;
+    }
+
+    .text-ads a, 
+    .text-ads li, 
+    .text-ads p, 
+    .text-ads div, 
+    .text-ads span, 
+    .text-ads h1, 
+    .text-ads h2, 
+    .text-ads h3, 
+    .text-ads h4, 
+    .text-ads h5, 
+    .text-ads h6 
+    {
+        font-size: 0.92rem;
     }
     .small-header
     {
