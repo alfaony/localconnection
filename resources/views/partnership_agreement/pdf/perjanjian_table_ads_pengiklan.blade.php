@@ -1,5 +1,5 @@
 
-<div class="card-body" id="printItem">
+<div class="card-body text-ads" id="printItem">
     <div class="row mb-4">
         <div class="col-6 pe-3 text-center">
             <h6><strong>PERJANJIAN KERJASAMA ANTARA {{ $agreement->getFields(" nama_perusahaan_pertama") }} DENGAN {{ $agreement->getFields(" nama_perusahaan_pihak_kedua") }}</strong></h6> 
