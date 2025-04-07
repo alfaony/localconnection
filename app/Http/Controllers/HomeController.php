@@ -26,6 +26,9 @@ use App\Models\TaskStatus;
 use App\Models\DailyTask;
 use App\Models\ScheduleOb;
 
+// Change to API
+use App\Models\User;
+
 class HomeController extends Controller
 {
     /**
@@ -175,6 +178,23 @@ class HomeController extends Controller
             }
         }
 
-        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday', 'dailyTaskTodoCount', 'dailyTasDoingCount', 'dailyTaskInreviewCount', 'dailyTaskNotComplateCount', 'quotesWithoutWorkOrder','startDate','endDate','schedules'));
+
+        // change to api
+        $checkins = User::where('is_checkin', true)->withCheckinCounts(Auth::user()->id)->first();
+        $dailyTasksQuery = DailyTask::whereHas('taskStatus', function ($query) {
+            $query->where('name', ParamSchema::COMPLATE);
+        })
+        ->where('assignment_user_id', Auth::id());
+
+        $totalTasksComplete = $dailyTasksQuery->count();
+
+        // 2. Total poin dari Task COMPLATE tersebut
+        $totalPoints = $dailyTasksQuery->sum('point');
+
+        $currentScore = round($totalTasksComplete + ($totalPoints * $checkins->point_percentage / 100 ));
+
+        // Return hasilnya
+
+        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday', 'dailyTaskTodoCount', 'dailyTasDoingCount', 'dailyTaskInreviewCount', 'dailyTaskNotComplateCount', 'quotesWithoutWorkOrder','startDate','endDate','schedules','checkins','totalTasksComplete','totalPoints','currentScore'));
     }
 }

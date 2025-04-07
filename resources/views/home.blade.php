@@ -2,307 +2,541 @@
 
 @section('title', 'Dashboard')
 
-@section('content_header')
-    <h1>Dashboard</h1>
-@stop
-
 @section('content')
+<div class="row g-3 mb-4">
+    <!-- Profile and Stats -->
 
-<div class="col-md-12 mt-2">
-    @if(Session::get('updateProfile'))
-    <div class="alert alert-success mt-3">Pengguna Berhasil Perbarui</div>
-    @endif
-</div>
-@canAccess('showReport','homes')
-<div class="card py-3">
-    <div class="card-header">
-        <h5>Laporan Overview Proyek</h5>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card text-white bg-warning mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Proyek Aktif</h5>
-                        <p class="card-text">{{ $totalActiveProjects }}</p>
-                    </div>
+    <div class="col-md-3 mt-3">
+        <div class="card border-0 shadow-lg hover-effect">
+            <div class="card-body text-center p-4">
+                <!-- Profile Image -->
+                <div class="avatar-wrapper mb-4">
+                    <img src="https://placehold.co/600x400" class="rounded-circle shadow-sm" alt="User Image"
+                        style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #fff">
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-warning mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Pekerja Aktif</h5>
-                        <p class="card-text">{{ $totalActiveWorkers }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-danger mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Anggaran Pembelian</h5>
-                        <p class="card-text">{{ 'Rp. '.number_format($totalPurchaseBudget,0,',','.') }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-warning mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Anggaran Proyek Aktif</h5>
-                        <p class="card-text">{{ 'Rp. '.number_format($activeProjectsBudget,0,',','.') }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-warning mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Anggaran Pekerja</h5>
-                        <p class="card-text">{{ 'Rp. '.number_format($activeEmployeeBudget,0,',','.') }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row mt-3">
-            <div class="col-md-4">
-                <a href="{{ route('quote.index') }}">
-                <div class="card text-white bg-warning mb-3 hover-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Quote</h5>
-                        <p class="card-text">{{ $totalQuote }}</p>
-                    </div>
-                </div>
-                </a>
-            </div>
-            <div class="col-md-4">
-                <a href="{{ route('work-order.index') }}">
-                <div class="card text-white bg-warning mb-3 hover-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Total SPK</h5>
-                        <p class="card-text">{{ $totalWorkOrder }}</p>
-                    </div>
-                </div>
-                </a>
-            </div>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="card-header">
-            <h5> Quote Tanpa SPK </h5>
-        </div>
-        <!-- Add Search Form -->
-        <form method="GET" action="{{ route('home') }}" class="mb-3">
-            <div class="row mt-2 align-items-center">
-                <div class="col-auto">
-                    <input type="text" name="search_quote" class="form-control" placeholder="Cari No Quote">
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Cari</button>
-                </div>
-            </div>
-        </form>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>No Quote</th>
-                        <th>Total</th>
-                        @canAccess('downloadPdf','quotes')
-                        <th>Aksi</th>
-                        @endcanAccess
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($quotesWithoutWorkOrder as $quote)
-                    <tr>
-                        <td>{{ $quote->number_result }}</td>
-                        <td>Rp {{ number_format($quote->total, 0, ',', '.') }}</td>
-                        @canAccess('downloadPdf','quotes')
-                        <td>
-                            <a href="{{ route('quote.download.pdf', $quote->slug) }}" class="btn btn-sm btn-primary">
-                                <i class="fa fa-eye"></i> Quote
-                            </a>
-                        </td>
-                        @endcanAccess
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="3" class="text-center">Tidak ada quotes tanpa WorkOrder.</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
 
-            {{ $quotesWithoutWorkOrder->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+                <!-- Profile Info -->
+                <div class="profile-meta">
+                    <h4 class="mb-3 fw-bold text-gradient">
+                        <i class="bi bi-person-gear me-2"></i>{{  Auth::user()->name }}
+                    </h4>
+
+                    <!-- Badge -->
+                    <div
+                        class="status-badge bg-soft-warning d-inline-flex align-items-center py-2 px-3 mb-3 rounded-pill">
+                        <i class="bi bi-shield-check me-2 text-warning"></i>
+                        <span class="text-dark small fw-medium"> {{  ucfirst(Auth::user()->role->name) }}</span>
+                    </div>
+
+                    <!-- Score -->
+                    <div class="score-container bg-soft-success p-3 rounded-3">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <i class="bi bi-trophy-fill me-2 text-gradient-gold fs-5"></i>
+                            <div>
+                                <div class="text-muted small">CURRENT SCORE</div>
+                                <div class="h4 mb-0 fw-bold text-success"> {{ $currentScore }} </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9 mt-3">
+        <!-- Info Cards Section -->
+        <div class="row g-3 mb-4">
+            {{-- 
+            <div class="col-md-3">
+                <div class="card info-box border-0 shadow-sm h-100 hover-effect"
+                    style="pointer-events: none; opacity: 0.5;">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="icon-container bg-primary-soft rounded-circle p-3 me-3">
+                            <i class="bi bi-shield-check text-primary fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small mb-1">GUILD</div>
+                            <div class="h4 mb-0 text-primary fw-bold">Overlord</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            --}}
+
+            <div class="col-md-3">
+                <div class="card info-box border-0 shadow-sm h-100 hover-effect">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="icon-container bg-success-soft rounded-circle p-3 me-3">
+                            <i class="bi bi-check2-circle text-success fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small mb-1">TASK COMPLETE</div>
+                            <div class="h4 mb-0 text-success fw-bold">{{ $totalTasksComplete }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card info-box border-0 shadow-sm h-100 hover-effect">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="icon-container bg-info-soft rounded-circle p-3 me-3">
+                            <i class="bi bi-calendar-check text-info fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small mb-1">CHECK-INS</div>
+                            <div class="h4 mb-0 text-info fw-bold">{{ $checkins->point_percentage }}%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card info-box border-0 shadow-sm h-100 hover-effect">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="icon-container bg-danger-soft rounded-circle p-3 me-3">
+                            <i class="bi bi-graph-up text-danger fs-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small mb-1">TOTAL POINTS</div>
+                            <div class="h4 mb-0 text-danger fw-bold">{{ $totalPoints }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- 
+        <!-- Action Cards Section -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <button class="btn btn-hover-effect w-100 h-100 p-4 d-flex flex-column align-items-center"
+                            disabled>
+                            <div class="icon-wrapper bg-moon mb-3">
+                                <i class="bi bi-moon-stars fs-2 text-white"></i>
+                            </div>
+                            <span class="fw-semibold mb-1">Kerja Larut Malam</span>
+                            <small class="text-muted opacity-75">1/3</small>
+                        </button>
+                    </div>
+
+                    <div class="col-md-4">
+                        <button class="btn btn-hover-effect w-100 h-100 p-4 d-flex flex-column align-items-center"
+                            disabled>
+                            <div class="icon-wrapper bg-fire mb-3">
+                                <i class="bi bi-fire fs-2 text-white"></i>
+                            </div>
+                            <span class="fw-semibold mb-1">Kerja Lembur Begadang</span>
+                            <small class="text-muted opacity-75">1/3</small>
+                        </button>
+                    </div>
+
+                    <div class="col-md-4">
+                        <button class="btn btn-hover-effect w-100 h-100 p-4 d-flex flex-column align-items-center"
+                            disabled>
+                            <div class="icon-wrapper bg-purple mb-3">
+                                <i class="bi bi-cloud-moon fs-2 text-white"></i>
+                            </div>
+                            <span class="fw-semibold mb-1">Izin Tidur Seharian</span>
+                            <small class="text-muted opacity-75">1/3</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        --}}
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Rankings -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex align-items-center">
+                <i class="bi bi-trophy me-2 mr-1"></i>Ranking Top Score
+            </div>
+            <div class="card-body" style="height: 200px; overflow-y: auto;">
+                <ol class="list-group list-group-flush">
+                    @for($i = 1; $i <= 10; $i++) <li
+                        class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="bi bi-{{ $i }}-circle-fill text-warning me-2"></i>
+                            Staff {{ $i }}
+                        </span>
+                        <span class="badge bg-warning">{{ rand(100, 999) }}</span>
+                        </li>
+                        @endfor
+                        <!-- Repeat similar structure for other list items -->
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle me-2 mr-1"></i>Ranking Staff Dengan Overdue Task Terbanyak
+            </div>
+            <div class="card-body" style="height: 200px; overflow-y: auto;">
+                <ol class="list-group list-group-flush">
+                    <!-- Similar structure with different icon -->
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="bi bi-1-circle-fill text-danger me-2"></i>
+                            Andika Pratama
+                        </span>
+                    </li>
+                </ol>
+            </div>
         </div>
     </div>
 </div>
-@endcanAccess
-@canAccess('showReportPointDaily','homes')
-<div class="card py-3">
-    <div class="card-header">
-        <h5>Laporan Overview Pekerjaan Harian</h5>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex align-items-center">
+                <i class="bi bi-alarm me-2 mr-1"></i>Staf Yang Ga Standby Pagi Hari
+            </div>
+            <div class="card-body" style="height: 150px; overflow-y: auto;">
+                <ol class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="bi bi-clock-history me-2"></i>Andika Pratama
+                    </li>
+                    <!-- Other list items -->
+                </ol>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-12">
-                <!-- Date filters -->
+
+    <div class="col-md-6">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <div class="display-4 text-primary mb-3">
+                    <i class="bi bi-bell-fill"></i>
+                </div>
+                <h5 class="mt-2"><i class="bi bi-people me-2"></i>PING YOUR TEAM</h5>
+                <div class="input-group my-3">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <select class="form-control" disabled>
+                        <option>Alfatony</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary w-100" disabled>
+                    <i class="bi bi-send me-2"></i>Ping Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- End Rankings -->
+
+<div class="row">
+    <div class="col-md-12 mt-2">
+        @if(Session::get('updateProfile'))
+        <div class="alert alert-success mt-3">Pengguna Berhasil Perbarui</div>
+        @endif
+    </div>
+    <div class="col-md-12">
+        @canAccess('showReport','homes')
+        <div class="card py-3">
+            <div class="card-header">
+                <h5>Laporan Overview Proyek</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-white bg-warning mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Proyek Aktif</h5>
+                                <p class="card-text">{{ $totalActiveProjects }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-warning mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Pekerja Aktif</h5>
+                                <p class="card-text">{{ $totalActiveWorkers }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-danger mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Anggaran Pembelian</h5>
+                                <p class="card-text">{{ 'Rp. '.number_format($totalPurchaseBudget,0,',','.') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-warning mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Anggaran Proyek Aktif</h5>
+                                <p class="card-text">{{ 'Rp. '.number_format($activeProjectsBudget,0,',','.') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-warning mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Anggaran Pekerja</h5>
+                                <p class="card-text">{{ 'Rp. '.number_format($activeEmployeeBudget,0,',','.') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <a href="{{ route('quote.index') }}">
+                            <div class="card text-white bg-warning mb-3 hover-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total Quote</h5>
+                                    <p class="card-text">{{ $totalQuote }}</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ route('work-order.index') }}">
+                            <div class="card text-white bg-warning mb-3 hover-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total SPK</h5>
+                                    <p class="card-text">{{ $totalWorkOrder }}</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="card-header">
+                    <h5> Quote Tanpa SPK </h5>
+                </div>
+                <!-- Add Search Form -->
                 <form method="GET" action="{{ route('home') }}" class="mb-3">
-                    <div class="mb-4 row">
-                        <div class="col-md-6">
-                            <label for="start_date" class="form-label">Tanggal Mulai:</label>
-                            <input type="date" class="form-control" name="start_date" id="start_date" value="{{ request('start_date') ?? $startDate->format('Y-m-d') }}">
+                    <div class="row mt-2 align-items-center">
+                        <div class="col-auto">
+                            <input type="text" name="search_quote" class="form-control" placeholder="Cari No Quote">
                         </div>
-
-                        <div class="col-md-6">
-                            <label for="end_date" class="form-label">Tanggal Akhir:</label>
-                            <input type="date" class="form-control" name="end_date" id="end_date" value="{{ request('end_date')  ?? $endDate->format('Y-m-d') }}">
-                        </div>
-                        <div class="col-md-12 mt-2">
-                            <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Cari</button>
-                            <button type="button" onclick="window.location.href='{{ route('home') }}'" class="btn btn-secondary"><i class="fa fa-times"></i> Reset</button>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> Cari</button>
                         </div>
                     </div>
                 </form>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-info mb-3">
-                    <div class="card-header">Poin Tugas</div>
-                    <div class="card-body">
-                        <p class="card-text">{{ $dailyTaskPoints }} Poin</p>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>No Quote</th>
+                                <th>Total</th>
+                                @canAccess('downloadPdf','quotes')
+                                <th>Aksi</th>
+                                @endcanAccess
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($quotesWithoutWorkOrder as $quote)
+                            <tr>
+                                <td>{{ $quote->number_result }}</td>
+                                <td>Rp {{ number_format($quote->total, 0, ',', '.') }}</td>
+                                @canAccess('downloadPdf','quotes')
+                                <td>
+                                    <a href="{{ route('quote.download.pdf', $quote->slug) }}"
+                                        class="btn btn-sm btn-primary">
+                                        <i class="fa fa-eye"></i> Quote
+                                    </a>
+                                </td>
+                                @endcanAccess
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="3" class="text-center">Tidak ada quotes tanpa WorkOrder.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+
+                    {{ $quotesWithoutWorkOrder->withQueryString()->links('vendor.pagination.bootstrap-4') }}
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-info mb-3">
-                    <div class="card-header">Poin Training</div>
-                    <div class="card-body">
-                        <p class="card-text">{{ $trainingPoints }} Poin</p>
+        </div>
+        @endcanAccess
+        @canAccess('showReportPointDaily','homes')
+        <div class="card py-3">
+            <div class="card-header">
+                <h5>Laporan Overview Pekerjaan Harian</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <!-- Date filters -->
+                        <form method="GET" action="{{ route('home') }}" class="mb-3">
+                            <div class="mb-4 row">
+                                <div class="col-md-6">
+                                    <label for="start_date" class="form-label">Tanggal Mulai:</label>
+                                    <input type="date" class="form-control" name="start_date" id="start_date"
+                                        value="{{ request('start_date') ?? $startDate->format('Y-m-d') }}">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="end_date" class="form-label">Tanggal Akhir:</label>
+                                    <input type="date" class="form-control" name="end_date" id="end_date"
+                                        value="{{ request('end_date')  ?? $endDate->format('Y-m-d') }}">
+                                </div>
+                                <div class="col-md-12 mt-2">
+                                    <button type="submit" class="btn btn-info"><i class="fa fa-search"></i>
+                                        Cari</button>
+                                    <button type="button" onclick="window.location.href='{{ route('home') }}'"
+                                        class="btn btn-secondary"><i class="fa fa-times"></i> Reset</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-header">Poin Tugas</div>
+                            <div class="card-body">
+                                <p class="card-text">{{ $dailyTaskPoints }} Poin</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-header">Poin Training</div>
+                            <div class="card-body">
+                                <p class="card-text">{{ $trainingPoints }} Poin</p>
+                            </div>
+                        </div>
+                    </div>
+                    @if(Auth::user()->role->name == \App\Schemas\RoleSchema::SALES)
+                    <div class="col-md-3">
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-header">Poin Penjualan</div>
+                            <div class="card-body">
+                                <p class="card-text">{{ $ipRightPoints }} Poin</p>
+                            </div>
+                        </div>
+                    </div>
+                    @else
+                    <div class="col-md-3">
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-header">Poin Hak Cipta</div>
+                            <div class="card-body">
+                                <p class="card-text">{{ $ipRightPoints }} Poin</p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    <div class="col-md-3">
+                        <div class="card bg-success mb-3">
+                            <div class="card-header">Jumlah Tugas Diselesaikan</div>
+                            <div class="card-body">
+                                <p class="card-text">{{ $dailyTaskCompleteCount }} Tugas</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            @if(Auth::user()->role->name == \App\Schemas\RoleSchema::SALES)
-            <div class="col-md-3">
-                <div class="card text-white bg-info mb-3">
-                    <div class="card-header">Poin Penjualan</div>
-                    <div class="card-body">
-                        <p class="card-text">{{ $ipRightPoints }} Poin</p>
+                <div class="row">
+                    <!-- Todo Card -->
+                    <div class="col-md-2 mb-4">
+                        <div class="card shadow-sm border-left-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title">Todo</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Jumlah Task: {{ $dailyTaskTodoCount }}</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            @else
-            <div class="col-md-3">
-                <div class="card text-white bg-info mb-3">
-                    <div class="card-header">Poin Hak Cipta</div>
-                    <div class="card-body">
-                        <p class="card-text">{{ $ipRightPoints }} Poin</p>
+
+                    <!-- Doing Card -->
+                    <div class="col-md-2 mb-4">
+                        <div class="card shadow-sm border-left-info">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="card-title">Doing</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Jumlah Task: {{ $dailyTasDoingCount }}</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            @endif
-            <div class="col-md-3">
-                <div class="card bg-success mb-3">
-                    <div class="card-header">Jumlah Tugas Diselesaikan</div>
-                    <div class="card-body">
-                        <p class="card-text">{{ $dailyTaskCompleteCount }} Tugas</p>
+
+                    <!-- In Review Card -->
+                    <div class="col-md-2 mb-4">
+                        <div class="card shadow-sm border-left-warning">
+                            <div class="card-header bg-warning text-white">
+                                <h5 class="card-title">In Review</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Jumlah Task: {{ $dailyTaskInreviewCount }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Complete Card -->
+                    <div class="col-md-2 mb-4">
+                        <div class="card shadow-sm border-left-success">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="card-title">Complete</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Jumlah Task: {{ $dailyTaskCompleteCount }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Not Complete Card -->
+                    <div class="col-md-2 mb-4">
+                        <div class="card shadow-sm border-left-danger">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="card-title">Not Complete</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">Jumlah Task: {{ $dailyTaskNotComplateCount }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <!-- Todo Card -->
-            <div class="col-md-2 mb-4">
-                <div class="card shadow-sm border-left-primary">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="card-title">Todo</h5>
+        <div class="card py-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-light mb-3">
+                            <div class="card-header text-danger">Jumlah Tugas Overdue</div>
+                            <div class="card-body">
+                                <p class="card-text">{{ $dailyTaskCountOverdue }} Tugas</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <p class="card-text">Jumlah Task: {{ $dailyTaskTodoCount }}</p>
+                    <div class="col-md-3">
+                        <div class="card bg-light mb-3">
+                            <div class="card-header text-primary">Jumlah Hari Ini</div>
+                            <div class="card-body">
+                                <p class="card-text">{{ $dailyTaskCountToday }} Tugas</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Doing Card -->
-            <div class="col-md-2 mb-4">
-                <div class="card shadow-sm border-left-info">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="card-title">Doing</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">Jumlah Task: {{ $dailyTasDoingCount }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- In Review Card -->
-            <div class="col-md-2 mb-4">
-                <div class="card shadow-sm border-left-warning">
-                    <div class="card-header bg-warning text-white">
-                        <h5 class="card-title">In Review</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">Jumlah Task: {{ $dailyTaskInreviewCount }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Complete Card -->
-            <div class="col-md-2 mb-4">
-                <div class="card shadow-sm border-left-success">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="card-title">Complete</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">Jumlah Task: {{ $dailyTaskCompleteCount }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Not Complete Card -->
-            <div class="col-md-2 mb-4">
-                <div class="card shadow-sm border-left-danger">
-                    <div class="card-header bg-danger text-white">
-                        <h5 class="card-title">Not Complete</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">Jumlah Task: {{ $dailyTaskNotComplateCount }}</p>
+                    <div class="col-md3">
+                        <div class="card bg-light mb-3">
+                            <div class="card-header text-green">Jumlah Tugas Mendatang</div>
+                            <div class="card-body">
+                                <p class="card-text">{{ $dailyTaskCountUpcoming }} Tugas</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        @endcanAccess
     </div>
 </div>
-<div class="card py-3">
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card bg-light mb-3">
-                    <div class="card-header text-danger">Jumlah Tugas Overdue</div>
-                    <div class="card-body">
-                        <p class="card-text">{{ $dailyTaskCountOverdue }} Tugas</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-light mb-3">
-                    <div class="card-header text-primary">Jumlah Hari Ini</div>
-                    <div class="card-body">
-                        <p class="card-text">{{ $dailyTaskCountToday }} Tugas</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md3">
-                <div class="card bg-light mb-3">
-                    <div class="card-header text-green">Jumlah Tugas Mendatang</div>
-                    <div class="card-body">
-                        <p class="card-text">{{ $dailyTaskCountUpcoming }} Tugas</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endcanAccess
-
 
 @canAccess('showScheduleOb','homes')
 <div class="card py-3">
@@ -327,15 +561,15 @@
                 </thead>
                 <tbody>
                     @forelse ($equipments as $equipment)
-                        <tr>
-                            <td>{{ $equipment->name }}</td>
-                            <td>{{ $equipment->code }}</td>
-                            <td>{{ $equipment->total_stock }}</td>
-                        </tr>
+                    <tr>
+                        <td>{{ $equipment->name }}</td>
+                        <td>{{ $equipment->code }}</td>
+                        <td>{{ $equipment->total_stock }}</td>
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="3" class="text-center">Tidak ada data stok habis.</td>
-                        </tr>
+                    <tr>
+                        <td colspan="3" class="text-center">Tidak ada data stok habis.</td>
+                    </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -351,25 +585,24 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script>
-    $(document).ready(function () {
-        $('input[name="start_date"]').on('change', function() {
-            var startDateValue = $(this).val();
-            $('input[name="end_date"]').val(startDateValue);
-        });
+$(document).ready(function() {
+    $('input[name="start_date"]').on('change', function() {
+        var startDateValue = $(this).val();
+        $('input[name="end_date"]').val(startDateValue);
     });
+});
 </script>
 @canAccess('showScheduleOb','homes')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var calendarEl = document.getElementById('calendar');
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            events: [
-                @foreach($schedules as $schedule)
-                {
-                    title: '{{ $schedule->user->name }} - {{ $schedule->shiftingOb->name }}',
-                    start: '{{ $schedule->date }}',
-                    description: `
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: [
+            @foreach($schedules as $schedule) {
+                title: '{{ $schedule->user->name }} - {{ $schedule->shiftingOb->name }}',
+                start: '{{ $schedule->date }}',
+                description: `
                         <b>User:</b> {{ $schedule->user->name }}<br>
                         <b>Shift:</b> {{ $schedule->shiftingOb->name }}<br>
                         <b>Clock In:</b> {{ $schedule->shiftingOb->clock_in }}<br>
@@ -377,25 +610,25 @@
                         <b>Real Clock In:</b> {{ $schedule->attendance ? $schedule->attendance->clock_in : '-' }}<br>
                         <b>Real Clock Out:</b> {{ $schedule->attendance ? $schedule->attendance->clock_out : '-' }}<br>
                     `,
-                    id: '{{ $schedule->id }}',
-                    extendedProps: {
-                        user_id: '{{ $schedule->user_id }}',
-                        shifting_ob_id: '{{ $schedule->shifting_ob_id }}'
-                    }
-                },
-                @endforeach
-            ],
-            eventDidMount: function(info) {
-                new bootstrap.Tooltip(info.el, {
-                    title: info.event.extendedProps.description,
-                    html: true,
-                    container: 'body'
-                });
-            }
-        });
-
-        calendar.render();
+                id: '{{ $schedule->id }}',
+                extendedProps: {
+                    user_id: '{{ $schedule->user_id }}',
+                    shifting_ob_id: '{{ $schedule->shifting_ob_id }}'
+                }
+            },
+            @endforeach
+        ],
+        eventDidMount: function(info) {
+            new bootstrap.Tooltip(info.el, {
+                title: info.event.extendedProps.description,
+                html: true,
+                container: 'body'
+            });
+        }
     });
+
+    calendar.render();
+});
 </script>
 @endcanAccess
 
@@ -404,38 +637,153 @@
 @section('css')
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>
-    .card-header {
-        font-weight: bold;
-    }
+.card-header {
+    font-weight: bold;
+}
 
-    .table-responsive {
-        overflow-x: auto;
-    }
+.table-responsive {
+    overflow-x: auto;
+}
 
-    .form-label {
-        font-weight: bold;
-    }
+.form-label {
+    font-weight: bold;
+}
 </style>
 <style>
-    .hover-card {
-        transition: transform 0.3s ease, background-color 0.3s ease;
-    }
+.hover-card {
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
 
-    .hover-card:hover {
-        background-color: #ffcf63 !important; /* Warna hover */
-        transform: scale(1.05); /* Efek zoom */
-    }
+.hover-card:hover {
+    background-color: #ffcf63 !important;
+    /* Warna hover */
+    transform: scale(1.05);
+    /* Efek zoom */
+}
 
-    .hover-card .card-title,
-    .hover-card .card-text {
-        transition: color 0.3s ease;
-    }
+.hover-card .card-title,
+.hover-card .card-text {
+    transition: color 0.3s ease;
+}
 
-    .hover-card:hover .card-title,
-    .hover-card:hover .card-text {
-        color: #000000; /* Warna teks saat hover */
-    }
+.hover-card:hover .card-title,
+.hover-card:hover .card-text {
+    color: #000000;
+    /* Warna teks saat hover */
+}
+</style>
+<style>
+/* Custom Styles */
+.hover-effect:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+.icon-container {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-primary-soft {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.bg-success-soft {
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.bg-info-soft {
+    background-color: rgba(13, 202, 240, 0.1);
+}
+
+.bg-danger-soft {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.btn-hover-effect {
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.btn-hover-effect:hover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-moon {
+    background: linear-gradient(45deg, #2b5876, #4e4376);
+}
+
+.bg-fire {
+    background: linear-gradient(45deg, #ff416c, #ff4b2b);
+}
+
+.bg-purple {
+    background: linear-gradient(45deg, #4776e6, #8e54e9);
+}
 </style>
 
+
+
+<style>
+/* Custom Styles */
+.hover-effect {
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.hover-effect:hover {
+    transform: translateY(-5px);
+    border-bottom-color: #ffc107;
+}
+
+.text-gradient {
+    background: linear-gradient(45deg, #2b5876, #4e4376);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.bg-soft-warning {
+    background-color: rgba(255, 193, 7, 0.15);
+}
+
+.bg-soft-success {
+    background-color: rgba(25, 135, 84, 0.08);
+}
+
+.text-gradient-gold {
+    background: linear-gradient(45deg, #FFD700, #D4AF37);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.avatar-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.avatar-wrapper::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+    border-radius: 50%;
+    z-index: -1;
+    opacity: 0.3;
+}
+</style>
 @endsection
