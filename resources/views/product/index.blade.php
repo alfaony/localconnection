@@ -126,6 +126,8 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
                         <tr>
                             <th>No</th>
                             <th>Nama Produk</th>
+                            <th>Harga Jual</th>
+                            <th>Harga Beli</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -134,6 +136,8 @@ $no = ($product->currentPage() - 1) * $product->perPage() + 1;
                     <tr>
                         <td>{{ $no }}</td>
                         <td>{{ $a->name }}</td>
+                        <td>Rp {{ number_format($a->price_sell) }}</td>
+                        <td>Rp {{ number_format($a->price_buy) }}</td>
                         <td>
                             <form method="post" action="{{ route('product.destroy',$a) }}">
                                 @csrf
