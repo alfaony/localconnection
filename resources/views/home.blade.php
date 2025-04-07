@@ -34,7 +34,7 @@
                             <i class="bi bi-trophy-fill me-2 text-gradient-gold fs-5"></i>
                             <div>
                                 <div class="text-muted small">CURRENT SCORE</div>
-                                <div class="h4 mb-0 fw-bold text-success"> {{ $currentScore }} </div>
+                                <div class="h4 mb-0 fw-bold text-success" id="currentScore">-</div>
                             </div>
                         </div>
                     </div>
@@ -71,7 +71,7 @@
                         </div>
                         <div>
                             <div class="text-muted small mb-1">TASK COMPLETE</div>
-                            <div class="h4 mb-0 text-success fw-bold">{{ $totalTasksComplete }}</div>
+                            <div class="h4 mb-0 text-success fw-bold" id="totalTasksComplete"></div>
                         </div>
                     </div>
                 </div>
@@ -85,7 +85,7 @@
                         </div>
                         <div>
                             <div class="text-muted small mb-1">CHECK-INS</div>
-                            <div class="h4 mb-0 text-info fw-bold">{{ $checkins->point_percentage }}%</div>
+                            <div class="h4 mb-0 text-info fw-bold" id="checkin_point_percentage">-</div>
                         </div>
                     </div>
                 </div>
@@ -99,7 +99,7 @@
                         </div>
                         <div>
                             <div class="text-muted small mb-1">TOTAL POINTS</div>
-                            <div class="h4 mb-0 text-danger fw-bold">{{ $totalPoints }}</div>
+                            <div class="h4 mb-0 text-danger fw-bold" id="totalPoints">-</div>
                         </div>
                     </div>
                 </div>
@@ -211,6 +211,7 @@
         </div>
     </div>
 
+    {{-- 
     <div class="col-md-6">
         <div class="card shadow-sm text-center">
             <div class="card-body">
@@ -230,6 +231,7 @@
             </div>
         </div>
     </div>
+    --}}
 </div>
 
 <!-- End Rankings -->
@@ -584,6 +586,32 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
+<script>
+    $(document).ready(async function() {
+        try {
+            $('#loading').show(); // Assume there's an element with id 'loading' for showing the loading state
+            const response = await $.ajax({
+                url: "{{ route('home.dashboardReport') }}",
+                type: "GET",
+                dataType: "json"
+            });
+
+            if (response.status === "success") {
+                console.log(response);
+
+                $('#currentScore').text(response.data.currentScore);
+                $('#totalPoints').text(response.data.totalPoints);
+                $('#totalTasksComplete').text(response.data.totalTasksComplete);
+                $('#checkin_point_percentage').text(response.data.checkin_point_percentage);
+                $('#checkins').text(response.data.checkins ? "Sudah" : "Belum");
+            }
+        } catch (error) {
+            console.error('Error fetching dashboard report:', error);
+        } finally {
+            $('#loading').hide(); // Hide the loading state after the request completes
+        }
+    });
+</script>
 <script>
 $(document).ready(function() {
     $('input[name="start_date"]').on('change', function() {

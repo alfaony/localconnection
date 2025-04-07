@@ -134,6 +134,7 @@ Auth::routes([
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home/dashboardReport', [App\Http\Controllers\HomeController::class, 'dashboardReport'])->name('home.dashboardReport');
 
 
 Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');

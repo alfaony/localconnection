@@ -179,7 +179,13 @@ class HomeController extends Controller
         }
 
 
-        // change to api
+        // Return hasilnya
+
+        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday', 'dailyTaskTodoCount', 'dailyTasDoingCount', 'dailyTaskInreviewCount', 'dailyTaskNotComplateCount', 'quotesWithoutWorkOrder','startDate','endDate','schedules'));
+    }
+
+    public function dashboardReport()
+    {
         $checkins = User::where('is_checkin', true)->withCheckinCounts(Auth::user()->id)->first();
         $dailyTasksQuery = DailyTask::whereHas('taskStatus', function ($query) {
             $query->where('name', ParamSchema::COMPLATE);
@@ -191,10 +197,17 @@ class HomeController extends Controller
         // 2. Total poin dari Task COMPLATE tersebut
         $totalPoints = $dailyTasksQuery->sum('point');
 
-        $currentScore = round($totalTasksComplete + ($totalPoints * $checkins->point_percentage / 100 ));
+        $currentScore = $checkins ? round($totalTasksComplete + ($totalPoints * $checkins->point_percentage / 100 )) : 0;
 
-        // Return hasilnya
-
-        return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday', 'dailyTaskTodoCount', 'dailyTasDoingCount', 'dailyTaskInreviewCount', 'dailyTaskNotComplateCount', 'quotesWithoutWorkOrder','startDate','endDate','schedules','checkins','totalTasksComplete','totalPoints','currentScore'));
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Dashboard report retrieved successfully',
+            'data' => [
+                'checkin_point_percentage' => $checkins->point_percentage ."%" ?? 0 ."%",
+                'totalTasksComplete' => $totalTasksComplete,
+                'totalPoints' => $totalPoints,
+                'currentScore' => $currentScore
+            ]
+        ]);
     }
 }
