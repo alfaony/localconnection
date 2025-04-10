@@ -88,7 +88,19 @@
                                             placeholder="Masukkan Nomor KTP"
                                             value="{{ old('id_card') ?? @$userEdit->id_card }}" required>
                                     </div>
-
+                                    <!-- Upload KTP -->
+                                    <div class="form-group">
+                                        <label for="avatar">Foto Saya</label>
+                                        @if(@$userEdit->avatar)
+                                        <div class="mt-1 mb-2">
+                                            <img src="{{ Storage::url(@$userEdit->avatar) }}" alt="Foto Saya"
+                                                class="img-fluid"
+                                                style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+                                        </div>
+                                        @endif
+                                        <input type="file" name="avatar" id="avatar" class="form-control"
+                                            accept="image/*">
+                                    </div>
                                     <!-- Upload KTP -->
                                     <div class="form-group">
                                         <label for="id_card_image">Upload KTP</label>

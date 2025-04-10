@@ -195,7 +195,7 @@ class HomeController extends Controller
         $totalTasksComplete = $dailyTasksQuery->count();
 
         // 2. Total poin dari Task COMPLATE tersebut
-        $totalPoints = $dailyTasksQuery->sum('point');
+        $totalPoints = intval($dailyTasksQuery->sum('point'));
 
         $currentScore = $checkins ? round($totalTasksComplete + ($totalPoints * $checkins->point_percentage / 100 )) : 0;
 
@@ -203,11 +203,66 @@ class HomeController extends Controller
             'status' => 'success',
             'message' => 'Dashboard report retrieved successfully',
             'data' => [
-                'checkin_point_percentage' => $checkins->point_percentage ."%" ?? 0 ."%",
+                'checkin_point_percentage' => $checkins ? $checkins->point_percentage ."%" : 0 ."%",
                 'totalTasksComplete' => $totalTasksComplete,
                 'totalPoints' => $totalPoints,
                 'currentScore' => $currentScore
             ]
         ]);
+    }
+
+    public function leaderboard()
+    {
+        $complateStatus = TaskStatus::where('name', ParamSchema::COMPLATE)->first();
+
+        $users = User::byCompany(Auth::user()->company_id)->with('role')->get();
+
+        $result = $users->map(function ($user) use ($complateStatus) {
+            $totalTasks = DailyTask::where('assignment_user_id', $user->id)
+                ->where('task_status_id', $complateStatus->id)
+                ->count();
+
+            $totalPoints = DailyTask::where('assignment_user_id', $user->id)
+                ->where('task_status_id', $complateStatus->id)
+                ->sum('point');
+
+            $checkinPercentage = $user->is_checkin ? ($user->point_percentage ?? 0) : 0;
+            $currentScore = round($totalTasks + ($totalPoints * $checkinPercentage / 100));
+
+            return [
+                'name' => $user->name,
+                'currentScore' => $currentScore
+            ];
+        });
+
+        $sorted = $result->sortByDesc('currentScore')->values();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $sorted
+        ]);
+    }
+
+    public function overdueRanking()
+    {
+        $today = Carbon::today();
+
+        // Ambil 10 user dengan jumlah overdue task terbanyak
+        $overdueUsers = User::select('name')->withCount(['dailyTaskAssigns as overdue_count' => function ($query) use ($today) {
+            $query->whereHas('taskStatus', function ($q) {
+                $q->whereIn('name', [
+                    ParamSchema::BACKLOG,
+                    ParamSchema::DOING,
+                    ParamSchema::INREVIEW,
+                    ParamSchema::TODO
+                ]);
+            })->whereDate('end_date', '<', $today);
+        }])
+        ->having('overdue_count', '>', 0)
+        ->orderByDesc('overdue_count')
+        ->take(10)
+        ->get(['id', 'name']);
+
+        return response()->json($overdueUsers);
     }
 }

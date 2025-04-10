@@ -135,6 +135,8 @@ Auth::routes([
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/home/dashboardReport', [App\Http\Controllers\HomeController::class, 'dashboardReport'])->name('home.dashboardReport');
+Route::get('/home/leaderboard', [App\Http\Controllers\HomeController::class, 'leaderboard'])->name('home.leaderboard');
+Route::get('/home/overdueRanking', [App\Http\Controllers\HomeController::class, 'overdueRanking'])->name('home.overdueRanking');
 
 
 Route::get('employee-checking/report', [EmployeeCheckingController::class, 'report'])->name('employee-checking.report');

@@ -3,15 +3,20 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="row g-3 mb-4">
+<div class="row g-3">
+    <div class="col-md-12 mt-2">
+        @if(Session::get('updateProfile'))
+        <div class="alert alert-success mt-3">Pengguna Berhasil Perbarui</div>
+        @endif
+    </div>
+    @canAccess('dashboardReport','homes')
     <!-- Profile and Stats -->
-
     <div class="col-md-3 mt-3">
         <div class="card border-0 shadow-lg hover-effect">
             <div class="card-body text-center p-4">
                 <!-- Profile Image -->
                 <div class="avatar-wrapper mb-4">
-                    <img src="https://placehold.co/600x400" class="rounded-circle shadow-sm" alt="User Image"
+                    <img src="{{ Auth::user()->avatar ? Storage::url(Auth::user()->avatar) : 'https://placehold.co/600x400?text=Your%20Avatar' }}" class="rounded-circle shadow-sm" alt="User Image"
                         style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #fff">
                 </div>
 
@@ -42,10 +47,10 @@
             </div>
         </div>
     </div>
-
+    
     <div class="col-md-9 mt-3">
         <!-- Info Cards Section -->
-        <div class="row g-3 mb-4">
+        <div class="row g-3">
             {{-- 
             <div class="col-md-3">
                 <div class="card info-box border-0 shadow-sm h-100 hover-effect"
@@ -63,7 +68,7 @@
             </div>
             --}}
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="card info-box border-0 shadow-sm h-100 hover-effect">
                     <div class="card-body d-flex align-items-center p-3">
                         <div class="icon-container bg-success-soft rounded-circle p-3 me-3">
@@ -71,13 +76,15 @@
                         </div>
                         <div>
                             <div class="text-muted small mb-1">TASK COMPLETE</div>
-                            <div class="h4 mb-0 text-success fw-bold" id="totalTasksComplete"></div>
+                            <div class="h4 mb-0 text-success fw-bold" id="totalTasksComplete">
+                                <span class="placeholder col-8 placeholder-glow"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="card info-box border-0 shadow-sm h-100 hover-effect">
                     <div class="card-body d-flex align-items-center p-3">
                         <div class="icon-container bg-info-soft rounded-circle p-3 me-3">
@@ -85,13 +92,15 @@
                         </div>
                         <div>
                             <div class="text-muted small mb-1">CHECK-INS</div>
-                            <div class="h4 mb-0 text-info fw-bold" id="checkin_point_percentage">-</div>
+                            <div class="h4 mb-0 text-info fw-bold" id="checkin_point_percentage">
+                                <span class="placeholder col-8 placeholder-glow"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="card info-box border-0 shadow-sm h-100 hover-effect">
                     <div class="card-body d-flex align-items-center p-3">
                         <div class="icon-container bg-danger-soft rounded-circle p-3 me-3">
@@ -99,7 +108,9 @@
                         </div>
                         <div>
                             <div class="text-muted small mb-1">TOTAL POINTS</div>
-                            <div class="h4 mb-0 text-danger fw-bold" id="totalPoints">-</div>
+                            <div class="h4 mb-0 text-danger fw-bold" id="totalPoints">
+                                <span class="placeholder col-8 placeholder-glow"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -148,53 +159,56 @@
         </div>
         --}}
     </div>
+    @endcanAccess
 </div>
 
-<div class="row g-3 mb-4">
+<div class="row g-3">
     <!-- Rankings -->
+    @canAccess('leaderboard','homes')
     <div class="col-md-6">
         <div class="card shadow-sm">
             <div class="card-header d-flex align-items-center">
-                <i class="bi bi-trophy me-2 mr-1"></i>Ranking Top Score
+                <i class="bi bi-trophy me-2"></i>Ranking Top Score
             </div>
-            <div class="card-body" style="height: 200px; overflow-y: auto;">
-                <ol class="list-group list-group-flush">
-                    @for($i = 1; $i <= 10; $i++) <li
-                        class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>
-                            <i class="bi bi-{{ $i }}-circle-fill text-warning me-2"></i>
-                            Staff {{ $i }}
-                        </span>
-                        <span class="badge bg-warning">{{ rand(100, 999) }}</span>
-                        </li>
-                        @endfor
-                        <!-- Repeat similar structure for other list items -->
+            <div class="card-body" style="height: 240px; overflow-y: auto;">
+                <!-- Loader -->
+                <div id="leaderboard-loader" class="d-flex justify-content-center align-items-center">
+                    <div class="spinner-border text-warning" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+
+                <!-- Leaderboard List -->
+                <ol class="list-group list-group-flush d-none" id="leaderboard-list">
+                    {{-- Will be filled by JS --}}
                 </ol>
             </div>
         </div>
     </div>
+    @endcanAccess
 
+    @canAccess('overdueRanking','homes')
     <div class="col-md-6">
         <div class="card shadow-sm">
             <div class="card-header d-flex align-items-center">
                 <i class="bi bi-exclamation-triangle me-2 mr-1"></i>Ranking Staff Dengan Overdue Task Terbanyak
             </div>
-            <div class="card-body" style="height: 200px; overflow-y: auto;">
-                <ol class="list-group list-group-flush">
-                    <!-- Similar structure with different icon -->
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>
-                            <i class="bi bi-1-circle-fill text-danger me-2"></i>
-                            Andika Pratama
-                        </span>
-                    </li>
+            <div class="card-body" style="height: 240px; overflow-y: auto;">
+                <div id="overdue-loader" class="d-flex justify-content-center align-items-center"
+                    style="height: 180px;">
+                    <div class="spinner-border text-danger" role="status"></div>
+                </div>
+                <ol class="list-group list-group-flush d-none" id="overdue-ranking">
+                    <!-- Data akan diisi via JS -->
                 </ol>
             </div>
         </div>
     </div>
+    @endcanAccess
 </div>
 
 <div class="row g-3">
+    {{--
     <div class="col-md-6">
         <div class="card shadow-sm">
             <div class="card-header d-flex align-items-center">
@@ -210,6 +224,7 @@
             </div>
         </div>
     </div>
+    --}}
 
     {{-- 
     <div class="col-md-6">
@@ -233,15 +248,9 @@
     </div>
     --}}
 </div>
-
 <!-- End Rankings -->
 
 <div class="row">
-    <div class="col-md-12 mt-2">
-        @if(Session::get('updateProfile'))
-        <div class="alert alert-success mt-3">Pengguna Berhasil Perbarui</div>
-        @endif
-    </div>
     <div class="col-md-12">
         @canAccess('showReport','homes')
         <div class="card py-3">
@@ -586,6 +595,91 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
+@canAccess('overdueRanking','homes')
+<script>
+    async function loadOverdueLeaderboard() 
+    {
+        $('#overdue-loader').removeClass('d-none');
+        $('#overdue-ranking').addClass('d-none');
+
+        const response = await $.get('{{ route("home.overdueRanking") }}');
+        
+        const container = $('#overdue-ranking');
+        container.empty();
+        
+        if (response.length === 0) {
+            container.append(`<li class="list-group-item text-center text-muted">No data available</li>`);
+        } else {
+            response.forEach((user, index) => {
+                container.append(`
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            ${index + 1 <= 9 ? `<i class="bi bi-${index + 1}-circle-fill text-danger me-2"></i>` : `<span class="badge bg-danger text-dark">${index + 1}</span>`}
+                            ${user.name}
+                        </span>
+                        <span class="badge bg-danger">${user.overdue_count}</span>
+                    </li>
+                `);
+            });
+        }
+
+        $('#overdue-loader').removeClass('d-flex').removeClass('justify-content-center').removeClass('align-items-center');
+        $('#overdue-loader').addClass('d-none');
+        container.removeClass('d-none');
+    }
+
+    $(document).ready(function () {
+        loadOverdueLeaderboard();
+    });
+</script>
+@endcanAccess
+
+@canAccess('leaderboard','homes')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchLeaderboard();
+    });
+
+    async function fetchLeaderboard() {
+        try {
+            const response = await $.ajax({
+                url: '{{ route("home.leaderboard") }}',
+                method: 'GET',
+            });
+
+            const leaderboard = response.data;
+            const list = $('#leaderboard-list');
+            list.empty();
+
+            if (leaderboard.length === 0) {
+                list.append(`<li class="list-group-item text-center text-muted">No data available</li>`);
+            } else {
+                leaderboard.forEach((item, index) => {
+                    const icon = index + 1 <= 9 ?
+                        `<i class="bi bi-${index + 1}-circle-fill text-warning me-2"></i>` :
+                        `<span class="badge bg-warning text-dark">${index + 1}</span>`;
+                    const html = `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>${icon}${item.name}</span>
+                                <span class="badge bg-warning text-dark">${item.currentScore}</span>
+                            </li>
+                        `;
+                    list.append(html);
+                });
+            }
+
+            $('#leaderboard-loader').removeClass('d-flex').removeClass('justify-content-center').removeClass('align-items-center');
+            $('#leaderboard-loader').addClass('d-none');
+            $('#leaderboard-list').removeClass('d-none');
+        } catch (error) {
+            console.error('Error loading leaderboard:', error);
+            $('#leaderboard-loader').html('<p class="text-danger">Failed to load leaderboard</p>');
+        }
+    }
+</script>
+@endcanAccess
+
+@canAccess('dashboardReport','homes')
 <script>
     $(document).ready(async function() {
         try {
@@ -593,12 +687,14 @@
             const response = await $.ajax({
                 url: "{{ route('home.dashboardReport') }}",
                 type: "GET",
-                dataType: "json"
+                dataType: "json",
+                beforeSend: function() {
+                    $("#totalTasksComplete, #checkin_point_percentage, #totalPoints, #currentScore")
+                        .html('<span class="placeholder col-8 placeholder-glow"></span>');
+                }
             });
 
             if (response.status === "success") {
-                console.log(response);
-
                 $('#currentScore').text(response.data.currentScore);
                 $('#totalPoints').text(response.data.totalPoints);
                 $('#totalTasksComplete').text(response.data.totalTasksComplete);
@@ -612,13 +708,15 @@
         }
     });
 </script>
+@endcanAccess
+
 <script>
-$(document).ready(function() {
-    $('input[name="start_date"]').on('change', function() {
-        var startDateValue = $(this).val();
-        $('input[name="end_date"]').val(startDateValue);
+    $(document).ready(function() {
+        $('input[name="start_date"]').on('change', function() {
+            var startDateValue = $(this).val();
+            $('input[name="end_date"]').val(startDateValue);
+        });
     });
-});
 </script>
 @canAccess('showScheduleOb','homes')
 <script>
@@ -631,13 +729,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: '{{ $schedule->user->name }} - {{ $schedule->shiftingOb->name }}',
                 start: '{{ $schedule->date }}',
                 description: `
-                        <b>User:</b> {{ $schedule->user->name }}<br>
-                        <b>Shift:</b> {{ $schedule->shiftingOb->name }}<br>
-                        <b>Clock In:</b> {{ $schedule->shiftingOb->clock_in }}<br>
-                        <b>Clock Out:</b> {{ $schedule->shiftingOb->clock_out }}<br>
-                        <b>Real Clock In:</b> {{ $schedule->attendance ? $schedule->attendance->clock_in : '-' }}<br>
-                        <b>Real Clock Out:</b> {{ $schedule->attendance ? $schedule->attendance->clock_out : '-' }}<br>
-                    `,
+                            <b>User:</b> {{ $schedule->user->name }}<br>
+                            <b>Shift:</b> {{ $schedule->shiftingOb->name }}<br>
+                            <b>Clock In:</b> {{ $schedule->shiftingOb->clock_in }}<br>
+                            <b>Clock Out:</b> {{ $schedule->shiftingOb->clock_out }}<br>
+                            <b>Real Clock In:</b> {{ $schedule->attendance ? $schedule->attendance->clock_in : '-' }}<br>
+                            <b>Real Clock Out:</b> {{ $schedule->attendance ? $schedule->attendance->clock_out : '-' }}<br>
+                        `,
                 id: '{{ $schedule->id }}',
                 extendedProps: {
                     user_id: '{{ $schedule->user_id }}',

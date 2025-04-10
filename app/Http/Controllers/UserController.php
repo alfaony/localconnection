@@ -272,6 +272,20 @@ class UserController extends Controller
             // $user = Auth::user();
             $user->id_card_image = $filePath;
         }
+
+        if ($request->hasFile('avatar')) 
+        {
+            $fileAvatar = $request->file('avatar');
+            $fileNameAvatar = uniqid() . '.' . $fileAvatar->getClientOriginalExtension();
+            $filePathAvatar = 'public/avatars/' . $fileNameAvatar;
+
+            // Simpan file ke storage
+            Storage::put($filePathAvatar, file_get_contents($fileAvatar));
+
+            // Update kolom id_card_image di tabel users
+            // $user = Auth::user();
+            $user->avatar = $filePathAvatar;
+        }
         
         // **Update Background, Experience, Skill**
         $user->background = $request->post('background');
@@ -316,7 +330,7 @@ class UserController extends Controller
 
         $user->save();
 
-        if(Access::can('edit_profile_all_user','users'))
+        if(Access::can('edit_profile_all_user','users') && $user->id != Auth::user()->id)
         {
             return redirect()->to(route('user.index'))->with('update',true);
         }else
