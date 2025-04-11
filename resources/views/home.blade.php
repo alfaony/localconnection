@@ -232,6 +232,9 @@
         
         
             <div style="height: 300px; overflow-y: auto;" id="office-media-image-section">
+                <div class="loading-spiner-office d-flex justify-content-center align-items-center" style="height: 300px; display: none;">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
             </div>
         
             {{-- Youtube Embed Section --}}
@@ -244,6 +247,9 @@
             </div>
         
             <div style="height: 300px; overflow-y: auto;" id="office-media-youtube-section">
+                <div class="loading-spiner-office d-flex justify-content-center align-items-center" style="height: 300px; display: none;">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
             </div>
         @endcanAccess
     </div>

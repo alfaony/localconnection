@@ -1,4 +1,4 @@
-<div class="row row-cols-2 row-cols-md-4 g-3 mb-4">
+<div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
     @forelse($youtubeMedias as $media)
     <div class="col-md-6 col-lg-4">
         <div class="card shadow-sm border-0">
@@ -21,7 +21,7 @@
     @empty
     <div class="col-12 text-center">
         <div class="card border-0 shadow-sm">
-            <div class="card-body">
+            <div class="card-body py-5">
                 <i class="bi bi-image-fill text-muted" style="font-size: 2rem;"></i>
                 <p class="text-muted mt-2">Tidak ada data</p>
                 @canAccess('store','office_medias')
