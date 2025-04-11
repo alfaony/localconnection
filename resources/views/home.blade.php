@@ -165,22 +165,18 @@
 <div class="row g-3">
     <!-- Rankings -->
     @canAccess('leaderboard','homes')
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card shadow-sm">
             <div class="card-header d-flex align-items-center">
                 <i class="bi bi-trophy me-2"></i>Ranking Top Score
             </div>
             <div class="card-body" style="height: 240px; overflow-y: auto;">
-                <!-- Loader -->
-                <div id="leaderboard-loader" class="d-flex justify-content-center align-items-center">
-                    <div class="spinner-border text-warning" role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div>
+                <div id="leaderboard-loader" class="d-flex justify-content-center align-items-center"
+                    style="height: 180px;">
+                    <div class="spinner-border text-success" role="status"></div>
                 </div>
-
-                <!-- Leaderboard List -->
                 <ol class="list-group list-group-flush d-none" id="leaderboard-list">
-                    {{-- Will be filled by JS --}}
+                    <!-- Data akan diisi via JS -->
                 </ol>
             </div>
         </div>
@@ -188,10 +184,26 @@
     @endcanAccess
 
     @canAccess('overdueRanking','homes')
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card shadow-sm">
             <div class="card-header d-flex align-items-center">
-                <i class="bi bi-exclamation-triangle me-2 mr-1"></i>Ranking Staff Dengan Overdue Task Terbanyak
+                <i class="bi bi-clipboard-check"></i> Ranking Staff Overdue to Waiting Review
+            </div>
+            <div class="card-body" style="height: 240px; overflow-y: auto;">
+                <div id="overdue-inreview-loader" class="d-flex justify-content-center align-items-center"
+                    style="height: 180px;">
+                    <div class="spinner-border text-warning" role="status"></div>
+                </div>
+                <ol class="list-group list-group-flush d-none" id="overdue-inreview-ranking">
+                    <!-- Data akan diisi via JS -->
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle me-2 mr-1"></i>Ranking Staff Overdue Task
             </div>
             <div class="card-body" style="height: 240px; overflow-y: auto;">
                 <div id="overdue-loader" class="d-flex justify-content-center align-items-center"
@@ -207,46 +219,34 @@
     @endcanAccess
 </div>
 
-<div class="row g-3">
-    {{--
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header d-flex align-items-center">
-                <i class="bi bi-alarm me-2 mr-1"></i>Staf Yang Ga Standby Pagi Hari
+<div class="card shadow-sm">
+    <div class="card-body">
+        @canAccess('index','office_medias')
+        {{-- What's Happening Now --}}
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2 mt-3">
+                <h5>What's Happening Now !</h5>
+                @canAccess('store','office_medias')
+                <button class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#uploadMomentModal">Upload</button>
+                @endcanAccess
             </div>
-            <div class="card-body" style="height: 150px; overflow-y: auto;">
-                <ol class="list-group list-group-flush">
-                    <li class="list-group-item">
-                        <i class="bi bi-clock-history me-2"></i>Andika Pratama
-                    </li>
-                    <!-- Other list items -->
-                </ol>
+        
+        
+            <div style="height: 300px; overflow-y: auto;" id="office-media-image-section">
             </div>
-        </div>
+        
+            {{-- Youtube Embed Section --}}
+            <hr>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5>Nonton Youtube Kantor ( Embed URL )</h5>
+                @canAccess('store','office_medias')
+                <button class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#youtubeEmbedModal">Embed URL</button>
+                @endcanAccess
+            </div>
+        
+            <div style="height: 300px; overflow-y: auto;" id="office-media-youtube-section">
+            </div>
+        @endcanAccess
     </div>
-    --}}
-
-    {{-- 
-    <div class="col-md-6">
-        <div class="card shadow-sm text-center">
-            <div class="card-body">
-                <div class="display-4 text-primary mb-3">
-                    <i class="bi bi-bell-fill"></i>
-                </div>
-                <h5 class="mt-2"><i class="bi bi-people me-2"></i>PING YOUR TEAM</h5>
-                <div class="input-group my-3">
-                    <span class="input-group-text"><i class="bi bi-person"></i></span>
-                    <select class="form-control" disabled>
-                        <option>Alfatony</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary w-100" disabled>
-                    <i class="bi bi-send me-2"></i>Ping Now
-                </button>
-            </div>
-        </div>
-    </div>
-    --}}
 </div>
 <!-- End Rankings -->
 
@@ -549,6 +549,7 @@
     </div>
 </div>
 
+
 @canAccess('showScheduleOb','homes')
 <div class="card py-3">
     <div class="card-body">
@@ -588,6 +589,72 @@
     </div>
 </div>
 @endif
+
+<!-- Modal -->
+@canAccess('store','office_medias')
+{{-- Modal Upload Moment --}}
+<div class="modal fade" id="uploadMomentModal" tabindex="-1" role="dialog" aria-labelledby="uploadMomentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" action="{{ route('office-media.store') }}" method="POST" enctype="multipart/form-data">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Moment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span> {{-- X Button --}}
+                </button>
+            </div>
+            <input type="hidden" name="type" value="image">
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="moment_caption" class="form-label">Caption</label>
+                    <input type="text" class="form-control" id="moment_caption" placeholder="Misalnya: Ultah Kevin!">
+                </div>
+                <div class="mb-3">
+                    <label for="moment_photo" class="form-label">Foto</label>
+                    <input class="form-control" type="file" id="moment_photo" accept="image/*">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Upload Sekarang</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Modal Youtube Embed --}}
+<div class="modal fade" id="youtubeEmbedModal" role="dialog"  tabindex="-1" aria-labelledby="youtubeEmbedModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" enctype="multipart/form-data">
+            <div class="modal-header">
+                <h5 class="modal-title">Tambah Embed YouTube</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span> {{-- X Button --}}
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="youtube_url" class="form-label">YouTube URL</label>
+                    <input type="url" class="form-control" id="youtube_url" placeholder="https://youtube.com/embed/abc123">
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="1" id="is_temporary" name="is_temporary" checked>
+                        <label class="form-check-label" for="is_temporary">
+                            Temporary
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="video_caption" class="form-label">Caption</label>
+                    <input type="text" class="form-control" id="video_caption" placeholder="Misalnya: Video Training Sales">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endcanAccess
 @endsection
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -595,6 +662,192 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+@canAccess('index','office_medias')
+<script>
+        $(document).ready(function () 
+        {
+            loadOfficeMedia();
+        });
+        function loadOfficeMedia() 
+        {
+            $('#office-media-image-section, #office-media-youtube-section').html(`
+                <div class="d-flex justify-content-center py-5">
+                    <div class="spinner-border text-secondary" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+            `);
+
+            $.ajax({
+                url: "{{ route('office-media.index') }}",
+                type: "GET",
+                success: function(res) {
+                    
+                    if (res.status === 'success') 
+                    {                    
+                        $('#office-media-image-section').html(res.data.image);
+                        $('#office-media-youtube-section').html(res.data.youtube);
+                    }
+                },
+                error: function() {
+                    $('#office-media-image-section, #office-media-youtube-section').html(`<div class="text-center text-danger">Failed to load content.</div>`);
+                }
+            });
+
+            $('#office_media_image').html(`
+                <div class="col-md-3 mt-3">
+                    <div class="card border-0">
+                        <img src="https://picsum.photos/300/200" class="rounded-circle mx-auto d-block mt-2"
+                                alt="moment image" style="object-fit: cover; width: 100px; height: 100px;">
+                        <small class="mt-2 d-block mb-2">Caption dummy</small>
+                    </div>
+                </div>
+            `);
+
+        }
+</script>
+@endcanAccess
+
+@canAccess('store','office_medias')
+<script>
+    $(document).ready(function () {
+        loadOfficeMedia();
+        
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+
+        
+
+        // 📸 Submit form Upload Image
+        $('#uploadMomentModal form').on('submit', function (e) {
+            e.preventDefault();
+
+            let formData = new FormData();
+            formData.append('type', 'image');
+            formData.append('title', $('#moment_caption').val());
+            formData.append('file', $('#moment_photo')[0].files[0]);
+
+            
+            $.ajax({
+                url: "{{ route('office-media.store') }}",
+                method: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function () {
+                    $('#uploadMomentModal button[type="submit"]').prop('disabled', true).text('Uploading...');
+                },
+                success: function (response) 
+                {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Media berhasil diupload.',
+                        icon: 'success',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                        didOpen: () => 
+                        {
+                            Swal.showLoading()
+                        },
+                        willClose: () => 
+                        {
+                            loadOfficeMedia();
+                            $('#uploadMomentModal form')[0].reset();
+                            $('#uploadMomentModal .close').click();
+                        }
+                    });
+                },
+                error: function (xhr) {
+                    console.log(xhr);
+                    
+                    alert(xhr.responseJSON?.message || 'Gagal upload foto');
+                },
+                complete: function () {
+                    $('#uploadMomentModal button[type="submit"]').prop('disabled', false).text('Upload Sekarang');
+                }
+            });
+        });
+
+        // 🎥 Submit form YouTube URL
+        $('#youtubeEmbedModal form').on('submit', function (e) {
+            e.preventDefault();
+
+            let youtubeUrl = $('#youtube_url').val();
+            let caption = $('#video_caption').val();
+            let isTemporary = $('#is_temporary').is(':checked');
+
+            $('#youtubeEmbedModal .close').click();
+
+            $.ajax({
+                url: "{{ route('office-media.store') }}",
+                method: "POST",
+                data: {
+                    type: 'youtube',
+                    youtube_url: youtubeUrl,
+                    title: caption,
+                    is_temporary: isTemporary ? 1 : 0
+                },
+                success: function (response) {
+                    Swal.fire({
+                        title: 'Success',
+                        text: 'Video berhasil disimpan',
+                        icon: 'success',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        },
+                        willClose: () => {
+                            loadOfficeMedia();
+                        }
+                    });
+                    
+                    $('#youtubeEmbedModal form')[0].reset();
+                },
+                error: function (xhr) {
+                    alert(xhr.responseJSON?.message || 'Gagal menyimpan video');
+                }
+            });
+        });
+    });
+</script>
+@endcanAccess
+
+@canAccess('destroy','office_medias')
+<script>
+    $(document).on('click', '.delete-media-btn', function () 
+    {
+        const mediaId = $(this).data('id');
+        if (!confirm('Yakin ingin menghapus media ini?')) return;
+    
+        $.ajax({
+            url: `{{ route('office-media.destroy', ':id') }}`.replace(':id', mediaId),
+            type: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            success: function (res) {
+                if (res.status === 'success') {
+                    
+                    loadOfficeMedia(); // reload section
+                }
+            },
+            error: function () {
+                alert('Gagal menghapus media.');
+            }
+        });
+    });
+</script>
+@endcanAccess
+
 @canAccess('overdueRanking','homes')
 <script>
     async function loadOverdueLeaderboard() 
@@ -602,30 +855,72 @@
         $('#overdue-loader').removeClass('d-none');
         $('#overdue-ranking').addClass('d-none');
 
+        $('#overdue-inreview-loader').removeClass('d-none');
+        $('#overdue-inreview-ranking').addClass('d-none');
+        
         const response = await $.get('{{ route("home.overdueRanking") }}');
         
         const container = $('#overdue-ranking');
+        const containerInreview = $('#overdue-inreview-ranking');
+
         container.empty();
+        containerInreview.empty();
         
-        if (response.length === 0) {
+        if (response.data.length === 0) {
             container.append(`<li class="list-group-item text-center text-muted">No data available</li>`);
+            containerInreview.append(`<li class="list-group-item text-center text-muted">No data available</li>`);
         } else {
-            response.forEach((user, index) => {
-                container.append(`
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>
-                            ${index + 1 <= 9 ? `<i class="bi bi-${index + 1}-circle-fill text-danger me-2"></i>` : `<span class="badge bg-danger text-dark">${index + 1}</span>`}
-                            ${user.name}
-                        </span>
-                        <span class="badge bg-danger">${user.overdue_count}</span>
-                    </li>
-                `);
-            });
+            if(response.status === 'success') 
+            {
+                if(response.data && response.data.overdueUsers.length > 0)
+                {
+                    response.data.overdueUsers.forEach((user, index) => {
+                        container.append(`
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    ${index + 1 <= 9 ? `<i class="bi bi-${index + 1}-circle-fill text-danger me-2"></i>` : `<span class="badge bg-danger text-dark">${index + 1}</span>`}
+                                    ${user.name}
+                                </span>
+                                <span class="badge bg-danger">${user.overdue_count}</span>
+                            </li>
+                        `);
+                    });
+                }
+                else
+                {
+                    container.append(`<li class="list-group-item text-center text-muted">No data available</li>`);
+                }
+
+                if(response.data && response.data.overdueInReviewUsers.length > 0)
+                {
+                    
+                    response.data.overdueInReviewUsers.forEach((user, index) => {
+                        containerInreview.append(`
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    ${index + 1 <= 9 ? `<i class="bi bi-${index + 1}-circle-fill text-warning me-2"></i>` : `<span class="badge bg-warning text-dark">${index + 1}</span>`}
+                                    ${user.name}
+                                </span>
+                                <span class="badge bg-warning">${user.overdue_count}</span>
+                            </li>
+                        `);
+                    });
+                }
+                else
+                {
+                    containerInreview.append(`<li class="list-group-item text-center text-muted">No data available</li>`);
+                }
+            }
         }
 
         $('#overdue-loader').removeClass('d-flex').removeClass('justify-content-center').removeClass('align-items-center');
         $('#overdue-loader').addClass('d-none');
+
+        $('#overdue-inreview-loader').removeClass('d-flex').removeClass('justify-content-center').removeClass('align-items-center');
+        $('#overdue-inreview-loader').addClass('d-none');
+
         container.removeClass('d-none');
+        containerInreview.removeClass('d-none');
     }
 
     $(document).ready(function () {
@@ -656,12 +951,12 @@
             } else {
                 leaderboard.forEach((item, index) => {
                     const icon = index + 1 <= 9 ?
-                        `<i class="bi bi-${index + 1}-circle-fill text-warning me-2"></i>` :
-                        `<span class="badge bg-warning text-dark">${index + 1}</span>`;
+                        `<i class="bi bi-${index + 1}-circle-fill text-success me-2"></i>` :
+                        `<span class="badge bg-success text-dark">${index + 1}</span>`;
                     const html = `
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <span>${icon}${item.name}</span>
-                                <span class="badge bg-warning text-dark">${item.currentScore}</span>
+                                <span class="badge bg-success text-dark">${item.currentScore}</span>
                             </li>
                         `;
                     list.append(html);
@@ -761,9 +1056,9 @@ document.addEventListener('DOMContentLoaded', function() {
 @stop
 
 @section('css')
-<link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
 .card-header {
     font-weight: bold;

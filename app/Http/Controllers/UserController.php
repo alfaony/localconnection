@@ -42,8 +42,12 @@ class UserController extends Controller
             $roleAccess = true;
 
             $role = Role::get();
-            $user = User::where('email','like', '%' . $request->get('email') . '%')
-                    ->OrderBy('name','asc')->paginate(10);
+            $user = User::where(function($query) use ($request) {
+                        $query->where('email', 'like', '%' . $request->get('email') . '%')
+                              ->orWhere('name', 'like', '%' . $request->get('email') . '%');
+                    })
+                    ->orderBy('name', 'asc')
+                    ->paginate(10);
             $users = User:: get();
 
             $totalUser = User::where('delete_able',1)->count();
@@ -54,7 +58,10 @@ class UserController extends Controller
             $role = Role::where('name','!=',RoleSchema::ROOT)->get();
             $user = User::where('delete_able',1)
             ->byCompany(Auth::user()->company_id)
-            ->where('email','like', '%' . $request->get('email') . '%')
+            ->where(function($query) use ($request) {
+                $query->where('email','like', '%' . $request->get('email') . '%')
+                    ->orWhere('name','like', '%' . $request->get('email') . '%');
+            })
             ->OrderBy('name','asc')->paginate(10);
             $users = User::byCompany(Auth::user()->company_id)->get();
 
