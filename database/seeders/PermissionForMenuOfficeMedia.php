@@ -38,6 +38,12 @@ class PermissionForMenuOfficeMedia extends Seeder
                 'guard_name' => 'web'
             ]);
 
+            if (in_array($method,['destroy'])) 
+            {
+                //assign role & permission
+                PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+            }
             //assign role & permission
             PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
             PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
