@@ -82,6 +82,7 @@ use App\Http\Controllers\DecisionController;
 use App\Http\Controllers\PartnershipAgreementController;
 use App\Http\Controllers\SupplierCategoryController;
 use App\Http\Controllers\ProductSupplierController;
+use App\Http\Controllers\DayoffController;
 
 
 
@@ -397,6 +398,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('product-supplier/import', [ProductSupplierController::class, 'import'])->name('product-supplier.import');
   Route::resource('product-supplier', ProductSupplierController::class);
 });
+
+Route::get('dayoff/check-quota', [DayoffController::class, 'checkQuota'])->name('dayoff.checkQuota');
+Route::resource('dayoff', DayoffController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
