@@ -221,11 +221,11 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        @canAccess('index','office_medias')
+        @canAccess('index','office_media')
         {{-- What's Happening Now --}}
             <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2 mt-3">
                 <h5>What's Happening Now !</h5>
-                @canAccess('store','office_medias')
+                @canAccess('store','office_media')
                 <button class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#uploadMomentModal">Upload</button>
                 @endcanAccess
             </div>
@@ -241,7 +241,7 @@
             <hr>
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5>Nonton Youtube Kantor ( Embed URL )</h5>
-                @canAccess('store','office_medias')
+                @canAccess('store','office_media')
                 <button class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#youtubeEmbedModal">Embed URL</button>
                 @endcanAccess
             </div>
@@ -597,7 +597,7 @@
 @endif
 
 <!-- Modal -->
-@canAccess('store','office_medias')
+@canAccess('store','office_media')
 {{-- Modal Upload Moment --}}
 <div class="modal fade" id="uploadMomentModal" tabindex="-1" role="dialog" aria-labelledby="uploadMomentModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -670,7 +670,7 @@
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
-@canAccess('index','office_medias')
+@canAccess('index','office_media')
 <script>
         $(document).ready(function () 
         {
@@ -716,7 +716,7 @@
 </script>
 @endcanAccess
 
-@canAccess('store','office_medias')
+@canAccess('store','office_media')
 <script>
     $(document).ready(function () {
         loadOfficeMedia();
@@ -827,7 +827,7 @@
 </script>
 @endcanAccess
 
-@canAccess('destroy','office_medias')
+@canAccess('destroy','office_media')
 <script>
     $(document).on('click', '.delete-media-btn', function () 
     {
