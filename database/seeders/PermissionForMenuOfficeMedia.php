@@ -10,7 +10,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PermissionForMenuShowReportPointDaily extends Seeder
+class PermissionForMenuOfficeMedia extends Seeder
 {
     /**
      * Run the database seeds.
@@ -19,7 +19,7 @@ class PermissionForMenuShowReportPointDaily extends Seeder
      */
     public function run()
     {
-        $dashboards = ['index', 'showReportPointDaily','dashboardReport','leaderboard','overdueRanking'];
+        $dashboards = ['index', 'store','destroy'];
 
         foreach ($dashboards as $method) 
         {   
@@ -30,14 +30,20 @@ class PermissionForMenuShowReportPointDaily extends Seeder
             $staff = Role::where('name',RoleSchema::STAFF)->first();
             // create permision
             $permission = Permission::firstOrCreate([
-                'name' => ucwords($method).' Home',
+                'name' => ucwords($method).' Office Media',
             ],[
                 'method' => $method,
-                'table' => 'homes',
-                'model' => 'Home',
+                'table' => 'office_media',
+                'model' => 'OfficeMedia',
                 'guard_name' => 'web'
             ]);
 
+            if (in_array($method,['destroy'])) 
+            {
+                //assign role & permission
+                PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+            }
             //assign role & permission
             PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
             PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
@@ -47,5 +53,6 @@ class PermissionForMenuShowReportPointDaily extends Seeder
         }
     }
 }
+
 
 

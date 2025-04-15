@@ -101,6 +101,7 @@ class RoleController extends Controller
             'partnership_agreements',
             'product_suppliers',
             'dayoffs',
+            'office_media',
         ];
 
         $checked = array_merge($mainMenus);
@@ -231,6 +232,7 @@ class RoleController extends Controller
                 'partnership_agreements',
                 'product_suppliers',
                 'dayoffs',
+                'office_media',
             ];
         $checked = array_merge($mainMenus);
 
@@ -321,6 +323,7 @@ class RoleController extends Controller
                 'partnership_agreements',
                 'product_suppliers',
                 'dayoffs',
+                'office_media',
             ];
         
         $checked = array_merge($mainMenus);

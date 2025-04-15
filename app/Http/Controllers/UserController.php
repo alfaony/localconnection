@@ -45,8 +45,12 @@ class UserController extends Controller
             $roleAccess = true;
 
             $role = Role::get();
-            $user = User::where('email','like', '%' . $request->get('email') . '%')
-                    ->OrderBy('name','asc')->paginate(10);
+            $user = User::where(function($query) use ($request) {
+                        $query->where('email', 'like', '%' . $request->get('email') . '%')
+                              ->orWhere('name', 'like', '%' . $request->get('email') . '%');
+                    })
+                    ->orderBy('name', 'asc')
+                    ->paginate(10);
             $users = User:: get();
 
             $totalUser = User::where('delete_able',1)->count();
@@ -57,7 +61,10 @@ class UserController extends Controller
             $role = Role::where('name','!=',RoleSchema::ROOT)->get();
             $user = User::where('delete_able',1)
             ->byCompany(Auth::user()->company_id)
-            ->where('email','like', '%' . $request->get('email') . '%')
+            ->where(function($query) use ($request) {
+                $query->where('email','like', '%' . $request->get('email') . '%')
+                    ->orWhere('name','like', '%' . $request->get('email') . '%');
+            })
             ->OrderBy('name','asc')->paginate(10);
             $users = User::byCompany(Auth::user()->company_id)->get();
 
@@ -294,6 +301,20 @@ class UserController extends Controller
             // $user = Auth::user();
             $user->id_card_image = $filePath;
         }
+
+        if ($request->hasFile('avatar')) 
+        {
+            $fileAvatar = $request->file('avatar');
+            $fileNameAvatar = uniqid() . '.' . $fileAvatar->getClientOriginalExtension();
+            $filePathAvatar = 'public/avatars/' . $fileNameAvatar;
+
+            // Simpan file ke storage
+            Storage::put($filePathAvatar, file_get_contents($fileAvatar));
+
+            // Update kolom id_card_image di tabel users
+            // $user = Auth::user();
+            $user->avatar = $filePathAvatar;
+        }
         
         // **Update Background, Experience, Skill**
         $user->background = $request->post('background');
@@ -338,7 +359,7 @@ class UserController extends Controller
 
         $user->save();
 
-        if(Access::can('edit_profile_all_user','users'))
+        if(Access::can('edit_profile_all_user','users') && $user->id != Auth::user()->id)
         {
             return redirect()->to(route('user.index'))->with('update',true);
         }else
