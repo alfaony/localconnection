@@ -87,5 +87,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuSupplierCategory::class);
         $this->call(PermissionForMenuPartnershipAgreement::class);
         $this->call(DayoffTypeSeeder::class);
+        $this->call(PermissionForMenuDayoffSeeder::class);
     }
 }

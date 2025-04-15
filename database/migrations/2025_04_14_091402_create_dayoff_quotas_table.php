@@ -16,7 +16,6 @@ return new class extends Migration
         Schema::create('dayoff_quotas', function (Blueprint $table) {
             $table->id();
             $table->uuid('user_id');
-            $table->year('year');
             $table->foreignId('dayoff_type_id')->constrained()->onDelete('cascade');
         
             $table->integer('quota'); // total kuota

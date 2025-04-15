@@ -9,14 +9,13 @@ use App\Models\DayoffQuota;
 
 class DayoffResetQuotaCommand extends Command
 {
-    protected $signature = 'dayoff:reset-quota {year?}';
+    protected $signature = 'dayoff:reset-quota';
     protected $description = 'Reset kuota semua user berdasarkan default_quota dari dayoff_types';
 
     public function handle()
     {
-        $year = $this->argument('year') ?? now()->year;
         $types = DayoffType::where('is_limited', true)->get();
-        $users = User::all();
+        $users = User::where('dayoff_active',true)->all();
 
         foreach ($users as $user) {
             foreach ($types as $type) {
@@ -24,7 +23,6 @@ class DayoffResetQuotaCommand extends Command
                     [
                         'user_id' => $user->id,
                         'dayoff_type_id' => $type->id,
-                        'year' => $year,
                     ],
                     [
                         'quota' => $type->default_quota,
@@ -32,10 +30,10 @@ class DayoffResetQuotaCommand extends Command
                     ]
                 );
 
-                $this->info("Kuota {$type->code} di-set untuk {$user->name} ($year): {$type->default_quota} hari");
+                $this->info("Kuota {$type->code} di-set untuk {$user->name} : {$type->default_quota} hari");
             }
         }
 
-        $this->info("Selesai reset kuota untuk tahun $year.");
+        $this->info("Selesai reset kuota untuk tahun ");
     }
 }

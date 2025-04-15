@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('name'); // e.g. Cuti Biasa, Cuti Sakit
             $table->boolean('is_limited')->default(true); // true = pakai kuota
+            $table->boolean('permission_required')->default(false);
             $table->integer('default_quota')->nullable(); // null jika unlimited
             $table->timestamps();
             $table->softDeletes();

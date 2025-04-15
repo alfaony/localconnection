@@ -82,6 +82,7 @@ class AppServiceProvider extends ServiceProvider
             [
                 'ask_bos',
                 'decisions',
+                'dayoffs',
                 'kyes',
                 'partnership_agreements',
                 'national_holidays',
@@ -483,6 +484,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Kategori Supplier',
                     'route' => 'supplier-category.index',
                     'icon' => 'fa fa-list',
+                ],
+                'dayoffs' => 
+                [
+                    'text' => 'Cuti',
+                    'route' => 'dayoff.index',
+                    'icon' => 'fa fa-calendar-times',
                 ],
             ];
 

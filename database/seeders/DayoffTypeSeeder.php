@@ -16,15 +16,16 @@ class DayoffTypeSeeder extends Seeder
 
 public function run()
 {
-    $data = [
-        ['name' => 'Cuti Biasa', 'code' => 'biasa', 'is_limited' => true, 'default_quota' => 12],
-        ['name' => 'Cuti Sakit', 'code' => 'sakit', 'is_limited' => true, 'default_quota' => 14],
-        ['name' => 'Cuti Khusus', 'code' => 'khusus', 'is_limited' => false, 'default_quota' => null],
-        ['name' => 'Cuti Bersama', 'code' => 'bersama', 'is_limited' => false, 'default_quota' => null],
+    $data = 
+    [
+        ['name' => 'Cuti Biasa', 'is_limited' => true, 'default_quota' => 12],
+        ['name' => 'Cuti Sakit', 'is_limited' => true, 'permission_required' => true, 'default_quota' => 14],
+        ['name' => 'Cuti Khusus', 'is_limited' => false, 'default_quota' => null],
+        ['name' => 'Cuti Bersama', 'is_limited' => false, 'default_quota' => null],
     ];
 
     foreach ($data as $item) {
-        DayoffType::updateOrCreate(['code' => $item['code']], $item);
+        DayoffType::updateOrCreate(['name' => $item['name']], $item);
     }
 }
 }

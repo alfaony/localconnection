@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DayoffType extends Model
 {
     protected $fillable = [
-        'name', 'code', 'is_limited', 'default_quota'
+        'name', 'code', 'is_limited', 'default_quota','permission_required'
     ];
 
     public function quotas()

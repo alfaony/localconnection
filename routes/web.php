@@ -399,7 +399,11 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('product-supplier', ProductSupplierController::class);
 });
 
-Route::get('dayoff/check-quota', [DayoffController::class, 'checkQuota'])->name('dayoff.checkQuota');
+Route::get('dayoff/infoApprovementHr', [DayoffController::class, 'infoApprovementHr'])->name('dayoff.infoApprovementHr');
+Route::get('dayoff/infoApprovementFinance', [DayoffController::class, 'infoApprovementFinance'])->name('dayoff.infoApprovementFinance');
+Route::get('dayoff/checkInfo', [DayoffController::class, 'checkInfo'])->name('dayoff.checkInfo');
+Route::post('dayoff/financeApprovement', [DayoffController::class, 'financeApprovement'])->name('dayoff.financeApprovement');
+Route::post('dayoff/hrApprovement', [DayoffController::class, 'hrApprovement'])->name('dayoff.hrApprovement');
 Route::resource('dayoff', DayoffController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');

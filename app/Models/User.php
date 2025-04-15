@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
 
+use Carbon\Carbon;
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
@@ -84,6 +86,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'custom_rest_times' => 'array', // This will automatically decode JSON into an array   
         'ip_addresses' => 'array',   
+        'dayoff_active' => 'boolean',
     ];
 
     protected $appends = ['point_checkin', 'today_percentage', 'point_percentage'];
@@ -157,6 +160,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(EmployeeChecking::class);
     }
+
+    public function dayoffQuotas()
+    {
+        return $this->hasMany(DayoffQuota::class);
+    }
+
     public function getLastPositionAttribute()
     {
         return $this->userPosition()
@@ -193,6 +202,11 @@ class User extends Authenticatable
     public function salary()
     {
         return $this->hasMany(UserSalary::class);
+    }
+
+    public function dayoffs()
+    {
+        return $this->hasMany(Dayoff::class);
     }
 
     public function kye()
@@ -252,6 +266,33 @@ class User extends Authenticatable
         return $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
     }
 
+    public function isSick(): bool
+    {
+        $today = Carbon::today();
+
+        return $this->dayoffs()
+            ->whereHas('type', fn($q) => $q->where('permission_required', true))
+            ->whereDate('date_start', '<=', $today)
+            ->whereDate('date_end', '>=', $today)
+            ->whereNull('rejected_at')
+            ->whereNotNull('approved_hr_at')
+            ->whereNotNull('approved_finance_at')
+            ->exists();
+    }
+
+    public function isDayoff(): bool
+    {
+        $today = Carbon::today();
+
+        return $this->dayoffs()
+            ->whereHas('type', fn($q) => $q->where('permission_required','!=', true))
+            ->whereDate('date_start', '<=', $today)
+            ->whereDate('date_end', '>=', $today)
+            ->whereNull('rejected_at')
+            ->whereNotNull('approved_hr_at')
+            ->whereNotNull('approved_finance_at')
+            ->exists();
+    }
     // Scope query untuk mendapatkan data user dengan perhitungan
     public function scopeWithCheckinCounts($query, $userId = null, $start = null, $end = null, $today = null)
     {
