@@ -251,6 +251,12 @@ class DayoffController extends Controller
         $dateEnd = Carbon::parse($request->date_end);
         $durasi = $dateStart->diffInDays($dateEnd) + 1;
 
+        $quota = $type->is_limited
+        ? DayoffQuota::where('user_id', $user->id)
+            ->where('dayoff_type_id', $type->id)
+            ->first()
+        : null;
+
         $pendingDuration = Dayoff::where('user_id', $user->id)
             ->where('dayoff_type_id', $type->id)
             ->whereNull('rejected_at')
