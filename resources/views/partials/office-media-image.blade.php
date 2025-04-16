@@ -4,7 +4,7 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body d-flex flex-column justify-content-center">
                     <div class="position-relative">
-                        @canAccess('destroy','office_medias')
+                        @canAccess('destroy','office_media')
                         <button class="btn btn-sm btn-danger position-absolute delete-media-btn" style="top: 5px; right: 5px; z-index: 10;"
                                 data-id="{{ $media->id }}">
                             <i class="bi bi-trash"></i>
@@ -25,7 +25,7 @@
                 <div class="card-body text-center py-5">
                     <i class="bi bi-image-fill text-muted" style="font-size: 2rem;"></i>
                     <p class="text-muted mt-2">Tidak ada data</p>
-                    @canAccess('store','office_medias')
+                    @canAccess('store','office_media')
                         <button class="btn btn-outline-secondary btn-sm mt-2" data-toggle="modal" data-target="#uploadMomentModal">Upload Sekarang</button>
                     @endcanAccess
                 </div>
