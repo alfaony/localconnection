@@ -131,7 +131,7 @@
                     <table class="table table-hover mb-0">
                         <thead class="bg-light">
                             <tr>
-                                @canAccess('financeApprovement', 'dayoffs')
+                                @canAccess('hrApprovement', 'dayoffs')
                                 <th class="pl-4 py-3 align-middle text-center" style="width: 5%">
                                     <div class="custom-control custom-checkbox">
                                         <input type="checkbox" class="custom-control-input" id="select-all-hr">
@@ -140,7 +140,7 @@
                                 </th>
                                 @endcanAccess
 
-                                @canAccess('hrApprovement', 'dayoffs')
+                                @canAccess('financeApprovement', 'dayoffs')
                                 <th class="pl-4 py-3 align-middle text-center" style="width: 5%">
                                     <div class="custom-control custom-checkbox">
                                         <input type="checkbox" class="custom-control-input" id="select-all-finance">
