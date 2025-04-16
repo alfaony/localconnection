@@ -18,6 +18,8 @@ use App\Schemas\RoleSchema;
 
 use Carbon\Carbon;
 
+use App\Helpers\Access;
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
@@ -292,6 +294,11 @@ class User extends Authenticatable
             ->whereNotNull('approved_hr_at')
             ->whereNotNull('approved_finance_at')
             ->exists();
+    }
+
+    public function isSearchDayoff(): bool
+    {
+        return (Access::can('hrApprovement', 'dayoffs') ||  Access::can('financeApprovement', 'dayoffs') || Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR);
     }
     // Scope query untuk mendapatkan data user dengan perhitungan
     public function scopeWithCheckinCounts($query, $userId = null, $start = null, $end = null, $today = null)

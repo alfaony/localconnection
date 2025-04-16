@@ -4,6 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Helpers\Access;
+use Illuminate\Support\Facades\Auth;
+use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
 
 class Dayoff extends Model
 {
@@ -53,6 +57,16 @@ class Dayoff extends Model
 
         return $permiision;
     }
+    public function getStatusTextAttribute()
+    {
+        if ($this->rejected_at) {
+            return 'Ditolak';
+        } elseif ($this->approved_hr_at && $this->approved_finance_at) {
+            return 'Disetujui';
+        } else {
+            return 'Menunggu';
+        }
+    }
     public function getStatusBadgeAttribute()
     {
         if ($this->rejected_at) {
@@ -66,12 +80,22 @@ class Dayoff extends Model
 
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId)
+        $approve = false;
+
+        if(Access::can('hrApprovement', 'dayoffs') ||  Access::can('financeApprovement', 'dayoffs') || Auth::user()->role->name == RoleSchema::ROOT)
+        {
+            $approve = true;
+        }
+
+        if($companyId && $approve)
         {
             return $query->whereHas('user', function ($query) use ($companyId) 
             {
                 $query->where('company_id', $companyId);
             });
+        }else
+        {
+            return $query->where('user_id', Auth::user()->id);
         }
     }
 

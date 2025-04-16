@@ -405,6 +405,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('product-supplier', ProductSupplierController::class);
 });
 
+Route::get('dayoff/export/{format}', [DayoffController::class, 'export'])->name('dayoff.export');
+Route::get('dayoff/checkExportStatus', [DayoffController::class, 'checkExportStatus'])->name('dayoff.checkExportStatus');
+Route::get('dayoff/clearExportSession', [DayoffController::class, 'clearExportSession'])->name('dayoff.clearExportSession');
 Route::get('dayoff/infoApprovementHr', [DayoffController::class, 'infoApprovementHr'])->name('dayoff.infoApprovementHr');
 Route::get('dayoff/infoApprovementFinance', [DayoffController::class, 'infoApprovementFinance'])->name('dayoff.infoApprovementFinance');
 Route::get('dayoff/checkInfo', [DayoffController::class, 'checkInfo'])->name('dayoff.checkInfo');

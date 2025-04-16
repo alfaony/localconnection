@@ -107,14 +107,30 @@ class UserController extends Controller
         {
             $user->custom_rest_times = $request->custom_rest_times;
         }
-
+        
         $user->save();
         
+        if($request->quotas)
+        {
+            $user->dayoff_active = $request->dayoff_active ? true : false;
+
+            foreach ($request->quotas as $typeId => $jumlah) 
+            {
+                $type = DayoffType::find($typeId);            
+                DayoffQuota::updateOrCreate(
+                    ['user_id' => $user->id, 'dayoff_type_id' => $typeId],
+                    ['quota' => $jumlah]
+                );
+            }
+
+            $user->save();
+        }
 
         $divisions = $request->input('divisions');
         if ($divisions) {
             $user->divisions()->attach($divisions);
         }
+        
         return redirect()->back()->with('store',true);
     }
 

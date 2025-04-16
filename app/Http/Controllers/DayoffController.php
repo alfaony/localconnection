@@ -8,10 +8,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
+use App\Models\User;
 use App\Models\Dayoff;
 use App\Models\DayoffType;
 use App\Models\DayoffQuota;
 use App\Models\EmployeeChecking;
+
+use App\Jobs\ExportDayoffJob;
 
 use Carbon\Carbon;
 
@@ -19,13 +22,38 @@ use App\Helpers\Access;
 
 class DayoffController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $cutis = Dayoff::byCompany(Auth::user()->company_id)
+        $users = User::byCompany(Auth::user()->company_id)->orderBy('name')->get();
+        $types = DayoffType::all();
+        $filePath = 'exports/' . session('last_export_filename');
+        $fileExists = $filePath && Storage::exists($filePath) ?? false;
+
+        $query = Dayoff::with(['user', 'type']);
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('type_id')) {
+            $query->where('dayoff_type_id', $request->type_id);
+        }
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = Carbon::parse($request->start_date);
+            $endDate = Carbon::parse($request->end_date);
+            $query->where(function ($q) use ($startDate, $endDate) 
+            {
+                $q->whereBetween('date_start', [$startDate, $endDate])
+                ->orWhereBetween('date_end', [$startDate, $endDate]);
+            });
+        }
+
+        $cutis = $query->byCompany(Auth::user()->company_id)
             ->latest()
             ->paginate(10);
 
-        return view('dayoff.index', compact('cutis'));
+        return view('dayoff.index', compact('cutis','users','types','fileExists'));
     }
 
     public function create()
@@ -91,7 +119,7 @@ class DayoffController extends Controller
         $filePath = null;
         if ($request->hasFile('file') && $type->permission_required) 
         {
-            $filePath = $request->file('file')->store('dayoff-files');
+            $filePath = $request->file('file')->store('public/dayoff-files');
         }
 
         Dayoff::create([
@@ -106,6 +134,14 @@ class DayoffController extends Controller
         return redirect()->route('dayoff.index')->with('store', true);
     }
 
+    public function show($id)
+    {
+        $dayoff = Dayoff::byCompany(Auth::user()->company_id)->findOrFail($id);
+
+        return view('dayoff.show', [
+            'dayoff' => $dayoff,
+        ]);
+    }
     public function edit($id)
     {
         $cuti = Dayoff::where('user_id', auth()->id())->findOrFail($id);
@@ -141,7 +177,7 @@ class DayoffController extends Controller
         $filePath = $cuti->file ?? NULL;
         if ($request->hasFile('file') && $type->permission_required) 
         {
-            $filePath = $request->file('file')->store('dayoff-files');
+            $filePath = $request->file('file')->store('public/dayoff-files');
         }
         if ($cuti->rejected_at) 
         {
@@ -209,21 +245,29 @@ class DayoffController extends Controller
 
         $user = auth()->user();
         $type = DayoffType::findOrFail($request->dayoff_type_id);
+        $excludeId = $request->query('exclude_id');
 
         $dateStart = Carbon::parse($request->date_start);
         $dateEnd = Carbon::parse($request->date_end);
         $durasi = $dateStart->diffInDays($dateEnd) + 1;
 
-        $quota = $type->is_limited
-            ? DayoffQuota::where('user_id', $user->id)
-                ->where('dayoff_type_id', $type->id)
-                ->first()
-            : null;
+        $pendingDuration = Dayoff::where('user_id', $user->id)
+            ->where('dayoff_type_id', $type->id)
+            ->whereNull('rejected_at')
+            ->where(function ($q) {
+                $q->whereNull('approved_hr_at')->orWhereNull('approved_finance_at');
+            })
+            ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+            ->get()
+            ->sum(fn($cuti) => Carbon::parse($cuti->date_start)->diffInDays(Carbon::parse($cuti->date_end)) + 1);
+        
+        $used = ($quota->used ?? 0) + $pendingDuration;
+        
+        $sisa = !$type->is_limited
+            ? 'Unlimited'
+            : max(0, ($quota->quota ?? $type->default_quota) - $used);
 
-        $sisa = !$type->is_limited ? 'Unlimited' : ($quota->quota ?? $type->default_quota) - ($quota->used ?? 0);
         $sisaAfter = $sisa === 'Unlimited' ? 'Unlimited' : $sisa - $durasi;
-
-        $excludeId = $request->query('exclude_id');
 
         $hasOverlap = Dayoff::where('user_id', $user->id)
             ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
@@ -424,7 +468,9 @@ class DayoffController extends Controller
 
     public function infoApprovementHr()
     {
-        $total = Dayoff::byCompany(Auth::user()->company_id)->whereNull('approved_hr_at')
+        $total = Dayoff::byCompany(Auth::user()->company_id)
+            ->whereNull('approved_hr_at')
+            ->whereNull('approval_hr_user_id')
             ->whereNull('rejected_at')
             ->count();
 
@@ -434,11 +480,54 @@ class DayoffController extends Controller
     public function infoApprovementFinance()
     {
         $total = Dayoff::byCompany(Auth::user()->company_id)->whereNull('approved_finance_at')
-            ->whereNotNull('approved_hr_at')
+            ->whereNull('approval_finance_user_id')
             ->whereNull('rejected_at')
             ->count();
 
         return response()->json(['total' => $total]);
+    }
+
+    public function export(Request $request, $format)
+    {
+        $filename = 'laporan_cuti_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
+        $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
+
+        ExportDayoffJob::dispatch($request->all(), $filename, $exportFormat);
+
+        session(['export_filename_dayoff' => 'public/exports/' . $filename]);
+
+        return redirect()->back()->with('export', true);
+    }
+
+    public function checkExportStatus()
+    {
+        $filename = session('export_filename_dayoff');
+
+        if ($filename && Storage::exists($filename)) {
+            return response()->json([
+                'ready' => true,
+                'download_url' => Storage::url($filename),
+            ]);
+        }
+
+        return response()->json([
+            'ready' => false,
+            'filename' => $filename,
+        ]);
+    }
+
+    public function clearExportSession()
+    {
+        $filename = session('export_filename_dayoff');
+
+        session()->forget('export_filename_dayoff');
+
+        if ($filename && Storage::exists($filename)) {
+            Storage::delete($filename);
+            \Log::info("Laporan cuti dihapus dari storage: " . $filename);
+        }
+
+        return redirect()->back()->with('export', true);
     }
 
     private function findFirstDivision($user)

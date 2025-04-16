@@ -19,7 +19,11 @@ class PermissionForMenuDayoffSeeder extends Seeder
      */
     public function run()
     {
-        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'checkInfo','financeApprovement','hrApprovement','infoApprovementFinance','infoApprovementHr','shareUser'];
+        $methods = ['index','create', 'show', 'edit', 'update', 'destroy'
+        , 'store', 'checkInfo','financeApprovement'
+        ,'hrApprovement','infoApprovementFinance','infoApprovementHr','shareUser'
+        ,'export','checkExportStatus','clearExportSession'
+    ];
         
         $manager = Role::where('name',RoleSchema::MANAGER)->first();
         $staff = Role::where('name',RoleSchema::STAFF)->first();
