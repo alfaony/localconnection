@@ -706,7 +706,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-@canAccess('infoApprovementFinance', 'dayoffs')
+@canAccess('infoApprovementHr', 'dayoffs')
 <script>
     async function loadApprovalInfoHr() 
     {
@@ -721,7 +721,7 @@
     });
 </script>
 @endcanAccess
-@canAccess('infoApprovementHr', 'dayoffs')
+@canAccess('infoApprovementFinance', 'dayoffs')
 <script>
     async function loadApprovalInfoFinance() 
     {
