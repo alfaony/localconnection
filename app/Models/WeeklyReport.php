@@ -26,6 +26,7 @@ class WeeklyReport extends Model
         'number_of_leads',
         'number_of_views',
         'number_of_profit',
+        'file',
     ];
 
     protected $casts = [
@@ -42,5 +43,16 @@ class WeeklyReport extends Model
     public function division()
     {
         return $this->belongsTo(Division::class);
+    }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        if($companyId)
+        {
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }
     }
 }

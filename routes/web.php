@@ -416,7 +416,6 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('dayoff', DayoffController::class);
 });
 
-
 Route::resource('weekly-report', WeeklyReportController::class);
 
 

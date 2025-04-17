@@ -20,6 +20,8 @@ return new class extends Migration
             $table->date('date'); // Tanggal submit
             $table->year('year');
             $table->integer('week'); // Auto-increment 1–52 per tahun dan per divisi
+            $table->string('file')->nullable();
+            
         
             // Text fields
             $table->text('key_activities')->nullable();
