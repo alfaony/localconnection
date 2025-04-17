@@ -55,6 +55,11 @@ class Dayoff extends Model
             $permiision = true;
         }
 
+        if($this->user_id != Auth::user()->id)
+        {
+            $permiision = false;
+        }
+
         return $permiision;
     }
     public function getStatusTextAttribute()
