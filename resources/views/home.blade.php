@@ -115,6 +115,41 @@
                     </div>
                 </div>
             </div>
+
+            @canAccess('infoApprovementHr', 'dayoffs')
+            <div class="col-md-6 mt-3">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Cuti yang Menunggu Persetujuan HR
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-hr">
+                                <span class="spinner-border spinner-border-sm text-primary"></span>
+                            </div>
+                        </div>
+                        <div><i class="fas fa-user-tie fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+            @endcanAccess
+            @canAccess('infoApprovementFinance', 'dayoffs')
+            <div class="col-md-6 mt-3">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Cuti yang Menunggu Persetujuan Finance
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-finance">
+                                <span class="spinner-border spinner-border-sm text-info"></span>
+                            </div>
+                        </div>
+                        <div><i class="fas fa-coins fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+            @endcanAccess
         </div>
 
         {{-- 
@@ -213,43 +248,6 @@
                 <ol class="list-group list-group-flush d-none" id="overdue-ranking">
                     <!-- Data akan diisi via JS -->
                 </ol>
-            </div>
-        </div>
-    </div>
-    @endcanAccess
-</div>
-
-<div class="row mb-3" id="approval-info-cards">
-    @canAccess('infoApprovementHr', 'dayoffs')
-    <div class="col-md-6">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                        Cuti yang Menunggu Persetujuan HR
-                    </div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-hr">
-                        <span class="spinner-border spinner-border-sm text-primary"></span>
-                    </div>
-                </div>
-                <div><i class="fas fa-user-tie fa-2x text-gray-300"></i></div>
-            </div>
-        </div>
-    </div>
-    @endcanAccess
-    @canAccess('infoApprovementFinance', 'dayoffs')
-    <div class="col-md-6">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                        Cuti yang Menunggu Persetujuan Finance
-                    </div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-finance">
-                        <span class="spinner-border spinner-border-sm text-info"></span>
-                    </div>
-                </div>
-                <div><i class="fas fa-coins fa-2x text-gray-300"></i></div>
             </div>
         </div>
     </div>
