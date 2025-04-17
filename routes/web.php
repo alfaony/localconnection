@@ -403,17 +403,18 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('product-supplier/importProgress/{batchId}', [ProductSupplierController::class, 'importProgress']);
   Route::post('product-supplier/import', [ProductSupplierController::class, 'import'])->name('product-supplier.import');
   Route::resource('product-supplier', ProductSupplierController::class);
+  
+  Route::get('dayoff/export/{format}', [DayoffController::class, 'export'])->name('dayoff.export');
+  Route::get('dayoff/checkExportStatus', [DayoffController::class, 'checkExportStatus'])->name('dayoff.checkExportStatus');
+  Route::get('dayoff/clearExportSession', [DayoffController::class, 'clearExportSession'])->name('dayoff.clearExportSession');
+  Route::get('dayoff/infoApprovementHr', [DayoffController::class, 'infoApprovementHr'])->name('dayoff.infoApprovementHr');
+  Route::get('dayoff/infoApprovementFinance', [DayoffController::class, 'infoApprovementFinance'])->name('dayoff.infoApprovementFinance');
+  Route::get('dayoff/checkInfo', [DayoffController::class, 'checkInfo'])->name('dayoff.checkInfo');
+  Route::post('dayoff/financeApprovement', [DayoffController::class, 'financeApprovement'])->name('dayoff.financeApprovement');
+  Route::post('dayoff/hrApprovement', [DayoffController::class, 'hrApprovement'])->name('dayoff.hrApprovement');
+  Route::resource('dayoff', DayoffController::class);
 });
 
-Route::get('dayoff/export/{format}', [DayoffController::class, 'export'])->name('dayoff.export');
-Route::get('dayoff/checkExportStatus', [DayoffController::class, 'checkExportStatus'])->name('dayoff.checkExportStatus');
-Route::get('dayoff/clearExportSession', [DayoffController::class, 'clearExportSession'])->name('dayoff.clearExportSession');
-Route::get('dayoff/infoApprovementHr', [DayoffController::class, 'infoApprovementHr'])->name('dayoff.infoApprovementHr');
-Route::get('dayoff/infoApprovementFinance', [DayoffController::class, 'infoApprovementFinance'])->name('dayoff.infoApprovementFinance');
-Route::get('dayoff/checkInfo', [DayoffController::class, 'checkInfo'])->name('dayoff.checkInfo');
-Route::post('dayoff/financeApprovement', [DayoffController::class, 'financeApprovement'])->name('dayoff.financeApprovement');
-Route::post('dayoff/hrApprovement', [DayoffController::class, 'hrApprovement'])->name('dayoff.hrApprovement');
-Route::resource('dayoff', DayoffController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
