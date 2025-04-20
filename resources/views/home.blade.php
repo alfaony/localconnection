@@ -8,7 +8,16 @@
         @if(Session::get('updateProfile'))
         <div class="alert alert-success mt-3">Pengguna Berhasil Perbarui</div>
         @endif
+
+        @canAccess('reminderDashboard', 'weekly_reports')
+        <div id="weekly-report-reminder">
+            <div class="text-center my-3">
+                <i class="fas fa-spinner fa-spin text-muted"></i> Memeriksa laporan mingguan...
+            </div>
+        </div>
+        @endcanAccess
     </div>
+
     @canAccess('dashboardReport','homes')
     <!-- Profile and Stats -->
     <div class="col-md-3 mt-3">
@@ -703,7 +712,26 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> 
+@canAccess('reminderDashboard', 'weekly_reports')
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            url: "{{ route('weekly-report.reminderDashboard') }}",
+            method: "GET",
+            success: function (res) {
+                $('#weekly-report-reminder').html(res.html);
+            },
+            error: function () {
+                $('#weekly-report-reminder').html(
+                    '<div class="alert alert-danger">Gagal memuat reminder laporan mingguan.</div>'
+                );
+            }
+        });
+    });
+</script>
+@endcanAccess
+
 @canAccess('infoApprovementHr', 'dayoffs')
 <script>
     async function loadApprovalInfoHr() 

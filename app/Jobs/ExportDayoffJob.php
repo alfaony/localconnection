@@ -19,13 +19,15 @@ class ExportDayoffJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $filters, $fileName, $company_id;
+    protected $filters, $fileName, $company_id,$start_date,$end_date;
 
-    public function __construct(array $filters, $fileName, $company_id)
+    public function __construct(array $filters, $fileName, $company_id, $start_date, $end_date)
     {
         $this->filters = $filters;
         $this->fileName = $fileName;
         $this->company_id = $company_id;
+        $this->start_date = $start_date;
+        $this->end_date = $end_date;
     }
 
     public function handle()
@@ -42,13 +44,13 @@ class ExportDayoffJob implements ShouldQueue
                 $query->where('dayoff_type_id', $this->filters['type_id']);
             }
     
-            if ($request->filled('start_date') && $request->filled('end_date')) {
-                $startDate = Carbon::parse($request->start_date);
-                $endDate = Carbon::parse($request->end_date);
+            if (!empty($this->start_date) && !empty($this->end_date)) {
+                $startDate = Carbon::parse($this->start_date);
+                $endDate = Carbon::parse($this->end_date);
                 $query->where(function ($q) use ($startDate, $endDate) 
                 {
                     $q->whereBetween('date_start', [$startDate, $endDate])
-                    ->orWhereBetween('date_end', [$startDate, $endDate]);
+                      ->orWhereBetween('date_end', [$startDate, $endDate]);
                 });
             }
     
@@ -57,6 +59,7 @@ class ExportDayoffJob implements ShouldQueue
             Excel::store(new DayoffExport($data), 'public/exports/' . $this->fileName);
         } catch (\Throwable $th) {
             //throw $th;
+            dd($th);
             Log::error($th->getMessage());
         }
     }

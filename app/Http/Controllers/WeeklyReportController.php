@@ -65,6 +65,11 @@ class WeeklyReportController extends Controller
             return back()->withErrors(['date' => 'Laporan untuk minggu ini sudah ada.'])->withInput();
         }
 
+        // if (!$weeklyReport->isEditable) 
+        // {
+        //     return back()->withErrors(['date' => 'Laporan ini tidak dapat diubah karena sudah lewat batas waktu yang diizinkan.'])->withInput();
+        // }
+
         $path = null;
         if ($request->hasFile('file')) 
         {
@@ -96,8 +101,6 @@ class WeeklyReportController extends Controller
 
     public function edit(WeeklyReport $weeklyReport)
     {
-        $this->authorize('update', $weeklyReport); // optional: jika pakai policy
-
         return view('weekly_report.createOrEdit', [
             'mode' => 'edit',
             'report' => $weeklyReport,
@@ -107,11 +110,8 @@ class WeeklyReportController extends Controller
 
     public function update(Request $request, WeeklyReport $weeklyReport)
     {
-        $this->authorize('update', $weeklyReport);
-
         $request->validate([
             'division_id' => 'required|uuid|exists:divisions,id',
-            'date' => 'required|date',
             'key_activities' => 'nullable|string',
             'problems' => 'nullable|string',
             'targets' => 'nullable|string',
@@ -124,6 +124,11 @@ class WeeklyReportController extends Controller
             'number_of_views' => 'nullable|integer|min:0',
             'number_of_profit' => 'nullable|integer|min:0',
         ]);
+
+        if (!$weeklyReport->isEditable) 
+        {
+            return back()->withErrors(['date' => 'Laporan ini tidak dapat diubah karena sudah lewat batas waktu yang diizinkan.'])->withInput();
+        }
 
         $date = Carbon::parse($request->date);
         $year = $date->year;
@@ -141,11 +146,14 @@ class WeeklyReportController extends Controller
             return back()->withErrors(['date' => 'Laporan untuk minggu ini sudah ada.'])->withInput();
         }
 
+        $path = $weeklyReport->file;
+        if ($request->hasFile('file')) 
+        {
+            $path = $request->file('file')->store('weekly_reports', 'public');
+        }
+
         $weeklyReport->update([
             'division_id' => $request->division_id,
-            'date' => $request->date,
-            'year' => $year,
-            'week' => $week,
             'key_activities' => $request->key_activities,
             'problems' => $request->problems,
             'targets' => $request->targets,
@@ -157,6 +165,7 @@ class WeeklyReportController extends Controller
             'number_of_leads' => $request->number_of_leads,
             'number_of_views' => $request->number_of_views,
             'number_of_profit' => $request->number_of_profit,
+            'file' => $path
         ]);
 
         return redirect()->route('weekly-report.index')->with('success', 'Laporan berhasil diperbarui.');
@@ -164,9 +173,43 @@ class WeeklyReportController extends Controller
 
     public function destroy(WeeklyReport $weeklyReport)
     {
-        $this->authorize('delete', $weeklyReport); // optional policy
+        if (!$weeklyReport->isEditable) 
+        {
+            return back()->withErrors(['date' => 'Laporan ini tidak dapat diubah karena sudah lewat batas waktu yang diizinkan.'])->withInput();
+        }
+
         $weeklyReport->delete();
 
         return redirect()->route('weekly-report.index')->with('success', 'Laporan berhasil dihapus.');
+    }
+
+    public function reminderDashboard()
+    {
+        $user = auth()->user();
+        $today = now();
+
+        // Cek jika hari ini < Rabu (3)
+        if ($today->dayOfWeekIso < 3) {
+            return response()->json(['html' => '']); // kosong
+        }
+
+        $year = $today->year;
+        $week = $today->isoWeek();
+        $divisions = $user->divisions;
+
+        $notReportedDivisions = $divisions->filter(function ($division) use ($user, $year, $week) {
+            return !WeeklyReport::where('user_id', $user->id)
+                ->where('division_id', $division->id)
+                ->where('year', $year)
+                ->where('week', $week)
+                ->exists();
+        });
+
+        if ($notReportedDivisions->isEmpty()) {
+            return response()->json(['html' => '']);
+        }
+
+        $html = view('partials.weekly-report-reminder', compact('notReportedDivisions'))->render();
+        return response()->json(['html' => $html]);
     }
 }

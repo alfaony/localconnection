@@ -498,8 +498,8 @@ class DayoffController extends Controller
     {
         $filename = 'laporan_cuti_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
-
-        ExportDayoffJob::dispatch($request->all(), $filename, $exportFormat);
+        
+        ExportDayoffJob::dispatch($request->all(), $filename, $exportFormat, $request->start_date, $request->end_date);
 
         session(['export_filename_dayoff' => 'public/exports/' . $filename]);
 

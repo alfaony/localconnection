@@ -44,7 +44,11 @@ class WeeklyReport extends Model
     {
         return $this->belongsTo(Division::class);
     }
-
+    
+    public function getIsEditableAttribute()
+    {
+        return $this->year == now()->year && $this->week == now()->isoWeek();
+    }
     public function scopeByCompany($query,$companyId)
     {
         if($companyId)

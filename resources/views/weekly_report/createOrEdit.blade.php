@@ -43,7 +43,7 @@
                         <label for="date" class="font-weight-bold">
                             <i class="fas fa-calendar-alt mr-2"></i>Tanggal Laporan
                         </label>
-                        <input type="date"  class="form-control" 
+                        <input type="date" id="date" class="form-control" 
                             value="{{ old('date', isset($report) ? $report->date->format('Y-m-d') : now()->format('Y-m-d')) }}" readonly>
                     </div>
 
@@ -75,21 +75,21 @@
                         <label class="font-weight-bold">
                             <i class="fas fa-tasks mr-2 text-success"></i>Aktivitas Kunci
                         </label>
-                        <input class="thriveEditor form-control" id="description_key_activities" data-ids="key_activities" name="key_activities" placeholder="Masukkan aktivitas utama minggu ini..."/>
+                        <input class="thriveEditor form-control" id="description_key_activities" data-ids="key_activities" name="key_activities" value="{{  @$report->key_activities }}" placeholder="Masukkan aktivitas utama minggu ini..."/>
                     </div>
 
                     <div class="form-group">
                         <label class="font-weight-bold">
                             <i class="fas fa-exclamation-triangle mr-2 text-danger"></i>Permasalahan
                         </label>
-                        <input class="thriveEditor form-control" id="description_problems" data-ids="problems" name="problems" placeholder="Deskripsi tantangan/hambatan..."/>
+                        <input class="thriveEditor form-control" id="description_problems" data-ids="problems" name="problems" value="{{  @$report->problems }}" placeholder="Deskripsi tantangan/hambatan..."/>
                     </div>
 
                     <div class="form-group">
                         <label class="font-weight-bold">
                             <i class="fas fa-bullseye mr-2 text-primary"></i>Target
                         </label>
-                        <input class="thriveEditor form-control" id="description_targets" data-ids="targets" name="targets" placeholder="Rencana target minggu depan..."/>
+                        <input class="thriveEditor form-control" id="description_targets" data-ids="targets" name="targets"  value="{{  @$report->targets }}" placeholder="Rencana target minggu depan..."/>
                     </div>
 
                     <div class="form-group">

@@ -12,9 +12,11 @@
         <div>
             <small class="text-muted">Daftar laporan mingguan Anda</small>
         </div>
+        @canAccess('store','weekly_reports')
         <a href="{{ route('weekly-report.create') }}" class="btn btn-primary btn-sm">
             <i class="fas fa-plus-circle mr-1"></i> Buat Laporan Baru
         </a>
+        @endcanAccess
     </div>
 
     <div class="card shadow">
@@ -48,17 +50,21 @@
                                     @endif
                                 </td>
                                 <td class="text-right pr-4">
+                                    @if($report->isEditable)
+                                    @canAccess('store','weekly_reports')
                                     <a href="{{ route('weekly-report.edit', $report->id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    @endcanAccess
                                     {{-- Optional Delete --}}
-                                    {{-- 
+                                    @canAccess('destroy','weekly_reports')
                                     <form action="{{ route('weekly-report.destroy', $report->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus laporan ini?')">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button>
                                     </form> 
-                                    --}}
+                                    @endcanAccess
+                                    @endif
                                 </td>
                             </tr>
                         @empty

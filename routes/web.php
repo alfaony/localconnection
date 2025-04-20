@@ -85,6 +85,7 @@ use App\Http\Controllers\ProductSupplierController;
 use App\Http\Controllers\DayoffController;
 use App\Http\Controllers\OfficeMediaController;
 use App\Http\Controllers\WeeklyReportController;
+use App\Http\Controllers\ReportChartController;
 
 
 
@@ -415,9 +416,14 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('dayoff/financeApprovement', [DayoffController::class, 'financeApprovement'])->name('dayoff.financeApprovement');
   Route::post('dayoff/hrApprovement', [DayoffController::class, 'hrApprovement'])->name('dayoff.hrApprovement');
   Route::resource('dayoff', DayoffController::class);
+
+  Route::get('dashboard-weekly-report', [ReportChartController::class, 'index']);
+  Route::get('dashboard-weekly-report/data', [ReportChartController::class, 'data'])->name('dasboard.weekly-report.fetch');
+  
+  Route::get('weekly-report/reminderDashboard', [WeeklyReportController::class, 'reminderDashboard'])->name('weekly-report.reminderDashboard');
+  Route::resource('weekly-report', WeeklyReportController::class);
 });
 
-Route::resource('weekly-report', WeeklyReportController::class);
 
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
