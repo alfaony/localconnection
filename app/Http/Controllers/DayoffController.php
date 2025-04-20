@@ -435,11 +435,12 @@ class DayoffController extends Controller
         if($dayoff->type->permission_required && $dayoff->approvalFinance && $dayoff->approvalHR)
         {
             $existingCheckinDates = EmployeeChecking::where('user_id', $dayoff->user_id)
-            ->whereDate('created_at', '>=', $dayoff->date_start)
-            ->whereDate('created_at', '<=', $dayoff->date_end)
+            ->whereDate('scheduled_time', '>=', $dayoff->date_start)
+            ->whereDate('scheduled_time', '<=', $dayoff->date_end)
             ->get()
-            ->map(function ($checkin) {
-                return $checkin->created_at;
+            ->map(function ($checkin) 
+            {
+                return Carbon::parse($checkin->scheduled_time)->format('Y-m-d');
             })
             ->unique()
             ->values();
@@ -448,24 +449,24 @@ class DayoffController extends Controller
             {
                 $firstDivision = $this->findFirstDivision($dayoff->user);
 
-                EmployeeChecking::create([
-                    'user_id' => $dayoff->user_id,
-                    'division_id' => $firstDivision->id,
-                    'scheduled_time' => $tanggal,
-                    'scheduled_timeout' => $tanggal,
-                    'is_dayoff' => false,
-                    'is_active' => false,
-                    'is_completed' => false,
-                    'is_permission' => true,
-                    'created_at' => $tanggal, // inject tanggal checkin asli
-                    'updated_at' => now(),
-                ]);
+                $employeeChecking = new EmployeeChecking();
+                $employeeChecking->user_id = $dayoff->user_id;
+                $employeeChecking->division_id = $firstDivision->id;
+                $employeeChecking->scheduled_time = $tanggal;
+                $employeeChecking->scheduled_timeout = $tanggal;
+                $employeeChecking->is_dayoff = false;
+                $employeeChecking->is_active = false;
+                $employeeChecking->is_completed = false;
+                $employeeChecking->is_permission = true;
+                $employeeChecking->created_at = Carbon::parse($tanggal);
+                $employeeChecking->updated_at = Carbon::parse($tanggal);
+                $employeeChecking->save();
             }
 
             EmployeeChecking::where('user_id', $dayoff->user_id)
             ->whereDate('created_at', '>=', $dayoff->date_start)
             ->whereDate('created_at', '<=', $dayoff->date_end)
-            ->where('is_active',true)
+            ->where('is_permission', false)
             ->delete();
         }
 

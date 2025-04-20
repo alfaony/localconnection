@@ -110,15 +110,20 @@
                             
                             @forelse($employeeCheckings as $index => $checking)
                                 <tr>
-                                    <td>{{ $checking->user->name }}</td>
+                                    <td>{{ $checking->user->name }}
+                                    </td>
                                     <td>
                                         @if(!$checking->is_active && !$checking->isDayoff())
+                                            @if($checking->is_permission)
+                                            {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y') : '' }}
+                                            @else
                                             {{ $checking->checkin_start_time ? \Carbon\Carbon::parse($checking->checkin_start_time)->locale('id')->translatedFormat('F d,y H:i:s') : \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y H:i:s') }}
                                             @if($manualCheck['manual_checkin'])
                                             <br>
                                             <span class="badge bg-primary">
                                                 Waktu Check-In : {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('H:i:s') : '' }}
                                             </span>
+                                            @endif
                                             @endif
                                         @else
                                             {{ $checking->scheduled_time ? \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y') : \Carbon\Carbon::parse($checking->scheduled_time)->locale('id')->translatedFormat('F d,y') }}

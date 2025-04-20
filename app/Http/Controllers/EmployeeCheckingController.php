@@ -55,7 +55,7 @@ class EmployeeCheckingController extends Controller
         // Nullable variabel
         $employeeCheckings = collect();
         $users = collect();
-
+        
 
         $start = $startDate ? Carbon::parse($startDate)->startOfDay() : Carbon::now()->startOfMonth()->startOfDay();
         $end = $endDate ? Carbon::parse($endDate)->endOfDay() : Carbon::now()->endOfDay();

@@ -467,6 +467,18 @@
             return false;
         }
 
+        if (action === 'approve') {
+            const confirm = confirm('Apakah Anda yakin ingin mensetujui cuti terpilih?');
+            if (!confirm) {
+                return false;
+            }
+        } else if (action === 'reject') {
+            const confirm = confirm('Apakah Anda yakin ingin menolak cuti terpilih?');
+            if (!confirm) {
+                return false;
+            }
+        }
+
         $('#cuti_ids_input_hr').val(JSON.stringify(selected));
         $('#action_type_input_hr').val(action);
 
@@ -502,6 +514,19 @@
         if (selected.length === 0) {
             alert('Pilih minimal satu cuti untuk Finance!');
             return false;
+        }
+
+        if (action === 'approve') 
+        {
+            const confirm = confirm('Apakah Anda yakin ingin mensetujui cuti terpilih?');
+            if (!confirm) {
+                return false;
+            }
+        } else if (action === 'reject') {
+            const confirm = confirm('Apakah Anda yakin ingin menolak cuti terpilih?');
+            if (!confirm) {
+                return false;
+            }
         }
 
         $('#cuti_ids_input').val(JSON.stringify(selected));
