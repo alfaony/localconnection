@@ -27,6 +27,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('project:reccuring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        $schedule->command('media:cleanup-temporary')->timezone('Asia/Jakarta')->dailyAt('00:00');
         // $schedule->command('email:send-device-list')->dailyAt('13:00');
 
         $company = Company::all();

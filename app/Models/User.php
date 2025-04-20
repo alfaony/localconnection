@@ -249,7 +249,7 @@ class User extends Authenticatable
         $totalCheckins = $this->total_successful_checkins ?? 0;
         $targetCheckins = $this->total_days * ParamSchema::TARGET_CHECKIN;
 
-        return $targetCheckins ? ($totalCheckins / $targetCheckins) * 100 : 0;
+        return ($targetCheckins ? number_format(($totalCheckins / $targetCheckins) * 100, 0) : 0);
     }
 
     // Scope query untuk mendapatkan data user dengan perhitungan

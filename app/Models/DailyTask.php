@@ -272,6 +272,9 @@ class DailyTask extends Model
             return $query->whereHas('user', function ($query) use ($companyId) 
             {
                 $query->where('company_id', $companyId);
+            })
+            ->orWhere(function ($query) use ($companyId) {
+                $query->where('assignment_user_id', auth()->user()->id);
             });
         }
     }
