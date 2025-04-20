@@ -80,6 +80,8 @@ class AppServiceProvider extends ServiceProvider
 
             $managementCompanyMenu = 
             [
+                'dashboard_weekly_reports',
+                'weekly_reports',
                 'ask_bos',
                 'decisions',
                 'dayoffs',
@@ -490,6 +492,18 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Cuti',
                     'route' => 'dayoff.index',
                     'icon' => 'fa fa-calendar-times',
+                ],
+                'weekly_reports' => 
+                [
+                    'text' => 'Laporan Mingguan',
+                    'route' => 'weekly-report.index',
+                    'icon' => 'fa fa-calendar',
+                ],
+                'dashboard_weekly_reports' => 
+                [
+                    'text' => 'Halaman Laporan Mingguan',
+                    'route' => 'dashboard-weekly-report.index',
+                    'icon' => 'fas fa-tachometer-alt',
                 ],
             ];
 

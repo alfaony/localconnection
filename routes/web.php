@@ -417,7 +417,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('dayoff/hrApprovement', [DayoffController::class, 'hrApprovement'])->name('dayoff.hrApprovement');
   Route::resource('dayoff', DayoffController::class);
 
-  Route::get('dashboard-weekly-report', [ReportChartController::class, 'index']);
+  Route::get('dashboard-weekly-report', [ReportChartController::class, 'index'])->name('dashboard-weekly-report.index');
   Route::get('dashboard-weekly-report/data', [ReportChartController::class, 'data'])->name('dasboard.weekly-report.fetch');
   
   Route::get('weekly-report/reminderDashboard', [WeeklyReportController::class, 'reminderDashboard'])->name('weekly-report.reminderDashboard');
