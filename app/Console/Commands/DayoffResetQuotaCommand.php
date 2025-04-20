@@ -15,7 +15,7 @@ class DayoffResetQuotaCommand extends Command
     public function handle()
     {
         $types = DayoffType::where('is_limited', true)->get();
-        $users = User::where('dayoff_active',true)->all();
+        $users = User::where('dayoff_active',true)->get();
 
         foreach ($users as $user) {
             foreach ($types as $type) {

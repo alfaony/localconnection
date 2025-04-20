@@ -220,6 +220,24 @@ class User extends Authenticatable
         return $this->salary()->latest()->first();
     }
 
+    public function remainingDayoffQuotas()
+    {
+        if (! $this->dayoff_active) {
+            return collect();
+        }
+
+        return $this->dayoffQuotas
+            ->filter(fn($quota) => $quota->type?->is_limited) // hanya quota terbatas
+            ->map(function ($quota) {
+                $total = $quota->quota ?? $quota->type->default_quota;
+                $used = $quota->used ?? 0;
+                return [
+                    'type' => $quota->type->name,
+                    'remaining' => $total - $used,
+                ];
+            });
+    }
+
     public function showName(): Attribute
     {
         return Attribute::make(

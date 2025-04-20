@@ -468,13 +468,13 @@
         }
 
         if (action === 'approve') {
-            const confirm = confirm('Apakah Anda yakin ingin mensetujui cuti terpilih?');
-            if (!confirm) {
+            let userConfirm = window.confirm('Apakah Anda yakin ingin mensetujui cuti terpilih?');
+            if (!userConfirm) {
                 return false;
             }
         } else if (action === 'reject') {
-            const confirm = confirm('Apakah Anda yakin ingin menolak cuti terpilih?');
-            if (!confirm) {
+            let userConfirm = window.confirm('Apakah Anda yakin ingin menolak cuti terpilih?');
+            if (!userConfirm) {
                 return false;
             }
         }
@@ -518,13 +518,13 @@
 
         if (action === 'approve') 
         {
-            const confirm = confirm('Apakah Anda yakin ingin mensetujui cuti terpilih?');
-            if (!confirm) {
+            const userConfirm = window.confirm('Apakah Anda yakin ingin mensetujui cuti terpilih?');
+            if (!userConfirm) {
                 return false;
             }
         } else if (action === 'reject') {
-            const confirm = confirm('Apakah Anda yakin ingin menolak cuti terpilih?');
-            if (!confirm) {
+            const userConfirm = window.confirm('Apakah Anda yakin ingin menolak cuti terpilih?');
+            if (!userConfirm) {
                 return false;
             }
         }

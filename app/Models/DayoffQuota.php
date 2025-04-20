@@ -17,6 +17,6 @@ class DayoffQuota extends Model
 
     public function type()
     {
-        return $this->belongsTo(DayoffType::class, 'dayoff_type_id')->withTrashed();
+        return $this->belongsTo(DayoffType::class, 'dayoff_type_id');
     }
 }

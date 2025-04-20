@@ -422,6 +422,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <th>Email</th>
                 <th>Perusahaan</th>
                 <th>Pic Persetujuan</th>
+                <th>Cuti</th>
                 <th>Aksi</th>
             </tr>
             @forelse($user as $a)
@@ -431,6 +432,11 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <td>{{ $a->email }}</td>
                 <td> {{ $a->company ? $a->company->name : '' }} </td>
                 <td>{{ $a->approver ? $a->approver->name : "Belum Memiliki Pic Persetujuan" }}</td>
+                <td>
+                @foreach($a->remainingDayoffQuotas() as $quota)
+                    <li>{{ $quota['type'] }}: {{ $quota['remaining'] }} hari</li>
+                @endforeach
+                </td>
                 <td>
                     <form method="post" action="{{ route('user.destroy',$a) }}">
                         @csrf
