@@ -115,6 +115,7 @@
                     </div>
                 </div>
             </div>
+
             @canAccess('infoApprovementHr', 'dayoffs')
             <div class="col-md-6 mt-3">
                 <div class="card border-left-primary shadow h-100 py-2">

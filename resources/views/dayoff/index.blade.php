@@ -189,7 +189,7 @@
                         <tbody class="border-top-0">
                             @forelse ($cutis as $cuti)
                                 <tr class="border-bottom">
-                                    @canAccess('financeApprovement', 'dayoffs')
+                                    @canAccess('hrApprovement', 'dayoffs')
                                     <td class="pl-4 align-middle">
                                         @if($cuti->rejected_at)
                                             <i class="fas fa-times-circle text-danger"></i>
@@ -200,7 +200,7 @@
                                         @endif
                                     </td>
                                     @endcanAccess
-                                    @canAccess('hrApprovement', 'dayoffs')
+                                    @canAccess('financeApprovement', 'dayoffs')
                                     <td class="pl-4 align-middle">
                                         @if($cuti->rejected_at)
                                         <i class="fas fa-times-circle text-danger"></i>
@@ -467,6 +467,18 @@
             return false;
         }
 
+        if (action === 'approve') {
+            const confirm = confirm('Apakah Anda yakin ingin mensetujui cuti terpilih?');
+            if (!confirm) {
+                return false;
+            }
+        } else if (action === 'reject') {
+            const confirm = confirm('Apakah Anda yakin ingin menolak cuti terpilih?');
+            if (!confirm) {
+                return false;
+            }
+        }
+
         $('#cuti_ids_input_hr').val(JSON.stringify(selected));
         $('#action_type_input_hr').val(action);
 
@@ -502,6 +514,19 @@
         if (selected.length === 0) {
             alert('Pilih minimal satu cuti untuk Finance!');
             return false;
+        }
+
+        if (action === 'approve') 
+        {
+            const confirm = confirm('Apakah Anda yakin ingin mensetujui cuti terpilih?');
+            if (!confirm) {
+                return false;
+            }
+        } else if (action === 'reject') {
+            const confirm = confirm('Apakah Anda yakin ingin menolak cuti terpilih?');
+            if (!confirm) {
+                return false;
+            }
         }
 
         $('#cuti_ids_input').val(JSON.stringify(selected));
