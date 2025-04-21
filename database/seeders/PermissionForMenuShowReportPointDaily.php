@@ -19,7 +19,7 @@ class PermissionForMenuShowReportPointDaily extends Seeder
      */
     public function run()
     {
-        $dashboards = ['index', 'showReportPointDaily','dashboardReport','leaderboard','overdueRanking'];
+        $dashboards = ['index', 'showReportPointDaily','dashboardReport','leaderboard','overdueRanking','listDayoff'];
 
         foreach ($dashboards as $method) 
         {   

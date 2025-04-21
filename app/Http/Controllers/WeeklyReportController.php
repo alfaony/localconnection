@@ -12,8 +12,10 @@ class WeeklyReportController extends Controller
 {
     public function index()
     {
+        $myDivisionIds = auth()->user()->divisions->pluck('id');
+
         $reports = WeeklyReport::with(['division'])
-            ->where('user_id', auth()->id())
+             ->whereIn('division_id', $myDivisionIds)
             ->orderByDesc('year')
             ->orderByDesc('week')
             ->paginate(10);

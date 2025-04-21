@@ -29,6 +29,7 @@ use App\Models\OfficeMedia;
 
 // Change to API
 use App\Models\User;
+use App\Models\Dayoff;
 
 class HomeController extends Controller
 {
@@ -293,4 +294,23 @@ class HomeController extends Controller
             ]
         ]);
     }
+
+    public function listDayoff()
+    {
+        $today = Carbon::today();
+
+        $cutiToday = Dayoff::with('user', 'type')
+            ->where('date_start', '<=', $today)
+            ->where('date_end', '>=', $today)
+            ->whereNotNull('approval_finance_user_id')
+            ->whereNotNull('approved_finance_at')
+            ->whereNotNull('approval_hr_user_id')
+            ->whereNotNull('approved_hr_at')
+            ->whereHas('user', fn($q) => $q->where('dayoff_active', true))
+            ->get();
+
+        $html = view('partials.dayoffs_today_list', compact('cutiToday'))->render();
+
+        return response()->json(['html' => $html]);
+}
 }

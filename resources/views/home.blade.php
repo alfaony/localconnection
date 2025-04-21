@@ -261,6 +261,22 @@
         </div>
     </div>
     @endcanAccess
+    
+    @canAccess('listDayoff','homes')
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header d-flex align-items-center">
+                <i class="fas fa-user-clock mr-2"></i>User Cuti Hari Ini
+            </div>
+            <div class="card-body" id="cuti-today-container">
+                <div class="text-center text-muted">
+                    <i class="fas fa-spinner fa-spin"></i> Memuat data cuti...
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcanAccess
+
 </div>
 
 <div class="card shadow-sm">
@@ -713,6 +729,31 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> 
+@canAccess('listDayoff','homes')
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const container = document.getElementById('cuti-today-container');
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-spinner fa-spin"></i> Memuat data cuti...
+            </div>
+        `;
+
+        try {
+            const response = await fetch("{{ route('home.listDayoff') }}");
+            const data = await response.json();
+            container.innerHTML = data.html;
+        } catch (error) {
+            container.innerHTML = `
+                <div class="text-danger">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Gagal memuat data cuti hari ini.
+                </div>
+            `;
+        }
+    });
+</script>
+@endcanAccess
+
 @canAccess('reminderDashboard', 'weekly_reports')
 <script>
     $(document).ready(function () {

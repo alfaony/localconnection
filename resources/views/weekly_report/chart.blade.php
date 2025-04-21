@@ -174,8 +174,8 @@
 
         const params = {
             division_id: $('#division-select').val(),
-            date_start: $('#date_start').val(),
-            date_end: $('#date_end').val(),
+            start_date: $('#start_date').val(),
+            end_date: $('#end_date').val(),
         };
 
         $.get("{{ route('dasboard.weekly-report.fetch') }}", params, function (res) {

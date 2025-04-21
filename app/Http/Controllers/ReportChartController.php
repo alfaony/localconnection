@@ -23,13 +23,13 @@ class ReportChartController extends Controller
 
         $request->validate([
             'division_id' => 'required|uuid|exists:divisions,id',
-            'date_start' => 'nullable|date',
-            'date_end' => 'nullable|date',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
         ]);
 
         // Default date range: bulan ini
-        $start = $request->date_start ? Carbon::parse($request->date_start) : now()->startOfMonth();
-        $end = $request->date_end ? Carbon::parse($request->date_end) : now()->endOfMonth();
+        $start = $request->start_date ? Carbon::parse($request->start_date) : now()->startOfMonth();
+        $end = $request->end_date ? Carbon::parse($request->end_date) : now()->endOfMonth();
 
         $reports = WeeklyReport::where('user_id', $user->id)
             ->where('division_id', $divisionId)
