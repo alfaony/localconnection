@@ -216,6 +216,8 @@ class HomeController extends Controller
         $users = User::byCompany(Auth::user()->company_id)->with('role')->get();
 
         $result = $users->map(function ($user) use ($complateStatus) {
+            $checkins = User::where('is_checkin', true)->withCheckinCounts($user->id)->first();
+
             $totalTasks = DailyTask::where('assignment_user_id', $user->id)
                 ->where('task_status_id', $complateStatus->id)
                 ->count();
@@ -224,7 +226,8 @@ class HomeController extends Controller
                 ->where('task_status_id', $complateStatus->id)
                 ->sum('point');
 
-            $checkinPercentage = $user->is_checkin ? ($user->point_percentage ?? 0) : 0;
+            $checkinPercentage = $user->is_checkin ? ($checkins->point_percentage ?? 0) : 0;
+
             $currentScore = round($totalTasks + ($totalPoints * $checkinPercentage / 100));
 
             return [
