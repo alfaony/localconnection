@@ -59,7 +59,7 @@ class ExportDayoffJob implements ShouldQueue
             Excel::store(new DayoffExport($data), 'public/exports/' . $this->fileName);
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             Log::error($th->getMessage());
         }
     }
