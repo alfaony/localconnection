@@ -16,6 +16,10 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
 
+use Carbon\Carbon;
+
+use App\Helpers\Access;
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
@@ -84,6 +88,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'custom_rest_times' => 'array', // This will automatically decode JSON into an array   
         'ip_addresses' => 'array',   
+        'dayoff_active' => 'boolean',
     ];
 
     protected $appends = ['point_checkin', 'today_percentage', 'point_percentage'];
@@ -157,6 +162,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(EmployeeChecking::class);
     }
+
+    public function dayoffQuotas()
+    {
+        return $this->hasMany(DayoffQuota::class);
+    }
+
     public function getLastPositionAttribute()
     {
         return $this->userPosition()
@@ -195,6 +206,11 @@ class User extends Authenticatable
         return $this->hasMany(UserSalary::class);
     }
 
+    public function dayoffs()
+    {
+        return $this->hasMany(Dayoff::class);
+    }
+
     public function kye()
     {
         return $this->hasOne(Kye::class);
@@ -202,6 +218,24 @@ class User extends Authenticatable
     public function getLastSalaryAttribute()
     {
         return $this->salary()->latest()->first();
+    }
+
+    public function remainingDayoffQuotas()
+    {
+        if (! $this->dayoff_active) {
+            return collect();
+        }
+
+        return $this->dayoffQuotas
+            ->filter(fn($quota) => $quota->type?->is_limited) // hanya quota terbatas
+            ->map(function ($quota) {
+                $total = $quota->quota ?? $quota->type->default_quota;
+                $used = $quota->used ?? 0;
+                return [
+                    'type' => $quota->type->name,
+                    'remaining' => $total - $used,
+                ];
+            });
     }
 
     public function showName(): Attribute
@@ -252,6 +286,38 @@ class User extends Authenticatable
         return ($targetCheckins ? number_format(($totalCheckins / $targetCheckins) * 100, 0) : 0);
     }
 
+    public function isSick(): bool
+    {
+        $today = Carbon::today();
+
+        return $this->dayoffs()
+            ->whereHas('type', fn($q) => $q->where('permission_required', true))
+            ->whereDate('date_start', '<=', $today)
+            ->whereDate('date_end', '>=', $today)
+            ->whereNull('rejected_at')
+            ->whereNotNull('approved_hr_at')
+            ->whereNotNull('approved_finance_at')
+            ->exists();
+    }
+
+    public function isDayoff(): bool
+    {
+        $today = Carbon::today();
+
+        return $this->dayoffs()
+            ->whereHas('type', fn($q) => $q->where('permission_required','!=', true))
+            ->whereDate('date_start', '<=', $today)
+            ->whereDate('date_end', '>=', $today)
+            ->whereNull('rejected_at')
+            ->whereNotNull('approved_hr_at')
+            ->whereNotNull('approved_finance_at')
+            ->exists();
+    }
+
+    public function isSearchDayoff(): bool
+    {
+        return (Access::can('hrApprovement', 'dayoffs') ||  Access::can('financeApprovement', 'dayoffs') || Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR);
+    }
     // Scope query untuk mendapatkan data user dengan perhitungan
     public function scopeWithCheckinCounts($query, $userId = null, $start = null, $end = null, $today = null)
     {

@@ -75,10 +75,12 @@ class ScheduleEmployeeCheckin extends Command
         // Cek jika user sedang cuti
         $dayOff = $onLeaveEmails['cuti'];
         $sickLeave = $onLeaveEmails['sakit'];
+        $sickInternal = $user->isSick();
+        $dayoffInternal = $user->isDayoff();
 
         // $sickLeave[] = strtolower("fatahPM2@gmail.com");
 
-        if (in_array(strtolower($user->email), $dayOff)) 
+        if (in_array(strtolower($user->email), $dayOff) || $dayoffInternal) 
         {
             $time = 
             [
@@ -87,7 +89,7 @@ class ScheduleEmployeeCheckin extends Command
             ];
             $local = $this->saveLocal($user, $time, "dayoff");
         }
-        elseif(in_array(strtolower($user->email), $sickLeave))
+        elseif(in_array(strtolower($user->email), $sickLeave) || $sickInternal)
         {
             $time = 
             [

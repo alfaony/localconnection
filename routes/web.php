@@ -82,7 +82,10 @@ use App\Http\Controllers\DecisionController;
 use App\Http\Controllers\PartnershipAgreementController;
 use App\Http\Controllers\SupplierCategoryController;
 use App\Http\Controllers\ProductSupplierController;
+use App\Http\Controllers\DayoffController;
 use App\Http\Controllers\OfficeMediaController;
+use App\Http\Controllers\WeeklyReportController;
+use App\Http\Controllers\ReportChartController;
 
 
 
@@ -142,9 +145,9 @@ Route::get('employee-checking/report', [EmployeeCheckingController::class, 'repo
 Route::get('partnership-agreement/sharePdf/{id}',[PartnershipAgreementController::class,'sharePdf'])->name('partnership-agreement.sharePdf');
 Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementController::class,'signatureShare'])->name('partnership-agreement.signatureShare');
 
-
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
+  Route::get('home/listDayoff', [App\Http\Controllers\HomeController::class, 'listDayoff'])->name('home.listDayoff');
   Route::get('home/dashboardReport', [App\Http\Controllers\HomeController::class, 'dashboardReport'])->name('home.dashboardReport');
   Route::get('home/leaderboard', [App\Http\Controllers\HomeController::class, 'leaderboard'])->name('home.leaderboard');
   Route::get('home/overdueRanking', [App\Http\Controllers\HomeController::class, 'overdueRanking'])->name('home.overdueRanking');
@@ -402,7 +405,26 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('product-supplier/importProgress/{batchId}', [ProductSupplierController::class, 'importProgress']);
   Route::post('product-supplier/import', [ProductSupplierController::class, 'import'])->name('product-supplier.import');
   Route::resource('product-supplier', ProductSupplierController::class);
+
+  
+  Route::get('dayoff/export/{format}', [DayoffController::class, 'export'])->name('dayoff.export');
+  Route::get('dayoff/checkExportStatus', [DayoffController::class, 'checkExportStatus'])->name('dayoff.checkExportStatus');
+  Route::get('dayoff/clearExportSession', [DayoffController::class, 'clearExportSession'])->name('dayoff.clearExportSession');
+  Route::get('dayoff/infoApprovementHr', [DayoffController::class, 'infoApprovementHr'])->name('dayoff.infoApprovementHr');
+  Route::get('dayoff/infoApprovementFinance', [DayoffController::class, 'infoApprovementFinance'])->name('dayoff.infoApprovementFinance');
+  Route::get('dayoff/checkInfo', [DayoffController::class, 'checkInfo'])->name('dayoff.checkInfo');
+  Route::post('dayoff/financeApprovement', [DayoffController::class, 'financeApprovement'])->name('dayoff.financeApprovement');
+  Route::post('dayoff/hrApprovement', [DayoffController::class, 'hrApprovement'])->name('dayoff.hrApprovement');
+  Route::resource('dayoff', DayoffController::class);
+
+  Route::get('dashboard-weekly-report', [ReportChartController::class, 'index'])->name('dashboard-weekly-report.index');
+  Route::get('dashboard-weekly-report/data', [ReportChartController::class, 'data'])->name('dasboard.weekly-report.fetch');
+  
+  Route::get('weekly-report/reminderDashboard', [WeeklyReportController::class, 'reminderDashboard'])->name('weekly-report.reminderDashboard');
+  Route::resource('weekly-report', WeeklyReportController::class);
 });
+
+
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

@@ -132,6 +132,33 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 </div>
             </div>
 
+            <div class="form-group mt-2 ">
+                <label for="dayoff_active">Setting Cuti</label>
+                <div class="form-check">
+                    <input type="checkbox" name="dayoff_active" id="dayoff_active" class="form-check-input"
+                        {{ old('dayoff_active', $userEdit->dayoff_active ?? false) ? 'checked' : '' }}>
+                    <label for="dayoff_active" class="form-check-label">Aktifkan cuti</label>
+                </div>
+                
+                <div id="quota-section" class="{{ old('dayoff_active', $userEdit->dayoff_active ?? false) ? '' : 'd-none' }}">
+                    <h5 class="font-weight-bold mt-4">Kuota Cuti</h5>
+                    <div class="border p-3 rounded bg-light">
+                        @foreach($dayoffTypes as $type)
+                            @if($type->is_limited)
+                            <div class="form-group">
+                                <label>{{ $type->name }}</label>
+                                <input type="number"
+                                    name="quotas[{{ $type->id }}]"
+                                    class="form-control"
+                                    min="0"
+                                    value="{{ old('quotas.' . $type->id, $userQuotas[$type->id] ?? $type->default_quota) }}">
+                            </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
             @if($roleAccess)
             <label for="phone">Role:</label>
             <select name="role" class="form-control mb-2 select2" required>
@@ -295,6 +322,32 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     </div>                    
                 </div>
             </div>
+            <div class="form-group mt-2 ">
+                <label for="dayoff_active">Setting Cuti</label>
+                <div class="form-check">
+                    <input type="checkbox" name="dayoff_active" id="dayoff_active" class="form-check-input"
+                        {{ old('dayoff_active', $userEdit->dayoff_active ?? false) ? 'checked' : '' }}>
+                    <label for="dayoff_active" class="form-check-label">Aktifkan cuti</label>
+                </div>
+
+                <div id="quota-section" class="{{ old('dayoff_active', $userEdit->dayoff_active ?? false) ? '' : 'd-none' }}">
+                    <h5 class="font-weight-bold mt-4">Kuota Cuti</h5>
+                    <div class="border p-3 rounded bg-light">
+                        @foreach($dayoffTypes as $type)
+                            @if($type->is_limited)
+                            <div class="form-group">
+                                <label>{{ $type->name }}</label>
+                                <input type="number"
+                                    name="quotas[{{ $type->id }}]"
+                                    class="form-control"
+                                    min="0"
+                                    value="{{ old('quotas.' . $type->id, $userQuotas[$type->id] ?? $type->default_quota) }}">
+                            </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            </div>
             @if($roleAccess)
             <label for="phone">Role:</label>
             <select name="role" class="form-control mb-2 select2" required>
@@ -369,6 +422,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <th>Email</th>
                 <th>Perusahaan</th>
                 <th>Pic Persetujuan</th>
+                <th>Cuti</th>
                 <th>Aksi</th>
             </tr>
             @forelse($user as $a)
@@ -378,6 +432,11 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 <td>{{ $a->email }}</td>
                 <td> {{ $a->company ? $a->company->name : '' }} </td>
                 <td>{{ $a->approver ? $a->approver->name : "Belum Memiliki Pic Persetujuan" }}</td>
+                <td>
+                @foreach($a->remainingDayoffQuotas() as $quota)
+                    <li>{{ $quota['type'] }}: {{ $quota['remaining'] }} hari</li>
+                @endforeach
+                </td>
                 <td>
                     <form method="post" action="{{ route('user.destroy',$a) }}">
                         @csrf
@@ -415,6 +474,17 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <!-- Script to toggle dependent options -->
+<script>
+    $(document).ready(function () {
+        $('#dayoff_active').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('#quota-section').removeClass('d-none');
+            } else {
+                $('#quota-section').addClass('d-none');
+            }
+        });
+    });
+</script>
  <script>
     document.getElementById("ipInputs").addEventListener("click", function (e) 
     {

@@ -29,6 +29,7 @@ use App\Models\OfficeMedia;
 
 // Change to API
 use App\Models\User;
+use App\Models\Dayoff;
 
 class HomeController extends Controller
 {
@@ -216,6 +217,8 @@ class HomeController extends Controller
         $users = User::byCompany(Auth::user()->company_id)->with('role')->get();
 
         $result = $users->map(function ($user) use ($complateStatus) {
+            $checkins = User::where('is_checkin', true)->withCheckinCounts($user->id)->first();
+
             $totalTasks = DailyTask::where('assignment_user_id', $user->id)
                 ->where('task_status_id', $complateStatus->id)
                 ->count();
@@ -224,7 +227,8 @@ class HomeController extends Controller
                 ->where('task_status_id', $complateStatus->id)
                 ->sum('point');
 
-            $checkinPercentage = $user->is_checkin ? ($user->point_percentage ?? 0) : 0;
+            $checkinPercentage = $user->is_checkin ? ($checkins->point_percentage ?? 0) : 0;
+
             $currentScore = round($totalTasks + ($totalPoints * $checkinPercentage / 100));
 
             return [
@@ -290,4 +294,23 @@ class HomeController extends Controller
             ]
         ]);
     }
+
+    public function listDayoff()
+    {
+        $today = Carbon::today();
+
+        $cutiToday = Dayoff::with('user', 'type')
+            ->where('date_start', '<=', $today)
+            ->where('date_end', '>=', $today)
+            ->whereNotNull('approval_finance_user_id')
+            ->whereNotNull('approved_finance_at')
+            ->whereNotNull('approval_hr_user_id')
+            ->whereNotNull('approved_hr_at')
+            ->whereHas('user', fn($q) => $q->where('dayoff_active', true))
+            ->get();
+
+        $html = view('partials.dayoffs_today_list', compact('cutiToday'))->render();
+
+        return response()->json(['html' => $html]);
+}
 }

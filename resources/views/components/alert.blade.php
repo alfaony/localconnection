@@ -44,6 +44,12 @@
 </div>
 @endif
 
+@if(Session::has('success'))
+<div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    <strong>Berhasil!</strong> {{ Session::get('success') }}
+</div>
+@endif
+
 @if ($errors->any())
 <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
     <strong>Kesalahan!</strong> Periksa kembali input Anda.
@@ -54,3 +60,4 @@
     </ul>
 </div>
 @endif
+

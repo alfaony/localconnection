@@ -8,7 +8,16 @@
         @if(Session::get('updateProfile'))
         <div class="alert alert-success mt-3">Pengguna Berhasil Perbarui</div>
         @endif
+
+        @canAccess('reminderDashboard', 'weekly_reports')
+        <div id="weekly-report-reminder">
+            <div class="text-center my-3">
+                <i class="fas fa-spinner fa-spin text-muted"></i> Memeriksa laporan mingguan...
+            </div>
+        </div>
+        @endcanAccess
     </div>
+
     @canAccess('dashboardReport','homes')
     <!-- Profile and Stats -->
     <div class="col-md-3 mt-3">
@@ -115,6 +124,41 @@
                     </div>
                 </div>
             </div>
+
+            @canAccess('infoApprovementHr', 'dayoffs')
+            <div class="col-md-6 mt-3">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Cuti yang Menunggu Persetujuan HR
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-hr">
+                                <span class="spinner-border spinner-border-sm text-primary"></span>
+                            </div>
+                        </div>
+                        <div><i class="fas fa-user-tie fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+            @endcanAccess
+            @canAccess('infoApprovementFinance', 'dayoffs')
+            <div class="col-md-6 mt-3">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Cuti yang Menunggu Persetujuan Finance
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-finance">
+                                <span class="spinner-border spinner-border-sm text-info"></span>
+                            </div>
+                        </div>
+                        <div><i class="fas fa-coins fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+            @endcanAccess
         </div>
 
         {{-- 
@@ -217,6 +261,22 @@
         </div>
     </div>
     @endcanAccess
+    
+    @canAccess('listDayoff','homes')
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header d-flex align-items-center">
+                <i class="fas fa-user-clock mr-2"></i>User Cuti Hari Ini
+            </div>
+            <div class="card-body" id="cuti-today-container">
+                <div class="text-center text-muted">
+                    <i class="fas fa-spinner fa-spin"></i> Memuat data cuti...
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcanAccess
+
 </div>
 
 <div class="card shadow-sm">
@@ -668,7 +728,81 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> 
+@canAccess('listDayoff','homes')
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const container = document.getElementById('cuti-today-container');
+        container.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-spinner fa-spin"></i> Memuat data cuti...
+            </div>
+        `;
+
+        try {
+            const response = await fetch("{{ route('home.listDayoff') }}");
+            const data = await response.json();
+            container.innerHTML = data.html;
+        } catch (error) {
+            container.innerHTML = `
+                <div class="text-danger">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Gagal memuat data cuti hari ini.
+                </div>
+            `;
+        }
+    });
+</script>
+@endcanAccess
+
+@canAccess('reminderDashboard', 'weekly_reports')
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            url: "{{ route('weekly-report.reminderDashboard') }}",
+            method: "GET",
+            success: function (res) {
+                $('#weekly-report-reminder').html(res.html);
+            },
+            error: function () {
+                $('#weekly-report-reminder').html(
+                    '<div class="alert alert-danger">Gagal memuat reminder laporan mingguan.</div>'
+                );
+            }
+        });
+    });
+</script>
+@endcanAccess
+
+@canAccess('infoApprovementHr', 'dayoffs')
+<script>
+    async function loadApprovalInfoHr() 
+    {
+        $('#count-hr').html('<span class="spinner-border spinner-border-sm text-primary"></span>');
+
+        const response = await $.get("{{ route('dayoff.infoApprovementHr') }}");
+        $('#count-hr').text(response.total);
+    }
+
+    $(document).ready(async function () {
+        await loadApprovalInfoHr();
+    });
+</script>
+@endcanAccess
+@canAccess('infoApprovementFinance', 'dayoffs')
+<script>
+    async function loadApprovalInfoFinance() 
+    {
+        $('#count-finance').html('<span class="spinner-border spinner-border-sm text-info"></span>');
+
+        const response = await $.get("{{ route('dayoff.infoApprovementFinance') }}");
+        $('#count-finance').text(response.total);
+    }
+
+    $(document).ready(async function () {
+        await loadApprovalInfoFinance();
+    });
+</script>
+@endcanAccess
 
 @canAccess('index','office_media')
 <script>

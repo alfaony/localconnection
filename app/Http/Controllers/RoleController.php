@@ -100,7 +100,10 @@ class RoleController extends Controller
             'kyes',
             'partnership_agreements',
             'product_suppliers',
+            'dayoffs',
             'office_media',
+            'weekly_reports',
+            'dashboard_weekly_reports',
         ];
 
         $checked = array_merge($mainMenus);
@@ -230,7 +233,10 @@ class RoleController extends Controller
                 'kyes',
                 'partnership_agreements',
                 'product_suppliers',
+                'dayoffs',
                 'office_media',
+                'weekly_reports',
+                'dashboard_weekly_reports',
             ];
         $checked = array_merge($mainMenus);
 
@@ -320,7 +326,10 @@ class RoleController extends Controller
                 'kyes',
                 'partnership_agreements',
                 'product_suppliers',
+                'dayoffs',
                 'office_media',
+                'weekly_reports',
+                'dashboard_weekly_reports',
             ];
         
         $checked = array_merge($mainMenus);
