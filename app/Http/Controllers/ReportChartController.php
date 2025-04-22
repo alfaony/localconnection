@@ -31,8 +31,7 @@ class ReportChartController extends Controller
         $start = $request->start_date ? Carbon::parse($request->start_date) : now()->startOfMonth();
         $end = $request->end_date ? Carbon::parse($request->end_date) : now()->endOfMonth();
 
-        $reports = WeeklyReport::where('user_id', $user->id)
-            ->where('division_id', $divisionId)
+        $reports = WeeklyReport::where('division_id', $divisionId)
             ->whereBetween('date', [$start, $end])
             ->get();
 
