@@ -45,7 +45,7 @@ class DeactivateCheckinV2 extends Command
             if ($existingLog) {
                 $existingLog->update(
                     [
-                    'excecuted_out_at' => now('Asia/Jakarta'),
+                    'excecuted_out_at' => Carbon::now('Asia/Jakarta'),
                 ]);
             }
 
