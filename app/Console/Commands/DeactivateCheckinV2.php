@@ -7,6 +7,7 @@ use App\Models\EmployeeChecking;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Exception\FirebaseException;
 use Carbon\Carbon;
+use App\Models\CheckinLog;
 
 class DeactivateCheckinV2 extends Command
 {
@@ -40,6 +41,14 @@ class DeactivateCheckinV2 extends Command
             $currentTime = Carbon::now()->tz('Asia/Jakarta')->format('H:i');
     
             // If the current time is greater than the timeout time, deactivate the check-in
+            $existingLog = CheckinLog::where('employee_checkin_id', $checkin->id)->first();
+            if ($existingLog) {
+                $existingLog->update(
+                    [
+                    'excecuted_out_at' => now('Asia/Jakarta'),
+                ]);
+            }
+
             if (isset($checkin->scheduled_timeout) &&  isset($timeoutTime) && $currentTime == $timeoutTime) {
                 // Update `is_active` to false in the local database
                 $checkin->is_active = false;

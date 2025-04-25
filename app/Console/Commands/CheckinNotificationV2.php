@@ -10,6 +10,7 @@ use Kreait\Firebase\Exception\FirebaseException;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Models\PassChecking;
+use App\Models\CheckinLog;
 
 class CheckinNotificationV2 extends Command
 {
@@ -48,6 +49,8 @@ class CheckinNotificationV2 extends Command
                             ->whereTime('end_time', '>=', $scheduleTime)
                             ->first();
 
+            $this->checkinLog($checkin, Carbon::now());
+
             if($currentTime == $scheduleTime && !$passCheckings && $checkin->user)
             {
                 
@@ -81,7 +84,8 @@ class CheckinNotificationV2 extends Command
         if ($this->firebase) 
         {
             try {
-                $this->firebase->getReference('employee_checkins/'.$checkin->user_id.'/'.$checkin->id)->set([
+                $data =
+                [
                     'local_id' => $checkin->id,
                     'scheduled_time' => $checkin->scheduled_time,
                     'scheduled_timeout' => $checkin->scheduled_timeout,
@@ -89,8 +93,17 @@ class CheckinNotificationV2 extends Command
                     'requires_photo' => $checkin->user->requires_photo,
                     'requires_location' => $checkin->user->requires_location,
                     'time_server' => Carbon::now()->tz('Asia/Jakarta'),
-                ]);
+                ];
+                $firebase = $this->firebase->getReference('employee_checkins/'.$checkin->user_id.'/'.$checkin->id)->set($data);
+
+                $data['status'] = "Success";
+                $this->checkinLog($checkin, null, json_encode($data));
+
             } catch (FirebaseException $e) {
+                $data['status'] = "Failed";
+                $data['message'] = $e->getMessage();
+
+                $this->checkinLog($checkin, null, json_encode($data));
                 $this->error("Gagal menyimpan di Firebase untuk user {$checkin->user_id}. Data tetap tersimpan di lokal.");
             }
         }
@@ -146,12 +159,40 @@ class CheckinNotificationV2 extends Command
                 foreach ($sendReport->failures()->getItems() as $failure) {
                     Log::error('Notification failed for token: ' . $failure->target()->value());
                 }
+                $error = $sendReport->failures()->getItems()[0]->error()->errors() ?? [];
+                $this->checkinLog($checkin, null, null, json_encode($error));
             }
+
 
             $this->info("Notification sent to user: {$checkin->user_id} for check-in at: {$checkin->scheduled_time}");
 
         } catch (FirebaseException $e) {
+            $this->checkinLog($checkin, null, null, json_encode($e->getMessage()));
             $this->error("Failed to send notification for user {$checkin->user_id}: " . $e->getMessage());
         }
     }
+
+    protected function checkinLog($checkin, $excuteTime = null, $firebase = null,$fcm =  null)
+    {
+        $data = [];
+        if ($fcm) {
+            $data['response_fcm'] = $fcm;
+        }
+        if ($firebase) {
+            $data['response_firebase'] = $firebase;
+        }
+
+
+        $existingLog = CheckinLog::where('employee_checkin_id', $checkin->id)->first();
+
+        if ($existingLog) {
+            $existingLog->update($data);
+        } else {
+            CheckinLog::create(array_merge([
+                'employee_checkin_id' => $checkin->id,
+                'excecuted_in_at' => now('Asia/Jakarta'),
+            ], $data));
+        }
+    }
+
 }
