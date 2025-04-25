@@ -167,6 +167,7 @@ class CheckinNotificationV2 extends Command
             $this->info("Notification sent to user: {$checkin->user_id} for check-in at: {$checkin->scheduled_time}");
 
         } catch (FirebaseException $e) {
+            $this->checkinLog($checkin, null, null, json_encode($e->getMessage()));
             $this->error("Failed to send notification for user {$checkin->user_id}: " . $e->getMessage());
         }
     }
