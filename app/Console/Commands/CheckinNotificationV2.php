@@ -42,6 +42,8 @@ class CheckinNotificationV2 extends Command
         if($checkin)
         {
             $scheduleTime = Carbon::parse($checkin->scheduled_time)->format('H:i');
+            $scheduleTimeout = Carbon::parse($checkin->scheduled_timeout)->format('H:i');
+
             $currentTime = Carbon::now()->tz('Asia/Jakarta')->format('H:i');
             $passCheckings = PassChecking::whereDate('date', Carbon::today())
                             ->where('user_id', $checkin->user_id)
@@ -71,6 +73,18 @@ class CheckinNotificationV2 extends Command
                 $checkin->pass_checking_id = $passCheckings->id;
                 $checkin->checkin_start_time = Carbon::now();
                 $checkin->save();
+            }
+            elseif ($currentTime >= $scheduleTime && $currentTime <= $scheduleTimeout && !$passCheckings && $checkin->user)
+            {
+                
+                if($checkin->user->manual_checkin == false)
+                {
+                    $this->scheduleCheckinForUser($checkin);
+                    $this->sendCheckinNotification($checkin, 'Time to Check-in', 'Please check-in now!');
+                }else
+                {
+                    $this->sendCheckinNotification($checkin, "It's been 30 minutes, time to check in", 'Please check-in now!');
+                }
             }
         }
 
