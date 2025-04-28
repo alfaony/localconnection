@@ -19,7 +19,7 @@ class PermissionForMenuWeeklyReportSeeder extends Seeder
      */
     public function run()
     {
-        $weeklyReport = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'downloadPdf', 'dataTableJson'];
+        $weeklyReport = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'downloadPdf', 'dataTableJson','reminderDashboard'];
         $weeklyReportDashbaord = ['index','data'];
 
         $root = Role::where('name',RoleSchema::ROOT)->first();

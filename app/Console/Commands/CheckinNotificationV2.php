@@ -42,6 +42,8 @@ class CheckinNotificationV2 extends Command
         if($checkin)
         {
             $scheduleTime = Carbon::parse($checkin->scheduled_time)->format('H:i');
+            $scheduleTimeout = Carbon::parse($checkin->scheduled_timeout)->format('H:i');
+
             $currentTime = Carbon::now()->tz('Asia/Jakarta')->format('H:i');
             $passCheckings = PassChecking::whereDate('date', Carbon::today())
                             ->where('user_id', $checkin->user_id)
@@ -72,6 +74,18 @@ class CheckinNotificationV2 extends Command
                 $checkin->checkin_start_time = Carbon::now();
                 $checkin->save();
             }
+            elseif ($currentTime >= $scheduleTime && $currentTime <= $scheduleTimeout && !$passCheckings && $checkin->user)
+            {
+                
+                if($checkin->user->manual_checkin == false)
+                {
+                    $this->scheduleCheckinForUser($checkin);
+                    $this->sendCheckinNotification($checkin, 'Time to Check-in', 'Please check-in now!');
+                }else
+                {
+                    $this->sendCheckinNotification($checkin, "It's been 30 minutes, time to check in", 'Please check-in now!');
+                }
+            }
         }
 
 
@@ -92,7 +106,7 @@ class CheckinNotificationV2 extends Command
                     'is_active' => true,
                     'requires_photo' => $checkin->user->requires_photo,
                     'requires_location' => $checkin->user->requires_location,
-                    'time_server' => Carbon::now()->tz('Asia/Jakarta'),
+                    'time_server' => Carbon::now()->tz('Asia/Jakarta')->format('H:i:s'),
                 ];
                 $firebase = $this->firebase->getReference('employee_checkins/'.$checkin->user_id.'/'.$checkin->id)->set($data);
 
@@ -190,7 +204,7 @@ class CheckinNotificationV2 extends Command
         } else {
             CheckinLog::create(array_merge([
                 'employee_checkin_id' => $checkin->id,
-                'excecuted_in_at' => Carbon::now('Asia/Jakarta'),
+                'excecuted_in_at' => Carbon::now('Asia/Jakarta')->format('Y-m-d H:i:s'),
             ], $data));
         }
     }

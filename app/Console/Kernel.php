@@ -49,17 +49,36 @@ class Kernel extends ConsoleKernel
         $employeeCheckings = EmployeeChecking::where('is_active', true)
             ->where('is_dayoff', false)
             ->whereDate('scheduled_time', Carbon::today()) // Filter today's check-ins
-            // ->where('scheduled_time','>=',Carbon::today('Asia/Jakarta')->format('Y-m-d H:i')) // Filter today's check-ins
-            // ->where('scheduled_time','<=',Carbon::today('Asia/Jakarta')->format('Y-m-d H:i')->addMinutes(11))
+            ->whereBetween('scheduled_time', [
+                Carbon::now('Asia/Jakarta')->format('Y-m-d H:i'),
+                Carbon::now('Asia/Jakarta')->addMinute(2)->format('Y-m-d H:i')
+            ])
             ->get();
+        
 
         foreach ($employeeCheckings as $checking) 
         {
             // Calculate the notification time (1 minute before scheduled time)
             $checkinNotificationTime = Carbon::parse($checking->scheduled_time);
-            $checkinDeactivateTime = Carbon::parse($checking->scheduled_timeout);
+            // $checkinDeactivateTime = Carbon::parse($checking->scheduled_timeout);
         
             $schedule->command("checkin:active --id={$checking->id}")->timezone('Asia/Jakarta')->dailyAt($checkinNotificationTime->format('H:i'));
+            // $schedule->command("checkin:deactivate --id={$checking->id}")->timezone('Asia/Jakarta')->dailyAt($checkinDeactivateTime->format('H:i'));
+        }
+
+        $employeeCheckingDeactives = EmployeeChecking::where('is_active', true)
+            ->where('is_dayoff', false)
+            ->whereDate('scheduled_timeout', Carbon::today()) // Filter today's check-ins
+            ->whereBetween('scheduled_timeout', [
+                Carbon::now('Asia/Jakarta')->format('Y-m-d H:i'),
+                Carbon::now('Asia/Jakarta')->addMinute(2)->format('Y-m-d H:i')
+            ])
+            ->get();
+
+        foreach ($employeeCheckingDeactives as $checking) 
+        {
+            // Calculate the notification time (1 minute before scheduled time)
+            $checkinDeactivateTime = Carbon::parse($checking->scheduled_timeout);
             $schedule->command("checkin:deactivate --id={$checking->id}")->timezone('Asia/Jakarta')->dailyAt($checkinDeactivateTime->format('H:i'));
         }
 
