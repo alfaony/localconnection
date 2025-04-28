@@ -92,7 +92,7 @@ class CheckinNotificationV2 extends Command
                     'is_active' => true,
                     'requires_photo' => $checkin->user->requires_photo,
                     'requires_location' => $checkin->user->requires_location,
-                    'time_server' => Carbon::now()->tz('Asia/Jakarta'),
+                    'time_server' => Carbon::now()->tz('Asia/Jakarta')->format('H:i:s'),
                 ];
                 $firebase = $this->firebase->getReference('employee_checkins/'.$checkin->user_id.'/'.$checkin->id)->set($data);
 
