@@ -50,7 +50,7 @@ class Kernel extends ConsoleKernel
             ->where('is_dayoff', false)
             ->whereDate('scheduled_time', Carbon::today()) // Filter today's check-ins
             ->where('scheduled_time','>=',Carbon::today('Asia/Jakarta')->format('Y-m-d H:i')) // Filter today's check-ins
-            ->where('scheduled_time','<=',Carbon::today('Asia/Jakarta')->format('Y-m-d H:i')->addSeconds(60))
+            ->where('scheduled_time','<=',Carbon::today('Asia/Jakarta')->format('Y-m-d H:i')->addMinutes(11))
             ->get();
 
         foreach ($employeeCheckings as $checking) 
