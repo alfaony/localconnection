@@ -190,7 +190,7 @@ class CheckinNotificationV2 extends Command
         } else {
             CheckinLog::create(array_merge([
                 'employee_checkin_id' => $checkin->id,
-                'excecuted_in_at' => Carbon::now('Asia/Jakarta'),
+                'excecuted_in_at' => Carbon::now('Asia/Jakarta')->format('Y-m-d H:i:s'),
             ], $data));
         }
     }
