@@ -53,11 +53,26 @@
                     Periode : {{ $start ? \Carbon\Carbon::parse($start)->format('d F Y') : '' }} - {{ $end ? \Carbon\Carbon::parse($end)->format('d F Y') : '' }}
                 </span>
             </div>
-            @canAccess('create','pass_checkings')
             <div class="ml-auto">
+                {{-- Tombol Export --}}
+                @canAccess('export','employee_checkings')
+                @canAccess('checkExportStatus','employee_checkings')
+                @canAccess('clearsession','employee_checkings')
+                <a href="{{ route('employee-checking.export', array_merge(request()->query(), ['format' => 'excel'])) }}" class="btn btn-primary">
+                    <i class="fa fa-file-excel"></i> Export Excel
+                </a>
+                
+                <a href="{{ route('employee-checking.export', array_merge(request()->query(), ['format' => 'csv'])) }}" class="btn btn-info">
+                    <i class="fa fa-file-csv"></i> Export CSV
+                </a>
+                @endcanAccess
+                @endcanAccess
+                @endcanAccess
+
+                @canAccess('create','pass_checkings')
                 <a class="btn btn-success" href="{{ route('pass-checking.index') }}"><i class="fa fa-list"></i> Pass Checking</a>
+                @endcanAccess
             </div>
-            @endcan
         </div>
         <ul class="nav nav-tabs" id="reportTab" role="tablist">
             <li class="nav-item">
@@ -397,6 +412,83 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @canAccess('export','employee_checkings')
+    @canAccess('checkExportStatus','employee_checkings')
+    @canAccess('clearsession','employee_checkings')
+
+    @if(Session::get('export'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let isDownloaded = false; // Track if file has been downloaded
+            const loadingOverlay = document.createElement('div');
+            
+            // Add a loading overlay
+            loadingOverlay.innerHTML = `
+                <div id="loading-overlay" style="display: flex; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; color: white; font-size: 20px;">
+                    <div>
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div class="spinner-border text-light" role="status"></div>
+                        </div>
+                        <p>Exporting your file, please wait...</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(loadingOverlay);
+
+            const checkExportStatus = () => {
+                if (isDownloaded) return; // Stop if already downloaded
+
+                fetch('{{ route('employee-checking.checkExportStatus') }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        
+                        if (data.ready) {
+                            isDownloaded = true; // Mark as downloaded
+
+                            // Create a hidden download link to trigger download
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = data.download_url;
+                            downloadLink.style.display = 'none';
+                            downloadLink.download = ''; // Optional: specify a filename
+                            
+                            document.body.appendChild(downloadLink);
+                            
+                            // Add onload callback to clear session after download
+                            downloadLink.onclick = () => {
+                                // Clear export session AFTER file download starts
+                                fetch('{{ route('employee-checking.clearsession') }}')
+                                    .then(() => {
+                                        // Hide the loading overlay
+                                        document.getElementById('loading-overlay').remove();
+                                    })
+                                    .catch(error => console.error('Error clearing session:', error));
+                            };
+
+                            // Trigger download
+                            downloadLink.click();
+
+                            // Remove the link element after triggering download
+                            document.body.removeChild(downloadLink);
+                        } else {
+                            setTimeout(checkExportStatus, 3000); // Retry every 3 seconds
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking export status:', error);
+                        // Hide loading overlay if error occurs
+                        document.getElementById('loading-overlay').remove();
+                    });
+            };
+
+            checkExportStatus();
+        });
+    </script>
+    @endif
+    @endcanAccess
+    @endcanAccess
+    @endcanAccess
+
     <script>
         $(document).ready(function () {
             $('.select2').select2();
