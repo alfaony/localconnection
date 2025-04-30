@@ -325,7 +325,7 @@ class EmployeeCheckingController extends Controller
             $start = $request->input('start_date') ? Carbon::parse($request->input('start_date'))->startOfDay() : Carbon::now()->startOfMonth()->startOfDay();
             $end = $request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : Carbon::now()->endOfDay();
             $today = Carbon::today()->toDateString();
-            $sort = $request->input('sort') ?? "asc";
+            $sort = $request->input('sort') ?? "desc";
             $role = Auth::user()->role->name ?? NULL; 
             
             // Queue the export and store the job file name in session
