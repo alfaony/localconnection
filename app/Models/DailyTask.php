@@ -267,13 +267,15 @@ class DailyTask extends Model
 
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId)
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+
+        if($companyIds)
         {
-            return $query->whereHas('user', function ($query) use ($companyId) 
+            return $query->whereHas('user', function ($query) use ($companyIds) 
             {
-                $query->where('company_id', $companyId);
+                $query->whereIn('company_id', $companyIds);
             })
-            ->orWhere(function ($query) use ($companyId) {
+            ->orWhere(function ($query) use ($companyIds) {
                 $query->where('assignment_user_id', auth()->user()->id);
             });
         }

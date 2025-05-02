@@ -131,6 +131,9 @@ class UserController extends Controller
             $user->divisions()->attach($divisions);
         }
         
+        if (!empty($request->company_access)) {
+            $user->accessibleCompanies()->sync($request->company_access);
+        }
         return redirect()->back()->with('store',true);
     }
 
@@ -241,6 +244,9 @@ class UserController extends Controller
         }
 
         $user->save();
+
+        // Update akses tambahan
+        $user->accessibleCompanies()->sync($request->company_access ?? []);
 
         return redirect()->to(route('user.index'))->with('update',true);
 

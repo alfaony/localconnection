@@ -36,21 +36,26 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         <p id="penggunaNo"></p>
         <form action="{{ route('user.store') }}" method="post">
             @csrf
-            <label for="name">Nama:</label>
-            <input type="text" id="name" name="name" placeholder="Anwar" value="{{ old('name') ?? @$userEdit->name }}" required>
-
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
-
-            <label for="phone">Phone:</label>
-            <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
-
-            <label for="phone">Divisi:</label>
-            <select name="divisions[]" multiple class="form-control select2">
-                @foreach ($divisions as $division)
-                    <option value="{{ $division->id }}">{{ $division->name }}</option>
-                @endforeach
-            </select>
+            <div class="form-group">
+                <label for="name">Nama:</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Anwar" value="{{ old('name') ?? @$userEdit->name }}" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone:</label>
+                <input type="text" id="phone" name="phone" class="form-control" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
+            </div>
+            <div class="form-group">
+                <label for="phone">Divisi:</label>
+                <select name="divisions[]" multiple class="form-control select2">
+                    @foreach ($divisions as $division)
+                        <option value="{{ $division->id }}">{{ $division->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div class="form-group mt-2">
                 <label>Gunakan IP Tertentu:</label>
 
@@ -160,36 +165,57 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             </div>
 
             @if($roleAccess)
-            <label for="phone">Role:</label>
-            <select name="role" class="form-control mb-2 select2" required>
-                <option value="" selected disabled>Pilih</option>
-                @foreach($role as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
-                @endforeach
-            </select>
 
-            <label for="phone">User Persetujuan:</label>
-            <select name="approvement_user_id" class="form-control mb-2 user-select2">
-                <option value="" selected disabled>Pilih</option>
-                @foreach($users as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ." - ".  $a->company->name }} </option>
-                @endforeach
-            </select>
+            <div class="form-group">
+                <label for="phone">Role:</label>
+                <select name="role" class="form-control mb-2 select2" required>
+                    <option value="" selected disabled>Pilih</option>
+                    @foreach($role as $a)
+                    <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">User Persetujuan:</label>
+                <select name="approvement_user_id" class="form-control mb-2 user-select2">
+                    <option value="" selected disabled>Pilih</option>
+                    @foreach($users as $a)
+                    <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ." - ".  $a->company->name }} </option>
+                    @endforeach
+                </select>
+            </div>
             @endif
 
             @if($companyAccess && !@$userEdit)
-            <label for="phone">Company:</label>
-            <select name="company" class="form-control mb-2" required>
-                <option value="" selected disabled>Pilih</option>
-                @foreach($company as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->company_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
-                @endforeach
-            </select>
+            <div class="form-group">
+                <label for="phone">Company (Induk):</label>
+                <select name="company" class="form-control mb-2" required>
+                    <option value="" selected disabled>Pilih</option>
+                    @foreach($company as $a)
+                    <option value="{{ $a->id }}" {{ @$userEdit->company_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                    @endforeach
+                </select>
+            </div>
             @endif
+            
+            <div class="form-group">
+                <label for="phone">Company Access Allow:</label>
+                <select name="company_access[]" multiple class="form-control select2">
+                    @foreach($company as $a)
+                    <option value="{{ $a->id }}" 
+                        {{ in_array($a->id, old('company_access', @$userEdit?->accessibleCompanies->pluck('id')->toArray() ?? [])) ? 'selected' : '' }}>
+                        {{ $a->name }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
 
             @if(!@$userEdit)
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" placeholder="**********" value="{{ old('password') }}" required>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" placeholder="**********" value="{{ old('password') }}" required>
+            </div>
 
             <label for="confirmPassword">Confirm Password:</label>
             <input type="password" id="confirmPassword" name="confirmPassword" placeholder="**********">
@@ -347,6 +373,17 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                         @endforeach
                     </div>
                 </div>
+            </div>
+            <div class="form-group">
+                <label for="phone">Company Access Allow:</label>
+                <select name="company_access[]" multiple class="form-control select2">
+                    @foreach($company as $a)
+                    <option value="{{ $a->id }}" 
+                        {{ in_array($a->id, old('company_access', @$userEdit?->accessibleCompanies->pluck('id')->toArray() ?? [])) ? 'selected' : '' }}>
+                        {{ $a->name }}
+                    </option>
+                    @endforeach
+                </select>
             </div>
             @if($roleAccess)
             <label for="phone">Role:</label>
