@@ -16,6 +16,8 @@ use App\Models\EmployeeChecking;
 use App\Models\User;
 use App\Models\UserStatus;
 
+use App\Jobs\EmployeeCheckingExportJob;
+
 use Carbon\Carbon;
 
 use App\Schemas\ParamSchema;
@@ -69,7 +71,7 @@ class EmployeeCheckingController extends Controller
                 $query->byRole($userId);
 
                 // Filter by date range
-                $query->when($startDate && $endDate, function ($q) use ($start, $end) {
+                $query->when($start && $end, function ($q) use ($start, $end) {
                     $q->whereBetween('created_at', [$start, $end]);
                 });
 
@@ -308,6 +310,71 @@ class EmployeeCheckingController extends Controller
      * 
      * Protected for checking has divison
      */
+
+     /**
+      * 
+      */
+    public function export(Request $request, $format)
+    {
+        // Determine file name and format
+        try {
+            $filename = 'quotes_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
+            $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
+    
+            $userId = $request->input('user_id');
+            $start = $request->input('start_date') ? Carbon::parse($request->input('start_date'))->startOfDay() : Carbon::now()->startOfMonth()->startOfDay();
+            $end = $request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : Carbon::now()->endOfDay();
+            $today = Carbon::today()->toDateString();
+            $sort = $request->input('sort') ?? "desc";
+            $role = Auth::user()->role->name ?? NULL; 
+            
+            // Queue the export and store the job file name in session
+            EmployeeCheckingExportJob::dispatch($filename, $exportFormat, Auth::user()->company_id, $userId, $start, $end, $today, $sort, $role);
+    
+    
+            $filename = "public/" . $filename;
+            session(['export_filename_checkin' => $filename]);
+            $filename = session('export_filename_checkin');
+    
+            return redirect()->back()->with('export',true);
+        } catch (\Throwable $th) {
+            //throw $th;
+            // dd($th);
+            Log::error("Error storing file: " . $th->getMessage());
+            return redirect()->back()->with('export',true);
+        }
+    }
+
+    public function checkExportStatus()
+    {
+        $filename = session('export_filename_checkin');
+
+        if ($filename && Storage::exists($filename)) {
+            // Provide the download URL if file exists
+            $downloadUrl = Storage::url($filename);
+            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        }
+    
+        return response()->json(['ready' => false,'filename' => $filename]);
+    }
+
+    public function clearsession()
+    {
+        // Retrieve the export filename from the session
+        $filename = session('export_filename_checkin');
+
+        // Forget the session variable to prevent re-download on refresh
+        session()->forget('export_filename_checkin');
+
+        // Check if the file exists and delete it
+        if ($filename && Storage::exists($filename)) {
+            Storage::delete($filename);
+            Log::info("File deleted from storage: " . $filename);
+        }
+
+        return redirect()->back()->with('export',true);
+    }
+
     protected function checkingDivision($user)
     {
         $manual_checkin = false;

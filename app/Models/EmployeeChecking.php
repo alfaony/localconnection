@@ -133,4 +133,16 @@ class EmployeeChecking extends Model
             });
         }
     }
+
+
+    public function scopeByCompanyJob($query,$companyId, $role)
+    {
+        if($companyId && $role && $role != RoleSchema::ROOT) 
+        {
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }
+    }
 }
