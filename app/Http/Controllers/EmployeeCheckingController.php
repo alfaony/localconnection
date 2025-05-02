@@ -71,7 +71,7 @@ class EmployeeCheckingController extends Controller
                 $query->byRole($userId);
 
                 // Filter by date range
-                $query->when($startDate && $endDate, function ($q) use ($start, $end) {
+                $query->when($start && $end, function ($q) use ($start, $end) {
                     $q->whereBetween('created_at', [$start, $end]);
                 });
 
