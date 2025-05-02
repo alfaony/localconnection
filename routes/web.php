@@ -337,6 +337,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
   Route::resource('national-holiday', NationalHolidayController::class)->only(['index','store','update','destroy']);
   
+  Route::get('employee-checking/export/{format}', [EmployeeCheckingController::class, 'export'])->name('employee-checking.export');
+  Route::get('employee-checking/checkExportStatus', [EmployeeCheckingController::class, 'checkExportStatus'])->name('employee-checking.checkExportStatus');
+  Route::get('employee-checking/clearsession', [EmployeeCheckingController::class, 'clearsession'])->name('employee-checking.clearsession');
   Route::get('employee-checking/checkLastScheduledCheckin',[EmployeeCheckingController::class,'checkLastScheduledCheckin'])->name('employee-checking.checkLastScheduledCheckin');
   Route::put('employee-checking/updatestatus/{employee_checking}',[EmployeeCheckingController::class,'updatestatus'])->name('employee-checking.updatestatus');
   Route::resource('employee-checking', EmployeeCheckingController::class)->only(['index','update']);

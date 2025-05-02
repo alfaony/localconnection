@@ -358,6 +358,41 @@ class User extends Authenticatable
                 }
             ]);
     }
+
+    public function scopeWithCheckinCountsJob($query, $companyId = null, $userId = null, $start = null, $end = null, $today = null, $role = null)
+    {
+        return $query->select('users.*')
+            ->byCompanyJob($companyId, $role)
+            ->when($userId, function ($query) use ($userId) {
+                $query->where('id', $userId);
+            })
+            ->withCount([
+                'employeeCheckings as total_checkin_today' => function ($query) use ($today) {
+                    $query->where('is_active', false)
+                          ->where('is_completed', true)
+                          ->where('is_dayoff', false)
+                          ->where('is_permission', false)
+                          ->whereDate('created_at', $today);
+                },
+                'employeeCheckings as total_successful_checkins' => function ($query) use ($start, $end) {
+                    $query->where('is_active', false)
+                          ->where('is_completed', true)
+                          ->where('is_dayoff', false)
+                          ->where('is_permission', false);
+                    if ($start && $end) {
+                        $query->whereBetween('created_at', [$start, $end]);
+                    }
+                },
+                'employeeCheckings as total_days' => function ($query) use ($start, $end) {
+                    $query->select(DB::raw('COUNT(DISTINCT DATE(created_at))'))
+                          ->where('is_dayoff', false)
+                          ->where('is_permission', false);
+                    if ($start && $end) {
+                        $query->whereBetween('created_at', [$start, $end]);
+                    }
+                }
+            ]);
+    }
     public function scopeByCompany($query,$companyId)
     {
         $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
@@ -365,6 +400,14 @@ class User extends Authenticatable
         if($companyIds && Auth::user()->role->name != RoleSchema::ROOT)
         {
             return $query->whereIn("company_id",$companyIds);
+        }
+    }
+
+    public function scopeByCompanyJob($query,$companyId, $role)
+    {
+        if($companyId && $role && $role != RoleSchema::ROOT)
+        {
+            return $query->where("company_id",$companyId);
         }
     }
 

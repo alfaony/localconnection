@@ -231,11 +231,13 @@ class HomeController extends Controller
 
             $currentScore = round($totalTasks + ($totalPoints * $checkinPercentage / 100));
 
-            return [
-                'name' => $user->name,
-                'currentScore' => $currentScore
-            ];
-        });
+            if ($currentScore > 0) {
+                return [
+                    'name' => $user->name,
+                    'currentScore' => $currentScore
+                ];
+            }
+        })->filter()->values();
 
         $sorted = $result->sortByDesc('currentScore')->values();
 
