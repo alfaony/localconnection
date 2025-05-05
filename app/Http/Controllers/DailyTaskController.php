@@ -59,7 +59,7 @@ class DailyTaskController extends Controller
         // Query dasar untuk tugas harian berdasarkan user ID
         $query = DailyTask::orderBy('created_at', $request->input('sort') ?? 'desc');
 
-        if(!$statusFilter && !$search && $taskFilter)
+        if(!$statusFilter && !$search && $taskFilter != 'all')
         {
             $query->whereHas('taskStatus', function ($query)
             {
