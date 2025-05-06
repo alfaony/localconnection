@@ -15,15 +15,18 @@ return new class extends Migration
     {
         Schema::create('subscribe_letters', function (Blueprint $table) {
             $table->id();
-            $table->uuid('responsible_user_id');
+            $table->uuid('pic_user_id');
+            $table->uuid('company_id');
             $table->string('name');
             $table->date('valid_from');
             $table->date('valid_until');
             $table->string('document_path')->nullable();
 
-            $table->foreign('responsible_user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
+
+            $table->foreign('pic_user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
         });
     }
 
