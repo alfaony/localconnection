@@ -30,13 +30,13 @@
             @endif
 
             <div class="mb-3">
-                <label>ID Kendaraan</label>
+                <label>ID Kendaraan <span class="text-danger">*</span></label>
                 <input type="text" name="vehicle_id" class="form-control"
                     value="{{ old('vehicle_id', $vehicle->vehicle_id ?? '') }}" required>
             </div>
 
             <div class="mb-3">
-                <label>Jenis Kendaraan</label>
+                <label>Jenis Kendaraan <span class="text-danger">*</span></label>
                 <select name="vehicle_type" class="form-control" required>
                     <option value="">-- Pilih Jenis Kendaraan --</option>
                     @foreach($typeVehicles as $type => $value)
@@ -49,19 +49,19 @@
             </div>
 
             <div class="mb-3">
-                <label>Tipe</label>
+                <label>Tipe <span class="text-danger">*</span></label>
                 <input type="text" name="type" class="form-control"
                     value="{{ old('type', $vehicle->type ?? '') }}" required>
             </div>
 
             <div class="mb-3">
-                <label>Posisi</label>
+                <label>Posisi <span class="text-danger">*</span></label>
                 <input type="text" name="position" class="form-control"
                     value="{{ old('position', $vehicle->position ?? '') }}" required>
             </div>
 
             <div class="mb-3">
-                <label>Penanggung Jawab</label>
+                <label>Penanggung Jawab <span class="text-danger">*</span></label>
                 <select name="pic_user_id" class="form-control" required>
                     <option value="">-- Pilih PIC --</option>
                     @foreach($users as $id => $name)
@@ -80,15 +80,17 @@
             </div>
 
             <div class="mb-3">
-                <label>Berlaku STNK</label>
+                <label>Batas Berlaku STNK <span class="text-danger">*</span></label>
                 <input type="date" name="subscription_stnk" class="form-control"
-                    value="{{ old('subscription_stnk', $vehicle->subscription_stnk ?? '') }}">
+                    value="{{ old('subscription_stnk', $vehicle->subscription_stnk ?? '') }}"
+                    required>
             </div>
 
             <div class="mb-3">
-                <label>Berlaku KIR</label>
+                <label>Batas Berlaku KIR <span class="text-danger">*</span></label>
                 <input type="date" name="subscription_kir" class="form-control"
-                    value="{{ old('subscription_kir', $vehicle->subscription_kir ?? '') }}">
+                    value="{{ old('subscription_kir', $vehicle->subscription_kir ?? '') }}"
+                    required>
             </div>
 
             <button type="submit" class="btn btn-success">

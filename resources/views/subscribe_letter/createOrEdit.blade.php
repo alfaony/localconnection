@@ -31,25 +31,25 @@
             @endif
 
             <div class="mb-3">
-                <label>Nama Surat</label>
+                <label>Nama Surat <span class="text-danger">*</span></label>
                 <input type="text" name="name" class="form-control"
                     value="{{ old('name', $letter->name ?? '') }}" required>
             </div>
 
             <div class="mb-3">
-                <label>Berlaku Dari</label>
+                <label>Berlaku Dari <span class="text-danger">*</span></label>
                 <input type="date" name="valid_from" class="form-control"
                     value="{{ old('valid_from', isset($letter) ? $letter->valid_from: '') }}" required>
             </div>
 
             <div class="mb-3">
-                <label>Sampai</label>
+                <label>Sampai <span class="text-danger">*</span></label>
                 <input type="date" name="valid_until" class="form-control"
                     value="{{ old('valid_until', isset($letter) ? $letter->valid_until : '') }}" required>
             </div>
 
             <div class="mb-3">
-                <label>Penanggung Jawab</label>
+                <label>Penanggung Jawab <span class="text-danger">*</span></label>
                 <select name="pic_user_id" class="form-control" required>
                     <option value="">-- Pilih PIC --</option>
                     @foreach($users as $id => $name)
@@ -62,8 +62,10 @@
             </div>
 
             <div class="mb-3">
-                <label>Upload Dokumen (PDF/JPG/PNG)</label>
-                <input type="file" name="document_path" accept=".pdf,.jpg,.jpeg,.png" class="form-control">
+                <label>Upload Dokumen (PDF/JPG/PNG)    @if(!isset($letter))<span class="text-danger">*</span> @endif</label>
+                <input type="file" name="document_path" accept=".pdf,.jpg,.jpeg,.png" class="form-control"
+                @if(!isset($letter)) required @endif
+                >
                 @if(isset($letter) && $letter->document_path)
                     <p class="mt-2">
                         <a href="{{ asset('storage/' . $letter->document_path) }}" target="_blank" class="btn btn-outline-secondary btn-sm">

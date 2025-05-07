@@ -38,6 +38,7 @@ class SubscribeLetterController extends Controller
             'valid_from' => 'required|date',
             'valid_until' => 'required|date|after_or_equal:valid_from',
             'pic_user_id' => 'required|uuid|exists:users,id',
+            'document_path' => 'required|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
     
         $filePath = null;
@@ -76,6 +77,7 @@ class SubscribeLetterController extends Controller
             'valid_from' => 'required|date',
             'valid_until' => 'required|date|after_or_equal:valid_from',
             'pic_user_id' => 'nullable|uuid|exists:users,id',
+            'document_path' => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
         $letter = SubscribeLetter::byCompany(auth()->user()->company_id)->findOrFail($id);
