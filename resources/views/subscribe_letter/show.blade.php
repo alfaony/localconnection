@@ -15,6 +15,7 @@
     </div>
 @stop
 @section('content')
+@include('components.alert')
 <div class="card">
     <div class="card-body">
         <dl class="row">

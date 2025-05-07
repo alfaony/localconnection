@@ -49,6 +49,25 @@ class Vehicle extends Model
         }
     }
 
+    public function getStatusFor($dateField)
+    {
+        $date = $this->{$dateField};
+
+        if (!$date) {
+            return 'secondary'; // atau null, kalau tidak ingin ditampilkan
+        }
+
+        $diff = Carbon::now()->diffInDays(Carbon::parse($date), false);
+
+        if ($diff > 30) {
+            return false;
+        } elseif ($diff >= 0 && $diff <= 30) {
+            return true;
+        } else {
+            return true;
+        }
+    }
+
     public function picUser()
     {
         return $this->belongsTo(User::class, 'pic_user_id')->withTrashed();

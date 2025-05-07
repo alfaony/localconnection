@@ -104,6 +104,8 @@ class RoleController extends Controller
             'office_media',
             'weekly_reports',
             'dashboard_weekly_reports',
+            'vehicles',
+            'subcribetion_letters',
         ];
 
         $checked = array_merge($mainMenus);
@@ -237,6 +239,8 @@ class RoleController extends Controller
                 'office_media',
                 'weekly_reports',
                 'dashboard_weekly_reports',
+                'vehicles',
+                'subcribetion_letters',
             ];
         $checked = array_merge($mainMenus);
 
@@ -330,6 +334,8 @@ class RoleController extends Controller
                 'office_media',
                 'weekly_reports',
                 'dashboard_weekly_reports',
+                'vehicles',
+                'subcribetion_letters',
             ];
         
         $checked = array_merge($mainMenus);

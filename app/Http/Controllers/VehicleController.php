@@ -10,7 +10,20 @@ class VehicleController extends Controller
 {
     public function index()
     {
-        $vehicles = Vehicle::byCompany(auth()->user()->company_id)->with('picUser')->latest()->paginate(10);
+        $vehicles = Vehicle::byCompany(auth()->user()->company_id)
+            ->with('picUser')
+            ->when(request('search'), function($query) {
+                $query->where('vehicle_id', 'LIKE', '%' . request('search') . '%')
+                      ->orWhere('vehicle_type', 'LIKE', '%' . request('search') . '%')
+                      ->orWhere('type', 'LIKE', '%' . request('search') . '%')
+                      ->orWhere('position', 'LIKE', '%' . request('search') . '%')
+                      ->orwhereHas('picUser', function ($query) {
+                          $query->where('name', 'LIKE', '%' . request('search') . '%');
+                      })
+                      ;
+            })
+            ->latest()
+            ->paginate(10);
         return view('vehicle.index', compact('vehicles'));
     }
 
@@ -97,5 +110,41 @@ class VehicleController extends Controller
         $vehicle->delete();
 
         return redirect()->route('vehicle.index')->with('delete', true);
+    }
+
+    public function infoPic()
+    {
+        $user = auth()->user();
+        $today = now();
+        $deadline = now()->addDays(30);
+
+        $vehicles = Vehicle::where('pic_user_id', $user->id)
+        ->where(function ($q) use ($deadline) {
+            $q->whereDate('subscription_stnk', '<=', $deadline)
+              ->orWhereDate('subscription_kir', '<=', $deadline)
+              ;
+        })
+        ->get();
+
+        $html = view('vehicle.partial-vehicle', compact('vehicles'))->render();
+        return response()->json(['html' => $html]);
+    }
+
+    public function infoManager()
+    {
+        $user = auth()->user();
+        $today = now();
+        $deadline = now()->addDays(30);
+
+        $vehicles = Vehicle::where('company_id', $user->company_id)
+            ->where(function ($q) use ($deadline) {
+                $q->whereDate('subscription_stnk', '<=', $deadline)
+                ->orWhereDate('subscription_kir', '<=', $deadline)
+                ;
+            })
+            ->get();
+
+        $html = view('vehicle.partial-vehicle', compact('vehicles'))->render();
+        return response()->json(['html' => $html]);
     }
 }

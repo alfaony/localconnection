@@ -6,7 +6,6 @@
 @stop
 
 @section('content')
-@include('components.alert')
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>List Kendaraan</span>
@@ -16,15 +15,24 @@
             @endcanAccess
         </div>
     </div>
-
+    
     <div class="card-body">
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
+        @include('components.alert')
+        
+        <div class="d-flex justify-content-end mb-3">
+            <form action="{{ route('vehicle.index') }}" method="get" class="mt-3">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" value="{{ request()->query('search') }}" placeholder="Cari...">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
 
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>ID Kendaraan</th>
                         <th>Jenis</th>
@@ -39,9 +47,6 @@
                 <tbody>
                 @forelse($vehicles as $vehicle)
                     <tr>
-                        <td>
-                            {{ $vehicle->id }}
-                        </td>
                         <td>{{ $vehicle->vehicle_id }}</td>
                         <td>{{ ucfirst($vehicle->vehicle_type) ?? "-" }}</td>
                         <td>{{ $vehicle->position }}</td>

@@ -17,6 +17,17 @@
     <div class="card-body">
         @include('components.alert')
 
+        <div class="d-flex justify-content-end mb-3">
+            <form action="{{ route('subscribe-letter.index') }}" method="get" class="mt-3">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" value="{{ request()->query('search') }}" placeholder="Cari...">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
                 <thead class="table-light">

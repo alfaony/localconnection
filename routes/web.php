@@ -86,6 +86,10 @@ use App\Http\Controllers\DayoffController;
 use App\Http\Controllers\OfficeMediaController;
 use App\Http\Controllers\WeeklyReportController;
 use App\Http\Controllers\ReportChartController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\SubscribeLetterController;
+
+
 
 
 
@@ -425,8 +429,15 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   
   Route::get('weekly-report/reminderDashboard', [WeeklyReportController::class, 'reminderDashboard'])->name('weekly-report.reminderDashboard');
   Route::resource('weekly-report', WeeklyReportController::class);
+  
+  Route::get('vehicle/infoPic', [VehicleController::class, 'infoPic'])->name('reminder.vehicle.pic');
+  Route::get('vehicle/infoManager', [VehicleController::class, 'infoManager'])->name('reminder.vehicle.manager');
+  Route::resource('vehicle', VehicleController::class);
+  
+  Route::get('subscribe-letter/infoPic', [SubscribeLetterController::class, 'infoPic'])->name('reminder.letter.pic');
+  Route::get('subscribe-letter/infoManager', [SubscribeLetterController::class, 'infoManager'])->name('reminder.letter.manager');
+  Route::resource('subscribe-letter', SubscribeLetterController::class);
 });
-
 
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');

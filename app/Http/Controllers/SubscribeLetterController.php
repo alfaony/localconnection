@@ -8,9 +8,20 @@ use Illuminate\Http\Request;
 
 class SubscribeLetterController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $letters = SubscribeLetter::byCompany(auth()->user()->company_id)->with('responsibleUser')->latest()->paginate(10);
+        $search = $request->query('search');
+        $letters = SubscribeLetter::byCompany(auth()->user()->company_id)
+            ->with('responsibleUser')
+            ->when($search, function($query, $search) {
+                return $query->where('name', 'like', "%{$search}%")
+                ->orWhereHas('responsibleUser', function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%");
+                })
+                ;
+            })
+            ->latest()
+            ->paginate(10);
         return view('subscribe_letter.index', compact('letters'));
     }
 
@@ -92,5 +103,33 @@ class SubscribeLetterController extends Controller
         $letter->delete();
 
         return redirect()->route('subscribe-letter.index')->with('delete', true);
+    }
+
+    public function infoPic()
+    {
+        $user = auth()->user();
+        $deadline = now()->addDays(30);
+
+        $letters = SubscribeLetter::where('pic_user_id', $user->id)
+            ->whereDate('valid_until', '<=', $deadline)
+            ->get();
+
+        $html = view('subscribe_letter.partial-subcribe-letter', compact('letters'))->render();
+        return response()->json(['html' => $html]);
+    }
+
+    public function infoManager()
+    {
+        $user = auth()->user();
+        $deadline = now()->addDays(30);
+
+        $letters = SubscribeLetter::whereHas('responsibleUser', function ($q) use ($user) {
+                $q->where('company_id', $user->company_id);
+            })
+            ->whereDate('valid_until', '<=', $deadline)
+            ->get();
+
+        $html = view('subscribe_letter.partial-subcribe-letter', compact('letters'))->render();
+        return response()->json(['html' => $html]);
     }
 }
