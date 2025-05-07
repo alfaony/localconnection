@@ -636,6 +636,7 @@
         const locationSection = document.getElementById('globalLocationSection');
         if (requiresLocation) {
             locationSection.style.display = 'block';
+            getLocation();
         } else {
             locationSection.style.display = 'none';
         }

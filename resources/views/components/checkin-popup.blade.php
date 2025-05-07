@@ -203,6 +203,8 @@
         if (requiresLocation) {
             locationSection.style.display = 'block';
             locationButton.setAttribute('required', 'required');
+            
+            getLocationNow();
         } else {
             locationSection.style.display = 'none';
             locationButton.removeAttribute('required');
