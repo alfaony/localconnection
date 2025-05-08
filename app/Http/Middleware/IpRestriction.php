@@ -23,13 +23,13 @@ class IpRestriction
             //  Ambil IP saat ini dari API ipify
             try {
                 $clientIp = request()->header('X-Real-IP') ?? explode(',', request()->header('X-Forwarded-For'))[0] ?? NULL;
-                $response = Http::get('https://api64.ipify.org?format=json');
+                $response = Http::get('https://ifconfig.me/ip');
                 if ($response->failed() && empty($clientIp)) 
                 {
                     abort(403, 'Gagal mendapatkan IP publik');
                 }
 
-                $currentIp = $clientIp != "" ? $clientIp : $response->json()['ip'];
+                $currentIp = $clientIp != "" ? $clientIp : $response->body();
             } catch (\Exception $e) {
                 abort(403, 'Gagal mendapatkan IP publik');
             }
