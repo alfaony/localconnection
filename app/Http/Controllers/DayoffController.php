@@ -49,6 +49,11 @@ class DayoffController extends Controller
             });
         }
 
+        // $users = User::where('company_id', Auth::user()->company_id)
+        //             ->where('dayoff_active', true)
+        //             ->with(['dayoffQuotas.type'])
+        //             ->get();
+        // dd($users);
         $cutis = $query->byCompany(Auth::user()->company_id)
             ->latest()
             ->paginate(10);
@@ -537,7 +542,7 @@ class DayoffController extends Controller
         $filename = 'laporan_cuti_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
         
-        ExportDayoffJob::dispatch($request->all(), $filename, $exportFormat, $request->start_date, $request->end_date);
+        ExportDayoffJob::dispatch($request->all(), $filename, Auth::user()->company_id, Auth::user(), Access::can('hrApprovement', 'dayoffs'), Access::can('financeApprovement', 'dayoffs'), $exportFormat, $request->start_date, $request->end_date);
 
         session(['export_filename_dayoff' => 'public/exports/' . $filename]);
 

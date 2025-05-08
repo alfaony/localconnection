@@ -104,4 +104,26 @@ class Dayoff extends Model
         }
     }
 
+    public function scopeByCompanyJob($query,$companyId, $user, $hrApprovement, $financeApprovement)
+    {
+        $approve = false;
+        $role = $user->role;
+
+        if($hrApprovement || $financeApprovement || $role->name == RoleSchema::ROOT)
+        {
+            $approve = true;
+        }
+
+        if($companyId && $approve)
+        {
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }else
+        {
+            return $query->where('user_id', $user->id);
+        }
+    }
+
 }

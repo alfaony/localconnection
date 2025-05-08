@@ -4,15 +4,21 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Carbon\Carbon;
 
-class DayoffExport implements FromCollection, WithHeadings
+class DayoffExport implements FromCollection, WithHeadings, WithTitle
 {
     protected $cutis;
 
     public function __construct($cutis)
     {
         $this->cutis = $cutis;
+    }
+
+    public function title(): string
+    {
+        return 'List Cuti';
     }
 
     public function collection()
