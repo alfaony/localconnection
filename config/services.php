@@ -67,5 +67,10 @@ return [
         'token' => env('CUTI_API_TOKEN'),
     ],
 
+    'path' => 
+    [
+        'ghost_script' => env('PATH_GHOST_SCRIPT', 'gs'),
+    ]
+
     
 ];

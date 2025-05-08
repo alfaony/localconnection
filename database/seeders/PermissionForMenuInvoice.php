@@ -19,7 +19,7 @@ class PermissionForMenuInvoice extends Seeder
      */
     public function run()
     {
-        $invoices = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'downloadPdf', 'dataTableJson','suggestionQuote','productCounting','counting','downloadPdf','select2','productPrice','destroyProduct'];
+        $invoices = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'downloadPdf', 'dataTableJson','suggestionQuote','productCounting','counting','downloadPdf','select2','productPrice','destroyProduct','downloadPdfA','checkPdfAStatus','clearsessionPdfA'];
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $admin = Role::where('name',RoleSchema::ADMIN)->first();
         $finance = Role::where('name',RoleSchema::FINANCE)->first();
@@ -37,9 +37,15 @@ class PermissionForMenuInvoice extends Seeder
             ]);
 
             //assign role & permission
-            PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
-            PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
-            PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permission->id]);
+            if ($root) {
+                PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+            }
+            if($finance){
+                PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permission->id]);
+            }
+            if($admin){
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -35,6 +36,7 @@ use App\Models\InvoiceEmailRecord;
 
 use App\Services\XeroService;
 use App\Jobs\ExportInvoiceJob;
+use App\Jobs\ConvertInvoiceToPdfAJob;
 
 class InvoiceController extends Controller
 {
@@ -624,6 +626,53 @@ class InvoiceController extends Controller
         return $this->xeroService->getInvoice($invoice->invoice_xero_id);
 
     }
+
+    /**
+     * Download PDF A
+     */
+    public function downloadPdfA($slug)
+    {
+        $gs = config('services.path.ghost_script');
+
+        dispatch(new ConvertInvoiceToPdfAJob($slug, $gs));
+
+        // Simpan nama file di session agar frontend tahu filenya nanti
+        session(['export_filename_invoice_pdfa' => "{$slug}.pdf"]);
+
+        return redirect()->back()->with('downloadPdfA', true);
+    }
+
+    public function checkPdfAStatus()
+    {
+        $filename = session('export_filename_invoice_pdfa');
+        $fileExist = "public/invoices/converted/pdfa-".$filename;
+        // $fileExist "public/invoices/converted";
+
+        if ($filename && Storage::exists($fileExist)) {
+            // Provide the download URL if file exists
+            $downloadUrl = Storage::url($fileExist);
+            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        }
+
+        return response()->json(['ready' => false]);
+    }
+
+    public function clearsessionPdfA()
+    {
+        $filename = session('export_filename_invoice_pdfa');
+        $fileExist = "public/invoices/converted/pdfa-".$filename;
+        $fileExistClear = "public/invoices/converted/clean-".$filename;
+
+        if ($filename && Storage::exists($fileExist)) 
+        {
+            Storage::delete($fileExist);
+            Storage::delete($fileExistClear);
+        }
+
+        // session()->forget('export_filename_invoice_pdfa');
+
+        return response()->json(['cleared' => true]);
+    }
     /**
      * Total After PPN dll
      */
@@ -959,6 +1008,7 @@ class InvoiceController extends Controller
         // Store the export in the 'public' disk
         ExportInvoiceJob::dispatch($filters, $filename, $exportFormat, Auth::user()->company_id);
         $filename = "public/" . $filename;
+        dd($filename);
         // Save filename to session or pass it to the frontend
         session(['export_filename_invoice' => $filename]);
 
