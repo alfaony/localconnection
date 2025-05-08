@@ -44,7 +44,7 @@ class ExportDayoffJob implements ShouldQueue
         {
             $query = Dayoff::with(['user', 'type']);
 
-            $query->byCompanyJob($this->company_id, $this->user->role, $this->hrApprovement, $this->financeApprovement);
+            $query->byCompanyJob($this->company_id, $this->user, $this->hrApprovement, $this->financeApprovement);
             
             if (!empty($this->filters['user_id'])) {
                 $query->where('user_id', $this->filters['user_id']);
@@ -82,10 +82,21 @@ class ExportDayoffJob implements ShouldQueue
     protected function generateRecap($companyId, $userLogin, $hrApprovement, $financeApprovement, $startDate, $endDate)
     {
         $year = $startDate ? Carbon::parse($startDate)->year : now()->year;
-        $users = User::where('company_id', $companyId)
-                    ->where('dayoff_active', true)
-                    ->with(['dayoffQuotas.type'])
-                    ->get();
+
+        if($financeApprovement || $hrApprovement)
+        {
+            $users = User::where('company_id', $companyId)
+                        ->where('dayoff_active', true)
+                        ->with(['dayoffQuotas.type'])
+                        ->get();
+        }else
+        {
+            $users = User::where('company_id', $companyId)
+            ->where('id', $userLogin->id)
+            ->where('dayoff_active', true)
+            ->with(['dayoffQuotas.type'])
+            ->get();
+        }
 
         $reports = [];
 
