@@ -16,6 +16,12 @@
             </div>
         </div>
         @endcanAccess
+
+        <div id="vehicle-reminder-pic"></div>
+        <div id="vehicle-reminder-manager"></div>
+
+        <div id="reminder-letter-pic"></div>
+        <div id="reminder-letter-manager"></div>
     </div>
 
     @canAccess('dashboardReport','homes')
@@ -729,6 +735,109 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> 
+@canAccess('infoPic','subscribe_letters')
+<script>
+    async function loadLetterReminderPIC() {
+        const container = document.querySelector('#reminder-letter-pic');
+        container.innerHTML = `<div class="text-center py-3">
+            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat surat (PIC)...
+        </div>`;
+
+        try {
+            const response = await fetch("{{ route('reminder.letter.pic') }}");
+            const data = await response.json();
+            container.innerHTML = data.html;
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat surat (PIC).</div>`;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadLetterReminderPIC();
+    });
+</script>
+@endcanAccess
+
+@canAccess('infoManager','subscribe_letters')
+<script>
+    async function loadLetterReminderManager() {
+        const container = document.querySelector('#reminder-letter-manager');
+        container.innerHTML = `<div class="text-center py-3">
+            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat surat (Manager)...
+        </div>`;
+
+        try {
+            const response = await fetch("{{ route('reminder.letter.manager') }}");
+            const data = await response.json();
+            container.innerHTML = data.html;
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat surat (Manager).</div>`;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => 
+    {
+        loadLetterReminderManager();
+    });
+</script>
+@endcanAccess
+
+@canAccess('infoManager','vehicles')
+<script>
+    async function loadVehicleReminderManager(containerSelector = '#vehicle-reminder-manager') {
+        const container = document.querySelector(containerSelector);
+        const url = "{{ route('reminder.vehicle.manager') }}";
+
+        container.innerHTML = `<div class="text-center py-3">
+            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat kendaraan (Manager)...
+        </div>`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            container.innerHTML = data.html;
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat kendaraan (Manager).</div>`;
+        }
+    }
+
+    // Panggil sesuai kebutuhan (bisa 1 atau dua-duanya)
+    document.addEventListener("DOMContentLoaded", () => {
+        loadVehicleReminderManager();
+    });
+</script>
+@endcanAccess
+
+@canAccess('infoPic','vehicles')
+<script>
+    async function loadVehicleReminderPIC(containerSelector = '#vehicle-reminder-pic') {
+        const container = document.querySelector(containerSelector);
+        const url = "{{ route('reminder.vehicle.pic') }}";
+
+        container.innerHTML = `<div class="text-center py-3">
+            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat kendaraan (PIC)...
+        </div>`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            container.innerHTML = data.html;
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat kendaraan (PIC).</div>`;
+        }
+    }
+
+    // Panggil sesuai kebutuhan (bisa 1 atau dua-duanya)
+    document.addEventListener("DOMContentLoaded", () => {
+        loadVehicleReminderPIC();
+    });
+</script>
+@endcanAccess
+
 @canAccess('listDayoff','homes')
 <script>
     document.addEventListener('DOMContentLoaded', async () => {

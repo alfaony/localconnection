@@ -119,5 +119,11 @@ return
       [
          'boolean' => 'On / Off',
          'integer' => 'Angka',
+      ],
+
+      "type_vehicle" => 
+      [
+         'motor' => 'Motor',
+         'mobil' => 'Mobil',
       ]
 ];
