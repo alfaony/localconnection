@@ -67,7 +67,7 @@
         </dl>
 
         
-        @canAccess('update', $vehicle)
+        @canAccess('update', 'vehicles')
             <button class="btn btn-warning mb-3" data-bs-toggle="modal" data-bs-target="#modalPerpanjangVehicle">
                 Perpanjang Masa Berlaku
             </button>

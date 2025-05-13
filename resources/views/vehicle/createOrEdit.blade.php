@@ -87,10 +87,10 @@
             </div>
 
             <div class="mb-3">
-                <label>Batas Berlaku KIR <span class="text-danger">*</span></label>
+                <label>Batas Berlaku KIR </label>
                 <input type="date" name="subscription_kir" class="form-control"
                     value="{{ old('subscription_kir', $vehicle->subscription_kir ?? '') }}"
-                    required>
+                    >
             </div>
 
             <button type="submit" class="btn btn-success">

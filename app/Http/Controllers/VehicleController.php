@@ -44,7 +44,7 @@ class VehicleController extends Controller
             'pic_user_id' => 'required|uuid|exists:users,id',
             'service_terakhir' => 'nullable|date',
             'subscription_stnk' => 'required|date',
-            'subscription_kir' => 'required|date',
+            'subscription_kir' => 'nullable|date',
         ]);
     
         Vehicle::create([
@@ -83,11 +83,9 @@ class VehicleController extends Controller
     {
         $request->validate([
             'service_terakhir' => 'nullable|date',
-            'subscription_stnk' => 'nullable|date',
             'subscription_kir' => 'nullable|date',
             'pic_user_id' => 'nullable|uuid|exists:users,id',
             'subscription_stnk' => 'required|date',
-            'subscription_kir' => 'required|date',
         ]);
 
         $vehicle = Vehicle::byCompany(auth()->user()->company_id)->findOrFail($id);
