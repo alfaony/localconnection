@@ -39,6 +39,7 @@ class DeactivateCheckinV2 extends Command
             // Get the current time and schedule timeout
             $timeoutTime = $checkin->scheduled_timeout ? Carbon::parse($checkin->scheduled_timeout)->format('H:i') : NULL;
             $currentTime = Carbon::now()->tz('Asia/Jakarta')->format('H:i');
+            $timeoutTimeWithSpare2Mnit = $checkin->scheduled_timeout ? Carbon::parse($checkin->scheduled_timeout)->subMinutes(2)->format('H:i') : NULL;
     
             // If the current time is greater than the timeout time, deactivate the check-in
             $existingLog = CheckinLog::where('employee_checkin_id', $checkin->id)->first();
@@ -59,6 +60,19 @@ class DeactivateCheckinV2 extends Command
     
                 $this->info("Check-in deactivated and removed from Firebase for user: {$checkin->user_id}");
             }
+
+            if (isset($checkin->scheduled_timeout) &&  isset($timeoutTime) && $currentTime <= $timeoutTimeWithSpare2Mnit) 
+            {
+                // Update `is_active` to false in the local database
+                $checkin->is_active = false;
+                $checkin->save();
+    
+                // Remove the record from Firebase
+                $this->removeFromFirebase($checkin);
+    
+                $this->info("Check-in deactivated and removed from Firebase for user: {$checkin->user_id}");
+            }
+            
     
             $this->info('Check-in deactivations and removals processed successfully.');
         }
