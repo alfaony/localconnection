@@ -6,22 +6,22 @@
                 <li>
                     <strong>{{ $v->vehicle_id }} {{ $v->vehicle_type }} {{ $v->type }}</strong>
                     <ul>
+                        @if($v->subscription_stnk && $v->getStatusFor('subscription_stnk'))
                         <li>
-                            @if($v->subscription_stnk && $v->getStatusFor('subscription_stnk'))
                                 Jatuh Tempo STNK:
                                 <span class="badge bg-{{ $v->getColorStatusFor('subscription_stnk') }}">
                                     {{ $v->subscription_stnk }}
                                 </span>
-                            @endif
                         </li>
+                        @endif
+                        @if($v->subscription_kir && $v->getStatusFor('subscription_kir'))
                         <li>
-                            @if($v->subscription_kir && $v->getStatusFor('subscription_kir'))
                                 Jatuh Tempo  KIR:
                                 <span class="badge bg-{{ $v->getColorStatusFor('subscription_kir') }}">
                                     {{ $v->subscription_kir }}
                                 </span>
+                            </li>
                             @endif
-                        </li>
                     </ul>
 
                 </li>
