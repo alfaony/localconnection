@@ -84,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
             [
                 'dashboard_weekly_reports',
                 'weekly_reports',
+                'flowcharts',
                 'ask_bos',
                 'decisions',
                 'dayoffs',
@@ -519,6 +520,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'subscribe-letter.index',
                     'icon' => 'fa fa-envelope-open',
                 ],
+                'flowcharts' => 
+                [
+                    'text' => 'Alur Kerja',
+                    'route' => 'flowchart.index',
+                    'icon' => 'fa fa-sitemap',
+                ]
             ];
 
             foreach ($listMenu as $role) 
