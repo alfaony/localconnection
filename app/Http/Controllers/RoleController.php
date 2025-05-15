@@ -106,6 +106,7 @@ class RoleController extends Controller
             'dashboard_weekly_reports',
             'vehicles',
             'subscribe_letters',
+            'flowcharts',
         ];
 
         $checked = array_merge($mainMenus);
@@ -241,6 +242,7 @@ class RoleController extends Controller
                 'dashboard_weekly_reports',
                 'vehicles',
                 'subscribe_letters',
+                'flowcharts',
             ];
         $checked = array_merge($mainMenus);
 
@@ -336,6 +338,7 @@ class RoleController extends Controller
                 'dashboard_weekly_reports',
                 'vehicles',
                 'subscribe_letters',
+                'flowcharts',
             ];
         
         $checked = array_merge($mainMenus);

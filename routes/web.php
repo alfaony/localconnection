@@ -88,6 +88,7 @@ use App\Http\Controllers\WeeklyReportController;
 use App\Http\Controllers\ReportChartController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\SubscribeLetterController;
+use App\Http\Controllers\FlowChartController;
 
 
 
@@ -437,6 +438,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('subscribe-letter/infoPic', [SubscribeLetterController::class, 'infoPic'])->name('reminder.letter.pic');
   Route::get('subscribe-letter/infoManager', [SubscribeLetterController::class, 'infoManager'])->name('reminder.letter.manager');
   Route::resource('subscribe-letter', SubscribeLetterController::class);
+  
+  Route::resource('flowchart', FlowChartController::class);
 });
 
 
