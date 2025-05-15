@@ -17,7 +17,7 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="name">Alur Kerja Name</label>
-                        <input type="text" name="name" class="form-control" required value="{{ old('name', $chart->name ?? '') }}">
+                        <input type="text" name="name" class="form-control"  value="{{ old('name', $chart->name ?? '') }}">
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -71,8 +71,27 @@
                 editor.import({!! $chart->json_model !!});
             @endif
 
-            document.getElementById("flowchartForm").addEventListener("submit", function () {
-                document.getElementById("modelInput").value = JSON.stringify(editor.export());
+            document.getElementById("flowchartForm").addEventListener("submit", function (e) {
+                // e.preventDefault();
+
+                const exported = editor.export();
+                const data = exported?.drawflow?.Home?.data ?? {};
+
+                for (const id in data) {
+                    const node = document.getElementById("node-" + id);
+                    const title = node?.querySelector(".title");
+
+                    if (title) {
+                        const userText = title.innerText.trim();
+
+                        data[id].data.label = userText;
+                        data[id].html = `<div class="drawflow_content_node"><div class="title" contenteditable="true">${userText}</div></div>`;
+                    }
+                }
+
+                // Simpan ke hidden input
+                document.getElementById("modelInput").value = JSON.stringify(exported);
+                // console.log("✅ Exported model ready:", exported);
             });
         });
 
@@ -94,7 +113,8 @@
 
             const html = `<div class='title' contenteditable='true'>${label}</div>`;
             // editor.addNode(type, 1, 1, pos.x, pos.y, type, {}, html);
-            editor.addNode(type, inputs, outputs, pos.x, pos.y, type, {}, html);
+            // editor.addNode(type, inputs, outputs, pos.x, pos.y, type, {}, html);
+            editor.addNode(type, inputs, outputs, pos.x, pos.y, type, { label }, html);
 
         }
         function addConditionalBranch() 
