@@ -35,7 +35,7 @@
                             <button type="button" class="btn btn-success btn-sm" onclick="addNode('start')">Add Start</button>
                             <button type="button" class="btn btn-primary btn-sm" onclick="addNode('step')">Add Step</button>
                             <button type="button" class="btn btn-warning btn-sm" onclick="addConditionalBranch()">Add Conditional</button>
-                            <button type="button" class="btn btn-dark btn-sm" onclick="addNode('command')">Add Command</button>
+                            <button type="button" class="btn btn-dark btn-sm" onclick="addNode('command')">Add Comment</button>
                             <button type="button" class="btn btn-danger btn-sm" onclick="addNode('end')">Add End</button>
                         </div>
                         <div id="drawflow"></div>
