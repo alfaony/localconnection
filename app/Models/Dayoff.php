@@ -24,7 +24,7 @@ class Dayoff extends Model
 
     public function type()
     {
-        return $this->belongsTo(DayoffType::class, 'dayoff_type_id');
+        return $this->belongsTo(DayoffType::class, 'dayoff_type_id')->withTrashed();
     }
 
     public function approvalHR()
