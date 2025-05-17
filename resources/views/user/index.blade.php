@@ -227,12 +227,34 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
 
-            <label for="phone">Divisi:</label>
+            {{--
             <select name="divisions[]" multiple class="form-control select-division">
                 @foreach ($divisions as $division)
                     <option value="{{ $division->id }}" {{ isset($divisionsUser) && in_array($division->id, $divisionsUser) ? 'selected' : '' }}>{{ $division->name }}</option>
                 @endforeach
             </select>
+            --}}
+            <div class="form-group">
+                <label>Divisi & Wajib Weekly Report:</label>
+                @foreach($divisions as $division)
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="divisions[]" value="{{ $division->id }}"
+                            id="div-check-{{ $division->id }}"
+                            {{ isset($divisionsUser) && in_array($division->id, $divisionsUser) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="div-check-{{ $division->id }}">
+                            {{ $division->name }}
+                        </label>
+
+                        &nbsp;&nbsp;
+                        <input class="form-check-input" type="checkbox" name="weekly_report_required[{{ $division->id }}]"
+                            id="weekly-check-{{ $division->id }}"
+                            {{ isset($weeklyRequired) && in_array($division->id, $weeklyRequired) ? 'checked' : '' }}>
+                        <label class="form-check-label text-muted small" for="weekly-check-{{ $division->id }}">
+                            Wajib Weekly Report
+                        </label>
+                    </div>
+                @endforeach
+            </div>
             <div class="form-group mt-2">
                 <label>Gunakan IP Tertentu:</label>
 
@@ -350,10 +372,10 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             </div>
             @if($roleAccess)
             <label for="phone">Role:</label>
-            <select name="role" class="form-control mb-2 select2" required>
+            <select name="role" class="form-control mb-2 " required>
                 <option value="" selected disabled>Pilih</option>
                 @foreach($role as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }} data-reportmandatory="{{  $a->is_mandatory_report}}"> {{ $a->name }} </option>
                 @endforeach
             </select>
 
