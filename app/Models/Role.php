@@ -59,8 +59,8 @@ class Role extends Model
     {
         return $this->permissions()
             ->where('table', 'weekly_reports')
-            ->where('method', 'index')
-            ->exists();
+            ->where('method', 'mandatory_report')
+            ->exists() ? true : false;
     }
 
     public function permissions()

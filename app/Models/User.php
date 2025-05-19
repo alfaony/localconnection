@@ -134,9 +134,10 @@ class User extends Authenticatable
 
     public function divisions()
     {
-        return $this->belongsToMany(Division::class);
+        return $this->belongsToMany(Division::class)
+            ->withPivot('weekly_report_required');
     }
-
+    
     public function getFirstDivisionAttribute()
     {
         return $this->divisions->first();
