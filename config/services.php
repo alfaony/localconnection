@@ -66,6 +66,11 @@ return [
         'base_url' => env('CUTI_API_BASE_URL', 'https://hris.gemateknologi.com/CutiApi'),
         'token' => env('CUTI_API_TOKEN'),
     ],
+    
+    'setting' =>
+    [
+        'punishment_point' => env('SETTING_PUNISHMENT_POINT', -100)
+    ]
 
     
 ];

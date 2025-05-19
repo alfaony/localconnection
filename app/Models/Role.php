@@ -15,6 +15,7 @@ class Role extends Model
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
+    protected $appends = ['is_mandatory_report'];
 
     protected static function boot()
     {
@@ -53,6 +54,14 @@ class Role extends Model
     // {
     //     return $this->hasMany(User::class);
     // }
+
+    public function getIsMandatoryReportAttribute(): bool
+    {
+        return $this->permissions()
+            ->where('table', 'weekly_reports')
+            ->where('method', 'mandatory_report')
+            ->exists() ? true : false;
+    }
 
     public function permissions()
     {
