@@ -89,6 +89,7 @@ use App\Http\Controllers\ReportChartController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\SubscribeLetterController;
 use App\Http\Controllers\FlowChartController;
+use App\Http\Controllers\ItemRequestController;
 
 
 
@@ -442,6 +443,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('flowchart', FlowChartController::class);
 });
 
+Route::resource('item-request', ItemRequestController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
