@@ -10,7 +10,7 @@
     @include('components.alert')
     <div class="card">
         <div class="card-body">
-            <form action="{{ isset($itemRequest) ? route('item-request.update', $itemRequest) : route('item-request.store') }}" method="POST">
+            <form action="{{ isset($itemRequest) ? route('item-request.update', $itemRequest) : route('item-request.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if(isset($itemRequest))
                     @method('PUT')
@@ -76,6 +76,16 @@
                             <strong>{{ $message }}</strong>
                         </span>
                     @enderror
+                </div>
+                <div class="form-group mt-3">
+                    <label for="picture">Foto Pendukung (opsional)</label>
+                    @if (!empty($itemRequest?->picture))
+                        <div class="mb-2">
+                            <img src="{{ asset('storage/' . $itemRequest->picture) }}" class="img-thumbnail"
+                                style="max-width: 250px;">
+                        </div>
+                    @endif
+                    <input type="file" name="picture" id="picture" class="form-control" accept="image/*">
                 </div>
 
                 <div class="form-group text-right">

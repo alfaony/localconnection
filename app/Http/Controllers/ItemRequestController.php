@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+use App\Models\User;
 use App\Models\ItemRequest;
 use App\Models\SupplierCategory;
-use Illuminate\Support\Facades\Auth;
+
 use App\Helpers\Access;
 
 class ItemRequestController extends Controller
@@ -27,25 +30,81 @@ class ItemRequestController extends Controller
         $validated = $request->validate([
             'supplier_category_id' => 'required|exists:supplier_categories,id',
             'item_name' => 'required|string|max:255',
-            'description' => 'nulQUlable|string',
+            'description' => 'nullable|string',
             'estimated_price' => 'required|numeric|min:1',
             'qty'=> "required|numeric|min:1"
         ]);
 
+        $userCandidate = $this->findCandidate(Auth::user()->company_id);
 
+        if ($request->hasFile('picture')) 
+        {
+            $validated['picture'] = $request->file('picture')->store('item_pictures', 'public');
+        }
+
+        $validated['assigned_pic_id'] = $userCandidate->id;
         $validated['user_id'] = auth()->id();
         $validated['company_id'] = auth()->user()->company_id;
         $validated['status'] = 'REQUESTED';
 
-        ItemRequest::create($validated);
+        $item = ItemRequest::create($validated);
 
-        return redirect()->route('item-request.index')->with('success', 'Request submitted.');
+        return redirect()->route('item-request.show',$item->id)->with('success', 'Request submitted.');
     }
 
     public function edit(ItemRequest $itemRequest)
     {
         $categories = SupplierCategory::byCompany(Auth::user()->company_id)->get();
         return view('item_request.createOrEdit', compact('itemRequest', 'categories'));
+    }
+
+    public function show(ItemRequest $itemRequest)
+    {
+       
+
+        $processingSteps = 
+        [
+            [
+                'title' => 'Pengajuan Diterima',
+                'description' => 'Permintaan telah dikirim ke divisi pengadaan.',
+                'completed' => true,
+                'date' => '2025-05-15 08:00',
+                'icon' => 'fa-envelope',
+                'attachment' => null
+            ],
+            [
+                'title' => 'Bon Pesanan Diunggah',
+                'description' => 'Bon pesanan telah diunggah.',
+                'completed' => true,
+                'date' => '2025-05-16 10:30',
+                'icon' => 'fa-file-alt',
+                'attachment' => 'https://example.com/bon.pdf'
+            ],
+            [
+                'title' => 'Menunggu Pembayaran',
+                'description' => 'Menunggu proses pembayaran dari bagian keuangan.',
+                'completed' => false,
+                'date' => null,
+                'icon' => 'fa-credit-card',
+                'attachment' => null
+            ]
+        ];
+
+        $potentialVendors = [
+            (object)[
+                'id' => 101,
+                'name' => 'CV. Teknologi Utama',
+                'rating' => 4.7
+            ],
+            (object)[
+                'id' => 102,
+                'name' => 'PT. Solusi Perkakas',
+                'rating' => 4.3
+            ]
+        ];
+
+
+        return view('item_request.show', compact('itemRequest', 'processingSteps', 'potentialVendors'));
     }
 
     public function update(Request $request, ItemRequest $itemRequest)
@@ -57,6 +116,14 @@ class ItemRequestController extends Controller
             'estimated_price' => 'required|numeric|min:1',
             'qty' => 'required|numeric|min:1',
         ]);
+
+        if ($request->hasFile('picture')) 
+        {
+            if ($itemRequest->picture) {
+                Storage::delete($itemRequest->picture);
+            }
+            $validated['picture'] = $request->file('picture')->store('item_pictures', 'public');
+        }
 
         $itemRequest->update($validated);
 
@@ -134,6 +201,27 @@ class ItemRequestController extends Controller
         }
         
         return response()->json($data);
+    }
+
+    private function findCandidate($companyId)
+    {
+        $users = User::where('company_id', $companyId)
+        ->withCount(['assignedRequests' => function ($query) {
+            $query->whereIn('status', ['REQUESTED', 'WAITING_PAYMENT', 'PAID', 'READY_TO_SEND']);
+        }])
+        ->get();
+    
+        // Cari jumlah tugas terkecil
+        $min = $users->min('assigned_requests_count');
+    
+        // Ambil semua user dengan jumlah tugas terkecil
+        $candidates = $users->where('assigned_requests_count', $min);
+    
+        // Pilih satu secara acak
+        $assignedUser = $candidates->random();
+    
+        // Assign jika ada
+        return $assignedUser;
     }
 
     private function  matchStatus($status, $badge = false)

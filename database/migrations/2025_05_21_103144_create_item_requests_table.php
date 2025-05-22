@@ -19,6 +19,7 @@ return new class extends Migration
             $table->uuid('user_id'); // requester
             $table->foreignId('supplier_category_id')->constrained('supplier_categories')->onDelete('cascade');
             $table->timestamp('date')->nullable();
+            $table->string('picture')->nullable(); // Path foto barang pendukung
             $table->string('item_name');
             $table->text('description')->nullable();
             $table->decimal('estimated_price', 12, 2);

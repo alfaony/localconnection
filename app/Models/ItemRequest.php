@@ -19,7 +19,8 @@ class ItemRequest extends Model
         'estimated_price',
         'assigned_pic_id',
         'status',
-        'qty'
+        'qty',
+        'picture',
     ];
 
     public function requester()
