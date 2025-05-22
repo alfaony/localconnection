@@ -8,57 +8,95 @@
 
 @section('content')
 
-    @include('components.alert')
-
-    <a href="{{ route('item-request.create') }}" class="btn btn-primary mb-3">
-        <i class="fas fa-plus"></i> Buat Permintaan
-    </a>
-
-    <div class="card">
-        <div class="card-body table-responsive p-0">
-            <table class="table table-hover text-nowrap">
-                <thead class="thead-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Nama Barang</th>
-                        <th>Kategori</th>
-                        <th>Estimasi Harga</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($requests as $req)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $req->item_name }}</td>
-                            <td>{{ $req->category->name ?? '-' }}</td>
-                            <td>Rp{{ number_format($req->estimated_price) }}</td>
-                            <td><span class="badge bg-info">{{ $req->status }}</span></td>
-                            <td>
-                                <a href="{{ route('item-request.edit', $req) }}" class="btn btn-sm btn-warning">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('item-request.destroy', $req) }}" method="POST" class="d-inline"
-                                      onsubmit="return confirm('Hapus request ini?')">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center">Belum ada permintaan.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+@include('components.alert')
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title">Daftar Permintaan Barang</h3>
+                <div class="ml-auto">
+                    <a href="{{ route('item-request.create') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus-circle mr-1"></i>Tambah Permintaan
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="item-request-table" class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nama Barang</th>
+                                <th>Kategori</th>
+                                <th>Estimasi Harga</th>
+                                <th>Jumlah</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{-- DataTables will handle rows --}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
-    <div class="mt-3">
-        {{ $requests->links() }}
-    </div>
+@section('js')
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#item-request-table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: "{{ route('item-request.datatable') }}",
+            columns: 
+            [
+                { data: 'item_name', name: 'item_name' },
+                { data: 'category.name', name: 'category.name' },
+                { data: 'qty', name: 'qty' },
+                { data: 'estimated_price', name: 'estimated_price' },
+                { data: 'status', name: 'status' },
+                { data: 'action', name: 'action', orderable: false, searchable: false }
+            ],
+            language: {
+                processing: '<i class="fas fa-spinner fa-spin"></i> Memuat...'
+            }
+        });
+    });
+</script>
+<script>
+    $(document).ready(function() {
+        // Delete confirmation
+        $('.delete-form').on('submit', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Hapus Permintaan?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.submit();
+                }
+            })
+        });
+    });
+</script>
+@endsection
+
+@section('css')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css"> 
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
+@endsection
 @stop

@@ -443,6 +443,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('flowchart', FlowChartController::class);
 });
 
+Route::get('item-request/dataTableJson', [ItemRequestController::class, 'dataTableJson'])->name('item-request.datatable');
 Route::resource('item-request', ItemRequestController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
