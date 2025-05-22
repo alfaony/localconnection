@@ -1008,7 +1008,7 @@ class InvoiceController extends Controller
         // Store the export in the 'public' disk
         ExportInvoiceJob::dispatch($filters, $filename, $exportFormat, Auth::user()->company_id);
         $filename = "public/" . $filename;
-        dd($filename);
+        // dd($filename);
         // Save filename to session or pass it to the frontend
         session(['export_filename_invoice' => $filename]);
 
