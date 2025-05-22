@@ -62,6 +62,9 @@ class CompanyController extends Controller
 
             // non Setting
             $Assetfields = ['Kartu Akses','⁠Kunci gembok','Kunci pintu','Kunci motor','Kunci mobil','Kunci lemari','Kunci brangkas','Kunci ruangan','kunci Lain'];
+
+            $fieldPunishmentTaskDoing = ['status_punihsment_task_doing' => null, 'point_punishment_task_doing' => null];
+            $fieldPunishment = ['point_punishment_task_todo' => null, 'point_punishment_weekly_report' => null];
     
             foreach ($fieldProfile as $key => $value) 
             {
@@ -113,6 +116,26 @@ class CompanyController extends Controller
                 $field->save();        
             }
 
+            foreach ($fieldPunishmentTaskDoing as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="punishment_task_doing";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldPunishment as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="punishment";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
             foreach ($Assetfields as $key => $value) 
             {
                 $asset = new AssetType();
@@ -120,6 +143,7 @@ class CompanyController extends Controller
                 $asset->user_id = $user->id;
                 $asset->save();
             }
+            
 
             DB::commit();
             return redirect()->back()->with('store',true);

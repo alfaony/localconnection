@@ -3,98 +3,106 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
+
+use App\Models\DailyTask;
+use App\Models\SettingCompany;
 use App\Models\User;
 use App\Models\TaskStatus;
 use App\Models\Division;
-use App\Models\DailyTask;
 use App\Models\DailyTaskStatusRecord;
 use App\Models\DailyTaskMessage;
 use App\Models\WeeklyReport;
+
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
-class CheckWeeklyReportCompliance extends Command
+
+class UpdateTaskStatusAndPenalty extends Command
 {
-    protected $signature = 'weekly:check-compliance';
-    protected $description = 'Cek user yang tidak mengisi weekly report sesuai divisinya';
+    protected $signature = 'dailytask:check-status';
+    protected $description = 'Update overdue TODO tasks to NOT COMPLETE and apply penalties. Also auto-complete stale DOING/NOT COMPLETE tasks.';
 
     public function handle()
     {
-        try {
-            $now = Carbon::now();
-            $lastWeek = $now->copy()->subWeek();
-            $week = $lastWeek->isoWeek();
-            $year = $lastWeek->year;
-    
-            $results = [];
-    
-            // Ambil semua user yang rolenya is_mandatory_report == true
-            $users = User::with(['role', 'divisions'])
-            ->get()
-            ->filter(fn ($user) => $user->role && $user->role->is_mandatory_report);
-    
-            foreach ($users as $user) 
-            {
-                foreach ($user->divisions as $division) {
-                    // Hanya yang weekly_report_required = true
-                    if (!($division->pivot->weekly_report_required ?? false)) {
-                        continue;
-                    }
-    
-                    // Cek apakah user sudah mengisi untuk minggu lalu
-                    $exists = WeeklyReport::where('division_id', $division->id)
-                        ->where('week', $week)
-                        ->where('year', $year)
-                        ->exists();
-    
-                    $naming = "Pengurangan Point !! , Tidak Melakukan Weekly Report divisi ". $division->name." Pada Week ".$week;
-    
-                    $taskStatuss = TaskStatus::where('name', ParamSchema::COMPLATE)->first();
-                    $admin = User::with('role')
-                        ->whereHas('role', fn ($query) => $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR]))
-                        ->where('company_id', $user->company_id)
-                        ->first();
-    
-                    if (!$exists) 
-                    {
-                        $dailyTask = new DailyTask();
-                        $dailyTask->user_id = $admin ? $admin->id : $user->id;
-                        $dailyTask->task_status_id = $taskStatuss->id;
-                        $dailyTask->start_date = Carbon::now();
-                        $dailyTask->end_date = Carbon::now();
-                        $dailyTask->submit = Carbon::now();
-                        $dailyTask->submit = Carbon::now();
-                        $dailyTask->status_submit = ParamSchema::ONTIME;
-                        $dailyTask->assignment_user_id = $user->id;
-                        $dailyTask->name = $naming;
-                        $dailyTask->description = "<p>".$naming."</p>";
-                        $dailyTask->report_note = "<p>".$naming."</p>";
-                        $dailyTask->point = config('services.setting.punishment_point');// Assuming default value is 0
-                        $dailyTask->save();
-    
-                        $messageType = 'approvement';
-                        $this->message($dailyTask, $messageType, 'Sistem ' . ucfirst($messageType) . ' Tugas ' . $dailyTask->name);
-                        
-                        $this->statusrecord($dailyTask, $taskStatuss);
-                        
-                        $this->info("User ".$user->name." tidak mengisi weekly report di divisi ".$division->name." untuk week ".$week.", maka akan di berikan task dengan nama ".$naming);
-                    }
-                }
-            }
+        $now = Carbon::now();
+        
 
-            $this->info('Weekly compliance check completed.');
-        } catch (\Throwable $th) {
-            //throw $th;
-            Log::error($th);
+        // =============================
+        // 1. TODO → NOT COMPLETE (lewat deadline)
+        // =============================
 
-            $this->info('Weekly compliance check completed.');
+        $todoTasks = DailyTask::with('assign')->whereHas('taskStatus', function ($query) {
+            $query->where('name', ParamSchema::TODO);
+        })
+        ->whereDate('end_date', '<', $now)
+        ->whereHas('assign')
+        ->get();
+
+        $taskStatuss1 = TaskStatus::where('name', ParamSchema::NOTCOMPLATE)->first();
+
+        foreach ($todoTasks as $task) 
+        {
+            $settingCompany = SettingCompany::byCompany($task->assign->company_id)->where('menu','punishment')->get()->pluck('field_value','field_title');
+            $task->task_status_id = $taskStatuss1->id;
+            $task->point = $settingCompany['point_punishment_task_todo'] ?? 0;
+            $task->save();
+
+            $admin1 = User::with('role')
+                    ->whereHas('role', fn ($query) => $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR]))
+                    ->where('company_id', $task->assign->company_id)
+                    ->first();
+
+            $messageType = 'reject';
+            $this->message($task, $messageType, $admin1, 'Sistem ' . ucfirst($messageType) . ' Tugas ' . $task->name);
+            
+            $this->statusrecord($task, $taskStatuss1);
         }
+
+        // =============================
+        // 2. DOING / NOT COMPLETE → COMPLETE (lebih dari 30 hari)
+        // =============================
+
+        $cutoffDate = $now->subDays(30);
+
+        $expiredTasks = DailyTask::whereHas('taskStatus', function ($query) 
+            {
+                $query->where('name', ParamSchema::DOING);
+            })
+            ->whereDate('end_date', '<', $cutoffDate)
+            ->whereHas('assign')
+            ->get();
+
+        foreach ($expiredTasks as $task) 
+        {
+
+            $settingCompany = SettingCompany::byCompany($task->assign->company_id)->where('menu','punishment_task_doing')->get()->pluck('field_value','field_title');
+             if($settingCompany['status_punihsment_task_doing'] == true)
+             {
+                 $task->task_status_id = TaskStatus::where('name', ParamSchema::NOTCOMPLATE)->firstOrFail()->id;
+                 $task->point = $settingCompany['point_punishment_task_doing'] ?? 0;
+                 $task->save();
+     
+                 $admin2 = User::with('role')
+                         ->whereHas('role', fn ($query) => $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR]))
+                         ->where('company_id', $task->assign->company_id)
+                         ->first();
+     
+                 $messageType = 'reject';
+                 $this->message($task, $messageType, $admin2, 'Sistem ' . ucfirst($messageType) . ' Tugas ' . $task->name);
+                 
+                 $this->statusrecord($task, $taskStatuss1);
+             }
+        }
+
+        $this->info("Auto-completed ".count($todoTasks)." old DOING/NOT COMPLETE tasks with penalty ");
+        $this->info("Auto-completed ".count($expiredTasks)." old DOING/NOT COMPLETE tasks with penalty ");
+
+
     }
 
-    protected function message($dailyTask, $template, $message, $filePath = null)
+    protected function message($task, $template, $user,$message, $filePath = null)
     {
         switch ($template) 
         {
@@ -190,8 +198,8 @@ class CheckWeeklyReportCompliance extends Command
         }
 
         $dailyTaskMessage = new DailyTaskMessage();
-        $dailyTaskMessage->user_id = $dailyTask->user_id;
-        $dailyTaskMessage->daily_task_id = $dailyTask->id;
+        $dailyTaskMessage->user_id = $user->id;
+        $dailyTaskMessage->daily_task_id = $task->id;
         $dailyTaskMessage->message = $message;
         $dailyTaskMessage->file_path = $filePath ?? NULL;
         $dailyTaskMessage->save();
@@ -199,10 +207,10 @@ class CheckWeeklyReportCompliance extends Command
         return true;
     }   
 
-    protected function statusrecord($dailyTask, $status)
+    protected function statusrecord($task, $status)
     {
         DailyTaskStatusRecord::create([
-            'daily_task_id' => $dailyTask->id,
+            'daily_task_id' => $task->id,
             'task_status_id' => $status->id,
             'date' => now(),
         ]);

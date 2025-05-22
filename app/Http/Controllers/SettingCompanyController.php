@@ -44,6 +44,10 @@ class SettingCompanyController extends Controller
                 'acta_file' => ['nullable', 'file', 'max:2048'],
                 'npwp_file' => ['nullable', 'file', 'max:2048'],
             ]);
+        if(!$request->has('status_punihsment_task_doing'))
+        {
+            $request->request->add(['status_punihsment_task_doing' => "0"]);
+        }
         
         DB::beginTransaction();
         try {
