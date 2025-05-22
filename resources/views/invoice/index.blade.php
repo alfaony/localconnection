@@ -274,12 +274,14 @@
                         // Add onload callback to clear session after download
                         downloadLink.onclick = () => {
                             // Clear export session AFTER file download starts
-                            fetch('{{ route('invoice.clearsession') }}')
-                                .then(() => {
-                                    // Hide the loading overlay
-                                    document.getElementById('loading-overlay').remove();
-                                })
-                                .catch(error => console.error('Error clearing session:', error));
+                            setTimeout(() => {
+                                fetch('{{ route('invoice.clearsession') }}')
+                                    .then(() => {
+                                        // Hide the loading overlay
+                                        document.getElementById('loading-overlay').remove();
+                                    })
+                                    .catch(error => console.error('Error clearing session:', error));
+                            }, 3000); // Delay by 3 seconds
                         };
 
                         // Trigger download

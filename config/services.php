@@ -70,7 +70,7 @@ return [
     'setting' =>
     [
         'punishment_point' => env('SETTING_PUNISHMENT_POINT', -100)
-    ]
+    ],
 
     'path' => 
     [
