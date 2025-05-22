@@ -13,6 +13,7 @@ use App\Models\DailyTaskMessage;
 use App\Models\WeeklyReport;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use App\Models\SettingCompany;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
@@ -35,7 +36,8 @@ class CheckWeeklyReportCompliance extends Command
             $users = User::with(['role', 'divisions'])
             ->get()
             ->filter(fn ($user) => $user->role && $user->role->is_mandatory_report);
-    
+            
+
             foreach ($users as $user) 
             {
                 foreach ($user->divisions as $division) {
@@ -60,6 +62,8 @@ class CheckWeeklyReportCompliance extends Command
     
                     if (!$exists) 
                     {
+                        $settingCompany = SettingCompany::byCompany($user->company_id)->where('menu','punishment')->get()->pluck('field_value','field_title');
+
                         $dailyTask = new DailyTask();
                         $dailyTask->user_id = $admin ? $admin->id : $user->id;
                         $dailyTask->task_status_id = $taskStatuss->id;
@@ -72,7 +76,7 @@ class CheckWeeklyReportCompliance extends Command
                         $dailyTask->name = $naming;
                         $dailyTask->description = "<p>".$naming."</p>";
                         $dailyTask->report_note = "<p>".$naming."</p>";
-                        $dailyTask->point = config('services.setting.punishment_point');// Assuming default value is 0
+                        $dailyTask->point = $settingCompany['point_punishment_weekly_report'] ?? 0;
                         $dailyTask->save();
     
                         $messageType = 'approvement';
