@@ -542,10 +542,15 @@ class DayoffController extends Controller
 
     public function infoApprovementHr()
     {
+        $divisionIds = Auth::user()->divisions->pluck('id')->toArray();
+
         $total = Dayoff::byCompany(Auth::user()->company_id)
             ->whereNull('approved_hr_at')
             ->whereNull('approval_hr_user_id')
             ->whereNull('rejected_at')
+            ->whereHas('user.divisions', function ($query) use ($divisionIds) {
+                $query->whereIn('divisions.id', $divisionIds);
+            })
             ->count();
 
         return response()->json(['total' => $total]);

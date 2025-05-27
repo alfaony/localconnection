@@ -28,7 +28,7 @@ class DivisionBudgetController extends Controller
             $approval = true;
         }
 
-        if($userRoleName == RoleSchema::ROOT || $userRoleName == RoleSchema::ADMIN || $userRoleName == RoleSchema::DIRECTOR)
+        if($userRoleName == RoleSchema::ROOT || $userRoleName == RoleSchema::ADMIN || $userRoleName == RoleSchema::DIRECTOR || Access::can('approve','division_budgets'))
         {
             $divisionBudgets = DivisionBudget::byCompany(Auth::user()->company_id)->with('division', 'user')->orderByRaw('
             CASE 

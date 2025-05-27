@@ -117,9 +117,10 @@ class Dayoff extends Model
 
         if($companyId && $approve)
         {
-            return $query->whereHas('user', function ($query) use ($companyId) 
+            $companyIds = $user->accessibleCompanies->pluck('id')->push($companyId)->unique();
+            return $query->whereHas('user', function ($query) use ($companyIds) 
             {
-                $query->where('company_id', $companyId);
+                $query->whereIn('company_id', $companyIds);
             });
         }else
         {
