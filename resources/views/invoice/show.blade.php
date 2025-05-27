@@ -115,12 +115,23 @@
         <div id="accordion">
             <!-- Invoice Details Section -->
             <div class="card">
-                <div class="card-header" id="headingOne">
+                <div class="card-header d-flex justify-content-between align-items-center" id="headingOne">
                     <h5 class="mb-0">
                         <button class="btn btn-link text-dark" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
                             Invoice Details
                         </button>
                     </h5>
+                    @canAccess('downloadPdfA','invoices')
+                    @canAccess('checkPdfAStatus','invoices')
+                    @canAccess('clearsessionPdfA','invoices')
+                    <div class="ml-auto">
+                        <a href="{{ route('invoice.download.pdfa', ['slug' => $invoice->slug]) }}" class="btn btn-success btn-sm">
+                            <i class="fa fa-file-pdf"></i> Download PDF/A
+                        </a>
+                    </div>
+                    @endcanAccess
+                    @endcanAccess
+                    @endcanAccess
                 </div>
                 <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
                     <div class="card-body">
@@ -300,6 +311,80 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
+@canAccess('downloadPdfA','invoices')
+@canAccess('checkPdfAStatus','invoices')
+@canAccess('clearsessionPdfA','invoices')
+@if(Session::get('downloadPdfA'))
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let isDownloaded = false; // Track if file has been downloaded
+        const loadingOverlay = document.createElement('div');
+        
+        // Add a loading overlay
+        loadingOverlay.innerHTML = `
+            <div id="loading-overlay" style="display: flex; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 9999; color: white; font-size: 20px;">
+                <div>
+                    <div class="spinner-border text-light" role="status"></div>
+                    <p>Exporting your file, please wait...</p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(loadingOverlay);
+
+        const checkExportStatus = () => {
+            if (isDownloaded) return; // Stop if already downloaded
+
+            fetch('{{ route('invoice.checkPdfAStatus') }}')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    
+                    if (data.ready) {
+                        isDownloaded = true; // Mark as downloaded
+
+                        // Create a hidden download link to trigger download
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = data.download_url;
+                        downloadLink.style.display = 'none';
+                        downloadLink.download = ''; // Optional: specify a filename
+                        
+                        document.body.appendChild(downloadLink);
+                        
+                        // Add onload callback to clear session after download
+                        downloadLink.onclick = () => {
+                            // Clear export session AFTER file download starts
+                            fetch('{{ route('invoice.clearsessionPdfA') }}')
+                                .then(() => {
+                                    // Hide the loading overlay
+                                    document.getElementById('loading-overlay').remove();
+                                })
+                                .catch(error => console.error('Error clearing session:', error));
+                        };
+
+                        // Trigger download
+                        downloadLink.click();
+
+                        // Remove the link element after triggering download
+                        document.body.removeChild(downloadLink);
+                    } else {
+                        setTimeout(checkExportStatus, 3000); // Retry every 3 seconds
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking export status:', error);
+                    // Hide loading overlay if error occurs
+                    document.getElementById('loading-overlay').remove();
+                });
+        };
+
+        checkExportStatus();
+    });
+</script>
+@endif
+@endcanAccess
+@endcanAccess
+@endcanAccess
+
 <script>
     $(document).ready(function() {
         $('.select2').select2({

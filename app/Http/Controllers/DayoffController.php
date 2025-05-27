@@ -49,6 +49,11 @@ class DayoffController extends Controller
             });
         }
 
+        // $users = User::where('company_id', Auth::user()->company_id)
+        //             ->where('dayoff_active', true)
+        //             ->with(['dayoffQuotas.type'])
+        //             ->get();
+        // dd($users);
         $cutis = $query->byCompany(Auth::user()->company_id)
             ->latest()
             ->paginate(10);
@@ -470,6 +475,44 @@ class DayoffController extends Controller
             ->delete();
         }
 
+        if(!$dayoff->type->permission_required && $dayoff->approvalFinance && $dayoff->approvalHR)
+        {
+            $existingCheckinDates = EmployeeChecking::where('user_id', $dayoff->user_id)
+            ->whereDate('scheduled_time', '>=', $dayoff->date_start)
+            ->whereDate('scheduled_time', '<=', $dayoff->date_end)
+            ->get()
+            ->map(function ($checkin) 
+            {
+                return Carbon::parse($checkin->scheduled_time)->format('Y-m-d');
+            })
+            ->unique()
+            ->values();
+
+            foreach ($existingCheckinDates as $tanggal) 
+            {
+                $firstDivision = $this->findFirstDivision($dayoff->user);
+
+                $employeeChecking = new EmployeeChecking();
+                $employeeChecking->user_id = $dayoff->user_id;
+                $employeeChecking->division_id = $firstDivision->id;
+                $employeeChecking->scheduled_time = $tanggal;
+                $employeeChecking->scheduled_timeout = $tanggal;
+                $employeeChecking->is_dayoff = true;
+                $employeeChecking->is_active = false;
+                $employeeChecking->is_completed = false;
+                $employeeChecking->is_permission = false;
+                $employeeChecking->created_at = Carbon::parse($tanggal);
+                $employeeChecking->updated_at = Carbon::parse($tanggal);
+                $employeeChecking->save();
+            }
+
+            EmployeeChecking::where('user_id', $dayoff->user_id)
+            ->whereDate('created_at', '>=', $dayoff->date_start)
+            ->whereDate('created_at', '<=', $dayoff->date_end)
+            ->where('is_dayoff', false)
+            ->delete();
+        }
+
         return true;
     }
 
@@ -499,7 +542,7 @@ class DayoffController extends Controller
         $filename = 'laporan_cuti_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
         
-        ExportDayoffJob::dispatch($request->all(), $filename, $exportFormat, $request->start_date, $request->end_date);
+        ExportDayoffJob::dispatch($request->all(), $filename, Auth::user()->company_id, Auth::user(), Access::can('hrApprovement', 'dayoffs'), Access::can('financeApprovement', 'dayoffs'), $exportFormat, $request->start_date, $request->end_date);
 
         session(['export_filename_dayoff' => 'public/exports/' . $filename]);
 

@@ -86,6 +86,11 @@ use App\Http\Controllers\DayoffController;
 use App\Http\Controllers\OfficeMediaController;
 use App\Http\Controllers\WeeklyReportController;
 use App\Http\Controllers\ReportChartController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\SubscribeLetterController;
+use App\Http\Controllers\FlowChartController;
+
+
 
 
 
@@ -114,6 +119,10 @@ Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permi
     return redirect('/invoice')->with('xero',true);
     
   });
+  
+  Route::get('invoice/downloadPdfA/{slug}',[InvoiceController::class,'downloadPdfA'])->name('invoice.download.pdfa');
+  Route::get('invoice/checkPdfAStatus', [InvoiceController::class, 'checkPdfAStatus'])->name('invoice.checkPdfAStatus');
+  Route::post('invoice/clearsessionPdfA', [InvoiceController::class, 'clearsessionPdfA'])->name('invoice.clearsessionPdfA');
   Route::delete('invoice/destroyProduct/product/{invoiceProduct}',[invoiceController::class,'destroyProduct'])->name('invoice.destroy.product');
   Route::get('invoice/history/{slug}', [InvoiceController::class, 'history'])->name('invoices.history');
   Route::get('invoice/export/{format}', [InvoiceController::class, 'export'])->name('invoice.export');
@@ -425,8 +434,17 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   
   Route::get('weekly-report/reminderDashboard', [WeeklyReportController::class, 'reminderDashboard'])->name('weekly-report.reminderDashboard');
   Route::resource('weekly-report', WeeklyReportController::class);
+  
+  Route::get('vehicle/infoPic', [VehicleController::class, 'infoPic'])->name('reminder.vehicle.pic');
+  Route::get('vehicle/infoManager', [VehicleController::class, 'infoManager'])->name('reminder.vehicle.manager');
+  Route::resource('vehicle', VehicleController::class);
+  
+  Route::get('subscribe-letter/infoPic', [SubscribeLetterController::class, 'infoPic'])->name('reminder.letter.pic');
+  Route::get('subscribe-letter/infoManager', [SubscribeLetterController::class, 'infoManager'])->name('reminder.letter.manager');
+  Route::resource('subscribe-letter', SubscribeLetterController::class);
+  
+  Route::resource('flowchart', FlowChartController::class);
 });
-
 
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');

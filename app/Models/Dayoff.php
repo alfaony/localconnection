@@ -24,7 +24,7 @@ class Dayoff extends Model
 
     public function type()
     {
-        return $this->belongsTo(DayoffType::class, 'dayoff_type_id');
+        return $this->belongsTo(DayoffType::class, 'dayoff_type_id')->withTrashed();
     }
 
     public function approvalHR()
@@ -101,6 +101,28 @@ class Dayoff extends Model
         }else
         {
             return $query->where('user_id', Auth::user()->id);
+        }
+    }
+
+    public function scopeByCompanyJob($query,$companyId, $user, $hrApprovement, $financeApprovement)
+    {
+        $approve = false;
+        $role = $user->role;
+
+        if($hrApprovement || $financeApprovement || $role->name == RoleSchema::ROOT)
+        {
+            $approve = true;
+        }
+
+        if($companyId && $approve)
+        {
+            return $query->whereHas('user', function ($query) use ($companyId) 
+            {
+                $query->where('company_id', $companyId);
+            });
+        }else
+        {
+            return $query->where('user_id', $user->id);
         }
     }
 

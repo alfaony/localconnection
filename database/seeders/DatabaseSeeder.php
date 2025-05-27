@@ -91,5 +91,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuOfficeMedia::class);
         $this->call(PermissionForMenuWeeklyReportSeeder::class);
         $this->call(PermissionForAccessExportCheckin::class);
+        $this->call(PermissionForMenuSubcribetionSeeder::class);
+        $this->call(PermissionForMenuFlowChartsSeeder::class);
     }
 }

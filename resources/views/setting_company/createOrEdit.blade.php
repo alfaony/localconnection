@@ -357,6 +357,76 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="card">
+                    <div class="card-header" id="headingTaskDoing">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseTaskDoing" aria-expanded="false" aria-controls="collapseTaskDoing">
+                                Pengaturan Sanksi Task DOING
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="collapseTaskDoing" class="collapse" aria-labelledby="headingTaskDoing" data-parent="#accordion">
+                        <div class="card-body">
+
+                            <div class="form-group">
+                                        <label for="status_punihsment_task_doing">Aktifkan Sanksi Otomatis Task DOING</label><br>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="status_punihsment_task_doing" name="status_punihsment_task_doing"
+                                            {{ old('status_punihsment_task_doing', $data['status_punihsment_task_doing'] ?? 0) ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="status_punihsment_task_doing">Aktifkan</label>
+                                        </div>
+                                        @error('status_punihsment_task_doing')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="point_punishment_task_doing">Poin Sanksi Task DOING</label>
+                                        <input type="number" name="point_punishment_task_doing" id="point_punishment_task_doing" class="form-control"
+                                            value="{{ old('point_punishment_task_doing', $data['point_punishment_task_doing'] ?? '') }}">
+                                        @error('point_punishment_task_doing')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header" id="headingPunishment">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapsePunishment" aria-expanded="false" aria-controls="collapsePunishment">
+                                    Pengaturan Sanksi Task TODO & Weekly Report
+                                </button>
+                            </h2>
+                        </div>
+
+                        <div id="collapsePunishment" class="collapse" aria-labelledby="headingPunishment" data-parent="#accordion">
+                            <div class="card-body">
+
+                                <div class="form-group">
+                                    <label for="point_punishment_task_todo">Poin Sanksi Task TODO</label>
+                                    <input type="number" name="point_punishment_task_todo" class="form-control" value="{{ old('point_punishment_task_todo', $data['point_punishment_task_todo'] ?? '') }}">
+                                    @error('point_punishment_task_todo')
+                                        <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="point_punishment_weekly_report">Poin Sanksi Weekly Report</label>
+                                    <input type="number" name="point_punishment_weekly_report" class="form-control" value="{{ old('point_punishment_weekly_report', $data['point_punishment_weekly_report'] ?? '') }}">
+                                    @error('point_punishment_weekly_report')
+                                        <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+
                 </div>
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
@@ -371,6 +441,29 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://unpkg.com/gijgo@1.9.14/js/gijgo.min.js" type="text/javascript"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggle = document.getElementById('status_punihsment_task_doing');
+        const pointInput = document.getElementById('point_punishment_task_doing');
+
+        function syncPunishmentPoint() {
+            if (toggle.checked) {
+                toggle.value=1;
+                pointInput.readOnly = false;
+            } else {
+                console.log("tidak aktif");
+                
+
+                toggle.value=0;
+                pointInput.readOnly = true;
+                pointInput.value = 0; // tetap terkirim ke server sebagai 0
+            }
+        }
+
+        toggle.addEventListener('change', syncPunishmentPoint);
+        syncPunishmentPoint(); // jalankan saat pertama load
+    });
+</script>
 <script>
     $(document).ready(function () 
     {

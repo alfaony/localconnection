@@ -200,8 +200,7 @@ class WeeklyReportController extends Controller
         $divisions = $user->divisions;
 
         $notReportedDivisions = $divisions->filter(function ($division) use ($user, $year, $week) {
-            return !WeeklyReport::where('user_id', $user->id)
-                ->where('division_id', $division->id)
+            return !WeeklyReport::where('division_id', $division->id)
                 ->where('year', $year)
                 ->where('week', $week)
                 ->exists();

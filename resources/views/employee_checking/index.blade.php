@@ -392,9 +392,9 @@
                     <span id="globalCaptchaWarning" style="color: red; font-size: 15px;"></span>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" id="FooterglobalSubmitCheckin">
                 <button id="globalSubmitCheckin" class="btn btn-primary" onclick="onSubmit()">Submit Check-in</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="globalCloseCheckin"type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -636,6 +636,7 @@
         const locationSection = document.getElementById('globalLocationSection');
         if (requiresLocation) {
             locationSection.style.display = 'block';
+            getLocation();
         } else {
             locationSection.style.display = 'none';
         }
@@ -697,6 +698,18 @@
             document.getElementById('globalCaptchaWarning').textContent = 'Captcha belum terverifikasi.';
             return;
         }
+
+        document.getElementById('FooterglobalSubmitCheckin').classList.add('d-flex', 'justify-content-center');
+        
+        document.getElementById('globalSubmitCheckin').disabled = true;
+        document.getElementById('globalSubmitCheckin').style.display = 'none';
+
+        document.getElementById('globalCloseCheckin').disabled = true;
+        document.getElementById('globalCloseCheckin').style.display = 'none';
+
+        document.getElementById('FooterglobalSubmitCheckin').insertAdjacentHTML('beforeend', `
+            <i class="fas fa-spinner fa-spin text-muted"></i> Data sedang diproses...
+        `);
 
         let formData = new FormData();
         formData.append('latitude', latitude);

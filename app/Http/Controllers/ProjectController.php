@@ -66,6 +66,7 @@ class ProjectController extends Controller
 
         $totalProject = Project::byRole()->count();
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)
+        ->whereDoesntHave('project')
         ->orderBy('created_at','desc')
         ->get();
 
@@ -118,6 +119,7 @@ class ProjectController extends Controller
         $project = Project::byRole()->OrderBy('created_at','asc')->paginate(10);
         // $workOrder = WorkOrder::all();
         $workOrder = WorkOrder::byCompany(Auth::user()->company_id)
+        ->whereDoesntHave('project')
         ->orWhere('id', $projectEdit->work_order_id)
         ->orderBy('created_at','desc')
         ->get();

@@ -29,7 +29,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('media:cleanup-temporary')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('dayoff:reset-quota')->timezone('Asia/Jakarta')->yearlyOn(1, 1, '0:00');
-        // $schedule->command('email:send-device-list')->dailyAt('13:00');
+        $schedule->command('weekly:check-compliance')->timezone('Asia/Jakarta')->mondays()->at('3:00');
+        $schedule->command('dailytask:check-status')->timezone('Asia/Jakarta')->dailyAt('00:00');
 
         $company = Company::all();
         foreach ($company as $a) 

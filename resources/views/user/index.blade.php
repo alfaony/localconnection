@@ -36,26 +36,64 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         <p id="penggunaNo"></p>
         <form action="{{ route('user.store') }}" method="post">
             @csrf
-            <div class="form-group">
-                <label for="name">Nama:</label>
-                <input type="text" id="name" name="name" class="form-control" placeholder="Anwar" value="{{ old('name') ?? @$userEdit->name }}" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" name="email" class="form-control" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
-            </div>
-            <div class="form-group">
-                <label for="phone">Phone:</label>
-                <input type="text" id="phone" name="phone" class="form-control" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
-            </div>
-            <div class="form-group">
-                <label for="phone">Divisi:</label>
-                <select name="divisions[]" multiple class="form-control select2">
-                    @foreach ($divisions as $division)
-                        <option value="{{ $division->id }}">{{ $division->name }}</option>
+            <label for="name">Nama:</label>
+            <input type="text" id="name" name="name" placeholder="Anwar" value="{{ old('name') ?? @$userEdit->name }}" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
+
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
+
+            <label for="phone">Divisi:</label>
+            {{--
+            <select name="divisions[]" multiple class="form-control select2">
+                @foreach ($divisions as $division)
+                    <option value="{{ $division->id }}">{{ $division->name }}</option>
+                @endforeach
+            </select>
+            --}}
+            <table class="table table-bordered" id="divisi-wrapper">
+                <thead>
+                    <tr>
+                        <th>Divisi</th>
+                        <th>Wajib Weekly Report</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($divisions as $division)
+                    <tr>
+                        <td>
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    name="divisions[]" 
+                                    value="{{ $division->id }}"
+                                    id="div-check-{{ $division->id }}"
+                                    {{ isset($divisionsUser) && in_array($division->id, $divisionsUser) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="div-check-{{ $division->id }}">
+                                    {{ $division->name }}
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="form-check weekly-wrapper" data-division="{{ $division->id }}" style="display: none;">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    name="weekly_report_required[{{ $division->id }}]"
+                                    id="weekly-check-{{ $division->id }}"
+                                    {{ isset($weeklyRequired) && in_array($division->id, $weeklyRequired) ? 'checked' : '' }}>
+                                <label class="form-check-label text-muted small" for="weekly-check-{{ $division->id }}">
+                                    Wajib Weekly Report
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
                     @endforeach
-                </select>
-            </div>
+                </tbody>
+            </table>
             <div class="form-group mt-2">
                 <label>Gunakan IP Tertentu:</label>
 
@@ -253,12 +291,54 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
 
-            <label for="phone">Divisi:</label>
+            {{--
             <select name="divisions[]" multiple class="form-control select-division">
                 @foreach ($divisions as $division)
                     <option value="{{ $division->id }}" {{ isset($divisionsUser) && in_array($division->id, $divisionsUser) ? 'selected' : '' }}>{{ $division->name }}</option>
                 @endforeach
             </select>
+            --}}
+            <table class="table table-bordered" id="divisi-wrapper">
+                <thead>
+                    <tr>
+                        <th>Divisi</th>
+                        <th>Wajib Weekly Report</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($divisions as $division)
+                    <tr>
+                        <td>
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    name="divisions[]" 
+                                    value="{{ $division->id }}"
+                                    id="div-check-{{ $division->id }}"
+                                    {{ isset($divisionsUser) && in_array($division->id, $divisionsUser) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="div-check-{{ $division->id }}">
+                                    {{ $division->name }}
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="form-check weekly-wrapper" data-division="{{ $division->id }}" style="display: none;">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    name="weekly_report_required[{{ $division->id }}]"
+                                    id="weekly-check-{{ $division->id }}"
+                                    {{ isset($weeklyRequired) && in_array($division->id, $weeklyRequired) ? 'checked' : '' }}>
+                                <label class="form-check-label text-muted small" for="weekly-check-{{ $division->id }}">
+                                    Wajib Weekly Report
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
             <div class="form-group mt-2">
                 <label>Gunakan IP Tertentu:</label>
 
@@ -387,10 +467,10 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             </div>
             @if($roleAccess)
             <label for="phone">Role:</label>
-            <select name="role" class="form-control mb-2 select2" required>
+            <select name="role" id="role-select" class="form-control mb-2 select2" required>
                 <option value="" selected disabled>Pilih</option>
                 @foreach($role as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }} data-reportmandatory="{{  $a->is_mandatory_report}}"> {{ $a->name }} </option>
                 @endforeach
             </select>
 
@@ -511,6 +591,61 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <!-- Script to toggle dependent options -->
+<script>
+    function toggleWeeklyCheckboxVisibility() {
+        const selectedRole = document.querySelector('#role-select option:checked');
+        const isMandatory = selectedRole?.dataset.reportmandatory ?? false;
+
+        console.log(isMandatory);
+        
+
+        document.querySelectorAll('.weekly-wrapper').forEach(wrapper => {
+            wrapper.style.display = isMandatory ? 'block' : 'none';
+        });
+
+        // Setelah di-toggle tampil, update disable state juga
+        updateWeeklyCheckboxState();
+    }
+
+    function updateWeeklyCheckboxState() {
+        document.querySelectorAll('[id^="div-check-"]').forEach(divCheckbox => {
+            const divisionId = divCheckbox.value;
+            const weeklyCheckbox = document.querySelector(`#weekly-check-${divisionId}`);
+
+            if (weeklyCheckbox) {
+                if (divCheckbox.checked) {
+                    weeklyCheckbox.disabled = false;
+                } else {
+                    weeklyCheckbox.checked = false;
+                    weeklyCheckbox.disabled = true;
+                }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Trigger awal
+        toggleWeeklyCheckboxVisibility();
+
+        // Saat role berubah
+        document.getElementById('role-select').addEventListener('change', function () {
+            console.log("changeee");
+            
+            toggleWeeklyCheckboxVisibility();
+        });
+
+        // Saat checkbox divisi berubah
+        document.querySelectorAll('[id^="div-check-"]').forEach(divCheckbox => {
+            divCheckbox.addEventListener('change', updateWeeklyCheckboxState);
+        });
+
+        $('#role-select').on('select2:select', function (e) {
+            console.log("change select2");
+            
+            toggleWeeklyCheckboxVisibility();
+        });
+    });
+</script>
 <script>
     $(document).ready(function () {
         $('#dayoff_active').on('change', function () {

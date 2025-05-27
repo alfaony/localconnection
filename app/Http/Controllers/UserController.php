@@ -126,10 +126,25 @@ class UserController extends Controller
             $user->save();
         }
 
-        $divisions = $request->input('divisions');
-        if ($divisions) {
-            $user->divisions()->attach($divisions);
+        // $divisions = $request->input('divisions');
+        // if ($divisions) {
+        //     $user->divisions()->attach($divisions);
+        // }
+        $divisionIds = $request->input('divisions', []);
+
+        // Ambil divisi yang dicentang sebagai wajib laporan
+        $weeklyRequired = $request->input('weekly_report_required', []);
+
+        // Siapkan data pivot
+        $syncData = [];
+        foreach ($divisionIds as $divisionId) {
+            $syncData[$divisionId] = [
+                'weekly_report_required' => isset($weeklyRequired[$divisionId])
+            ];
         }
+
+        // Simpan ke pivot division_user
+        $user->divisions()->sync($syncData);
         
         if (!empty($request->company_access)) {
             $user->accessibleCompanies()->sync($request->company_access);
@@ -149,6 +164,9 @@ class UserController extends Controller
         $company = Company::orderBy('name','asc')->get();
         $divisions = Division::byCompany(Auth::user()->company_id)->get();
         $divisionsUser = $userEdit->divisions ? $userEdit->divisions->pluck('id')->toArray() : NULL ;
+        $weeklyRequired = $userEdit->divisions->filter(function ($d) {
+            return $d->pivot->weekly_report_required;
+        })->pluck('id')->toArray() ?? [];
         $dayofweek = config('custom.daysOfWeek');
         $dayoffTypes = DayoffType::all();
         $userQuotas = $userEdit->dayoffQuotas->pluck('quota', 'dayoff_type_id')->toArray() ?? [];
@@ -183,7 +201,7 @@ class UserController extends Controller
         }
 
 
-        return view('user.index', compact('userEdit','user','totalUser','role', 'company', 'companyAccess', 'roleAccess','users', 'divisions','divisionsUser', 'dayofweek','dayoffTypes','userQuotas'));
+        return view('user.index', compact('userEdit','user','totalUser','role', 'company', 'companyAccess', 'roleAccess','users', 'divisions','divisionsUser', 'dayofweek','dayoffTypes','userQuotas', 'weeklyRequired'));
     }
 
     /**
@@ -206,8 +224,23 @@ class UserController extends Controller
             $user->password = bcrypt($request->post('newPassword'));
         }
 
-        $divisions = $request->input('divisions');
-        $user->divisions()->sync($divisions);
+        // $divisions = $request->input('divisions');
+        // $user->divisions()->sync($divisions);
+        $divisionIds = $request->input('divisions', []);
+
+        // Ambil input divisi yang wajib isi laporan
+        $weeklyRequired = $request->input('weekly_report_required', []); // array key: division_id
+
+        // Persiapkan data sinkronisasi pivot
+        $syncData = [];
+        foreach ($divisionIds as $divisionId) {
+            $syncData[$divisionId] = [
+                'weekly_report_required' => isset($weeklyRequired[$divisionId]) // true if checked
+            ];
+        }
+
+        // Sync relasi many-to-many + pivot
+        $user->divisions()->sync($syncData);
 
         $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
         $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;

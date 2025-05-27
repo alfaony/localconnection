@@ -42,7 +42,9 @@
         </div>
 
         <!-- Submit Button -->
-        <button id="submitCheckin" class="btn btn-primary mt-4" onclick="onSubmit()">Submit Check-in</button>
+         <div class="form-group" id="footerSubmitCheckin">
+             <button id="submitCheckin" class="btn btn-primary mt-4" onclick="onSubmit()">Submit Check-in</button>
+         </div>
     </div>
 </div>
 <audio id="checkinAudio" src="/audio/notification-sound.mp3" preload="auto"></audio>
@@ -79,6 +81,7 @@
     {
         const userId = "{{ Auth::user()->id }}";
         const checkin = firebase.app().database("{{ config('services.firebase.service_database_checkin_url') }}");
+
 
         checkin.ref('employee_checkins/' + userId).on('value', (snapshot) => {
             const data = snapshot.val();
@@ -200,6 +203,8 @@
         if (requiresLocation) {
             locationSection.style.display = 'block';
             locationButton.setAttribute('required', 'required');
+            
+            getLocationNow();
         } else {
             locationSection.style.display = 'none';
             locationButton.removeAttribute('required');
@@ -427,6 +432,16 @@
             }
             return; // Hentikan eksekusi jika reCAPTCHA belum terverifikasi
         }
+
+        document.getElementById('footerSubmitCheckin').classList.add('d-flex', 'justify-content-center','mt-3','align-items-center');
+        document.getElementById('footerSubmitCheckin').insertAdjacentHTML('beforeend', `
+            <div class="spinner-border text-muted" role="status">
+                <span class="sr-only">Data sedang diproses...</span>
+            </div>
+        `);
+
+        document.getElementById('submitCheckin').disabled = true;
+        document.getElementById('submitCheckin').style.display = 'none';
 
         // Meminta reCAPTCHA token sebelum submit
         submitCheckin(recaptchaToken);

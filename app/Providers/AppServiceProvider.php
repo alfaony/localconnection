@@ -68,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
             $shippingMenuArray = array();
             $wilayahMenuArray = array();
             $productMenuArray = array();
+            $subcribetionMenuArray = array();
 
             $equipmentMenu = ['devices','equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
@@ -77,11 +78,13 @@ class AppServiceProvider extends ServiceProvider
             $shippingMenu = ['providers','shipping_rates','shipping_calculations'];
             $wilayahMenu = ['provinces','cities','districts','subdistricts','postal_codes'];
             $productMenu = ['pricelists','products','product_suppliers','supplier_categories'];
+            $subcribetionMenu = ['vehicles','subscribe_letters'];
 
             $managementCompanyMenu = 
             [
                 'dashboard_weekly_reports',
                 'weekly_reports',
+                'flowcharts',
                 'ask_bos',
                 'decisions',
                 'dayoffs',
@@ -505,6 +508,24 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'dashboard-weekly-report.index',
                     'icon' => 'fas fa-tachometer-alt',
                 ],
+                'vehicles' => 
+                [
+                    'text' => 'Kendaraan',
+                    'route' => 'vehicle.index',
+                    'icon' => 'fa fa-car',
+                ],
+                'subscribe_letters' => 
+                [
+                    'text' => 'Surat Berlangganan',
+                    'route' => 'subscribe-letter.index',
+                    'icon' => 'fa fa-envelope-open',
+                ],
+                'flowcharts' => 
+                [
+                    'text' => 'Alur Kerja',
+                    'route' => 'flowchart.index',
+                    'icon' => 'fa fa-sitemap',
+                ]
             ];
 
             foreach ($listMenu as $role) 
@@ -604,6 +625,14 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($subcribetionMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($subcribetionMenuArray,$menus[$role]);
+                }
+            }
+
             $managementSalesMenu = 
             [
                 'text'    => 'Manajemen Penjualan',
@@ -666,6 +695,11 @@ class AppServiceProvider extends ServiceProvider
                 'submenu'   => $productMenuArray    
             ];
 
+            $subcribetionMenu = [
+                'text'      => 'Manajemen Perpanjangan',
+                'submenu'   => $subcribetionMenuArray    
+            ];
+
 
             if($managementCompanyMenu['submenu'] )
             {
@@ -720,6 +754,11 @@ class AppServiceProvider extends ServiceProvider
             if($wilayahMenu['submenu'] )
             {
                 $event->menu->add($wilayahMenu);
+            }
+
+            if($subcribetionMenu['submenu'] )
+            {
+                $event->menu->add($subcribetionMenu);
             }
         });
 

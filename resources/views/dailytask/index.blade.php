@@ -145,7 +145,7 @@
                     <label>&nbsp;</label>
                     <div>
                         <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> Search</button>
-                        <button type="button" onclick="window.location.href='{{ route('dailytask.index') }}?task=all'" class="btn btn-secondary"><i class="fa fa-times"></i> Show All</button>
+                        <button type="button" onclick="window.location.href='{{ route('dailytask.index') }}?task=all&start_date={{ \Carbon\Carbon::now()->subMonth()->startOfMonth()->format('d-m-Y') }}&end_date={{ \Carbon\Carbon::now()->addMonth()->endOfMonth()->format('d-m-Y') }}'" class="btn btn-secondary"><i class="fa fa-times"></i> Show All</button>
                         @canAccess('export','dailytasks')
                         <button type="button" class="btn btn-success" onclick="exportFilteredData('xlsx')">
                             <i class="fa fa-file-excel"></i> Export Excel

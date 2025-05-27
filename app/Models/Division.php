@@ -65,7 +65,7 @@ class Division extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class)->withPivot('weekly_report_required');
     }
 
     public function scopeByCompany($query,$companyId)

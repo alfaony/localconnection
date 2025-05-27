@@ -16,6 +16,12 @@
             </div>
         </div>
         @endcanAccess
+
+        <div id="vehicle-reminder-pic"></div>
+        <div id="vehicle-reminder-manager"></div>
+
+        <div id="reminder-letter-pic"></div>
+        <div id="reminder-letter-manager"></div>
     </div>
 
     @canAccess('dashboardReport','homes')
@@ -721,6 +727,30 @@
     </div>
 </div>
 @endcanAccess
+
+@canAccess('index','office_media')
+{{-- Modal Fullscreen Bootstrap Carousel --}}
+<div class="modal fade" id="officeMediaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen modal-dialog-centered">
+    <div class="modal-content bg-dark border-0">
+      <div class="modal-body p-0">
+        <div id="officeMediaCarousel" class="carousel slide">
+            <div class="carousel-inner" id="officeMediaCarouselInner">
+                <!-- Slides will be injected -->
+                 <button class="carousel-control-prev" type="button" data-bs-target="#officeMediaCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+  </button>
+
+  <button class="carousel-control-next" type="button" data-bs-target="#officeMediaCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+  </button>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+@endcanAccess
 @endsection
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -729,6 +759,109 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> 
+@canAccess('infoPic','subscribe_letters')
+<script>
+    async function loadLetterReminderPIC() {
+        const container = document.querySelector('#reminder-letter-pic');
+        container.innerHTML = `<div class="text-center py-3">
+            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat surat (PIC)...
+        </div>`;
+
+        try {
+            const response = await fetch("{{ route('reminder.letter.pic') }}");
+            const data = await response.json();
+            container.innerHTML = data.html;
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat surat (PIC).</div>`;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadLetterReminderPIC();
+    });
+</script>
+@endcanAccess
+
+@canAccess('infoManager','subscribe_letters')
+<script>
+    async function loadLetterReminderManager() {
+        const container = document.querySelector('#reminder-letter-manager');
+        container.innerHTML = `<div class="text-center py-3">
+            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat surat (Manager)...
+        </div>`;
+
+        try {
+            const response = await fetch("{{ route('reminder.letter.manager') }}");
+            const data = await response.json();
+            container.innerHTML = data.html;
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat surat (Manager).</div>`;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => 
+    {
+        loadLetterReminderManager();
+    });
+</script>
+@endcanAccess
+
+@canAccess('infoManager','vehicles')
+<script>
+    async function loadVehicleReminderManager(containerSelector = '#vehicle-reminder-manager') {
+        const container = document.querySelector(containerSelector);
+        const url = "{{ route('reminder.vehicle.manager') }}";
+
+        container.innerHTML = `<div class="text-center py-3">
+            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat kendaraan (Manager)...
+        </div>`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            container.innerHTML = data.html;
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat kendaraan (Manager).</div>`;
+        }
+    }
+
+    // Panggil sesuai kebutuhan (bisa 1 atau dua-duanya)
+    document.addEventListener("DOMContentLoaded", () => {
+        loadVehicleReminderManager();
+    });
+</script>
+@endcanAccess
+
+@canAccess('infoPic','vehicles')
+<script>
+    async function loadVehicleReminderPIC(containerSelector = '#vehicle-reminder-pic') {
+        const container = document.querySelector(containerSelector);
+        const url = "{{ route('reminder.vehicle.pic') }}";
+
+        container.innerHTML = `<div class="text-center py-3">
+            <i class="fas fa-spinner fa-spin"></i> Memuat pengingat kendaraan (PIC)...
+        </div>`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            container.innerHTML = data.html;
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = `<div class="alert alert-danger">❌ Gagal memuat pengingat kendaraan (PIC).</div>`;
+        }
+    }
+
+    // Panggil sesuai kebutuhan (bisa 1 atau dua-duanya)
+    document.addEventListener("DOMContentLoaded", () => {
+        loadVehicleReminderPIC();
+    });
+</script>
+@endcanAccess
+
 @canAccess('listDayoff','homes')
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
@@ -847,6 +980,61 @@
             `);
 
         }
+</script>
+<script>
+    async function handleMediaClick(clickedIndex) {
+        const $allImages = $('.office-media-thumb');
+        let slidesHtml = '';
+
+        $allImages.each(function (index) {
+            const imgUrl = $(this).data('url');
+            const title = $(this).attr('alt') ?? '';
+            const activeClass = (index === clickedIndex) ? 'active' : '';
+
+            slidesHtml += `
+                <div class="carousel-item ${activeClass}">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <img src="${imgUrl}" class="d-block mx-auto img-fluid" alt="${title}" style="object-fit: contain;">
+                    </div>
+                </div>
+                `;
+        });
+
+        // Inject HTML
+        $('#officeMediaCarouselInner').html(slidesHtml);
+
+        // Tunggu 1 tick agar DOM benar-benar render
+        await new Promise(resolve => setTimeout(resolve, 10));
+
+        // Init carousel
+        const carouselElement = document.getElementById('officeMediaCarousel');
+        if (carouselElement.carouselInstance) {
+            carouselElement.carouselInstance.dispose();
+        }
+
+        carouselElement.carouselInstance = new bootstrap.Carousel(carouselElement, {
+            interval: false,
+    ride: false,
+    keyboard: true,
+        });
+
+        carouselElement.carouselInstance.to(clickedIndex);
+
+        // Tampilkan modal
+        const modalElement = document.getElementById('officeMediaModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } else {
+            console.error('Modal #officeMediaModal not found in DOM');
+        }
+    }
+
+    // Bind click
+    $(document).on('click', '.office-media-thumb', function () {
+        const clickedIndex = $(this).data('index');
+        handleMediaClick(clickedIndex);
+    });
 </script>
 @endcanAccess
 

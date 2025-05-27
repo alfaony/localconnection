@@ -39,17 +39,19 @@ class DeactivateCheckinV2 extends Command
             // Get the current time and schedule timeout
             $timeoutTime = $checkin->scheduled_timeout ? Carbon::parse($checkin->scheduled_timeout)->format('H:i') : NULL;
             $currentTime = Carbon::now()->tz('Asia/Jakarta')->format('H:i');
+            $timeoutTimeWithSpare2Mnit = $checkin->scheduled_timeout ? Carbon::parse($checkin->scheduled_timeout)->addMinutes(2)->format('H:i') : NULL;
+
     
             // If the current time is greater than the timeout time, deactivate the check-in
             $existingLog = CheckinLog::where('employee_checkin_id', $checkin->id)->first();
             if ($existingLog) {
                 $existingLog->update(
                     [
-                        'executed_out_at' => Carbon::now('Asia/Jakarta')->format('H:i:s'),
+                        'excecuted_out_at' => Carbon::now('Asia/Jakarta')->format('Y-m-d H:i:s'),
                 ]);
             }
 
-            if (isset($checkin->scheduled_timeout) &&  isset($timeoutTime) && $currentTime == $timeoutTime) {
+            if (isset($checkin->scheduled_timeout) &&  isset($timeoutTime) && $currentTime <= $timeoutTimeWithSpare2Mnit) {
                 // Update `is_active` to false in the local database
                 $checkin->is_active = false;
                 $checkin->save();
