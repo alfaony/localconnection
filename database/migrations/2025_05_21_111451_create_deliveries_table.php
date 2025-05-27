@@ -16,9 +16,11 @@ return new class extends Migration
         Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
             $table->uuid('company_id');
-            $table->foreignId('item_purchase_id')->constrained('item_purchases')->onDelete('cascade');
+            $table->foreignId('item_request_id')->constrained('item_requests')->onDelete('cascade');
             $table->uuid('sprinter_id');
             $table->string('resi_number')->nullable();
+            $table->string('shipping_method')->nullable();
+            $table->string('airwillbill_photo')->nullable();
             $table->string('delivery_photo')->nullable();
             $table->timestamp('delivered_at')->nullable();
             $table->timestamps();

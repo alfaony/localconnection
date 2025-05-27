@@ -28,8 +28,8 @@
                             <tr>
                                 <th>Nama Barang</th>
                                 <th>Kategori</th>
-                                <th>Estimasi Harga</th>
                                 <th>Jumlah</th>
+                                <th>Estimasi Harga</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>

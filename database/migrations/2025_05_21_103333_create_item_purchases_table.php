@@ -13,13 +13,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('item_purchases', function (Blueprint $table) {
+        Schema::create('item_purchases', function (Blueprint $table) 
+        {
             $table->id();
             $table->uuid('company_id');
             $table->foreignId('item_request_id')->constrained('item_requests')->onDelete('cascade');
+            $table->foreignId('product_supplier_id')->constrained('product_suppliers')->onDelete('cascade'); // Relasi ke product_suppliers
             $table->uuid('sprinter_id'); // user_id yang assigned
-            $table->decimal('actual_price', 12, 2);
+            $table->bigInteger('actual_price');
+            $table->date('payment_term_date')->nullable();
             $table->string('bon_photo')->nullable();
+            $table->string('payment_method')->nullable();
+            $table->string('rekening_number')->nullable();
+            $table->enum('status', ['waiting_payment', 'paid'])->default('waiting_payment');
+            $table->text('note')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

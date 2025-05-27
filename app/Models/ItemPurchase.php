@@ -13,20 +13,27 @@ class ItemPurchase extends Model
     protected $fillable = [
         'company_id',
         'item_request_id',
-        'vendor_id',
+        'product_supplier_id',
         'sprinter_id',
         'actual_price',
         'bon_photo',
+        'payment_photo',
+        'status',
+        'payment_term_date',
+        'payment_method',
+        'rekening_number',
+        'note'
     ];
+
 
     public function itemRequest()
     {
         return $this->belongsTo(ItemRequest::class)->withTrashed();
     }
 
-    public function vendor()
+    public function productSupplier()
     {
-        return $this->belongsTo(Vendor::class)->withTrashed();
+        return $this->belongsTo(ProductSupplier::class,'product_supplier_id')->withTrashed();
     }
 
     public function sprinter()

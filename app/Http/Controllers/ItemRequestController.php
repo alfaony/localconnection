@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 use App\Models\User;
+use App\Models\Delivery;
 use App\Models\ItemRequest;
 use App\Models\SupplierCategory;
+use App\Jobs\ProcessItemRequestCreated;
 
 use App\Helpers\Access;
+use App\Services\WorkflowService;
 
 class ItemRequestController extends Controller
 {
@@ -49,6 +53,7 @@ class ItemRequestController extends Controller
 
         $item = ItemRequest::create($validated);
 
+        dispatch(new ProcessItemRequestCreated($item->id));
         return redirect()->route('item-request.show',$item->id)->with('success', 'Request submitted.');
     }
 
@@ -125,6 +130,7 @@ class ItemRequestController extends Controller
             $validated['picture'] = $request->file('picture')->store('item_pictures', 'public');
         }
 
+        dispatch(new ProcessItemRequestCreated($itemRequest->id));
         $itemRequest->update($validated);
 
         return redirect()->route('item-request.index')->with('success', 'Request updated.');
@@ -159,8 +165,8 @@ class ItemRequestController extends Controller
         if(Access::can('downloadPdf','quotes'))
         {
             $pdf = [
-                'name' => 'Pdf',
-                'route' => 'quote.download.pdf',
+                'name' => 'show',
+                'route' => 'item-request.show',
                 'id' => true,
             ];
 
@@ -171,7 +177,7 @@ class ItemRequestController extends Controller
         {
             $edit = [
                 'name' => 'Edit',
-                'route' => 'quote.edit',
+                'route' => 'item-request.edit',
                 'id' => true,
             ];
 
@@ -182,7 +188,7 @@ class ItemRequestController extends Controller
         {
             $destroy = [
                 'name' => 'Delete',
-                'route' => 'quote.destroy',
+                'route' => 'item-request.destroy',
                 'id' => true,
             ];
 
@@ -197,10 +203,83 @@ class ItemRequestController extends Controller
         foreach ($data->data as $index => $item) 
         {
             $item->estimated_price = 'Rp. '.number_format($item->estimated_price, 0,',','.'); // Format angka dengan 2 desimal
-            $item->status = '<span class="badge '.$this->matchStatus($item->status, true).'">'.$this->matchStatus($item->status).'</span>';
+            $item->status = $item->status_badge;
         }
         
         return response()->json($data);
+    }
+
+    public function workflow($itemRequest)
+    {
+        try 
+        {   
+            $itemRequest = ItemRequest::find($itemRequest);
+
+            // Generate array steps dari service atau manual
+            $steps = WorkflowService::generateSteps($itemRequest); // asumsi kamu punya ini
+
+            // Render HTML partial blade
+            $htmlWorkflow = view('item_request._workflow_steps', compact('steps','itemRequest'))->render();
+            
+            return response()->json([
+                'success' => true,
+                'html' => $htmlWorkflow,
+            ]);
+
+        } catch (\Exception $e) {
+            // dd($e);
+            Log::error('Workflow load error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat workflow.'
+            ], 500);
+        }
+    }
+
+    public function delivery(Request $request, $id)
+    {
+        $request->validate([
+            'resi_number' => 'nullable|string',
+            'airwillbill_photo' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'delivery_photo' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+       $itemRequest = ItemRequest::findOrFail($id);
+
+        if ($request->hasFile('airwillbill_photo')) {
+            $airwillbillPath = $request->file('airwillbill_photo')->store('airwillbill', 'public');
+        } else {
+            $airwillbillPath = null;
+        }
+        $deliveryPhotoPath = $request->hasFile('delivery_photo') ? $request->file('delivery_photo')->store('delivery_photo', 'public') : null;
+
+        if(!$itemRequest->delivery)
+        {
+            $delivery = Delivery::create(
+            [
+                'item_request_id' => $itemRequest->id,
+                'company_id' => auth()->user()->company_id,
+                'sprinter_id' => auth()->id(),
+                'shipping_method' => $request->shipping_method,
+                'resi_number' => $request->resi_number,
+                'airwillbill_photo' => $airwillbillPath,
+                'delivery_photo' => $deliveryPhotoPath,
+            ]);
+        }
+        else
+        {
+            $itemRequest->delivery->update([
+                'delivery_photo' => $deliveryPhotoPath,
+                'delivered_at' => now(),
+            ]);
+
+            $delivery = $itemRequest->delivery;
+
+            ItemRequest::where('id', $id)->update(['status' => 'DELIVERED']);
+        }
+
+        return response()->json(['success' => true, 'delivery' => $delivery]);
     }
 
     private function findCandidate($companyId)

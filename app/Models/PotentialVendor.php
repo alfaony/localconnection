@@ -13,7 +13,7 @@ class PotentialVendor extends Model
     protected $fillable = [
         'company_id',
         'item_request_id',
-        'vendor_id',
+        'product_supplier_id',
         'responded',
         'responded_at',
     ];
@@ -23,8 +23,8 @@ class PotentialVendor extends Model
         return $this->belongsTo(ItemRequest::class)->withTrashed();
     }
 
-    public function vendor()
+    public function productSupplier()
     {
-        return $this->belongsTo(Vendor::class)->withTrashed();
+        return $this->belongsTo(ProductSupplier::class, 'product_supplier_id');
     }
 }

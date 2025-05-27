@@ -12,16 +12,19 @@ class Delivery extends Model
 
     protected $fillable = [
         'company_id',
-        'item_purchase_id',
+        'item_request_id',
         'sprinter_id',
         'resi_number',
+        'shipping_method',
+        'resi_number',
+        'airwillbill_photo',
         'delivery_photo',
         'delivered_at',
     ];
 
-    public function purchase()
+    public function itemRequest()
     {
-        return $this->belongsTo(ItemPurchase::class, 'item_purchase_id')->withTrashed();
+        return $this->belongsTo(ItemRequest::class, 'item_request_id')->withTrashed();
     }
 
     public function sprinter()

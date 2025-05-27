@@ -90,6 +90,8 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\SubscribeLetterController;
 use App\Http\Controllers\FlowChartController;
 use App\Http\Controllers\ItemRequestController;
+use App\Http\Controllers\ChatMessageController;
+use App\Http\Controllers\ItemPurchaseController;
 
 
 
@@ -443,13 +445,23 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('flowchart', FlowChartController::class);
 });
 
+Route::resource('chat-message', ChatMessageController::class)->only(['store','show']);
+
+
+Route::get('item-request/workflow/{id}', [ItemRequestController::class, 'workflow'])->name('item-request.workflow');
 Route::get('item-request/dataTableJson', [ItemRequestController::class, 'dataTableJson'])->name('item-request.datatable');
 Route::resource('item-request', ItemRequestController::class);
+
+Route::put('item-request/delivery/{id}', [ItemRequestController::class, 'delivery'])->name('item-request.delivery');
+Route::put('item-purchase/payment/{id}', [ItemPurchaseController::class, 'payment'])->name('item-purchase.payment');
+Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
 
 Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');
+
+// Broadcast::routes();
 
 
 

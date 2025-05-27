@@ -22,10 +22,11 @@ return new class extends Migration
             $table->string('picture')->nullable(); // Path foto barang pendukung
             $table->string('item_name');
             $table->text('description')->nullable();
-            $table->decimal('estimated_price', 12, 2);
+            $table->bigInteger('estimated_price');
             $table->integer('qty')->nullable();
             $table->uuid('assigned_pic_id')->nullable(); // sprinter
             $table->string('status'); // e.g. requested, waiting_payment, paid, done
+            $table->boolean('is_open')->default(true);
             $table->timestamps();
             $table->softDeletes();
 

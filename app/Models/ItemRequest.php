@@ -23,6 +23,8 @@ class ItemRequest extends Model
         'picture',
     ];
 
+    protected $appends = ['status_badge'];
+
     public function requester()
     {
         return $this->belongsTo(User::class, 'user_id')->withTrashed();
@@ -45,16 +47,59 @@ class ItemRequest extends Model
 
     public function purchase()
     {
-        return $this->hasOne(ItemPurchase::class);
+        return $this->hasMany(ItemPurchase::class, 'item_request_id');
     }
 
     public function chatMessages()
     {
-        return $this->hasMany(ChatMessage::class);
+        return $this->hasMany(ChatMessage::class, 'item_request_id');
     }
 
     public function scopeByCompany($query, $companyId)
     {
         return $query->where('company_id', $companyId);
+    }
+
+    public function delivery()
+    {
+        return $this->hasOne(Delivery::class);
+    }
+
+    public function getStatusBadgeAttribute()
+    {
+        $status = strtoupper($this->status); // pastikan uppercase
+        switch ($status) {
+            case 'REQUESTED':
+                return '<span class="badge badge-secondary"><i class="fas fa-paper-plane mr-1"></i> Requested</span>';
+            case 'LOOKING_FOR_SPRINTER':
+                return '<span class="badge badge-info"><i class="fas fa-bicycle mr-1"></i> Looking for Sprinter</span>';
+            case 'LOOKING_FOR_ITEM':
+                return '<span class="badge badge-warning"><i class="fas fa-search mr-1"></i> Looking for Item</span>';
+            case 'WAITING_PAYMENT':
+                return '<span class="badge badge-primary"><i class="fas fa-credit-card mr-1"></i> Waiting Payment</span>';
+            case 'WAITING_DELIVERY_CONFIRMATION':
+                return '<span class="badge badge-success"><i class="fas fa-truck-loading mr-1"></i> Waiting Delivery Confirmation</span>';
+            case 'DELIVERED':
+                return '<span class="badge badge-success"><i class="fas fa-truck mr-1"></i> Delivered</span>';
+
+            default:
+                return '<span class="badge badge-dark"><i class="fas fa-question-circle mr-1"></i>'.$status.'</span>';
+        }
+    }
+
+    public function getIsCompletePaymentAttribute(): bool
+    {
+        // Ambil semua itemPurchase
+        $purchases = $this->purchase;
+
+        // Jika tidak ada purchase, dianggap belum complete
+        if ($purchases->isEmpty()) {
+            return false;
+        }
+
+        // Jika semua purchase punya payment → true
+        return $purchases->every(function ($purchase) {
+            return $purchase->payment !== null;
+        });
     }
 }

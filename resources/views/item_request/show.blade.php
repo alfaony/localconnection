@@ -3,83 +3,6 @@
 @section('title', 'Detail Permintaan Barang')
 
 @section('content')
-@php
-    $steps = [
-        [
-            'title' => 'Pengajuan Barang',
-            'icon' => 'fas fa-file-signature',
-            'status' => 'completed',
-            'description' => 'Permintaan awal pengadaan barang',
-            'date' => now()->subDays(3)->format('Y-m-d H:i'),
-            'data' => [
-                'requester' => 'John Doe',
-                'department' => 'IT Department',
-                'notes' => 'Permintaan diajukan melalui sistem'
-            ]
-        ],
-        [
-            'title' => 'Penunjukan PIC',
-            'icon' => 'fas fa-user-tie',
-            'status' => 'active',
-            'description' => 'Penunjukan Penanggung Jawab Procurement',
-            'date' => now()->subDays(2)->format('Y-m-d H:i'),
-            'data' => [
-                'assigned_pic' => 'Budi Santoso',
-                'assignment_method' => 'Beban kerja terkecil',
-                'current_workload' => '4 tugas aktif',
-                'contact' => 'budi@santoso.com'
-            ]
-        ],
-        [
-            'title' => 'Pencarian Vendor',
-            'icon' => 'fas fa-store',
-            'status' => 'pending',
-            'description' => 'Identifikasi dan negoisasi dengan vendor',
-            'data' => [
-                'vendors' => [
-                    [
-                        'name' => 'Toko Elektronik Maju',
-                        'response' => 'positive',
-                        'message' => 'Stok tersedia, harga Rp35.000.000',
-                        'response_time' => '2 jam'
-                    ],
-                    [
-                        'name' => 'Global Computer',
-                        'response' => 'negative',
-                        'message' => 'Stok kosong',
-                        'response_time' => '4 jam'
-                    ]
-                ],
-                'broadcast_status' => [
-                    'sent' => true,
-                    'total_vendors' => 8,
-                    'responses' => 5
-                ]
-            ]
-        ],
-        [
-            'title' => 'Konfirmasi Pembayaran',
-            'icon' => 'fas fa-coins',
-            'status' => 'pending',
-            'description' => 'Verifikasi dan konfirmasi pembayaran',
-            'data' => [
-                'finance_contact' => 'finance@company.com',
-                'payment_method' => 'Transfer Bank',
-                'due_date' => now()->addDays(3)->format('Y-m-d')
-            ]
-        ],
-        [
-            'title' => 'Pengiriman Barang',
-            'icon' => 'fas fa-truck',
-            'status' => 'pending',
-            'description' => 'Proses pengiriman ke gudang',
-            'data' => [
-                'shipping_methods' => ['JNE', 'SiCepat', 'DHL'],
-                'tracking_info' => null
-            ]
-        ]
-    ];
-@endphp
 <div class="container-fluid">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
@@ -94,7 +17,7 @@
 
     <div class="row">
         <!-- Main Content -->
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <!-- Item Details Card -->
             <div class="card card-primary card-outline">
                 <div class="card-header bg-gradient-primary d-flex align-items-center">
@@ -124,58 +47,42 @@
 
                                 <dt class="col-sm-4 text-info"><i class="fas fa-cubes mr-2"></i>Kuantitas</dt>
                                 <dd class="col-sm-8">{{ $itemRequest->qty }} Unit</dd>
+                                <dt class="col-sm-4 text-info"><i class="fas fa-info-circle mr-2"></i>Status</dt>
+                                <dd class="col-sm-8">{!! $itemRequest->status_badge !!}</dd>
+
+                                <dt class="col-sm-4 text-info"><i class="fas fa-door-open mr-2"></i>Open Status</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge {{ $itemRequest->is_open ? 'badge-success' : 'badge-danger' }} rounded-pill">
+                                        {{ $itemRequest->is_open ? 'Open' : 'Closed' }}
+                                    </span>
+                                </dd>
                             </dl>
                         </div>
                     </div>
                 </div>
             </div>
 
+        </div>
+        
+    </div>
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-8">
             <!-- Workflow Timeline Card -->
-            <div class="card card-info card-outline mt-4">
+            <div class="card card-info card-outline ">
                 <div class="card-header bg-gradient-info">
                     <h3 class="card-title text-white"><i class="fas fa-project-diagram mr-2"></i>Alur Proses Pengadaan</h3>
                 </div>
                 <div class="card-body pt-4">
-                    <div class="workflow-timeline">
-                        @foreach($steps as $step)
-                        <div class="workflow-step {{ $step['status'] }} animated fadeIn">
-                            <div class="step-icon shadow-sm">
-                                <i class="{{ $step['icon'] }}"></i>
-                            </div>
-                            <div class="step-content shadow-sm">
-                                <div class="step-header border-bottom pb-2">
-                                    <h5 class="mb-0">{{ $step['title'] }}</h5>
-                                    <span class="badge badge-{{ 
-                                        $step['status'] == 'completed' ? 'success' : 
-                                        ($step['status'] == 'active' ? 'warning' : 'secondary') 
-                                    }}">
-                                        {{ ucfirst($step['status']) }}
-                                    </span>
-                                </div>
-                                
-                                <div class="step-body pt-3">
-                                    @if($step['status'] == 'active')
-                                    <div class="step-actions">
-                                        <!-- Action Content -->
-                                    </div>
-                                    @endif
-                                    
-                                    <div class="step-details">
-                                        <p class="mb-1">{{ $step['description'] }}</p>
-                                        
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
+                    <div class="workflow-timeline" id="workflow-wrapper">
+                        
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Sidebar -->
+        </div>        
         <div class="col-lg-4">
             <!-- Vendor List Card -->
+            {{-- 
             <div class="card card-success card-outline">
                 <div class="card-header bg-gradient-success">
                     <h3 class="card-title text-white"><i class="fas fa-store-alt mr-2"></i>Daftar Vendor</h3>
@@ -209,147 +116,497 @@
                     <!-- Repeat Vendor Cards -->
                 </div>
             </div>
-
+            --}}
+    
             <!-- Live Chat Card -->
-            <div class="card card-primary card-outline mt-4">
+            <div class="card card-primary card-outline" id="chat-wrapper">
                 <div class="card-header bg-gradient-primary">
                     <h3 class="card-title text-white"><i class="fas fa-comments mr-2"></i>Live Chat</h3>
                 </div>
                 <div class="card-body p-0">
-                    <div class="chat-container" style="height: 300px; overflow-y: auto;">
-                        <!-- Chat Messages -->
+                    <div class="chat-container p-3" id="chat-container" style="height: 300px; overflow-y: auto;">
+                        <div class="text-center" id="chat-loading">
+                            <i class="fas fa-spinner fa-spin"></i> Loading chat...
+                        </div>
                     </div>
                     <div class="chat-input p-3 border-top">
-                        <div class="input-group">
-                            <textarea class="form-control" rows="1" placeholder="Ketik pesan..."></textarea>
-                            <div class="input-group-append">
-                                <button class="btn btn-primary">
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
+                        <form id="chat-form">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="chat-message" placeholder="Ketik pesan..." required>
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<!-- Modal Pilih Vendor -->
+<div class="modal fade" id="selectVendorModal" tabindex="-1" role="dialog" aria-labelledby="selectVendorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <form id="vendor-billing-form"  method="POST" enctype="multipart/form-data">
+        @csrf
+        <input type="hidden" name="item_request_id" value="{{ $itemRequest->id }}">
+        <input type="hidden" name="product_supplier_id" id="modal_vendor_id">
+
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title"><i class="fas fa-file-invoice-dollar mr-2"></i>Konfirmasi Vendor & Penagihan</h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+              <div id="modal_vendor_info" class="mb-3 text-muted small"></div>
+              <div class="form-group">
+
+              </div>
+              <div class="form-group">
+                  <div class="custom-control custom-checkbox">
+                      <input type="checkbox" class="custom-control-input" id="is_finished" name="is_finished">
+                      <label class="custom-control-label" for="is_finished">Apakah proses pembelian ini sudah selesai?</label>
+                    </div>
+            </div>
+              <div class="form-group">
+                  <label for="purchase_date">Tenggat Tanggal Pembayaran</label>
+                  <input type="date" class="form-control" name="payment_term_date" required>
+              </div>
+
+              <div class="form-group">
+                  <label for="amount">Total Pembelian (Rp)</label>
+                  <input type="text" class="form-control @error('estimated_price') is-invalid @enderror" id="estimated_price_show" placeholder="30.000.000" oninput="formatRupiahFormat(this,'estimated_price')" required/>
+                  <input type="hidden" id="estimated_price" name="actual_price">
+              </div>
+              <div class="form-group">
+                  <label for="payment_method">Metode Pembayaran</label>
+                  <select class="form-control" name="payment_method" required>
+                      <option value="">- Pilih -</option>
+                      <option value="TRANSFER">Transfer</option>
+                      <option value="CASH">Cash</option>
+                  </select>
+              </div>
+
+              <div class="form-group">
+                  <label for="rekening_number">Nomor Rekening</label>
+                  <input type="text" class="form-control" name="rekening_number">
+              </div>
+                <div class="form-group">
+                    <label for="bon_image">Upload Foto Bon</label>
+                    <input type="file" class="form-control-file" name="bon_photo" accept="image/*" capture="environment" required>
+                </div>
+              <div class="form-group">
+                  <label for="note">Catatan</label>
+                  <textarea class="form-control" name="note" rows="3"></textarea>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-paper-plane"></i> Simpan & Proses
+            </button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+          </div>
+        </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Upload Transfer -->
+<div class="modal fade" id="uploadTransferModal" tabindex="-1" role="dialog" aria-labelledby="uploadTransferModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <form id="form-upload-payment" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+            <input type="hidden" id="item_purchase_id_input">
+
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="uploadTransferModalLabel"><i class="fas fa-file-invoice-dollar mr-2"></i>Upload Bukti Transfer</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Bukti Transfer (JPG, PNG, PDF)</label>
+                        <input type="file" name="proof_image" class="form-control-file" accept="image/*,application/pdf" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-upload mr-2"></i>Upload
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 @stop
 
-@section('css')
-<style>
-    /* Custom Styles */
-    .img-hover-zoom {
-        transition: transform .2s;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .img-hover-zoom:hover {
-        transform: scale(1.03);
-    }
-
-    .workflow-timeline {
-        position: relative;
-        padding-left: 60px;
-    }
-
-    .workflow-step {
-        position: relative;
-        padding: 25px 0;
-        margin-left: 30px;
-        border-left: 3px solid #dee2e6;
-    }
-
-    .workflow-step:last-child {
-        border-left-style: dashed;
-    }
-
-    .step-icon {
-        position: absolute;
-        left: -48px;
-        top: 25px;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        transition: all 0.3s ease;
-    }
-
-    .workflow-step.completed .step-icon {
-        background: #28a745;
-        color: white;
-        border-color: #28a745;
-    }
-
-    .workflow-step.active .step-icon {
-        background: #ffc107;
-        color: white;
-        animation: pulse 1.5s infinite;
-    }
-
-    .step-content {
-        background: white;
-        border-radius: 8px;
-        padding: 20px;
-        margin-left: 35px;
-        transition: transform 0.3s ease;
-    }
-
-    .workflow-step:hover .step-content {
-        transform: translateX(10px);
-    }
-
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(255,193,7,0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(255,193,7,0); }
-        100% { box-shadow: 0 0 0 0 rgba(255,193,7,0); }
-    }
-
-    .vendor-card {
-        transition: all 0.3s ease;
-        border: 1px solid rgba(0,0,0,0.1);
-    }
-
-    .vendor-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-
-    .star-rating {
-        font-size: 0.9em;
-    }
-
-    .chat-container {
-        background: #f8f9fa;
-    }
-
-    .chat-message {
-        max-width: 80%;
-        border-radius: 15px;
-        padding: 10px 15px;
-        margin: 10px;
-        position: relative;
-    }
-
-    .received {
-        background: white;
-        border: 1px solid #dee2e6;
-    }
-
-    .sent {
-        background: #007bff;
-        color: white;
-        margin-left: auto;
-    }
-</style>
-@endsection
-
 @section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/js/all.min.js"></script>
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-smooth-scroll/2.2.0/jquery.smooth-scroll.min.js"></script>
+<!-- 🎵 Notifikasi Suara -->
+ 
+<audio id="notification-sound" src="/audio/notification-sound.mp3" preload="auto"></audio>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.11.3/dist/echo.iife.js"></script>
+<script>
+    const SOCKET_IO_HOST = @json(config('services.setting.app_socet_url'));
+
+    const socket = io(SOCKET_IO_HOST, {
+        transports: ['websocket'],
+        secure: true
+    });
+
+    if (typeof window !== 'undefined' ) 
+    {
+        const socket = io(SOCKET_IO_HOST, {
+            transports: ["polling"],
+            secure: false,
+        });
+        
+        socket.on("connect", () => {
+            console.log("[Socket.IO] Connected with ID:", socket.id);
+        });
+
+        socket.on("connect_error", (error) => {
+            console.error("[Socket.IO] Connection Error:", error);
+        });
+
+        socket.on("disconnect", (reason) => {
+            console.warn("[Socket.IO] Disconnected:", reason);
+        });
+
+         echo = new Echo({
+            broadcaster: "socket.io",
+            host: SOCKET_IO_HOST,
+            secure: false,
+            client:io,
+            transports: ["polling"],
+            withCredentials: true // ⬅️ WAJIB agar cookie dikirim
+        });
+
+         echo.connector.socket.on('connect', () => 
+         {
+            console.log('✅ Echo connected successfully!');
+        });
+
+          echo.connector.socket.on('connect_error', (err) => 
+          {
+            console.error('❌ Echo connection failed:', err);
+        });
+
+        const chatContainer = document.getElementById('chat-container');
+        const notifSound = document.getElementById('notification-sound');
+        const itemRequestId = '{{ $itemRequest->id }}';
+        
+        echo.channel('chat.item-request.' + itemRequestId)
+            .listen('ChatMessageSent', (e) => {
+                console.log("📩 Real-time message:", e);
+
+                const html = `
+                    <div class="mb-2">
+                        <strong>${e.sender_name}:</strong> ${e.message}
+                        <div class="text-muted" style="font-size: 12px;">
+                            ${new Date(e.created_at).toLocaleTimeString()}
+                        </div>
+                    </div>`;
+                chatContainer.innerHTML += html;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                notifSound?.play();
+            });
+    }    
+</script>
+
+<script>
+    $(document).on('submit', '#form-upload-delivery', function (e) {
+        e.preventDefault();
+
+        const form = this;
+        const formData = new FormData(form);
+        const id = document.getElementById('item_purchase_id').value; // pastikan ID ada
+
+        formData.append('_method', 'PUT');
+
+        $.ajax({
+            url: `/item-request/delivery/${id}`,
+            method: 'POST', // tetap POST karena spoof PUT
+            data: formData,
+            processData: false, // WAJIB
+            contentType: false, // WAJIB
+            beforeSend: () => {
+                Swal.fire({ title: 'Mengirim...', didOpen: () => Swal.showLoading() });
+            },
+            success: function (res) {
+                Swal.fire('Berhasil', 'Data pengiriman berhasil disimpan', 'success').then(() => {
+                    loadWorkflow();
+                });
+            },
+            error: function (err) {
+                console.error(err);
+                Swal.fire('Gagal', 'Gagal mengirim data', 'error');
+            }
+        });
+    });
+</script>
+<script>
+     $(document).on('click', '.btn-upload-transfer', function () {
+        const itemPurchaseId = $(this).data('id');
+        $('#item_purchase_id_input').val(itemPurchaseId);
+    });
+
+    $('#form-upload-payment').on('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        formData.append('_method', 'PUT');
+        const itemPurchaseId = $('#item_purchase_id_input').val();
+        
+
+        $.ajax({
+            url: `/item-purchase/payment/${itemPurchaseId}`,
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            beforeSend: () => {
+                Swal.fire({ title: 'Mengupload...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            },
+            success: (res) => 
+            {
+                let timerInterval;
+                Swal.fire({
+                    title: 'Berhasil',
+                    html: 'Bukti transfer berhasil diunggah!<br>Menutup dalam <b></b> detik.',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    willOpen: () => {
+                        Swal.showLoading();
+                        timerInterval = setInterval(() => {
+                            const content = Swal.getHtmlContainer();
+                            if (content) {
+                                const b = content.querySelector('b');
+                                if (b) {
+                                    b.textContent = Math.ceil(Swal.getTimerLeft() / 1000);
+                                }
+                            }
+                        }, 100);
+                    },
+                    onClose: () => {
+                        clearInterval(timerInterval);
+                    }
+                }).then(() => {
+                    loadWorkflow();
+                });
+            },
+            error: (err) => {
+                console.error(err);
+                Swal.fire('Gagal', 'Upload gagal. Periksa input Anda.', 'error');
+            }
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function () 
+    {
+        $('#vendor-billing-form').on('submit', async function (e) {
+            e.preventDefault();
+
+            const form = this;
+            const formData = new FormData(form);
+
+            // Konfirmasi sebelum submit
+            // const confirm = await Swal.fire({
+            //     title: 'Kirim ke Finance?',
+            //     html: 'Pastikan harga dan bon sudah benar. Data ini akan dikirim ke tim Finance untuk proses pembayaran.',
+            //     icon: 'warning',
+            //     showCancelButton: true,
+            //     confirmButtonText: 'Ya, kirim sekarang!',
+            //     cancelButtonText: 'Batal'
+            // });
+
+            // if (!confirm.isConfirmed) return;
+
+            $.ajax({
+                url: '{{ route("item-purchase.store") }}',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: () => {
+                    Swal.showLoading();
+                },
+                success: function (res) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Data telah dikirim ke Finance.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                    $('#selectVendorModal').modal('hide');
+                    // Optional: reload workflow section
+                    loadWorkflow();
+                },
+                error: function (xhr) {
+                    let msg = xhr.responseJSON?.message ?? 'Terjadi kesalahan saat mengirim data.';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: msg
+                    });
+                }
+            });
+
+        });
+    });
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        $(document).on('click', '.btn-select-vendor', function () {
+            const vendorId = $(this).data('vendor-id');
+            const vendorName = $(this).data('vendor-name');
+            const vendorPhone = $(this).data('vendor-phone');
+            const vendorLocation = $(this).data('vendor-location');
+
+            $('#modal_vendor_id').val(vendorId);
+            $('#modal_vendor_info').html(`
+                <i class="fas fa-user-tie mr-1"></i><strong> ${vendorName}</strong> 
+                <i class="fas fa-map-marker-alt ml-3 mr-1"></i>${vendorLocation}
+                <i class="fas fa-phone-alt ml-3 mr-1"></i>${vendorPhone}
+            `);
+
+            $('#selectVendorModal').modal('show');
+        });
+    });
+</script>
+<script>
+    async function loadWorkflow() {
+        const wrapper = document.getElementById('workflow-wrapper');
+        wrapper.innerHTML = `
+            <div class="text-center p-4" id="workflow-loading">
+                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                <p>Memuat alur proses...</p>
+            </div>`;
+
+        try {
+            const response = await fetch(`{{ route('item-request.workflow', $itemRequest->id) }}`);
+            const result = await response.json();
+
+            if (result.success) {
+                wrapper.innerHTML = result.html;
+            } else {
+                wrapper.innerHTML = `<div class="alert alert-warning">Gagal memuat workflow: ${result.message}</div>`;
+            }
+        } catch (error) {
+            // console.log(error);
+            
+            wrapper.innerHTML = `<div class="alert alert-danger">Terjadi kesalahan koneksi.</div>`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadWorkflow();
+    });
+</script>
+<script>
+    const itemRequestId = '{{ $itemRequest->id }}';
+    const chatContainer = document.getElementById('chat-container');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-message');
+
+    let isLoadingChat = false;
+    let isSendingMessage = false;
+
+    async function loadChat() {
+        if (isLoadingChat) return;
+        isLoadingChat = true;
+        $('#chat-loading').show();
+
+        const urlChat = "{{ route('chat-message.show', ':id') }}".replace(':id', itemRequestId);
+
+        try {
+            const response = await fetch(urlChat);
+            const messages = await response.json();
+
+            let html = '';
+            Object.entries(messages).forEach(([key, msg]) => {
+                html += `
+                    <div class="mb-2">
+                        <strong>${msg.sender.name}:</strong> ${msg.message}
+                        <div class="text-muted" style="font-size: 12px;">${new Date(msg.created_at).toLocaleTimeString()}</div>
+                    </div>`;
+            });
+
+            chatContainer.innerHTML = html;
+            scrollToBottom();
+        } catch (err) {
+            console.error('Gagal memuat chat:', err);
+        } finally {
+            $('#chat-loading').hide();
+            isLoadingChat = false;
+        }
+    }
+
+    function scrollToBottom() {
+        if (chatContainer && chatContainer.scrollHeight) {
+            chatContainer.scrollTo({
+                top: chatContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    chatForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        if (isSendingMessage) return;
+
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        isSendingMessage = true;
+
+        try {
+            await fetch('{{ route("chat-message.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    item_request_id: itemRequestId,
+                    message: message
+                })
+            });
+
+            chatInput.value = '';
+            await loadChat();
+        } catch (err) {
+            console.error('Gagal mengirim pesan:', err);
+        } finally {
+            isSendingMessage = false;
+        }
+    });
+
+    // Load awal
+    loadChat();
+</script>
 <script>
     // Smooth scroll for vendor list
     $('.vendor-scroll').smoothScroll({
@@ -357,10 +614,6 @@
             this.stop();
         }
     });
-
-    // Chat auto-scroll
-    const chatContainer = $('.chat-container');
-    chatContainer.scrollTop(chatContainer[0].scrollHeight);
 
     // Hover effects
     $('.vendor-card').hover(
@@ -381,5 +634,126 @@
             $(this).find('.step-content').removeClass('shadow');
         }
     );
+
+    function formatRupiahFormat(input = null, inputNonFormat = null) 
+    {
+        let numStr = input.value.toString().replace(/[^,\d]/g, '');
+        let split = numStr.split(',');
+        let sisa = split[0].length % 3;
+        let rupiah = split[0].substr(0, sisa);
+        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+
+        rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+
+        if (numStr === "" || parseInt(numStr) === 0) {
+            input.value = '';
+            numStr = 0;
+        } else {
+            // Menghapus angka 0 di depan jika input diawali dengan 0
+            rupiah = rupiah.replace(/^0+/, '');
+            input.value ='Rp. '+rupiah;
+        }
+
+        // Update 'salary' input with non-formatted number
+        document.getElementById(inputNonFormat).value = parseInt(numStr);
+    }
 </script>
+@endsection
+@section('css')
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+<style>
+.workflow-step {
+    position: relative;
+    padding: 20px 0;
+    margin-left: 60px;
+    border-left: 2px solid #eee;
+}
+
+.step-icon {
+    position: absolute;
+    left: -45px;
+    top: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.detail-card {
+    background: #f8f9fa;
+    transition: transform 0.2s;
+}
+
+.detail-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.response-item {
+    margin: 10px 0;
+    border-radius: 8px!important;
+}
+
+.vendor-responses .alert-success {
+    border-left: 4px solid #28a745;
+}
+
+.vendor-responses .alert-danger {
+    border-left: 4px solid #dc3545;
+}
+
+.workflow-step.completed {
+    opacity: 0.8;
+}
+
+.workflow-step.active {
+    border-left-color: #ffc107;
+}
+
+.workflow-step.active .step-icon {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,193,7,0.4); }
+    70% { box-shadow: 0 0 0 12px rgba(255,193,7,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,193,7,0); }
+}
+</style>
+<style>
+.upload-form {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.shipping-info .alert {
+    border-left: 4px solid #28a745;
+}
+
+.custom-file-label::after {
+    content: "Browse";
+}
+
+.delivery-status .alert-success {
+    border-left: 4px solid #28a745;
+    padding-left: 1rem;
+}
+
+.delivery-status .alert-info {
+    border-left: 4px solid #17a2b8;
+}
+</style>
 @endsection
