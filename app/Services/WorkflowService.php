@@ -91,7 +91,7 @@ class WorkflowService
         [
             'icon' => 'fas fa-truck',
             'status' => $itemRequest->delivery ? ($itemRequest->delivery->delivery_photo ? 'completed' : 'active') : 'pending',
-            'description' => 'Proses pengiriman ke gudang',
+            'description' => 'Proses pengiriman ke Pembeli',
             'data' => [
                 'shipping_methods' => ['JNE', 'SiCepat', 'DHL'],
                 'tracking_info' => null
