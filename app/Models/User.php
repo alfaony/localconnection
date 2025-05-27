@@ -118,6 +118,11 @@ class User extends Authenticatable
         return $this->hasMany(DailyTask::class,'assignment_user_id');
     }
 
+    public function dailyTasks()
+    {
+        return $this->hasMany(DailyTask::class, 'user_id'); // pembuat
+    }
+
     public function settingCompany()
     {
         return $this->hasMany(SettingCompany::class);

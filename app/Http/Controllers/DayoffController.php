@@ -84,6 +84,17 @@ class DayoffController extends Controller
         {
             return redirect()->back()->withErrors(['msg' => 'Mohon maaf, Anda belum tersedia. Mohon hubungi admin untuk mengaktifkan akun Anda.']);
         }
+        $checkInfo = $this->checkInfo($request)->getOriginalContent();
+        if ($checkInfo['quota_insufficient']) 
+        {
+            return redirect()->back()->withErrors(['msg' => 'Maaf, Anda tidak memiliki cukup kuota untuk mengajukan cuti.']);
+        }
+
+        if ($checkInfo['overlaps']) 
+        {
+            return redirect()->back()->withErrors(['msg' => 'Maaf, Anda memiliki jadwal cuti yang tumpang tindih dengan cuti lain. Mohon perbaiki jadwal cuti Anda.']);
+        }
+        
         $type = DayoffType::where('id', $request->dayoff_type_id)->firstOrFail();
         $daysRequested = Carbon::parse($request->date_start)->diffInDays(Carbon::parse($request->date_end)) + 1;
 
@@ -178,6 +189,19 @@ class DayoffController extends Controller
             'reason' => 'nullable|string',
             'file' => 'nullable|file|max:2048',
         ]);
+        $request->merge(['dayoff_type_id' => $cuti->dayoff_type_id, 'exclude_id' => $cuti->id]);
+        
+        $checkInfo = $this->checkInfo($request)->getOriginalContent();
+        if ($checkInfo['quota_insufficient']) 
+        {
+            return redirect()->back()->withErrors(['msg' => 'Maaf, Anda tidak memiliki cukup kuota untuk mengajukan cuti.']);
+        }
+
+        if ($checkInfo['overlaps']) 
+        {
+            return redirect()->back()->withErrors(['msg' => 'Maaf, Anda memiliki jadwal cuti yang tumpang tindih dengan cuti lain. Mohon perbaiki jadwal cuti Anda.']);
+        }
+        
 
         $filePath = $cuti->file ?? NULL;
         if ($request->hasFile('file') && $type->permission_required) 
@@ -250,7 +274,7 @@ class DayoffController extends Controller
 
         $user = auth()->user();
         $type = DayoffType::findOrFail($request->dayoff_type_id);
-        $excludeId = $request->query('exclude_id');
+        $excludeId = $request->query('exclude_id') ?? $request->get('exclude_id') ?? null;
 
         $dateStart = Carbon::parse($request->date_start);
         $dateEnd = Carbon::parse($request->date_end);

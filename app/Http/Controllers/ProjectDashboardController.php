@@ -185,8 +185,29 @@ class ProjectDashboardController extends Controller
         $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date') ) :NULL;
         $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date') ) :NULL;
         
+        $userDivisionIds = User::with('divisions')
+        ->findOrFail($userId)
+        ->divisions
+        ->pluck('id')
+        ->toArray();
+        
         $query = DailyTask::with('taskStatus')
-            ->where('assignment_user_id', $userId)
+            // ->where('assignment_user_id', $userId)
+            ->where(function ($q) use ($userId, $userDivisionIds) {
+                // Tampilkan jika assignment_user_id == user_id
+                $q->where('assignment_user_id', $userId);
+
+                // ATAU: tampilkan jika user pembuat adalah $userId
+                // dan assignment_user divisinya TIDAK termasuk yang dimiliki user
+                $q->orWhere(function ($sub) use ($userId, $userDivisionIds) {
+                    $sub->where('user_id', $userId)
+                        ->whereHas('assign', function ($assignUser) use ($userDivisionIds) {
+                            $assignUser->whereHas('divisions', function ($div) use ($userDivisionIds) {
+                                $div->whereNotIn('divisions.id', $userDivisionIds);
+                            });
+                        });
+                });
+            })
             ->whereHas('taskStatus', function ($query) {
                 $query->where('name', ParamSchema::DOING)
                     ->orWhere('name', ParamSchema::INREVIEW)
@@ -355,7 +376,7 @@ class ProjectDashboardController extends Controller
                         ->orWhere('name', ParamSchema::TODO)
                         ->orWhere('name', ParamSchema::NOTCOMPLATE);
                 });
-            }])->orderBy('daily_task_assigns_count', 'desc');
+            }   ])->orderBy('daily_task_assigns_count', 'desc');
 
         if ($divisionId) {
             $overdueTasksQuery->whereHas('divisions', function ($query) use ($divisionId) {
