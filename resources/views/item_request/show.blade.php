@@ -259,7 +259,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-smooth-scroll/2.2.0/jquery.smooth-scroll.min.js"></script>
 <!-- 🎵 Notifikasi Suara -->
  
-<audio id="notification-sound" src="/audio/notification-sound.mp3" preload="auto"></audio>
+<audio id="notification-sound-update" src="/audio/notification-update-item-request.mp3" preload="auto"></audio>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.11.3/dist/echo.iife.js"></script>
@@ -296,6 +296,10 @@
             secure: false,
             client:io,
             transports: ["polling"],
+            forceTLS: true,
+            encrypted: true,
+            disableStats: true,
+            authEndpoint: '/broadcasting/auth',
             withCredentials: true // ⬅️ WAJIB agar cookie dikirim
         });
 
@@ -310,7 +314,7 @@
         });
 
         const chatContainer = document.getElementById('chat-container');
-        const notifSound = document.getElementById('notification-sound');
+        const notifSound = document.getElementById('notification-sound-update');
         const itemRequestId = '{{ $itemRequest->id }}';
         
         echo.channel('chat.item-request.' + itemRequestId)
@@ -328,6 +332,9 @@
                 chatContainer.scrollTop = chatContainer.scrollHeight;
 
                 notifSound?.play();
+                // loadChat();
+                // loadWorkflow();
+
             });
     }    
 </script>
@@ -596,7 +603,7 @@
             });
 
             chatInput.value = '';
-            await loadChat();
+            // await loadChat();
         } catch (err) {
             console.error('Gagal mengirim pesan:', err);
         } finally {

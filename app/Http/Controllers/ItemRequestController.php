@@ -130,7 +130,7 @@ class ItemRequestController extends Controller
             $validated['picture'] = $request->file('picture')->store('item_pictures', 'public');
         }
 
-        dispatch(new ProcessItemRequestCreated($itemRequest->id));
+        // dispatch(new ProcessItemRequestCreated($itemRequest->id));
         $itemRequest->update($validated);
 
         return redirect()->route('item-request.index')->with('success', 'Request updated.');
@@ -162,8 +162,8 @@ class ItemRequestController extends Controller
         // Add action buttons to each row
         $actionButtons = [];
 
-        if(Access::can('downloadPdf','quotes'))
-        {
+        // if(Access::can('downloadPdf','quotes'))
+        // {
             $pdf = [
                 'name' => 'show',
                 'route' => 'item-request.show',
@@ -171,10 +171,10 @@ class ItemRequestController extends Controller
             ];
 
             array_push($actionButtons,$pdf);
-        }
+        // }
 
-        if(Access::can('edit','quotes'))
-        {
+        // if(Access::can('edit','quotes'))
+        // {
             $edit = [
                 'name' => 'Edit',
                 'route' => 'item-request.edit',
@@ -182,10 +182,10 @@ class ItemRequestController extends Controller
             ];
 
             array_push($actionButtons,$edit);
-        }
+        // }
 
-        if(Access::can('destroy','quotes'))
-        {
+        // if(Access::can('destroy','quotes'))
+        // {
             $destroy = [
                 'name' => 'Delete',
                 'route' => 'item-request.destroy',
@@ -193,7 +193,7 @@ class ItemRequestController extends Controller
             ];
 
             array_push($actionButtons,$destroy);
-        }
+        // }
 
 
         $response =  datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);

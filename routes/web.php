@@ -92,6 +92,7 @@ use App\Http\Controllers\FlowChartController;
 use App\Http\Controllers\ItemRequestController;
 use App\Http\Controllers\ChatMessageController;
 use App\Http\Controllers\ItemPurchaseController;
+use Illuminate\Support\Facades\Broadcast;
 
 
 
@@ -108,6 +109,18 @@ use App\Http\Controllers\ItemPurchaseController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+Broadcast::routes(['middleware' => ['web', 'auth']]);
+Route::get('/test-channel', function () {
+    // Simulasikan user login (pastikan kamu sudah login lewat browser)
+    $user = auth()->user();
+
+    if (!$user) {
+        return response()->json(['message' => 'Not Authenticated'], 401);
+    }
+
+    // Tes channel auth logic untuk private-chat.item-request.2
+    return Broadcast::channel('private-chat.item-request.2', $user, 2);
+});
 
 
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
@@ -450,9 +463,9 @@ Route::resource('chat-message', ChatMessageController::class)->only(['store','sh
 
 Route::get('item-request/workflow/{id}', [ItemRequestController::class, 'workflow'])->name('item-request.workflow');
 Route::get('item-request/dataTableJson', [ItemRequestController::class, 'dataTableJson'])->name('item-request.datatable');
+Route::put('item-request/delivery/{id}', [ItemRequestController::class, 'delivery'])->name('item-request.delivery');
 Route::resource('item-request', ItemRequestController::class);
 
-Route::put('item-request/delivery/{id}', [ItemRequestController::class, 'delivery'])->name('item-request.delivery');
 Route::put('item-purchase/payment/{id}', [ItemPurchaseController::class, 'payment'])->name('item-purchase.payment');
 Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
 
