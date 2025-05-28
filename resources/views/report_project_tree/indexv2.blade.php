@@ -258,7 +258,7 @@
             const overdueTasks = await fetchData(apiEndpoints.overdueTasks, params);
             if (overdueTasks) {
                 const labels = overdueTasks.map(task => task.name);
-                const data = overdueTasks.map(task => task.total_overdue_tasks);
+                const data = overdueTasks.map(task => task.daily_task_assigns_count);
                 const userIds = overdueTasks.map(task => task.id); // Extract user IDs
 
                 if (overdueTasksChart) 
@@ -308,7 +308,7 @@
             const upcomingTasks = await fetchData(apiEndpoints.upcomingTasks, params);
             if (upcomingTasks) {
                 const labels = upcomingTasks.map(task => task.name);
-                const data = upcomingTasks.map(task => task.total_upcoming_tasks);
+                const data = upcomingTasks.map(task => task.daily_task_assigns_count);
                 const userIds = upcomingTasks.map(task => task.id); // Extract user IDs
 
                 if (upcomingTasksChart) 
