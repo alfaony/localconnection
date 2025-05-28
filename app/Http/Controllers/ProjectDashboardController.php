@@ -290,7 +290,7 @@ class ProjectDashboardController extends Controller
         $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : null;
         $divisionId = $request->get('division_id');
 
-        $overdueTasksQuery = User::where('company_id', Auth::user()->company_id)
+        $overdueTasksQuery = User::byCompany(Auth::user()->company_id)
             ->withCount([
                 'dailyTaskAssigns as todo_count' => function ($query) use ($today, $startDate, $endDate) {
                     $query->where('end_date', '<', $today);
@@ -395,9 +395,10 @@ class ProjectDashboardController extends Controller
         $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : null;
         $defaultDivisi = Auth::user()->FirstDivision ? Auth::user()->FirstDivision->id : NULL;
         $divisionId = $request->get('division_id') ?? $defaultDivisi;
+        
 
         $overdueTasksQuery = User::select('id', 'slug', 'name')
-            ->where('company_id', Auth::user()->company_id)
+            ->byCompany(Auth::user()->company_id)
             
             // 1. Count tasks assigned to the user
             ->withCount(['dailyTaskAssigns as assigned_task_count' => function ($query) use ($today, $startDate, $endDate) {
@@ -430,7 +431,9 @@ class ProjectDashboardController extends Controller
                     ]);
                 })
                 ->whereHas('assign.divisions', function ($query) use ($divisionId) {
-                    $query->where('division_id', '!=', $divisionId);
+                    $divisionIds =  auth()->user()->divisions->pluck('id')->push($divisionId)->unique();
+                    $query->whereNotIn('division_id', $divisionIds);
+
                 });
             }]);
 
@@ -458,7 +461,7 @@ class ProjectDashboardController extends Controller
         $defaultDivisi = Auth::user()->FirstDivision ? Auth::user()->FirstDivision->id : NULL;
         $divisionId = $request->get('division_id') ?? $defaultDivisi;
 
-        $upcomingTasksQuery = User::where('company_id', Auth::user()->company_id)
+        $upcomingTasksQuery = User::byCompany(Auth::user()->company_id)
             // 1. Hitung task yang DITERIMA user ini
             ->withCount(['dailyTaskAssigns as assigned_task_count' => function ($query) use ($today) {
                 $query->where('end_date', '>=', $today)
@@ -483,6 +486,8 @@ class ProjectDashboardController extends Controller
                         ]);
                     })
                     ->whereHas('assign.divisions', function ($query) use ($divisionId) {
+                        // $divisionIds =  auth()->user()->divisions->pluck('id')->push($divisionId)->unique();
+                        // $query->whereNotIn('division_id', $divisionIds);
                         $query->where('division_id', '!=', $divisionId); // filter yg beda divisi
                     });
             }]);
@@ -492,7 +497,7 @@ class ProjectDashboardController extends Controller
                 $query->where('division_id', $divisionId);
             });
         }
-
+        
         $users = $upcomingTasksQuery->get();
 
         // Gabungkan count
