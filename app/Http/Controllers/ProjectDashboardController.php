@@ -355,6 +355,39 @@ class ProjectDashboardController extends Controller
         return response()->json($totalCounts);
     }
 
+    // public function getOverdueTasks(Request $request)
+    // {
+    //     $today = Carbon::today();
+    //     $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : null;
+    //     $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : null;
+    //     $defaultDivisi = Auth::user()->FirstDivision ? Auth::user()->FirstDivision->id : NULL;
+    //     $divisionId = $request->get('division_id') ?? $defaultDivisi;
+
+    //     $overdueTasksQuery = User::select('id', 'slug', 'name')
+    //         ->where('company_id', Auth::user()->company_id)
+    //         ->withCount(['dailyTaskAssigns as daily_task_assigns_count' => function ($query) use ($today, $startDate, $endDate) {
+    //             $query->where('end_date', '<', $today);
+    //             if ($startDate && $endDate) {
+    //                 $query->whereBetween('end_date', [$startDate, $endDate]);
+    //             }
+    //             $query->whereHas('taskStatus', function ($query) {
+    //                 $query->where('name', ParamSchema::DOING)
+    //                     ->orWhere('name', ParamSchema::INREVIEW)
+    //                     ->orWhere('name', ParamSchema::TODO)
+    //                     ->orWhere('name', ParamSchema::NOTCOMPLATE);
+    //             });
+    //         }   ])->orderBy('daily_task_assigns_count', 'desc');
+
+    //     if ($divisionId) {
+    //         $overdueTasksQuery->whereHas('divisions', function ($query) use ($divisionId) {
+    //             $query->where('division_id', $divisionId);
+    //         });
+    //     }
+
+    //     $overdueTasks = $overdueTasksQuery->get();
+
+    //     return response()->json($overdueTasks);
+    // }
     public function getOverdueTasks(Request $request)
     {
         $today = Carbon::today();
@@ -365,18 +398,41 @@ class ProjectDashboardController extends Controller
 
         $overdueTasksQuery = User::select('id', 'slug', 'name')
             ->where('company_id', Auth::user()->company_id)
-            ->withCount(['dailyTaskAssigns as daily_task_assigns_count' => function ($query) use ($today, $startDate, $endDate) {
+            
+            // 1. Count tasks assigned to the user
+            ->withCount(['dailyTaskAssigns as assigned_task_count' => function ($query) use ($today, $startDate, $endDate) {
                 $query->where('end_date', '<', $today);
                 if ($startDate && $endDate) {
                     $query->whereBetween('end_date', [$startDate, $endDate]);
                 }
                 $query->whereHas('taskStatus', function ($query) {
-                    $query->where('name', ParamSchema::DOING)
-                        ->orWhere('name', ParamSchema::INREVIEW)
-                        ->orWhere('name', ParamSchema::TODO)
-                        ->orWhere('name', ParamSchema::NOTCOMPLATE);
+                    $query->whereIn('name', [
+                        ParamSchema::DOING,
+                        ParamSchema::INREVIEW,
+                        ParamSchema::TODO,
+                        ParamSchema::NOTCOMPLATE
+                    ]);
                 });
-            }   ])->orderBy('daily_task_assigns_count', 'desc');
+            }])
+            
+            // 2. Count tasks created by the user but assigned to another division
+            ->withCount(['dailyTasks as created_to_other_division_count' => function ($query) use ($divisionId, $today, $startDate, $endDate) {
+                $query->where('end_date', '<', $today);
+                if ($startDate && $endDate) {
+                    $query->whereBetween('end_date', [$startDate, $endDate]);
+                }
+                $query->whereHas('taskStatus', function ($query) {
+                    $query->whereIn('name', [
+                        ParamSchema::DOING,
+                        ParamSchema::INREVIEW,
+                        ParamSchema::TODO,
+                        ParamSchema::NOTCOMPLATE
+                    ]);
+                })
+                ->whereHas('assign.divisions', function ($query) use ($divisionId) {
+                    $query->where('division_id', '!=', $divisionId);
+                });
+            }]);
 
         if ($divisionId) {
             $overdueTasksQuery->whereHas('divisions', function ($query) use ($divisionId) {
@@ -384,9 +440,16 @@ class ProjectDashboardController extends Controller
             });
         }
 
-        $overdueTasks = $overdueTasksQuery->get();
+        $users = $overdueTasksQuery->get();
 
-        return response()->json($overdueTasks);
+        // Combine counts manually
+        $users->each(function ($user) {
+            $user->total_overdue_tasks = $user->assigned_task_count + $user->created_to_other_division_count;
+        });
+
+        $sortedUsers = $users->sortByDesc('total_overdue_tasks')->values();
+
+        return response()->json($sortedUsers);
     }
 
     public function getUpcomingTasks(Request $request)
@@ -396,15 +459,33 @@ class ProjectDashboardController extends Controller
         $divisionId = $request->get('division_id') ?? $defaultDivisi;
 
         $upcomingTasksQuery = User::where('company_id', Auth::user()->company_id)
-            ->withCount(['dailyTaskAssigns' => function ($query) use ($today) {
-                $query->where('end_date', '>=', $today);
-                $query->whereHas('taskStatus', function ($query) {
-                    $query->where('name', ParamSchema::DOING)
-                        ->orWhere('name', ParamSchema::INREVIEW)
-                        ->orWhere('name', ParamSchema::TODO)
-                        ->orWhere('name', ParamSchema::NOTCOMPLATE);
-                });
-            }])->orderBy('daily_task_assigns_count', 'desc');
+            // 1. Hitung task yang DITERIMA user ini
+            ->withCount(['dailyTaskAssigns as assigned_task_count' => function ($query) use ($today) {
+                $query->where('end_date', '>=', $today)
+                    ->whereHas('taskStatus', function ($query) {
+                        $query->whereIn('name', [
+                            ParamSchema::DOING,
+                            ParamSchema::INREVIEW,
+                            ParamSchema::TODO,
+                            ParamSchema::NOTCOMPLATE
+                        ]);
+                    });
+            }])
+            // 2. Hitung task yang DIA BUAT, tapi penerimanya bukan dari divisinya
+            ->withCount(['dailyTasks as created_to_other_division_count' => function ($query) use ($divisionId, $today) {
+                $query->where('end_date', '>=', $today)
+                    ->whereHas('taskStatus', function ($query) {
+                        $query->whereIn('name', [
+                            ParamSchema::DOING,
+                            ParamSchema::INREVIEW,
+                            ParamSchema::TODO,
+                            ParamSchema::NOTCOMPLATE
+                        ]);
+                    })
+                    ->whereHas('assign.divisions', function ($query) use ($divisionId) {
+                        $query->where('division_id', '!=', $divisionId); // filter yg beda divisi
+                    });
+            }]);
 
         if ($divisionId) {
             $upcomingTasksQuery->whereHas('divisions', function ($query) use ($divisionId) {
@@ -412,9 +493,17 @@ class ProjectDashboardController extends Controller
             });
         }
 
-        $upcomingTasks = $upcomingTasksQuery->get();
+        $users = $upcomingTasksQuery->get();
 
-        return response()->json($upcomingTasks);
+        // Gabungkan count
+        $users->each(function ($user) {
+            $user->total_upcoming_tasks = $user->assigned_task_count + $user->created_to_other_division_count;
+        });
+
+        // Sort manual karena gabungan tidak bisa via DB orderBy
+        $sortedUsers = $users->sortByDesc('total_upcoming_tasks')->values();
+
+        return response()->json($sortedUsers);
     }
 
     public function getVisions(Request $request)
