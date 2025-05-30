@@ -17,13 +17,21 @@ class Device
 
     public function info()
     {
-        $url = $this->client->api()."device/info?token=".$this->client->token();
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-        ])->get($url);
-        $json_data = $response->json();
+        try {
+            $url = $this->client->api()."device/info?token=".$this->client->token();
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->get($url);
+            $json_data = $response->json();
+        } catch (\Throwable $th) 
+        {
+            throw $th;
+        }
 
-        return $json_data;
+        return $json_data ?? 
+        [
+            'status' => false
+        ];
     }
 
     public function disconnect()
@@ -93,6 +101,20 @@ class Device
         $json_data = $response->json();
 
         return $json_data;
+    }
+
+    public function statusConnect()
+    {
+        $data = $this->info();
+        if($data['status'])
+        {
+            return $data['data']['status'] == "connected" ? true : false;
+        }else
+        {
+            return false;
+        }
+
+        return false;
     }
 
 }
