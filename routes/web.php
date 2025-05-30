@@ -112,10 +112,9 @@ use App\Http\Controllers\BroadcastAuthController;
 | contains the "web" middleware group. Now create something great!
 |
 */
-Route::post('/webhook/wablas', [WablasWebhookController::class, 'handle']);
-
-
+Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
+
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');

@@ -35,12 +35,12 @@ class ItemRequestController extends Controller
         // dd($info);
 
 
-        // $send = new Message($client);
+        $send = new Message($client);
 
-        // $phones ='085156147720';
-        // $message = 'hello Eb by Api';
-        // $send_text = $send->single_text($phones,$message);
-        // dd($send_text);
+        $phones ='085156147720';
+        $message = 'hello Eb by Api';
+        $send_text = $send->single_text($phones,$message);
+        dd($send_text);
 
 
 

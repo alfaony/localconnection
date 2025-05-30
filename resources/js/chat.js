@@ -15,25 +15,20 @@ window.Echo = new Echo({
     disableStats: true,
 });
 
-console.log(window.Echo);
 
+window.Echo.private('chat.item-request.'+itemRequestId).listen('ChatMessageSent', (e) => 
+{
+    const html = `
+        <div class="mb-2">
+            <strong>${e.sender_name}:</strong> ${e.message}
+            <div class="text-muted" style="font-size: 12px;">
+                ${new Date(e.created_at).toLocaleTimeString()}
+            </div>
+        </div>`;
+    chatContainer.innerHTML += html;
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 
-window.Echo.private('chat.item-request.'+itemRequestId)
-        .listen('ChatMessageSent', (e) => {
-    console.log("📩 Real-time message:", e);
-
-    // const html = `
-    //     <div class="mb-2">
-    //         <strong>${e.sender_name}:</strong> ${e.message}
-    //         <div class="text-muted" style="font-size: 12px;">
-    //             ${new Date(e.created_at).toLocaleTimeString()}
-    //         </div>
-    //     </div>`;
-    // chatContainer.innerHTML += html;
-    // chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    // notifSound?.play();
-    // loadChat();
-    // loadWorkflow();
-
+    notifSound?.play();
+    loadChat();
+    loadWorkflow();
 });

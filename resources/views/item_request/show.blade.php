@@ -261,8 +261,9 @@
 <audio id="notification-sound-update" src="/audio/notification-update-item-request.mp3" preload="auto"></audio>
 <script>
     itemRequestId = "{{ $itemRequest->id }}";
+    notifSound = document.getElementById('notification-sound-update');
 </script>
-@vite('resources/js/chat.js')
+
 <script>
 </script>
 <script>
@@ -596,6 +597,7 @@
         document.getElementById(inputNonFormat).value = parseInt(numStr);
     }
 </script>
+@vite('resources/js/chat.js')
 @endsection
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
