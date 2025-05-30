@@ -71,6 +71,11 @@ return [
     [
         'app_socet_url' => env("APP_SOCET_URL", 'https://keloola-bos-management.test:6001'),
         'punishment_point' => env('SETTING_PUNISHMENT_POINT', -100)
+    ],
+
+    'path' => 
+    [
+        'ghost_script' => env('PATH_GHOST_SCRIPT', 'gs'),
     ]
 
     

@@ -118,6 +118,11 @@ class User extends Authenticatable
         return $this->hasMany(DailyTask::class,'assignment_user_id');
     }
 
+    public function dailyTasks()
+    {
+        return $this->hasMany(DailyTask::class, 'user_id'); // pembuat
+    }
+
     public function settingCompany()
     {
         return $this->hasMany(SettingCompany::class);
@@ -220,6 +225,11 @@ class User extends Authenticatable
     public function kye()
     {
         return $this->hasOne(Kye::class);
+    }
+    
+    public function accessibleCompanies()
+    {
+        return $this->belongsToMany(Company::class, 'company_user_access');
     }
     public function getLastSalaryAttribute()
     {
@@ -396,9 +406,11 @@ class User extends Authenticatable
     }
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+
+        if($companyIds && Auth::user()->role->name != RoleSchema::ROOT)
         {
-            return $query->where("company_id",$companyId);
+            return $query->whereIn("company_id",$companyIds);
         }
     }
 
@@ -444,7 +456,8 @@ class User extends Authenticatable
     {
         if(Auth::user()->role->name == RoleSchema::ROOT || Auth::user()->role->name == RoleSchema::ADMIN || Auth::user()->role->name == RoleSchema::DIRECTOR)
         {
-            return $query->where('company_id', Auth::user()->company_id);
+            $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push(Auth::user()->company_id)->unique();
+            return $query->whereIn('company_id', $companyIds);
         }
         else
         {

@@ -47,7 +47,9 @@ class UserRequest extends FormRequest
                 'end_rest_time' => 'required_if:is_checkin,1|nullable|date_format:H:i|after:rest_time',
                 'custom_rest_times' => 'nullable|array',
                 'custom_rest_times.*.start' => 'nullable|date_format:H:i',
-                'custom_rest_times.*.end' => 'nullable|date_format:H:i|after:custom_rest_times.*.start'
+                'custom_rest_times.*.end' => 'nullable|date_format:H:i|after:custom_rest_times.*.start',
+                'company_access' => 'nullable|array',
+                'company_access.*' => 'required|uuid|exists:companies,id',
             ];
         }else
         {

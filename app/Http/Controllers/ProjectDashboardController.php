@@ -343,7 +343,7 @@ class ProjectDashboardController extends Controller
         $divisionId = $request->get('division_id') ?? $defaultDivisi;
 
         $overdueTasksQuery = User::select('id', 'slug', 'name')
-            ->where('company_id', Auth::user()->company_id)
+            ->byCompany(Auth::user()->company_id)
             ->withCount(['dailyTaskAssigns as daily_task_assigns_count' => function ($query) use ($today, $startDate, $endDate) {
                 $query->where('end_date', '<', $today);
                 if ($startDate && $endDate) {
@@ -355,7 +355,21 @@ class ProjectDashboardController extends Controller
                         ->orWhere('name', ParamSchema::TODO)
                         ->orWhere('name', ParamSchema::NOTCOMPLATE);
                 });
-            }])->orderBy('daily_task_assigns_count', 'desc');
+            }])
+            ->withCount(['dailyTasks as daily_task_assigns_count_all' => function ($query) use ($today, $startDate, $endDate) {
+                $query->where('end_date', '<', $today);
+                if ($startDate && $endDate) {
+                    $query->whereBetween('end_date', [$startDate, $endDate]);
+                }
+                $query->whereHas('taskStatus', function ($query) {
+                    $query->where('name', ParamSchema::DOING)
+                        ->orWhere('name', ParamSchema::INREVIEW)
+                        ->orWhere('name', ParamSchema::TODO)
+                        ->orWhere('name', ParamSchema::NOTCOMPLATE);
+                })
+                ;
+            }])
+            ->orderBy('daily_task_assigns_count', 'desc');
 
         if ($divisionId) {
             $overdueTasksQuery->whereHas('divisions', function ($query) use ($divisionId) {
@@ -374,7 +388,7 @@ class ProjectDashboardController extends Controller
         $defaultDivisi = Auth::user()->FirstDivision ? Auth::user()->FirstDivision->id : NULL;
         $divisionId = $request->get('division_id') ?? $defaultDivisi;
 
-        $upcomingTasksQuery = User::where('company_id', Auth::user()->company_id)
+        $upcomingTasksQuery = User::byCompany(Auth::user()->company_id)
             ->withCount(['dailyTaskAssigns' => function ($query) use ($today) {
                 $query->where('end_date', '>=', $today);
                 $query->whereHas('taskStatus', function ($query) {

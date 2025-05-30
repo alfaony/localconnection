@@ -69,7 +69,7 @@ class DivisionController extends Controller
         $today = \Carbon\Carbon::today();
     
         // Get users with their overdue tasks
-        $overdueTasks = User::where('company_id',Auth::user()->company_id)
+        $overdueTasks = User::byCompany(Auth::user()->company_id)
         ->whereHas('divisions', function ($query) use ($division) {
             $query->where('divisions.id', $division->id);
         })
@@ -86,7 +86,7 @@ class DivisionController extends Controller
 
         
         // Get users with their tasks due today or upcoming
-        $upcomingTasks = User::where('company_id',Auth::user()->company_id)
+        $upcomingTasks = User::byCompany(Auth::user()->company_id)
         ->whereHas('divisions', function ($query) use ($division) {
             $query->where('divisions.id', $division->id);
         })

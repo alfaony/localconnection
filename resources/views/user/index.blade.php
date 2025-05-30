@@ -203,36 +203,57 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             </div>
 
             @if($roleAccess)
-            <label for="phone">Role:</label>
-            <select name="role" id="role-select" class="form-control mb-2 select2" required>
-                <option value="" selected disabled>Pilih</option>
-                @foreach($role as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }} data-reportmandatory="{{  $a->is_mandatory_report}}" > {{ $a->name }} </option>
-                @endforeach
-            </select>
 
-            <label for="phone">User Persetujuan:</label>
-            <select name="approvement_user_id" class="form-control mb-2 user-select2">
-                <option value="" selected disabled>Pilih</option>
-                @foreach($users as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ." - ".  $a->company->name }} </option>
-                @endforeach
-            </select>
+            <div class="form-group">
+                <label for="phone">Role:</label>
+                <select name="role" class="form-control mb-2 select2" required>
+                    <option value="" selected disabled>Pilih</option>
+                    @foreach($role as $a)
+                    <option value="{{ $a->id }}" {{ @$userEdit->role_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">User Persetujuan:</label>
+                <select name="approvement_user_id" class="form-control mb-2 user-select2">
+                    <option value="" selected disabled>Pilih</option>
+                    @foreach($users as $a)
+                    <option value="{{ $a->id }}" {{ @$userEdit->approvement_user_id == $a->id ? 'selected' : '' }}> {{ $a->name ." - ".  $a->company->name }} </option>
+                    @endforeach
+                </select>
+            </div>
             @endif
 
             @if($companyAccess && !@$userEdit)
-            <label for="phone">Company:</label>
-            <select name="company" class="form-control mb-2" required>
-                <option value="" selected disabled>Pilih</option>
-                @foreach($company as $a)
-                <option value="{{ $a->id }}" {{ @$userEdit->company_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
-                @endforeach
-            </select>
+            <div class="form-group">
+                <label for="phone">Company (Induk):</label>
+                <select name="company" class="form-control mb-2" required>
+                    <option value="" selected disabled>Pilih</option>
+                    @foreach($company as $a)
+                    <option value="{{ $a->id }}" {{ @$userEdit->company_id == $a->id ? 'selected' : '' }}> {{ $a->name }} </option>
+                    @endforeach
+                </select>
+            </div>
             @endif
+            
+            <div class="form-group">
+                <label for="phone">Company Access Allow:</label>
+                <select name="company_access[]" multiple class="form-control select2">
+                    @foreach($company as $a)
+                    <option value="{{ $a->id }}" 
+                        {{ in_array($a->id, old('company_access', @$userEdit?->accessibleCompanies->pluck('id')->toArray() ?? [])) ? 'selected' : '' }}>
+                        {{ $a->name }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
 
             @if(!@$userEdit)
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" placeholder="**********" value="{{ old('password') }}" required>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" placeholder="**********" value="{{ old('password') }}" required>
+            </div>
 
             <label for="confirmPassword">Confirm Password:</label>
             <input type="password" id="confirmPassword" name="confirmPassword" placeholder="**********">
@@ -432,6 +453,17 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                         @endforeach
                     </div>
                 </div>
+            </div>
+            <div class="form-group">
+                <label for="phone">Company Access Allow:</label>
+                <select name="company_access[]" multiple class="form-control select2">
+                    @foreach($company as $a)
+                    <option value="{{ $a->id }}" 
+                        {{ in_array($a->id, old('company_access', @$userEdit?->accessibleCompanies->pluck('id')->toArray() ?? [])) ? 'selected' : '' }}>
+                        {{ $a->name }}
+                    </option>
+                    @endforeach
+                </select>
             </div>
             @if($roleAccess)
             <label for="phone">Role:</label>

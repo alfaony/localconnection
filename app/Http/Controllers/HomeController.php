@@ -304,10 +304,12 @@ class HomeController extends Controller
         $cutiToday = Dayoff::with('user', 'type')
             ->where('date_start', '<=', $today)
             ->where('date_end', '>=', $today)
-            ->whereNotNull('approval_finance_user_id')
-            ->whereNotNull('approved_finance_at')
-            ->whereNotNull('approval_hr_user_id')
-            ->whereNotNull('approved_hr_at')
+            ->where(function ($query) {
+                $query->whereNotNull('approval_finance_user_id')
+                      ->orWhereNotNull('approved_finance_at')
+                      ->orWhereNotNull('approval_hr_user_id')
+                      ->orWhereNotNull('approved_hr_at');
+            })
             ->whereHas('user', fn($q) => $q->where('dayoff_active', true))
             ->get();
 

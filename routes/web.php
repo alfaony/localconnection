@@ -129,6 +129,10 @@ Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permi
     return redirect('/invoice')->with('xero',true);
     
   });
+  
+  Route::get('invoice/downloadPdfA/{slug}',[InvoiceController::class,'downloadPdfA'])->name('invoice.download.pdfa');
+  Route::get('invoice/checkPdfAStatus', [InvoiceController::class, 'checkPdfAStatus'])->name('invoice.checkPdfAStatus');
+  Route::post('invoice/clearsessionPdfA', [InvoiceController::class, 'clearsessionPdfA'])->name('invoice.clearsessionPdfA');
   Route::delete('invoice/destroyProduct/product/{invoiceProduct}',[invoiceController::class,'destroyProduct'])->name('invoice.destroy.product');
   Route::get('invoice/history/{slug}', [InvoiceController::class, 'history'])->name('invoices.history');
   Route::get('invoice/export/{format}', [InvoiceController::class, 'export'])->name('invoice.export');
