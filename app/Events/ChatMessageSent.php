@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -24,9 +24,9 @@ class ChatMessageSent implements ShouldBroadcast
         $this->item_request_id = $item_request_id;
     }
 
-    public function broadcastOn(): Channel
+    public function broadcastOn(): PrivateChannel
     {
-        return new Channel('chat.item-request.' . $this->item_request_id);
+        return new PrivateChannel('chat.item-request.' . $this->item_request_id);
     }
 
     public function broadcastWith(): array

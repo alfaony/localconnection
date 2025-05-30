@@ -357,6 +357,51 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="card">
+                        <div class="card-header" id="headingWABlas">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseWABlas" aria-expanded="false" aria-controls="collapseWABlas">
+                                    Wablas Credential
+                                </button>
+                            </h2>
+                        </div>
+                        <div id="collapseWABlas" class="collapse" aria-labelledby="headingWABlas" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="server_wablas">Negara Server WA Blas (Texas)</label>
+                                            <input type="text" name="server_wablas" class="form-control" value="{{ old('server_wablas', isset($data['server_wablas']) ? $data['server_wablas'] : '') }}">
+                                            @error('server_wablas')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="token_wablas">Token WA Blas</label>
+                                            <input type="text" name="token_wablas" class="form-control" value="{{ old('token_wablas', isset($data['token_wablas']) ? $data['token_wablas'] : '') }}">
+                                            @error('token_wablas')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="webhook_key_wablas">Secret Key WA Blas</label>
+                                            <input type="text" name="webhook_key_wablas" class="form-control" value="{{ old('webhook_key_wablas', isset($data['webhook_key_wablas']) ? $data['webhook_key_wablas'] : '') }}">
+                                            @error('webhook_key_wablas')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>

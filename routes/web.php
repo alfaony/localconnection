@@ -61,7 +61,7 @@ use App\Http\Controllers\EmployeeCheckingController;
 use App\Http\Controllers\XeroController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\XeroWebhookController;
-use App\Http\Controllers\LoginController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PassCheckingController;
 use App\Http\Controllers\KyeController;
 use App\Http\Controllers\WarehouseController;
@@ -93,6 +93,9 @@ use App\Http\Controllers\ItemRequestController;
 use App\Http\Controllers\ChatMessageController;
 use App\Http\Controllers\ItemPurchaseController;
 use Illuminate\Support\Facades\Broadcast;
+use App\Http\Controllers\WablasWebhookController;
+use App\Http\Controllers\BroadcastAuthController;
+
 
 
 
@@ -109,18 +112,7 @@ use Illuminate\Support\Facades\Broadcast;
 | contains the "web" middleware group. Now create something great!
 |
 */
-Broadcast::routes(['middleware' => ['web', 'auth']]);
-Route::get('/test-channel', function () {
-    // Simulasikan user login (pastikan kamu sudah login lewat browser)
-    $user = auth()->user();
-
-    if (!$user) {
-        return response()->json(['message' => 'Not Authenticated'], 401);
-    }
-
-    // Tes channel auth logic untuk private-chat.item-request.2
-    return Broadcast::channel('private-chat.item-request.2', $user, 2);
-});
+Route::post('/webhook/wablas', [WablasWebhookController::class, 'handle']);
 
 
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
@@ -128,6 +120,9 @@ Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice'
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+Route::group(['middleware' => ['auth','web']], function(){
+  Route::post('broadcasting/authorize', [BroadcastAuthController::class, 'broadcastingAuthorize'])->name('broadcasting.authorize');
+});
 
 Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
   Route::get('xero',function(){

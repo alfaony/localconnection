@@ -9,16 +9,41 @@ use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\Delivery;
 use App\Models\ItemRequest;
+use App\Models\SettingCompany;
 use App\Models\SupplierCategory;
+
 use App\Jobs\ProcessItemRequestCreated;
 
 use App\Helpers\Access;
+
 use App\Services\WorkflowService;
+
+use App\Services\Weblas\Device;
+use App\Services\Weblas\Message;
+use App\Services\Weblas\WablasClient;
+
 
 class ItemRequestController extends Controller
 {
     public function index()
-    {
+    {   
+        $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
+        $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
+        $device = new Device($client);
+        $info = $device->info();
+
+        // dd($info);
+
+
+        // $send = new Message($client);
+
+        // $phones ='085156147720';
+        // $message = 'hello Eb by Api';
+        // $send_text = $send->single_text($phones,$message);
+        // dd($send_text);
+
+
+
         $requests = ItemRequest::byCompany(auth()->user()->company_id)->latest()->paginate(10);
         return view('item_request.index', compact('requests'));
     }

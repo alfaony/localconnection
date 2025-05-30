@@ -254,91 +254,17 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/js/all.min.js"></script>
-<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-smooth-scroll/2.2.0/jquery.smooth-scroll.min.js"></script>
 <!-- 🎵 Notifikasi Suara -->
  
 <audio id="notification-sound-update" src="/audio/notification-update-item-request.mp3" preload="auto"></audio>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.11.3/dist/echo.iife.js"></script>
 <script>
-    const SOCKET_IO_HOST = @json(config('services.setting.app_socet_url'));
-
-    const socket = io(SOCKET_IO_HOST, {
-        transports: ['websocket'],
-        secure: true
-    });
-
-    if (typeof window !== 'undefined' ) 
-    {
-        const socket = io(SOCKET_IO_HOST, {
-            transports: ["polling"],
-            secure: false,
-        });
-        
-        socket.on("connect", () => {
-            console.log("[Socket.IO] Connected with ID:", socket.id);
-        });
-
-        socket.on("connect_error", (error) => {
-            console.error("[Socket.IO] Connection Error:", error);
-        });
-
-        socket.on("disconnect", (reason) => {
-            console.warn("[Socket.IO] Disconnected:", reason);
-        });
-
-         echo = new Echo({
-            broadcaster: "socket.io",
-            host: SOCKET_IO_HOST,
-            secure: false,
-            client:io,
-            transports: ["polling"],
-            forceTLS: true,
-            encrypted: true,
-            disableStats: true,
-            authEndpoint: '/broadcasting/auth',
-            withCredentials: true // ⬅️ WAJIB agar cookie dikirim
-        });
-
-         echo.connector.socket.on('connect', () => 
-         {
-            console.log('✅ Echo connected successfully!');
-        });
-
-          echo.connector.socket.on('connect_error', (err) => 
-          {
-            console.error('❌ Echo connection failed:', err);
-        });
-
-        const chatContainer = document.getElementById('chat-container');
-        const notifSound = document.getElementById('notification-sound-update');
-        const itemRequestId = '{{ $itemRequest->id }}';
-        
-        echo.channel('chat.item-request.' + itemRequestId)
-            .listen('ChatMessageSent', (e) => {
-                console.log("📩 Real-time message:", e);
-
-                const html = `
-                    <div class="mb-2">
-                        <strong>${e.sender_name}:</strong> ${e.message}
-                        <div class="text-muted" style="font-size: 12px;">
-                            ${new Date(e.created_at).toLocaleTimeString()}
-                        </div>
-                    </div>`;
-                chatContainer.innerHTML += html;
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-
-                notifSound?.play();
-                // loadChat();
-                // loadWorkflow();
-
-            });
-    }    
+    itemRequestId = "{{ $itemRequest->id }}";
 </script>
-
+@vite('resources/js/chat.js')
+<script>
+</script>
 <script>
     $(document).on('submit', '#form-upload-delivery', function (e) {
         e.preventDefault();
