@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use App\Schemas\RoleSchema;
 
 class FlowChart extends Model
 {
@@ -20,9 +22,11 @@ class FlowChart extends Model
 
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId)
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+
+        if($companyIds && Auth::user()->role->name != RoleSchema::ROOT)
         {
-            return $query->where('company_id', $companyId);
+            return $query->whereIn("company_id",$companyIds);
         }
     }
 }
