@@ -103,6 +103,11 @@
                                                         <i class="fas fa-phone-alt mr-2 ml-3"></i> {{ $vendor['phone_number'] }}
                                                     </div>
                                                     <div class="small">{{ $vendor['message'] }}</div>
+                                                    @if(isset($vendor['response']))
+                                                    <span class="badge badge-pill {{ $vendor['response'] == 'positive' ? 'badge-success' : 'badge-danger' }}">
+                                                        {{ $vendor['response'] == 'positive' ? 'Ya' : 'Tidak' }}
+                                                    </span>
+                                                    @endif
                                                 </div>
                                             </div>
                                             <div class="text-right">

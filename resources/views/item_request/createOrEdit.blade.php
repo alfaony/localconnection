@@ -87,17 +87,19 @@
                     @endif
                     <input type="file" name="picture" id="picture" class="form-control" accept="image/*">
                 </div>
-                @if (isset($itemRequest) && $itemRequest->shareWa) 
+                @if (isset($shareWa) && $shareWa) 
                 <div class="form-group">
                     <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="shareWa" name="shareWa" @if (isset($itemRequest) && $itemRequest->shareWa) checked @endif>
+                        <input type="checkbox" class="custom-control-input" id="shareWa" name="shareWa" @if (isset($shareWa) && $shareWa) checked @endif>
                         <label class="custom-control-label" for="shareWa">Bagikan nomor Whatsapp ke client</label>
                     </div>
                 </div>
                 @endif
+
                 <div class="form-group text-right">
-                    <button type="submit" class="btn btn-{{ isset($itemRequest) ? 'primary' : 'success' }}">
-                        <i class="fas fa-save mr-1"></i>{{ isset($itemRequest) ? ' Update' : ' Simpan' }}
+                    <button type="submit" class="btn btn-{{ isset($itemRequest) ? 'primary' : 'success' }}" 
+                        onclick="return confirm('Yakin Data Request Telah Sesuai ?')">
+                        <i class="fas fa-save mr-1"></i>{{ isset($itemRequest) ? ' Perbarui' : ' Simpan' }}
                     </button>
                     <a href="{{ route('item-request.index') }}" class="btn btn-secondary">
                         <i class="fas fa-times mr-1"></i>Batal

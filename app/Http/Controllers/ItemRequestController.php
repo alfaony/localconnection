@@ -12,6 +12,7 @@ use App\Models\ItemRequest;
 use App\Models\SettingCompany;
 use App\Models\SupplierCategory;
 
+use App\Jobs\SentMessageToVendor;
 use App\Jobs\ProcessItemRequestCreated;
 
 use App\Helpers\Access;
@@ -66,62 +67,30 @@ class ItemRequestController extends Controller
         $item = ItemRequest::create($validated);
 
         dispatch(new ProcessItemRequestCreated($item->id));
+
+        $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
+
+        if($request->shareWa && $settingCompany['server_wablas'] && $settingCompany['token_wablas'])
+        {
+            dispatch(new SentMessageToVendor($item));
+        }
         return redirect()->route('item-request.show',$item->id)->with('success', 'Request submitted.');
     }
 
     public function edit(ItemRequest $itemRequest)
     {
         $categories = SupplierCategory::byCompany(Auth::user()->company_id)->get();
-        return view('item_request.createOrEdit', compact('itemRequest', 'categories'));
+
+        $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
+        $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
+        $shareWa = $client->status() ?? false;
+
+        return view('item_request.createOrEdit', compact('itemRequest', 'categories', 'shareWa'));
     }
 
     public function show(ItemRequest $itemRequest)
     {
-       
-
-        $processingSteps = 
-        [
-            [
-                'title' => 'Pengajuan Diterima',
-                'description' => 'Permintaan telah dikirim ke divisi pengadaan.',
-                'completed' => true,
-                'date' => '2025-05-15 08:00',
-                'icon' => 'fa-envelope',
-                'attachment' => null
-            ],
-            [
-                'title' => 'Bon Pesanan Diunggah',
-                'description' => 'Bon pesanan telah diunggah.',
-                'completed' => true,
-                'date' => '2025-05-16 10:30',
-                'icon' => 'fa-file-alt',
-                'attachment' => 'https://example.com/bon.pdf'
-            ],
-            [
-                'title' => 'Menunggu Pembayaran',
-                'description' => 'Menunggu proses pembayaran dari bagian keuangan.',
-                'completed' => false,
-                'date' => null,
-                'icon' => 'fa-credit-card',
-                'attachment' => null
-            ]
-        ];
-
-        $potentialVendors = [
-            (object)[
-                'id' => 101,
-                'name' => 'CV. Teknologi Utama',
-                'rating' => 4.7
-            ],
-            (object)[
-                'id' => 102,
-                'name' => 'PT. Solusi Perkakas',
-                'rating' => 4.3
-            ]
-        ];
-
-
-        return view('item_request.show', compact('itemRequest', 'processingSteps', 'potentialVendors'));
+        return view('item_request.show', compact('itemRequest'));
     }
 
     public function update(Request $request, ItemRequest $itemRequest)
@@ -133,6 +102,13 @@ class ItemRequestController extends Controller
             'estimated_price' => 'required|numeric|min:1',
             'qty' => 'required|numeric|min:1',
         ]);
+
+        $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
+
+        if($request->shareWa && $settingCompany['server_wablas'] && $settingCompany['token_wablas'])
+        {
+            dispatch(new SentMessageToVendor($itemRequest));
+        }
 
         if ($request->hasFile('picture')) 
         {

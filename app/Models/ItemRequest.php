@@ -23,7 +23,7 @@ class ItemRequest extends Model
         'picture',
     ];
 
-    protected $appends = ['status_badge'];
+    protected $appends = ['status_badge','price_with_format'];
 
     public function requester()
     {
@@ -87,6 +87,12 @@ class ItemRequest extends Model
         }
     }
 
+    public function getPriceWithFormatAttribute()
+    {
+        return 'Rp ' . number_format($this->estimated_price, 0, ',', '.');
+    }
+
+    
     public function getIsCompletePaymentAttribute(): bool
     {
         // Ambil semua itemPurchase

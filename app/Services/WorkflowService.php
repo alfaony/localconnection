@@ -50,7 +50,7 @@ class WorkflowService
                         'location' => $vendor->productSupplier ? $vendor->productSupplier->location : '-',
                         'phone_number' => $vendor->productSupplier ? $vendor->productSupplier->phone_number : '-',
                         'foto' => $vendor->productSupplier ? $vendor->productSupplier->store_photo ? Storage::url($vendor->productSupplier->store_photo) : NULL : NULL,
-                        'response' => $vendor->status ?? '',
+                        'response' => $vendor->responded ?? '',
                         'message' => $vendor->response_message ?? '',
                         'response_time' => $vendor->response_time ?? ''
                     ];
