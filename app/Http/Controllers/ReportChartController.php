@@ -79,6 +79,14 @@ class ReportChartController extends Controller
                     'key_activities' => $report?->key_activities,
                     'problems' => $report?->problems,
                     'targets' => $report?->targets,
+                    'number_of_customers' => $report?->number_of_customers ?? 0,
+                    'number_of_users' => $report?->number_of_users ?? 0,
+                    'number_of_products' => $report?->number_of_products ?? 0,
+                    'number_of_projects' => $report?->number_of_projects ?? 0,
+                    'number_of_homepasses' => $report?->number_of_homepasses ?? 0,
+                    'number_of_leads' => $report?->number_of_leads ?? 0,
+                    'number_of_views' => $report?->number_of_views ?? 0,
+                    'number_of_profit' => $report?->number_of_profit ?? 0,
                 ];
             }),
         ]);

@@ -73,6 +73,9 @@
                         <th>Aktivitas Kunci</th>
                         <th>Permasalahan</th>
                         <th>Target</th>
+                        <th>
+                            Metrik Kinerja
+                        </th>
                     </tr>
                 </thead>
                 <tbody id="report-detail-body"></tbody>
@@ -163,6 +166,43 @@
                     <td>${row.key_activities ?? '-'}</td>
                     <td>${row.problems ?? '-'}</td>
                     <td>${row.targets ?? '-'}</td>
+                    <td>
+                        <table class="table table-sm mb-0">
+                            <tr>
+                                <th>Customers</th>
+                                <td>${row.number_of_customers ?? 0}</td>
+                            </tr>
+                            <tr>
+                                <th>Users</th>
+                                <td>${row.number_of_users ?? 0}</td>
+                            </tr>
+                            <tr>
+                                <th>Products</th>
+                                <td>${row.number_of_products ?? 0}</td>
+                            </tr>
+                            <tr>
+                                <th>Projects</th>
+                                <td>${row.number_of_projects ?? 0}</td>
+                            </tr>
+                            <tr>
+                                <th>Homepasses</th>
+                                <td>${row.number_of_homepasses ?? 0}</td>
+                            </tr>
+                            <tr>
+                                <th>Leads</th>
+                                <td>${row.number_of_leads ?? 0}</td>
+                            </tr>
+                            <tr>
+                                <th>Views</th>
+                                <td>${row.number_of_views ?? 0}</td>
+                            </tr>
+                            <tr>
+                                <th>Profit</th>
+                                <td>${row.number_of_profit ?? 0}</td>
+                            </tr>
+                        </table>
+                    </td>
+                    
                 </tr>
             `);
         });
