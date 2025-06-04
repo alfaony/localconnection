@@ -53,11 +53,18 @@ class PermissionForRoleSprinter extends Seeder
 
                 $this->command->info('Role SPRINTER berhasil disinkronisasi dengan permission dari STAFF.');
             }
-    
+            
+            if (!$sprinterRole) 
+            {
+                $this->command->error('Role SPRINTER tidak ditemukan.');
+                return;
+            }
+
             $itemRequest = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_sprinter','as_finance'];
             $itemPurchase = ['store','update','edit','show','destroy','payment'];
             $chatMessage = ['index','store','show','edit'];
-    
+            
+            
              foreach ($itemRequest as $method) 
              {
                 // create permision
