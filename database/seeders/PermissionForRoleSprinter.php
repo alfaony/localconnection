@@ -78,6 +78,13 @@ class PermissionForRoleSprinter extends Seeder
                 if (in_array($method, ['as_finance'])) 
                 {
                  
+                    if ($root) 
+                    {
+                        PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                    }
+                    if($admin){
+                        PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+                    }
                     if ($staffFinance) 
                     {
                         PermissionRole::create(['role_id' => $staffFinance->id, 'permission_id' => $permission->id]);
@@ -98,11 +105,11 @@ class PermissionForRoleSprinter extends Seeder
                 {
                     PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
                 }
-                if($finance){
-                    PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permission->id]);
-                }
                 if($admin){
                     PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+                }
+                if($finance){
+                    PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permission->id]);
                 }
                 if ($staffFinance) 
                 {
@@ -137,6 +144,13 @@ class PermissionForRoleSprinter extends Seeder
                 if (in_array($method, ['payment'])) 
                 {
                  
+                    if ($root) 
+                    {
+                        PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permissionItemPurchase->id]);
+                    }
+                    if($admin){
+                        PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permissionItemPurchase->id]);
+                    }
                     if ($staffFinance) 
                     {
                         PermissionRole::create(['role_id' => $staffFinance->id, 'permission_id' => $permissionItemPurchase->id]);
@@ -156,11 +170,11 @@ class PermissionForRoleSprinter extends Seeder
                 {
                     PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permissionItemPurchase->id]);
                 }
-                if($finance){
-                    PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permissionItemPurchase->id]);
-                }
                 if($admin){
                     PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permissionItemPurchase->id]);
+                }
+                if($finance){
+                    PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permissionItemPurchase->id]);
                 }
                 if ($staffFinance) 
                 {
@@ -197,11 +211,11 @@ class PermissionForRoleSprinter extends Seeder
                 {
                     PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permissionChatMessage->id]);
                 }
-                if($finance){
-                    PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permissionChatMessage->id]);
-                }
                 if($admin){
                     PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permissionChatMessage->id]);
+                }
+                if($finance){
+                    PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permissionChatMessage->id]);
                 }
                 if ($staffFinance) 
                 {

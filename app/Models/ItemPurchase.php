@@ -23,7 +23,6 @@ class ItemPurchase extends Model
         'payment_method',
         'rekening_number',
         'note',
-        'finance_user_id',
     ];
 
 

@@ -189,6 +189,12 @@
                                                     <i class="fas fa-receipt mr-2"></i>
                                                     No. Rekening: {{ $purchase->rekening_number}}
                                                 </div>
+                                                @if($purchase->payment)
+                                                <div class="mb-2">
+                                                    <i class="fas fa-building mr-2"></i>
+                                                    Finance: {{ $purchase->payment->finance->name ?? '' }}
+                                                </div>
+                                                @endif
                                                 @if(!$purchase->payment)
                                                 @canAccess('payment','item_purchases')
                                                 <button class="btn btn-sm btn-success btn-upload-transfer"
@@ -202,9 +208,9 @@
                                             </div>
                                         </div>
                                         @if($purchase->payment)
-                                        <div class="col-md-6">
+                                        <div class="col-md-6 mt-5">
                                             <img src="{{ Storage::url($purchase->payment->proof_image) }}" class="img-thumbnail" max-width="70%" alt="Bukti Transfer">
-                                            <a href="{{ Storage::url($purchase->payment->proof_image) }}" download class="btn btn-sm btn-outline-primary ml-2">
+                                            <a href="{{ Storage::url($purchase->payment->proof_image) }}" download class="btn btn-sm btn-outline-primary ml-2 mt-2">
                                                 <i class="fas fa-download"></i> Unduh
                                             </a>
                                         </div>

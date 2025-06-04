@@ -815,11 +815,10 @@
                 chatContainer.innerHTML += html;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
 
-
+                notifSound?.play();
             }
             
             loadChat();
-            notifSound?.play();
             loadWorkflow();
         });
 </script>

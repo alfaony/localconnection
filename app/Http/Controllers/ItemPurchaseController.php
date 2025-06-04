@@ -183,7 +183,6 @@ class ItemPurchaseController extends Controller
                 'finance_id' => auth()->id(),
                 'proof_image' => $path,
                 'paid_at' => now(),
-                'finance_user_id' => auth()->id(),
             ]);
     
             // Update status if needed

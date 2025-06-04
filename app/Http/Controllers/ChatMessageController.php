@@ -59,7 +59,7 @@ class ChatMessageController extends Controller
          $userIds = ChatMessage::where('item_request_id', $data['item_request_id'])
         ->where('user_id', '!=', auth()->id())
         ->distinct()
-        ->pluck('user_id');
+        ->pluck('user_id')->push($chat->user_id)->push($chat->itemRequest->user_id)->push($chat->itemRequest->assigned_pic_id)->unique();
 
         // Kirim inbox ke user-user tersebut
         $directUrl = route('item-request.show', $data['item_request_id']);
