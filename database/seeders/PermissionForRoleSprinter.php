@@ -49,7 +49,10 @@ class PermissionForRoleSprinter extends Seeder
                 ]);
         
                 // Copy permission dari role staff
-                $sprinterRole->permissions()->sync($staffRole->permissions->pluck('id'));
+                foreach ($staffRole->permissions as $permission) 
+                {
+                    PermissionRole::create(['role_id' => $sprinterRole->id, 'permission_id' => $permission->id]);
+                }
 
                 $this->command->info('Role SPRINTER berhasil disinkronisasi dengan permission dari STAFF.');
             }
@@ -245,10 +248,9 @@ class PermissionForRoleSprinter extends Seeder
             DB::commit();
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             DB::rollBack();
             Log::error($th->getMessage());
-            // dd($th);
         }
     }
 }
