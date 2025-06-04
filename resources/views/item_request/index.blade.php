@@ -6,6 +6,8 @@
     <h1>Permintaan Barang</h1>
 @stop
 
+@canAccess('dataTableJson', 'item_requests')
+
 @section('content')
 
 @include('components.alert')
@@ -14,11 +16,13 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Daftar Permintaan Barang</h3>
+                @canAccess('create', 'item_requests')
                 <div class="ml-auto">
                     <a href="{{ route('item-request.create') }}" class="btn btn-primary btn-sm">
                         <i class="fas fa-plus-circle mr-1"></i>Tambah Permintaan
                     </a>
                 </div>
+                @endcanAccess
             </div>
             
             <div class="card-body">
@@ -93,6 +97,8 @@
     });
 </script>
 @endsection
+
+@endcanAccess
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">

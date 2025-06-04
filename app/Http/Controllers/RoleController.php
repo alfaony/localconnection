@@ -107,6 +107,9 @@ class RoleController extends Controller
             'vehicles',
             'subscribe_letters',
             'flowcharts',
+            'item_requests',
+            'item_purchases',
+            'chat_messages',
         ];
 
         $checked = array_merge($mainMenus);
@@ -243,6 +246,9 @@ class RoleController extends Controller
                 'vehicles',
                 'subscribe_letters',
                 'flowcharts',
+                'item_requests',
+                'item_purchases',
+                'chat_messages',
             ];
         $checked = array_merge($mainMenus);
 
@@ -339,6 +345,9 @@ class RoleController extends Controller
                 'vehicles',
                 'subscribe_letters',
                 'flowcharts',
+                'item_requests',
+                'item_purchases',
+                'chat_messages',
             ];
         
         $checked = array_merge($mainMenus);

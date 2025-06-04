@@ -95,6 +95,7 @@ use App\Http\Controllers\ItemPurchaseController;
 use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\WablasWebhookController;
 use App\Http\Controllers\BroadcastAuthController;
+use App\Http\Controllers\PotentialVendorController;
 
 
 
@@ -118,6 +119,15 @@ Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->mi
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+Route::middleware('validate.vendor.token')->group(function () 
+{
+    Route::get('item-request/respond/{id}/{token}', [PotentialVendorController::class, 'edit'])->name('vendor.respond');
+    Route::post('item-request/respond/{id}/{token}', [PotentialVendorController::class, 'update'])->name('vendor.respond.submit');
+});
+// Public route (tidak membutuhkan login)
+Route::get('item-request/list/{companySlug}', [ItemRequestController::class, 'publicIndex']);
+Route::get('item-request/ajax/{companySlug}', [ItemRequestController::class, 'loadByCompany']);
 
 Route::group(['middleware' => ['auth','web']], function(){
   Route::post('broadcasting/authorize', [BroadcastAuthController::class, 'broadcastingAuthorize'])->name('broadcasting.authorize');
@@ -344,6 +354,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('division-budget', DivisionBudgetController::class);
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
 
+  Route::get('inbox/unreadcount', [InboxController::class, 'unreadcount'])->name('inbox.unreadcount');
   Route::get('/inbox/{id}', [InboxController::class, 'show'])->name('inbox.show');
   Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
   
@@ -454,25 +465,24 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('subscribe-letter', SubscribeLetterController::class);
   
   Route::resource('flowchart', FlowChartController::class);
+  
+  Route::resource('chat-message', ChatMessageController::class)->only(['store','show']);
+  
+  Route::get('item-request/workflow/{id}', [ItemRequestController::class, 'workflow'])->name('item-request.workflow');
+  Route::get('item-request/dataTableJson', [ItemRequestController::class, 'dataTableJson'])->name('item-request.datatable');
+  Route::put('item-request/delivery/{id}', [ItemRequestController::class, 'delivery'])->name('item-request.delivery');
+  Route::resource('item-request', ItemRequestController::class);
+  
+  Route::put('item-purchase/payment/{id}', [ItemPurchaseController::class, 'payment'])->name('item-purchase.payment');
+  Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
 });
 
-Route::resource('chat-message', ChatMessageController::class)->only(['store','show']);
 
-
-Route::get('item-request/workflow/{id}', [ItemRequestController::class, 'workflow'])->name('item-request.workflow');
-Route::get('item-request/dataTableJson', [ItemRequestController::class, 'dataTableJson'])->name('item-request.datatable');
-Route::put('item-request/delivery/{id}', [ItemRequestController::class, 'delivery'])->name('item-request.delivery');
-Route::resource('item-request', ItemRequestController::class);
-
-Route::put('item-purchase/payment/{id}', [ItemPurchaseController::class, 'payment'])->name('item-purchase.payment');
-Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
 
 Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');
-
-// Broadcast::routes();
 
 
 

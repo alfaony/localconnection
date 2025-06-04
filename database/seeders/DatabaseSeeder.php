@@ -93,5 +93,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForAccessExportCheckin::class);
         $this->call(PermissionForMenuSubcribetionSeeder::class);
         $this->call(PermissionForMenuFlowChartsSeeder::class);
+        $this->call(PermissionForRoleSprinter::class);
     }
 }

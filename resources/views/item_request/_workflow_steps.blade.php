@@ -68,62 +68,93 @@
                             @case('Penunjukan PIC')
                                 <div class="media align-items-center">
                                     <div class="media-body">
-                                        <h6 class="mt-0 mb-1">{{ $step['data']['assigned_pic'] }}</h6>
+                                        <h6 class="mt-0 mb-1">{{ $step['data']['assigned_pic'] }} - {{ $itemRequest->assignedPic->email ?? '' }}</h6>
                                     </div>
                                 </div>
                             @break
-
+                        
                             @case('Pencarian Toko')
-                                <div class="vendor-responses">
+                               <div class="vendor-responses">
                                     @foreach($step['data']['vendors'] as $vendor)
-                                    <div class="response-item alert {{ $vendor['response'] == 'positive' ? 'alert-success' : ($vendor['response'] == 'negative' ? 'alert-danger' : 'alert-light') }}">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                             <div class="d-flex align-items-center">
-                                                <div class="vendor-avatar mr-3">
-                                                    @if($itemRequest->is_open)
-                                                    <button class="btn btn-sm btn-success btn-select-vendor"
-                                                        data-vendor-id="{{ $vendor['id'] }}"
-                                                        data-vendor-name="{{ $vendor['name'] }}"
-                                                        data-vendor-location="{{ $vendor['location'] }}"
-                                                        data-vendor-phone="{{ $vendor['phone_number'] }}">
-                                                        Pilih <i class="fas fa-check"></i>
-                                                    </button>
-                                                    @else
-                                                    <span class="badge badge-danger">
-                                                        Closed
-                                                    </span>
+                                        <div class="response-item alert 
+                                            {{ $vendor['response'] == 'positive' ? 'alert-success' : 
+                                            ($vendor['response'] == 'negative' ? 'alert-danger' : 'alert-light') }} p-3 mb-3 rounded">
 
-                                                    @endif
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <i class="fas fa-user-tie mr-2"></i>
-                                                    <strong>{{ $vendor['name'] }}</strong>
-                                                    <div class="small">
-                                                        <i class="fas fa-map-marker-alt mr-2"></i> {{ $vendor['location'] }}
-                                                        <i class="fas fa-phone-alt mr-2 ml-3"></i> {{ $vendor['phone_number'] }}
+                                            <div class="row justify-content-between align-items-start flex-wrap">
+                                                {{-- KIRI: Info vendor --}}
+                                                <div class="d-flex">
+                                                    {{-- Tombol atau status --}}
+                                                    <div class="mr-3 text-center">
+                                                        @if($itemRequest->is_open)
+                                                            <button class="btn btn-sm btn-outline-success btn-select-vendor"
+                                                                data-vendor-id="{{ $vendor['id'] }}"
+                                                                data-vendor-name="{{ $vendor['name'] }}"
+                                                                data-vendor-location="{{ $vendor['location'] }}"
+                                                                data-vendor-phone="{{ $vendor['phone_number'] }}"
+                                                                data-vendor-price-offered="{{ $vendor['price_offered'] }}"
+                                                                >
+                                                                Pilih <i class="fas fa-check"></i>
+                                                            </button>
+                                                        @else
+                                                            <span class="badge badge-danger">Closed</span>
+                                                        @endif
                                                     </div>
-                                                    <div class="small">{{ $vendor['message'] }}</div>
-                                                    @if(isset($vendor['response']))
-                                                    <span class="badge badge-pill {{ $vendor['response'] == 'positive' ? 'badge-success' : 'badge-danger' }}">
-                                                        {{ $vendor['response'] == 'positive' ? 'Ya' : 'Tidak' }}
-                                                    </span>
+
+                                                    {{-- Detail --}}
+                                                    <div>
+                                                        <div class="mb-1">
+                                                            <i class="fas fa-user-tie mr-2"></i>
+                                                            <strong>{{ $vendor['name'] }}</strong>
+                                                            @if(!empty($vendor['responded']) && !empty($vendor['responded_at']))
+                                                                <i class="fas fa-star text-warning ml-1" title="Sudah merespons"></i>
+                                                            @endif
+                                                        </div>
+
+                                                        <div class="text-muted small">
+                                                            <i class="fas fa-map-marker-alt mr-1"></i>{{ $vendor['location'] }}
+                                                            <span class="ml-3">
+                                                                <i class="fas fa-phone-alt mr-1"></i>{{ $vendor['phone_number'] }}
+                                                            </span>
+                                                        </div>
+
+                                                        @if(!empty($vendor['message']))
+                                                            <div class="small mt-1">{{ $vendor['message'] }}</div>
+                                                        @endif
+
+                                                        @if(!empty($vendor['price_offered']))
+                                                            <div class="mt-2">
+                                                                <span class="badge badge-info">
+                                                                    <i class="fas fa-money-bill-wave mr-1"></i>
+                                                                    Rp {{ number_format($vendor['price_offered'], 0, ',', '.') }}
+                                                                </span>
+                                                            </div>
+                                                        @endif
+
+                                                        @if(!empty($vendor['note']))
+                                                            <div class="text-muted small mt-1">
+                                                                <i class="fas fa-sticky-note mr-1"></i>{{ $vendor['note'] }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                {{-- KANAN: waktu + tombol pilih (jika ya) --}}
+                                                <div class="text-right mt-3 mt-md-0 ml-md-3">
+                                                    @if($vendor['response'] != 0 && isset($vendor['response_time']))
+                                                        <i class="fas fa-star text-warning mr-2"></i>
+                                                    @endif
+
+                                                    @if($vendor['response'] == 'positive')
+                                                        <button class="btn btn-sm btn-success">
+                                                            Pilih <i class="fas fa-check"></i>
+                                                        </button>
                                                     @endif
                                                 </div>
-                                            </div>
-                                            <div class="text-right">
-                                                <small class="text-muted">
-                                                    {{ $vendor['response_time'] }}
-                                                </small>
-                                                @if($vendor['response'] == 'positive')
-                                                <button class="btn btn-sm btn-success ml-2">
-                                                    Pilih <i class="fas fa-check"></i>
-                                                </button>
-                                                @endif
                                             </div>
                                         </div>
-                                    </div>
                                     @endforeach
                                 </div>
+
                             @break
 
                             @case('Konfirmasi Pembayaran')
@@ -159,12 +190,14 @@
                                                     No. Rekening: {{ $purchase->rekening_number}}
                                                 </div>
                                                 @if(!$purchase->payment)
+                                                @canAccess('payment','item_purchases')
                                                 <button class="btn btn-sm btn-success btn-upload-transfer"
                                                     data-toggle="modal"
                                                     data-target="#uploadTransferModal"
                                                     data-id="{{ $purchase->id }}">
                                                     <i class="fas fa-upload mr-2"></i>Upload Bukti Transfer
                                                 </button>
+                                                @endcanAccess
                                                 @endif
                                             </div>
                                         </div>
@@ -196,6 +229,8 @@
                                     @else
                                         @if(!$itemRequest->delivery)
                                         @if($itemRequest->status == 'WAITING_DELIVERY_CONFIRMATION')
+
+                                        @canAccess('delivery','item_requests')
                                         <form id="form-upload-delivery" enctype="multipart/form-data">
                                             @csrf
                                             @method('PUT')
@@ -221,6 +256,8 @@
                                                 <i class="fas fa-paper-plane"></i> Submit
                                             </button>
                                         </form>
+                                        @endcanAccess
+
                                         @endif
                                         @else
                                         <div class="row">
@@ -280,8 +317,9 @@
                                                 @endif
                                             </div>
                                         </div>
-                                    @else
+                                    @elseif($step['status'] == 'active')
                                         <div class="alert alert-info">
+                                            @canAccess('delivery','item_requests')
                                             <form id="form-upload-delivery" enctype="multipart/form-data">
                                                 @csrf
                                                 @method('PUT')
@@ -296,6 +334,7 @@
                                                     <i class="fas fa-paper-plane"></i> Submit
                                                 </button>
                                             </form>
+                                            @endcanAccess
                                         </div>
                                     @endif
                                 </div>

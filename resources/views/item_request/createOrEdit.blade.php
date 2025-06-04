@@ -90,17 +90,21 @@
                 @if (isset($shareWa) && $shareWa) 
                 <div class="form-group">
                     <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="shareWa" name="shareWa" @if (isset($shareWa) && $shareWa) checked @endif>
+                        <input type="checkbox" class="custom-control-input" id="shareWa" name="shareWa" {{ isset($itemRequest) ? '' : (isset($shareWa) && $shareWa ? 'checked' : '') }}>
                         <label class="custom-control-label" for="shareWa">Bagikan nomor Whatsapp ke client</label>
                     </div>
                 </div>
                 @endif
 
                 <div class="form-group text-right">
+                    @canAccess('store', 'item_requests')
+                    @canAccess('update', 'item_requests')
                     <button type="submit" class="btn btn-{{ isset($itemRequest) ? 'primary' : 'success' }}" 
                         onclick="return confirm('Yakin Data Request Telah Sesuai ?')">
                         <i class="fas fa-save mr-1"></i>{{ isset($itemRequest) ? ' Perbarui' : ' Simpan' }}
                     </button>
+                    @endcanAccess
+                    @endcanAccess
                     <a href="{{ route('item-request.index') }}" class="btn btn-secondary">
                         <i class="fas fa-times mr-1"></i>Batal
                     </a>

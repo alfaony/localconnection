@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use App\Events\ChatMessageSent;
 
 use App\Models\User;
+use App\Models\Company;
 use App\Models\Delivery;
 use App\Models\ItemRequest;
 use App\Models\SettingCompany;
@@ -16,6 +19,7 @@ use App\Jobs\SentMessageToVendor;
 use App\Jobs\ProcessItemRequestCreated;
 
 use App\Helpers\Access;
+use App\Helpers\InboxHelper;
 
 use App\Services\WorkflowService;
 
@@ -32,7 +36,7 @@ class ItemRequestController extends Controller
     }
 
     public function create()
-    {
+    {                
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
         $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
         $shareWa = $client->status() ?? false;
@@ -52,14 +56,14 @@ class ItemRequestController extends Controller
             'qty'=> "required|numeric|min:1"
         ]);
 
-        $userCandidate = $this->findCandidate(Auth::user()->company_id);
+        // $userCandidate = $this->findCandidate(Auth::user()->company_id);
 
         if ($request->hasFile('picture')) 
         {
             $validated['picture'] = $request->file('picture')->store('item_pictures', 'public');
         }
 
-        $validated['assigned_pic_id'] = $userCandidate->id;
+        // $validated['assigned_pic_id'] = $userCandidate->id;
         $validated['user_id'] = auth()->id();
         $validated['company_id'] = auth()->user()->company_id;
         $validated['status'] = 'REQUESTED';
@@ -126,6 +130,10 @@ class ItemRequestController extends Controller
 
     public function destroy(ItemRequest $itemRequest)
     {
+        if (!$itemRequest->is_open) 
+        {
+            return redirect()->route('item-request.index')->with('error', 'Error: Request sudah selesai, tidak dapat dihapus.');
+        }
         $itemRequest->delete();
         return redirect()->route('item-request.index')->with('success', 'Request deleted.');
     }
@@ -150,8 +158,8 @@ class ItemRequestController extends Controller
         // Add action buttons to each row
         $actionButtons = [];
 
-        // if(Access::can('downloadPdf','quotes'))
-        // {
+        if(Access::can('show','item_requests') && Access::can('workflow','item_requests'))
+        {
             $pdf = [
                 'name' => 'show',
                 'route' => 'item-request.show',
@@ -159,10 +167,10 @@ class ItemRequestController extends Controller
             ];
 
             array_push($actionButtons,$pdf);
-        // }
+        }
 
-        // if(Access::can('edit','quotes'))
-        // {
+        if(Access::can('edit','item_requests'))
+        {
             $edit = [
                 'name' => 'Edit',
                 'route' => 'item-request.edit',
@@ -170,10 +178,10 @@ class ItemRequestController extends Controller
             ];
 
             array_push($actionButtons,$edit);
-        // }
+        }
 
-        // if(Access::can('destroy','quotes'))
-        // {
+        if(Access::can('destroy','item_requests'))
+        {
             $destroy = [
                 'name' => 'Delete',
                 'route' => 'item-request.destroy',
@@ -181,7 +189,7 @@ class ItemRequestController extends Controller
             ];
 
             array_push($actionButtons,$destroy);
-        // }
+        }
 
 
         $response =  datatablesFormaterWithSearchRelasion($query, $columnNames, $actionButtons, $searchable, $bootstrap);
@@ -232,9 +240,11 @@ class ItemRequestController extends Controller
             'airwillbill_photo' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'delivery_photo' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         ]);
-
+        
        $itemRequest = ItemRequest::findOrFail($id);
 
+       DB::beginTransaction();
+       try {
         if ($request->hasFile('airwillbill_photo')) {
             $airwillbillPath = $request->file('airwillbill_photo')->store('airwillbill', 'public');
         } else {
@@ -254,6 +264,10 @@ class ItemRequestController extends Controller
                 'airwillbill_photo' => $airwillbillPath,
                 'delivery_photo' => $deliveryPhotoPath,
             ]);
+
+            $message = "Air Way Bill (Resi) Sudah Terbit Untuk Request #{$itemRequest->item_name} #id {$itemRequest->id}";
+            $directUrl = route('item-request.show', $itemRequest->id);
+            $this->sentInbox($itemRequest->assigned_pic_id,$message, $directUrl, $itemRequest->id);
         }
         else
         {
@@ -265,10 +279,71 @@ class ItemRequestController extends Controller
             $delivery = $itemRequest->delivery;
 
             ItemRequest::where('id', $id)->update(['status' => 'DELIVERED']);
+
+            $message = "Request selesai #{$itemRequest->item_name} #id {$itemRequest->id}";
+            $directUrl = route('item-request.show', $itemRequest->id);
+            $this->sentInbox($itemRequest->user_id,$message, $directUrl, $itemRequest->id);
         }
 
+        DB::commit();
         return response()->json(['success' => true, 'delivery' => $delivery]);
+
+       } catch (\Throwable $th) {
+        //throw $th;
+        // dd($th);
+        DB::rollBack();
+        Log::error($th);
+
+        return response()->json(['success' => false, 'message' => 'Error']);
+       }
     }
+
+    public function publicIndex($companySlug)
+    {
+        $company = Company::where('slug', $companySlug)->firstOrFail();
+        return view('item_request.public_index', compact('company'));
+    }
+
+    public function loadByCompany($companySlug)
+    {
+        $company = Company::where('slug', $companySlug)->firstOrFail();
+
+        $requests = ItemRequest::with(['assignedPic', 'requester'])
+            ->where('company_id', $company->id)
+            ->where('status', '!=', 'DELIVERED')
+            ->latest()
+            ->get();
+
+        $data = $requests->map(function ($request) {
+            $created = \Carbon\Carbon::parse($request->created_at);
+            $now = now();
+            $target = $created->copy()->setTime(16, 0, 0); // target: 04:00 hari itu
+            $todaySameDay = $created->isSameDay($now);
+
+            if (!$todaySameDay || $now->greaterThan($target)) {
+                $countdown = '00:00:00';
+                $expired = true;
+            } else {
+                $diff = $now->diff($target);
+                $countdown = $diff->format('%H:%I:%S');
+                $expired = false;
+            }
+
+            return [
+                'sprinter' => optional($request->assignedPic)->name ?? '-',
+                'item'     => $request->item_name,
+                'qty'      => $request->qty,
+                'status'   => $request->status,
+                'countdown'=> $countdown,
+                'expired'  => $expired,
+                'created_at' => $request->created_at,
+                'status_badge' => $request->status_badge
+            ];
+        });
+
+        return response()->json($data);
+    }
+
 
     private function findCandidate($companyId)
     {
@@ -334,5 +409,28 @@ class ItemRequestController extends Controller
         }
 
 
+    }
+
+    private function sentInbox($to,$message,$directUrl, $itemRequest = null)
+    {
+        if($itemRequest)
+        {
+            broadcast(new ChatMessageSent(
+                "",
+                $message,
+                now(),
+                $itemRequest,
+                Auth::user()->id
+            ))->toOthers();
+        }
+
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $to, 
+            Auth::user()->id, 
+            $message, 
+            $directUrl
+        );
+        return;
     }
 }

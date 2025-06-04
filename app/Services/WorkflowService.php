@@ -40,9 +40,11 @@ class WorkflowService
             'status' => $itemRequest->assignedPic ? ($itemRequest->is_open ? 'active' : 'completed') : 'pending',
             'description' => 'Identifikasi dan negoisasi dengan Toko',
             'data' => [
-                'vendors' => $itemRequest->potentialVendors->filter(function ($vendor) use ($usedVendorIds) {
+                'vendors' => $itemRequest->potentialVendors->filter(function ($vendor) use ($usedVendorIds) 
+                {
                     return $vendor->productSupplier && !in_array($vendor->productSupplier->id, $usedVendorIds);
                 })
+                ->sortByDesc('responded_at')
                  ->map(function ($vendor) {
                     return [
                         'id' => $vendor->productSupplier->id,
@@ -50,9 +52,12 @@ class WorkflowService
                         'location' => $vendor->productSupplier ? $vendor->productSupplier->location : '-',
                         'phone_number' => $vendor->productSupplier ? $vendor->productSupplier->phone_number : '-',
                         'foto' => $vendor->productSupplier ? $vendor->productSupplier->store_photo ? Storage::url($vendor->productSupplier->store_photo) : NULL : NULL,
-                        'response' => $vendor->responded ?? '',
                         'message' => $vendor->response_message ?? '',
-                        'response_time' => $vendor->response_time ?? ''
+                        'response_time' => $vendor->responded_at ?? null,
+                        'price_offered' => $vendor->price_offered,
+                        'response' => $vendor->responded,
+                        'note' => $vendor->note
+
                     ];
                 })->toArray(),
                 'broadcast_status' => [

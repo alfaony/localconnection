@@ -130,6 +130,8 @@
                         </div>
                     </div>
                     <div class="chat-input p-3 border-top">
+                        @canAccess('store','chat_messages')
+                        @canAccess('show','chat_messages')
                         <form id="chat-form">
                             <div class="input-group">
                                 <input type="text" class="form-control" id="chat-message" placeholder="Ketik pesan..." required>
@@ -140,50 +142,87 @@
                                 </div>
                             </div>
                         </form>
+                        @endcanAccess
+                        @endcanAccess
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@canAccess('update','item_purchases')
 <!-- Modal Pilih Vendor -->
 <div class="modal fade" id="selectVendorModal" tabindex="-1" role="dialog" aria-labelledby="selectVendorModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
-    <form id="vendor-billing-form"  method="POST" enctype="multipart/form-data">
+    <form id="vendor-billing-form" method="POST" enctype="multipart/form-data">
         @csrf
-        <input type="hidden" name="item_request_id" value="{{ $itemRequest->id }}">
-        <input type="hidden" name="product_supplier_id" id="modal_vendor_id">
+        <input type="hidden" name="item_request_id" value="{{ $itemRequest->id }}" required>
+        <input type="hidden" name="product_supplier_id" id="modal_vendor_id" required>
 
         <div class="modal-content">
           <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title"><i class="fas fa-file-invoice-dollar mr-2"></i>Konfirmasi Vendor & Penagihan</h5>
+            <h5 class="modal-title">
+              <i class="fas fa-file-invoice-dollar mr-2"></i>
+              Konfirmasi Vendor & Penagihan
+            </h5>
             <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
+
+          <!-- ▷ Area Konfirmasi Inline (hidden awalnya) ◁ -->
+          <div id="vendor-confirm-section" class="alert alert-warning m-3 d-none">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Yakin ingin mengirim ke Finance?</strong><br>
+                Pastikan harga, bon, dan data lainnya sudah benar.
+              </div>
+              <div>
+                <button type="button" id="confirm-send-btn" class="btn btn-sm btn-danger mr-2 mb-2">
+                  <i class="fas fa-paper-plane"></i> Kirim
+                </button>
+                <button type="button" id="cancel-send-btn" class="btn btn-sm btn-secondary">
+                  Batal
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- ▷ /Area Konfirmasi Inline ◁ -->
+
           <div class="modal-body">
               <div id="modal_vendor_info" class="mb-3 text-muted small"></div>
-              <div class="form-group">
 
-              </div>
               <div class="form-group">
                   <div class="custom-control custom-checkbox">
                       <input type="checkbox" class="custom-control-input" id="is_finished" name="is_finished">
-                      <label class="custom-control-label" for="is_finished">Apakah proses pembelian ini sudah selesai?</label>
-                    </div>
-            </div>
-              <div class="form-group">
-                  <label for="purchase_date">Tenggat Tanggal Pembayaran</label>
-                  <input type="date" class="form-control" name="payment_term_date" required>
+                      <label class="custom-control-label" for="is_finished">
+                        Apakah proses pembelian ini sudah selesai?
+                      </label>
+                  </div>
               </div>
 
               <div class="form-group">
-                  <label for="amount">Total Pembelian (Rp)</label>
-                  <input type="text" class="form-control @error('estimated_price') is-invalid @enderror" id="estimated_price_show" placeholder="30.000.000" oninput="formatRupiahFormat(this,'estimated_price')" required/>
-                  <input type="hidden" id="estimated_price" name="actual_price">
+                  <label for="purchase_date">Tenggat Tanggal Pembayaran <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" name="payment_term_date" value="{{ date('Y-m-d') }}" required>
               </div>
+
               <div class="form-group">
-                  <label for="payment_method">Metode Pembayaran</label>
+                  <label for="amount">Total Pembelian (Rp) <span class="text-danger">*</span></label>
+                  <input
+                      type="text"
+                      class="form-control @error('estimated_price') is-invalid @enderror"
+                      id="estimated_price_show"
+                      placeholder="30.000.000"
+                      oninput="formatRupiahFormat(this,'estimated_price')"
+                      required
+                  />
+                  <input type="hidden" id="estimated_price" name="actual_price" required>
+              </div>
+
+              <div class="form-group">
+                  <label for="payment_method">Metode Pembayaran <span class="text-danger">*</span></label>
                   <select class="form-control" name="payment_method" required>
                       <option value="">- Pilih -</option>
                       <option value="TRANSFER">Transfer</option>
@@ -192,20 +231,31 @@
               </div>
 
               <div class="form-group">
-                  <label for="rekening_number">Nomor Rekening</label>
-                  <input type="text" class="form-control" name="rekening_number">
+                  <label for="rekening_number">Nomor Rekening <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" name="rekening_number" required>
               </div>
-                <div class="form-group">
-                    <label for="bon_image">Upload Foto Bon</label>
-                    <input type="file" class="form-control-file" name="bon_photo" accept="image/*" capture="environment" required>
-                </div>
+
+              <div class="form-group">
+                  <label for="bon_image">Upload Foto Bon <span class="text-danger">*</span></label>
+                  <input
+                      type="file"
+                      class="form-control-file"
+                      name="bon_photo"
+                      accept="image/*"
+                      capture="environment"
+                      required
+                  >
+              </div>
+
               <div class="form-group">
                   <label for="note">Catatan</label>
                   <textarea class="form-control" name="note" rows="3"></textarea>
               </div>
           </div>
+
           <div class="modal-footer">
-            <button type="submit" class="btn btn-success">
+            <!-- Tombol Normal yang bakal memicu tampilan konfirmasi -->
+            <button type="submit" id="vendor-submit-btn" class="btn btn-success">
                 <i class="fas fa-paper-plane"></i> Simpan & Proses
             </button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
@@ -214,7 +264,9 @@
     </form>
   </div>
 </div>
+@endcanAccess
 
+@canAccess('payment','item_purchases')
 <!-- Modal Upload Transfer -->
 <div class="modal fade" id="uploadTransferModal" tabindex="-1" role="dialog" aria-labelledby="uploadTransferModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -226,15 +278,33 @@
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title" id="uploadTransferModalLabel"><i class="fas fa-file-invoice-dollar mr-2"></i>Upload Bukti Transfer</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <button type="button" id="btnUploadTransferModalClose" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
+                </div>
+
+                <div id="upload-confirm-section" class="alert alert-warning mx-3 mt-3 d-none">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Yakin ingin mengunggah bukti transfer?</strong><br>
+                            Pastikan file yang Anda unggah sudah benar.
+                        </div>
+                        <div>
+                            <button type="button" id="confirm-upload-btn" class="btn btn-sm btn-danger mr-2 mb-2">
+                                <i class="fas fa-paper-plane"></i> Unggah
+                            </button>
+                            <button type="button" id="cancel-upload-btn" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-times"></i> Batal
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Bukti Transfer (JPG, PNG, PDF)</label>
-                        <input type="file" name="proof_image" class="form-control-file" accept="image/*,application/pdf" required>
+                        <input type="file" name="proof_image" class="form-control-file" accept="image/*" required>
                     </div>
                 </div>
 
@@ -248,6 +318,7 @@
         </form>
     </div>
 </div>
+@endcanAccess
 @stop
 
 @section('js')
@@ -259,13 +330,11 @@
 <!-- 🎵 Notifikasi Suara -->
  
 <audio id="notification-sound-update" src="/audio/notification-update-item-request.mp3" preload="auto"></audio>
-<script>
-    itemRequestId = "{{ $itemRequest->id }}";
-    notifSound = document.getElementById('notification-sound-update');
-</script>
+<!-- Tambahkan ini di <head> atau sebelum penutup </body> -->
+<script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 
-<script>
-</script>
+@canAccess('delivery','item_requests')
 <script>
     $(document).on('submit', '#form-upload-delivery', function (e) {
         e.preventDefault();
@@ -276,147 +345,238 @@
 
         formData.append('_method', 'PUT');
 
+        let url = "{{ route('item-request.delivery', ':id') }}";
+        url = url.replace(':id', id);
+
         $.ajax({
-            url: `/item-request/delivery/${id}`,
+            url: url,
             method: 'POST', // tetap POST karena spoof PUT
             data: formData,
-            processData: false, // WAJIB
-            contentType: false, // WAJIB
-            beforeSend: () => {
-                Swal.fire({ title: 'Mengirim...', didOpen: () => Swal.showLoading() });
-            },
+            processData: false,
+            contentType: false,
             success: function (res) {
-                Swal.fire('Berhasil', 'Data pengiriman berhasil disimpan', 'success').then(() => {
-                    loadWorkflow();
-                });
+                // Tampilkan toast sukses
+                $('<div class="toast align-items-center position-fixed top-0 end-0 m-3 show" role="alert" aria-live="assertive" aria-atomic="true">' +
+                    '<div class="toast-header bg-success text-white">' +
+                    '<strong class="me-auto"><i class="fas fa-check-circle me-2"></i>Berhasil</strong>' +
+                    '<button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
+                    '</div>' +
+                    '<div class="toast-body bg-white text-dark">Data telah dikirim ke Finance.</div>' +
+                '</div>')
+                .appendTo('body')
+                .toast({ delay: 2000 })
+                .toast('show');
+
+                // Callback
+                loadWorkflow();
             },
             error: function (err) {
                 console.error(err);
-                Swal.fire('Gagal', 'Gagal mengirim data', 'error');
+                // Toast untuk error
+                $('<div class="toast align-items-center position-fixed top-0 end-0 m-3 show" role="alert" aria-live="assertive" aria-atomic="true">' +
+                    '<div class="toast-header bg-danger text-white">' +
+                    '<strong class="me-auto"><i class="fas fa-times-circle me-2"></i>Gagal</strong>' +
+                    '<button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
+                    '</div>' +
+                    '<div class="toast-body bg-white text-dark">Terjadi kesalahan saat mengirim data.</div>' +
+                '</div>')
+                .appendTo('body')
+                .toast({ delay: 3000 })
+                .toast('show');
             }
         });
     });
 </script>
+@endcanAccess
+
+@canAccess('payment','item_purchases')
 <script>
      $(document).on('click', '.btn-upload-transfer', function () {
         const itemPurchaseId = $(this).data('id');
         $('#item_purchase_id_input').val(itemPurchaseId);
     });
 
-    $('#form-upload-payment').on('submit', function(e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-        formData.append('_method', 'PUT');
-        const itemPurchaseId = $('#item_purchase_id_input').val();
-        
-
-        $.ajax({
-            url: `/item-purchase/payment/${itemPurchaseId}`,
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            beforeSend: () => {
-                Swal.fire({ title: 'Mengupload...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            },
-            success: (res) => 
-            {
-                let timerInterval;
-                Swal.fire({
-                    title: 'Berhasil',
-                    html: 'Bukti transfer berhasil diunggah!<br>Menutup dalam <b></b> detik.',
-                    timer: 3000,
-                    timerProgressBar: true,
-                    willOpen: () => {
-                        Swal.showLoading();
-                        timerInterval = setInterval(() => {
-                            const content = Swal.getHtmlContainer();
-                            if (content) {
-                                const b = content.querySelector('b');
-                                if (b) {
-                                    b.textContent = Math.ceil(Swal.getTimerLeft() / 1000);
-                                }
-                            }
-                        }, 100);
-                    },
-                    onClose: () => {
-                        clearInterval(timerInterval);
-                    }
-                }).then(() => {
-                    loadWorkflow();
-                });
-            },
-            error: (err) => {
-                console.error(err);
-                Swal.fire('Gagal', 'Upload gagal. Periksa input Anda.', 'error');
-            }
-        });
-    });
-</script>
-
-<script>
     $(document).ready(function () 
     {
-        $('#vendor-billing-form').on('submit', async function (e) {
+        // Langkah 1: Saat klik submit → tampilkan konfirmasi
+        $('#form-upload-payment').on('submit', function(e) 
+        {
             e.preventDefault();
+            $('#upload-confirm-section').removeClass('d-none');
+            $(this).find('button[type="submit"]').addClass('d-none');
+        });
 
-            const form = this;
+        // Langkah 2: Batal konfirmasi → sembunyikan kembali konfirmasi & tampilkan submit
+        $('#cancel-upload-btn').on('click', function () {
+            $('#upload-confirm-section').addClass('d-none');
+            $('#form-upload-payment').find('button[type="submit"]').removeClass('d-none');
+        });
+
+        // Langkah 3: Konfirmasi kirim
+        $('#confirm-upload-btn').on('click', function () {
+            const form = document.getElementById('form-upload-payment');
             const formData = new FormData(form);
+            formData.append('_method', 'PUT');
 
-            // Konfirmasi sebelum submit
-            // const confirm = await Swal.fire({
-            //     title: 'Kirim ke Finance?',
-            //     html: 'Pastikan harga dan bon sudah benar. Data ini akan dikirim ke tim Finance untuk proses pembayaran.',
-            //     icon: 'warning',
-            //     showCancelButton: true,
-            //     confirmButtonText: 'Ya, kirim sekarang!',
-            //     cancelButtonText: 'Batal'
-            // });
+            const itemPurchaseId = $('#item_purchase_id_input').val();
 
-            // if (!confirm.isConfirmed) return;
+            // Disable tombol
+            $('#form-upload-payment :input').prop('disabled', true);
+            $('#btnUploadTransferModalClose').prop('disabled', false);
 
+            $('#confirm-upload-btn').html(`
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Mengunggah...
+            `).prop('disabled', true);
+
+            let url = "{{ route('item-purchase.payment', ':id') }}";
+            url = url.replace(':id', itemPurchaseId);
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    // Tampilkan notifikasi kecil di dalam modal
+                    $('#upload-confirm-section').replaceWith(`
+                        <div class="alert alert-success mx-3 mt-3">
+                            <i class="fas fa-check-circle"></i> Bukti transfer berhasil diunggah.
+                        </div>
+                    `);
+                    setTimeout(() => {
+                        
+                            $('#uploadTransferModal').modal('hide');
+                        
+                            $('#btnUploadTransferModalClose').click();
+                            // Reset form agar tidak menyisakan file lama
+
+                            // Optional: reload data
+                            if (typeof loadWorkflow === 'function') {
+                                loadWorkflow();
+                            }
+                    }, 1500);
+                },
+                error: function (err) {
+                    console.error(err);
+                    $('#upload-confirm-section').addClass('d-none');
+                    $('#form-upload-payment').find('button[type="submit"]').removeClass('d-none');
+                    $('#form-upload-payment :input').prop('disabled', false);
+                    $('#confirm-upload-btn').html('<i class="fas fa-check"></i> Ya, Unggah').prop('disabled', false);
+
+                    // Tambahkan pesan error inline
+                    if ($('#upload-error-alert').length === 0) {
+                        $('.modal-body').prepend(`
+                            <div id="upload-error-alert" class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle"></i> Upload gagal. Periksa file Anda.
+                            </div>
+                        `);
+                    }
+                }
+            });
+        });
+    });
+
+</script>
+@endcanAccess
+
+@canAccess('store','item_purchases')
+<script>
+    $(document).ready(function () {
+        // 1. Tahan submit pertama kali
+        $('#vendor-billing-form').on('submit', function (e) 
+        {
+            e.preventDefault();
+            $('#vendor-submit-btn').addClass('d-none');
+            $('#vendor-confirm-section').removeClass('d-none');
+        });
+
+        // 2. Batal kirim
+        $('#cancel-send-btn').on('click', function () {
+            $('#vendor-confirm-section').addClass('d-none');
+            $('#vendor-submit-btn').removeClass('d-none');
+        });
+
+        // 3. Konfirmasi “Ya, Kirim” → AJAX
+        $('#confirm-send-btn').on('click', function () {
+            // Step 1: Disable tombol kirim dulu biar user nggak klik spam
+            $('#confirm-send-btn').html(`
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Mengirim...
+            `).prop('disabled', true);
+
+            // Step 2: Ambil FormData SEBELUM form di-disable
+            const form = document.getElementById('vendor-billing-form');
+            const formData = new FormData(form);
+            const csrfToken = $('meta[name="csrf-token"]').attr('content');
+            formData.append('_token', csrfToken);
+
+            // Step 3: Baru disable seluruh input
+            $('#vendor-billing-form :input').prop('disabled', true);
+
+            // Step 4: Kirim AJAX
             $.ajax({
                 url: '{{ route("item-purchase.store") }}',
                 method: 'POST',
                 data: formData,
                 processData: false,
                 contentType: false,
-                beforeSend: () => {
-                    Swal.showLoading();
-                },
                 success: function (res) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: 'Data telah dikirim ke Finance.',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
+                   $('<div class="toast align-items-center position-fixed top-0 end-0 m-3 show" role="alert" aria-live="assertive" aria-atomic="true">' +
+                    '<div class="toast-header bg-success text-white">' +
+                    '<strong class="me-auto"><i class="fas fa-check-circle me-2"></i>Berhasil</strong>' +
+                    '<button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
+                    '</div>' +
+                    '<div class="toast-body bg-white text-dark">Data telah dikirim ke Finance.</div>' +
+                    '</div>')
+                    .appendTo('body')
+                    .toast({ delay: 2000 })
+                    .toast('show');
 
-                    $('#selectVendorModal').modal('hide');
-                    // Optional: reload workflow section
-                    loadWorkflow();
+                    setTimeout(function () {
+                        $('#selectVendorModal').modal('hide');
+                    }, 500);
+
+                    if (typeof loadWorkflow === 'function') {
+                        loadWorkflow();
+                    }
                 },
                 error: function (xhr) {
-                    let msg = xhr.responseJSON?.message ?? 'Terjadi kesalahan saat mengirim data.';
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal!',
-                        text: msg
-                    });
+                    $('#vendor-billing-form :input').prop('disabled', false);
+                    $('#vendor-confirm-section').addClass('d-none');
+                    $('#vendor-submit-btn').removeClass('d-none');
+                    $('#confirm-send-btn').html('<i class="fas fa-paper-plane"></i> Ya, Kirim').prop('disabled', false);
+
+                    const msg = xhr.responseJSON?.message ?? 'Terjadi kesalahan saat mengirim data.';
+                    if ($('#error-alert-inline').length === 0) {
+                        $('#vendor-confirm-section').before(`
+                            <div id="error-alert-inline" class="alert alert-danger m-3">
+                                <i class="fas fa-exclamation-circle"></i> ${msg}
+                            </div>
+                        `);
+                    } else {
+                        $('#error-alert-inline').html(`<i class="fas fa-exclamation-circle"></i> ${msg}`);
+                    }
                 }
             });
-
         });
     });
-    
+ 
     document.addEventListener('DOMContentLoaded', function () {
         $(document).on('click', '.btn-select-vendor', function () {
             const vendorId = $(this).data('vendor-id');
             const vendorName = $(this).data('vendor-name');
             const vendorPhone = $(this).data('vendor-phone');
             const vendorLocation = $(this).data('vendor-location');
+            const vendorPriceOffered = $(this).data('vendor-price-offered');
+
+            if (vendorPriceOffered) 
+            {
+                document.getElementById("estimated_price").value = vendorPriceOffered;
+                document.getElementById("estimated_price_show").value = vendorPriceOffered;
+                formatRupiahFormat(document.getElementById("estimated_price_show"),"estimated_price"); // Format default value
+            }
 
             $('#modal_vendor_id').val(vendorId);
             $('#modal_vendor_info').html(`
@@ -429,6 +589,9 @@
         });
     });
 </script>
+@endcanAccess
+
+@canAccess('workflow','item_requests')
 <script>
     async function loadWorkflow() {
         const wrapper = document.getElementById('workflow-wrapper');
@@ -458,6 +621,10 @@
         loadWorkflow();
     });
 </script>
+@endcanAccess
+
+@canAccess('store','chat_messages')
+@canAccess('show','chat_messages')
 <script>
     const itemRequestId = '{{ $itemRequest->id }}';
     const chatContainer = document.getElementById('chat-container');
@@ -476,7 +643,11 @@
 
         try {
             const response = await fetch(urlChat);
-            const messages = await response.json();
+            // console.log(response);
+            
+            const data = await response.json();
+
+            const messages = data.message;
 
             let html = '';
             Object.entries(messages).forEach(([key, msg]) => {
@@ -489,6 +660,12 @@
 
             chatContainer.innerHTML = html;
             scrollToBottom();
+
+            if (!data.status) 
+            {
+                chatForm.innerHTML = '<div class="text-center">Chat telah berakhir.</div>';
+                return;
+            }
         } catch (err) {
             console.error('Gagal memuat chat:', err);
         } finally {
@@ -530,7 +707,7 @@
             });
 
             chatInput.value = '';
-            // await loadChat();
+            await loadChat();
         } catch (err) {
             console.error('Gagal mengirim pesan:', err);
         } finally {
@@ -541,6 +718,9 @@
     // Load awal
     loadChat();
 </script>
+@endcanAccess
+@endcanAccess
+
 <script>
     // Smooth scroll for vendor list
     $('.vendor-scroll').smoothScroll({
@@ -597,98 +777,143 @@
         document.getElementById(inputNonFormat).value = parseInt(numStr);
     }
 </script>
-@vite('resources/js/chat.js')
+
+<script>
+    host = '{{ config('services.connection_reverb.host')}}';
+    key = '{{ config('services.connection_reverb.key')}}';
+    port = '{{ config('services.connection_reverb.port')}}';  
+    currentClientId = "{{ Auth::user()->id }}";
+    notifSound = document.getElementById('notification-sound-update');
+
+    window.Pusher = Pusher;
+
+    window.Echo = new Echo.default({
+        broadcaster: 'reverb',
+        key: key,
+        wsHost: host,
+        wsPort: 8080,
+        wssPort: port,
+        forceTLS: true,
+        enabledTransports: ['ws', 'wss'],
+        authEndpoint: '/broadcasting/authorize',
+        disableStats: true,
+    });
+
+    window.Echo.private('chat.item-request.' + itemRequestId)
+        .listen('ChatMessageSent', function (e) {
+            console.log(e);
+            
+            if(e.sender_id != currentClientId)
+            {
+                const html = `
+                <div class="mb-2">
+                    <strong>${e.sender_name}:</strong> ${e.message}
+                    <div class="text-muted" style="font-size: 12px;">
+                        ${new Date(e.created_at).toLocaleTimeString()}
+                    </div>
+                </div>`;
+                chatContainer.innerHTML += html;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+
+            }
+            
+            loadChat();
+            notifSound?.play();
+            loadWorkflow();
+        });
+</script>
 @endsection
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
 <style>
-.workflow-step {
-    position: relative;
-    padding: 20px 0;
-    margin-left: 60px;
-    border-left: 2px solid #eee;
-}
+    .workflow-step {
+        position: relative;
+        padding: 20px 0;
+        margin-left: 60px;
+        border-left: 2px solid #eee;
+    }
 
-.step-icon {
-    position: absolute;
-    left: -45px;
-    top: 20px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
-}
+    .step-icon {
+        position: absolute;
+        left: -45px;
+        top: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
 
-.detail-card {
-    background: #f8f9fa;
-    transition: transform 0.2s;
-}
+    .detail-card {
+        background: #f8f9fa;
+        transition: transform 0.2s;
+    }
 
-.detail-card:hover {
-    transform: translateX(5px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
+    .detail-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
-.response-item {
-    margin: 10px 0;
-    border-radius: 8px!important;
-}
+    .response-item {
+        margin: 10px 0;
+        border-radius: 8px!important;
+    }
 
-.vendor-responses .alert-success {
-    border-left: 4px solid #28a745;
-}
+    .vendor-responses .alert-success {
+        border-left: 4px solid #28a745;
+    }
 
-.vendor-responses .alert-danger {
-    border-left: 4px solid #dc3545;
-}
+    .vendor-responses .alert-danger {
+        border-left: 4px solid #dc3545;
+    }
 
-.workflow-step.completed {
-    opacity: 0.8;
-}
+    .workflow-step.completed {
+        opacity: 0.8;
+    }
 
-.workflow-step.active {
-    border-left-color: #ffc107;
-}
+    .workflow-step.active {
+        border-left-color: #ffc107;
+    }
 
-.workflow-step.active .step-icon {
-    animation: pulse 1.5s infinite;
-}
+    .workflow-step.active .step-icon {
+        animation: pulse 1.5s infinite;
+    }
 
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(255,193,7,0.4); }
-    70% { box-shadow: 0 0 0 12px rgba(255,193,7,0); }
-    100% { box-shadow: 0 0 0 0 rgba(255,193,7,0); }
-}
-</style>
-<style>
-.upload-form {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #eee;
-}
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(255,193,7,0.4); }
+        70% { box-shadow: 0 0 0 12px rgba(255,193,7,0); }
+        100% { box-shadow: 0 0 0 0 rgba(255,193,7,0); }
+    }
+    </style>
+    <style>
+    .upload-form {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #eee;
+    }
 
-.shipping-info .alert {
-    border-left: 4px solid #28a745;
-}
+    .shipping-info .alert {
+        border-left: 4px solid #28a745;
+    }
 
-.custom-file-label::after {
-    content: "Browse";
-}
+    .custom-file-label::after {
+        content: "Browse";
+    }
 
-.delivery-status .alert-success {
-    border-left: 4px solid #28a745;
-    padding-left: 1rem;
-}
+    .delivery-status .alert-success {
+        border-left: 4px solid #28a745;
+        padding-left: 1rem;
+    }
 
-.delivery-status .alert-info {
-    border-left: 4px solid #17a2b8;
-}
+    .delivery-status .alert-info {
+        border-left: 4px solid #17a2b8;
+    }
 </style>
 @endsection

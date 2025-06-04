@@ -43,22 +43,28 @@ class SentMessageToVendor implements ShouldQueue
         try {
             $settingCompany = SettingCompany::byCompany($this->itemRequest->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
             $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
-            $message = "Hai kak, kami butuh barang berikut:\n\n"
-                        . "Nama: {$this->itemRequest->item_name}\n"
-                        . "Qty: {$this->itemRequest->qty}\n"
-                        . "Dengan Estimasi Harga: {$this->itemRequest->price_with_format}\n\n"
-                        . "Apakah kakak punya? Jika ya, balas dengan format:\n"
-                        . "#{$this->itemRequest->id} Saya punya...";
             if($client->status())
             {
                 $potentialVendors = $this->itemRequest->potentialVendors()->get();
                 foreach ($potentialVendors as $potentialVendor) 
                 {
+                    $url = route('vendor.respond', ['id' => $potentialVendor->id, 'token' => $potentialVendor->response_token]);
+
+                    $message = "Hai kak, kami butuh barang berikut:\n\n"
+                        . "Nama: {$this->itemRequest->item_name}\n"
+                        . "Qty: {$this->itemRequest->qty}\n"
+                        . "Dengan Estimasi Harga: {$this->itemRequest->price_with_format}\n\n"
+                        . "Apakah kakak punya? Jika ya, balas dengan format:\n\n"
+                        . "Untuk melakukan penawaran silakan klik link di bawah ini:\n"
+                        . "{$url}\n\n"
+                        . "Terimakasih";
+
                     $this->sendMessage($client, $potentialVendor->productSupplier->phone_number, $message);
                 }
             }
         } catch (\Throwable $th) 
         {
+            dd($th);
             Log::error($th->getMessage());
         }
     }

@@ -3,15 +3,28 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+
 use App\Models\ItemPurchase;
 use App\Models\Payment;
 use App\Models\ItemRequest;
+use App\Models\User;
+
 use App\Jobs\ProcessItemRequestCreated;
+
+use App\Helpers\InboxHelper;
+
+use App\Models\Role;
+use App\Schemas\RoleSchema;
+
+use App\Events\ChatMessageSent;
 
 class ItemPurchaseController extends Controller
 {
     public function store(Request $request)
-    {
+    {   
         // Validate the request
         $validatedData = $request->validate([
             "payment_term_date" => "required|date",
@@ -23,6 +36,7 @@ class ItemPurchaseController extends Controller
             'rekening_number' => "nullable|string",
             "note" => "nullable|string"
         ]);
+        DB::beginTransaction();
         try {
             $itemRequest = ItemRequest::find($validatedData['item_request_id']);
     
@@ -43,13 +57,62 @@ class ItemPurchaseController extends Controller
     
             if($request->is_finished)
             {
-                return $this->itemRequestClose($validatedData['item_request_id']);
+                $financeRole = Role::where('name', RoleSchema::FINANCE)->first() ?? NULL;
+                $managerFinance = Role::where('name', "MANAGER FINANCE")->first() ?? NULL;
+
+                $adminRole = Role::where('name', RoleSchema::ADMIN)->first();
+                $rootRole = Role::where('name', RoleSchema::ROOT)->first();
+                
+                $financesApprove = User::where('company_id', $itemRequest->company_id)
+                ->whereHas('role.permissions', function ($q) {
+                    $q->where('method', 'as_finance')
+                    ->where('table', 'item_requests');
+                })->get();
+
+                if(!$financesApprove->isEmpty())
+                {
+                    foreach ($financesApprove as $financeApprove)
+                    {
+                        $message = "Meminta pembayaran untuk item request #{$itemRequest->item_name}";
+                        $directUrl = route('item-request.show', $itemRequest->id);
+                        $this->sentInbox($financeApprove->id,$message, $directUrl, $itemRequest->id, $itemRequest->id);
+                    }
+                }else
+                {
+                    $finances = User::where('company_id', $itemRequest->company_id)
+                    ->where(function ($query) use ($financeRole, $managerFinance, $adminRole, $rootRole) {
+                        if ($financeRole) {
+                            $query->where('role_id', $financeRole->id);
+                        }
+                        if ($managerFinance) 
+                        {
+                            $query->orWhere('role_id', $managerFinance->id);
+                        }
+                        if(!$financeRole && !$managerFinance)
+                        {
+                            $query->orWhere('role_id', $adminRole->id)->orWhere('role_id', $rootRole->id);
+                        }
+                        ;
+                    })
+                    ->get();
+                    foreach ($finances as $finance)
+                     {
+                        $message = "Meminta pembayaran untuk item request #{$itemRequest->item_name}";
+                        $directUrl = route('item-request.show', $itemRequest->id);
+                        $this->sentInbox($finance->id,$message, $directUrl, $itemRequest->id, $itemRequest->id);
+                    }
+                }
+
+                $this->itemRequestClose($validatedData['item_request_id']);
             }
     
-    
+                
+            DB::commit();
             return response()->json(['message' => 'Item purchase created successfully', 'data' => $itemPurchase], 201);
         } catch (\Throwable $th) {
             //throw $th;
+            DB::rollBack();
+            // dd($th);
             Log::error($th);
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -108,6 +171,7 @@ class ItemPurchaseController extends Controller
             'proof_image' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
+        DB::beginTransaction();
         try {
             $itemPurchase = ItemPurchase::where('id', $id)->firstOrFail();
     
@@ -119,18 +183,30 @@ class ItemPurchaseController extends Controller
                 'finance_id' => auth()->id(),
                 'proof_image' => $path,
                 'paid_at' => now(),
+                'finance_user_id' => auth()->id(),
             ]);
     
             // Update status if needed
             $itemPurchase->status='paid';
             $itemPurchase->save();
+            
+
+            if($itemPurchase->itemRequest->is_complete_payment)
+            {
+                $itemRequest = ItemRequest::where('id', $itemPurchase->item_request_id)->update(['status' => 'WAITING_DELIVERY_CONFIRMATION']);
     
-            $itemRequest = ItemRequest::where('id', $itemPurchase->item_request_id)->update(['status' => 'WAITING_DELIVERY_CONFIRMATION']);
-    
-    
+                $message = "Request Penerbitan Air Way Bill (Resi) pada request #{$itemPurchase->itemRequest->item_name} #id {$itemPurchase->itemRequest->id}";
+                $directUrl = route('item-request.show', $itemPurchase->itemRequest->id);
+                $this->sentInbox($itemPurchase->itemRequest->user_id,$message, $directUrl, $itemPurchase->itemRequest->id);
+            }
+
+            
+            DB::commit();
             return response()->json(['success' => true]);
         } catch (\Throwable $th) {
             //throw $th;
+            // dd($th);
+            DB::rollBack();
             Log::error($th);
             return response()->json(['error' => $th->getMessage()], 500);
         }
@@ -140,6 +216,30 @@ class ItemPurchaseController extends Controller
     private function itemRequestClose($id)
     {
         return ItemRequest::where('id',$id)->update(['is_open' => false]);
+    }
+
+    private function sentInbox($to,$message,$directUrl, $itemRequest = null)
+    {
+       
+        if($itemRequest)
+        {
+            broadcast(new ChatMessageSent(
+                "",
+                $message,
+                now(),
+                $itemRequest,
+                Auth::user()->id
+            ))->toOthers();
+        }
+
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $to, 
+            Auth::user()->id, 
+            $message, 
+            $directUrl
+        );
+        return true;
     }
 
 }
