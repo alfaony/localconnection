@@ -65,6 +65,7 @@ class CompanyController extends Controller
 
             $fieldPunishmentTaskDoing = ['status_punihsment_task_doing' => null, 'point_punishment_task_doing' => null];
             $fieldPunishment = ['point_punishment_task_todo' => null, 'point_punishment_weekly_report' => null];
+            $fieldWablas = ['server_wablas' => null,'token_wablas' => null, 'webhook_key_wablas' => null];
     
             foreach ($fieldProfile as $key => $value) 
             {
@@ -131,6 +132,16 @@ class CompanyController extends Controller
                 $field = new SettingCompany();
                 $field->user_id = $user->id;
                 $field->menu="punishment";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldWablas as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="wablas";
                 $field->field_title = $key;
                 $field->field_value = $value;
                 $field->save();        
