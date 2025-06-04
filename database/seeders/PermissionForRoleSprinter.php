@@ -245,6 +245,7 @@ class PermissionForRoleSprinter extends Seeder
             DB::commit();
         } catch (\Throwable $th) {
             //throw $th;
+            dd($th);
             DB::rollBack();
             Log::error($th->getMessage());
             // dd($th);
