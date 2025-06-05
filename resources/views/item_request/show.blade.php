@@ -48,10 +48,10 @@
                                 <dt class="col-sm-4 text-info"><i class="fas fa-cubes mr-2"></i>Kuantitas</dt>
                                 <dd class="col-sm-8">{{ $itemRequest->qty }} Unit</dd>
                                 <dt class="col-sm-4 text-info"><i class="fas fa-info-circle mr-2"></i>Status</dt>
-                                <dd class="col-sm-8">{!! $itemRequest->status_badge !!}</dd>
+                                <dd class="col-sm-8" id="status_badge">{!! $itemRequest->status_badge !!}</dd>
 
                                 <dt class="col-sm-4 text-info"><i class="fas fa-door-open mr-2"></i>Open Status</dt>
-                                <dd class="col-sm-8">
+                                <dd class="col-sm-8" id="status_open">
                                     <span class="badge {{ $itemRequest->is_open ? 'badge-success' : 'badge-danger' }} rounded-pill">
                                         {{ $itemRequest->is_open ? 'Open' : 'Closed' }}
                                     </span>
@@ -132,16 +132,22 @@
                     <div class="chat-input p-3 border-top">
                         @canAccess('store','chat_messages')
                         @canAccess('show','chat_messages')
-                        <form id="chat-form">
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="chat-message" placeholder="Ketik pesan..." required>
+                        <form id="chat-form" enctype="multipart/form-data">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" id="chat-message" placeholder="Ketik pesan..." name="message">
                                 <div class="input-group-append">
+                                    <label class="btn btn-outline-secondary mb-0" for="chat-file">
+                                        <i class="fas fa-paperclip"></i>
+                                    </label>
+                                    <input type="file" id="chat-file" name="file" accept=".jpg,.jpeg,.png,.pdf" style="display: none;">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-paper-plane"></i>
                                     </button>
                                 </div>
                             </div>
+                            <small class="text-muted d-block">Hanya file gambar atau PDF, maks. 2MB</small>
                         </form>
+                        <div id="file-preview" class="text-muted small mt-1" style="display: none;"></div>
                         @endcanAccess
                         @endcanAccess
                     </div>
@@ -595,6 +601,9 @@
 <script>
     async function loadWorkflow() {
         const wrapper = document.getElementById('workflow-wrapper');
+        const statusBadge = document.getElementById('status_badge');
+        const statusOpen = document.getElementById('status_open');
+
         wrapper.innerHTML = `
             <div class="text-center p-4" id="workflow-loading">
                 <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
@@ -606,6 +615,8 @@
             const result = await response.json();
 
             if (result.success) {
+                statusBadge.innerHTML = result.status_badge;
+                statusOpen.innerHTML = result.status_open;
                 wrapper.innerHTML = result.html;
             } else {
                 wrapper.innerHTML = `<div class="alert alert-warning">Gagal memuat workflow: ${result.message}</div>`;
@@ -625,6 +636,37 @@
 
 @canAccess('store','chat_messages')
 @canAccess('show','chat_messages')
+<script>
+document.getElementById('chat-file').addEventListener('change', function () {
+    const preview = document.getElementById('file-preview');
+    const file = this.files[0];
+
+    if (file) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+        const maxSize = 2 * 1024 * 1024; // 2MB
+
+        if (!allowedTypes.includes(file.type)) {
+            alert('Format file tidak diizinkan. Hanya gambar atau PDF.');
+            this.value = '';
+            preview.style.display = 'none';
+            return;
+        }
+
+        if (file.size > maxSize) {
+            alert('Ukuran file melebihi batas 2MB.');
+            this.value = '';
+            preview.style.display = 'none';
+            return;
+        }
+
+        preview.textContent = `📎 ${file.name}`;
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
+});
+</script>
+
 <script>
     const itemRequestId = '{{ $itemRequest->id }}';
     const chatContainer = document.getElementById('chat-container');
@@ -651,12 +693,62 @@
 
             let html = '';
             Object.entries(messages).forEach(([key, msg]) => {
+
+                const isMine = msg.sender.id === "{{ auth()->id() }}"; // Ganti sesuai auth user ID
+                const alignment = isMine ? 'text-right' : 'text-left';
+                const bubbleClass = isMine ? 'bg-primary text-white ml-auto' : 'bg-light text-dark';
+                const senderName = isMine ? 'Saya' : msg.sender.name;
+
+                let fileHtml = '';
+
+                if (msg.attachment) {
+                    const ext = msg.attachment.split('.').pop().toLowerCase();
+                    const url = `/storage//${msg.attachment}`; // Ganti sesuai path file kamu
+
+                    if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+                        fileHtml = `
+                            <div class="mt-2">
+                                <img src="${url}" alt="attachment" class="img-fluid rounded" style="max-height: 150px;">
+                                <div class="mt-1">
+                                    <a href="${url}" download class="btn btn-sm btn-light border">
+                                        <i class="fas fa-download mr-1"></i> Download Gambar
+                                    </a>
+                                </div>
+                            </div>`;
+                    } else if (ext === 'pdf') {
+                        fileHtml = `
+                            <div class="mt-2">
+                                <a href="${url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-file-pdf mr-1"></i> Lihat PDF
+                                </a>
+                                <a href="${url}" download class="btn btn-sm btn-outline-dark ml-2">
+                                    <i class="fas fa-download mr-1"></i> Download PDF
+                                </a>
+                            </div>`;
+                    } else {
+                        fileHtml = `
+                            <div class="mt-2">
+                                <a href="${url}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-file mr-1"></i> Buka File
+                                </a>
+                                <a href="${url}" download class="btn btn-sm btn-outline-dark ml-2">
+                                    <i class="fas fa-download mr-1"></i> Download
+                                </a>
+                            </div>`;
+                    }
+                }
+
                 html += `
-                    <div class="mb-2">
-                        <strong>${msg.sender.name}:</strong> ${msg.message}
-                        <div class="text-muted" style="font-size: 12px;">${new Date(msg.created_at).toLocaleTimeString()}</div>
+                    <div class="d-flex flex-column ${alignment} mb-3">
+                        <div class="small text-muted mb-1">${senderName} - ${new Date(msg.created_at).toLocaleTimeString()}</div>
+                        <div class="p-2 rounded ${bubbleClass}" style="max-width: 70%;">
+                            ${msg.message || ''}
+                            ${fileHtml}
+                        </div>
                     </div>`;
             });
+
+
 
             chatContainer.innerHTML = html;
             scrollToBottom();
@@ -683,30 +775,38 @@
         }
     }
 
-    chatForm.addEventListener('submit', async function (e) {
+    chatForm.addEventListener('submit', async function (e) 
+    {
         e.preventDefault();
 
         if (isSendingMessage) return;
 
         const message = chatInput.value.trim();
-        if (!message) return;
+        const fileInput = document.getElementById('chat-file');
+        const file = fileInput.files[0];
+
+        if (!message && !file) return; // jangan kirim kosong
 
         isSendingMessage = true;
+
+        const formData = new FormData();
+        formData.append('item_request_id', itemRequestId);
+        if (message) formData.append('message', message);
+        if (file) formData.append('file', file);
 
         try {
             await fetch('{{ route("chat-message.store") }}', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({
-                    item_request_id: itemRequestId,
-                    message: message
-                })
+                body: formData
             });
 
             chatInput.value = '';
+            fileInput.value = '';
+            document.getElementById('file-preview').style.display = 'none';
+
             await loadChat();
         } catch (err) {
             console.error('Gagal mengirim pesan:', err);
@@ -714,6 +814,7 @@
             isSendingMessage = false;
         }
     });
+
 
     // Load awal
     loadChat();

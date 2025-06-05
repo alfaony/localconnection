@@ -23,7 +23,7 @@ class ItemRequest extends Model
         'picture',
     ];
 
-    protected $appends = ['status_badge','price_with_format'];
+    protected $appends = ['status_badge','price_with_format','status_open'];
 
     public function requester()
     {
@@ -107,5 +107,13 @@ class ItemRequest extends Model
         return $purchases->every(function ($purchase) {
             return $purchase->payment !== null;
         });
+    }
+
+    public function getStatusOpenAttribute()
+    {
+        $badgeClass = $this->is_open ? 'badge-success' : 'badge-danger';
+        $statusText = $this->is_open ? 'Open' : 'Closed';
+
+        return "<span class=\"badge {$badgeClass} rounded-pill\">{$statusText}</span>";
     }
 }

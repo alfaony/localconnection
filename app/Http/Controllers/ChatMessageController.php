@@ -35,14 +35,20 @@ class ChatMessageController extends Controller
         $data = $request->validate([
             'item_request_id' => 'required|exists:item_requests,id',
             'message' => 'required|string|max:1000',
+            'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
-
+        $path = null;
+        if ($request->hasFile('file')) 
+        {
+            $path = $request->file('file')->store('chat_uploads', 'public');
+        }
         
         $chat = ChatMessage::create([
             'company_id' => auth()->user()->company_id,
             'user_id' => auth()->id(),
             'item_request_id' => $data['item_request_id'],
             'message' => $data['message'],
+            'attachment' => $path
         ]);
 
         

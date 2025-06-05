@@ -220,6 +220,8 @@ class ItemRequestController extends Controller
             return response()->json([
                 'success' => true,
                 'html' => $htmlWorkflow,
+                'status_badge' => $itemRequest->status_badge,
+                'status_open' => $itemRequest->status_open
             ]);
 
         } catch (\Exception $e) {

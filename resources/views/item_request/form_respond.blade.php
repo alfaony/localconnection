@@ -368,8 +368,9 @@
             @endif
         </div>
         
+        @if($itemRequest->is_open || $potentialVendor->responded )
         <!-- Item Image -->
-        <div class="card-custom">
+        <div class="card mt-2">
             <div class="item-img-container">
                 <img src="{{ Storage::url($itemRequest->picture) }}" 
                      alt="{{ $itemRequest->name }}" class="item-img">
@@ -462,8 +463,8 @@
             </div>
         </div>
         
-
         <!-- Response Form -->
+         @if(!$potentialVendor->responded)
         <div class="card-custom">
             <div class="card-header-custom">
                 <i class="bi bi-pencil-square me-2"></i>Form Penawaran
@@ -526,6 +527,8 @@
                 </form>
             </div>
         </div>
+        @endif
+        @endif
 
     </div>
 
