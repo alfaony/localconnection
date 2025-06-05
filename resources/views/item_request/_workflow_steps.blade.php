@@ -159,7 +159,7 @@
                                     @endforeach
                                 </div>
                                 @canAccess('complete','item_purchases')
-                                @if($itemRequest->is_open)
+                                @if($itemRequest->is_open && $itemRequest->purchase->isNotEmpty())
                                     <div class="text-center mt-3 mt-md-0 ml-md-3">
                                         <button class="btn btn-sm btn-success" id="btn-complete-request"
                                             onclick="confirmCompleteRequest({{ $itemRequest->id }})">
