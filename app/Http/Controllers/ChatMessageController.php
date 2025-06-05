@@ -8,6 +8,7 @@ use App\Models\ChatMessage;
 use App\Events\ChatMessageSent;
 use Illuminate\Support\Facades\Auth;   
 use App\Helpers\InboxHelper;
+use App\Jobs\SentInbox;
 
 class ChatMessageController extends Controller
 {
@@ -73,7 +74,7 @@ class ChatMessageController extends Controller
 
         foreach ($userIds as $userId) 
         {
-            $this->sentInbox($userId, $message, $directUrl);
+            SentInbox::dispatch($userId, Auth::user()->id,$message, $directUrl);
         }
 
             return response()->json(['success' => true]);
