@@ -867,7 +867,44 @@ document.getElementById('chat-file').addEventListener('change', function () {
             fileInput.value = '';
             document.getElementById('file-preview').style.display = 'none';
 
-            await loadChat();
+            const timestamp = new Date().toLocaleTimeString();
+            const senderName = 'Saya';
+            const messageText = message;
+            const previewURL = file ? URL.createObjectURL(file) : null;
+
+            let fileHtml = '';
+            if (file) {
+                const ext = file.name.split('.').pop().toLowerCase();
+
+                if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+                    fileHtml = `
+                        <div class="mt-2">
+                            <img src="${previewURL}" alt="attachment" class="img-fluid rounded" style="max-height: 150px;">
+                        </div>`;
+                } else if (ext === 'pdf') {
+                    fileHtml = `
+                        <div class="mt-2">
+                            <span class="badge badge-danger"><i class="fas fa-file-pdf"></i> PDF Dilampirkan</span>
+                        </div>`;
+                } else {
+                    fileHtml = `
+                        <div class="mt-2">
+                            <span class="badge badge-secondary"><i class="fas fa-file"></i> File Dilampirkan</span>
+                        </div>`;
+                }
+            }
+
+            const html = `
+                <div class="d-flex flex-column text-right mb-3">
+                    <div class="small text-muted mb-1">${senderName} - ${timestamp}</div>
+                    <div class="p-2 rounded bg-primary text-white ml-auto" style="max-width: 70%;">
+                        ${messageText || ''}
+                        ${fileHtml}
+                    </div>
+                </div>`;
+
+            chatContainer.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
         } catch (err) {
             console.error('Gagal mengirim pesan:', err);
         } finally {
