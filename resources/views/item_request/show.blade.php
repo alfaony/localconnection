@@ -172,7 +172,7 @@
               <i class="fas fa-file-invoice-dollar mr-2"></i>
               Konfirmasi Vendor & Penagihan
             </h5>
-            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
@@ -264,7 +264,7 @@
             <button type="submit" id="vendor-submit-btn" class="btn btn-success">
                 <i class="fas fa-paper-plane"></i> Simpan & Proses
             </button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
           </div>
         </div>
     </form>
@@ -333,6 +333,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/js/all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-smooth-scroll/2.2.0/jquery.smooth-scroll.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+
 <!-- 🎵 Notifikasi Suara -->
  
 <audio id="notification-sound-update" src="/audio/notification-update-item-request.mp3" preload="auto"></audio>
@@ -929,6 +931,10 @@ document.getElementById('chat-file').addEventListener('change', function () {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
 <style>
+    #chat-container .d-flex 
+    {
+        word-break: break-word;
+    }
     .workflow-step {
         position: relative;
         padding: 20px 0;

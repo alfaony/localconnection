@@ -28,16 +28,24 @@ class IpRestriction
                 {
                     abort(403, 'Gagal mendapatkan IP publik');
                 }
-
+                
                 $currentIp = $clientIp != "" ? $clientIp : $response->body();
+                
             } catch (\Exception $e) {
                 abort(403, 'Gagal mendapatkan IP publik');
             }
 
             //  Cek apakah IP saat ini ada di daftar yang diizinkan
-            if (!in_array($currentIp, $allowedIps)) {
+            if (!in_array($currentIp, $allowedIps)) 
+            {
                 return response()->view('ip_restricted',['currentIp' => $currentIp]);
             }
+
+            if ($response->body() && !in_array($response->body(), $allowedIps)) 
+            {
+                return response()->view('ip_restricted',['currentIp' => $response->body()]);
+            }
+
         }
 
         return $next($request);
