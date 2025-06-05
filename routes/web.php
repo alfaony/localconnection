@@ -126,7 +126,7 @@ Route::middleware('validate.vendor.token')->group(function ()
     Route::post('item-request/respond/{id}/{token}', [PotentialVendorController::class, 'update'])->name('vendor.respond.submit');
 });
 // Public route (tidak membutuhkan login)
-Route::get('item-request/list/{companySlug}', [ItemRequestController::class, 'publicIndex']);
+Route::get('item-request/list/{companySlug}', [ItemRequestController::class, 'publicIndex'])->name('item-request.public.index');
 Route::get('item-request/ajax/{companySlug}', [ItemRequestController::class, 'loadByCompany']);
 
 Route::group(['middleware' => ['auth','web']], function(){
