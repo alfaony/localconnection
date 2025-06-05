@@ -266,7 +266,7 @@ class ItemRequestController extends Controller
                 'airwillbill_photo' => $airwillbillPath,
                 'delivery_photo' => $deliveryPhotoPath,
             ]);
-
+            
             $message = "Air Way Bill (Resi) Sudah Terbit Untuk Request #{$itemRequest->item_name} #id {$itemRequest->id}";
             $directUrl = route('item-request.show', $itemRequest->id);
             $this->sentInbox($itemRequest->assigned_pic_id,$message, $directUrl, $itemRequest->id);

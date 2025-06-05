@@ -369,7 +369,7 @@
                     '<strong class="me-auto"><i class="fas fa-check-circle me-2"></i>Berhasil</strong>' +
                     '<button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
                     '</div>' +
-                    '<div class="toast-body bg-white text-dark">Data telah dikirim ke Finance.</div>' +
+                    '<div class="toast-body bg-white text-dark">Data telah dikirim ke Sprinter.</div>' +
                 '</div>')
                 .appendTo('body')
                 .toast({ delay: 2000 })
@@ -448,23 +448,43 @@
                 contentType: false,
                 success: function (res) {
                     // Tampilkan notifikasi kecil di dalam modal
-                    $('#upload-confirm-section').replaceWith(`
-                        <div class="alert alert-success mx-3 mt-3">
-                            <i class="fas fa-check-circle"></i> Bukti transfer berhasil diunggah.
-                        </div>
-                    `);
+                   $('<div class="toast align-items-center position-fixed top-0 end-0 m-3 show" role="alert" aria-live="assertive" aria-atomic="true">' +
+                        '<div class="toast-header bg-success text-white">' +
+                        '<strong class="me-auto"><i class="fas fa-check-circle me-2"></i>Berhasil</strong>' +
+                        '<button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
+                        '</div>' +
+                        '<div class="toast-body bg-white text-dark">Bukti Transfer Telah berhasil diunggah.</div>' +
+                    '</div>')
+                    .appendTo('body')
+                    .toast({ delay: 2000 })
+                    .toast('show');
                     setTimeout(() => {
-                        
-                            $('#uploadTransferModal').modal('hide');
-                        
-                            $('#btnUploadTransferModalClose').click();
-                            // Reset form agar tidak menyisakan file lama
 
-                            // Optional: reload data
-                            if (typeof loadWorkflow === 'function') {
-                                loadWorkflow();
-                            }
-                    }, 1500);
+                        // Reset form
+                        $('#form-upload-payment')[0].reset();
+
+                        // Pulihkan tombol submit
+                        $('#form-upload-payment button[type="submit"]').removeClass('d-none');
+                        $('#upload-confirm-section').addClass('d-none');
+
+                        // Pulihkan tombol konfirmasi
+                        $('#confirm-upload-btn')
+                            .html('<i class="fas fa-paper-plane"></i> Unggah')
+                            .prop('disabled', false);
+
+                        // Aktifkan kembali semua input
+                        $('#form-upload-payment :input').prop('disabled', false);
+
+                        $('#uploadTransferModal').modal('hide');
+                    
+                        $('#btnUploadTransferModalClose').click();
+                        // Reset form agar tidak menyisakan file lama
+
+                        // Optional: reload data
+                        if (typeof loadWorkflow === 'function') {
+                            loadWorkflow();
+                        }
+                    }, 1000);
                 },
                 error: function (err) {
                     console.error(err);
@@ -483,6 +503,33 @@
                     }
                 }
             });
+        });
+
+        $('#uploadTransferModal').on('hidden.bs.modal', function () 
+        {
+            // Reset form
+            $('#form-upload-payment')[0].reset();
+
+            // Kembalikan semua input ke keadaan aktif
+            $('#form-upload-payment :input').prop('disabled', false);
+
+            // Kembalikan tombol konfirmasi
+            $('#confirm-upload-btn')
+                .html('<i class="fas fa-paper-plane"></i> Unggah')
+                .prop('disabled', false);
+
+            // Tampilkan kembali tombol submit utama
+            $('#form-upload-payment button[type="submit"]').removeClass('d-none');
+
+            // Sembunyikan konfirmasi upload jika masih muncul
+            $('#upload-confirm-section').addClass('d-none');
+
+            // Hapus semua alert (success dan error) jika ada
+            $('#upload-error-alert').remove();
+            $('#uploadTransferModal .alert-success').remove();
+
+            // Kosongkan hidden input ID (opsional)
+            $('#item_purchase_id_input').val('');
         });
     });
 
@@ -541,6 +588,17 @@
                     .appendTo('body')
                     .toast({ delay: 2000 })
                     .toast('show');
+
+                    $('#vendor-billing-form')[0].reset(); // reset nilai
+                    $('#modal_vendor_info').empty(); // bersihkan info vendor
+
+                    // 3. Pulihkan UI
+                    $('#vendor-billing-form :input').prop('disabled', false);
+                    $('#confirm-send-btn')
+                        .html('<i class="fas fa-paper-plane"></i> Kirim')
+                        .prop('disabled', false);
+                    $('#vendor-submit-btn').removeClass('d-none');
+                    $('#vendor-confirm-section').addClass('d-none');
 
                     setTimeout(function () {
                         $('#selectVendorModal').modal('hide');
