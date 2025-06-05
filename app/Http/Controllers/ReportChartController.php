@@ -31,8 +31,9 @@ class ReportChartController extends Controller
         $start = $request->start_date ? Carbon::parse($request->start_date) : now()->startOfMonth();
         $end = $request->end_date ? Carbon::parse($request->end_date) : now()->endOfMonth();
 
+        $periodStart = 
         $reports = WeeklyReport::where('division_id', $divisionId)
-            ->whereBetween('date', [$start, $end])
+            ->whereBetween('week', [$start->isoWeek(), $end->isoWeek()])
             ->get();
 
         $period = CarbonPeriod::create(Carbon::parse($start)->startOfWeek(), Carbon::parse($end)->endOfWeek());
@@ -78,6 +79,14 @@ class ReportChartController extends Controller
                     'key_activities' => $report?->key_activities,
                     'problems' => $report?->problems,
                     'targets' => $report?->targets,
+                    'number_of_customers' => $report?->number_of_customers ?? 0,
+                    'number_of_users' => $report?->number_of_users ?? 0,
+                    'number_of_products' => $report?->number_of_products ?? 0,
+                    'number_of_projects' => $report?->number_of_projects ?? 0,
+                    'number_of_homepasses' => $report?->number_of_homepasses ?? 0,
+                    'number_of_leads' => $report?->number_of_leads ?? 0,
+                    'number_of_views' => $report?->number_of_views ?? 0,
+                    'number_of_profit' => $report?->number_of_profit ?? 0,
                 ];
             }),
         ]);
