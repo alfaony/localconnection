@@ -174,6 +174,8 @@ class ItemPurchaseController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);
+            Log::error($th);
+            return response()->json(['message' => 'Permintaan diselesaikan']);
         }
     }
 
@@ -196,12 +198,9 @@ class ItemPurchaseController extends Controller
         {
             foreach ($financesApprove as $financeApprove)
             {
-                if($financeApprove->id == auth()->id())
-                {
-                    $message = "Meminta pembayaran untuk item request #{$itemRequest->item_name}";
-                    $directUrl = route('item-request.show', $itemRequest->id);
-                    $this->sentInbox($financeApprove->id,$message, $directUrl, $itemRequest->id, $itemRequest->id);
-                }
+                $message = "Meminta pembayaran untuk item request #{$itemRequest->item_name}";
+                $directUrl = route('item-request.show', $itemRequest->id);
+                $this->sentInbox($financeApprove->id,$message, $directUrl, $itemRequest->id, $itemRequest->id);
             }
         }else
         {
