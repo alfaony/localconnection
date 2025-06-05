@@ -54,13 +54,13 @@ class ChatMessageController extends Controller
 
         
         
-        // broadcast(new ChatMessageSent(
-        //     $chat->sender->name ?? 'Anonim',
-        //     $chat->message,
-        //     $chat->created_at,
-        //     $chat->item_request_id,
-        //     Auth::user()->id
-        // ))->toOthers();
+        broadcast(new ChatMessageSent(
+            $chat->sender->name ?? 'Anonim',
+            $chat->message,
+            $chat->created_at,
+            $chat->item_request_id,
+            Auth::user()->id
+        ))->toOthers();
         
 
          $userIds = ChatMessage::where('item_request_id', $data['item_request_id'])
