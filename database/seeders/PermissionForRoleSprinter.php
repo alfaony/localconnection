@@ -64,7 +64,7 @@ class PermissionForRoleSprinter extends Seeder
             }
 
             $itemRequest = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_sprinter','as_finance'];
-            $itemPurchase = ['store','update','edit','show','destroy','payment'];
+            $itemPurchase = ['store','update','edit','show','destroy','payment','complete'];
             $chatMessage = ['index','store','show','edit'];
             
             
@@ -79,7 +79,7 @@ class PermissionForRoleSprinter extends Seeder
                     'model' => 'ItemRequest',
                     'guard_name' => 'web'
                 ]);
-                if (in_array($method, ['as_sprinter'])) 
+                if (in_array($method, ['as_sprinter','complete'])) 
                 {
                     PermissionRole::create(['role_id' => $sprinterRole->id, 'permission_id' => $permission->id]);
                     continue;

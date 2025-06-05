@@ -42,10 +42,11 @@ class WorkflowService
             'data' => [
                 'vendors' => $itemRequest->potentialVendors->filter(function ($vendor) use ($usedVendorIds) 
                 {
-                    return $vendor->productSupplier && !in_array($vendor->productSupplier->id, $usedVendorIds);
+                    return $vendor->productSupplier;
                 })
                 ->sortByDesc('responded_at')
                  ->map(function ($vendor) {
+                    $itemPurchase = $vendor->itemRequest->purchase ? $vendor->itemRequest->purchase->pluck('product_supplier_id')->toArray() : [];
                     return [
                         'id' => $vendor->productSupplier->id,
                         'name' => $vendor->productSupplier ? $vendor->productSupplier->store_name : '-',
@@ -56,7 +57,8 @@ class WorkflowService
                         'response_time' => $vendor->responded_at ?? null,
                         'price_offered' => $vendor->price_offered,
                         'response' => $vendor->responded,
-                        'note' => $vendor->note
+                        'note' => $vendor->note,
+                        'is_selected' => in_array($vendor->productSupplier->id, $itemPurchase)
 
                     ];
                 })->toArray(),

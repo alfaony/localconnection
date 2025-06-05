@@ -57,53 +57,7 @@ class ItemPurchaseController extends Controller
     
             if($request->is_finished)
             {
-                $financeRole = Role::where('name', RoleSchema::FINANCE)->first() ?? NULL;
-                $managerFinance = Role::where('name', "MANAGER FINANCE")->first() ?? NULL;
-
-                $adminRole = Role::where('name', RoleSchema::ADMIN)->first();
-                $rootRole = Role::where('name', RoleSchema::ROOT)->first();
-                
-                $financesApprove = User::where('company_id', $itemRequest->company_id)
-                ->whereHas('role.permissions', function ($q) {
-                    $q->where('method', 'as_finance')
-                    ->where('table', 'item_requests');
-                })->get();
-
-                if(!$financesApprove->isEmpty())
-                {
-                    foreach ($financesApprove as $financeApprove)
-                    {
-                        $message = "Meminta pembayaran untuk item request #{$itemRequest->item_name}";
-                        $directUrl = route('item-request.show', $itemRequest->id);
-                        $this->sentInbox($financeApprove->id,$message, $directUrl, $itemRequest->id, $itemRequest->id);
-                    }
-                }else
-                {
-                    $finances = User::where('company_id', $itemRequest->company_id)
-                    ->where(function ($query) use ($financeRole, $managerFinance, $adminRole, $rootRole) {
-                        if ($financeRole) {
-                            $query->where('role_id', $financeRole->id);
-                        }
-                        if ($managerFinance) 
-                        {
-                            $query->orWhere('role_id', $managerFinance->id);
-                        }
-                        if(!$financeRole && !$managerFinance)
-                        {
-                            $query->orWhere('role_id', $adminRole->id)->orWhere('role_id', $rootRole->id);
-                        }
-                        ;
-                    })
-                    ->get();
-                    foreach ($finances as $finance)
-                     {
-                        $message = "Meminta pembayaran untuk item request #{$itemRequest->item_name}";
-                        $directUrl = route('item-request.show', $itemRequest->id);
-                        $this->sentInbox($finance->id,$message, $directUrl, $itemRequest->id, $itemRequest->id);
-                    }
-                }
-
-                $this->itemRequestClose($validatedData['item_request_id']);
+                $this->itemRequestClose($itemRequest);
             }
     
                 
@@ -211,10 +165,71 @@ class ItemPurchaseController extends Controller
         }
     }
 
-
-    private function itemRequestClose($id)
+    public function complete($id)
     {
-        return ItemRequest::where('id',$id)->update(['is_open' => false]);
+        try {
+            $itemRequest = ItemRequest::findOrFail($id);
+            $this->itemRequestClose($itemRequest);
+            return response()->json(['message' => 'Permintaan diselesaikan']);
+        } catch (\Throwable $th) {
+            //throw $th;
+            // dd($th);
+        }
+    }
+
+    private function itemRequestClose($itemRequest)
+    {
+        // return ItemRequest::where('id',$id)->update(['is_open' => false]);
+        $financeRole = Role::where('name', RoleSchema::FINANCE)->first() ?? NULL;
+        $managerFinance = Role::where('name', "MANAGER FINANCE")->first() ?? NULL;
+
+        $adminRole = Role::where('name', RoleSchema::ADMIN)->first();
+        $rootRole = Role::where('name', RoleSchema::ROOT)->first();
+        
+        $financesApprove = User::where('company_id', $itemRequest->company_id)
+        ->whereHas('role.permissions', function ($q) {
+            $q->where('method', 'as_finance')
+            ->where('table', 'item_requests');
+        })->get();
+
+        if(!$financesApprove->isEmpty())
+        {
+            foreach ($financesApprove as $financeApprove)
+            {
+                if($financeApprove->id == auth()->id())
+                {
+                    $message = "Meminta pembayaran untuk item request #{$itemRequest->item_name}";
+                    $directUrl = route('item-request.show', $itemRequest->id);
+                    $this->sentInbox($financeApprove->id,$message, $directUrl, $itemRequest->id, $itemRequest->id);
+                }
+            }
+        }else
+        {
+            $finances = User::where('company_id', $itemRequest->company_id)
+            ->where(function ($query) use ($financeRole, $managerFinance, $adminRole, $rootRole) {
+                if ($financeRole) {
+                    $query->where('role_id', $financeRole->id);
+                }
+                if ($managerFinance) 
+                {
+                    $query->orWhere('role_id', $managerFinance->id);
+                }
+                if(!$financeRole && !$managerFinance)
+                {
+                    $query->orWhere('role_id', $adminRole->id)->orWhere('role_id', $rootRole->id);
+                }
+                ;
+            })
+            ->get();
+            foreach ($finances as $finance)
+            {
+                $message = "Meminta pembayaran untuk item request #{$itemRequest->item_name}";
+                $directUrl = route('item-request.show', $itemRequest->id);
+                $this->sentInbox($finance->id,$message, $directUrl, $itemRequest->id, $itemRequest->id);
+            }
+        }
+            $itemRequest->is_open = 0;
+            return $itemRequest->save();
     }
 
     private function sentInbox($to,$message,$directUrl, $itemRequest = null)

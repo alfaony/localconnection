@@ -346,6 +346,19 @@ class ItemRequestController extends Controller
         return response()->json($data);
     }
 
+    public function complete($id)
+    {
+        $itemRequest = ItemRequest::findOrFail($id);
+        
+        if (!$itemRequest->is_open) {
+            return response()->json(['message' => 'Permintaan sudah ditutup'], 400);
+        }
+
+        $itemRequest->is_open = false;
+        $itemRequest->save();
+
+        return response()->json(['message' => 'Permintaan diselesaikan']);
+    }
 
     private function findCandidate($companyId)
     {

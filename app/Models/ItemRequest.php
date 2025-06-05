@@ -21,6 +21,7 @@ class ItemRequest extends Model
         'status',
         'qty',
         'picture',
+        'is_open',
     ];
 
     protected $appends = ['status_badge','price_with_format','status_open'];

@@ -473,6 +473,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('item-request/delivery/{id}', [ItemRequestController::class, 'delivery'])->name('item-request.delivery');
   Route::resource('item-request', ItemRequestController::class);
   
+  Route::post('item-purchase/complete/{id}', [ItemPurchaseController::class, 'complete'])->name('item-purchase.complete');
   Route::put('item-purchase/payment/{id}', [ItemPurchaseController::class, 'payment'])->name('item-purchase.payment');
   Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
 });

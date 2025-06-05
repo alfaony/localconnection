@@ -85,18 +85,22 @@
                                                 <div class="d-flex">
                                                     {{-- Tombol atau status --}}
                                                     <div class="mr-3 text-center">
-                                                        @if($itemRequest->is_open)
-                                                            <button class="btn btn-sm btn-outline-success btn-select-vendor"
-                                                                data-vendor-id="{{ $vendor['id'] }}"
-                                                                data-vendor-name="{{ $vendor['name'] }}"
-                                                                data-vendor-location="{{ $vendor['location'] }}"
-                                                                data-vendor-phone="{{ $vendor['phone_number'] }}"
-                                                                data-vendor-price-offered="{{ $vendor['price_offered'] }}"
-                                                                >
-                                                                Pilih <i class="fas fa-check"></i>
-                                                            </button>
+                                                        @if(!$vendor['is_selected'])
+                                                            @if($itemRequest->is_open)
+                                                                <button class="btn btn-sm btn-outline-success btn-select-vendor"
+                                                                    data-vendor-id="{{ $vendor['id'] }}"
+                                                                    data-vendor-name="{{ $vendor['name'] }}"
+                                                                    data-vendor-location="{{ $vendor['location'] }}"
+                                                                    data-vendor-phone="{{ $vendor['phone_number'] }}"
+                                                                    data-vendor-price-offered="{{ $vendor['price_offered'] }}"
+                                                                    >
+                                                                    Pilih <i class="fas fa-check"></i>
+                                                                </button>
+                                                            @else
+                                                                <span class="badge badge-danger">Closed</span>
+                                                            @endif
                                                         @else
-                                                            <span class="badge badge-danger">Closed</span>
+                                                            <i class="fas fa-check text-success"></i>
                                                         @endif
                                                     </div>
 
@@ -154,7 +158,16 @@
                                         </div>
                                     @endforeach
                                 </div>
-
+                                @canAccess('complete','item_purchases')
+                                @if($itemRequest->is_open)
+                                    <div class="text-center mt-3 mt-md-0 ml-md-3">
+                                        <button class="btn btn-sm btn-success" id="btn-complete-request"
+                                            onclick="confirmCompleteRequest({{ $itemRequest->id }})">
+                                            <i class="fas fa-check mr-2"></i> Selesaikan Permintaan
+                                        </button>
+                                    </div>
+                                @endif
+                                @endcanAccess
                             @break
 
                             @case('Konfirmasi Pembayaran')
@@ -195,7 +208,7 @@
                                                     Finance: {{ $purchase->payment->finance->name ?? '' }}
                                                 </div>
                                                 @endif
-                                                @if(!$purchase->payment)
+                                                @if(!$purchase->payment && !$itemRequest->is_open)
                                                 @canAccess('payment','item_purchases')
                                                 <button class="btn btn-sm btn-success btn-upload-transfer"
                                                     data-toggle="modal"
