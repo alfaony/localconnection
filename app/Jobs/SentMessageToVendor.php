@@ -64,7 +64,7 @@ class SentMessageToVendor implements ShouldQueue
             }
         } catch (\Throwable $th) 
         {
-            dd($th);
+            // dd($th);
             Log::error($th->getMessage());
         }
     }
