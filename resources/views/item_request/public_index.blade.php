@@ -324,7 +324,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-
+    
     <script>
         // Fungsi untuk mengubah format tanggal
         function formatDateTime(dateString) {
@@ -340,11 +340,16 @@
         
         // Fungsi untuk menghitung sisa waktu
         function getTimeRemaining(createdAt) {   
+            const CLOSED_TIME = "{{ $settingCompany['closed_time'] ?? '16:00' }}";
+
+
             const now = new Date();
             const created = new Date(createdAt);
             const deadline = new Date(created);
             
-            deadline.setHours(16, 0, 0, 0);
+            const [closedHour, closedMinute] = (typeof CLOSED_TIME !== 'undefined' ? CLOSED_TIME : '16:00').split(':').map(Number);
+            
+            deadline.setHours(closedHour, closedMinute || 0, 0, 0);
             
             const isSameDay = now.toDateString() === created.toDateString();
             const remaining = deadline - now;

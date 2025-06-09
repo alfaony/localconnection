@@ -93,6 +93,14 @@
                                 </div>
 
                                 <div class="form-group">
+                                    <label for="closed_time">Waktu Tutup Sprinter</label>
+                                    <input type="time" name="closed_time" id="closed_time" class="form-control" value="{{ old('closed_time', $data['closed_time'] ?? '14:00') }}">
+                                    @error('closed_time')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
                                     <label for="reward_point_conversion">Konversi Poin Hadiah (per 1 POIN)</label>
                                     <input type="text" class="form-control" id="reward_point_conversion_show" oninput="formatRupiahFormat(this,'reward_point_conversion')" value="{{ old('reward_point_conversion', $data['reward_point_conversion'] ?? '500') }}">
                                     <input type="hidden" name="reward_point_conversion" id="reward_point_conversion" class="form-control" value="{{ old('reward_point_conversion', $data['reward_point_conversion'] ?? '500') }}">

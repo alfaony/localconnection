@@ -30,7 +30,7 @@
                     <div class="row">
                         <div class="col-md-4 mb-4">
                             <div class="card img-hover-zoom">
-                                <img src="{{ Storage::url($itemRequest->picture) }}" class="card-img-top" 
+                                <img src="{{ $itemRequest->picture ? Storage::url($itemRequest->picture) : asset('logo/logo-thrive.png') }}" class="card-img-top"
                                     alt="Item Image" style="height: 200px; object-fit: cover;">
                             </div>
                         </div>

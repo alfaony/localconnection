@@ -54,7 +54,7 @@ class CompanyController extends Controller
             $user->company_id = $company->id;
             $user->save();
     
-            $fieldProfile = ['name' => $request->post('company_pt'),'director'=> $request->post('director'),'address' => $request->post('address'),'npwp_number' => $request->post('npwp_number'),'currency'=>'','currency_usd'=>"",'nib_file'=>'','acta_file'=> '','npwp_file' => '','signature_file' => '','template_perjanjian' => $request->post('template_perjanjian'),'affiliate_company'=>null];
+            $fieldProfile = ['name' => $request->post('company_pt'),'director'=> $request->post('director'),'address' => $request->post('address'),'npwp_number' => $request->post('npwp_number'),'currency'=>'','currency_usd'=>"",'nib_file'=>'','acta_file'=> '','npwp_file' => '','signature_file' => '','template_perjanjian' => $request->post('template_perjanjian'),'affiliate_company'=>null,'closed_time'=>"14:00"];
             $fieldEmail = ['clock_in' => '08:00','reward_point_conversion' => '500','late_point'=>-10,'on_time_poin'=>0,'host' => '','port' => '','username' => '','password' => '','encryption'=> '','sent_time'=>'','sent_time_status'=>''];
             $fieldHeadLetter = ['header' => '', 'footer' => ''];
             $fieldXero = ['client_id' => '', 'client_secret' => '', 'webhook_key' => ''];

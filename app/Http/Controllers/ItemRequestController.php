@@ -40,10 +40,18 @@ class ItemRequestController extends Controller
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
         $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
         $shareWa = $client->status() ?? false;
+
+        $existsSprinter = User::where('company_id', Auth::user()->company_id)
+            ->whereHas('role.permissions', function ($q) {
+                $q->where('method', 'as_sprinter')
+                ->where('table', 'item_requests');
+            })
+            ->exists();
+
         
         // $statusShareWa = 
         $categories = SupplierCategory::byCompany(Auth::user()->company_id)->get();
-        return view('item_request.createOrEdit', compact('categories', 'shareWa'));
+        return view('item_request.createOrEdit', compact('categories', 'shareWa', 'existsSprinter'));
     }
 
     public function store(Request $request)
@@ -303,7 +311,9 @@ class ItemRequestController extends Controller
     public function publicIndex($companySlug)
     {
         $company = Company::where('slug', $companySlug)->firstOrFail();
-        return view('item_request.public_index', compact('company'));
+        $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('field_title','closed_time')->get()->pluck('field_value','field_title');
+
+        return view('item_request.public_index', compact('company', 'settingCompany'));
     }
 
     public function loadByCompany($companySlug)

@@ -97,6 +97,7 @@
                 @endif
 
                 <div class="form-group text-right">
+                    @if($existsSprinter)
                     @canAccess('store', 'item_requests')
                     @canAccess('update', 'item_requests')
                     <button type="submit" class="btn btn-{{ isset($itemRequest) ? 'primary' : 'success' }}" 
@@ -108,6 +109,11 @@
                     <a href="{{ route('item-request.index') }}" class="btn btn-secondary">
                         <i class="fas fa-times mr-1"></i>Batal
                     </a>
+                    @else
+                    <div class="alert alert-warning text-center" role="alert">
+                        <i class="fas fa-info-circle mr-1"></i> Belum ada sprinter di perusahaan ini, silahkan tambahkan sprinter terlebih dahulu
+                    </div>
+                    @endif
                 </div>
             </form>
         </div>
