@@ -154,6 +154,8 @@ Route::get('employee-checking/report', [EmployeeCheckingController::class, 'repo
 Route::get('partnership-agreement/sharePdf/{id}',[PartnershipAgreementController::class,'sharePdf'])->name('partnership-agreement.sharePdf');
 Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementController::class,'signatureShare'])->name('partnership-agreement.signatureShare');
 
+Route::post('dailytask/checkDivisionQuota', [DailyTaskController::class, 'checkDivisionQuota'])->name('dailytask.checkDivisionQuota');
+
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/listDayoff', [App\Http\Controllers\HomeController::class, 'listDayoff'])->name('home.listDayoff');
@@ -445,7 +447,6 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   
   Route::resource('flowchart', FlowChartController::class);
 });
-
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

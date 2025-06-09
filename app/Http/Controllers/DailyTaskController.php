@@ -35,6 +35,8 @@ use App\Models\DailyTaskCustomFieldValue;
 use App\Models\Objective;
 use App\Models\DailyTaskStatusRecord;
 use App\Models\SettingCompany;
+use App\Models\Division;
+use App\Models\DivisionQuotaLock;
 
 use App\Helpers\InboxHelper;
 use Ramsey\Uuid\Uuid;
@@ -361,11 +363,12 @@ class DailyTaskController extends Controller
             $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
             $doing = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
             $approvement = TaskStatus::where('name',ParamSchema::COMPLATE)->orWhere('name',ParamSchema::NOTCOMPLATE)->get();
+            $divisions = Auth::user()->divisions()->get();
 
             $daysMap = config('custom.days');
             $isOverdue = $dailytask->isOverdue();
 
-            $htmlContent = view('dailytask.sidebar', compact('dailytask','daysMap','isOverdue','doing','approvement'))->render();
+            $htmlContent = view('dailytask.sidebar', compact('dailytask','daysMap','isOverdue','doing','approvement', 'divisions'))->render();
             $htmlHeadContact = view('dailytask.sidebarhead', compact('dailytask'))->render();
             $htmlTableContent = view('dailytask.element-table', compact('dailytask'))->render();
             
@@ -397,12 +400,13 @@ class DailyTaskController extends Controller
             $dailytaskNext = $request->next_slug ? DailyTask::select('id','slug','name')->byCompany(Auth::user()->company_id)->where('slug', $request->next_slug)->firstOrFail() : null;
             $doing = TaskStatus::where('name', ParamSchema::TODO)->firstOrFail();
             $approvement = TaskStatus::whereIn('name', [ParamSchema::COMPLATE, ParamSchema::NOTCOMPLATE])->get();
+            $divisions = Auth::user()->divisions()->get();
 
             $daysMap = config('custom.days');
             $isOverdue = $dailytask->isOverdue();
 
             // Handle AJAX request
-            $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext','dailytaskChildCount'))->render();
+            $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext','dailytaskChildCount', 'divisions'))->render();
             $htmlHeadContact = view('dailytask.sidebarhead', compact('dailytask'))->render();
             $htmlTableContent = view('dailytask.element-table', compact('dailytask'))->render();
             $htmlTableContentDashboard = view('dailytask.element-table-dashboard', compact('dailytask'))->render();
@@ -475,6 +479,7 @@ class DailyTaskController extends Controller
         $user = Auth::user(); // Get the current authenticated user
         $divisionIds = $user->divisions->pluck('id');
         $days = config('custom.days');
+        $divisions = Auth::user()->divisions()->get();
 
         $child = $dailytask->head ? TRUE : FALSE ;
         $taskRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
@@ -491,12 +496,14 @@ class DailyTaskController extends Controller
         }
 
 
-        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child','days','taskRecurring'));
+        return view('dailytask.edit',compact('categories', 'types', 'users', 'childTasks', 'dailytask', 'projects','objectives','child','days','taskRecurring', 'divisions'));
 
     }
 
     public function update(DailyTaskRequest $request, $slug)
     {
+
+        // dd($request->all());
         DB::beginTransaction();
         try {
             $dailyTask = DailyTask::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
@@ -532,7 +539,28 @@ class DailyTaskController extends Controller
                 }
     
                 $this->sentInbox($userTo,$message, $directUrl);
-            }   
+            }  
+            if($request->point > 0)
+            {
+                $request->validate([
+                    'point' => 'required|integer|min:1',
+                    'division_id' => 'required|exists:divisions,id',
+                ]);
+
+                $check = $this->checkDivisionQuota(new Request([
+                    'division_id' => $request->division_id,
+                    'point' => $request->point,
+                    'exclude_task_id' => $dailyTask->id
+                ]));
+
+                if ($check->original['status'] !== 'ok') 
+                {
+                    return redirect()->back()->with('error', $check->original['message']);
+                }
+
+                $dailyTask->division_id = $request->division_id;
+                $dailyTask->division_quota_lock_id = $check->original['quota_lock_id'];
+            } 
 
             // Handle Recurring Task Creation
             $oldType = $dailyTask->daily_task_type_id;
@@ -885,14 +913,36 @@ class DailyTaskController extends Controller
         $request->validate([
             'point' => 'nullable|integer',
             'task_status' => 'required|exists:task_statuses,id',
+            'division_id' => 'nullable|exists:divisions,id',
         ]);
-        
+
         $taskStatuss = TaskStatus::find($request->task_status);
 
         DB::beginTransaction();
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         try {
-            $dailytask->point = $request->point;
+            if($request->point > 0)
+            {
+                $request->validate([
+                    'point' => 'required|integer|min:1',
+                    'division_id' => 'required|exists:divisions,id',
+                ]);
+
+                $check = $this->checkDivisionQuota(new Request([
+                    'division_id' => $request->division_id,
+                    'point' => $request->point
+                ]));
+
+                if ($check->original['status'] !== 'ok') 
+                {
+                    return response()->json(['success' => false, 'message' => $check->original['message']]);
+                }
+
+                $dailytask->division_id = $request->division_id;
+                $dailytask->division_quota_lock_id = $check->original['quota_lock_id'];
+            }
+                
+            $dailytask->point = $request->point ?? 0;
             $dailytask->task_status_id = $taskStatuss->id;
             $dailytask->approved = $taskStatuss->name == ParamSchema::COMPLATE ? true : false;
 
@@ -906,11 +956,6 @@ class DailyTaskController extends Controller
                 $dailytask->report_note = null;
                 $dailytask->submit = null;
                 $dailytask->status_submit = null;
-
-                // You can uncomment this if you want to delete media files as well
-                // foreach ($dailytask->media as $media) {
-                //     $media->delete(); 
-                // }
             }
 
             // Call InboxHelper to send notification
@@ -940,7 +985,7 @@ class DailyTaskController extends Controller
 
             if ($request->ajax()) {
                 // Return JSON error response for AJAX requests
-                return response()->json(['success' => false, 'message' => 'An error occurred while updating the task.']);
+                return response()->json(['success' => false, 'message' => $th->getMessage()]);
             }
 
             return redirect()->route('dailytask.show', $dailytask->slug)->with('approvement', false);
@@ -1544,6 +1589,75 @@ class DailyTaskController extends Controller
         );
 
         return;
+    }
+
+
+
+    public function checkDivisionQuota(Request $request)
+    {
+        $request->validate([
+            'point' => 'required|integer',
+            'division_id' => 'required|exists:divisions,id',
+            'exclude_task_id' => 'nullable|uuid|exists:daily_tasks,id',
+        ]);
+
+        $point = (int) $request->point;
+        $divisionId = $request->division_id;
+        $month = now()->month;
+        $year = now()->year;
+
+        if ($point <= 0) 
+        {
+            return response()->json([
+                'status' => 'ok',
+                'message' => 'Poin nol atau negatif, tidak perlu cek kuota.',
+                'remaining' => null
+            ]);
+        }
+        $checkDailyTask = $request->exclude_task_id ? DailyTask::where('id',$request->exclude_task_id)->first() : NULL;
+
+
+        if($checkDailyTask && $checkDailyTask->division_id == $divisionId && $checkDailyTask->division_quota_lock_id)
+        {
+            $quota = DivisionQuotaLock::where('division_id', $divisionId)
+                ->where('id', $checkDailyTask->division_quota_lock_id)
+                ->first();
+        }else
+        {
+            $quota = DivisionQuotaLock::where('division_id', $divisionId)
+                ->where('month', $month)
+                ->where('year', $year)
+                ->first();
+        }
+
+        if (!$quota) 
+        {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Kuota divisi ini belum tersedia',
+            ]);
+        }
+
+        $used = DailyTask::where('division_quota_lock_id', $quota->id)
+            ->when($request->exclude_task_id, function ($query) use ($request) {
+                $query->where('id', '!=', $request->exclude_task_id);
+            })
+            ->sum('point');
+
+        $sisa = $quota->locked_quota - $used;
+
+        if ($point > $sisa) {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Kuota tidak cukup. Sisa: ' . $sisa . ' poin.',
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'remaining' => $sisa,
+            'quota_lock_id' => $quota->id, // kalau ingin langsung assign
+        ]);
     }
 
     protected function handleRecurringTask($dailyTask, $request)

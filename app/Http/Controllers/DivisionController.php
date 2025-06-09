@@ -44,19 +44,33 @@ class DivisionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'point_quota_monthly' => 'nullable|integer',
-        ]); 
-
-        $division = Division::create([
-            'user_id' => auth()->id(),
-            'name' => $request->name,
-            'manual_checkin' => $request->has('manual_checkin') ? 1 : 0,
-            'requires_photo' => $request->has('requires_photo') ? 1 : 0,
-            'requires_location' => $request->has('requires_location') ? 1 : 0,
-            'point_quota_monthly' => $request->point_quota_monthly ?? null
+            'point_quota_monthly' => 'required|integer|min:0',
         ]);
 
-        return redirect()->route('division.index')->with('success', 'Division Store successfully.');
+        DB::beginTransaction();
+
+        try {
+            $division = Division::create([
+                'user_id' => Auth::user()->id,
+                'name' => $request->name,
+                'point_quota_monthly' => $request->point_quota_monthly,
+            ]);
+
+            // Create DivisionQuotaLock untuk bulan ini
+            if($request->point_quota_monthly > 0)
+            {
+                $this->ensureQuotaLockFor($division);
+            }
+
+            DB::commit();
+
+            return back()->with('success', 'Divisi berhasil ditambahkan.');
+        } catch (\Throwable $e) {
+            // dd($e);
+            Log::error($e);
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function create()
@@ -141,73 +155,35 @@ class DivisionController extends Controller
         return view('divisions.show_division', compact('tasks', 'customFields', 'division', 'users', 'taskStatuss'));
     }
 
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'point_quota_monthly' => 'nullable|integer',
+            'point_quota_monthly' => 'required|integer|min:0',
         ]);
 
         DB::beginTransaction();
+
         try {
-            $division = Division::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-    
-            $newMonthlyQuota = (int) $request->input('point_quota_monthly');
-            $month = now()->month;
-            $year = now()->year;
+            $division = Division::byCompany(Auth::user()->company_id)->where('slug', $id)->firstOrFail();
+            $division->name = $request->name;
 
-            $quotaMonthly = $division->point_quota_monthly ?? 0;
-
-            // Jika kuota monthly di divisions berubah
-            if ($newMonthlyQuota != $division->point_quota_monthly) 
+            if($division->point_quota_monthly != $request->point_quota_monthly)
             {
-                // Update point_quota_monthly di divisions
-                $quotaMonthly = $newMonthlyQuota;
+                $newQuota = (int) $request->point_quota_monthly;
+                $check = $this->validateAndUpdateQuotaLock($division, $newQuota);
+    
+                $division->point_quota_monthly = $newQuota;
+                $division->save();
             }
 
-            // Cek apakah kuota terkunci bulan ini sudah ada
-            $quotaLock = DivisionQuotaLock::where('division_id', $division->id)
-                ->where('month', $month)
-                ->where('year', $year)
-                ->first();
-
-            if ($quotaLock) {
-                // Jika ada input locked_quota untuk update quota terkunci
-                $newLockedQuota = (int) $request->input('locked_quota', $quotaLock->locked_quota);
-
-                if ($newLockedQuota != $quotaLock->locked_quota) {
-                    // Kalau menurunkan kuota, cek apakah sudah ada poin yang dipakai lebih besar dari quota baru
-                    if ($newLockedQuota < $quotaLock->locked_quota) {
-                        $usedPoints = DailyTask::where('division_id', $division->id)
-                            ->whereMonth('created_at', $month)
-                            ->whereYear('created_at', $year)
-                            ->sum('point');
-
-                        if ($usedPoints > $newLockedQuota) {
-                            return back()->with('error', 'Kuota baru lebih kecil dari poin yang sudah dipakai.');
-                        }
-                    }
-
-                    // Update kuota terkunci
-                    $quotaLock->locked_quota = $newLockedQuota;
-                    $quotaLock->save();
-                }
-            }
-
-            $division->update([
-                'name' => $request->name,
-                'point_quota_monthly' => $quotaMonthly,
-            ]);
-            
             DB::commit();
-            return redirect()->route('division.index')->with('success', 'Division updated successfully.');
-        } catch (\Throwable $th) {
-            //throw $th;
-            dd($th);
-            Log::error($th);
-            DB::rollback();
-
-            return back()->with('error', 'An error occurred: ' . $th->getMessage());
+            return back()->with('success', 'Divisi berhasil diperbarui.');
+        } catch (\Throwable $e) {
+            // dd($e);
+            Log::error($e);
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -372,5 +348,65 @@ class DivisionController extends Controller
             ];
         });
         return response()->json($tasks);
+    }
+
+    protected function ensureQuotaLockFor(Division $division)
+    {
+        $month = now()->month;
+        $year = now()->year;
+
+        $exists = DivisionQuotaLock::where('division_id', $division->id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->exists();
+
+        if (!$exists) {
+            DivisionQuotaLock::create([
+                'division_id' => $division->id,
+                'month' => $month,
+                'year' => $year,
+                'locked_quota' => $division->point_quota_monthly,
+            ]);
+        }
+    }
+
+    protected function validateAndUpdateQuotaLock(Division $division, int $newQuota)
+    {
+        $month = now()->month;
+        $year = now()->year;
+
+        $quotaLock = DivisionQuotaLock::where('division_id', $division->id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+
+        if (!$quotaLock) {
+            // Auto-buat kalau belum ada
+            DivisionQuotaLock::create([
+                'division_id' => $division->id,
+                'month' => $month,
+                'year' => $year,
+                'locked_quota' => $newQuota,
+            ]);
+            return;
+        }
+
+        // Jika quota diturunkan, pastikan aman
+        if ($newQuota < $quotaLock->locked_quota) {
+            $usedPoints = DailyTask::where('division_quota_lock_id', $quotaLock->id)->sum('point');
+
+            if ($newQuota < $usedPoints) {
+                throw new \Exception("Kuota tidak bisa diturunkan ke $newQuota karena sudah terpakai $usedPoints poin.");
+            }
+
+            $quotaLock->locked_quota = $newQuota;
+            $quotaLock->save();
+        }
+
+        // Jika quota dinaikkan, bebas update
+        if ($newQuota > $quotaLock->locked_quota) {
+            $quotaLock->locked_quota = $newQuota;
+            $quotaLock->save();
+        }
     }
 }

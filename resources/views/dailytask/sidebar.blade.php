@@ -291,10 +291,25 @@
                     @endforeach
                 </select>
             </div>
+            @canAccess('checkDivisionQuota','dailytasks')
             <div class="form-group mt-2">
                 <label for="point">Poin</label>
-                <input type="number" name="point" class="form-control" value="{{ $dailytask->point }}">
+                <input type="number" name="point" id="pointInput" class="form-control" placeholder="Masukkan Poin">
             </div>
+
+            <div id="divisionSection" class="form-group mt-2 d-none">
+                <label for="task_status">Point Divisi</label>
+                <select id="divisionSelect" name="division_id" class="form-control">
+                    <option value="" selected>Pilih Divisi</option>    
+                    @foreach($divisions as $division)
+                        <option value="{{ $division->id }}">{{ $division->name }}</option>
+                    @endforeach
+                </select>
+                <small id="quotaInfo" class="text-muted d-none"></small>
+                <small id="quotaWarning" class="text-danger d-none">Poin melebihi kuota tersedia!</small>
+            </div>
+            @endcanAccess
+            
             <div class="d-flex justify-content-start">
                 <button type="button" id="submitApprovement" class="btn btn-success mt-3">Simpan Tugas</button>
                 @if($dailytaskNext)
