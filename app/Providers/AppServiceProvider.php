@@ -9,6 +9,7 @@ use JeroenNoten\LaravelAdminLte\Events\BuildingMenu;
 use App\Helpers\Access;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\EquipmentReduction;
 use App\Models\TaskAssign;
@@ -55,7 +56,7 @@ class AppServiceProvider extends ServiceProvider
                 'pricelists',
                 'roles',
             ];
-
+            $managementRequestItemArray = array();
             $managementCompanyArray = array();
             $managementCompanyArray = array();
             $managementSalesArray = array();
@@ -79,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
             $wilayahMenu = ['provinces','cities','districts','subdistricts','postal_codes'];
             $productMenu = ['pricelists','products','product_suppliers','supplier_categories'];
             $subcribetionMenu = ['vehicles','subscribe_letters'];
+            $managementRequestItemMenu = ['item_requests'];
 
             $managementCompanyMenu = 
             [
@@ -525,7 +527,19 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Alur Kerja',
                     'route' => 'flowchart.index',
                     'icon' => 'fa fa-sitemap',
-                ]
+                ],
+                'item_requests' => 
+                [
+                    'text' => 'Pengajuan Barang',
+                    'route' => 'item-request.index',
+                    'icon' => 'fa fa-shopping-cart',
+                ],
+                'list_sprinter' =>
+                [
+                    'text' => 'List Sprinter',
+                    'url' => url("item-request/list/".Auth::user()->company->slug),
+                    'icon' => 'fa fa-list',
+                ] 
             ];
 
             foreach ($listMenu as $role) 
@@ -633,11 +647,31 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($managementRequestItemMenu as $role) 
+            {
+                if(in_array($role,['item_requests']) && Access::can("index", $role))
+                {
+                    array_push($managementRequestItemArray,$menus["list_sprinter"]);
+                }
+
+                if(Access::can("index", $role))
+                {
+                    array_push($managementRequestItemArray,$menus[$role]);
+                }
+            }
+
+            $managementRequestItemMenu = 
+            [
+                'text'    => 'Manajemen Pengajuan Barang',
+                'submenu' => $managementRequestItemArray
+            ];
+
             $managementSalesMenu = 
             [
                 'text'    => 'Manajemen Penjualan',
                 'submenu' => $managementSalesArray
             ];
+
 
             $productivityMenu = 
             [
@@ -714,6 +748,11 @@ class AppServiceProvider extends ServiceProvider
             if($managementSalesMenu['submenu'] )
             {
                 $event->menu->add($managementSalesMenu);
+            }
+
+            if($managementRequestItemMenu['submenu'] )
+            {
+                $event->menu->add($managementRequestItemMenu);
             }
 
             if($productivityMenu['submenu'] )

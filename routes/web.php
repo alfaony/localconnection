@@ -61,7 +61,7 @@ use App\Http\Controllers\EmployeeCheckingController;
 use App\Http\Controllers\XeroController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\XeroWebhookController;
-use App\Http\Controllers\LoginController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\PassCheckingController;
 use App\Http\Controllers\KyeController;
 use App\Http\Controllers\WarehouseController;
@@ -89,6 +89,14 @@ use App\Http\Controllers\ReportChartController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\SubscribeLetterController;
 use App\Http\Controllers\FlowChartController;
+use App\Http\Controllers\ItemRequestController;
+use App\Http\Controllers\ChatMessageController;
+use App\Http\Controllers\ItemPurchaseController;
+use Illuminate\Support\Facades\Broadcast;
+use App\Http\Controllers\WablasWebhookController;
+use App\Http\Controllers\BroadcastAuthController;
+use App\Http\Controllers\PotentialVendorController;
+
 
 
 
@@ -105,13 +113,25 @@ use App\Http\Controllers\FlowChartController;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
-
+Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
+
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+Route::middleware('validate.vendor.token')->group(function () 
+{
+    Route::get('item-request/respond/{id}/{token}', [PotentialVendorController::class, 'edit'])->name('vendor.respond');
+    Route::post('item-request/respond/{id}/{token}', [PotentialVendorController::class, 'update'])->name('vendor.respond.submit');
+});
+// Public route (tidak membutuhkan login)
+Route::get('item-request/list/{companySlug}', [ItemRequestController::class, 'publicIndex'])->name('item-request.public.index');
+Route::get('item-request/ajax/{companySlug}', [ItemRequestController::class, 'loadByCompany']);
+
+Route::group(['middleware' => ['auth','web']], function(){
+  Route::post('broadcasting/authorize', [BroadcastAuthController::class, 'broadcastingAuthorize'])->name('broadcasting.authorize');
+});
 
 Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
   Route::get('xero',function(){
@@ -334,6 +354,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('division-budget', DivisionBudgetController::class);
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
 
+  Route::get('inbox/unreadcount', [InboxController::class, 'unreadcount'])->name('inbox.unreadcount');
   Route::get('/inbox/{id}', [InboxController::class, 'show'])->name('inbox.show');
   Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
   
@@ -444,7 +465,19 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('subscribe-letter', SubscribeLetterController::class);
   
   Route::resource('flowchart', FlowChartController::class);
+  
+  Route::resource('chat-message', ChatMessageController::class)->only(['store','show']);
+  
+  Route::get('item-request/workflow/{id}', [ItemRequestController::class, 'workflow'])->name('item-request.workflow');
+  Route::get('item-request/dataTableJson', [ItemRequestController::class, 'dataTableJson'])->name('item-request.datatable');
+  Route::put('item-request/delivery/{id}', [ItemRequestController::class, 'delivery'])->name('item-request.delivery');
+  Route::resource('item-request', ItemRequestController::class);
+  
+  Route::post('item-purchase/complete/{id}', [ItemPurchaseController::class, 'complete'])->name('item-purchase.complete');
+  Route::put('item-purchase/payment/{id}', [ItemPurchaseController::class, 'payment'])->name('item-purchase.payment');
+  Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
 });
+
 
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');

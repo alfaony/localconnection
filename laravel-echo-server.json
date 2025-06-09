@@ -1,0 +1,40 @@
+{
+	"authHost": "https://keloola-bos-management.test",
+	"authEndpoint": "/broadcasting/auth",
+	"verifyAuthPath": true,
+	"clients": [
+		{
+			"appId": "bf9ee560ff144613",
+			"key": "9010b5e88543ba4f38c0479a2e58e30f"
+		}
+	],
+	"database": "sqlite",
+	"databaseConfig": {
+		"redis": {},
+		"sqlite": {
+			"databasePath": "/database/laravel-echo-server.sqlite"
+		}
+	},
+	"devMode": true,
+	"host": "127.0.0.1",
+	"port": 6001,
+	
+	"socketio": {
+		"host": "wss://ws.keloola.xyz",  
+		"secure": true
+	},
+	"secureOptions": 67108864,
+	"protocol": "http",
+	"sslCertChainPath": "",
+	"sslPassphrase": "",
+	"subscribers": {
+		"http": true,
+		"redis": false
+	},
+	"apiOriginAllow": {
+		"allowCors": true,
+		"allowOrigin": "keloola-bos-management.test",
+		"allowMethods": "GET, POST",
+		"allowHeaders": "Origin, Content-Type, X-Auth-Token, X-Requested-With, Accept, Authorization, X-CSRF-TOKEN, X-Socket-Id"
+	}
+}

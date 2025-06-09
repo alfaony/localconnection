@@ -20,14 +20,17 @@ class InboxController extends Controller
         $inboxMessages = Inbox::where('user_id_to', Auth::user()->id)
                             ->orderBy('created_at', 'desc') // Mengurutkan berdasarkan created_at secara menurun
                             ->paginate(10); // Melakukan paginasi dengan 10 item per halaman
+                            // ->get();
 
         $unreadMessage = Inbox::select('id')->where('user_id_to', Auth::user()->id)
-            ->where('is_read', 0)
+            ->where('is_notif', true) // update all is_notif false
             ->orderBy('created_at', 'desc') // Mengurutkan berdasarkan created_at secara menurun
             ->get();
-        
-        $inboxNotif = new InboxHelper();
-        $inboxNotif->readAll(Auth::id(),$unreadMessage);
+
+        foreach ($unreadMessage as $message) 
+        {
+            $message->update(['is_notif' => false]);
+        }
 
         return view('inbox.index', compact('inboxMessages','unreadMessage'));
     }
@@ -73,8 +76,7 @@ class InboxController extends Controller
      */
     public function unreadcount()
     {
-        $unreadCount = Inbox::where('user_id_to', Auth::id())->where('is_read', false)->count();
-
+        $unreadCount = Inbox::where('user_id_to', Auth::id())->where('is_notif', true)->count();
         return response()->json(['unreadCount' => $unreadCount]);
     }
 

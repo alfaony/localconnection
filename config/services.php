@@ -69,13 +69,19 @@ return [
     
     'setting' =>
     [
+        'app_socet_url' => env("APP_SOCET_URL", 'https://keloola-bos-management.test:6001'),
         'punishment_point' => env('SETTING_PUNISHMENT_POINT', -100)
     ],
 
     'path' => 
     [
         'ghost_script' => env('PATH_GHOST_SCRIPT', 'gs'),
-    ]
+    ],
 
-    
+    'connection_reverb' =>
+    [
+        'host' => env('PUSHER_HOST', env('REVERB_HOST', 'ws.keloola.xyz')),
+        'key' => env('PUSHER_APP_KEY', env('REVERB_APP_KEY',null)),
+        'port' => env('PUSHER_PORT', env('REVERB_PORT', 443)),
+    ]
 ];

@@ -4,26 +4,12 @@ namespace App\Helpers;
 
 use App\Models\Inbox;
 use App\Models\User;
-use Kreait\Firebase\Factory;
-use Kreait\Firebase\Messaging\CloudMessage;
+use App\Events\InboxReceived;
 
 class InboxHelper
 {
     protected $database;
     protected $messaging;
-
-    public function __construct()
-    {
-        if(config('services.firebase.service_account') && config('services.firebase.service_database_inbox_url') && !isset($this->database))
-        {
-            $factory = (new Factory)
-                ->withServiceAccount(storage_path(config('services.firebase.service_account'))) // Ambil dari konfigurasi
-                ->withDatabaseUri(config('services.firebase.service_database_inbox_url'));
-    
-            $this->database = $factory->createDatabase();
-            $this->messaging = $factory->createMessaging();
-        }
-    }
 
     /**
      * Send a message to the inbox.
@@ -35,82 +21,39 @@ class InboxHelper
      * @param bool $isRead
      * @return Inbox|bool
      */
-    public function sent($userToId, $userFromId, $message, $directUrl = null, $isRead = false)
+    public function sent($userToId, $userFromId, $message, $directUrl = null, $isRead = false, $category = "entry")
     {
-        if ($userFromId != $userToId) {
-            // Create a new inbox entry in the database
-            $inboxMessage = Inbox::create([
-                'user_id_to' => $userToId,
-                'user_id_from' => $userFromId,
-                'message' => $message,
-                'direct_url' => $directUrl,
-                'is_read' => $isRead,
-            ]);
-
-            if(isset($this->database))
+        try {
+            //code...
+            if ($userFromId != $userToId) 
             {
-                // Push the notification to Firebase Realtime Database
-                $this->database
-                    ->getReference('notifications/' . $userToId)
-                    ->push([
-                        // 'message' => $message,
-                        // 'direct_url' => $directUrl,
-                        'is_read' => $isRead,
-                        // 'timestamp' => now()->timestamp,
-                        'inbox_id' => $inboxMessage->id,
-                    ]);
-
-            }
-
-            return $inboxMessage;
-        }
-
-        return true;
-    }
-
-    public function readAll($userToId, $inboxMessage)
-    {
-        foreach ($inboxMessage as $inbox) 
-        {
-            $this->read($userToId, $inbox->id);
-        }
-    }
-
-    public function read($userToId, $inboxId)
-    {
-        if($this->database)
-        {
-
-            // Cari referensi data dengan inbox_id yang sesuai
-            $notificationRef = $this->database->getReference('notifications/' . $userToId);
-            
-            if($notificationRef->getSnapshot()->exists() === false)
-            {
-                return;
-            }
-            try {
-                //code...
-                $reference = $this->database->getReference('notifications/' . $userToId)
-                ->orderByChild('inbox_id')
-                ->equalTo($inboxId)
-                ->getSnapshot();
-    
-                // Periksa apakah data ditemukan
-                if ($reference->exists()) {
-                    $updates = [];
-                    foreach ($reference->getValue() as $key => $value) {
-                        $updates['notifications/' . $userToId . '/' . $key . '/is_read'] = true;
-                    }
+                // Create a new inbox entry in the database
+                $inboxMessage = Inbox::create([
+                    'user_id_to' => $userToId,
+                    'user_id_from' => $userFromId,
+                    'message' => $message,
+                    'direct_url' => $directUrl,
+                    'is_read' => $isRead,
+                    'is_notif' => true,
+                ]);
+                broadcast(new InboxReceived($inboxMessage, $category))->toOthers();
                 
-                    // Perform the update
-                    $this->database->getReference()->update($updates);
-                }
-            } catch (\Throwable $th) {
-                //throw $th;
-                return;
+    
+                return $inboxMessage;
             }
+    
+            return true;
+        } catch (\Throwable $th) {
+            //throw $th;
+            return throw $th;
         }
+    }
 
-        return;
+
+     public function read($userToId, $inboxId)
+    {
+        $inboxId = Inbox::find($inboxId);
+        $inboxId->is_read = true;
+        $inboxId->save();
     }
 }

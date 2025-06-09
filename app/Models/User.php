@@ -142,6 +142,16 @@ class User extends Authenticatable
         return $this->belongsToMany(Division::class)
             ->withPivot('weekly_report_required');
     }
+
+    public function assignedRequests()
+    {
+        return $this->hasMany(ItemRequest::class, 'assigned_pic_id');
+    }
+
+    public function request()
+    {
+        return $this->hasMany(ItemRequest::class, 'user_id');
+    }
     
     public function getFirstDivisionAttribute()
     {

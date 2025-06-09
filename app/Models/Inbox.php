@@ -16,6 +16,7 @@ class Inbox extends Model
         'message',
         'direct_url',
         'is_read',
+        'is_notif',
     ];
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
