@@ -62,6 +62,10 @@
                                     <label for="name">Nama</label>
                                     <input type="text" class="form-control" name="name" value="{{ $division->name }}" required>
                                 </div>
+                                <div class="form-group">
+                                    <label for="point_quota_monthly">Point Quota Monthly</label>
+                                    <input type="number" class="form-control" name="point_quota_monthly" min="0" value="{{ $division->point_quota_monthly }}">
+                                </div>
                                 {{-- 
                                 <!-- Checkbox -->
                                 <div class="form-group">
@@ -108,6 +112,10 @@
                     <div class="form-group">
                         <label for="name">Nama</label>
                         <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="point_quota_monthly">Point Quota Monthly</label>
+                        <input type="number" class="form-control" min="0" name="point_quota_monthly" required>
                     </div>
                     <!-- Checkbox -->
                      {{-- 

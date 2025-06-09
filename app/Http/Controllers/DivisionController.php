@@ -13,6 +13,7 @@ use App\Models\Division;
 use App\Models\Objective;
 use App\Models\ObjectiveKeyResult;
 use App\Models\DailyTask;
+use App\Models\DivisionQuotaLock;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
@@ -43,6 +44,7 @@ class DivisionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'point_quota_monthly' => 'nullable|integer',
         ]); 
 
         $division = Division::create([
@@ -51,6 +53,7 @@ class DivisionController extends Controller
             'manual_checkin' => $request->has('manual_checkin') ? 1 : 0,
             'requires_photo' => $request->has('requires_photo') ? 1 : 0,
             'requires_location' => $request->has('requires_location') ? 1 : 0,
+            'point_quota_monthly' => $request->point_quota_monthly ?? null
         ]);
 
         return redirect()->route('division.index')->with('success', 'Division Store successfully.');
@@ -142,18 +145,70 @@ class DivisionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'point_quota_monthly' => 'nullable|integer',
         ]);
 
-        $division = Division::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        DB::beginTransaction();
+        try {
+            $division = Division::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+    
+            $newMonthlyQuota = (int) $request->input('point_quota_monthly');
+            $month = now()->month;
+            $year = now()->year;
 
-        $division->update([
-            'name' => $request->name,
-            'manual_checkin' => $request->has('manual_checkin') ? 1 : 0,
-            'requires_photo' => $request->has('requires_photo') ? 1 : 0,
-            'requires_location' => $request->has('requires_location') ? 1 : 0,
-        ]);
+            $quotaMonthly = $division->point_quota_monthly ?? 0;
 
-        return redirect()->route('division.index')->with('success', 'Division updated successfully.');
+            // Jika kuota monthly di divisions berubah
+            if ($newMonthlyQuota != $division->point_quota_monthly) 
+            {
+                // Update point_quota_monthly di divisions
+                $quotaMonthly = $newMonthlyQuota;
+            }
+
+            // Cek apakah kuota terkunci bulan ini sudah ada
+            $quotaLock = DivisionQuotaLock::where('division_id', $division->id)
+                ->where('month', $month)
+                ->where('year', $year)
+                ->first();
+
+            if ($quotaLock) {
+                // Jika ada input locked_quota untuk update quota terkunci
+                $newLockedQuota = (int) $request->input('locked_quota', $quotaLock->locked_quota);
+
+                if ($newLockedQuota != $quotaLock->locked_quota) {
+                    // Kalau menurunkan kuota, cek apakah sudah ada poin yang dipakai lebih besar dari quota baru
+                    if ($newLockedQuota < $quotaLock->locked_quota) {
+                        $usedPoints = DailyTask::where('division_id', $division->id)
+                            ->whereMonth('created_at', $month)
+                            ->whereYear('created_at', $year)
+                            ->sum('point');
+
+                        if ($usedPoints > $newLockedQuota) {
+                            return back()->with('error', 'Kuota baru lebih kecil dari poin yang sudah dipakai.');
+                        }
+                    }
+
+                    // Update kuota terkunci
+                    $quotaLock->locked_quota = $newLockedQuota;
+                    $quotaLock->save();
+                }
+            }
+
+            $division->update([
+                'name' => $request->name,
+                'point_quota_monthly' => $quotaMonthly,
+            ]);
+            
+            DB::commit();
+            return redirect()->route('division.index')->with('success', 'Division updated successfully.');
+        } catch (\Throwable $th) {
+            //throw $th;
+            dd($th);
+            Log::error($th);
+            DB::rollback();
+
+            return back()->with('error', 'An error occurred: ' . $th->getMessage());
+        }
     }
 
     public function destroy($slug)
