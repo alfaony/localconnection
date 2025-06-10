@@ -1634,7 +1634,7 @@ class DailyTaskController extends Controller
         {
             return response()->json([
                 'status' => 'fail',
-                'message' => 'Kuota divisi ini belum tersedia',
+                'message' => 'Kuota Tidak Tersedia, Silahkan untuk menambahkan kuota edit divisi pada menu Divisi atau Hubungi Admin.',
             ]);
         }
 
