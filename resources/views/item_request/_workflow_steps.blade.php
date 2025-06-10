@@ -74,6 +74,11 @@
                             @break
                         
                             @case('Pencarian Toko')
+                                <div class="text-right mb-3">
+                                    <button class="btn btn-sm btn-outline-success btn-select-vendor">
+                                        <i class="fas fa-plus"></i> Vendor
+                                    </button>
+                                </div>
                                <div class="vendor-responses">
                                     @foreach($step['data']['vendors'] as $vendor)
                                         <div class="response-item alert 
@@ -175,7 +180,7 @@
                                 @foreach($itemRequest->purchase as $purchase)
                                 <div class="p-3 border rounded mt-2">
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-md-12">
                                             <div class="payment-info">
                                                 <h6 class="mb-1">{{ $purchase->productSupplier->store_name }}</h6>
                                                 <div class="mb-2">
@@ -208,26 +213,43 @@
                                                     Finance: {{ $purchase->payment->finance->name ?? '' }}
                                                 </div>
                                                 @endif
-                                                @if(!$purchase->payment && !$itemRequest->is_open)
-                                                @canAccess('payment','item_purchases')
-                                                <button class="btn btn-sm btn-success btn-upload-transfer"
-                                                    data-toggle="modal"
-                                                    data-target="#uploadTransferModal"
-                                                    data-id="{{ $purchase->id }}">
-                                                    <i class="fas fa-upload mr-2"></i>Upload Bukti Transfer
-                                                </button>
-                                                @endcanAccess
-                                                @endif
                                             </div>
                                         </div>
-                                        @if($purchase->payment)
+                                        @if($purchase->bon_photo)
                                         <div class="col-md-6 mt-5">
-                                            <img src="{{ Storage::url($purchase->payment->proof_image) }}" class="img-thumbnail" max-width="70%" alt="Bukti Transfer">
-                                            <a href="{{ Storage::url($purchase->payment->proof_image) }}" download class="btn btn-sm btn-outline-primary ml-2 mt-2">
+                                            <label for="">Bukti Tagihan</label>
+                                            <img src="{{ Storage::url($purchase->bon_photo) }}" class="img-thumbnail" max-width="70%" alt="bon photo">
+                                            <a href="{{ Storage::url($purchase->bon_photo) }}" download class="btn btn-sm btn-outline-primary ml-2 mt-2">
                                                 <i class="fas fa-download"></i> Unduh
                                             </a>
                                         </div>
                                         @endif
+                                        <div class="col-md-6 mt-5">
+                                        @if($purchase->payment)
+                                            <label for="">Bukti Pembayaran</label>
+                                            <img src="{{ Storage::url($purchase->payment->proof_image) }}" class="img-thumbnail" max-width="70%" alt="Bukti Transfer">
+                                            <a href="{{ Storage::url($purchase->payment->proof_image) }}" download class="btn btn-sm btn-outline-primary ml-2 mt-2">
+                                                <i class="fas fa-download"></i> Unduh
+                                            </a>
+                                        @else
+                                            @if(!$purchase->payment && !$itemRequest->is_open)
+                                                @canAccess('payment','item_purchases')
+                                                <div class="upload-container text-center mt-4">
+                                                    <!-- Kotak upload dengan ikon + besar -->
+                                                    <div class="upload-box btn-upload-transfer"
+                                                        data-toggle="modal"
+                                                        data-target="#uploadTransferModal"
+                                                        data-id="{{ $purchase->id }}">
+                                                        <div class="upload-icon">
+                                                            <i class="fas fa-plus fa-3x"></i>
+                                                        </div>
+                                                        <div class="upload-label mt-2">Upload Bukti Transfer</div>
+                                                    </div>
+                                                </div>
+                                                @endcanAccess
+                                            @endif
+                                        @endif
+                                        </div>
                                     </div>
                                 </div>
                                 @endforeach

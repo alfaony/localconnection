@@ -27,7 +27,7 @@ class DivisionController extends Controller
         $user = Auth::user();
         
         // Menggunakan relasi untuk mengambil divisi yang terkait dengan user tersebut
-        if($user->role->name == RoleSchema::ADMIN || $user->role->name == RoleSchema::ROOT)
+        if($user->role->name == RoleSchema::ADMIN || $user->role->name == RoleSchema::ROOT || ( Access::can('create','divisions') && Access::can('store','divisions')))
         {
             $divisions = Division::byCompany($user->company_id)->paginate(10);
         }
