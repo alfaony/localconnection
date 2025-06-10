@@ -7,15 +7,33 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Ramsey\Uuid\Uuid;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Division extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = ['id', 'user_id', 'name','requires_photo','requires_location','manual_checkin','point_quota_monthly'];
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
+
+    protected static $logAttributes = [
+        'user_id', 'name','point_quota_monthly'
+    ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['user_id', 'name','point_quota_monthly'])
+            ->useLogName('division');
+        ;
+    }
+    public function activities()
+    {
+        return $this->hasMany(\Spatie\Activitylog\Models\Activity::class, 'subject_id');
+    }
     
     protected static function boot()
     {
