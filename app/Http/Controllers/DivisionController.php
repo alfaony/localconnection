@@ -13,6 +13,7 @@ use App\Models\Division;
 use App\Models\Objective;
 use App\Models\ObjectiveKeyResult;
 use App\Models\DailyTask;
+use App\Models\DivisionQuotaLock;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
@@ -26,7 +27,7 @@ class DivisionController extends Controller
         $user = Auth::user();
         
         // Menggunakan relasi untuk mengambil divisi yang terkait dengan user tersebut
-        if($user->role->name == RoleSchema::ADMIN || $user->role->name == RoleSchema::ROOT)
+        if($user->role->name == RoleSchema::ADMIN || $user->role->name == RoleSchema::ROOT || ( Access::can('create','divisions') && Access::can('store','divisions')))
         {
             $divisions = Division::byCompany($user->company_id)->paginate(10);
         }
@@ -43,17 +44,33 @@ class DivisionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-        ]); 
-
-        $division = Division::create([
-            'user_id' => auth()->id(),
-            'name' => $request->name,
-            'manual_checkin' => $request->has('manual_checkin') ? 1 : 0,
-            'requires_photo' => $request->has('requires_photo') ? 1 : 0,
-            'requires_location' => $request->has('requires_location') ? 1 : 0,
+            'point_quota_monthly' => 'required|integer|min:0',
         ]);
 
-        return redirect()->route('division.index')->with('success', 'Division Store successfully.');
+        DB::beginTransaction();
+
+        try {
+            $division = Division::create([
+                'user_id' => Auth::user()->id,
+                'name' => $request->name,
+                'point_quota_monthly' => $request->point_quota_monthly,
+            ]);
+
+            // Create DivisionQuotaLock untuk bulan ini
+            if($request->point_quota_monthly > 0)
+            {
+                $this->ensureQuotaLockFor($division);
+            }
+
+            DB::commit();
+
+            return back()->with('success', 'Divisi berhasil ditambahkan.');
+        } catch (\Throwable $e) {
+            // dd($e);
+            Log::error($e);
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function create()
@@ -138,22 +155,36 @@ class DivisionController extends Controller
         return view('divisions.show_division', compact('tasks', 'customFields', 'division', 'users', 'taskStatuss'));
     }
 
-    public function update(Request $request, $slug)
+    public function update(Request $request, $id)
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'point_quota_monthly' => 'required|integer|min:0',
         ]);
 
-        $division = Division::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        DB::beginTransaction();
 
-        $division->update([
-            'name' => $request->name,
-            'manual_checkin' => $request->has('manual_checkin') ? 1 : 0,
-            'requires_photo' => $request->has('requires_photo') ? 1 : 0,
-            'requires_location' => $request->has('requires_location') ? 1 : 0,
-        ]);
+        try {
+            $division = Division::byCompany(Auth::user()->company_id)->where('slug', $id)->firstOrFail();
+            $division->name = $request->name;
 
-        return redirect()->route('division.index')->with('success', 'Division updated successfully.');
+            if($division->point_quota_monthly != $request->point_quota_monthly)
+            {
+                $newQuota = (int) $request->point_quota_monthly;
+                $check = $this->validateAndUpdateQuotaLock($division, $newQuota);
+    
+                $division->point_quota_monthly = $newQuota;
+                $division->save();
+            }
+
+            DB::commit();
+            return back()->with('success', 'Divisi berhasil diperbarui.');
+        } catch (\Throwable $e) {
+            // dd($e);
+            Log::error($e);
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function destroy($slug)
@@ -317,5 +348,65 @@ class DivisionController extends Controller
             ];
         });
         return response()->json($tasks);
+    }
+
+    protected function ensureQuotaLockFor(Division $division)
+    {
+        $month = now()->month;
+        $year = now()->year;
+
+        $exists = DivisionQuotaLock::where('division_id', $division->id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->exists();
+
+        if (!$exists) {
+            DivisionQuotaLock::create([
+                'division_id' => $division->id,
+                'month' => $month,
+                'year' => $year,
+                'locked_quota' => $division->point_quota_monthly,
+            ]);
+        }
+    }
+
+    protected function validateAndUpdateQuotaLock(Division $division, int $newQuota)
+    {
+        $month = now()->month;
+        $year = now()->year;
+
+        $quotaLock = DivisionQuotaLock::where('division_id', $division->id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+
+        if (!$quotaLock) {
+            // Auto-buat kalau belum ada
+            DivisionQuotaLock::create([
+                'division_id' => $division->id,
+                'month' => $month,
+                'year' => $year,
+                'locked_quota' => $newQuota,
+            ]);
+            return;
+        }
+
+        // Jika quota diturunkan, pastikan aman
+        if ($newQuota < $quotaLock->locked_quota) {
+            $usedPoints = DailyTask::where('division_quota_lock_id', $quotaLock->id)->sum('point');
+
+            if ($newQuota < $usedPoints) {
+                throw new \Exception("Kuota tidak bisa diturunkan ke $newQuota karena sudah terpakai $usedPoints poin.");
+            }
+
+            $quotaLock->locked_quota = $newQuota;
+            $quotaLock->save();
+        }
+
+        // Jika quota dinaikkan, bebas update
+        if ($newQuota > $quotaLock->locked_quota) {
+            $quotaLock->locked_quota = $newQuota;
+            $quotaLock->save();
+        }
     }
 }

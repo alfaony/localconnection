@@ -882,6 +882,88 @@
         this.files = dataTransfer.files;
     });
 </script>
+
+@canAccess('approvement','dailytasks')
+@canAccess('checkDivisionQuota','dailytasks')
+<script>
+    let selectedDivisionId = null;
+
+    $(document).on('input', '#pointInput', function () {
+        let point = parseInt($(this).val());
+
+        if (isNaN(point) || point <= 0) {
+            // Poin kosong atau <= 0 → tidak perlu divisi
+            $('#divisionSelect').val('').trigger('change'); // kosongkan dropdown
+            $('#divisionSelect').closest('.form-group').addClass('d-none');
+            $('#quotaInfo').addClass('d-none');
+            $('#quotaWarning').addClass('d-none');
+
+            // Enable tombol submit
+            $('#submitApprovement, #submitAndContinue').prop('disabled', false);
+            return;
+        }
+
+        // Poin valid → tampilkan divisi
+        $('#divisionSelect').closest('.form-group').removeClass('d-none');
+
+        // Reset info kuota
+        $('#quotaInfo').addClass('d-none').text('');
+        $('#quotaWarning').addClass('d-none').text('');
+
+        selectedDivisionId = $('#divisionSelect').val();
+        
+        if (!selectedDivisionId) {
+            $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+            return;
+        }
+
+        // Lanjutkan cek kuota
+        checkQuota(point, selectedDivisionId);
+    });
+
+    $(document).on('change', '#divisionSelect', function () {
+        selectedDivisionId = $(this).val();
+        let point = parseInt($('#pointInput').val());
+
+        if (!selectedDivisionId || isNaN(point) || point <= 0) {
+            $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+            return;
+        }
+
+        checkQuota(point, selectedDivisionId);
+    });
+
+    function checkQuota(point, divisionId) {
+        $.ajax({
+            url: '{{ route("dailytask.checkDivisionQuota") }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                point: point,
+                division_id: divisionId,
+                exclude_task_id: '{{ $dailytask->id ?? null }}' // agar pengecekan edit tetap akurat
+            },
+            success: function (res) {
+                if (res.status === 'fail') {
+                    $('#quotaWarning').removeClass('d-none').text(res.message);
+                    $('#quotaInfo').addClass('d-none');
+                    $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+                } else {
+                    $('#quotaWarning').addClass('d-none');
+                    $('#quotaInfo').removeClass('d-none').text('Sisa kuota: ' + res.remaining + ' poin');
+                    $('#submitApprovement, #submitAndContinue').prop('disabled', false);
+                }
+            },
+            error: function () {
+                $('#quotaWarning').removeClass('d-none').text('Terjadi kesalahan saat cek kuota.');
+                $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+            }
+        });
+    }
+</script>
+@endcanAccess
+@endcanAccess
+
 @canAccess('approvement','dailytasks')
 <script>
     $(document).on('click', '#submitApprovement, #submitAndContinue', function(e) {

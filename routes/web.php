@@ -174,6 +174,7 @@ Route::get('employee-checking/report', [EmployeeCheckingController::class, 'repo
 Route::get('partnership-agreement/sharePdf/{id}',[PartnershipAgreementController::class,'sharePdf'])->name('partnership-agreement.sharePdf');
 Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementController::class,'signatureShare'])->name('partnership-agreement.signatureShare');
 
+
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/listDayoff', [App\Http\Controllers\HomeController::class, 'listDayoff'])->name('home.listDayoff');
@@ -308,6 +309,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('/dailytask/export', [DailyTaskController::class, 'export'])->name('dailytask.export');
   Route::get('dailytask/template', [DailyTaskController::class, 'template'])->name('dailytask.template');
   Route::get('dailytask/downloadtemplate', [DailyTaskController::class, 'downloadtemplate'])->name('dailytask.downloadtemplate');
+  Route::post('dailytask/checkDivisionQuota', [DailyTaskController::class, 'checkDivisionQuota'])->name('dailytask.checkDivisionQuota');
   Route::post('dailytask/import', [DailyTaskController::class, 'import'])->name('dailytask.import');
   Route::put('dailytask/storesubtask/{slug}', [DailyTaskController::class,'storesubtask'])->name('dailytask.storesubtask');
   Route::put('dailytask/comment/{slug}', [DailyTaskController::class,'comment'])->name('dailytask.comment');
@@ -477,8 +479,6 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('item-purchase/payment/{id}', [ItemPurchaseController::class, 'payment'])->name('item-purchase.payment');
   Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
 });
-
-
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

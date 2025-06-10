@@ -145,6 +145,16 @@ class DailyTask extends Model
         return $this->hasMany(DailyTaskStatusRecord::class);
     }
 
+    public function division()
+    {
+        return $this->belongsTo(Division::class)->withTrashed();
+    }
+
+    public function divisionQuotaLock()
+    {
+        return $this->belongsTo(DivisionQuotaLock::class)->withTrashed();
+    }
+
     public function getDateRangeSubmitAttribute()
     {
         if ($this->submit && $this->start_date) {

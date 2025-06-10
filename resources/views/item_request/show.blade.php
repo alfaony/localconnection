@@ -119,6 +119,7 @@
             --}}
     
             <!-- Live Chat Card -->
+             @canAccess('show','chat_messages')
             <div class="card card-primary card-outline" id="chat-wrapper">
                 <div class="card-header bg-gradient-primary">
                     <h3 class="card-title text-white"><i class="fas fa-comments mr-2"></i>Live Chat</h3>
@@ -131,7 +132,6 @@
                     </div>
                     <div class="chat-input p-3 border-top">
                         @canAccess('store','chat_messages')
-                        @canAccess('show','chat_messages')
                         <form id="chat-form" enctype="multipart/form-data">
                             <div class="input-group mb-2">
                                 <input type="text" class="form-control" id="chat-message" placeholder="Ketik pesan..." name="message">
@@ -149,10 +149,10 @@
                         </form>
                         <div id="file-preview" class="text-muted small mt-1" style="display: none;"></div>
                         @endcanAccess
-                        @endcanAccess
                     </div>
                 </div>
             </div>
+             @endcanAccess
         </div>
     </div>
 </div>
@@ -164,7 +164,7 @@
     <form id="vendor-billing-form" method="POST" enctype="multipart/form-data">
         @csrf
         <input type="hidden" name="item_request_id" value="{{ $itemRequest->id }}" required>
-        <input type="hidden" name="product_supplier_id" id="modal_vendor_id" required>
+        <input type="hidden" name="product_supplier_id" id="modal_vendor_id">
 
         <div class="modal-content">
           <div class="modal-header bg-primary text-white">
@@ -198,6 +198,8 @@
           <!-- ▷ /Area Konfirmasi Inline ◁ -->
 
           <div class="modal-body">
+            <div class="row" id="additional_vendor_fields"></div>
+
               <div id="modal_vendor_info" class="mb-3 text-muted small"></div>
 
               <div class="form-group">
@@ -682,30 +684,81 @@
     });
  
     document.addEventListener('DOMContentLoaded', function () {
-        $(document).on('click', '.btn-select-vendor', function () {
+        $(document).on('click', '.btn-select-vendor', function () 
+        {
             const vendorId = $(this).data('vendor-id');
             const vendorName = $(this).data('vendor-name');
             const vendorPhone = $(this).data('vendor-phone');
             const vendorLocation = $(this).data('vendor-location');
             const vendorPriceOffered = $(this).data('vendor-price-offered');
 
-            if (vendorPriceOffered) 
-            {
+            // Set nilai jika harga ditawarkan tersedia
+            $('#modal_vendor_id').val(vendorId);
+
+            if (vendorPriceOffered) {
                 document.getElementById("estimated_price").value = vendorPriceOffered;
                 document.getElementById("estimated_price_show").value = vendorPriceOffered;
-                formatRupiahFormat(document.getElementById("estimated_price_show"),"estimated_price"); // Format default value
+                formatRupiahFormat(document.getElementById("estimated_price_show"), "estimated_price");
             }
 
-            $('#modal_vendor_id').val(vendorId);
-            $('#modal_vendor_info').html(`
-                <i class="fas fa-user-tie mr-1"></i><strong> ${vendorName}</strong> 
-                <i class="fas fa-map-marker-alt ml-3 mr-1"></i>${vendorLocation}
-                <i class="fas fa-phone-alt ml-3 mr-1"></i>${vendorPhone}
-            `);
+            
+            // Update vendor info
+            if (vendorId) 
+            {
+                $('#modal_vendor_info').html(`
+                    <i class="fas fa-user-tie mr-1"></i><strong> ${vendorName}</strong> 
+                    <i class="fas fa-map-marker-alt ml-3 mr-1"></i>${vendorLocation}
+                    <i class="fas fa-phone-alt ml-3 mr-1"></i>${vendorPhone}
+                `);
+                $('#additional_vendor_fields').html(''); // Kosongkan form tambahan jika sebelumnya terisi
+            } else {
+                // Jika vendorId tidak ditemukan, tambahkan field input manual
+                $('#modal_vendor_info').html(`<strong class="text-danger">Vendor baru - silakan isi detailnya</strong>`);
+                $('#additional_vendor_fields').html(`
+                    <div class="col-md-6">
+                        <div class="form-group mb-4">
+                            <label for="owner_name" class="form-label fw-bold">Nama Pemilik <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" name="owner_name" class="form-control rounded-end"
+                                    placeholder="Nama lengkap pemilik" required>
+                            </div>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="phone_number" class="form-label fw-bold">Nomor Telepon <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                <input type="text" name="phone_number" class="form-control rounded-end"
+                                    placeholder="Format: 628" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-4">
+                            <label for="store_name" class="form-label fw-bold">Nama Toko <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-store"></i></span>
+                                <input type="text" name="store_name" class="form-control rounded-end"
+                                    placeholder="Nama toko supplier" required>
+                            </div>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="location" class="form-label fw-bold">Lokasi <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                                <input type="text" name="location" class="form-control rounded-end"
+                                    placeholder="Alamat lengkap toko" required>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
 
+            // Tampilkan modal
             $('#selectVendorModal').modal('show');
         });
     });
+
 </script>
 @endcanAccess
 
@@ -749,34 +802,34 @@
 @canAccess('store','chat_messages')
 @canAccess('show','chat_messages')
 <script>
-document.getElementById('chat-file').addEventListener('change', function () {
-    const preview = document.getElementById('file-preview');
-    const file = this.files[0];
+    document.getElementById('chat-file').addEventListener('change', function () {
+        const preview = document.getElementById('file-preview');
+        const file = this.files[0];
 
-    if (file) {
-        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-        const maxSize = 2 * 1024 * 1024; // 2MB
+        if (file) {
+            const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+            const maxSize = 2 * 1024 * 1024; // 2MB
 
-        if (!allowedTypes.includes(file.type)) {
-            alert('Format file tidak diizinkan. Hanya gambar atau PDF.');
-            this.value = '';
+            if (!allowedTypes.includes(file.type)) {
+                alert('Format file tidak diizinkan. Hanya gambar atau PDF.');
+                this.value = '';
+                preview.style.display = 'none';
+                return;
+            }
+
+            if (file.size > maxSize) {
+                alert('Ukuran file melebihi batas 2MB.');
+                this.value = '';
+                preview.style.display = 'none';
+                return;
+            }
+
+            preview.textContent = `📎 ${file.name}`;
+            preview.style.display = 'block';
+        } else {
             preview.style.display = 'none';
-            return;
         }
-
-        if (file.size > maxSize) {
-            alert('Ukuran file melebihi batas 2MB.');
-            this.value = '';
-            preview.style.display = 'none';
-            return;
-        }
-
-        preview.textContent = `📎 ${file.name}`;
-        preview.style.display = 'block';
-    } else {
-        preview.style.display = 'none';
-    }
-});
+    });
 </script>
 
 <script>
@@ -967,9 +1020,6 @@ document.getElementById('chat-file').addEventListener('change', function () {
     // Load awal
     loadChat();
 </script>
-@endcanAccess
-@endcanAccess
-
 <script>
     // Smooth scroll for vendor list
     $('.vendor-scroll').smoothScroll({
@@ -997,34 +1047,6 @@ document.getElementById('chat-file').addEventListener('change', function () {
             $(this).find('.step-content').removeClass('shadow');
         }
     );
-
-    function formatRupiahFormat(input = null, inputNonFormat = null) 
-    {
-        let numStr = input.value.toString().replace(/[^,\d]/g, '');
-        let split = numStr.split(',');
-        let sisa = split[0].length % 3;
-        let rupiah = split[0].substr(0, sisa);
-        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-        if (ribuan) {
-            let separator = sisa ? '.' : '';
-            rupiah += separator + ribuan.join('.');
-        }
-
-        rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
-
-        if (numStr === "" || parseInt(numStr) === 0) {
-            input.value = '';
-            numStr = 0;
-        } else {
-            // Menghapus angka 0 di depan jika input diawali dengan 0
-            rupiah = rupiah.replace(/^0+/, '');
-            input.value ='Rp. '+rupiah;
-        }
-
-        // Update 'salary' input with non-formatted number
-        document.getElementById(inputNonFormat).value = parseInt(numStr);
-    }
 </script>
 
 <script>
@@ -1070,6 +1092,38 @@ document.getElementById('chat-file').addEventListener('change', function () {
             loadChat();
             loadWorkflow();
         });
+</script>
+@endcanAccess
+@endcanAccess
+
+<script>
+    function formatRupiahFormat(input = null, inputNonFormat = null) 
+    {
+        let numStr = input.value.toString().replace(/[^,\d]/g, '');
+        let split = numStr.split(',');
+        let sisa = split[0].length % 3;
+        let rupiah = split[0].substr(0, sisa);
+        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+
+        rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+
+        if (numStr === "" || parseInt(numStr) === 0) {
+            input.value = '';
+            numStr = 0;
+        } else {
+            // Menghapus angka 0 di depan jika input diawali dengan 0
+            rupiah = rupiah.replace(/^0+/, '');
+            input.value ='Rp. '+rupiah;
+        }
+
+        // Update 'salary' input with non-formatted number
+        document.getElementById(inputNonFormat).value = parseInt(numStr);
+    }
 </script>
 @endsection
 @section('css')
