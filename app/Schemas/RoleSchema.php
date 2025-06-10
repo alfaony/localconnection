@@ -8,7 +8,7 @@ class RoleSchema
 {
     const ROOT = 'Root'; // all access
     const ADMIN = 'Administrator'; // all except role & permission (his company only)
-    const FINANCE = 'Finance';
+    const FINANCE = 'Staff Finance';
     const PROCUREMENT = 'Procurement';
     const PM = 'Project Manager';
     const HR = 'Human Resource';
@@ -20,4 +20,7 @@ class RoleSchema
     const MANAGER = 'Manager';
     const STAFF = 'Staff';
     const SYSTEM = 'System Admin';
+    const SPRINTER = "Sprinter";
+    const STAFF_FINANCE = "Staff Finance";
+    const MANAGER_FINANCE = "Manager Finance";
 }

@@ -94,5 +94,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuSubcribetionSeeder::class);
         $this->call(PermissionForMenuFlowChartsSeeder::class);
         $this->call(PermissionForAllowCheckDivisionQuota::class);
+        $this->call(PermissionForRoleSprinter::class);
     }
 }

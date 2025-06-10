@@ -101,7 +101,7 @@ class ProductSupplierController extends Controller
             $productSupplier->supplierCategories()->sync($categoryIds);
 
             DB::commit();
-            return redirect()->route('product-supplier.index')->with(['success' => 'Supplier successfully added!', 'store' => true]);
+            return redirect()->route('product-supplier.index')->with(['store' => true]);
         } catch (\Exception $e) {
             // dd($e);
             DB::rollBack();
@@ -171,7 +171,7 @@ class ProductSupplierController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('product-supplier.index')->with(['success' => 'Supplier updated successfully!', 'update' => true]);
+            return redirect()->route('product-supplier.index')->with(['update' => true]);
         } catch (\Exception $e) {
             // dd($e);
             DB::rollBack();

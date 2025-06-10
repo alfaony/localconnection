@@ -20,9 +20,11 @@
         "laravel/tinker": "^2.7",
         "laravel/ui": "^4.2",
         "maatwebsite/excel": "^3.1",
+        "pusher/pusher-php-server": "^7.2",
         "ramsey/uuid": "^4.7",
         "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.6",
+        "silvanix/wablas": "*",
         "spatie/laravel-activitylog": "^4.7"
     },
     "require-dev": {

@@ -93,6 +93,14 @@
                                 </div>
 
                                 <div class="form-group">
+                                    <label for="closed_time">Waktu Tutup Sprinter</label>
+                                    <input type="time" name="closed_time" id="closed_time" class="form-control" value="{{ old('closed_time', $data['closed_time'] ?? '14:00') }}">
+                                    @error('closed_time')
+                                        <span class="text-danger">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
                                     <label for="reward_point_conversion">Konversi Poin Hadiah (per 1 POIN)</label>
                                     <input type="text" class="form-control" id="reward_point_conversion_show" oninput="formatRupiahFormat(this,'reward_point_conversion')" value="{{ old('reward_point_conversion', $data['reward_point_conversion'] ?? '500') }}">
                                     <input type="hidden" name="reward_point_conversion" id="reward_point_conversion" class="form-control" value="{{ old('reward_point_conversion', $data['reward_point_conversion'] ?? '500') }}">
@@ -359,75 +367,114 @@
                     </div>
                     
                     <div class="card">
-                    <div class="card-header" id="headingTaskDoing">
-                        <h2 class="mb-0">
-                            <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseTaskDoing" aria-expanded="false" aria-controls="collapseTaskDoing">
-                                Pengaturan Sanksi Task DOING
-                            </button>
-                        </h2>
-                    </div>
-                    <div id="collapseTaskDoing" class="collapse" aria-labelledby="headingTaskDoing" data-parent="#accordion">
-                        <div class="card-body">
+                        <div class="card-header" id="headingTaskDoing">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseTaskDoing" aria-expanded="false" aria-controls="collapseTaskDoing">
+                                    Pengaturan Sanksi Task DOING
+                                </button>
+                            </h2>
+                        </div>
+                        <div id="collapseTaskDoing" class="collapse" aria-labelledby="headingTaskDoing" data-parent="#accordion">
+                            <div class="card-body">
 
-                            <div class="form-group">
-                                        <label for="status_punihsment_task_doing">Aktifkan Sanksi Otomatis Task DOING</label><br>
-                                        <div class="custom-control custom-switch">
-                                            <input type="checkbox" class="custom-control-input" id="status_punihsment_task_doing" name="status_punihsment_task_doing"
-                                            {{ old('status_punihsment_task_doing', $data['status_punihsment_task_doing'] ?? 0) ? 'checked' : '' }}>
-                                            <label class="custom-control-label" for="status_punihsment_task_doing">Aktifkan</label>
+                                <div class="form-group">
+                                            <label for="status_punihsment_task_doing">Aktifkan Sanksi Otomatis Task DOING</label><br>
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input" id="status_punihsment_task_doing" name="status_punihsment_task_doing"
+                                                {{ old('status_punihsment_task_doing', $data['status_punihsment_task_doing'] ?? 0) ? 'checked' : '' }}>
+                                                <label class="custom-control-label" for="status_punihsment_task_doing">Aktifkan</label>
+                                            </div>
+                                            @error('status_punihsment_task_doing')
+                                                <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
                                         </div>
-                                        @error('status_punihsment_task_doing')
+
+                                        <div class="form-group">
+                                            <label for="point_punishment_task_doing">Poin Sanksi Task DOING</label>
+                                            <input type="number" name="point_punishment_task_doing" id="point_punishment_task_doing" class="form-control"
+                                                value="{{ old('point_punishment_task_doing', $data['point_punishment_task_doing'] ?? '') }}">
+                                            @error('point_punishment_task_doing')
+                                                <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header" id="headingPunishment">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapsePunishment" aria-expanded="false" aria-controls="collapsePunishment">
+                                        Pengaturan Sanksi Task TODO & Weekly Report
+                                    </button>
+                                </h2>
+                            </div>
+
+                            <div id="collapsePunishment" class="collapse" aria-labelledby="headingPunishment" data-parent="#accordion">
+                                <div class="card-body">
+
+                                    <div class="form-group">
+                                        <label for="point_punishment_task_todo">Poin Sanksi Task TODO</label>
+                                        <input type="number" name="point_punishment_task_todo" class="form-control" value="{{ old('point_punishment_task_todo', $data['point_punishment_task_todo'] ?? '') }}">
+                                        @error('point_punishment_task_todo')
                                             <span class="text-danger text-sm">{{ $message }}</span>
                                         @enderror
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="point_punishment_task_doing">Poin Sanksi Task DOING</label>
-                                        <input type="number" name="point_punishment_task_doing" id="point_punishment_task_doing" class="form-control"
-                                            value="{{ old('point_punishment_task_doing', $data['point_punishment_task_doing'] ?? '') }}">
-                                        @error('point_punishment_task_doing')
+                                        <label for="point_punishment_weekly_report">Poin Sanksi Weekly Report</label>
+                                        <input type="number" name="point_punishment_weekly_report" class="form-control" value="{{ old('point_punishment_weekly_report', $data['point_punishment_weekly_report'] ?? '') }}">
+                                        @error('point_punishment_weekly_report')
                                             <span class="text-danger text-sm">{{ $message }}</span>
                                         @enderror
                                     </div>
 
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <div class="card-header" id="headingPunishment">
+                      <div class="card">
+                        <div class="card-header" id="headingWABlas">
                             <h2 class="mb-0">
-                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapsePunishment" aria-expanded="false" aria-controls="collapsePunishment">
-                                    Pengaturan Sanksi Task TODO & Weekly Report
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseWABlas" aria-expanded="false" aria-controls="collapseWABlas">
+                                    Wablas Credential
                                 </button>
                             </h2>
                         </div>
-
-                        <div id="collapsePunishment" class="collapse" aria-labelledby="headingPunishment" data-parent="#accordion">
+                        <div id="collapseWABlas" class="collapse" aria-labelledby="headingWABlas" data-parent="#accordion">
                             <div class="card-body">
-
-                                <div class="form-group">
-                                    <label for="point_punishment_task_todo">Poin Sanksi Task TODO</label>
-                                    <input type="number" name="point_punishment_task_todo" class="form-control" value="{{ old('point_punishment_task_todo', $data['point_punishment_task_todo'] ?? '') }}">
-                                    @error('point_punishment_task_todo')
-                                        <span class="text-danger text-sm">{{ $message }}</span>
-                                    @enderror
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="server_wablas">Negara Server WA Blas (Texas)</label>
+                                            <input type="text" name="server_wablas" class="form-control" value="{{ old('server_wablas', isset($data['server_wablas']) ? $data['server_wablas'] : '') }}">
+                                            @error('server_wablas')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="token_wablas">Token WA Blas</label>
+                                            <input type="text" name="token_wablas" class="form-control" value="{{ old('token_wablas', isset($data['token_wablas']) ? $data['token_wablas'] : '') }}">
+                                            @error('token_wablas')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="webhook_key_wablas">Secret Key WA Blas</label>
+                                            <input type="text" name="webhook_key_wablas" class="form-control" value="{{ old('webhook_key_wablas', isset($data['webhook_key_wablas']) ? $data['webhook_key_wablas'] : '') }}">
+                                            @error('webhook_key_wablas')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    
                                 </div>
-
-                                <div class="form-group">
-                                    <label for="point_punishment_weekly_report">Poin Sanksi Weekly Report</label>
-                                    <input type="number" name="point_punishment_weekly_report" class="form-control" value="{{ old('point_punishment_weekly_report', $data['point_punishment_weekly_report'] ?? '') }}">
-                                    @error('point_punishment_weekly_report')
-                                        <span class="text-danger text-sm">{{ $message }}</span>
-                                    @enderror
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-
-                </div>
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
 
