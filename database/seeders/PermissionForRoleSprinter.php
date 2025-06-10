@@ -196,7 +196,7 @@ class PermissionForRoleSprinter extends Seeder
                 }
                 if($manager)
                 {
-                    PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
+                    PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permissionItemPurchase->id]);
                 }
     
                 PermissionRole::create(['role_id' => $sprinterRole->id, 'permission_id' => $permissionItemPurchase->id]);
@@ -237,7 +237,7 @@ class PermissionForRoleSprinter extends Seeder
                 }
                 if($manager)
                 {
-                    PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
+                    PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permissionChatMessage->id]);
                 }
     
                 PermissionRole::create(['role_id' => $sprinterRole->id, 'permission_id' => $permissionChatMessage->id]);
