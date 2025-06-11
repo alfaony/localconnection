@@ -331,7 +331,7 @@
                 padding: 20px;
             }
         }
-        @media (max-width: 576px) 
+        @media (max-width: 768px) 
         {
             .detail-label {
                 flex: 0 0 auto;
