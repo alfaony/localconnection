@@ -108,7 +108,7 @@
         }
         
         .item-img-container {
-            height: 200px;
+            height: 400px;
             border-radius: 12px;
             overflow: hidden;
             margin-bottom: 20px;
@@ -118,7 +118,6 @@
         
         .item-img {
             width: 100%;
-            height: 100%;
             object-fit: cover;
             transition: transform 0.5s ease;
         }
@@ -309,6 +308,9 @@
         }
         
         @media (max-width: 768px) {
+            .item-img-container {
+                height: 200px;
+            }
             .detail-item {
                 flex-direction: column;
             }
@@ -329,19 +331,36 @@
                 padding: 20px;
             }
         }
+        @media (max-width: 576px) 
+        {
+            .detail-label {
+                flex: 0 0 auto;
+                width: 100%;
+                margin-bottom: 4px;
+            }
+
+            .detail-value {
+                width: 100%;
+                flex: 0 0 auto;
+            }
+
+            .detail-row {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container-custom">
+    <div class="container">
         <!-- Header Card -->
         <div class="header-card">
-            <div class="header-overlay"></div>
             <div class="header-content">
                 <div class="header-icon">
                     <i class="bi bi-cart-check"></i>
                 </div>
-                <h1 class="h2 fw-bold mb-3">Respon Permintaan Barang</h1>
-                <p class="lead mb-0">Kirim penawaran Anda untuk permintaan barang berikut</p>
+                <h5 class="fw-bold">Respon Permintaan Barang</h5>
             </div>
         </div>
 
@@ -370,7 +389,7 @@
         
         @if($itemRequest->is_open || $potentialVendor->responded )
         <!-- Item Image -->
-        <div class="card mt-2">
+        <div class="card">
             <div class="item-img-container">
                 <img src="{{ Storage::url($itemRequest->picture) }}" 
                      alt="{{ $itemRequest->name }}" class="item-img">
@@ -390,14 +409,14 @@
                     <div class="detail-value">{{ $itemRequest->item_name }}</div>
                 </div>
                 
-                <div class="detail-item">
+                <div class="detail-item d-none">
                     <div class="detail-label">
                         <i class="bi bi-upc-scan"></i>Kode Permintaan
                     </div>
                     <div class="detail-value">{{ $potentialVendor->response_token  ?? "-" }}</div>
                 </div>
                 
-                <div class="detail-item">
+                <div class="detail-item d-none">
                     <div class="detail-label">
                         <i class="bi bi-calendar"></i>Tanggal Permintaan
                     </div>
@@ -440,7 +459,7 @@
                 </div>
                 @endif
                 
-                <div class="detail-item mb-0 pb-0 ">
+                <div class="detail-item mb-0 pb-0 d-none">
                     <div class="detail-label mb-2">
                         <i class="bi bi-check-circle"></i>Status
                     </div>
@@ -475,11 +494,8 @@
                         <i class="bi bi-info-circle-fill"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold">Informasi Penting!</h5>
-                        <p class="mb-0">
-                            Pastikan harga yang Anda tawarkan tidak melebihi harga maksimum. 
-                            Penawaran yang sudah dikirim tidak dapat diubah. Berikan catatan 
-                            jika ada informasi tambahan yang perlu disampaikan.
+                        <p class="mb-0 fw-bold">
+                            Pastikan harga tidak melebihi harga maksimum. Penawaran tidak dapat diubah.
                         </p>
                     </div>
                 </div>
@@ -517,11 +533,10 @@
                                   name="note" 
                                   class="form-control note-textarea" 
                                   placeholder="Berikan catatan tambahan tentang penawaran Anda (misal: kondisi barang, garansi, dll)"
-                                  rows="4">
-                        </textarea>
+                                  rows="4"></textarea>
                     </div>
                     
-                    <button type="submit" class="btn btn-submit">
+                    <button type="submit" class="btn btn-submit text-white">
                         <i class="bi bi-send-check me-2"></i>Kirim Penawaran
                     </button>
                 </form>
