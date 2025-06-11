@@ -33,7 +33,7 @@
                                 <i class="fas fa-user-check"></i> Konfirmasi PIC
                             </button>
                         @break
-
+                
                         @case('Pencarian Vendor')
                             <div class="alert alert-info py-2">
                                 <i class="fas fa-bullhorn"></i> 
@@ -74,11 +74,13 @@
                             @break
                         
                             @case('Pencarian Toko')
+                                @if($itemRequest->is_open)
                                 <div class="text-right mb-3">
                                     <button class="btn btn-sm btn-outline-success btn-select-vendor">
                                         <i class="fas fa-plus"></i> Vendor
                                     </button>
                                 </div>
+                                @endif
                                <div class="vendor-responses">
                                     @foreach($step['data']['vendors'] as $vendor)
                                         <div class="response-item alert 
