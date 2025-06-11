@@ -11,6 +11,15 @@
         {{ session('success') }}
     </div>
 @endif
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="card-body">
     @canAccess('store','divisions')
     <button type="button" class="btn btn-info" data-toggle="modal" data-target="#createModal"><i class="fa fa-plus"></i> Divisi</button>
@@ -62,6 +71,10 @@
                                     <label for="name">Nama</label>
                                     <input type="text" class="form-control" name="name" value="{{ $division->name }}" required>
                                 </div>
+                                <div class="form-group">
+                                    <label for="point_quota_monthly">Kuota Point Bulanan</label>
+                                    <input type="number" class="form-control" name="point_quota_monthly" min="0" value="{{ $division->point_quota_monthly }}">
+                                </div>
                                 {{-- 
                                 <!-- Checkbox -->
                                 <div class="form-group">
@@ -108,6 +121,10 @@
                     <div class="form-group">
                         <label for="name">Nama</label>
                         <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="point_quota_monthly">Kuota Point Bulanan</label>
+                        <input type="number" class="form-control" min="0" name="point_quota_monthly" required>
                     </div>
                     <!-- Checkbox -->
                      {{-- 

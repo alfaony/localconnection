@@ -284,7 +284,7 @@
                 <button class="btn btn-info text-white btn-sm me-2">Edit</button>
                 <button class="btn btn-info text-white btn-sm">Detail</button>
             </div>
-            <button type="btn button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"><i class="btn btn-trash"></i></button>
+            <button type="btn button" class="btn-close" id="btn-offcanvas-closed" data-bs-dismiss="offcanvas" aria-label="Close"><i class="btn btn-trash"></i></button>
         </div>
     </div>
   
@@ -312,6 +312,88 @@
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script>
 <script src="https://unpkg.com/browser-image-compression/dist/browser-image-compression.js"></script>
+
+@canAccess('approvement','dailytasks')
+@canAccess('checkDivisionQuota','dailytasks')
+<script>
+    let selectedDivisionId = null;
+
+    $(document).on('input', '#pointInput', function () {
+        let point = parseInt($(this).val());
+
+        if (isNaN(point) || point <= 0) {
+            // Poin kosong atau <= 0 → tidak perlu divisi
+            $('#divisionSelect').val('').trigger('change'); // kosongkan dropdown
+            $('#divisionSelect').closest('.form-group').addClass('d-none');
+            $('#quotaInfo').addClass('d-none');
+            $('#quotaWarning').addClass('d-none');
+
+            // Enable tombol submit
+            $('#submitApprovement, #submitAndContinue').prop('disabled', false);
+            return;
+        }
+
+        // Poin valid → tampilkan divisi
+        $('#divisionSelect').closest('.form-group').removeClass('d-none');
+
+        // Reset info kuota
+        $('#quotaInfo').addClass('d-none').text('');
+        $('#quotaWarning').addClass('d-none').text('');
+
+        selectedDivisionId = $('#divisionSelect').val();
+        
+        if (!selectedDivisionId) {
+            $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+            return;
+        }
+
+        // Lanjutkan cek kuota
+        checkQuota(point, selectedDivisionId);
+    });
+
+    $(document).on('change', '#divisionSelect', function () {
+        selectedDivisionId = $(this).val();
+        let point = parseInt($('#pointInput').val());
+
+        if (!selectedDivisionId || isNaN(point) || point <= 0) {
+            $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+            return;
+        }
+
+        checkQuota(point, selectedDivisionId);
+    });
+
+    function checkQuota(point, divisionId) {
+        $.ajax({
+            url: '{{ route("dailytask.checkDivisionQuota") }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                point: point,
+                division_id: divisionId,
+                exclude_task_id: '{{ $dailytask->id ?? null }}' // agar pengecekan edit tetap akurat
+            },
+            success: function (res) {
+                if (res.status === 'fail') {
+                    $('#quotaWarning').removeClass('d-none').text(res.message);
+                    $('#quotaInfo').addClass('d-none');
+                    $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+                } else {
+                    $('#quotaWarning').addClass('d-none');
+                    $('#quotaInfo').removeClass('d-none').text('Sisa kuota: ' + res.remaining + ' poin');
+                    $('#submitApprovement, #submitAndContinue').prop('disabled', false);
+                }
+            },
+            error: function () {
+                $('#quotaWarning').removeClass('d-none').text('Terjadi kesalahan saat cek kuota.');
+                $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+            }
+        });
+    }
+</script>
+@endcanAccess
+@endcanAccess
+
 @canAccess('show','dailytasks')
 <script>
     $(document).on('click', '.show-popup-btn', function() {
@@ -695,6 +777,8 @@
 
                                 if (isContinue && nextTaskId) 
                                 {
+                                    $("#btn-offcanvas-closed").click();
+
                                     reloadPopupContent(slug); // Function to reload the popup content
                                     let bsOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('sidePopup'));
                                     bsOffcanvas.hide();

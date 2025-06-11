@@ -11,6 +11,8 @@ use App\Models\ItemPurchase;
 use App\Models\Payment;
 use App\Models\ItemRequest;
 use App\Models\User;
+use App\Models\ProductSupplier;
+use App\Models\PotentialVendor;
 
 use App\Jobs\ProcessItemRequestCreated;
 
@@ -26,20 +28,39 @@ class ItemPurchaseController extends Controller
     public function store(Request $request)
     {   
         // Validate the request
+
         $validatedData = $request->validate([
             "payment_term_date" => "required|date",
             'item_request_id' => 'required|integer|exists:item_requests,id',
-            'product_supplier_id' => 'required|integer|exists:product_suppliers,id',
+            'product_supplier_id' => 'nullable|integer|exists:product_suppliers,id',
             'actual_price' => 'required|numeric|min:0',
             'bon_photo' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
             'payment_method' => "nullable|string",
             'rekening_number' => "nullable|string",
             "note" => "nullable|string"
         ]);
+
+        if($request->product_supplier_id == null || $request->product_supplier_id == "")
+        {
+            $validatedData = array_merge($validatedData, $request->validate([
+                   'owner_name' => 'required|string|max:255',
+                   'store_name' => 'required|string|max:255',
+                   'phone_number' => 'required|string|max:20',
+                   'location' => 'required|string|max:255',
+               ]));
+        }
+
         DB::beginTransaction();
         try {
             $itemRequest = ItemRequest::find($validatedData['item_request_id']);
-    
+
+            if($request->product_supplier_id == null || $request->product_supplier_id == "")
+            {
+                $newVendor = $this->addVendor($request, $itemRequest);
+                $validatedData['product_supplier_id'] = $newVendor->id;
+            }
+            
+            // dd($request->all());
             $bonPhoto = $request->file('bon_photo');
             $bonPhotoName = "bon-photo-{$itemRequest->id}.{$bonPhoto->getClientOriginalExtension()}";
             $path = $bonPhoto->storeAs('public/item-purchase-bon-photos', $bonPhotoName);
@@ -253,6 +274,34 @@ class ItemPurchaseController extends Controller
             $directUrl
         );
         return true;
+    }
+
+    public function addVendor(Request $request, ItemRequest $itemRequest)
+    {
+        try {
+            $productSupplier = ProductSupplier::create([
+                'owner_name' => $request->owner_name,
+                'company_id' => $itemRequest->company_id,
+                'store_name' => $request->store_name,
+                'phone_number' => $request->phone_number,
+                'location' => $request->location,
+            ]);
+    
+            $productSupplier->supplierCategories()->sync($itemRequest->supplier_category_id);
+    
+    
+            PotentialVendor::create([
+                'company_id' => $itemRequest->company_id,
+                'item_request_id' => $itemRequest->id,
+                'product_supplier_id' => $productSupplier->id,
+            ]);
+
+            return $productSupplier;
+        } catch (\Throwable $th) {
+            throw $th;
+            Log::error($th);
+        }
+        
     }
 
 }

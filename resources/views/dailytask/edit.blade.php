@@ -146,17 +146,37 @@
                                     </div>
                                 </div>
                                 @if(@$dailytask->approved)
+
                                 @canAccess('approvement','dailytasks')
+                                @canAccess('checkDivisionQuota','dailytasks')
                                 <div class="col-md-12">
                                     <div class="form-group">
-                                        <label for="points" class="form-label">Poin</label>
-                                        <input type="number" class="form-control" id="points" name="point" value="{{ old('point', isset($dailytask) ? $dailytask->point : '') }}" >
-                                        @error('point')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <label for="pointInput">Poin</label>
+                                        <input type="number" name="point" id="pointInput"
+                                            class="form-control" placeholder="Masukkan Poin"
+                                            value="{{ old('point', $dailytask->point) }}">
+                                    </div>
+
+                                    <div class="form-group" id="divisionWrapper">
+                                        <label for="divisionSelect">Divisi</label>
+                                        <select id="divisionSelect" name="division_id" class="form-control {{ $dailytask->point > 0 ? '' : 'd-none' }}">
+                                            <option value="">Pilih Divisi</option>
+                                            @foreach($divisions as $division)
+                                                <option value="{{ $division->id }}" {{ $dailytask->division_id == $division->id ? 'selected' : '' }}>
+                                                    {{ $division->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div id="pointSection" class="{{ $dailytask->point > 0 ? 'mt-2' : 'd-none' }}">
+                                        <small id="quotaInfo" class="text-muted d-none"></small>
+                                        <small id="quotaWarning" class="text-danger d-none">Poin melebihi kuota tersedia!</small>
                                     </div>
                                 </div>
                                 @endcanAccess
+                                @endcanAccess
+                                
                                 @endif
                             </div>
                             
@@ -179,6 +199,93 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+@canAccess('approvement','dailytasks')
+@canAccess('checkDivisionQuota','dailytasks')
+<script>
+    let selectedDivisionId = $('#divisionSelect').val();
+    const excludeTaskId = "{{ $dailytask->id }}"; // Untuk pengecualian saat edit
+
+    $(document).ready(function () {
+        const initialPoint = parseInt($('#pointInput').val());
+        if (!isNaN(initialPoint) && initialPoint > 0) {
+            $('#divisionSelect').removeClass('d-none');
+            $('#pointSection').removeClass('d-none');
+            if (selectedDivisionId) {
+                checkQuota(initialPoint, selectedDivisionId);
+            }
+        } else {
+            $('#divisionSelect').addClass('d-none');
+            $('#pointSection').addClass('d-none');
+            toggleSubmitButtons(true);
+        }
+    });
+
+    $(document).on('input', '#pointInput', function () {
+        const point = parseInt($(this).val());
+
+        if (isNaN(point) || point <= 0) {
+            $('#divisionSelect').addClass('d-none');
+            $('#quotaWarning, #quotaInfo').addClass('d-none');
+            toggleSubmitButtons(false);
+            return;
+        }
+
+        $('#divisionSelect').removeClass('d-none');
+        selectedDivisionId = $('#divisionSelect').val();
+        $('#pointSection').removeClass('d-none');
+
+        if (selectedDivisionId) {
+            checkQuota(point, selectedDivisionId);
+        } else {
+            toggleSubmitButtons(true);
+        }
+    });
+
+    $(document).on('change', '#divisionSelect', function () {
+        selectedDivisionId = $(this).val();
+        const point = parseInt($('#pointInput').val());
+
+        if (selectedDivisionId && point > 0) {
+            checkQuota(point, selectedDivisionId);
+        } else {
+            toggleSubmitButtons(true);
+        }
+    });
+
+    function toggleSubmitButtons(disable = true) {
+        $('#submitApprovement, #btn-submit').attr('disabled', disable);
+    }
+
+    function checkQuota(point, divisionId) {
+        $.ajax({
+            url: '{{ route("dailytask.checkDivisionQuota") }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                point: point,
+                division_id: divisionId,
+                exclude_task_id: excludeTaskId,
+            },
+            success: function (res) {
+                if (res.status === 'fail') {
+                    $('#quotaWarning').removeClass('d-none').text(res.message);
+                    $('#quotaInfo').addClass('d-none');
+                    toggleSubmitButtons(true);
+                } else {
+                    $('#quotaWarning').addClass('d-none');
+                    $('#quotaInfo').removeClass('d-none').text('Sisa kuota: ' + res.remaining + ' poin');
+                    toggleSubmitButtons(false);
+                }
+            },
+            error: function () {
+                toggleSubmitButtons(true);
+                $('#quotaWarning').removeClass('d-none').text('Terjadi kesalahan saat memeriksa kuota.');
+            }
+        });
+    }
+</script>
+@endcanAccess
+@endcanAccess
 
 <script>
     
