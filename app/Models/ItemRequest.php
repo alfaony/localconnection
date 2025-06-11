@@ -58,6 +58,7 @@ class ItemRequest extends Model
 
     public function scopeByCompany($query, $companyId)
     {
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
         return $query->where('company_id', $companyId);
     }
 

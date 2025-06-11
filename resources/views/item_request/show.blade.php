@@ -347,50 +347,71 @@
 @canAccess('complete','item_purchases')
 <script>
     function confirmCompleteRequest(itemRequestId) {
-        if (!confirm('Apakah Anda yakin ingin menyelesaikan permintaan ini?')) return;
+        Swal.fire({
+            title: 'Yakin ingin menyelesaikan permintaan ini?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Selesaikan',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (!result.isConfirmed) return;
 
-        document.getElementById('btn-complete-request').style.display = 'none';
+            // Tampilkan proses Swal loading
+            Swal.fire({
+                title: 'Memproses...',
+                text: 'Mengirim data ke Finance...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
-        let url = "{{ route('item-purchase.complete', ':id') }}";
-        url = url.replace(':id', itemRequestId);
+            let url = "{{ route('item-purchase.complete', ':id') }}";
+            url = url.replace(':id', itemRequestId);
 
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ is_open: false })
-        })
-        .then(res => {
-            if (!res.ok) throw new Error('Gagal menyelesaikan permintaan');
-            return res.json();
-        })
-        .then(data => {
-            // Tampilkan toast sukses
-            const toast = $(`
-                <div class="toast align-items-center position-fixed top-0 end-0 m-3 show" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header bg-success text-white">
-                        <strong class="me-auto"><i class="fas fa-check-circle me-2"></i> Berhasil</strong>
-                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ is_open: false })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Gagal menyelesaikan permintaan');
+                return res.json();
+            })
+            .then(data => {
+                Swal.close(); // Tutup loading
+                // Tampilkan toast sukses
+                const toast = $(`
+                    <div class="toast align-items-center position-fixed top-0 end-0 m-3 show" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header bg-success text-white">
+                            <strong class="me-auto"><i class="fas fa-check-circle me-2"></i> Berhasil</strong>
+                            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body bg-white text-dark">
+                            Data telah dikirim ke Finance.
+                        </div>
                     </div>
-                    <div class="toast-body bg-white text-dark">
-                        Data telah dikirim ke Sprinter.
-                    </div>
-                </div>
-            `).appendTo('body');
+                `).appendTo('body');
 
-            toast.toast({ delay: 2000 }).toast('show');
-            loadWorkflow();
+                toast.toast({ delay: 2000 }).toast('show');
 
-            // Reload setelah delay (jika perlu)
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Terjadi kesalahan saat menyelesaikan permintaan.');
+                loadWorkflow(); // Muat ulang workflow jika ada
+
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops!',
+                    text: 'Terjadi kesalahan saat menyelesaikan permintaan.'
+                });
+            });
         });
     }
 </script>
@@ -637,7 +658,7 @@
                     '<strong class="me-auto"><i class="fas fa-check-circle me-2"></i>Berhasil</strong>' +
                     '<button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
                     '</div>' +
-                    '<div class="toast-body bg-white text-dark">Data telah dikirim ke Finance.</div>' +
+                    '<div class="toast-body bg-white text-dark">Data telah berhasil disimpan.</div>' +
                     '</div>')
                     .appendTo('body')
                     .toast({ delay: 2000 })

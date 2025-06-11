@@ -91,7 +91,7 @@
                 <div class="form-group">
                     <div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input" id="shareWa" name="shareWa" {{ isset($itemRequest) ? '' : (isset($shareWa) && $shareWa ? 'checked' : '') }}>
-                        <label class="custom-control-label" for="shareWa">Bagikan nomor Whatsapp ke client</label>
+                        <label class="custom-control-label" for="shareWa">Blast ke Whatsapp Vendor</label>
                     </div>
                 </div>
                 @endif
