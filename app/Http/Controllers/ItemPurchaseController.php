@@ -276,7 +276,7 @@ class ItemPurchaseController extends Controller
         return true;
     }
 
-    public function addVendor(Request $request, ItemRequest $itemRequest)
+    private function addVendor(Request $request, ItemRequest $itemRequest)
     {
         try {
             $productSupplier = ProductSupplier::create([

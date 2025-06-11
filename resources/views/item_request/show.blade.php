@@ -381,7 +381,7 @@
             `).appendTo('body');
 
             toast.toast({ delay: 2000 }).toast('show');
-            // loadWorkflow();
+            loadWorkflow();
 
             // Reload setelah delay (jika perlu)
             setTimeout(() => {
