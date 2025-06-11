@@ -221,7 +221,7 @@ class ItemPurchaseController extends Controller
             {
                 $message = "Meminta pembayaran untuk item request #{$itemRequest->item_name}";
                 $directUrl = route('item-request.show', $itemRequest->id);
-                $this->sentInbox($financeApprove->id,$message, $directUrl, $itemRequest->id, $itemRequest->id);
+                $this->sentInbox($financeApprove->id,$message, $directUrl);
             }
         }else
         {
@@ -245,9 +245,18 @@ class ItemPurchaseController extends Controller
             {
                 $message = "Meminta pembayaran untuk item request #{$itemRequest->item_name}";
                 $directUrl = route('item-request.show', $itemRequest->id);
-                $this->sentInbox($finance->id,$message, $directUrl, $itemRequest->id, $itemRequest->id);
+                $this->sentInbox($finance->id,$message, $directUrl);
             }
         }
+
+            broadcast(new ChatMessageSent(
+                    "",
+                    $message,
+                    now(),
+                    $itemRequest->id,
+                    Auth::user()->id
+                ))->toOthers();
+
             $itemRequest->is_open = 0;
             return $itemRequest->save();
     }
