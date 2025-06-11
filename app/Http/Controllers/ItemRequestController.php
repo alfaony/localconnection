@@ -97,7 +97,14 @@ class ItemRequestController extends Controller
         $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
         $shareWa = $client->status() ?? false;
 
-        return view('item_request.createOrEdit', compact('itemRequest', 'categories', 'shareWa'));
+        $existsSprinter = User::where('company_id', Auth::user()->company_id)
+            ->whereHas('role.permissions', function ($q) {
+                $q->where('method', 'as_sprinter')
+                ->where('table', 'item_requests');
+            })
+            ->exists();
+
+        return view('item_request.createOrEdit', compact('itemRequest', 'categories', 'shareWa','existsSprinter'));
     }
 
     public function show(ItemRequest $itemRequest)
