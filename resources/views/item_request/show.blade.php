@@ -359,7 +359,7 @@
             // Tampilkan proses Swal loading
             Swal.fire({
                 title: 'Memproses...',
-                text: 'Mengirim data ke Sprinter...',
+                text: 'Mengirim data ke Finance...',
                 allowOutsideClick: false,
                 didOpen: () => {
                     Swal.showLoading();
@@ -391,7 +391,7 @@
                             <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
                         <div class="toast-body bg-white text-dark">
-                            Data telah dikirim ke Sprinter.
+                            Data telah dikirim ke Finance.
                         </div>
                     </div>
                 `).appendTo('body');
