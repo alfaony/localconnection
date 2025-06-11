@@ -154,7 +154,7 @@ class ItemRequestController extends Controller
         return redirect()->route('item-request.index')->with('success', 'Request deleted.');
     }
 
-    public function dataTableJson()
+    public function dataTableJson(Request $request)
     {
         // Fetch data for the DataTable
         $query = ItemRequest::query();
