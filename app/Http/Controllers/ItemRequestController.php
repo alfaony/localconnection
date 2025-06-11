@@ -324,7 +324,7 @@ class ItemRequestController extends Controller
     public function publicIndex($companySlug)
     {
         $company = Company::where('slug', $companySlug)->firstOrFail();
-        $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('field_title','closed_time')->get()->pluck('field_value','field_title');
+        $settingCompany = SettingCompany::byCompany($company->id)->where('field_title','closed_time')->get()->pluck('field_value','field_title');
 
         return view('item_request.public_index', compact('company', 'settingCompany'));
     }

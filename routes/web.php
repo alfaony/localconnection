@@ -353,8 +353,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
   Route::resource('shifting-ob', ShiftingObController::class)->only(['index','store','update','destroy']);
   Route::resource('schedule-ob', ScheduleObController::class)->except(['edit','create','show']);
-  Route::resource('division-budget', DivisionBudgetController::class);
+
   Route::post('division-budget/approve/{divisionBudget}', [DivisionBudgetController::class, 'approve'])->name('division-budget.approve');
+  Route::resource('division-budget', DivisionBudgetController::class);
 
   Route::get('inbox/unreadcount', [InboxController::class, 'unreadcount'])->name('inbox.unreadcount');
   Route::get('/inbox/{id}', [InboxController::class, 'show'])->name('inbox.show');
