@@ -239,7 +239,7 @@
               </div>
 
               <div class="form-group">
-                  <label for="rekening_number">Nomor Rekening <span class="text-danger">*</span></label>
+                  <label for="rekening_number">Nama Bank & Nomor Rekening <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" name="rekening_number" required>
               </div>
 
