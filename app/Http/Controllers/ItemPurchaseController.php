@@ -22,6 +22,7 @@ use App\Models\Role;
 use App\Schemas\RoleSchema;
 
 use App\Events\ChatMessageSent;
+use App\Jobs\ItemRequestClose;
 
 class ItemPurchaseController extends Controller
 {
@@ -78,7 +79,9 @@ class ItemPurchaseController extends Controller
     
             if($request->is_finished)
             {
-                $this->itemRequestClose($itemRequest);
+                $itemRequest->is_open = 0;
+                $itemRequest->save();
+                Dispatch(new ItemRequestClose($itemRequest, Auth::user()->id)); // itemRequestClose($itemRequest);
             }
     
                 
@@ -190,7 +193,10 @@ class ItemPurchaseController extends Controller
     {
         try {
             $itemRequest = ItemRequest::findOrFail($id);
-            $this->itemRequestClose($itemRequest);
+            // $this->itemRequestClose($itemRequest);
+            $itemRequest->is_open = 0;
+            $itemRequest->save();
+            Dispatch(new ItemRequestClose($itemRequest, Auth::user()->id)); // itemRequestClose($itemRequest);
             return response()->json(['message' => 'Permintaan diselesaikan']);
         } catch (\Throwable $th) {
             //throw $th;

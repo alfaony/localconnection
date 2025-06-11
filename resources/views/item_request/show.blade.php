@@ -658,7 +658,7 @@
                     '<strong class="me-auto"><i class="fas fa-check-circle me-2"></i>Berhasil</strong>' +
                     '<button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
                     '</div>' +
-                    '<div class="toast-body bg-white text-dark">Data telah dikirim ke Finance.</div>' +
+                    '<div class="toast-body bg-white text-dark">Data telah berhasil disimpan.</div>' +
                     '</div>')
                     .appendTo('body')
                     .toast({ delay: 2000 })
