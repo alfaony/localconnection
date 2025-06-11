@@ -207,7 +207,7 @@
                                                 </div>
                                                 <div class="mb-2">
                                                     <i class="fas fa-receipt mr-2"></i>
-                                                    No. Rekening: {{ $purchase->rekening_number}}
+                                                    Bank & No. Rekening: {{ $purchase->rekening_number}}
                                                 </div>
                                                 @if($purchase->payment)
                                                 <div class="mb-2">
