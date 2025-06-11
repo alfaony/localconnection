@@ -129,11 +129,9 @@ return
       
       "request_order_step" => 
       [
-         '0' => 'REQUESTED',
-         '1' => 'FIND_PIC',
-         '2' => 'FIND_VENDOR',
-         '3' => 'WAITING_PAYMENT',
-         '4' => 'PAID',
-         '5' => 'READY_TO_SEND',
+         'REQUESTED' => 'Requested',
+         'WAITING_PAYMENT' => 'Waiting Payment',
+         'WAITING_DELIVERY_CONFIRMATION' => 'Waiting Delivery Confirmation',
+         'DELIVERED' => 'Delivered',
       ],
 ];

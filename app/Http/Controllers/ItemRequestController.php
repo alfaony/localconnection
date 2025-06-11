@@ -32,7 +32,8 @@ class ItemRequestController extends Controller
 {
     public function index()
     {   
-        return view('item_request.index');
+        $stepsRequest = config('custom.request_order_step');;
+        return view('item_request.index', compact('stepsRequest'));
     }
 
     public function create()
@@ -158,6 +159,11 @@ class ItemRequestController extends Controller
         // Fetch data for the DataTable
         $query = ItemRequest::query();
         $query->with('category')->byCompany(Auth::user()->company_id)->orderBy('updated_at', 'desc');
+
+        if ($request->filled('status')) 
+        {
+            $query->where('status', $request->status);
+        }
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['item_name', 'category', 'estimated_price', 'qty', 'status'];
 
