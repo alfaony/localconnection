@@ -32,7 +32,8 @@ class ItemRequestController extends Controller
 {
     public function index()
     {   
-        return view('item_request.index');
+        $stepsRequest = config('custom.request_order_step');;
+        return view('item_request.index', compact('stepsRequest'));
     }
 
     public function create()
@@ -97,7 +98,14 @@ class ItemRequestController extends Controller
         $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
         $shareWa = $client->status() ?? false;
 
-        return view('item_request.createOrEdit', compact('itemRequest', 'categories', 'shareWa'));
+        $existsSprinter = User::where('company_id', Auth::user()->company_id)
+            ->whereHas('role.permissions', function ($q) {
+                $q->where('method', 'as_sprinter')
+                ->where('table', 'item_requests');
+            })
+            ->exists();
+
+        return view('item_request.createOrEdit', compact('itemRequest', 'categories', 'shareWa','existsSprinter'));
     }
 
     public function show(ItemRequest $itemRequest)
@@ -146,11 +154,16 @@ class ItemRequestController extends Controller
         return redirect()->route('item-request.index')->with('success', 'Request deleted.');
     }
 
-    public function dataTableJson()
+    public function dataTableJson(Request $request)
     {
         // Fetch data for the DataTable
         $query = ItemRequest::query();
         $query->with('category')->byCompany(Auth::user()->company_id)->orderBy('updated_at', 'desc');
+
+        if ($request->filled('status')) 
+        {
+            $query->where('status', $request->status);
+        }
         // Map column indexes to column names (this may vary based on your table structure)
         $columnNames = ['item_name', 'category', 'estimated_price', 'qty', 'status'];
 
@@ -311,7 +324,7 @@ class ItemRequestController extends Controller
     public function publicIndex($companySlug)
     {
         $company = Company::where('slug', $companySlug)->firstOrFail();
-        $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('field_title','closed_time')->get()->pluck('field_value','field_title');
+        $settingCompany = SettingCompany::byCompany($company->id)->where('field_title','closed_time')->get()->pluck('field_value','field_title');
 
         return view('item_request.public_index', compact('company', 'settingCompany'));
     }

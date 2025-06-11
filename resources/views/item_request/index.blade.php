@@ -56,10 +56,20 @@
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 <script>
     $(document).ready(function () {
+        $('#filter-status').on('change', function () {
+            $('#item-request-table').DataTable().ajax.reload();
+        });
+
+
         $('#item-request-table').DataTable({
             processing: true,
             serverSide: true,
-            ajax: "{{ route('item-request.datatable') }}",
+             ajax: {
+                url: "{{ route('item-request.datatable') }}",
+                data: function (d) {
+                    d.status = $('#filter-status').val(); // ⬅️ Filter dikirim ke server
+                }
+            },
             columns: 
             [
                 { data: 'item_name', name: 'item_name' },
@@ -71,7 +81,26 @@
             ],
             language: {
                 processing: '<i class="fas fa-spinner fa-spin"></i> Memuat...'
-            }
+            },
+            initComplete: function () {
+            // Inject dropdown ke sebelah search box
+            const filterHtml = `
+                <label class="ml-3 mb-0">
+                    <select id="filter-status" class="form-control form-control-sm">
+                        <option value="" selected>All</option>
+                        @foreach($stepsRequest as $key => $values)
+                            <option value="{{ $key }}">{{ $values }}</option>
+                        @endforeach
+                    </select>
+                </label>`;
+            
+            $('#item-request-table_filter').append(filterHtml);
+
+            // Trigger reload saat filter berubah
+            $('#filter-status').on('change', function () {
+                $('#item-request-table').DataTable().ajax.reload();
+            });
+        }
         });
     });
 </script>
