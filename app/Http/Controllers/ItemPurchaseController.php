@@ -209,11 +209,17 @@ class ItemPurchaseController extends Controller
         $adminRole = Role::where('name', RoleSchema::ADMIN)->first();
         $rootRole = Role::where('name', RoleSchema::ROOT)->first();
         
-        $financesApprove = User::where('company_id', $itemRequest->company_id)
-        ->whereHas('role.permissions', function ($q) {
+         $financesApprove = User::whereHas('role.permissions', function ($q) {
             $q->where('method', 'as_finance')
             ->where('table', 'item_requests');
-        })->get();
+        })
+        ->where(function ($q) use ($itemRequest) {
+            $q->where('company_id', $itemRequest->company_id)
+            ->orWhereHas('accessibleCompanies', function ($sub) use ($itemRequest) {
+                $sub->where('companies.id', $itemRequest->company_id);
+            });
+        })
+        ->get();
 
         if(!$financesApprove->isEmpty())
         {
