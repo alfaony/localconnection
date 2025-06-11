@@ -253,7 +253,13 @@
     });
 
     function toggleSubmitButtons(disable = true) {
-        $('#submitApprovement, #btn-submit').attr('disabled', disable);
+        checkSubmit = "{{ $dailytask->submit ? 'true' : 'false' }}";
+        
+        if(checkSubmit == 'true') 
+        {
+            $('#submitApprovement, #btn-submit').attr('disabled', disable);
+        }
+
     }
 
     function checkQuota(point, divisionId) {
