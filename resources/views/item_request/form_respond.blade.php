@@ -355,196 +355,202 @@
 <body>
     <div class="container">
         <!-- Header Card -->
-        <div class="header-card">
-            <div class="header-content">
-                <div class="header-icon">
-                    <i class="bi bi-cart-check"></i>
-                </div>
-                <h5 class="fw-bold">Respon Permintaan Barang</h5>
-            </div>
-        </div>
-
-        <div class="alert-container">
-            @include('components.alert')
-        </div>
-        
-        <!-- Status Indicator -->
-        <div class="d-flex justify-content-center mb-2">
-            
-            @if($potentialVendor->responded && $potentialVendor->responded_at)
-            <span class="status-badge status-responded">
-                <i class="bi bi-check-circle me-2"></i>Sudah Menawarkan
-            </span>
-            @elseif(!$itemRequest->is_open)
-            <span class="status-badge status-closed">
-                <i class="bi bi-lock me-2"></i>Permintaan Ditutup
-            </span>
-
-            @elseif(!!$potentialVendor->responded && !!$potentialVendor->responded_at)
-            <span class="status-badge status-open">
-                <i class="bi bi-unlock me-2"></i> Permintaan Masih Terbuka
-            </span>
-            @endif
-        </div>
-        
-        @if($itemRequest->is_open || $potentialVendor->responded )
-        <!-- Item Image -->
-        <div class="card">
-            <div class="item-img-container">
-                <img src="{{ Storage::url($itemRequest->picture) }}" 
-                     alt="{{ $itemRequest->name }}" class="item-img">
-            </div>
-        </div>
-        
-        <!-- Item Details -->
-        <div class="card-custom">
-            <div class="card-header-custom">
-                <i class="bi bi-box-seam me-2"></i>Detail Permintaan
-            </div>
-            <div class="card-body-custom">
-                <div class="detail-item">
-                    <div class="detail-label">
-                        <i class="bi bi-tag"></i>Nama Barang
-                    </div>
-                    <div class="detail-value">{{ $itemRequest->item_name }}</div>
-                </div>
-                
-                <div class="detail-item d-none">
-                    <div class="detail-label">
-                        <i class="bi bi-upc-scan"></i>Kode Permintaan
-                    </div>
-                    <div class="detail-value">{{ $potentialVendor->response_token  ?? "-" }}</div>
-                </div>
-                
-                <div class="detail-item d-none">
-                    <div class="detail-label">
-                        <i class="bi bi-calendar"></i>Tanggal Permintaan
-                    </div>
-                    <div class="detail-value">{{ $itemRequest->created_at->format('d F Y') }}</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">
-                        <i class="bi bi-boxes"></i>Jumlah
-                    </div>
-                    <div class="detail-value">{{ $itemRequest->qty }} unit</div>
-                </div>
-                
-                <div class="detail-item">
-                    <div class="detail-label">
-                        <i class="bi bi-currency-exchange"></i>Harga Maksimum
-                    </div>
-                    <div class="detail-value">
-                        <span class="price-highlight">Rp {{ number_format($itemRequest->estimated_price,0,',','.') }}</span>
-                    </div>
-                </div>
-                
-                <div class="detail-item mb-0 pb-0">
-                    <div class="detail-label">
-                        <i class="bi bi-card-text"></i>Deskripsi
-                    </div>
-                    <div class="detail-value">
-                        {!! $itemRequest->description !!}
-                    </div>
-                </div>
-                
-                @if($potentialVendor->price_offered)
-                <div class="detail-item mt-2">
-                    <div class="detail-label">
-                        <i class="bi bi-cash"></i>Harga Penawaran
-                    </div>
-                    <div class="detail-value">
-                        <span class="price-highlight">Rp {{ number_format($potentialVendor->price_offered ?? 0,0,',','.') }}</span>
-                    </div>
-                </div>
-                @endif
-                
-                <div class="detail-item mb-0 pb-0 d-none">
-                    <div class="detail-label mb-2">
-                        <i class="bi bi-check-circle"></i>Status
-                    </div>
-                    <div class="detail-value mb-2">
-                        <span class="badge bg-{{ $potentialVendor->responded ? 'success' : 'warning' }} text-white">
-                            {{ $potentialVendor->responded ? 'Sudah Ditawarkan' : 'Belum Ditawarkan' }}
-                        </span>
-                    </div>
-                </div>
-                @if($potentialVendor->notes)
-                <div class="detail-item mb-0 pb-0">
-                    <div class="detail-label">
-                        <i class="bi bi-card-text"></i>Catatan
-                    </div>
-                    <div class="detail-value mb-2 mt-2">
-                        {!! $potentialVendor->notes ?? '-' !!}
-                    </div>
-                </div>
-                @endif
-            </div>
-        </div>
-        
-        <!-- Response Form -->
-         @if(!$potentialVendor->responded)
-        <div class="card-custom">
-            <div class="card-header-custom">
-                <i class="bi bi-pencil-square me-2"></i>Form Penawaran
-            </div>
-            <div class="card-body-custom">
-                <div class="alert alert-primary alert-custom">
-                    <div class="alert-icon">
-                        <i class="bi bi-info-circle-fill"></i>
-                    </div>
-                    <div>
-                        <p class="mb-0 fw-bold">
-                            Pastikan harga tidak melebihi harga maksimum. Penawaran tidak dapat diubah.
-                        </p>
-                    </div>
-                </div>
-
-                <form method="POST" action="{{ route('vendor.respond.submit', [$vendor->id, $vendor->response_token]) }}">
-                    @csrf
-                    <div class="mb-2">
-                        <label class="form-label">
-                            <i class="bi bi-currency-dollar"></i>Harga Penawaran
-                        </label>
-                        <div class="price-input-group">
-                            <span>Rp</span>
-                            <input type="number" 
-                                   id="price_offered"
-                                   name="price_offered"
-                                   class="form-control price-input" 
-                                   placeholder="Masukkan harga penawaran"
-                                   max="{{  $itemRequest->estimated_price }}"
-                                   required>
-                        </div>
-                        
-                        <div class="validation-feedback text-danger" id="priceFeedback">
-                            <i class="bi bi-exclamation-circle"></i> 
-                            <span>Harga tidak boleh melebihi  Rp. {{number_format($itemRequest->estimated_price,0,',','.')}}</span>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="mb-2">
-                        <label class="form-label">
-                            <i class="bi bi-card-text"></i>Catatan Tambahan
-                            <span class="text-muted ms-1">(Opsional)</span>
-                        </label>
-                        <textarea id="note" 
-                                  name="note" 
-                                  class="form-control note-textarea" 
-                                  placeholder="Berikan catatan tambahan tentang penawaran Anda (misal: kondisi barang, garansi, dll)"
-                                  rows="4"></textarea>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-submit text-white">
-                        <i class="bi bi-send-check me-2"></i>Kirim Penawaran
-                    </button>
-                </form>
-            </div>
-        </div>
-        @endif
-        @endif
-
+         <div class="row">
+            {{-- 
+             <div class="header-card mb-1 mt-0">
+                 <div class="header-content">
+                     <div class="header-icon">
+                         <i class="bi bi-cart-check"></i>
+                     </div>
+                     <h5 class="fw-bold">Respon Permintaan Barang</h5>
+                 </div>
+             </div>
+             --}}
+     
+             <div class="alert-container">
+                 @include('components.alert')
+             </div>
+             
+             <!-- Status Indicator -->
+             <div class="d-flex justify-content-center mb-2">
+                 
+                 @if($potentialVendor->responded && $potentialVendor->responded_at)
+                 <span class="status-badge status-responded">
+                     <i class="bi bi-check-circle me-2"></i>Sudah Menawarkan
+                 </span>
+                 @elseif(!$itemRequest->is_open)
+                 <span class="status-badge status-closed">
+                     <i class="bi bi-lock me-2"></i>Permintaan Ditutup
+                 </span>
+     
+                 @elseif(!!$potentialVendor->responded && !!$potentialVendor->responded_at)
+                 <span class="status-badge status-open">
+                     <i class="bi bi-unlock me-2"></i> Permintaan Masih Terbuka
+                 </span>
+                 @endif
+             </div>
+             
+             @if($itemRequest->is_open || $potentialVendor->responded )
+             <!-- Item Image -->
+             <div class="card">
+                <div class="card-header-custom">
+                     <i class="bi bi-cart-check me-2"></i>Respon Permintaan Barang
+                 </div>
+                 <div class="item-img-container">
+                     <img src="{{ Storage::url($itemRequest->picture) }}" 
+                          alt="{{ $itemRequest->name }}" class="item-img">
+                 </div>
+             </div>
+             
+             <!-- Item Details -->
+             <div class="card-custom">
+                 <div class="card-header-custom">
+                     <i class="bi bi-box-seam me-2"></i>Detail Permintaan
+                 </div>
+                 <div class="card-body-custom">
+                     <div class="detail-item">
+                         <div class="detail-label">
+                             <i class="bi bi-tag"></i>Nama Barang
+                         </div>
+                         <div class="detail-value">{{ $itemRequest->item_name }}</div>
+                     </div>
+                     
+                     <div class="detail-item d-none">
+                         <div class="detail-label">
+                             <i class="bi bi-upc-scan"></i>Kode Permintaan
+                         </div>
+                         <div class="detail-value">{{ $potentialVendor->response_token  ?? "-" }}</div>
+                     </div>
+                     
+                     <div class="detail-item d-none">
+                         <div class="detail-label">
+                             <i class="bi bi-calendar"></i>Tanggal Permintaan
+                         </div>
+                         <div class="detail-value">{{ $itemRequest->created_at->format('d F Y') }}</div>
+                     </div>
+                     
+                     <div class="detail-item">
+                         <div class="detail-label">
+                             <i class="bi bi-boxes"></i>Jumlah
+                         </div>
+                         <div class="detail-value">{{ $itemRequest->qty }} unit</div>
+                     </div>
+                     
+                     <div class="detail-item">
+                         <div class="detail-label">
+                             <i class="bi bi-currency-exchange"></i>Harga Maksimum
+                         </div>
+                         <div class="detail-value">
+                             <span class="price-highlight">Rp {{ number_format($itemRequest->estimated_price,0,',','.') }}</span>
+                         </div>
+                     </div>
+                     
+                     <div class="detail-item mb-0 pb-0">
+                         <div class="detail-label">
+                             <i class="bi bi-card-text"></i>Deskripsi
+                         </div>
+                         <div class="detail-value">
+                             {!! $itemRequest->description !!}
+                         </div>
+                     </div>
+                     
+                     @if($potentialVendor->price_offered)
+                     <div class="detail-item mt-2">
+                         <div class="detail-label">
+                             <i class="bi bi-cash"></i>Harga Penawaran
+                         </div>
+                         <div class="detail-value">
+                             <span class="price-highlight">Rp {{ number_format($potentialVendor->price_offered ?? 0,0,',','.') }}</span>
+                         </div>
+                     </div>
+                     @endif
+                     
+                     <div class="detail-item mb-0 pb-0 d-none">
+                         <div class="detail-label mb-2">
+                             <i class="bi bi-check-circle"></i>Status
+                         </div>
+                         <div class="detail-value mb-2">
+                             <span class="badge bg-{{ $potentialVendor->responded ? 'success' : 'warning' }} text-white">
+                                 {{ $potentialVendor->responded ? 'Sudah Ditawarkan' : 'Belum Ditawarkan' }}
+                             </span>
+                         </div>
+                     </div>
+                     @if($potentialVendor->notes)
+                     <div class="detail-item mb-0 pb-0">
+                         <div class="detail-label">
+                             <i class="bi bi-card-text"></i>Catatan
+                         </div>
+                         <div class="detail-value mb-2 mt-2">
+                             {!! $potentialVendor->notes ?? '-' !!}
+                         </div>
+                     </div>
+                     @endif
+                 </div>
+             </div>
+             
+             <!-- Response Form -->
+              @if(!$potentialVendor->responded)
+             <div class="card-custom">
+                 <div class="card-header-custom">
+                     <i class="bi bi-pencil-square me-2"></i>Form Penawaran
+                 </div>
+                 <div class="card-body-custom">
+                     <div class="alert alert-primary alert-custom">
+                         <div class="alert-icon">
+                             <i class="bi bi-info-circle-fill"></i>
+                         </div>
+                         <div>
+                             <p class="mb-0 fw-bold">
+                                 Pastikan harga tidak melebihi harga maksimum. Penawaran tidak dapat diubah.
+                             </p>
+                         </div>
+                     </div>
+     
+                     <form method="POST" action="{{ route('vendor.respond.submit', [$vendor->id, $vendor->response_token]) }}">
+                         @csrf
+                         <div class="mb-2">
+                             <label class="form-label">
+                                 <i class="bi bi-currency-dollar"></i>Harga Penawaran
+                             </label>
+                             <div class="price-input-group">
+                                 <span>Rp</span>
+                                 <input type="number" 
+                                        id="price_offered"
+                                        name="price_offered"
+                                        class="form-control price-input" 
+                                        placeholder="Masukkan harga penawaran"
+                                        max="{{  $itemRequest->estimated_price }}"
+                                        required>
+                             </div>
+                             
+                             <div class="validation-feedback text-danger" id="priceFeedback">
+                                 <i class="bi bi-exclamation-circle"></i> 
+                                 <span>Harga tidak boleh melebihi  Rp. {{number_format($itemRequest->estimated_price,0,',','.')}}</span>
+                             </div>
+                             
+                         </div>
+                         
+                         <div class="mb-2">
+                             <label class="form-label">
+                                 <i class="bi bi-card-text"></i>Catatan Tambahan
+                                 <span class="text-muted ms-1">(Opsional)</span>
+                             </label>
+                             <textarea id="note" 
+                                       name="note" 
+                                       class="form-control note-textarea" 
+                                       placeholder="Berikan catatan tambahan tentang penawaran Anda (misal: kondisi barang, garansi, dll)"
+                                       rows="4"></textarea>
+                         </div>
+                         
+                         <button type="submit" class="btn btn-submit text-white">
+                             <i class="bi bi-send-check me-2"></i>Kirim Penawaran
+                         </button>
+                     </form>
+                 </div>
+             </div>
+             @endif
+             @endif
+         </div>
     </div>
 
     <!-- Bootstrap Bundle with Popper -->
