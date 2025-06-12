@@ -336,6 +336,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
   Route::resource('objective', ObjectiveController::class);
 
+  Route::get('/divisions/ajaxDivisionTasks/{division}', [DivisionController::class, 'ajaxDivisionTasks'])->name('divisions.ajax.tasks');
   Route::get('division/fetchusertask/{userId}/{filter}', [DivisionController::class, 'fetchusertask'])->name('division.fetchusertask');
   Route::resource('division', DivisionController::class);
   
