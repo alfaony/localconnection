@@ -175,6 +175,7 @@ Route::get('employee-checking/report', [EmployeeCheckingController::class, 'repo
 Route::get('partnership-agreement/sharePdf/{id}',[PartnershipAgreementController::class,'sharePdf'])->name('partnership-agreement.sharePdf');
 Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementController::class,'signatureShare'])->name('partnership-agreement.signatureShare');
 
+Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {

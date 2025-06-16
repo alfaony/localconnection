@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Rating;
 use App\Models\Meeting;
+use App\Models\Project;
 
 use Google\Service\Calendar;
 use Illuminate\Http\Request;
@@ -33,7 +34,8 @@ class MeetingController extends Controller
     public function create()
     {
         $users = User::byCompany(Auth::user()->company_id)->get();
-        return view('meeting.createOrEdit', compact('users'));
+        $projects = Project::byCompany(Auth::user()->company_id)->get();
+        return view('meeting.createOrEdit', compact('users', 'projects'));
     }
 
     public function upload(Meeting $meeting, Request $request)
@@ -59,11 +61,10 @@ class MeetingController extends Controller
             if (empty($data)) {
                 return back()->with('error', 'Please provide either a file or a link');
             }
+    
             
             $updated = $meeting->update($data);
-            
-            Log::info('Update status: ' . ($updated ? 'success' : 'failed'));
-            Log::info('Meeting data: ' . json_encode($meeting));
+
             
             if (!$updated) {
                 return back()->with('error', 'Gagal menyimpan data');
@@ -116,71 +117,69 @@ class MeetingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama_rapat' => 'required|string',
-            'jenis_rapat' => 'required|in:offline,online',
+            'meeting_name' => 'required|string',
+            'meeting_type' => 'required|in:offline,online',
             'google_meet_link' => 'nullable|url',
             'google_event_id' => 'nullable|string',
-            'agenda_rapat' => 'required|string',
-            'tempat_rapat' => 'nullable|string',
-            'tanggal_mulai' => 'required|date',
-            'tanggal_berakhir' => 'required|date|after_or_equal:tanggal_mulai',
-            'jam_mulai' => 'required',
-            'jam_berakhir' => 'required|after:jam_mulai',
-            'catatan' => 'nullable|string',
-            'nama_pic' => 'required',
-            'peserta' => 'required',
+            'meeting_agenda' => 'required|string',
+            'meeting_location' => 'nullable|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_time' => 'required',
+            'end_time' => 'required|after:start_time',
+            'notes' => 'nullable|string',
+            'participant' => 'required|array',
+            'participant.*' => 'required|uuid|exists:users,id',
+            'attachment_link' => 'nullable|url',
+            'attachment' => 'nullable|file|max:2048'
         ]);
 
-        $validated['peserta'] = json_encode($request->peserta);
-        $validated['nama_pic'] = json_encode($request->nama_pic);
-        
-        $meeting = Meeting::create($validated);
-
-        // Array untuk menyimpan semua email
-        $emails = [];
-
-        // Simpan dan ambil email peserta
-        foreach ($request->peserta as $pesertaId) {
-            $participant = MeetingParticipant::create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $pesertaId,
-            ]);
-            
-            // Ambil email peserta
-            $user = User::find($pesertaId);
-            if ($user && $user->email) {
-                $emails[] = $user->email;
-            }
-        }
-
-        // Simpan dan ambil email PIC
-        foreach ($request->nama_pic as $picId) {
-            MeetingParticipant::create([
-                'meeting_id' => $meeting->id,
-                'user_id' => $picId,
-            ]);
-            
-            // Ambil email PIC
-            $user = User::find($picId);
-            if ($user && $user->email) {
-                $emails[] = $user->email;
-            }
-        }
-
-        // Hapus email duplikat
-        $emails = array_unique($emails);
-
         try {
-            // Kirim email ke semua peserta dan PIC
-            foreach ($emails as $email) {
-                Mail::to($email)->send(new RatingInvitation($meeting));
+            $validated['participant'] = json_encode($request->participant);
+            $validated['user_id'] = Auth::user()->id;
+            $validated['company_id'] = Auth::user()->company_id;
+    
+            if ($request->hasFile('attachment')) {
+                $validated['attachment'] = $request->file('attachment')->store('attachments');
             }
-        } catch (\Exception $e) {
-            Log::error('Error sending emails in store method: ' . $e->getMessage());
-            // Tidak menghentikan proses meski email gagal
+    
+            $meeting = Meeting::create($validated);
+    
+            $emails = [];
+            
+            // dd($meeting);
+
+            
+            $meeting->participants()->sync($request->participant);
+            // foreach ($request->participant as $participantId) 
+            // {
+            //     MeetingParticipant::create([
+            //         'meeting_id' => $meeting->id,
+            //         'user_id' => $participantId,
+            //     ]);
+    
+            //     $user = User::find($participantId);
+            //     if ($user && $user->email) {
+            //         $emails[] = $user->email;
+            //     }
+            // }
+    
+            $emails = array_unique($emails);
+    
+            // try {
+            //     foreach ($emails as $email) {
+            //         Mail::to($email)->send(new RatingInvitation($meeting));
+            //     }
+            // } catch (\Exception $e) {
+            //     Log::error('Error sending emails in store method: ' . $e->getMessage());
+            // }
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error('Error in store method: ' . $th->getMessage());
+            return redirect()->route('meeting.index')->with('error', $th->getMessage());
         }
 
-        return redirect()->route('meeting.index')->with('success', 'Rapat berhasil dibuat dan undangan telah dikirim');
+        return redirect()->route('meeting.index')->with('success', 'Meeting successfully created and invitations sent.');
     }
 
 
@@ -199,126 +198,100 @@ class MeetingController extends Controller
 
 
 
-    public function edit(Meeting $meeting)
+    public function edit($slug)
     {
-        $users = User::all(); 
-
-        return view('meeting.edit', compact('meeting', 'users'));
+        $meeting = Meeting::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
+        $users = User::byCompany(Auth::user()->company_id)->get();
+        $projects = Project::byCompany(Auth::user()->company_id)->get();
+        return view('meeting.createOrEdit', compact('meeting', 'users', 'projects'));
     }
 
 
 
-    public function update(Request $request, Meeting $meeting)
+    public function update(Request $request, $slug)
     {
-        Log::info('Update request received', ['request' => $request->all()]);
-
         try {
-            $validated = $request->validate([
-                'nama_rapat' => 'required|string',
-                'status' => 'required|string',
-                'jenis_rapat' => 'required|in:offline,online',
+             $validated = $request->validate([
+                'meeting_name' => 'required|string',
+                'meeting_type' => 'required|in:offline,online',
                 'google_meet_link' => 'nullable|url',
                 'google_event_id' => 'nullable|string',
-                'agenda_rapat' => 'required|string',
-                'tempat_rapat' => 'nullable|string',
-                'tanggal_mulai' => 'required|date',
-                'tanggal_berakhir' => 'required|date|after_or_equal:tanggal_mulai',
-                'jam_mulai' => 'required',
-                'jam_berakhir' => 'required|after:jam_mulai',
-                'catatan' => 'nullable|string',
-                'nama_pic' => 'required',
-                'peserta' => 'required',
+                'meeting_agenda' => 'required|string',
+                'meeting_location' => 'nullable|string',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'start_time' => 'required',
+                'end_time' => 'required|after:start_time',
+                'notes' => 'nullable|string',
+                'participant' => 'required|array',
+                'participant.*' => 'required|uuid|exists:users,id',
+                'attachment_link' => 'nullable|url',
+                'attachment' => 'nullable|file|max:2048'
             ]);
-
-            Log::info('Validation passed', ['validated' => $validated]);
-
-            if ($meeting->jenis_rapat === 'online' && $meeting->google_event_id) {
-                try {
-                    $googleMeetResponse = $this->googleMeetController->updateGoogleMeet($meeting, $request);
-                    $responseData = json_decode($googleMeetResponse->getContent(), true);
-                    
-                    if (!$responseData['success']) {
-                        Log::error('Failed to update Google Meet', $responseData);
-                        return redirect()
-                            ->back()
-                            ->with('error', $responseData['message'])
-                            ->withInput();
-                    }
-                } catch (\Exception $e) {
-                    Log::error('Exception when updating Google Meet', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
-                    return redirect()
-                        ->back()
-                        ->with('error', 'Gagal mengupdate Google Meet: ' . $e->getMessage())
-                        ->withInput();
-                }
-            }
-
-            // Update data di database
-            $validated['peserta'] = json_encode($request->peserta);
-            $validated['nama_pic'] = json_encode($request->nama_pic);
+            $meeting = Meeting::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             
+
+            // if ($meeting->meeting_type === 'online' && $meeting->google_event_id) {
+            //     try {
+            //         $googleMeetResponse = $this->googleMeetController->updateGoogleMeet($meeting, $request);
+            //         $responseData = json_decode($googleMeetResponse->getContent(), true);
+
+            //         if (!$responseData['success']) {
+            //             Log::error('Failed to update Google Meet', $responseData);
+            //             return redirect()->back()->with('error', $responseData['message'])->withInput();
+            //         }
+            //     } catch (\Exception $e) {
+            //         Log::error('Exception when updating Google Meet', [
+            //             'error' => $e->getMessage(),
+            //             'trace' => $e->getTraceAsString()
+            //         ]);
+            //         return redirect()->back()->with('error', 'Failed to update Google Meet: ' . $e->getMessage())->withInput();
+            //     }
+            // }
+            
+
+            if ($request->hasFile('attachment')) 
+            {
+                $validated['attachment'] = $request->file('attachment')->store('attachments');
+            }
+
             $meeting->update($validated);
-            Log::info('Meeting updated in database', ['meeting_id' => $meeting->id]);
 
-            // Update meeting participants
-            MeetingParticipant::where('meeting_id', $meeting->id)->delete();
-            Log::info('Old participants deleted');
 
-            // Tambah participants baru
-            foreach ($request->peserta as $pesertaId) {
-                MeetingParticipant::create([
-                    'meeting_id' => $meeting->id,
-                    'user_id' => $pesertaId,
-                ]);
-            }
-            Log::info('New participants added');
+            $meeting->participants()->sync($request->participant);
 
-            // Tambah PIC baru
-            foreach ($request->nama_pic as $picId) {
-                MeetingParticipant::create([
-                    'meeting_id' => $meeting->id,
-                    'user_id' => $picId,
-                ]);
-            }
-            Log::info('New PICs added');
 
-            return redirect()->route('meeting.index')->with('success', 'Rapat berhasil diupdate');
+            return redirect()->route('meeting.index')->with('success', 'Meeting successfully updated');
 
         } catch (\Exception $e) {
             Log::error('Error in update method', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
-                ->withInput();
+            return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage())->withInput();
         }
     }
 
 
-    public function destroy(Meeting $meeting)
+    public function destroy($slug)
     {
-        if ($meeting->jenis_rapat === 'online' && $meeting->google_event_id) {
-            try {
-                $googleMeetResponse = $this->googleMeetController->deleteGoogleMeet($meeting->google_event_id);
-                $responseData = json_decode($googleMeetResponse->getContent(), true);
+        // if ($meeting->jenis_rapat === 'online' && $meeting->google_event_id) {
+        //     try {
+        //         $googleMeetResponse = $this->googleMeetController->deleteGoogleMeet($meeting->google_event_id);
+        //         $responseData = json_decode($googleMeetResponse->getContent(), true);
                 
-                if (!$responseData['success']) {
-                    return redirect()->back()->with('error', 'Gagal menghapus Google Meet');
-                }
-            } catch (\Exception $e) {
-                return redirect()->back()->with('error', 'Gagal menghapus Google Meet: ' . $e->getMessage());
-            }
-        }
+        //         if (!$responseData['success']) {
+        //             return redirect()->back()->with('error', 'Gagal menghapus Google Meet');
+        //         }
+        //     } catch (\Exception $e) {
+        //         return redirect()->back()->with('error', 'Gagal menghapus Google Meet: ' . $e->getMessage());
+        //     }
+        // }
         // Hapus meeting participants
-            MeetingParticipant::where('meeting_id', $meeting->id)->delete();
-            
-            // Hapus meeting
-            $meeting->delete();
-            return redirect()->route('meeting.index')->with('success', 'Rapat berhasil dihapus');
+        $meeting = Meeting::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        $meeting->participants()->delete();
+        $meeting->delete();
+        return redirect()->route('meeting.index')->with('success', 'Rapat berhasil dihapus');
         
     }
 

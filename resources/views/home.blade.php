@@ -167,47 +167,37 @@
             @endcanAccess
         </div>
 
-        {{-- 
+
         <!-- Action Cards Section -->
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm mt-2">
+            <div class="card-header d-flex align-items-center">
+                <h3 class="card-title flex-grow-1">
+                    {{ \Carbon\Carbon::parse('this week')->locale('id_ID')->isoFormat('d F Y') }}
+                    -
+                    {{ \Carbon\Carbon::parse('this week')->endOfWeek()->locale('id_ID')->isoFormat('d F y') }}
+                </h3>
+            </div>
             <div class="card-body p-4">
                 <div class="row g-3">
-                    <div class="col-md-4">
-                        <button class="btn btn-hover-effect w-100 h-100 p-4 d-flex flex-column align-items-center"
-                            disabled>
-                            <div class="icon-wrapper bg-moon mb-3">
-                                <i class="bi bi-moon-stars fs-2 text-white"></i>
-                            </div>
-                            <span class="fw-semibold mb-1">Kerja Larut Malam</span>
-                            <small class="text-muted opacity-75">1/3</small>
-                        </button>
-                    </div>
-
-                    <div class="col-md-4">
-                        <button class="btn btn-hover-effect w-100 h-100 p-4 d-flex flex-column align-items-center"
-                            disabled>
-                            <div class="icon-wrapper bg-fire mb-3">
-                                <i class="bi bi-fire fs-2 text-white"></i>
-                            </div>
-                            <span class="fw-semibold mb-1">Kerja Lembur Begadang</span>
-                            <small class="text-muted opacity-75">1/3</small>
-                        </button>
-                    </div>
-
-                    <div class="col-md-4">
-                        <button class="btn btn-hover-effect w-100 h-100 p-4 d-flex flex-column align-items-center"
-                            disabled>
-                            <div class="icon-wrapper bg-purple mb-3">
-                                <i class="bi bi-cloud-moon fs-2 text-white"></i>
-                            </div>
-                            <span class="fw-semibold mb-1">Izin Tidur Seharian</span>
-                            <small class="text-muted opacity-75">1/3</small>
-                        </button>
+                    <div class="col-md-12">
+                        <table class="table table-sm table-bordered" id="agenda-table">
+                            <thead>
+                                <tr>
+                                    <th>Agenda</th>
+                                    <th>Tanggal</th>
+                                    <th>Pukul</th>
+                                    <th>Type</th>
+                                    <th>Lokasi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
-        --}}
     </div>
     @endcanAccess
 </div>
@@ -759,6 +749,52 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> 
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const tableBody = document.querySelector('#agenda-table tbody');
+        tableBody.innerHTML = '';
+
+        try {
+            const res = await fetch("{{ route('home.meetingAgenda') }}");
+            const data = await res.json();
+
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No agendas found.</td></tr>';
+                return;
+            }
+
+            for (const item of data) {
+                console.log(item);
+                
+                const row = `
+                    <tr>
+                        <td>${item.meeting_name}</td>
+                        <td>${formatDate(item.start_date)}</td>
+                        <td>${item.start_time} - ${item.end_time}</td>
+                        <td><span class="badge bg-${item.meeting_type === 'online' ? 'info' : 'secondary'}">${item.meeting_type}</span>
+                        <td>${item.meeting_type === 'online' ? `<a href="${item.google_meet_link}" target="_blank" class="text-primary">Google Meet</a>` : item.meeting_location}</td>
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            }
+        } catch (err) {
+            console.error(err);
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-danger text-center">Failed to load agendas.</td></tr>';
+        }
+
+        function formatDate(dateStr) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateStr).toLocaleDateString('id-ID', options);
+        }
+
+        function statusColor(status) {
+            return status === 'approved' ? 'success' : (status === 'pending' ? 'warning' : 'danger');
+        }
+    });
+</script>
+
 @canAccess('infoPic','subscribe_letters')
 <script>
     async function loadLetterReminderPIC() {

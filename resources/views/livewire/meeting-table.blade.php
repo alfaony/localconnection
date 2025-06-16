@@ -52,23 +52,25 @@
                                 <td>{{ ucfirst($meeting->meeting_type) }}</td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{{ route('meeting.edit', $meeting->id) }}"
-                                            class="btn btn-primary btn-sm">
+                                        <a href="{{ route('meeting.edit', $meeting->slug) }}"
+                                            class="btn btn-primary btn-sm mb-1 mr-1">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="{{ route('meeting.destroy', $meeting) }}" method="POST"
-                                            style="display:inline;" class="delete-form">
+                                        <form action="{{ route('meeting.destroy', $meeting->slug) }}" method="POST"
+                                            style="display:inline;" class="delete-form mb-1 mr-1">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
-                                        <a href="{{ route('meeting.show', $meeting) }}" class="btn btn-info btn-sm">
+                                        <a href="{{ route('meeting.show', $meeting->slug) }}" class="btn btn-info btn-sm mb-1 mr-1">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('ratings.create', $meeting) }}"
+                                        {{-- 
+                                        <a href="{{ route('ratings.create', $meeting->slug) }}"
                                             class="btn btn-success btn-sm"> <i class="far fa-fw fa-star"></i> </a>
+                                        --}}
                                     </div>
                                 </td>
                             </tr>

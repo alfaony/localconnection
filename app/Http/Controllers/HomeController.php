@@ -18,6 +18,7 @@ use App\Models\Job;
 use App\Models\Quote;
 use App\Models\WorkOrder;
 use App\Models\Equipment;
+use App\Models\Meeting;
 
 use App\Models\Training;
 use App\Models\IpRight;
@@ -316,5 +317,18 @@ class HomeController extends Controller
         $html = view('partials.dayoffs_today_list', compact('cutiToday'))->render();
 
         return response()->json(['html' => $html]);
-}
+    }
+
+    public function meetingAgenda()
+    {
+        $user = Auth::user();
+
+        $meetings = Meeting::whereJsonContains('participant', $user->id)
+            ->orWhere('user_id', $user->id)
+            ->orderBy('start_date', 'desc')
+            ->orderBy('start_time')
+            ->get();
+
+        return response()->json($meetings);
+    }
 }

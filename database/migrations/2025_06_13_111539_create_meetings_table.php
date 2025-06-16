@@ -30,9 +30,7 @@ return new class extends Migration
             $table->time('start_time');
             $table->time('end_time');
             $table->text('notes')->nullable();
-            $table->string('pic_name');
             $table->string('participant');
-            $table->enum('status', ['scheduled', 'completed', 'cancelled'])->default('scheduled');
             $table->string('attachment')->nullable();
             $table->string('attachment_link')->nullable();
 
