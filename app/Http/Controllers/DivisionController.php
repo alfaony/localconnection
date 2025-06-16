@@ -19,6 +19,8 @@ use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
 use App\Helpers\Access;
 
+use Carbon\Carbon;
+
 class DivisionController extends Controller
 {
     public function index()
@@ -348,6 +350,48 @@ class DivisionController extends Controller
             ];
         });
         return response()->json($tasks);
+    }
+
+    public function ajaxDivisionTasks(Request $request, Division $division)
+    {
+        $month = $request->input('month', now()->month);
+        $year = $request->input('year', now()->year);
+
+        $lock = DivisionQuotaLock::where('division_id', $division->id)
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+
+        if (!$lock) return response()->json([
+            'quota' => 0,
+            'used' => 0,
+            'remaining' => 0,
+            'tasks' => []
+        ]);
+
+       $tasks = DailyTask::with(['user', 'assign']) // eager load relasi
+        ->where('division_id', $division->id)
+        ->where('division_quota_lock_id', $lock->id)
+        ->get()
+        ->map(function ($task) {
+            return [
+                'name' => $task->name,
+                'point' => $task->point,
+                'description' => $task->description,
+                'created_at' => $task->created_at,
+                'user_name' => optional($task->user)->name,
+                'assign_name' => optional($task->assign)->name,
+            ];
+        });
+
+        $used = $tasks->sum('point');
+
+        return response()->json([
+            'quota' => $lock->locked_quota,
+            'used' => $used,
+            'remaining' => $lock->locked_quota - $used,
+            'tasks' => $tasks
+        ]);
     }
 
     protected function ensureQuotaLockFor(Division $division)
