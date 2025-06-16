@@ -338,6 +338,7 @@ class ItemRequestController extends Controller
         $requests = ItemRequest::with(['assignedPic', 'requester'])
             ->where('company_id', $company->id)
             ->where('status', '!=', 'DELIVERED')
+            ->where('status', '!=', 'CLOSED')
             ->latest()
             ->get();
 
