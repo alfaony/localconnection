@@ -56,6 +56,8 @@
                                         {{ $itemRequest->is_open ? 'Open' : 'Closed' }}
                                     </span>
                                 </dd>
+                                <dt id="close_reason_label" class="col-sm-4 text-info {{ $itemRequest->status != 'CLOSED' ? 'd-none' : '' }}"><i class="fas fa-times-circle mr-2"></i>Alasan Penutupan</dt>
+                                <dd id="close_reason_value" class="col-sm-8 {{ $itemRequest->status != 'CLOSED' ? 'd-none' : '' }}">{{ $itemRequest->close_reason ?? 'N/A' }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -344,6 +346,90 @@
 <script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 
+@canAccess('closed','item_requests')
+<script>
+    function confirmCloseRequest(itemRequestId) {
+        Swal.fire({
+            title: 'Tutup Permintaan?',
+            input: 'textarea',
+            inputLabel: 'Catatan',
+            inputPlaceholder: 'Tulis alasan penutupan permintaan...',
+            inputAttributes: {
+                'aria-label': 'Catatan'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Kirim & Tutup',
+            cancelButtonText: 'Batal',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Catatan wajib diisi!';
+                }
+        }
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
+            // Tampilkan proses Swal loading
+            Swal.fire({
+                title: 'Memproses...',
+                text: 'Mengirim data...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            let url = "{{ route('item-request.closed', ':id') }}";
+            url = url.replace(':id', itemRequestId);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ close_reason: result.value })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Gagal menyelesaikan permintaan');
+                return res.json();
+            })
+            .then(data => {
+                Swal.close(); // Tutup loading
+                // Tampilkan toast sukses
+                const toast = $(`
+                    <div class="toast align-items-center position-fixed top-0 end-0 m-3 show" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header bg-success text-white">
+                            <strong class="me-auto"><i class="fas fa-check-circle me-2"></i> Berhasil</strong>
+                            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body bg-white text-dark">
+                            Data telah dikirim Requester
+                        </div>
+                    </div>
+                `).appendTo('body');
+
+                toast.toast({ delay: 2000 }).toast('show');
+
+                loadWorkflow(); // Muat ulang workflow jika ada
+
+                setTimeout(() => {
+                    loadWorkflow();
+                }, 2000);
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops!',
+                    text: 'Terjadi kesalahan saat menyelesaikan permintaan.'
+                });
+            });
+        });
+    }
+</script>
+@endcanAccess
+
+
 @canAccess('complete','item_purchases')
 <script>
     function confirmCompleteRequest(itemRequestId) {
@@ -401,7 +487,7 @@
                 loadWorkflow(); // Muat ulang workflow jika ada
 
                 setTimeout(() => {
-                    location.reload();
+                    loadWorkflow();
                 }, 2000);
             })
             .catch(err => {
@@ -804,6 +890,15 @@
                 statusBadge.innerHTML = result.status_badge;
                 statusOpen.innerHTML = result.status_open;
                 wrapper.innerHTML = result.html;
+
+                if(result.status_closed)
+                {
+                    document.getElementById('close_reason_label').classList.remove('d-none');
+                    document.getElementById('close_reason_value').classList.remove('d-none');
+
+                    document.getElementById('close_reason_value').innerHTML = result.reason_text;
+                }
+
             } else {
                 wrapper.innerHTML = `<div class="alert alert-warning">Gagal memuat workflow: ${result.message}</div>`;
             }

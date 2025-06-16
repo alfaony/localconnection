@@ -63,7 +63,7 @@ class PermissionForRoleSprinter extends Seeder
                 return;
             }
 
-            $itemRequest = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_sprinter','as_finance'];
+            $itemRequest = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_sprinter','as_finance','closed'];
             $itemPurchase = ['store','update','edit','show','destroy','payment','complete'];
             $chatMessage = ['index','store','show','edit'];
             
@@ -79,9 +79,16 @@ class PermissionForRoleSprinter extends Seeder
                     'model' => 'ItemRequest',
                     'guard_name' => 'web'
                 ]);
-                if (in_array($method, ['as_sprinter','complete'])) 
+                if (in_array($method, ['as_sprinter','complete','closed'])) 
                 {
                     PermissionRole::create(['role_id' => $sprinterRole->id, 'permission_id' => $permission->id]);
+                    if($admin){
+                        PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+                    }
+                    if ($root) 
+                    {
+                        PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                    }
                     continue;
                 }
     
@@ -99,10 +106,10 @@ class PermissionForRoleSprinter extends Seeder
                     {
                         PermissionRole::create(['role_id' => $staffFinance->id, 'permission_id' => $permission->id]);
                     }
-                    if ($managerFinance) 
-                    {
-                        PermissionRole::create(['role_id' => $managerFinance->id, 'permission_id' => $permission->id]);
-                    }
+                    // if ($managerFinance) 
+                    // {
+                    //     PermissionRole::create(['role_id' => $managerFinance->id, 'permission_id' => $permission->id]);
+                    // }
                     if($finance)
                     {
                         PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permission->id]);

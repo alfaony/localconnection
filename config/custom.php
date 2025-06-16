@@ -133,5 +133,6 @@ return
          'WAITING_PAYMENT' => 'Waiting Payment',
          'WAITING_DELIVERY_CONFIRMATION' => 'Waiting Delivery Confirmation',
          'DELIVERED' => 'Delivered',
+         'CLOSED' => 'Closed',
       ],
 ];
