@@ -242,7 +242,9 @@ class ItemRequestController extends Controller
                 'success' => true,
                 'html' => $htmlWorkflow,
                 'status_badge' => $itemRequest->status_badge,
-                'status_open' => $itemRequest->status_open
+                'status_open' => $itemRequest->status_open,
+                'status_closed' => $itemRequest->status == 'CLOSED' ? true : false,
+                'reason_text' => $itemRequest->close_reason,
             ]);
 
         } catch (\Exception $e) {
@@ -290,7 +292,7 @@ class ItemRequestController extends Controller
             
             $message = "Air Way Bill (Resi) Sudah Terbit Untuk Request #{$itemRequest->item_name} #id {$itemRequest->id}";
             $directUrl = route('item-request.show', $itemRequest->id);
-            $this->sentInbox($itemRequest->assigned_pic_id,$message, $directUrl, $itemRequest->id);
+            $this->sentInbox($itemRequest->user_id,$message, $directUrl, $itemRequest->id);
         }
         else
         {
@@ -369,7 +371,7 @@ class ItemRequestController extends Controller
         return response()->json($data);
     }
 
-    public function complete($id)
+    public function closed(Request $request, $id)
     {
         $itemRequest = ItemRequest::findOrFail($id);
         
@@ -378,9 +380,15 @@ class ItemRequestController extends Controller
         }
 
         $itemRequest->is_open = false;
+        $itemRequest->status = 'CLOSED';
+        $itemRequest->close_reason = $request->close_reason;
         $itemRequest->save();
 
-        return response()->json(['message' => 'Permintaan diselesaikan']);
+        $message = "Permintaan #{$itemRequest->item_name} #id {$itemRequest->id} telah ditutup. Silakan cek detailnya";
+        $directUrl = route('item-request.show', $itemRequest->id);
+        $this->sentInbox($itemRequest->user_id,$message, $directUrl, $itemRequest->id);
+
+        return response()->json(['message' => 'Permintaan ditutup']);
     }
 
     private function findCandidate($companyId)

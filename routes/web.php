@@ -474,6 +474,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   
   Route::get('item-request/workflow/{id}', [ItemRequestController::class, 'workflow'])->name('item-request.workflow');
   Route::get('item-request/dataTableJson', [ItemRequestController::class, 'dataTableJson'])->name('item-request.datatable');
+  Route::post('item-request/closed/{id}', [ItemRequestController::class, 'closed'])->name('item-request.closed');
   Route::put('item-request/delivery/{id}', [ItemRequestController::class, 'delivery'])->name('item-request.delivery');
   Route::resource('item-request', ItemRequestController::class);
   
