@@ -1,6 +1,10 @@
 @foreach($steps as $index => $step)
     <div class="workflow-step {{ $step['status'] }} animated fadeIn">
-        <div class="step-icon shadow-sm bg-{{ $step['status'] == 'completed' ? 'success' : ($step['status'] == 'active' ? 'warning' : 'secondary') }}">
+        <div class="step-icon shadow-sm bg-{{ 
+            $step['status'] == 'completed' ? 'success' : 
+            ($step['status'] == 'active' ? 'warning' : 
+            ($step['status'] == 'closed' ? 'danger' : 'secondary')) 
+        }}">
             <i class="{{ $step['icon'] }} text-white"></i>
         </div>
         <div class="step-content shadow-sm ml-3">
@@ -18,7 +22,8 @@
                 </div>
                 <span class="badge badge-{{ 
                     $step['status'] == 'completed' ? 'success' : 
-                    ($step['status'] == 'active' ? 'warning' : 'secondary') 
+                    ($step['status'] == 'active' ? 'warning' : 
+                    ($step['status'] == 'closed' ? 'danger' : 'secondary')) 
                 }} ml-2">
                     {{ ucfirst($step['status']) }}
                 </span>
@@ -165,18 +170,24 @@
                                         </div>
                                     @endforeach
                                 </div>
-                                @canAccess('complete','item_purchases')
-                                @if($itemRequest->is_open && $itemRequest->purchase->isNotEmpty())
-                                    <div class="text-center mt-3 mt-md-0 ml-md-3">
+                                <div class="text-center mt-3 mt-md-0 ml-md-3">
+                                        @if($itemRequest->is_open && $itemRequest->purchase->isNotEmpty())
+                                        @canAccess('complete','item_purchases')
                                         <button class="btn btn-sm btn-success" id="btn-complete-request"
                                             onclick="confirmCompleteRequest({{ $itemRequest->id }})">
                                             <i class="fas fa-check mr-2"></i> Selesaikan Permintaan
                                         </button>
+                                        @endcanAccess
+                                        @elseif($itemRequest->is_open)
+                                        @canAccess('closed','item_requests')
+                                        <button class="btn btn-sm btn-danger" id="btn-close-request"
+                                            onclick="confirmCloseRequest({{ $itemRequest->id }})">
+                                            <i class="fas fa-times mr-2"></i> Tutup Permintaan
+                                        </button>
+                                        @endcanAccess
+                                        @endif
                                     </div>
-                                @endif
-                                @endcanAccess
                             @break
-
                             @case('Konfirmasi Pembayaran')
                                 @if($itemRequest->purchase)
                                 @foreach($itemRequest->purchase as $purchase)

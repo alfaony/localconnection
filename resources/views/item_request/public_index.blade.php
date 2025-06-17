@@ -595,7 +595,7 @@
             setInterval(updateCountdowns, 1000);
             
             // Refresh data otomatis setiap 2 menit
-            setInterval(loadItemRequests, 3 * 60 * 1000);
+            setInterval(loadItemRequests, 2 * 60 * 1000);
         });
     </script>
 </body>

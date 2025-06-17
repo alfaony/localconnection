@@ -22,6 +22,7 @@ class ItemRequest extends Model
         'qty',
         'picture',
         'is_open',
+        'close_reason',
     ];
 
     protected $appends = ['status_badge','price_with_format','status_open'];
@@ -83,6 +84,8 @@ class ItemRequest extends Model
                 return '<span class="badge badge-success"><i class="fas fa-truck-loading mr-1"></i> Waiting Delivery Confirmation</span>';
             case 'DELIVERED':
                 return '<span class="badge badge-success"><i class="fas fa-truck mr-1"></i> Delivered</span>';
+            case 'CLOSED':
+                return '<span class="badge badge-danger"><i class="fas fa-times-circle mr-1"></i> Closed</span>';
 
             default:
                 return '<span class="badge badge-dark"><i class="fas fa-question-circle mr-1"></i>'.$status.'</span>';

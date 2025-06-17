@@ -72,7 +72,7 @@ class WorkflowService
         ],
         'Konfirmasi Pembayaran' => 
         [
-            'status' => $itemRequest->purchase->count() > 0 ? ($itemRequest->is_complete_payment ? 'completed' : 'active') : 'pending',
+            'status' => ($itemRequest->purchase->count() > 0 ? ($itemRequest->is_complete_payment ? 'completed' : 'active') : ($itemRequest->status == "CLOSED" ? 'closed' : 'pending')),
             'title' => 'Konfirmasi Pembayaran',
             'icon' => 'fas fa-coins',
             'description' => 'Verifikasi dan konfirmasi pembayaran',
@@ -86,7 +86,7 @@ class WorkflowService
         [
             'title' => 'Upload Resi Pengiriman',
             'icon' => 'fas fa-file-invoice',
-            'status' => $itemRequest->is_complete_payment ? ($itemRequest->delivery ? 'completed' : 'active') : 'pending',
+            'status' => $itemRequest->is_complete_payment ? ($itemRequest->delivery ? 'completed' : 'active') : ($itemRequest->status == "CLOSED" ? 'closed' : 'pending'),
             'description' => 'Upload bukti pengiriman barang',
             'data' => [
                 'tracking_info' => null,
@@ -97,7 +97,7 @@ class WorkflowService
         'Pengiriman Barang' => 
         [
             'icon' => 'fas fa-truck',
-            'status' => $itemRequest->delivery ? ($itemRequest->delivery->delivery_photo ? 'completed' : 'active') : 'pending',
+            'status' => $itemRequest->delivery ? ($itemRequest->delivery->delivery_photo ? 'completed' : 'active') : ($itemRequest->status == "CLOSED" ? 'closed' : 'pending'),
             'description' => 'Proses pengiriman ke Pembeli',
             'data' => [
                 'shipping_methods' => ['JNE', 'SiCepat', 'DHL'],

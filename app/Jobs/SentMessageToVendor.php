@@ -50,14 +50,16 @@ class SentMessageToVendor implements ShouldQueue
                 {
                     $url = route('vendor.respond', ['id' => $potentialVendor->id, 'token' => $potentialVendor->response_token]);
 
-                    $message = "Hai kak, kami butuh barang berikut:\n\n"
+                    $message ="Hai Kak, perkenalkan kami dari Thrive.\n\n" 
+                        ."Kami membutuhkan barang berikut:\n\n"
                         . "Nama: {$this->itemRequest->item_name}\n"
                         . "Qty: {$this->itemRequest->qty}\n"
-                        . "Dengan Estimasi Harga: {$this->itemRequest->price_with_format}\n\n"
-                        . "Apakah kakak punya? Jika ya, balas dengan format:\n\n"
-                        . "Untuk melakukan penawaran silakan klik link di bawah ini:\n"
+                        . "Estimasi Harga: {$this->itemRequest->price_with_format}\n\n"
+                        . "Apakah di tempat Kakak tersedia untuk produk tersebut?\n"
+                        . "Jika tersedia, mohon konfirmasinya ya Kak.\n\n"
+                        . "Untuk melakukan penawaran, silakan klik link di bawah ini:\n"
                         . "{$url}\n\n"
-                        . "Terimakasih";
+                        . "Terima kasih🙏😊";
 
                     $this->sendMessage($client, $potentialVendor->productSupplier->phone_number, $message);
                 }
