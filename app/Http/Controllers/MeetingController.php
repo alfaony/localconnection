@@ -183,17 +183,17 @@ class MeetingController extends Controller
     }
 
 
-    public function show(Meeting $meeting)
-    {
-            
+    public function show($slug)
+    {       
+        $meeting = Meeting::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
          // Decode 'nama_pic' to get the array of user IDs
-        $namaPicIds = json_decode($meeting->nama_pic, true);
-        $namaPicUsers = User::whereIn('id', $namaPicIds)->get();
+        // $namaPicIds = json_decode($meeting->nama_pic, true);
+        // $namaPicUsers = User::whereIn('id', $namaPicIds)->get();
 
-        // Decode 'peserta' to get the array of user IDs for participants
-        $pesertaIds = json_decode($meeting->peserta, true);
-        $pesertaUsers = User::whereIn('id', $pesertaIds)->get();
-        return view('meeting.show', compact('meeting','namaPicUsers', 'pesertaUsers'));
+        // // Decode 'peserta' to get the array of user IDs for participants
+        // $pesertaIds = json_decode($meeting->peserta, true);
+        // $pesertaUsers = User::whereIn('id', $pesertaIds)->get();
+        return view('meeting.show', compact('meeting'));
     }
 
 
@@ -310,15 +310,14 @@ class MeetingController extends Controller
         return redirect()->back()->with('success', 'Notulensi berhasil diperbarui!');
     }
 
-
-    // use Barryvdh\DomPDF\Facade\Pdf;
-
-    // public function download(Meeting $meeting)
-    // {
-    //     $pdf = PDF::loadView('meeting.pdf', compact('meeting'));
-    //     return $pdf->download('notulensi-rapat-' . $meeting->id . '.pdf');
-    // }
-
-    
-
+    protected function sentMessage($userToId, $userFromId, $message, $directUrl = null, $isRead = false, $category = "entry")
+    {
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $project->user_id, 
+            Auth::user()->id, 
+            'Request Report for ' . $project->title, 
+            $directUrl
+        );
+    }
 }

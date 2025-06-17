@@ -1,0 +1,477 @@
+@extends('adminlte::page')
+
+@section('title', 'Detail Pengajuan Rapat')
+
+@section('content_header')
+    <h1 class="m-0 text-dark">Detail Pengajuan Rapat</h1>
+@stop
+
+@section('content')
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">
+                        <i class="fas fa-calendar-check mr-2"></i>Detail Pengajuan Rapat
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{{ route('meeting.index') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left mr-1"></i>Kembali ke Daftar
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <!-- Informasi Utama -->
+                            <div class="info-box bg-light mb-4 p-3 border rounded">
+                                <div class="info-box-content">
+                                    <h3 class="info-box-text font-weight-bold text-primary mb-1">{{ $meeting->nama_rapat }}</h3>
+                                    <span class="info-box-number mb-2">
+                                        <i class="fas fa-tag mr-1 text-muted"></i>
+                                        {{ $meeting->jenis_rapat == 'online' ? 'Rapat Online' : 'Rapat Offline' }}
+                                    </span>
+                                    <div class="text-muted">
+                                        <i class="fas fa-clipboard-list mr-1"></i>
+                                        {{ $meeting->agenda_rapat }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Detail Waktu -->
+                            <div class="card card-outline card-primary mb-4">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="far fa-clock mr-2"></i>Waktu Rapat
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="border-bottom pb-2 mb-2">
+                                                <div class="text-muted small">Tanggal Mulai</div>
+                                                <div class="font-weight-bold">
+                                                    <i class="far fa-calendar mr-1 text-primary"></i>
+                                                    {{ \Carbon\Carbon::parse($meeting->tanggal_mulai)->translatedFormat('l, d F Y') }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="border-bottom pb-2 mb-2">
+                                                <div class="text-muted small">Tanggal Berakhir</div>
+                                                <div class="font-weight-bold">
+                                                    <i class="far fa-calendar mr-1 text-primary"></i>
+                                                    {{ \Carbon\Carbon::parse($meeting->tanggal_berakhir)->translatedFormat('l, d F Y') }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="border-bottom pb-2 mb-2">
+                                                <div class="text-muted small">Jam Mulai</div>
+                                                <div class="font-weight-bold">
+                                                    <i class="far fa-clock mr-1 text-primary"></i>
+                                                    {{ \Carbon\Carbon::parse($meeting->jam_mulai)->format('H:i') }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="border-bottom pb-2 mb-2">
+                                                <div class="text-muted small">Jam Berakhir</div>
+                                                <div class="font-weight-bold">
+                                                    <i class="far fa-clock mr-1 text-primary"></i>
+                                                    {{ \Carbon\Carbon::parse($meeting->jam_berakhir)->format('H:i') }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 mt-2">
+                                            <div class="text-muted small">Durasi</div>
+                                            <div class="font-weight-bold">
+                                                <i class="fas fa-hourglass-half mr-1 text-primary"></i>
+
+                                                <span class="text-muted">({{ \Carbon\Carbon::parse($meeting->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($meeting->jam_berakhir)->format('H:i') }})</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Catatan -->
+                            @if($meeting->catatan)
+                            <div class="card card-outline card-info mb-4">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-sticky-note mr-2"></i>Catatan
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ $meeting->catatan }}</p>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+
+                        <div class="col-md-4">
+                            <!-- Status & Info -->
+                            <div class="card card-outline card-success mb-4">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-info-circle mr-2"></i>Informasi
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <div class="text-muted small">Status</div>
+                                        <div>
+                                            @if($meeting->status == 'diproses')
+                                                <span class="badge bg-warning p-2">Diproses</span>
+                                            @elseif($meeting->status == 'disetujui')
+                                                <span class="badge bg-success p-2">Disetujui</span>
+                                            @elseif($meeting->status == 'ditolak')
+                                                <span class="badge bg-danger p-2">Ditolak</span>
+                                            @elseif($meeting->status == 'selesai')
+                                                <span class="badge bg-info p-2">Selesai</span>
+                                            @else
+                                                <span class="badge bg-secondary p-2">Belum Diproses</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="text-muted small">Dibuat Pada</div>
+                                        <div>
+                                            <i class="far fa-calendar mr-1"></i>
+                                            {{ \Carbon\Carbon::parse($meeting->created_at)->translatedFormat('d F Y H:i') }}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <div class="text-muted small">Terakhir Diperbarui</div>
+                                        <div>
+                                            <i class="far fa-calendar mr-1"></i>
+                                            {{ \Carbon\Carbon::parse($meeting->updated_at)->translatedFormat('d F Y H:i') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tempat Rapat -->
+                            <div class="card card-outline card-purple mb-4">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        @if($meeting->jenis_rapat == 'online')
+                                            <i class="fas fa-video mr-2"></i>Rapat Online
+                                        @else
+                                            <i class="fas fa-building mr-2"></i>Tempat Rapat
+                                        @endif
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    @if($meeting->jenis_rapat == 'online')
+                                        <div class="mb-2">
+                                            <div class="text-muted small">Link Google Meet</div>
+                                            @if($meeting->google_meet_link)
+                                                <a href="{{ $meeting->google_meet_link }}" target="_blank" class="font-weight-bold text-primary">
+                                                    <i class="fas fa-external-link-alt mr-1"></i>
+                                                    {{ $meeting->google_meet_link }}
+                                                </a>
+                                            @else
+                                                <span class="text-muted">Tidak tersedia</span>
+                                            @endif
+                                        </div>
+                                        
+                                        <div>
+                                            <div class="text-muted small">ID Google Event</div>
+                                            <div class="font-weight-bold">
+                                                {{ $meeting->google_event_id ?? 'Tidak tersedia' }}
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="font-weight-bold">
+                                            <i class="fas fa-map-marker-alt mr-1 text-purple"></i>
+                                            {{ $meeting->tempat_rapat ?? 'Belum ditentukan' }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- PIC -->
+                            <div class="card card-outline card-indigo mb-4">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-user-tie mr-2"></i>Penanggung Jawab (PIC)
+                                    </h3>
+                                </div>
+                                <div class="card-body p-0">
+                                    <ul class="list-group list-group-flush">
+                                        @forelse($meeting->picUsers as $pic)
+                                            <li class="list-group-item d-flex align-items-center">
+                                                <div class="symbol symbol-40 symbol-light mr-3">
+                                                    <span class="symbol-label bg-primary text-white font-weight-bold">
+                                                        {{ substr($pic->name, 0, 1) }}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <div class="font-weight-bold">{{ $pic->name }}</div>
+                                                    <div class="text-muted small">{{ $pic->email }}</div>
+                                                </div>
+                                            </li>
+                                        @empty
+                                            <li class="list-group-item text-center text-muted py-3">
+                                                Tidak ada PIC yang ditentukan
+                                            </li>
+                                        @endforelse
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Peserta Rapat -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card card-outline card-info">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <i class="fas fa-users mr-2"></i>Peserta Rapat
+                                    </h3>
+                                    <div class="card-tools">
+                                        <span class="badge badge-info p-2">
+                                            {{ $meeting->participants->count() }} Peserta
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-striped">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th width="5%">#</th>
+                                                    <th>Nama Peserta</th>
+                                                    <th>Email</th>
+                                                    <th>Status Kehadiran</th>
+                                                    <th>Konfirmasi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($meeting->participants as $index => $participant)
+                                                    <tr>
+                                                        <td>{{ $index+1 }}</td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="symbol symbol-40 symbol-light mr-3">
+                                                                    <span class="symbol-label bg-info text-white font-weight-bold">
+                                                                        {{ substr($participant->name, 0, 1) }}
+                                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <div class="font-weight-bold">{{ $participant->name }}</div>
+                                                                    <div class="text-muted small">{{ $participant->department ?? '-' }}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>{{ $participant->email }}</td>
+                                                        <td>
+                                                            @if($participant->pivot->attendance_status == 'confirmed')
+                                                                <span class="badge bg-success">Hadir</span>
+                                                            @elseif($participant->pivot->attendance_status == 'tentative')
+                                                                <span class="badge bg-warning">Mungkin Hadir</span>
+                                                            @elseif($participant->pivot->attendance_status == 'declined')
+                                                                <span class="badge bg-danger">Tidak Hadir</span>
+                                                            @else
+                                                                <span class="badge bg-secondary">Belum Konfirmasi</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            {{ $participant->pivot->confirmation_time ? \Carbon\Carbon::parse($participant->pivot->confirmation_time)->format('d M Y H:i') : '-' }}
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-right">
+                    @if($meeting->status == 'diproses')
+                        <a href="{{ route('meeting.edit', $meeting->id) }}" class="btn btn-warning">
+                            <i class="fas fa-edit mr-1"></i>Edit Pengajuan
+                        </a>
+                    @endif
+                    
+                    @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
+                        @if($meeting->status == 'diproses')
+                            <button class="btn btn-success" data-toggle="modal" data-target="#approveModal">
+                                <i class="fas fa-check-circle mr-1"></i>Setujui
+                            </button>
+                            <button class="btn btn-danger" data-toggle="modal" data-target="#rejectModal">
+                                <i class="fas fa-times-circle mr-1"></i>Tolak
+                            </button>
+                        @endif
+                    @endif
+                    
+                    @if($meeting->status == 'disetujui' && $meeting->isUpcoming())
+                        <a href="#" class="btn btn-info">
+                            <i class="fas fa-calendar-plus mr-1"></i>Tambahkan ke Kalender
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve Modal -->
+    <div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-labelledby="approveModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="approveModalLabel">
+                        <i class="fas fa-check-circle mr-2"></i>Setujui Pengajuan Rapat
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{{ route('meeting.approve', $meeting->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <p>Anda yakin ingin menyetujui pengajuan rapat ini?</p>
+                        <div class="form-group">
+                            <label for="approvalNotes">Catatan (Opsional)</label>
+                            <textarea class="form-control" id="approvalNotes" name="notes" rows="3" placeholder="Tambahkan catatan jika diperlukan"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success">Setujui</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="rejectModalLabel">
+                        <i class="fas fa-times-circle mr-2"></i>Tolak Pengajuan Rapat
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{{ route('meeting.reject', $meeting->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <p>Anda yakin ingin menolak pengajuan rapat ini?</p>
+                        <div class="form-group">
+                            <label for="rejectReason">Alasan Penolakan <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="rejectReason" name="reason" rows="3" required placeholder="Berikan alasan penolakan"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Tolak</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@stop
+
+@section('css')
+    <style>
+        .info-box {
+            transition: all 0.3s ease;
+            border-left: 4px solid #3c8dbc;
+        }
+        
+        .info-box:hover {
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .symbol {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        
+        .symbol-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            font-size: 1.2rem;
+        }
+        
+        .card-outline {
+            border-top: 3px solid !important;
+        }
+        
+        .card-outline.card-primary {
+            border-top-color: #3c8dbc !important;
+        }
+        
+        .card-outline.card-success {
+            border-top-color: #28a745 !important;
+        }
+        
+        .card-outline.card-info {
+            border-top-color: #17a2b8 !important;
+        }
+        
+        .card-outline.card-purple {
+            border-top-color: #6f42c1 !important;
+        }
+        
+        .card-outline.card-indigo {
+            border-top-color: #6610f2 !important;
+        }
+        
+        .table thead th {
+            border-top: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            color: #495057;
+            background-color: #f8f9fa;
+        }
+        
+        .list-group-item {
+            border-left: none;
+            border-right: none;
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 0.5em 0.8em;
+            border-radius: 20px;
+        }
+    </style>
+@stop
+
+@section('js')
+    <script>
+        $(document).ready(function() {
+            // Menampilkan notifikasi jika ada pesan dari controller
+            @if(session('success'))
+                toastr.success('{{ session('success') }}');
+            @endif
+            
+            @if(session('error'))
+                toastr.error('{{ session('error') }}');
+            @endif
+        });
+    </script>
+@stop
