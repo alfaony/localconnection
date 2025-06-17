@@ -1070,7 +1070,7 @@
 
     $('#mediaComment').on('change', function() 
     {
-        var maxFileSize = 1 * 1024 * 1024; // 5MB in bytes
+        var maxFileSize = 10 * 1024 * 1024; // 5MB in bytes
         var files = this.files;
         var validFiles = [];
 
