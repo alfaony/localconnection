@@ -60,12 +60,12 @@
     </div>
   </div>
 @endcanAccess
-@canAccess('ajaxDivisionTasks', 'project_dashboards')
+@canAccess('ajaxDivisionTasks', 'divisions')
   <div class="card p-3 mt-3">
     <div class="card-header" id="headingTwo">
       <h5 class="mb-0">
         <button class="btn btn-link" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
-            Pantauan Tugas
+            Tracking Skore
         </button>
       </h5>
     </div>
@@ -143,7 +143,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
 <!-- 5. Inisialisasi Datepicker -->
-@canAccess('ajaxDivisionTasks', 'project_dashboards')
+@canAccess('ajaxDivisionTasks', 'divisions')
 <script>
   $(document).ready(function () {
     $('#monthPicker').datepicker({
