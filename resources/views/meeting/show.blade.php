@@ -232,7 +232,7 @@
                                     </h3>
                                     <div class="card-tools">
                                         <span class="badge badge-info p-2">
-                                            {{ $meeting->participants->count() }} Peserta
+                                            {{ count($meeting->combined_participants ?? []) }} Peserta
                                         </span>
                                     </div>
                                 </div>
@@ -247,41 +247,35 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach($meeting->participants as $index => $participant)
+                                                @forelse($meeting->combined_participants ?? [] as $index => $participant)
                                                     <tr>
-                                                        <td>{{ $index+1 }}</td>
+                                                        <td>{{ $index + 1 }}</td>
                                                         <td>
                                                             <div class="d-flex align-items-center">
                                                                 <div class="symbol symbol-40 symbol-light mr-3">
                                                                     <span class="symbol-label bg-info text-white font-weight-bold">
-                                                                        {{ substr($participant->name, 0, 1) }}
+                                                                        {{ strtoupper(substr($participant['name'], 0, 1)) }}
                                                                     </span>
                                                                 </div>
                                                                 <div>
-                                                                    <div class="font-weight-bold">{{ $participant->name }}</div>
-                                                                    <div class="text-muted small">{{ $participant->department ?? '-' }}</div>
+                                                                    <div class="font-weight-bold">{{ $participant['name'] }}</div>
+                                                                    <div class="text-muted small">
+                                                                        {{ optional(\App\Models\User::find($participant['id']))->department ?? 'Eksternal' }}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td>{{ $participant->email }}</td>
-                                                        {{-- 
                                                         <td>
-                                                            @if($participant->pivot->attendance_status == 'confirmed')
-                                                                <span class="badge bg-success">Hadir</span>
-                                                            @elseif($participant->pivot->attendance_status == 'tentative')
-                                                                <span class="badge bg-warning">Mungkin Hadir</span>
-                                                            @elseif($participant->pivot->attendance_status == 'declined')
-                                                                <span class="badge bg-danger">Tidak Hadir</span>
-                                                            @else
-                                                                <span class="badge bg-secondary">Belum Konfirmasi</span>
-                                                            @endif
+                                                            {{ filter_var($participant['id'], FILTER_VALIDATE_EMAIL) 
+                                                                ? $participant['id'] 
+                                                                : (\App\Models\User::find($participant['id'])->email ?? '-') }}
                                                         </td>
-                                                        <td>
-                                                            {{ $participant->pivot->confirmation_time ? \Carbon\Carbon::parse($participant->pivot->confirmation_time)->format('d M Y H:i') : '-' }}
-                                                        </td>
-                                                        --}}
                                                     </tr>
-                                                @endforeach
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="3" class="text-center text-muted">Tidak ada peserta</td>
+                                                    </tr>
+                                                @endforelse
                                             </tbody>
                                         </table>
                                     </div>

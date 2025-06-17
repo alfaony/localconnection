@@ -62,6 +62,7 @@
             </div>
         </div>
     </div>
+    @endcanAccess
     
     <div class="col-md-9 mt-3">
         <!-- Info Cards Section -->
@@ -82,7 +83,7 @@
                 </div>
             </div>
             --}}
-
+            @canAccess('dashboardReport','homes')
             <div class="col-md-4">
                 <div class="card info-box border-0 shadow-sm h-100 hover-effect">
                     <div class="card-body d-flex align-items-center p-3">
@@ -130,6 +131,7 @@
                     </div>
                 </div>
             </div>
+            @endcanAccess
 
             @canAccess('infoApprovementHr', 'dayoffs')
             <div class="col-md-6 mt-3">
@@ -172,9 +174,7 @@
         <div class="card border-0 shadow-sm mt-2">
             <div class="card-header d-flex align-items-center">
                 <h3 class="card-title flex-grow-1">
-                    {{ \Carbon\Carbon::parse('this week')->locale('id_ID')->isoFormat('d F Y') }}
-                    -
-                    {{ \Carbon\Carbon::parse('this week')->endOfWeek()->locale('id_ID')->isoFormat('d F y') }}
+                    Agenda Meeting
                 </h3>
             </div>
             <div class="card-body p-4">
@@ -199,7 +199,6 @@
             </div>
         </div>
     </div>
-    @endcanAccess
 </div>
 
 <div class="row g-3">
@@ -753,11 +752,23 @@
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
         const tableBody = document.querySelector('#agenda-table tbody');
-        tableBody.innerHTML = '';
+
+        // Tampilkan indikator loading
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    <div class="spinner-border text-primary" role="status">
+                    </div>
+                </td>
+            </tr>
+        `;
 
         try {
             const res = await fetch("{{ route('home.meetingAgenda') }}");
             const data = await res.json();
+
+            // Kosongkan dulu tbody
+            tableBody.innerHTML = '';
 
             if (data.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No agendas found.</td></tr>';
@@ -766,15 +777,14 @@
 
             for (const item of data) {
                 console.log(item);
-                
+
                 const row = `
                     <tr>
                         <td>${item.meeting_name}</td>
                         <td>${formatDate(item.start_date)}</td>
                         <td>${item.start_time} - ${item.end_time}</td>
-                        <td><span class="badge bg-${item.meeting_type === 'online' ? 'info' : 'secondary'}">${item.meeting_type}</span>
+                        <td><span class="badge bg-${item.meeting_type === 'online' ? 'info' : 'secondary'}">${item.meeting_type}</span></td>
                         <td>${item.meeting_type === 'online' ? `<a href="${item.google_meet_link}" target="_blank" class="text-primary">Google Meet</a>` : item.meeting_location}</td>
-                        </td>
                     </tr>
                 `;
                 tableBody.insertAdjacentHTML('beforeend', row);

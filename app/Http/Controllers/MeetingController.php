@@ -175,7 +175,7 @@ class MeetingController extends Controller
     
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             Log::error('Error in store method: ' . $th->getMessage());
             return redirect()->route('meeting.index')->with('error', $th->getMessage());
         }
@@ -225,7 +225,7 @@ class MeetingController extends Controller
                 'end_time' => 'required|after:start_time',
                 'notes' => 'nullable|string',
                 'participant' => 'required|array',
-                'participant.*' => 'required|uuid|exists:users,id',
+                'participant.*' => 'required',
                 'attachment_link' => 'nullable|url',
                 'attachment' => 'nullable|file|max:2048'
             ]);
@@ -259,7 +259,28 @@ class MeetingController extends Controller
             $meeting->update($validated);
 
 
-            $meeting->participants()->sync($request->participant);
+            $participantIds = [];
+            $externalEmails = [];
+
+            foreach ($request->participant as $p) 
+            {
+                if (User::where('id', $p)->exists())
+                 {
+                    $participantIds[] = $p;
+                    $message = "Perubahan undangan Meeting - " . $meeting->meeting_name;
+                    $url = route('meeting.show',$meeting->slug);
+
+                    $this->sentMessage($p, Auth::user()->id, $message, $url, false, 'high');
+                } elseif (filter_var($p, FILTER_VALIDATE_EMAIL)) {
+                    $externalEmails[] = $p;
+                }
+            }
+
+            // Sync user internal
+            $meeting->participants()->sync($participantIds);
+
+            $meeting->participants = $externalEmails;
+            $meeting->save();
 
 
             return redirect()->route('meeting.index')->with('success', 'Meeting successfully updated');

@@ -52,11 +52,21 @@
                     </div>
                     <div class="col-md-6">
                         <label for="participant">Peserta</label>
-                <select name="participant[]" multiple class="form-control selectMulti2">
-    @foreach ($meeting->combined_participants ?? [] as $p)
-        <option value="{{ $p['id'] }}" selected>{{ $p['name'] }}</option>
-    @endforeach
-</select>
+                        <select name="participant[]"  multiple="multiple" class="form-control selectMulti2" required>
+                            @foreach($users as $user)
+                                  <option value="{{ $user->id }}"
+                                    @if(collect($meeting->combined_participants ?? [])->pluck('id')->contains($user->id)) selected @endif>
+                                    {{ $user->name }}
+                                </option>
+                            @endforeach
+
+                            {{-- Tambahkan peserta eksternal --}}
+                            @foreach (($meeting->combined_participants ?? []) as $p)
+                                @if (!\App\Models\User::where('id', $p['id'])->exists())
+                                    <option value="{{ $p['id'] }}" selected>{{ $p['name'] }}</option>
+                                @endif
+                            @endforeach
+                        </select>
                         <small class="text-muted">Pilih peserta rapat</small>
                     </div>
                 </div>

@@ -323,7 +323,10 @@ class HomeController extends Controller
     {
         $user = Auth::user();
 
-        $meetings = Meeting::whereJsonContains('participant', $user->id)
+        $meetings = Meeting::whereHas('participants', function ($query) use ($user) 
+            {
+                $query->where('user_id', $user->id);
+            })
             ->orWhere('user_id', $user->id)
             ->orderBy('start_date', 'desc')
             ->orderBy('start_time')
