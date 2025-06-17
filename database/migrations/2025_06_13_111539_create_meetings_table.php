@@ -29,8 +29,8 @@ return new class extends Migration
             $table->date('end_date');
             $table->time('start_time');
             $table->time('end_time');
-            $table->text('notes')->nullable();
-            $table->string('participant');
+            $table->json('participants')->nullable();
+            $table->enum('status', ['scheduled', 'completed', 'cancelled'])->default('scheduled');
             $table->string('attachment')->nullable();
             $table->string('attachment_link')->nullable();
 

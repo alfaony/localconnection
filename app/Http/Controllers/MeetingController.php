@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 
+use App\Helpers\InboxHelper;
+
 class MeetingController extends Controller
 {
 
@@ -129,7 +131,7 @@ class MeetingController extends Controller
             'end_time' => 'required|after:start_time',
             'notes' => 'nullable|string',
             'participant' => 'required|array',
-            'participant.*' => 'required|uuid|exists:users,id',
+            'participant.*' => 'required',
             'attachment_link' => 'nullable|url',
             'attachment' => 'nullable|file|max:2048'
         ]);
@@ -139,42 +141,41 @@ class MeetingController extends Controller
             $validated['user_id'] = Auth::user()->id;
             $validated['company_id'] = Auth::user()->company_id;
     
-            if ($request->hasFile('attachment')) {
+            if ($request->hasFile('attachment')) 
+            {
                 $validated['attachment'] = $request->file('attachment')->store('attachments');
             }
     
             $meeting = Meeting::create($validated);
     
-            $emails = [];
-            
-            // dd($meeting);
+            $participantIds = [];
+            $externalEmails = [];
 
-            
-            $meeting->participants()->sync($request->participant);
-            // foreach ($request->participant as $participantId) 
-            // {
-            //     MeetingParticipant::create([
-            //         'meeting_id' => $meeting->id,
-            //         'user_id' => $participantId,
-            //     ]);
+            foreach ($request->participant as $p) {
+                if (User::where('id', $p)->exists())
+                 {
+                    $participantIds[] = $p;
+                    $message = "Undangan Meeting - " . $meeting->meeting_name;
+                    $url = route('meeting.show',$meeting->slug);
+
+                    $this->sentMessage($p, Auth::user()->id, $message, $url, false, 'high');
+                } elseif (filter_var($p, FILTER_VALIDATE_EMAIL)) {
+                    $externalEmails[] = $p;
+                }
+            }
+
+            // Sync user internal
+            $meeting->participants()->sync($participantIds);
     
-            //     $user = User::find($participantId);
-            //     if ($user && $user->email) {
-            //         $emails[] = $user->email;
-            //     }
-            // }
+            if (!empty($externalEmails)) 
+            {
+                $meeting->participants = $externalEmails;
+                $meeting->save();
+            }
     
-            $emails = array_unique($emails);
-    
-            // try {
-            //     foreach ($emails as $email) {
-            //         Mail::to($email)->send(new RatingInvitation($meeting));
-            //     }
-            // } catch (\Exception $e) {
-            //     Log::error('Error sending emails in store method: ' . $e->getMessage());
-            // }
         } catch (\Throwable $th) {
             //throw $th;
+            dd($th);
             Log::error('Error in store method: ' . $th->getMessage());
             return redirect()->route('meeting.index')->with('error', $th->getMessage());
         }
@@ -264,6 +265,7 @@ class MeetingController extends Controller
             return redirect()->route('meeting.index')->with('success', 'Meeting successfully updated');
 
         } catch (\Exception $e) {
+            dd($e);
             Log::error('Error in update method', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -314,10 +316,12 @@ class MeetingController extends Controller
     {
         $inboxHelper = new InboxHelper();
         $inboxHelper->sent(
-            $project->user_id, 
-            Auth::user()->id, 
-            'Request Report for ' . $project->title, 
-            $directUrl
+            $userToId,
+            $userFromId,
+            $message,
+            $directUrl,
+            $isRead,
+            $category
         );
     }
 }

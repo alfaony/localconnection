@@ -7,6 +7,14 @@
 @stop
 
 @section('content')
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('meeting.index') }}">Daftar Rapat</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ $meeting->meeting_name }}</li>
+        </ol>
+    </nav>
+    
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -15,9 +23,11 @@
                         <i class="fas fa-calendar-check mr-2"></i>Detail Pengajuan Rapat
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('meeting.index') }}" class="btn btn-light btn-sm">
-                            <i class="fas fa-arrow-left mr-1"></i>Kembali ke Daftar
+                        <a href="{{ route('meeting.edit', $meeting->slug) }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit mr-1"></i>Edit
                         </a>
+                        @canAccess('update','meeting')
+                        @endcanAccess
                     </div>
                 </div>
                 <div class="card-body">
@@ -26,14 +36,15 @@
                             <!-- Informasi Utama -->
                             <div class="info-box bg-light mb-4 p-3 border rounded">
                                 <div class="info-box-content">
-                                    <h3 class="info-box-text font-weight-bold text-primary mb-1">{{ $meeting->nama_rapat }}</h3>
+                                    <h3 class="info-box-text font-weight-bold text-primary mb-1">{{ $meeting->meeting_name }}</h3>
                                     <span class="info-box-number mb-2">
                                         <i class="fas fa-tag mr-1 text-muted"></i>
-                                        {{ $meeting->jenis_rapat == 'online' ? 'Rapat Online' : 'Rapat Offline' }}
+                                        {{ $meeting->meeting_type == 'online' ? 'Rapat Online' : 'Rapat Offline' }}
                                     </span>
                                     <div class="text-muted">
                                         <i class="fas fa-clipboard-list mr-1"></i>
-                                        {{ $meeting->agenda_rapat }}
+                                        {!! $meeting->meeting_agenda !!}
+                                        dsds
                                     </div>
                                 </div>
                             </div>
@@ -119,6 +130,7 @@
                                     </h3>
                                 </div>
                                 <div class="card-body">
+                                    {{-- 
                                     <div class="mb-3">
                                         <div class="text-muted small">Status</div>
                                         <div>
@@ -135,6 +147,7 @@
                                             @endif
                                         </div>
                                     </div>
+                                    --}}
                                     
                                     <div class="mb-3">
                                         <div class="text-muted small">Dibuat Pada</div>
@@ -158,7 +171,7 @@
                             <div class="card card-outline card-purple mb-4">
                                 <div class="card-header">
                                     <h3 class="card-title">
-                                        @if($meeting->jenis_rapat == 'online')
+                                        @if($meeting->meeting_type == 'online')
                                             <i class="fas fa-video mr-2"></i>Rapat Online
                                         @else
                                             <i class="fas fa-building mr-2"></i>Tempat Rapat
@@ -166,7 +179,7 @@
                                     </h3>
                                 </div>
                                 <div class="card-body">
-                                    @if($meeting->jenis_rapat == 'online')
+                                    @if($meeting->meeting_type == 'online')
                                         <div class="mb-2">
                                             <div class="text-muted small">Link Google Meet</div>
                                             @if($meeting->google_meet_link)
@@ -201,26 +214,9 @@
                                         <i class="fas fa-user-tie mr-2"></i>Penanggung Jawab (PIC)
                                     </h3>
                                 </div>
-                                <div class="card-body p-0">
-                                    <ul class="list-group list-group-flush">
-                                        @forelse($meeting->picUsers as $pic)
-                                            <li class="list-group-item d-flex align-items-center">
-                                                <div class="symbol symbol-40 symbol-light mr-3">
-                                                    <span class="symbol-label bg-primary text-white font-weight-bold">
-                                                        {{ substr($pic->name, 0, 1) }}
-                                                    </span>
-                                                </div>
-                                                <div>
-                                                    <div class="font-weight-bold">{{ $pic->name }}</div>
-                                                    <div class="text-muted small">{{ $pic->email }}</div>
-                                                </div>
-                                            </li>
-                                        @empty
-                                            <li class="list-group-item text-center text-muted py-3">
-                                                Tidak ada PIC yang ditentukan
-                                            </li>
-                                        @endforelse
-                                    </ul>
+                                <div class="card-body">
+                                    <div class="font-weight-bold">{{ $meeting->user->name }}</div>
+                                    <div class="text-muted small">{{ $meeting->user->email }}</div>
                                 </div>
                             </div>
                         </div>
@@ -248,8 +244,6 @@
                                                     <th width="5%">#</th>
                                                     <th>Nama Peserta</th>
                                                     <th>Email</th>
-                                                    <th>Status Kehadiran</th>
-                                                    <th>Konfirmasi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -270,6 +264,7 @@
                                                             </div>
                                                         </td>
                                                         <td>{{ $participant->email }}</td>
+                                                        {{-- 
                                                         <td>
                                                             @if($participant->pivot->attendance_status == 'confirmed')
                                                                 <span class="badge bg-success">Hadir</span>
@@ -284,6 +279,7 @@
                                                         <td>
                                                             {{ $participant->pivot->confirmation_time ? \Carbon\Carbon::parse($participant->pivot->confirmation_time)->format('d M Y H:i') : '-' }}
                                                         </td>
+                                                        --}}
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -301,6 +297,7 @@
                         </a>
                     @endif
                     
+                    {{--
                     @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
                         @if($meeting->status == 'diproses')
                             <button class="btn btn-success" data-toggle="modal" data-target="#approveModal">
@@ -317,11 +314,13 @@
                             <i class="fas fa-calendar-plus mr-1"></i>Tambahkan ke Kalender
                         </a>
                     @endif
+                    --}}
                 </div>
             </div>
         </div>
     </div>
 
+    {{--
     <!-- Approve Modal -->
     <div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-labelledby="approveModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
@@ -381,6 +380,7 @@
             </div>
         </div>
     </div>
+    --}}
 @stop
 
 @section('css')
@@ -459,19 +459,4 @@
             border-radius: 20px;
         }
     </style>
-@stop
-
-@section('js')
-    <script>
-        $(document).ready(function() {
-            // Menampilkan notifikasi jika ada pesan dari controller
-            @if(session('success'))
-                toastr.success('{{ session('success') }}');
-            @endif
-            
-            @if(session('error'))
-                toastr.error('{{ session('error') }}');
-            @endif
-        });
-    </script>
 @stop

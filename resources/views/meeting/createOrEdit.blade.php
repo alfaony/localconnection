@@ -52,11 +52,11 @@
                     </div>
                     <div class="col-md-6">
                         <label for="participant">Peserta</label>
-                        <select name="participant[]"  multiple="multiple" class="form-control select2" required>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" {{ in_array($user->id, old('participant', @$meeting ? @$meeting->participants->pluck('id')->toArray() : [])) ? 'selected' : '' }}>{{ $user->name }}</option>
-                            @endforeach
-                        </select>
+                <select name="participant[]" multiple class="form-control selectMulti2">
+    @foreach ($meeting->combined_participants ?? [] as $p)
+        <option value="{{ $p['id'] }}" selected>{{ $p['name'] }}</option>
+    @endforeach
+</select>
                         <small class="text-muted">Pilih peserta rapat</small>
                     </div>
                 </div>
@@ -115,6 +115,12 @@
 <script>
     $(document).ready(function() {
         $('.select2').select2({
+            placeholder: 'Select an option',
+            allowClear: true
+        });
+
+        $('.selectMulti2').select2({
+            tags: true,
             placeholder: 'Select an option',
             allowClear: true
         });

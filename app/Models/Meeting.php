@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
@@ -36,10 +37,13 @@ class Meeting extends Model
         'end_time',
         'notes',
         'pic_name',
-        'participant',
         'status',
         'attachment',
         'attachment_link'
+    ];
+
+    protected $casts = [
+        'participants' => 'array',
     ];
 
     public function setMeetingNameAttribute($value)
@@ -85,6 +89,34 @@ class Meeting extends Model
     {
         return $this->belongsTo(Company::class)->withTrashed();
     }
+
+public function getCombinedParticipantsAttribute(): Collection
+{
+    // Peserta internal via relasi belongsToMany
+    $internal = $this->participants()->get()->map(function ($user) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+        ];
+    });
+
+    // Peserta eksternal via kolom JSON 'participants'
+    $external = collect($this->participants_external)->map(function ($email) {
+        return [
+            'id' => $email,
+            'name' => $email . ' (External)',
+        ];
+    });
+
+    return $internal->merge($external);
+}
+
+public function getParticipantsExternalAttribute(): array
+{
+    return is_array($this->participants)
+        ? $this->participants
+        : json_decode($this->participants ?? '[]', true);
+}
 
     public function scopeByCompany($query, $companyId)
     {
