@@ -185,31 +185,6 @@
             }
         }
 
-        $('#meeting_type').change(toggleFields).trigger('change');
-
-        $('#pic_name, #participant').select2({
-            placeholder: 'Search name...',
-            ajax: {
-                url: '{{ route('get-users') }}',
-                type: 'POST',
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
-                        name: params.term,
-                        _token: '{{ csrf_token() }}'
-                    };
-                },
-                processResults: function(data) {
-                    return {
-                        results: data.map(function(item) {
-                            return { id: item.id, text: item.name };
-                        })
-                    };
-                },
-            }
-        });
-
         $('#end_date').on('change', function () {
             if (new Date($(this).val()) < new Date($('#start_date').val())) {
                 alert('Tanggal berakhir harus setelah tanggal mulai');

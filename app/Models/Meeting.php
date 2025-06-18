@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 
-use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
 
 use App\Helpers\Access;
@@ -90,44 +89,64 @@ class Meeting extends Model
         return $this->belongsTo(Company::class)->withTrashed();
     }
 
-public function getCombinedParticipantsAttribute(): Collection
-{
-    // Peserta internal via relasi belongsToMany
-    $internal = $this->participants()->get()->map(function ($user) {
-        return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-        ];
-    });
+    public function getCombinedParticipantsAttribute(): Collection
+    {
+        // Peserta internal via relasi belongsToMany
+        $internal = $this->participants()->get()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ];
+        });
+        
 
-    // Peserta eksternal via kolom JSON 'participants'
-    $external = collect($this->participants_external)->map(function ($email) {
-        return [
-            'id' => $email,
-            'email' => $email,
-            'name' => $email . ' (External)',
-        ];
-    });
+        // Peserta eksternal via kolom JSON 'participants'
+        $external = collect($this->participants_external)->map(function ($email) {
+            return [
+                'id' => $email,
+                'email' => $email,
+                'name' => $email . ' (External)',
+            ];
+        });
 
-    return $internal->merge($external);
-}
+        if ($internal->isNotEmpty() && $external->isNotEmpty()) {
+            return $internal->merge($external)->values();
+        }
 
-public function getParticipantsExternalAttribute(): array
-{
-    return is_array($this->participants)
-        ? $this->participants
-        : json_decode($this->participants ?? '[]', true);
-}
+        if ($internal->isNotEmpty()) {
+            return $internal;
+        }
+
+        if ($external->isNotEmpty()) {
+            return $external;
+        }
+
+        return collect();
+    }
+
+    public function getParticipantsExternalAttribute(): array
+    {
+        return is_array($this->participants)
+            ? $this->participants
+            : json_decode($this->participants ?? '[]', true);
+    }
 
     public function scopeByCompany($query, $companyId)
     {
-        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+        $user = auth()->user();
+        $companyIds = $user->accessibleCompanies->pluck('id')->push($companyId)->unique();
 
-        if($companyIds && Auth::user()->role->name != RoleSchema::ROOT)
-        {
-            return $query->whereIn("company_id",$companyIds);
+        if ($user->role->name !== RoleSchema::ROOT) {
+            return $query->where(function ($q) use ($companyIds, $user) {
+                $q->whereIn("company_id", $companyIds)
+                ->orWhereHas('participants', function ($q2) use ($user) {
+                    $q2->where('users.id', $user->id);
+                });
+            });
         }
+
+        return $query;
     }
 }
 

@@ -18,6 +18,7 @@ use Google\Client as GoogleClient;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 use App\Helpers\InboxHelper;
 use App\Schemas\ParamSchema;

@@ -171,6 +171,7 @@
 
 
         <!-- Action Cards Section -->
+         @canAccess('meetingAgenda','homes')
         <div class="card border-0 shadow-sm mt-2">
             <div class="card-header d-flex align-items-center">
                 <h3 class="card-title flex-grow-1">
@@ -198,6 +199,7 @@
                 </div>
             </div>
         </div>
+        @endcanAccess
     </div>
 </div>
 
@@ -749,6 +751,7 @@
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> 
 
+@canAccess('meetingAgenda','homes')
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
         const tableBody = document.querySelector('#agenda-table tbody');
@@ -804,6 +807,7 @@
         }
     });
 </script>
+@endcanAccess
 
 @canAccess('infoPic','subscribe_letters')
 <script>

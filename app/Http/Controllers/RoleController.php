@@ -110,6 +110,7 @@ class RoleController extends Controller
             'item_requests',
             'item_purchases',
             'chat_messages',
+            'meetings',
         ];
 
         $checked = array_merge($mainMenus);
@@ -249,6 +250,7 @@ class RoleController extends Controller
                 'item_requests',
                 'item_purchases',
                 'chat_messages',
+                'meetings',
             ];
         $checked = array_merge($mainMenus);
 
@@ -348,6 +350,7 @@ class RoleController extends Controller
                 'item_requests',
                 'item_purchases',
                 'chat_messages',
+                'meetings',
             ];
         
         $checked = array_merge($mainMenus);

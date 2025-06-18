@@ -157,7 +157,7 @@ class GoogleService
             $google = new GoogleService($meeting->company_id);
             $client = $google->getClient();
             $calendar = $google->getCalendarService();
-
+            
             // Attendees dari peserta
             $attendees = [];
             foreach ($meeting->combined_participants as $participant) 
