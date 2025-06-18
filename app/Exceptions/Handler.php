@@ -55,7 +55,7 @@ class Handler extends ExceptionHandler
                 'desc' => 'Path: '.$e->getFile(),
                 'status' => 'error'
             ];
-            // $this->discordLog($data);
+            $this->discordLog($data);
         });
     }
 
