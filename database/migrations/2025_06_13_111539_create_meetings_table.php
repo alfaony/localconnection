@@ -20,7 +20,7 @@ return new class extends Migration
             $table->uuid('project_id')->nullable();
             $table->string('slug');
             $table->string('meeting_name');
-            $table->enum('meeting_type', ['offline', 'online']);
+            $table->string('meeting_type');
             $table->string('google_meet_link')->nullable();
             $table->string('google_event_id')->nullable();
             $table->text('meeting_agenda');

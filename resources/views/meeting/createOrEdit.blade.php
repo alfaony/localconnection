@@ -54,9 +54,9 @@
                         <label for="participant">Peserta</label>
                         <select name="participant[]"  multiple="multiple" class="form-control selectMulti2" required>
                             @foreach($users as $user)
-                                  <option value="{{ $user->id }}"
+                                  <option value="{{ $user->email }}"
                                     @if(collect($meeting->combined_participants ?? [])->pluck('id')->contains($user->id)) selected @endif>
-                                    {{ $user->name }}
+                                    {{ $user->name }} - {{ $user->email }}
                                 </option>
                             @endforeach
 
@@ -76,8 +76,9 @@
             <x-adminlte-card title="Lokasi" theme="primary" icon="fas fa-map-marker-alt">
                 <x-adminlte-select name="meeting_type" label="Tipe Rapat" id="meeting_type" required>
                     <option value="">---Pilih Tipe Rapat---</option>
-                    <option value="offline" {{ old('meeting_type', $meeting->meeting_type ?? '') == 'offline' ? 'selected' : '' }}>Offline</option>
-                    <option value="online" {{ old('meeting_type', $meeting->meeting_type ?? '') == 'online' ? 'selected' : '' }}>Online</option>
+                    @foreach ($meetingType as $key => $value)
+                        <option value="{{ $key }}" {{ old('meeting_type', $meeting->meeting_type ?? '') == $key ? 'selected' : '' }}>{{ $value }}</option>
+                    @endforeach
                 </x-adminlte-select>
 
                 <div id="google_meet_section" style="display:none">
@@ -95,7 +96,7 @@
 
             {{-- Lain-lain --}}
             <x-adminlte-card title="Lain-lain" theme="primary" icon="fas fa-paperclip">
-                <x-adminlte-select name="status" label="Proyek" class="select2">
+                <x-adminlte-select name="project_id" label="Proyek" class="select2">
                     <option selected disabled>---Pilih Proyek---</option>
                     @foreach ($projects as $project)
                         <option value="{{ $project->id }}" {{ old('project_id', $meeting->project_id ?? '') == $project->id ? 'selected' : '' }}>{{ $project->title }}</option>
@@ -122,6 +123,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
         $('.select2').select2({
@@ -133,6 +135,39 @@
             tags: true,
             placeholder: 'Select an option',
             allowClear: true
+        });
+
+        $('.selectMulti2').on('select2:selecting', function (e) 
+        {
+            const inputValue = e.params.args.data.id;
+
+            // Cek apakah input bukan dari daftar user (manual input)
+            const isManual = e.params.args.data.element === undefined;
+
+            if (isManual) {
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                const isValidEmail = emailPattern.test(inputValue);
+
+                if (!isValidEmail) 
+                {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'warning',
+                        title: 'Format email tidak valid',
+                        showConfirmButton: false,
+                        timer: 2500,
+                        timerProgressBar: true,
+                        background: '#fff3cd',
+                        customClass: 
+                        {
+                            popup: 'swal2-shadow'
+                        }
+                    });
+
+                    e.preventDefault(); // blok input
+                }
+            }
         });
     });
 </script>

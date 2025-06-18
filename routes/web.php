@@ -97,6 +97,7 @@ use App\Http\Controllers\WablasWebhookController;
 use App\Http\Controllers\BroadcastAuthController;
 use App\Http\Controllers\PotentialVendorController;
 use App\Http\Controllers\MeetingController;
+use App\Http\Controllers\GoogleMeetController;
 
 
 
@@ -132,6 +133,11 @@ Route::get('item-request/ajax/{companySlug}', [ItemRequestController::class, 'lo
 
 Route::group(['middleware' => ['auth','web']], function(){
   Route::post('broadcasting/authorize', [BroadcastAuthController::class, 'broadcastingAuthorize'])->name('broadcasting.authorize');
+});
+
+Route::group(['prefix' => 'google'], function () {
+  Route::get('oauth', [GoogleMeetController::class, 'redirectToGoogle'])->name('google.auth')->middleware('auth');
+  Route::get('oauth/callback', [GoogleMeetController::class, 'handleGoogleCallback']);
 });
 
 Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
@@ -483,17 +489,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('item-purchase/complete/{id}', [ItemPurchaseController::class, 'complete'])->name('item-purchase.complete');
   Route::put('item-purchase/payment/{id}', [ItemPurchaseController::class, 'payment'])->name('item-purchase.payment');
   Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
+
+  Route::resource('meeting', MeetingController::class);
 });
-
-Route::get('meeting/{meeting}/meet-status', [MeetingController::class, 'checkMeetStatus'])->name('meeting.check-meet-status');
-Route::post('/get-users', [MeetingController::class, 'getUsers'])->name('get-users');
-Route::patch('/meeting/{meeting}/complete', [MeetingController::class, 'complete'])->name('meeting.complete');
-Route::patch('/meeting/{meeting}/upload', [MeetingController::class, 'upload'])->name('meeting.upload');
-Route::post('meeting/create-google-meet', [GoogleMeetController::class, 'createGoogleMeet'])->name('meeting.create-google-meet');
-Route::resource('meeting', MeetingController::class);
-
-  Route::get('google/oauth', [GoogleMeetController::class, 'redirectToGoogle'])->name('google.auth');
-  Route::get('google/oauth/callback', [GoogleMeetController::class, 'handleGoogleCallback']);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

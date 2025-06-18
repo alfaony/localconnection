@@ -10,62 +10,35 @@ use Google\Client as GoogleClient;
 use Google\Service\Calendar\Event;
 use Illuminate\Support\Facades\Log;
 use Google\Service\Calendar\EventDateTime;
+use App\Models\SettingCompany; 
+use App\Services\GoogleService;
 
 class GoogleMeetController extends Controller
 {   
     public function redirectToGoogle()
     {
-        $client = new GoogleClient();
-        $client->setClientId(config('services.google.client_id'));
-        $client->setClientSecret(config('services.google.client_secret'));
-        $client->setRedirectUri(config('services.google.redirect_uri'));
-        $client->setAccessType('offline'); 
-        $client->setPrompt('consent'); 
-        $client->addScope(Calendar::CALENDAR);
-
-        // $client->addScope([Calendar::CALENDAR, Calendar::CALENDAR_EVENTS]);
-
-        
-        // Mengarahkan pengguna ke Google login
-        $authUrl = $client->createAuthUrl();
-        return redirect()->to($authUrl);
+        $companyId = auth()->user()->company_id;
+        $google = new GoogleService($companyId);
+        return redirect()->away($google->getAuthUrl());
     }
+
     public function handleGoogleCallback(Request $request)
     {
-        // Pastikan parameter kode ada di request
         $authCode = $request->input('code');
-        if (!$authCode) {
-            return redirect()->route('google.error')->with('error', 'Authorization code tidak ditemukan.');
+        $companyId = $request->input('state');
+
+        if (!$authCode || !$companyId) {
+            return redirect()->route('dashboard')->with('error', 'Kode otorisasi atau state tidak ditemukan.');
         }
 
-        // Inisialisasi Google Client
-        $client = new GoogleClient();
-        $client->setClientId(config('services.google.client_id'));
-        $client->setClientSecret(config('services.google.client_secret'));
-        $client->setRedirectUri(config('services.google.redirect_uri'));
-
-        try {
-            // Tukar kode otorisasi dengan token
-            $token = $client->fetchAccessTokenWithAuthCode($authCode);
-
-            // Periksa jika ada error saat menukar token
-            if (isset($token['error'])) {
-                return redirect()->route('google.error')->with('error', $token['error_description']);
-            }
-
-            // Simpan token ke file token.json
-            $tokenPath = storage_path('app/token.json');
-            file_put_contents($tokenPath, json_encode($token));
-
-            // Redirect ke halaman sukses
-            return redirect()->route('google.success')->with('success', 'Token berhasil disimpan.');
-        } catch (\Exception $e) {
-            // Log error untuk debugging
-            Log::error('Error saat menukar token:', ['message' => $e->getMessage()]);
-            return redirect()->route('google.error')->with('error', 'Terjadi kesalahan saat memproses token.');
+        $google = new GoogleService($companyId);
+        if ($google->fetchAndSaveToken($authCode)) {
+            return redirect()->route('meeting.index')->with('success', 'Google Calendar terhubung!');
+        } else {
+            return redirect()->route('meeting.index')->with('error', 'Gagal menyimpan token Google.');
         }
     }
-
+    
     public function createGoogleMeet(Request $request)
     {
         $client = new GoogleClient();

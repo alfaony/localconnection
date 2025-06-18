@@ -7,6 +7,7 @@
 @stop
 
 @section('content')
+   @include('components.alert')
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
@@ -22,13 +23,13 @@
                     <h3 class="card-title">
                         <i class="fas fa-calendar-check mr-2"></i>Detail Pengajuan Rapat
                     </h3>
+                    @canAccess('update','meetings')
                     <div class="card-tools">
                         <a href="{{ route('meeting.edit', $meeting->slug) }}" class="btn btn-warning btn-sm">
                             <i class="fas fa-edit mr-1"></i>Edit
                         </a>
-                        @canAccess('update','meeting')
-                        @endcanAccess
                     </div>
+                    @endcanAccess
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -41,10 +42,9 @@
                                         <i class="fas fa-tag mr-1 text-muted"></i>
                                         {{ $meeting->meeting_type == 'online' ? 'Rapat Online' : 'Rapat Offline' }}
                                     </span>
-                                    <div class="text-muted">
+                                    <div class="text-muted" style="max-height: 50vh; overflow-y: auto;">
                                         <i class="fas fa-clipboard-list mr-1"></i>
                                         {!! $meeting->meeting_agenda !!}
-                                        dsds
                                     </div>
                                 </div>
                             </div>
@@ -148,6 +148,31 @@
                                         </div>
                                     </div>
                                     --}}
+                                     @if($meeting->attachment)
+                                    <div class="mb-3">
+                                        <div class="text-muted small">Lampiran</div>
+                                        <div>
+                                            <i class="fas fa-paperclip mr-1"></i>
+                                            <a href="{{ url('storage/' . $meeting->attachment) }}" target="_blank">Lampiran</a>
+                                            
+                                        </div>
+                                    </div>
+                                    @endif
+                                    @if($meeting->project)
+                                    <div class="mb-3">
+                                        <div class="text-muted small">
+                                            Proyek
+                                        </div>
+                                        <div>
+                                            <i class="fas fa-project-diagram mr-1"></i>
+                                            @if(App\Helpers\Access::can('show','projects'))
+                                            <a href="{{ route('project.show', $meeting->project->slug) }}" target="_blank">{{ $meeting->project->title }}</a>
+                                            @else
+                                            {{ $meeting->project->title }}
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @endif
                                     
                                     <div class="mb-3">
                                         <div class="text-muted small">Dibuat Pada</div>
@@ -171,17 +196,17 @@
                             <div class="card card-outline card-purple mb-4">
                                 <div class="card-header">
                                     <h3 class="card-title">
-                                        @if($meeting->meeting_type == 'online')
-                                            <i class="fas fa-video mr-2"></i>Rapat Online
-                                        @else
+                                        @if($meeting->meeting_type == 'offline')
                                             <i class="fas fa-building mr-2"></i>Tempat Rapat
+                                        @else
+                                            <i class="fas fa-video mr-2"></i>Rapat Online
                                         @endif
                                     </h3>
                                 </div>
                                 <div class="card-body">
-                                    @if($meeting->meeting_type == 'online')
+                                    @if($meeting->meeting_type != 'offline')
                                         <div class="mb-2">
-                                            <div class="text-muted small">Link Google Meet</div>
+                                            <div class="text-muted small">Link Meet</div>
                                             @if($meeting->google_meet_link)
                                                 <a href="{{ $meeting->google_meet_link }}" target="_blank" class="font-weight-bold text-primary">
                                                     <i class="fas fa-external-link-alt mr-1"></i>
@@ -192,16 +217,19 @@
                                             @endif
                                         </div>
                                         
+                                        @if($meeting->google_event_id)
                                         <div>
                                             <div class="text-muted small">ID Google Event</div>
                                             <div class="font-weight-bold">
                                                 {{ $meeting->google_event_id ?? 'Tidak tersedia' }}
                                             </div>
                                         </div>
+                                        @endif
                                     @else
+                                    
                                         <div class="font-weight-bold">
                                             <i class="fas fa-map-marker-alt mr-1 text-purple"></i>
-                                            {{ $meeting->tempat_rapat ?? 'Belum ditentukan' }}
+                                            {{ $meeting->meeting_location ?? 'Belum ditentukan' }}
                                         </div>
                                     @endif
                                 </div>
@@ -260,7 +288,7 @@
                                                                 <div>
                                                                     <div class="font-weight-bold">{{ $participant['name'] }}</div>
                                                                     <div class="text-muted small">
-                                                                        {{ optional(\App\Models\User::find($participant['id']))->department ?? 'Eksternal' }}
+                                                                        {{ optional(\App\Models\User::find($participant['id']))->name ?? 'Eksternal' }}
                                                                     </div>
                                                                 </div>
                                                             </div>

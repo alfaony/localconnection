@@ -435,7 +435,7 @@
                         </div>
                     </div>
 
-                      <div class="card">
+                    <div class="card">
                         <div class="card-header" id="headingWABlas">
                             <h2 class="mb-0">
                                 <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseWABlas" aria-expanded="false" aria-controls="collapseWABlas">
@@ -473,8 +473,38 @@
                                             @enderror
                                         </div>
                                     </div>
-                                    
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header" id="headingNewCard">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseNewCard" aria-expanded="false" aria-controls="collapseNewCard">
+                                    Google Credential
+                                </button>
+                            </h2>
+                        </div>
+                        <div id="collapseNewCard" class="collapse" aria-labelledby="headingNewCard" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="google_client_id">Google Client ID</label>
+                                    <input type="text" name="google_client_id" class="form-control" value="{{ old('google_client_id', isset($data['google_client_id']) ? $data['google_client_id'] : '') }}">
+                                    @error('google_client_id')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+
+                                    <label for="google_client_secret">Google Client Secret</label>
+                                    <input type="text" name="google_client_secret" class="form-control" value="{{ old('google_client_secret', isset($data['google_client_secret']) ? $data['google_client_secret'] : '') }}">
+                                    @error('google_client_secret')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
 

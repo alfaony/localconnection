@@ -97,6 +97,7 @@ public function getCombinedParticipantsAttribute(): Collection
         return [
             'id' => $user->id,
             'name' => $user->name,
+            'email' => $user->email,
         ];
     });
 
@@ -104,6 +105,7 @@ public function getCombinedParticipantsAttribute(): Collection
     $external = collect($this->participants_external)->map(function ($email) {
         return [
             'id' => $email,
+            'email' => $email,
             'name' => $email . ' (External)',
         ];
     });

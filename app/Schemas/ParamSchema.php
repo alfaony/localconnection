@@ -114,4 +114,6 @@ class ParamSchema
     const ONREVIEW = "onreview";
 
     const REJECTED = "rejected";
+
+    const GOOGLE_MEET = "google_meet";
 }

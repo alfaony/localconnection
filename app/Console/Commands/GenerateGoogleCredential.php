@@ -44,7 +44,7 @@ class GenerateGoogleCredential extends Command
         $companies = Company::all();
         $menu = 'google';
 
-        $fields = ['google_client_id' => null,'google_client_secret' => null, 'google_redirect_uri' => null];
+        $fields = ['google_client_id' => null,'google_client_secret' => null, 'google_redirect_uri' => null, 'google_refresh_token' => null, 'google_access_token' => null,'google_expires_at' => null , 'google_token_created_at' => null];
         foreach ($companies as $company) 
         {
             // Mencari user dengan role admin atau root pada setiap perusahaan

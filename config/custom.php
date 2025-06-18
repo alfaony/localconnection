@@ -135,4 +135,10 @@ return
          'DELIVERED' => 'Delivered',
          'CLOSED' => 'Closed',
       ],
+
+      "meeting_type" =>
+      [
+         'online' => 'Online',
+         'offline' => 'Offline',
+      ]
 ];

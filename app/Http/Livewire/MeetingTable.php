@@ -3,6 +3,7 @@
 namespace App\Http\Livewire;
 
 use Illuminate\Support\Facades\Auth;
+use App\Models\SettingCompany;
 
 use App\Models\Meeting;
 use Livewire\Component;
@@ -10,9 +11,30 @@ use Livewire\WithPagination;
 
 class MeetingTable extends Component
 {
-    public $search = '';
     use WithPagination;
     protected $paginationTheme = 'bootstrap';
+
+    public $search = '';
+    public $googleConnected = false;
+    public $googleReadyChecked = false;
+
+    public function mount()
+    {
+        $this->checkGoogleConnection();
+    }
+
+    public function checkGoogleConnection()
+    {
+        $companyId = Auth::user()->company_id;
+
+        $settings = SettingCompany::byCompany($companyId)
+            ->where('menu', 'google')
+            ->get()
+            ->pluck('field_value', 'field_title');
+        $this->googleReadyChecked = !empty($settings['google_client_id']) && !empty($settings['google_client_secret']);
+        $this->googleConnected = !empty($settings['google_access_token']) && !empty($settings['google_refresh_token']);
+    }
+
     public function render()
     {
         return view('livewire.meeting-table', [
