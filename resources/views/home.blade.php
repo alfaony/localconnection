@@ -181,7 +181,7 @@
             <div class="card-body p-4">
                 <div class="row g-3">
                     <div class="col-md-12">
-                        <div style="max-height: 50vh; overflow-y: auto;">
+                        <div style="max-height: 20vh; overflow-y: auto;">
                             <table class="table table-sm table-bordered" id="agenda-table">
                                 <thead>
                                     <tr>
@@ -789,7 +789,7 @@
                         <td>${formatDate(item.start_date)}</td>
                         <td>${item.start_time} - ${item.end_time}</td>
                         <td><span class="badge bg-${item.meeting_type === 'online' ? 'info' : 'secondary'}">${item.meeting_type}</span></td>
-                        <td>${item.meeting_type != 'offline' ? `<a href="${item.google_meet_link}" target="_blank" class="text-primary">Link Meeting</a>` : item.meeting_location}</td>
+                        <td>${item.meeting_type != 'offline' ? (item.google_meet_link ? `<a href="${item.google_meet_link}" target="_blank" class="text-primary">Link Meeting</a>` : '-') : (item.meeting_location || '-')}</td>
                     </tr>
                 `;
                 tableBody.insertAdjacentHTML('beforeend', row);

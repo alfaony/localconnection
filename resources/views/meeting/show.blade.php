@@ -63,7 +63,7 @@
                                                 <div class="text-muted small">Tanggal Mulai</div>
                                                 <div class="font-weight-bold">
                                                     <i class="far fa-calendar mr-1 text-primary"></i>
-                                                    {{ \Carbon\Carbon::parse($meeting->start_date)->translatedFormat('l, d F Y') }}
+                                                    {{ \Carbon\Carbon::parse($meeting->start_date)->locale('id_ID')->translatedFormat('l, j F Y') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -72,7 +72,7 @@
                                                 <div class="text-muted small">Tanggal Berakhir</div>
                                                 <div class="font-weight-bold">
                                                     <i class="far fa-calendar mr-1 text-primary"></i>
-                                                    {{ \Carbon\Carbon::parse($meeting->end_date)->translatedFormat('l, d F Y') }}
+                                                    {{ \Carbon\Carbon::parse($meeting->end_date)->locale('id_ID')->translatedFormat('l, d F Y') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -301,14 +301,18 @@
                                                         </td>
                                                         <td>
                                                             @canAccess('join', 'meetings')
-                                                            @if($participant['status'] == App\Schemas\ParamSchema::INTERNAL && $participant['id'] == auth()->user()->id && !$participant['is_attended'])
+                                                            @if($participant['status'] == App\Schemas\ParamSchema::INTERNAL && $participant['id'] == auth()->user()->id && !$participant['is_attended'] && $meeting->is_active)
                                                             <button class="btn btn-success btn-sm" onclick="joinMeeting('{{ auth()->user()->id }}')">
                                                                 <i class="fas fa-sign-in-alt"></i> Bergabung
                                                             </button>
-                                                            @elseif($participant['status'] == App\Schemas\ParamSchema::INTERNAL && $participant['id'] == auth()->user()->id && $participant['is_attended'])
-                                                            <span class="badge badge-success">Hadir</span>
+                                                            @elseif($participant['status'] == App\Schemas\ParamSchema::INTERNAL)
+                                                                @if($participant['is_attended'])
+                                                                <span class="badge badge-success">Hadir</span>
+                                                                @else
+                                                                <span class="badge badge-danger">{{ $meeting->is_active ? 'Belum Hadir' : 'Tidak Hadir' }}</span>
+                                                                @endif
                                                             @else
-                                                            <span class="badge badge-secondary">Belum Hadir</span>
+                                                            <span class="badge badge-secondary">-</span>
                                                             @endif
                                                             @endcanAccess
                                                         </td>

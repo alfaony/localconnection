@@ -139,7 +139,7 @@ class GoogleService
 
             // Set description
             $description = $payload['meeting_agenda'] ?? $meeting->meeting_agenda;
-            if (($payload['meeting_type'] ?? $meeting->meeting_type) === 'ONLINE' && $meeting->google_meet_link) {
+            if (($payload['meeting_type'] ?? $meeting->meeting_type) === 'online' && $meeting->google_meet_link) {
                 $description .= "\n\nMeeting Link: " . $meeting->google_meet_link;
             }
 
@@ -154,7 +154,7 @@ class GoogleService
             $options = ['sendUpdates' => 'all'];
 
             // Jika GOOGLE_MEET dan belum ada conferenceData, generate baru
-            if (($payload['meeting_type'] ?? $meeting->meeting_type) === 'GOOGLE_MEET') {
+            if (($payload['meeting_type'] ?? $meeting->meeting_type) === 'google_meet') {
                 if (!$event->getConferenceData()) {
                     $conferenceRequest = new \Google\Service\Calendar\CreateConferenceRequest([
                         'requestId' => uniqid(),

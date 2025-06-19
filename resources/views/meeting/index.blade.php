@@ -2,10 +2,6 @@
 
 @section('title', 'Daftar Rapat')
 
-@section('content_header')
-    <h1>Daftar Rapat</h1>
-@stop
-
 @section('content')
     @include('components.alert')
     @livewire('meeting-table')

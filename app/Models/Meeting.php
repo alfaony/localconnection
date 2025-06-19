@@ -137,6 +137,24 @@ class Meeting extends Model
             : json_decode($this->participants ?? '[]', true);
     }
 
+    public function getIsActiveAttribute(): bool
+    {
+        // Gabungkan tanggal dan jam selesai
+        $endDateTime = Carbon::createFromFormat('Y-m-d H:i:s', "{$this->end_date} {$this->end_time}");
+
+        return now()->lt($endDateTime); // true jika sekarang < waktu selesai
+    }
+
+    public function getMeetingTypeBadgeAttribute(): string
+    {
+        return match (strtolower($this->meeting_type)) {
+            'online' => '<span class="badge bg-primary">Rapat Online</span>',
+            'offline' => '<span class="badge bg-secondary">Rapat Offline</span>',
+            'google_meet' => '<span class="badge bg-success">Google Meet</span>',
+            default => '<span class="badge bg-dark">Jenis Tidak Diketahui</span>',
+        };
+    }
+
     public function scopeByCompany($query, $companyId)
     {
         $user = auth()->user();

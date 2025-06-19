@@ -47,7 +47,7 @@ class MeetingTable extends Component
                 ->orderBy('created_at', 'desc')
                 ->orderBy('start_date', 'desc')
                 ->orderBy('start_time', 'desc')
-                ->paginate(5)
+                ->paginate(10)
         ]);
     }
 
