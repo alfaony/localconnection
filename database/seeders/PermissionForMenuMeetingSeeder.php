@@ -27,6 +27,7 @@ class PermissionForMenuMeetingSeeder extends Seeder
         try {
 
             $itemRequest = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','join'];
+            $dashboard = ['meetingAgenda'];
             
              foreach ($itemRequest as $method) 
              {
@@ -44,6 +45,26 @@ class PermissionForMenuMeetingSeeder extends Seeder
                 foreach ($roles as $role) 
                 {
                     PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
+                }
+            }
+
+
+            foreach ($dashboard as $method) 
+            {
+                // create permision
+                $permissionsDashboard = Permission::firstOrCreate([
+                    'name' => ucwords($method).' Home',
+                ],[
+                    'method' => $method,
+                    'table' => 'homes',
+                    'model' => 'Home',
+                    'guard_name' => 'web'
+                ]); 
+
+                //assign role & permission
+                foreach ($roles as $role) 
+                {
+                    PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permissionsDashboard->id]);
                 }
             }
 

@@ -181,20 +181,22 @@
             <div class="card-body p-4">
                 <div class="row g-3">
                     <div class="col-md-12">
-                        <table class="table table-sm table-bordered" id="agenda-table">
-                            <thead>
-                                <tr>
-                                    <th>Agenda</th>
-                                    <th>Tanggal</th>
-                                    <th>Pukul</th>
-                                    <th>Type</th>
-                                    <th>Lokasi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
-                            </tbody>
-                        </table>
+                        <div style="max-height: 50vh; overflow-y: auto;">
+                            <table class="table table-sm table-bordered" id="agenda-table">
+                                <thead>
+                                    <tr>
+                                        <th>Agenda</th>
+                                        <th>Tanggal</th>
+                                        <th>Pukul</th>
+                                        <th>Type</th>
+                                        <th>Lokasi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -787,7 +789,7 @@
                         <td>${formatDate(item.start_date)}</td>
                         <td>${item.start_time} - ${item.end_time}</td>
                         <td><span class="badge bg-${item.meeting_type === 'online' ? 'info' : 'secondary'}">${item.meeting_type}</span></td>
-                        <td>${item.meeting_type === 'online' ? `<a href="${item.google_meet_link}" target="_blank" class="text-primary">Google Meet</a>` : item.meeting_location}</td>
+                        <td>${item.meeting_type != 'offline' ? `<a href="${item.google_meet_link}" target="_blank" class="text-primary">Link Meeting</a>` : item.meeting_location}</td>
                     </tr>
                 `;
                 tableBody.insertAdjacentHTML('beforeend', row);
