@@ -66,7 +66,7 @@ class CompanyController extends Controller
             $fieldPunishmentTaskDoing = ['status_punihsment_task_doing' => null, 'point_punishment_task_doing' => null];
             $fieldPunishment = ['point_punishment_task_todo' => null, 'point_punishment_weekly_report' => null];
             $fieldWablas = ['server_wablas' => null,'token_wablas' => null, 'webhook_key_wablas' => null];
-            $fieldGoogle = ['google_client_id' => null,'google_client_secret' => null, 'google_redirect_uri' => null];
+            $fieldGoogle = ['google_client_id' => null,'google_client_secret' => null, 'google_redirect_uri' => null, 'google_refresh_token' => null, 'google_access_token' => null,'google_expires_at' => null , 'google_token_created_at' => null];
     
             foreach ($fieldProfile as $key => $value) 
             {
