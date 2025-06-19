@@ -116,4 +116,8 @@ class ParamSchema
     const REJECTED = "rejected";
 
     const GOOGLE_MEET = "google_meet";
+
+    const INTERNAL = "internal";
+
+    const EXTERNAL = "external";
 }

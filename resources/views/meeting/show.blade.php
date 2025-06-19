@@ -272,6 +272,7 @@
                                                     <th width="5%">#</th>
                                                     <th>Nama Peserta</th>
                                                     <th>Email</th>
+                                                    <th>Join</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -297,6 +298,19 @@
                                                             {{ filter_var($participant['id'], FILTER_VALIDATE_EMAIL) 
                                                                 ? $participant['id'] 
                                                                 : (\App\Models\User::find($participant['id'])->email ?? '-') }}
+                                                        </td>
+                                                        <td>
+                                                            @canAccess('join', 'meetings')
+                                                            @if($participant['status'] == App\Schemas\ParamSchema::INTERNAL && $participant['id'] == auth()->user()->id && !$participant['is_attended'])
+                                                            <button class="btn btn-success btn-sm" onclick="joinMeeting('{{ auth()->user()->id }}')">
+                                                                <i class="fas fa-sign-in-alt"></i> Bergabung
+                                                            </button>
+                                                            @elseif($participant['status'] == App\Schemas\ParamSchema::INTERNAL && $participant['id'] == auth()->user()->id && $participant['is_attended'])
+                                                            <span class="badge badge-success">Hadir</span>
+                                                            @else
+                                                            <span class="badge badge-secondary">Belum Hadir</span>
+                                                            @endif
+                                                            @endcanAccess
                                                         </td>
                                                     </tr>
                                                 @empty
@@ -404,6 +418,42 @@
     </div>
     --}}
 @stop
+@section('js')
+<script>
+    function joinMeeting(userId) 
+    {   
+        let meetingId = "{{ $meeting->id }}";
+
+        $.ajax({
+            url: '{{ route("meeting.join") }}',
+            method: 'POST',
+            data: {
+                meeting_id: meetingId,
+                user_id: userId,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    toastr.success(response.message || 'Berhasil hadir.');
+
+                    if (response.redirect_url) {
+                        setTimeout(() => {
+                            window.open(response.redirect_url, '_blank');
+                        }, 1000);
+                    } else {
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                } else {
+                    toastr.error(response.message || 'Gagal mencatat kehadiran.');
+                }
+            },
+            error: function(xhr) {
+                toastr.error(xhr.responseJSON.message || 'Terjadi kesalahan.');
+            }
+        });
+    }
+</script>
+@endsection
 
 @section('css')
     <style>

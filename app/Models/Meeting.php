@@ -71,7 +71,8 @@ class Meeting extends Model
 
     public function participants()
     {
-        return $this->belongsToMany(User::class, 'meeting_user');
+        return $this->belongsToMany(User::class, 'meeting_user')
+                ->withPivot(['is_attended','join_time']);
     }
 
     public function user()
@@ -97,6 +98,9 @@ class Meeting extends Model
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'status' => ParamSchema::INTERNAL,
+                'is_attended' => $user->pivot->is_attended,
+                'join_time' => $user->pivot->join_time
             ];
         });
         
@@ -107,6 +111,7 @@ class Meeting extends Model
                 'id' => $email,
                 'email' => $email,
                 'name' => $email . ' (External)',
+                'status' => ParamSchema::EXTERNAL
             ];
         });
 

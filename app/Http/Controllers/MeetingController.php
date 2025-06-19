@@ -7,6 +7,7 @@ use App\Models\Rating;
 use App\Models\Meeting;
 use App\Models\Project;
 use App\Models\SettingCompany;
+use App\Models\PassChecking;
 
 use Google\Service\Calendar;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ use Illuminate\Support\Str;
 
 use App\Helpers\InboxHelper;
 use App\Schemas\ParamSchema;
+use Carbon\CarbonPeriod;
 
 use App\Services\GoogleService;
 
@@ -153,7 +155,7 @@ class MeetingController extends Controller
     
             if ($request->hasFile('attachment')) 
             {
-                $validated['attachment'] = $request->file('attachment')->store('attachments');
+                $validated['attachment'] = $request->file('attachment')->store('attachments', 'public');
             }
     
             $meeting = Meeting::create($validated);
@@ -184,9 +186,9 @@ class MeetingController extends Controller
             {
                 $meeting->participants = $externalEmails;
                 $meeting->save();
-            }
+            }   
 
-            if($this->validateGoogleMeet(Auth::user()->company_id) && $request->meeting_type == ParamSchema::GOOGLE_MEET)
+            if($this->validateGoogleMeet(Auth::user()->company_id) && ($request->meeting_type == ParamSchema::GOOGLE_MEET || $request->meeting_type == "online"))
             {
                 $maxDescriptionLength = config('services.google.max_description_length'); // safe limit
 
@@ -291,7 +293,7 @@ class MeetingController extends Controller
 
             if ($request->hasFile('attachment')) 
             {
-                $validated['attachment'] = $request->file('attachment')->store('attachments');
+                $validated['attachment'] = $request->file('attachment')->store('attachments', 'public');
             }
 
             $meeting->update($validated);
@@ -322,16 +324,16 @@ class MeetingController extends Controller
 
             $meeting->participants = $externalEmails;
             $meeting->save();
-
+            
             // Update google meet
-             if ($meeting->meeting_type === ParamSchema::GOOGLE_MEET  && $meeting->google_event_id && $request->meeting_type === ParamSchema::GOOGLE_MEET) 
+             if (($meeting->meeting_type === ParamSchema::GOOGLE_MEET || $meeting->meeting_type === "online")  && $meeting->google_event_id && ($request->meeting_type == ParamSchema::GOOGLE_MEET || $request->meeting_type == "online")) 
              {
                 $googleService = new GoogleService(Auth::user()->company_id);
                 $googleService->updateGoogleMeet($meeting, $request->all());
              }
 
             //  Start google meet
-             if($request->meeting_type === ParamSchema::GOOGLE_MEET && !$meeting->google_event_id)
+             if(($request->meeting_type == ParamSchema::GOOGLE_MEET || $request->meeting_type == "online") && !$meeting->google_event_id)
              {
                 $maxDescriptionLength = config('services.google.max_description_length'); // safe limit
 
@@ -355,7 +357,7 @@ class MeetingController extends Controller
             return redirect()->route('meeting.show', $meeting->slug)->with('update', true);
 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             DB::rollback();
             Log::error('Error in update method', [
                 'error' => $e->getMessage(),
@@ -395,6 +397,86 @@ class MeetingController extends Controller
         $meeting->save(); // Simpan perubahan ke database
 
         return redirect()->back()->with('success', 'Notulensi berhasil diperbarui!');
+    }
+
+    public function join(Request $request)
+    {
+        $request->validate([
+            'meeting_id' => 'required|exists:meetings,id',
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $meeting = Meeting::findOrFail($request->meeting_id);
+        $authUser = Auth::user();
+        try {
+            if ($authUser->id != $request->user_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akses tidak diizinkan.',
+                ], 403);
+            }
+    
+            if (!$meeting->participants()->where('user_id', $authUser->id)->exists()) {
+                return response()->json(
+                    [
+                    'success' => false,
+                    'message' => 'Anda bukan peserta rapat ini.',
+                ], 403);
+            }
+    
+            // ✅ Tandai hadir dan simpan waktu bergabung
+            $meeting->participants()->updateExistingPivot($authUser->id, [
+                'is_attended' => true,
+                'join_time' => now(),
+            ]);
+    
+            // ✅ Jika semua sudah hadir, tandai rapat selesai
+            $meeting->status = 'completed';
+            $meeting->save();
+            // $allAttended = $meeting->participants->every(fn ($p) => $p->pivot->is_attended);
+            // if ($allAttended) {
+            // }
+    
+            $existingSchedules = PassChecking::whereBetween('date', [$meeting->start_date, $meeting->end_date])->where('user_id', $authUser->id)
+            ->where(function ($query) use ($meeting) {
+                $query->whereBetween('start_time', [$meeting->start_time, $meeting->end_time])
+                    ->orWhereBetween('end_time', [$meeting->start_time, $meeting->end_time])
+                    ->orWhere(function ($query) use ($meeting) {
+                        $query->where('start_time', '<=', $meeting->start_time)
+                            ->where('end_time', '>=', $meeting->end_time);
+                    });
+            })
+            ->exists();
+    
+            if(!$existingSchedules)
+            {
+                foreach (CarbonPeriod::create($meeting->start_date, $meeting->end_date) as $date) 
+                {
+                    PassChecking::create([
+                        'user_id' => $authUser->id,
+                        'name' => $meeting->meeting_name,
+                        'date' => $date->format('Y-m-d'),
+                        'start_time' => $meeting->start_time,
+                        'end_time' => $meeting->end_time,
+                    ]);
+                }
+            }
+    
+            return response()->json([
+                'success' => true,
+                'message' => 'Kehadiran berhasil dicatat.',
+                'redirect_url' => $meeting->meeting_type === 'online' && $meeting->google_meet_link
+                    ? $meeting->google_meet_link
+                    : null,
+            ]);
+        } catch (\Throwable $th) {
+            //throw $th;
+            dd($th);
+            return response()->json([
+                'success' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
     }
 
     protected function sentMessage($userToId, $userFromId, $message, $directUrl = null, $isRead = false, $category = "entry")

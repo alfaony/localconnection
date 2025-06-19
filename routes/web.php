@@ -490,6 +490,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('item-purchase/payment/{id}', [ItemPurchaseController::class, 'payment'])->name('item-purchase.payment');
   Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
 
+  Route::post('meeting/join', [MeetingController::class, 'join'])->name('meeting.join');
   Route::resource('meeting', MeetingController::class);
 });
 
