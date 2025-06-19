@@ -185,6 +185,13 @@
             }
         }
 
+        $('#meeting_type').change(toggleFields).trigger('change');
+
+        $('#pic_name, #participant').select2({
+            placeholder: 'Search name...',
+            
+        });
+
         $('#end_date').on('change', function () {
             if (new Date($(this).val()) < new Date($('#start_date').val())) {
                 alert('Tanggal berakhir harus setelah tanggal mulai');
