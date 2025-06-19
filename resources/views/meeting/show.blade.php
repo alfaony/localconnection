@@ -441,8 +441,9 @@
                     toastr.success(response.message || 'Berhasil hadir.');
 
                     if (response.redirect_url) {
-                        setTimeout(() => {
-                            window.open(response.redirect_url, '_blank');
+                        setTimeout(() => 
+                        {
+                            window.open(response.redirect_url);
                         }, 1000);
                     } else {
                         setTimeout(() => location.reload(), 1000);
