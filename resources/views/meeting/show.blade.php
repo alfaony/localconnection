@@ -63,7 +63,7 @@
                                                 <div class="text-muted small">Tanggal Mulai</div>
                                                 <div class="font-weight-bold">
                                                     <i class="far fa-calendar mr-1 text-primary"></i>
-                                                    {{ \Carbon\Carbon::parse($meeting->tanggal_mulai)->translatedFormat('l, d F Y') }}
+                                                    {{ \Carbon\Carbon::parse($meeting->start_date)->translatedFormat('l, d F Y') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -72,7 +72,7 @@
                                                 <div class="text-muted small">Tanggal Berakhir</div>
                                                 <div class="font-weight-bold">
                                                     <i class="far fa-calendar mr-1 text-primary"></i>
-                                                    {{ \Carbon\Carbon::parse($meeting->tanggal_berakhir)->translatedFormat('l, d F Y') }}
+                                                    {{ \Carbon\Carbon::parse($meeting->end_date)->translatedFormat('l, d F Y') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -81,7 +81,7 @@
                                                 <div class="text-muted small">Jam Mulai</div>
                                                 <div class="font-weight-bold">
                                                     <i class="far fa-clock mr-1 text-primary"></i>
-                                                    {{ \Carbon\Carbon::parse($meeting->jam_mulai)->format('H:i') }}
+                                                    {{ \Carbon\Carbon::parse($meeting->start_time)->format('H:i') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -90,7 +90,7 @@
                                                 <div class="text-muted small">Jam Berakhir</div>
                                                 <div class="font-weight-bold">
                                                     <i class="far fa-clock mr-1 text-primary"></i>
-                                                    {{ \Carbon\Carbon::parse($meeting->jam_berakhir)->format('H:i') }}
+                                                    {{ \Carbon\Carbon::parse($meeting->end_time)->format('H:i') }}
                                                 </div>
                                             </div>
                                         </div>
@@ -99,7 +99,7 @@
                                             <div class="font-weight-bold">
                                                 <i class="fas fa-hourglass-half mr-1 text-primary"></i>
 
-                                                <span class="text-muted">({{ \Carbon\Carbon::parse($meeting->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($meeting->jam_berakhir)->format('H:i') }})</span>
+                                                <span class="text-muted">({{ \Carbon\Carbon::parse($meeting->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($meeting->end_time)->format('H:i') }})</span>
                                             </div>
                                         </div>
                                     </div>

@@ -193,7 +193,9 @@ class GoogleService
                 'start' => $startDateTime,
                 'end' => $endDateTime,
                 'attendees' => $attendees,
-                'conferenceData' => [
+                '
+                
+                ' => [
                     'createRequest' => [
                         'requestId' => uniqid(),
                         'conferenceSolutionKey' => ['type' => 'hangoutsMeet']

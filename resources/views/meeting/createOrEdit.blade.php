@@ -48,7 +48,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <label for="pic_name">PIC</label>
-                        <p>{{ Auth::user()->name }}</p>
+                        <p>{{ @$meeting ?   $meeting->user->name : Auth::user()->name }}</p>
                     </div>
                     <div class="col-md-6">
                         <label for="participant">Peserta</label>
