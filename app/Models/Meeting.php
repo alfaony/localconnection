@@ -142,7 +142,12 @@ class Meeting extends Model
         $user = auth()->user();
         $companyIds = $user->accessibleCompanies->pluck('id')->push($companyId)->unique();
 
-        if ($user->role->name !== RoleSchema::ROOT) {
+        if(RoleSchema::ADMIN === $user->role->name) 
+        {
+            return $query->whereIn("company_id", $companyIds);    
+        }
+        elseif (RoleSchema::ROOT != $user->role->name) 
+        {
             return $query->where(function ($q) use ($companyIds, $user) {
                 $q->whereIn("company_id", $companyIds)
                 ->orWhereHas('participants', function ($q2) use ($user) {
@@ -150,8 +155,6 @@ class Meeting extends Model
                 });
             });
         }
-
-        return $query;
     }
 }
 
