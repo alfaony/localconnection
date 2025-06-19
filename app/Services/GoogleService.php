@@ -30,10 +30,12 @@ class GoogleService
         $this->client->setState($companyId);
 
         $accessToken = [
-            'access_token' => $this->setting['google_access_token'] ?? null,
-            'refresh_token' => $this->setting['google_refresh_token'] ?? null,
+            'access_token' => $this->setting['google_access_token'] ?? '',
+            'refresh_token' => $this->setting['google_refresh_token'] ?? '',
             'expires_in' => (int) ($this->setting['google_expires_in'] ?? 3600),
             'created' => (int) ($this->setting['google_token_created_at'] ?? now()->subHour()->timestamp),
+            'scope' => 'https://www.googleapis.com/auth/calendar',
+            'token_type' => 'Bearer',
         ];
 
         $this->client->setAccessToken($accessToken);
