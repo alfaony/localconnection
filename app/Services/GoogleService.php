@@ -121,65 +121,66 @@ class GoogleService
         try {
             $event = $this->calendar->events->get('primary', $meeting->google_event_id);
 
-            $start = new \Google\Service\Calendar\EventDateTime([
-                'dateTime' => "{$payload['start_date']}T{$payload['start_time']}:00+07:00",
+           $startDateTime = new \Google\Service\Calendar\EventDateTime([
+                'dateTime' => \Carbon\Carbon::parse("{$payload['start_date']} {$payload['start_time']}", 'Asia/Jakarta')->toRfc3339String(),
                 'timeZone' => 'Asia/Jakarta'
             ]);
 
-            $end = new \Google\Service\Calendar\EventDateTime([
-                'dateTime' => "{$payload['end_date']}T{$payload['end_time']}:00+07:00",
+            $endDateTime = new \Google\Service\Calendar\EventDateTime([
+                'dateTime' => \Carbon\Carbon::parse("{$payload['end_date']} {$payload['end_time']}", 'Asia/Jakarta')->toRfc3339String(),
                 'timeZone' => 'Asia/Jakarta'
             ]);
 
-            // Attendees
             $attendees = [];
-            foreach ($meeting->combined_participants as $participant) {
+            foreach ($meeting->combined_participants as $participant) 
+            {
                 $attendees[] = ['email' => $participant['email']];
             }
 
-            // Description logic (tambahkan link manual jika meeting_type === online)
+            // Set description
             $description = $payload['meeting_agenda'] ?? $meeting->meeting_agenda;
-            if (($payload['meeting_type'] ?? $meeting->meeting_type) === 'online' && $meeting->google_meet_link) {
-                $description .= "\n\nLink: " . $meeting->google_meet_link;
+            if (($payload['meeting_type'] ?? $meeting->meeting_type) === 'ONLINE' && $meeting->google_meet_link) {
+                $description .= "\n\nMeeting Link: " . $meeting->google_meet_link;
             }
 
             // Set event attributes
             $event->setSummary($payload['meeting_name'] ?? $meeting->meeting_name);
             $event->setDescription($description);
-            $event->setStart($start);
-            $event->setEnd($end);
+            $event->setStart($startDateTime);
+            $event->setEnd($endDateTime);
             $event->setAttendees($attendees);
 
-            
-            // Tambahkan conferenceData jika meeting_type == GOOGLE_MEET dan belum ada conference
-            if (($payload['meeting_type'] ?? $meeting->meeting_type) === 'GOOGLE_MEET' && !$event->getConferenceData()) {
-                $conferenceRequest = new \Google\Service\Calendar\CreateConferenceRequest([
-                    'requestId' => uniqid(),
-                    'conferenceSolutionKey' => new \Google\Service\Calendar\ConferenceSolutionKey([
-                        'type' => 'hangoutsMeet'
-                    ])
-                ]);
-                $conferenceData = new \Google\Service\Calendar\ConferenceData([
-                    'createRequest' => $conferenceRequest
-                ]);
-                $event->setConferenceData($conferenceData);
+            // OPTIONS default
+            $options = ['sendUpdates' => 'all'];
+
+            // Jika GOOGLE_MEET dan belum ada conferenceData, generate baru
+            if (($payload['meeting_type'] ?? $meeting->meeting_type) === 'GOOGLE_MEET') {
+                if (!$event->getConferenceData()) {
+                    $conferenceRequest = new \Google\Service\Calendar\CreateConferenceRequest([
+                        'requestId' => uniqid(),
+                        'conferenceSolutionKey' => new \Google\Service\Calendar\ConferenceSolutionKey([
+                            'type' => 'hangoutsMeet'
+                        ])
+                    ]);
+                    $conferenceData = new \Google\Service\Calendar\ConferenceData([
+                        'createRequest' => $conferenceRequest
+                    ]);
+                    $event->setConferenceData($conferenceData);
+                }
+
+                $options['conferenceDataVersion'] = 1;
             }
 
-            // Update event
-            $this->calendar->events->update('primary', $meeting->google_event_id, $event, [
-                'conferenceDataVersion' => 1,
-                'sendUpdates' => 'all',
-            ]);
-
-            dd("here");
+            $this->calendar->events->update('primary', $meeting->google_event_id, $event, $options);
+            
             return true;
-
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             \Log::error('Failed to update Google event', ['message' => $e->getMessage()]);
             return false;
         }
     }
+
 
     public function createGoogleMeet($meeting)
     {
