@@ -166,8 +166,8 @@ class Meeting extends Model
         }
         elseif (RoleSchema::ROOT != $user->role->name) 
         {
-            return $query->where(function ($q) use ($companyIds, $user) {
-                $q->whereIn("company_id", $companyIds)
+            return $query->where(function ($q) use ($user) {
+                $q->where("user_id", $user->id)
                 ->orWhereHas('participants', function ($q2) use ($user) {
                     $q2->where('users.id', $user->id);
                 });
