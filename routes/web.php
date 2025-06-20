@@ -96,6 +96,8 @@ use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\WablasWebhookController;
 use App\Http\Controllers\BroadcastAuthController;
 use App\Http\Controllers\PotentialVendorController;
+use App\Http\Controllers\MeetingController;
+use App\Http\Controllers\GoogleMeetController;
 
 
 
@@ -131,6 +133,11 @@ Route::get('item-request/ajax/{companySlug}', [ItemRequestController::class, 'lo
 
 Route::group(['middleware' => ['auth','web']], function(){
   Route::post('broadcasting/authorize', [BroadcastAuthController::class, 'broadcastingAuthorize'])->name('broadcasting.authorize');
+});
+
+Route::group(['prefix' => 'google'], function () {
+  Route::get('oauth', [GoogleMeetController::class, 'redirectToGoogle'])->name('google.auth')->middleware('auth');
+  Route::get('oauth/callback', [GoogleMeetController::class, 'handleGoogleCallback']);
 });
 
 Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
@@ -177,6 +184,7 @@ Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementCont
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
+  Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
   Route::get('home/listDayoff', [App\Http\Controllers\HomeController::class, 'listDayoff'])->name('home.listDayoff');
   Route::get('home/dashboardReport', [App\Http\Controllers\HomeController::class, 'dashboardReport'])->name('home.dashboardReport');
   Route::get('home/leaderboard', [App\Http\Controllers\HomeController::class, 'leaderboard'])->name('home.leaderboard');
@@ -481,6 +489,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('item-purchase/complete/{id}', [ItemPurchaseController::class, 'complete'])->name('item-purchase.complete');
   Route::put('item-purchase/payment/{id}', [ItemPurchaseController::class, 'payment'])->name('item-purchase.payment');
   Route::resource('item-purchase', ItemPurchaseController::class)->only(['store','update']);  
+
+  Route::post('meeting/join', [MeetingController::class, 'join'])->name('meeting.join');
+  Route::resource('meeting', MeetingController::class);
 });
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');

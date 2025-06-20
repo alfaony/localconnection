@@ -84,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
 
             $managementCompanyMenu = 
             [
+                'meetings',
                 'dashboard_weekly_reports',
                 'weekly_reports',
                 'flowcharts',
@@ -539,7 +540,13 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'List Sprinter',
                     'url' => url("item-request/list/".Auth::user()->company->slug),
                     'icon' => 'fa fa-list',
-                ] 
+                ],
+                'meetings' => 
+                [
+                    'text' => 'Rapat',
+                    'route' => 'meeting.index',
+                    'icon' => 'fas fa-chalkboard-teacher',
+                ]
             ];
 
             foreach ($listMenu as $role) 

@@ -35,12 +35,12 @@ class Inbox extends Model
 
     public function userTo()
     {
-        return $this->belongsTo(User::class, 'user_id_to');
+        return $this->belongsTo(User::class, 'user_id_to')->withTrashed();
     }
 
     public function userFrom()
     {
-        return $this->belongsTo(User::class, 'user_id_from');
+        return $this->belongsTo(User::class, 'user_id_from')->withTrashed();
     }
 }
 

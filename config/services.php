@@ -83,5 +83,11 @@ return [
         'host' => env('PUSHER_HOST', env('REVERB_HOST', 'ws.keloola.xyz')),
         'key' => env('PUSHER_APP_KEY', env('REVERB_APP_KEY',null)),
         'port' => env('PUSHER_PORT', env('REVERB_PORT', 443)),
-    ]
+    ],
+
+    'google' =>
+    [
+        'redirect_uri' => env('GOOGLE_REDIRECT_URI', 'http://localhost:8000/google/oauth/callback'),
+        'max_description_length' => env('GOOGLE_MAX_DESCRIPTION_LENGTH', 8000),
+    ],
 ];

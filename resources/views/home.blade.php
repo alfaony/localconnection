@@ -62,6 +62,7 @@
             </div>
         </div>
     </div>
+    @endcanAccess
     
     <div class="col-md-9 mt-3">
         <!-- Info Cards Section -->
@@ -82,7 +83,7 @@
                 </div>
             </div>
             --}}
-
+            @canAccess('dashboardReport','homes')
             <div class="col-md-4">
                 <div class="card info-box border-0 shadow-sm h-100 hover-effect">
                     <div class="card-body d-flex align-items-center p-3">
@@ -130,6 +131,7 @@
                     </div>
                 </div>
             </div>
+            @endcanAccess
 
             @canAccess('infoApprovementHr', 'dayoffs')
             <div class="col-md-6 mt-3">
@@ -167,49 +169,56 @@
             @endcanAccess
         </div>
 
-        {{-- 
+
         <!-- Action Cards Section -->
-        <div class="card border-0 shadow-sm">
+         @canAccess('meetingAgenda','homes')
+       <div class="card border-0 shadow-sm mt-2">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h3 class="card-title mb-0">Agenda Meeting</h3>
+                <ul class="nav nav-tabs card-header-tabs ml-auto" id="agendaTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="today-tab" data-bs-toggle="tab" type="button" role="tab">
+                            Hari Ini
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="week-tab" data-bs-toggle="tab" type="button" role="tab">
+                            Minggu Ini
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
             <div class="card-body p-4">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <button class="btn btn-hover-effect w-100 h-100 p-4 d-flex flex-column align-items-center"
-                            disabled>
-                            <div class="icon-wrapper bg-moon mb-3">
-                                <i class="bi bi-moon-stars fs-2 text-white"></i>
-                            </div>
-                            <span class="fw-semibold mb-1">Kerja Larut Malam</span>
-                            <small class="text-muted opacity-75">1/3</small>
-                        </button>
+                <div class="table-responsive" style="max-height: 50vh;">
+                    @canAccess('store','meetings')
+                    <div class="d-flex justify-content-end mb-2">
+                        <a href="{{ route('meeting.create') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Agenda
+                        </a>
                     </div>
-
-                    <div class="col-md-4">
-                        <button class="btn btn-hover-effect w-100 h-100 p-4 d-flex flex-column align-items-center"
-                            disabled>
-                            <div class="icon-wrapper bg-fire mb-3">
-                                <i class="bi bi-fire fs-2 text-white"></i>
-                            </div>
-                            <span class="fw-semibold mb-1">Kerja Lembur Begadang</span>
-                            <small class="text-muted opacity-75">1/3</small>
-                        </button>
-                    </div>
-
-                    <div class="col-md-4">
-                        <button class="btn btn-hover-effect w-100 h-100 p-4 d-flex flex-column align-items-center"
-                            disabled>
-                            <div class="icon-wrapper bg-purple mb-3">
-                                <i class="bi bi-cloud-moon fs-2 text-white"></i>
-                            </div>
-                            <span class="fw-semibold mb-1">Izin Tidur Seharian</span>
-                            <small class="text-muted opacity-75">1/3</small>
-                        </button>
-                    </div>
+                    @endcanAccess
+                    <table class="table table-sm table-bordered align-middle mb-0" id="agenda-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="30%">Agenda</th>
+                                <th width="30%">Tanggal</th>
+                                <th width="20%">Pukul</th>
+                                <th >Type</th>
+                                <th width="10%">Lokasi / Tautan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        --}}
+        @endcanAccess
     </div>
-    @endcanAccess
 </div>
 
 <div class="row g-3">
@@ -759,6 +768,149 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> 
+
+@canAccess('join','meetings')
+<script>
+    function joinMeeting(userId, meetingId) 
+    {   
+        Swal.fire({
+            title: 'Loading...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        $.ajax({
+            url: '{{ route("meeting.join") }}',
+            method: 'POST',
+            data: {
+                meeting_id: meetingId,
+                user_id: userId,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        title: 'Berhasil',
+                        text: response.message || 'Berhasil hadir.',
+                        icon: 'success'
+                    }).then(() => {
+                        if (response.redirect_url) {
+                            setTimeout(() => 
+                            {   
+                                loadMeetings();
+                                var win = window.open(response.redirect_url, '_blank');
+                                win.focus();
+                            }, 1000);
+                        } else {
+                            setTimeout(() => location.reload(), 1000);
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Gagal',
+                        text: response.message || 'Gagal mencatat kehadiran.',
+                        icon: 'error'
+                    });
+                }
+            },
+            error: function(xhr) {
+                Swal.fire({
+                    title: 'Terjadi Kesalahan',
+                    text: xhr.responseJSON.message || 'Terjadi kesalahan.',
+                    icon: 'error'
+                });
+            }
+        }).always(() => {
+            Swal.close();
+        });
+    }
+</script>
+@endcanAccess
+
+@canAccess('meetingAgenda','homes')
+<script>
+    const currentUserId = "{{ auth()->id() }}";
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadMeetings('today');
+
+        document.getElementById('today-tab').addEventListener('click', function () {
+            switchTab(this);
+            loadMeetings('today');
+        });
+
+        document.getElementById('week-tab').addEventListener('click', function () {
+            switchTab(this);
+            loadMeetings('week');
+        });
+
+        function switchTab(activeTab) {
+            document.querySelectorAll('#agendaTabs .nav-link').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            activeTab.classList.add('active');
+        }
+    });
+
+    // ✅ Di luar DOMContentLoaded: bisa diakses global
+    async function loadMeetings(scope = 'today') {
+        const tableBody = document.querySelector('#agenda-table tbody');
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-muted">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </td>
+            </tr>
+        `;
+
+        try {
+            const res = await fetch(`{{ route('home.meetingAgenda') }}?scope=${scope}`);
+            const data = await res.json();
+            tableBody.innerHTML = '';
+
+            if (!data.length) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Tidak ada agenda.</td></tr>';
+                return;
+            }
+
+            for (const item of data) {
+                const userIsAttending = item.participants?.some(p => p.id === currentUserId && p.pivot.is_attended);
+                                
+                const locationOrAction = item.meeting_type !== 'offline' ? (userIsAttending ? `<span class="badge bg-success">Hadir</span>`: (item.google_meet_link ? (item.is_already ? `<button class="btn btn-sm btn-success" onclick="joinMeeting('${currentUserId}', '${item.id}')"><i class="fas fa-sign-in-alt"></i> Bergabung</button>` : `<span class="badge bg-warning text-dark mt-1">Segera Dimulai</span>` ) : '-')) : (item.meeting_location || '-');
+
+                    const url = `{{ route('meeting.show', ':id') }}`.replace(':id', item.slug);
+
+                const row = `
+                    <tr>
+                        <td>
+                            <a href="${url}" data-id="${item.id}" class="btn btn-sm btn-info badge text-white">
+                                ${item.meeting_name}
+                            </a>
+                        </td>
+                        <td>${formatDate(item.start_date)}</td>
+                        <td>${item.start_time} - ${item.end_time}</td>
+                        <td>${item.meeting_type_badge}</td>
+                        <td>${locationOrAction}</td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            }
+
+        } catch (err) {
+            console.error(err);
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-danger text-center">Gagal memuat agenda.</td></tr>';
+        }
+    }
+
+    function formatDate(dateStr) {
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return new Date(dateStr).toLocaleDateString('id-ID', options);
+    }
+</script>
+@endcanAccess
+
 @canAccess('infoPic','subscribe_letters')
 <script>
     async function loadLetterReminderPIC() {

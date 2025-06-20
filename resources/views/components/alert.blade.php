@@ -61,3 +61,9 @@
 </div>
 @endif
 
+@if (Session::has('error'))
+<div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+    <strong>Kesalahan!</strong> {{ Session::get('error') }}
+</div>
+@endif
+
