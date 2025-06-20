@@ -35,10 +35,10 @@
                         <x-adminlte-input name="end_date" label="Tanggal Berakhir" type="date" value="{{ old('end_date', $meeting->end_date ?? '') }}" required />
                     </div>
                     <div class="col-md-3">
-                        <x-adminlte-input name="start_time" label="Jam Mulai" type="time" min="07:00" max="20:00" value="{{ old('start_time', $meeting->start_time ?? '') }}" required />
+                        <x-adminlte-input name="start_time" label="Jam Mulai" type="time" value="{{ old('start_time', $meeting->start_time ?? '') }}" required />
                     </div>
                     <div class="col-md-3">
-                        <x-adminlte-input name="end_time" label="Jam Berakhir" type="time" min="07:00" max="20:00" value="{{ old('end_time', $meeting->end_time ?? '') }}" required />
+                        <x-adminlte-input name="end_time" label="Jam Berakhir" type="time" value="{{ old('end_time', $meeting->end_time ?? '') }}" required />
                     </div>
                 </div>
             </x-adminlte-card>

@@ -319,18 +319,25 @@ class HomeController extends Controller
         return response()->json(['html' => $html]);
     }
 
-    public function meetingAgenda()
+    public function meetingAgenda(Request $request)
     {
         $user = Auth::user();
+        $scope = $request->get('scope'); // 'today' or 'week'
 
-        $meetings = Meeting::whereHas('participants', function ($query) use ($user) 
-            {
-                $query->where('user_id', $user->id);
-            })
-            ->orWhere('user_id', $user->id)
-            ->orderBy('start_date', 'desc')
-            ->orderBy('start_time')
-            ->get();
+        $meetings = Meeting::with('participants')
+            ->where(function ($query) use ($user) {
+                $query->whereHas('participants', fn($q) => $q->where('user_id', $user->id))
+                    ->orWhere('user_id', $user->id);
+            });
+
+        // Filter berdasarkan scope
+        if ($scope === 'today') {
+            $meetings->whereDate('start_date', now()->toDateString());
+        } elseif ($scope === 'week') {
+            $meetings->whereBetween('start_date', [now()->startOfWeek(), now()->endOfWeek()]);
+        }
+
+        $meetings = $meetings->orderBy('start_date')->orderBy('start_time')->get();
 
         return response()->json($meetings);
     }

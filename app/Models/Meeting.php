@@ -45,6 +45,8 @@ class Meeting extends Model
         'participants' => 'array',
     ];
 
+    protected $appends = ['meeting_type_badge'];
+
     public function setMeetingNameAttribute($value)
     {
         if ($this->attributes['meeting_name'] ?? null !== $value) {

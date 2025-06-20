@@ -1,7 +1,7 @@
 @canAccess('index','meetings')
 <div class="row">
     <div class="col-md-12">
-        <div class="card mt-3">
+        <div class="card mt-">
                 <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-3">
                 <h4 class="mb-0">Rapat</h4>
         

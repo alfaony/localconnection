@@ -172,32 +172,48 @@
 
         <!-- Action Cards Section -->
          @canAccess('meetingAgenda','homes')
-        <div class="card border-0 shadow-sm mt-2">
-            <div class="card-header d-flex align-items-center">
-                <h3 class="card-title flex-grow-1">
-                    Agenda Meeting
-                </h3>
+       <div class="card border-0 shadow-sm mt-2">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h3 class="card-title mb-0">Agenda Meeting</h3>
+                <ul class="nav nav-tabs card-header-tabs ml-auto" id="agendaTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="today-tab" data-bs-toggle="tab" type="button" role="tab">
+                            Hari Ini
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="week-tab" data-bs-toggle="tab" type="button" role="tab">
+                            Minggu Ini
+                        </button>
+                    </li>
+                </ul>
             </div>
+
             <div class="card-body p-4">
-                <div class="row g-3">
-                    <div class="col-md-12">
-                        <div style="max-height: 20vh; overflow-y: auto;">
-                            <table class="table table-sm table-bordered" id="agenda-table">
-                                <thead>
-                                    <tr>
-                                        <th>Agenda</th>
-                                        <th>Tanggal</th>
-                                        <th>Pukul</th>
-                                        <th>Type</th>
-                                        <th>Lokasi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="table-responsive" style="max-height: 50vh;">
+                    @canAccess('store','meetings')
+                    <div class="d-flex justify-content-end mb-2">
+                        <a href="{{ route('meeting.create') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i> Agenda
+                        </a>
                     </div>
+                    @endcanAccess
+                    <table class="table table-sm table-bordered align-middle mb-0" id="agenda-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Agenda</th>
+                                <th>Tanggal</th>
+                                <th>Pukul</th>
+                                <th>Type</th>
+                                <th>Lokasi / Tautan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -753,61 +769,123 @@
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.7.2/main.min.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> 
 
+@canAccess('join','meetings')
+<script>
+    function joinMeeting(userId, meetingId) 
+    {   
+        $.ajax({
+            url: '{{ route("meeting.join") }}',
+            method: 'POST',
+            data: {
+                meeting_id: meetingId,
+                user_id: userId,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    toastr.success(response.message || 'Berhasil hadir.');
+                    
+                    if (response.redirect_url) {
+                        setTimeout(() => 
+                        {   
+                            loadMeetings();
+                            var win = window.open(response.redirect_url, '_blank');
+                            win.focus();
+                        }, 1000);
+                    } else {
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                } else {
+                    toastr.error(response.message || 'Gagal mencatat kehadiran.');
+                }
+            },
+            error: function(xhr) {
+                toastr.error(xhr.responseJSON.message || 'Terjadi kesalahan.');
+            }
+        });
+    }
+</script>
+@endcanAccess
+
 @canAccess('meetingAgenda','homes')
 <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-        const tableBody = document.querySelector('#agenda-table tbody');
+    const currentUserId = "{{ auth()->id() }}";
 
-        // Tampilkan indikator loading
+    document.addEventListener('DOMContentLoaded', () => {
+        loadMeetings('today');
+
+        document.getElementById('today-tab').addEventListener('click', function () {
+            switchTab(this);
+            loadMeetings('today');
+        });
+
+        document.getElementById('week-tab').addEventListener('click', function () {
+            switchTab(this);
+            loadMeetings('week');
+        });
+
+        function switchTab(activeTab) {
+            document.querySelectorAll('#agendaTabs .nav-link').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            activeTab.classList.add('active');
+        }
+    });
+
+    // ✅ Di luar DOMContentLoaded: bisa diakses global
+    async function loadMeetings(scope = 'today') {
+        const tableBody = document.querySelector('#agenda-table tbody');
         tableBody.innerHTML = `
             <tr>
                 <td colspan="5" class="text-center text-muted">
-                    <div class="spinner-border text-primary" role="status">
-                    </div>
+                    <div class="spinner-border text-primary" role="status"></div>
                 </td>
             </tr>
         `;
 
         try {
-            const res = await fetch("{{ route('home.meetingAgenda') }}");
+            const res = await fetch(`{{ route('home.meetingAgenda') }}?scope=${scope}`);
             const data = await res.json();
-
-            // Kosongkan dulu tbody
             tableBody.innerHTML = '';
 
-            if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No agendas found.</td></tr>';
+            if (!data.length) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Tidak ada agenda.</td></tr>';
                 return;
             }
 
             for (const item of data) {
-                console.log(item);
+                const userIsAttending = item.participants?.some(p => p.id === currentUserId && p.pivot.is_attended);
+                                
+                const locationOrAction = item.meeting_type !== 'offline' ? (userIsAttending ? `<span class="badge bg-success">Hadir</span>`: (item.google_meet_link ? `<button class="btn btn-sm btn-success" onclick="joinMeeting('${currentUserId}', '${item.id}')"><i class="fas fa-sign-in-alt"></i> Bergabung</button>` : '-')) : (item.meeting_location || '-');
+
+                    const url = `{{ route('meeting.show', ':id') }}`.replace(':id', item.slug);
 
                 const row = `
                     <tr>
-                        <td>${item.meeting_name}</td>
+                        <td>
+                            <a href="${url}" data-id="${item.id}" class="btn btn-sm btn-info badge text-white">
+                                ${item.meeting_name}
+                            </a>
+                        </td>
                         <td>${formatDate(item.start_date)}</td>
                         <td>${item.start_time} - ${item.end_time}</td>
-                        <td><span class="badge bg-${item.meeting_type === 'online' ? 'info' : 'secondary'}">${item.meeting_type}</span></td>
-                        <td>${item.meeting_type != 'offline' ? (item.google_meet_link ? `<a href="${item.google_meet_link}" target="_blank" class="text-primary">Link Meeting</a>` : '-') : (item.meeting_location || '-')}</td>
+                        <td>${item.meeting_type_badge}</td>
+                        <td>${locationOrAction}</td>
                     </tr>
                 `;
                 tableBody.insertAdjacentHTML('beforeend', row);
             }
+
         } catch (err) {
             console.error(err);
-            tableBody.innerHTML = '<tr><td colspan="5" class="text-danger text-center">Failed to load agendas.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-danger text-center">Gagal memuat agenda.</td></tr>';
         }
+    }
 
-        function formatDate(dateStr) {
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            return new Date(dateStr).toLocaleDateString('id-ID', options);
-        }
-
-        function statusColor(status) {
-            return status === 'approved' ? 'success' : (status === 'pending' ? 'warning' : 'danger');
-        }
-    });
+    function formatDate(dateStr) {
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return new Date(dateStr).toLocaleDateString('id-ID', options);
+    }
 </script>
 @endcanAccess
 

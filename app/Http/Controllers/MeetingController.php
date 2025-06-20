@@ -179,6 +179,8 @@ class MeetingController extends Controller
                 }
             }
 
+            $participantIds[] = Auth::user()->id;
+
             // Sync user internal
             $meeting->participants()->sync($participantIds);
     
@@ -319,6 +321,8 @@ class MeetingController extends Controller
                 }
             }
 
+            $participantIds[] = $meeting->user_id;
+
             // Sync user internal
             $meeting->participants()->sync($participantIds);
 
@@ -415,10 +419,17 @@ class MeetingController extends Controller
                     'message' => 'Akses tidak diizinkan.',
                 ], 403);
             }
-    
-            if (!$meeting->participants()->where('user_id', $authUser->id)->exists()) {
-                return response()->json(
-                    [
+
+            $isParticipant = $meeting->participants()->where('user_id', $authUser->id)->exists();
+            $isHost = $meeting->user_id == $authUser->id ? true : false;
+
+            $isParticipant = DB::table('meeting_user')
+                ->where('meeting_id', $meeting->id)
+                ->where('user_id', $authUser->id)
+                ->exists();
+
+            if (! $isHost && ! $isParticipant) {
+                return response()->json([
                     'success' => false,
                     'message' => 'Anda bukan peserta rapat ini.',
                 ], 403);
@@ -465,13 +476,13 @@ class MeetingController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Kehadiran berhasil dicatat.',
-                'redirect_url' => $meeting->meeting_type === 'online' && $meeting->google_meet_link
+                'redirect_url' => ($meeting->meeting_type === 'online' || $meeting->meeting_type === 'google_meet') && $meeting->google_meet_link
                     ? $meeting->google_meet_link
                     : null,
             ]);
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             return response()->json([
                 'success' => false,
                 'message' => $th->getMessage(),

@@ -308,11 +308,10 @@
                                                             @elseif($participant['status'] == App\Schemas\ParamSchema::INTERNAL)
                                                                 @if($participant['is_attended'])
                                                                 <span class="badge badge-success">Hadir</span>
+                                                                <br/><small class="text-muted"> Bergabung pada {{ \Carbon\Carbon::parse($participant['join_time'])->format('d-m-Y H:i') }}</small>
                                                                 @else
                                                                 <span class="badge badge-danger">{{ $meeting->is_active ? 'Belum Hadir' : 'Tidak Hadir' }}</span>
                                                                 @endif
-                                                            @else
-                                                            <span class="badge badge-secondary">-</span>
                                                             @endif
                                                             @endcanAccess
                                                         </td>
@@ -423,6 +422,8 @@
     --}}
 @stop
 @section('js')
+
+@canAccess('join','meetings')
 <script>
     function joinMeeting(userId) 
     {   
@@ -439,11 +440,11 @@
             success: function(response) {
                 if (response.success) {
                     toastr.success(response.message || 'Berhasil hadir.');
-
+                    
                     if (response.redirect_url) {
                         setTimeout(() => 
                         {
-                            window.open(response.redirect_url);
+                            window.location.href = response.redirect_url;
                         }, 1000);
                     } else {
                         setTimeout(() => location.reload(), 1000);
@@ -458,6 +459,8 @@
         });
     }
 </script>
+@endcanAccess
+
 @endsection
 
 @section('css')
