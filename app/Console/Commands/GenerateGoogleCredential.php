@@ -77,22 +77,7 @@ class GenerateGoogleCredential extends Command
                 } 
                 $this->info("Successfully for company '{$company->name}'.");
             }
-
-            $fieldClosedTimeExists = SettingCompany::byCompany($company->id)->where('field_title', "closed_time")->first();
-            if (!$fieldClosedTimeExists) 
-            {
-                // Jika field belum ada, buat baru
-                $field = new SettingCompany();
-                $field->menu = "profile";
-                $field->user_id = $user->id;
-                $field->field_title = "closed_time";
-                $field->field_value = "16:00";
-                $field->save();
-            }
-
         }
         return Command::SUCCESS;
     }
 }
-
-
