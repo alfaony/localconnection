@@ -773,6 +773,14 @@
 <script>
     function joinMeeting(userId, meetingId) 
     {   
+        Swal.fire({
+            title: 'Loading...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         $.ajax({
             url: '{{ route("meeting.join") }}',
             method: 'POST',
@@ -783,25 +791,39 @@
             },
             success: function(response) {
                 if (response.success) {
-                    toastr.success(response.message || 'Berhasil hadir.');
-                    
-                    if (response.redirect_url) {
-                        setTimeout(() => 
-                        {   
-                            loadMeetings();
-                            var win = window.open(response.redirect_url, '_blank');
-                            win.focus();
-                        }, 1000);
-                    } else {
-                        setTimeout(() => location.reload(), 1000);
-                    }
+                    Swal.fire({
+                        title: 'Berhasil',
+                        text: response.message || 'Berhasil hadir.',
+                        icon: 'success'
+                    }).then(() => {
+                        if (response.redirect_url) {
+                            setTimeout(() => 
+                            {   
+                                loadMeetings();
+                                var win = window.open(response.redirect_url, '_blank');
+                                win.focus();
+                            }, 1000);
+                        } else {
+                            setTimeout(() => location.reload(), 1000);
+                        }
+                    });
                 } else {
-                    toastr.error(response.message || 'Gagal mencatat kehadiran.');
+                    Swal.fire({
+                        title: 'Gagal',
+                        text: response.message || 'Gagal mencatat kehadiran.',
+                        icon: 'error'
+                    });
                 }
             },
             error: function(xhr) {
-                toastr.error(xhr.responseJSON.message || 'Terjadi kesalahan.');
+                Swal.fire({
+                    title: 'Terjadi Kesalahan',
+                    text: xhr.responseJSON.message || 'Terjadi kesalahan.',
+                    icon: 'error'
+                });
             }
+        }).always(() => {
+            Swal.close();
         });
     }
 </script>

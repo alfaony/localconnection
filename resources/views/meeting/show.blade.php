@@ -437,6 +437,9 @@
                 user_id: userId,
                 _token: '{{ csrf_token() }}'
             },
+            beforeSend: function() {
+                toastr.info('Processing...');
+            },
             success: function(response) {
                 if (response.success) {
                     toastr.success(response.message || 'Berhasil hadir.');
