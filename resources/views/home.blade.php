@@ -201,11 +201,11 @@
                     <table class="table table-sm table-bordered align-middle mb-0" id="agenda-table">
                         <thead class="table-light">
                             <tr>
-                                <th>Agenda</th>
-                                <th>Tanggal</th>
-                                <th>Pukul</th>
-                                <th>Type</th>
-                                <th>Lokasi / Tautan</th>
+                                <th width="30%">Agenda</th>
+                                <th width="30%">Tanggal</th>
+                                <th width="20%">Pukul</th>
+                                <th >Type</th>
+                                <th width="10%">Lokasi / Tautan</th>
                             </tr>
                         </thead>
                         <tbody>
