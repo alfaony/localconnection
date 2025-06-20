@@ -45,7 +45,7 @@ class Meeting extends Model
         'participants' => 'array',
     ];
 
-    protected $appends = ['meeting_type_badge'];
+    protected $appends = ['meeting_type_badge','is_already'];
 
     public function setMeetingNameAttribute($value)
     {
@@ -155,6 +155,15 @@ class Meeting extends Model
             'google_meet' => '<span class="badge bg-success">Google Meet</span>',
             default => '<span class="badge bg-dark">Jenis Tidak Diketahui</span>',
         };
+    }
+
+    public function getIsAlreadyAttribute()
+    {
+        // Gabungkan tanggal dan waktu mulai
+        $start = Carbon::parse("{$this->start_date} {$this->start_time}");
+
+        // Cek apakah sekarang >= (start - 1 jam)
+        return now()->greaterThanOrEqualTo($start->subHour());
     }
 
     public function scopeByCompany($query, $companyId)

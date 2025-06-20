@@ -47,7 +47,7 @@
                                 <tr>
                                     <td>{{ $meetings->firstItem() + $index }}</td>
                                     <td>{{ Str::limit($meeting->meeting_name, 30) }}</td>
-                                    <td>{{ Str::limit(strip_tags($meeting->meeting_agenda), 100) }}</td>
+                                    <td>{!! Str::limit(strip_tags($meeting->meeting_agenda), 100) !!}</td>
                                     <td>{{ \Carbon\Carbon::parse($meeting->start_date)->format('Y-m-d') }}</td>
                                     <td>{{ \Carbon\Carbon::parse($meeting->start_time)->format('H:i') }} -
                                         {{ \Carbon\Carbon::parse($meeting->end_time)->format('H:i') }}</td>

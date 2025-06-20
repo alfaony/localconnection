@@ -302,9 +302,13 @@
                                                         <td>
                                                             @canAccess('join', 'meetings')
                                                             @if($participant['status'] == App\Schemas\ParamSchema::INTERNAL && $participant['id'] == auth()->user()->id && !$participant['is_attended'] && $meeting->is_active)
-                                                            <button class="btn btn-success btn-sm" onclick="joinMeeting('{{ auth()->user()->id }}')">
-                                                                <i class="fas fa-sign-in-alt"></i> Bergabung
-                                                            </button>
+                                                                @if($meeting->is_already)
+                                                                <button class="btn btn-success btn-sm" onclick="joinMeeting('{{ auth()->user()->id }}')">
+                                                                    <i class="fas fa-sign-in-alt"></i> Bergabung
+                                                                </button>
+                                                                @else
+                                                                <span class="badge bg-warning text-dark mt-1">Segera Dimulai</span>
+                                                                @endif
                                                             @elseif($participant['status'] == App\Schemas\ParamSchema::INTERNAL)
                                                                 @if($participant['is_attended'])
                                                                 <span class="badge badge-success">Hadir</span>
