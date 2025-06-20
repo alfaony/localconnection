@@ -173,7 +173,7 @@ class MeetingController extends Controller
                     $message = "Undangan Meeting - " . $meeting->meeting_name;
                     $url = route('meeting.show',$meeting->slug);
 
-                    $this->sentMessage($p, Auth::user()->id, $message, $url, false, 'high');
+                    $this->sentMessage($p, Auth::user()->id, $message, $url, false, 'email');
                 } elseif (filter_var($p, FILTER_VALIDATE_EMAIL)) {
                     $externalEmails[] = $p;
                 }
@@ -315,7 +315,7 @@ class MeetingController extends Controller
                     $message = "Perubahan undangan Meeting - " . $meeting->meeting_name;
                     $url = route('meeting.show',$meeting->slug);
 
-                    $this->sentMessage($p, Auth::user()->id, $message, $url, false, 'high');
+                    $this->sentMessage($p, Auth::user()->id, $message, $url, false, 'email');
                 } elseif (filter_var($p, FILTER_VALIDATE_EMAIL)) {
                     $externalEmails[] = $p;
                 }
