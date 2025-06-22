@@ -55,7 +55,7 @@ class SentMessageToVendor implements ShouldQueue
                         . "Nama: {$this->itemRequest->item_name}\n"
                         . "Qty: {$this->itemRequest->qty}\n"
                         . "Estimasi Harga: {$this->itemRequest->price_with_format}\n\n"
-                        . "Apakah di tempat Kakak tersedia untuk produk tersebut?\n"
+                        . "Apakah di toko {$potentialVendor->productSupplier->store_name} tersedia untuk produk tersebut?\n"
                         . "Jika tersedia, mohon konfirmasinya ya Kak.\n\n"
                         . "Untuk melakukan penawaran, silakan klik link di bawah ini:\n"
                         . "{$url}\n\n"

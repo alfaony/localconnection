@@ -21,7 +21,7 @@ class PermissionForMenuDivision extends Seeder
     public function run()
     {   
 
-        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2'];
+        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2','ajaxDivisionTasks'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $admin = Role::where('name',RoleSchema::ADMIN)->first();
