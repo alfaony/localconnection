@@ -28,7 +28,7 @@ class GoogleMeetController extends Controller
         $companyId = $request->input('state');
 
         if (!$authCode || !$companyId) {
-            return redirect()->route('dashboard')->with('error', 'Kode otorisasi atau state tidak ditemukan.');
+            return redirect()->route('home')->with('error', 'Kode otorisasi atau state tidak ditemukan.');
         }
 
         $google = new GoogleService($companyId);

@@ -65,7 +65,7 @@
     <div class="card-header" id="headingTwo">
       <h5 class="mb-0">
         <button class="btn btn-link" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
-            Tracking Skore
+            Tracking Poin Tugas
         </button>
       </h5>
     </div>

@@ -318,7 +318,7 @@
                                             <div class="col-12 col-md-6">
                                                 <div class="mb-2">
                                                     <i class="fas fa-user mr-2"></i>
-                                                    <strong>Sprinter: </strong>
+                                                <strong>Requester: </strong>
                                                     {{ $itemRequest->delivery->sprinter->name }}
                                                 </div>
                                                 <div class="mb-2">
