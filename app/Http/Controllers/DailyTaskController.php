@@ -687,9 +687,7 @@ class DailyTaskController extends Controller
             {
                 if ($dailyTask->recurringRule) 
                 {
-                    $dailyTask->recurringRule->delete();
-                    $dailyTask->recurring_rule_id = null;
-                    $dailyTask->save();
+                    $this->setrecurringToNull($dailyTask, true);
                 }
             }
             
@@ -1811,22 +1809,34 @@ class DailyTaskController extends Controller
         }
     }
 
-    protected function setrecurringToNull($dailyTask)
+    protected function setrecurringToNull(DailyTask $dailyTask, $affectAll = true)
     {
-        $dailyTaskOneGroup = DailyTask::where('recurring_group_id',$dailyTask->recurring_group_id)->get();
-        if($dailyTaskOneGroup->count() != 0)
-        {
-            $types = DailyTaskType::where('name','Daily')->firstOrFail();
+        $rule = $dailyTask->recurringRule;
 
-            foreach ($dailyTaskOneGroup as $task) 
-            {
-                $task->recurring_group_id = NULL;
-                $task->recurring_days = NULL;
-                $task->daily_task_type_id = $types->id;
+        if (!$rule) return;
+
+        $typeDaily = DailyTaskType::where('name', ParamSchema::DAILY)->firstOrFail();
+
+        if ($affectAll) 
+        {
+            $allTasks = $rule->dailyTask()->get();
+
+            foreach ($allTasks as $task) {
+                $task->recurring_rule_id = null;
+                $task->daily_task_type_id = $typeDaily->id;
                 $task->save();
 
-                $this->message($task->id,'trash','System Recurring Tugas '.$task->name.' dihapus');
+                $this->message($task->id, 'trash', 'System Recurring Tugas ' . $task->name . ' dihapus');
             }
+
+            $rule->delete();
+        } else {
+            // Hanya cabut dari 1 task saja
+            $dailyTask->recurring_rule_id = null;
+            $dailyTask->daily_task_type_id = $typeDaily->id;
+            $dailyTask->save();
+
+            $this->message($dailyTask->id, 'trash', 'System Memisahkan Tugas ' . $dailyTask->name . ' dari recurring');
         }
     }
 }
