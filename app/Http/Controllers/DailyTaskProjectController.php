@@ -417,7 +417,7 @@ class DailyTaskProjectController extends Controller
         $project = DailyTaskProject::byCompany(Auth::user()->company_id)->where('slug',$slug)->firstOrFail();
         $customFields = $project->customFields;
         $redirect = $request->redirect ?? 'daily_task_project.showproject';
-        $days = config('custom.days');
+        $days = config('custom.day_name_code');
         $minDate = Carbon::now()->format('Y-m-d');
         $taskRecurring = DailyTaskType::select('id')->where('name', ParamSchema::RECURRING)->first();
 

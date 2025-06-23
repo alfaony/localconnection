@@ -155,6 +155,11 @@ class DailyTask extends Model
         return $this->belongsTo(DivisionQuotaLock::class)->withTrashed();
     }
 
+    public function recurringRule()
+    {
+        return $this->hasOne(RecurringRule::class);
+    }
+
     public function getDateRangeSubmitAttribute()
     {
         if ($this->submit && $this->start_date) {
