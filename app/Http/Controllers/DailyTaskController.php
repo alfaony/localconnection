@@ -656,6 +656,24 @@ class DailyTaskController extends Controller
                     'description' => $dailyTask->description ?? null,
                 ];
 
+                switch ($rec['frequency']) 
+                {
+                    case 'DAILY':
+
+                    case 'WEEKLY':
+                        $recurringData['by_day'] = $rec['by_day'] ?? null;
+                        break;
+
+                    case 'MONTHLY':
+                        $recurringData['by_month_day'] = $rec['by_month_day'] ?? null;
+                        break;
+
+                    case 'YEARLY':
+                        $recurringData['by_month_day'] = $rec['by_month_day'] ?? null;
+                        $recurringData['by_month'] = $rec['by_month'] ?? null;
+                        break;
+                }
+
                 if ($rule) {
                     $rule->update($recurringData);
                 } else {

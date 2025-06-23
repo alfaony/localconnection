@@ -25,6 +25,6 @@ class RecurringRule extends Model
 
     public function dailyTask()
     {
-        return $this->hasMany(DailyTask::class)->withTrashed();
+        return $this->hasMany(DailyTask::class);
     }
 }

@@ -84,17 +84,63 @@
 </div>
 
 <!-- Recurring Days -->
-@if(!empty($dailytask->recurring_days))
-<div class="form-group row mb-3">
-    <div class="col-md-6">
-        <p class="form-control-plaintext"><strong>Recurring Days:</strong></p>
-    </div>
-    <div class="col-md-6">
-        <div class="d-flex flex-wrap">
-            @php $recurringDays = json_decode($dailytask->recurring_days, true); @endphp
-            @foreach($recurringDays as $day)
-                <span class="badge badge-info me-2 mb-2 mt-2">{{ $daysMap[$day] ?? ucfirst($day) }}</span>
-            @endforeach
+@if($dailytask->recurringRule)
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Tugas Berulang:</label>
+    <div class="col-sm-8">
+        <div class="mt-2">
+
+            {{-- by_day (weekly) --}}
+            @if(!empty($dailytask->recurringRule->by_day))
+                @php
+                    $dayMap = [
+                        'MO' => 'Senin', 'TU' => 'Selasa', 'WE' => 'Rabu',
+                        'TH' => 'Kamis', 'FR' => 'Jumat', 'SA' => 'Sabtu', 'SU' => 'Minggu',
+                    ];
+                @endphp
+                <div class="mb-2">
+                    <strong>Hari dalam Minggu:</strong><br>
+                    @foreach($dailytask->recurringRule->by_day as $day)
+                        <span class="badge badge-info mr-1">{{ $dayMap[$day] ?? $day }}</span>
+                    @endforeach
+                </div>
+            @endif
+
+            {{-- by_month_day (monthly/yearly) --}}
+            @if(!empty($dailytask->recurringRule->by_month_day))
+                <div class="mb-2">
+                    <strong>Tanggal dalam Bulan:</strong><br>
+                    @foreach($dailytask->recurringRule->by_month_day as $day)
+                        <span class="badge badge-primary mr-1">{{ $day }}</span>
+                    @endforeach
+                </div>
+            @endif
+
+            {{-- by_month (yearly) --}}
+            @if(!empty($dailytask->recurringRule->by_month))
+                @php
+                    $monthMap = [
+                        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                    ];
+                @endphp
+                <div class="mb-2">
+                    <strong>Bulan dalam Tahun:</strong><br>
+                    @foreach($dailytask->recurringRule->by_month as $month)
+                        <span class="badge badge-success mr-1">{{ $monthMap[$month] ?? $month }}</span>
+                    @endforeach
+                </div>
+            @endif
+
+            {{-- until --}}
+            @if($dailytask->recurringRule->until)
+                <div class="mb-2">
+                    <strong>Hingga:</strong>
+                    {{ \Carbon\Carbon::parse($dailytask->recurringRule->until)->translatedFormat('d F Y') }}
+                </div>
+            @endif
+
         </div>
     </div>
 </div>
