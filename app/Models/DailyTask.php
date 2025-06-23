@@ -157,7 +157,7 @@ class DailyTask extends Model
 
     public function recurringRule()
     {
-        return $this->hasOne(RecurringRule::class);
+        return $this->belongsTo(RecurringRule::class)->withTrashed();
     }
 
     public function getDateRangeSubmitAttribute()
