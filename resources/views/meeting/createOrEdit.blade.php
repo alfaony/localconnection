@@ -197,16 +197,30 @@
                 alert('Tanggal berakhir harus setelah tanggal mulai');
                 $(this).val('');
             }
+        }); 
+
+        function validateTime() 
+        {
+            const startDate = $('#start_date').val();
+            const endDate = $('#end_date').val();
+            const startTime = $('#start_time').val();
+            const endTime = $('#end_time').val();
+
+            if (startDate === endDate && startTime && endTime && endTime <= startTime) {
+                alert('Jam selesai harus setelah jam mulai');
+                $('#end_time').val('');
+            }
+        }
+
+        // Saat user memilih waktu via picker
+        $('#end_time').on('change', function () {
+            validateTime();
         });
 
-        $('#end_time').on('change', function () {
-            if ($('#start_date').val() === $('#end_date').val()) {
-                if ($(this).val() <= $('#start_time').val()) {
-                    alert('Jam selesai harus setelah jam mulai');
-                    $(this).val('');
-                }
-            }
-        });
+        // Saat user ketik manual dan selesai (blur)
+        $('#end_time').on('blur', function () {
+            validateTime();
+});
     });
 
     // Auto-fill end_date = start_date jika end_date masih kosong
