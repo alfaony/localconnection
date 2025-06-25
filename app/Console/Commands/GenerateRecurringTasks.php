@@ -115,7 +115,7 @@ class GenerateRecurringTasks extends Command
             }
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             Log::error('Error generating recurring tasks: ' . $th->getMessage());
             DB::rollBack();
         }
