@@ -216,6 +216,33 @@ class Project extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    public function meetings()
+    {
+        return $this->hasMany(Meeting::class)->withTrashed();
+    }
+
+    public function getMeetingsJsonAttribute()
+    {
+        if (!$this->relationLoaded('meetings')) {
+            return []; // Pastikan relasi sudah di-load
+        }
+
+        return $this->meetings->map(function ($meeting) {
+            return [
+                'id' => $meeting->id,
+                'meeting_name' => $meeting->meeting_name,
+                'participants' => $meeting->relationLoaded('participants')
+                    ? $meeting->participantRelasion->map(function ($user) {
+                        return [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                        ];
+                    })->values()->all()
+                    : []
+            ];
+        })->values()->all();
+    }
+
     public function getEndDateEmailShowAttribute()
     {
         return Carbon::parse($this->end_date);

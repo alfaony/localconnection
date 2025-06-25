@@ -98,6 +98,7 @@ use App\Http\Controllers\BroadcastAuthController;
 use App\Http\Controllers\PotentialVendorController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\GoogleMeetController;
+use App\Http\Controllers\MomController;
 
 
 
@@ -493,6 +494,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('meeting/join', [MeetingController::class, 'join'])->name('meeting.join');
   Route::resource('meeting', MeetingController::class);
 });
+
+Route::resource('mom', MomController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
