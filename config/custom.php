@@ -140,5 +140,16 @@ return
       [
          'online' => 'Online',
          'offline' => 'Offline',
-      ]
+      ],
+
+      "day_name_code" => 
+      [
+         'MO' => 'Senin',
+         'TU' => 'Selasa',
+         'WE' => 'Rabu',
+         'TH' => 'Kamis',
+         'FR' => 'Jumat',
+         'SA' => 'Sabtu',
+         'SU' => 'Minggu',
+      ],
 ];
