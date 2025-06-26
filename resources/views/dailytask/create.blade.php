@@ -90,20 +90,63 @@
                                         </div>
                                         <div class="form-group">
                                             <label for="type_id">Jenis Tugas</label>
-                                            <select name="type_id[]" id="type_id" class="form-control" required>
-                                                <option value="" selected disabled>Pilih Tipe</option>
+                                            <select name="type_id[]" id="type_id" class="form-control" required onchange="toggleRecurringPanel(this)">
                                                 @foreach($types as $type)
-                                                    <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                                    <option value="{{ $type->id }}" {{ $type->is_default ? 'selected' : '' }}>{{ $type->name }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
                                         <!-- Checkbox Hari -->
-                                        <div id="day-checkboxes" style="display:none;">
-                                            <label>Pilih Hari:</label>
-                                            <div>
-                                                @foreach($days as $day => $value)
-                                                <input type="checkbox" name="days[]" value="{{ $day }}"> {{ ucfirst($value) }}
+                                        <div id="recurring-panel" class="bg-light p-3 rounded shadow-sm mb-3" style="display: none;">
+                                            <h5 class="mb-3">Pengaturan Tugas Berulang</h5>
+
+                                            <!-- Frekuensi (default: DAILY) -->
+                                            <div class="form-group mb-3">
+                                                <label for="recurring_frequency">Frekuensi</label>
+                                                <select name="recurring[0][frequency]" id="recurring_frequency" class="form-control" onchange="handleFrequencyChange(this)">
+                                                    <option value="DAILY" selected>Setiap Hari</option>
+                                                    <option value="WEEKLY">Setiap Minggu</option>
+                                                    <option value="MONTHLY">Setiap Bulan</option>
+                                                    <option value="YEARLY">Setiap Tahun</option>
+                                                </select>
+                                            </div>
+
+                                            <!-- WEEKLY -->
+                                            <div class="form-group mb-3" id="by-day-group" style="display:none;">
+                                                <label>Pilih Hari</label><br>
+                                                @foreach($days as $code => $label)
+                                                    <label class="mr-3">
+                                                        <input type="checkbox" name="recurring[0][by_day][]" value="{{ $code }}"> {{ $label }}
+                                                    </label>
                                                 @endforeach
+                                            </div>
+
+                                            <!-- MONTHLY & YEARLY -->
+                                            <div class="form-group mb-3" id="by-month-day-group" style="display:none;">
+                                                <label>Tanggal dalam Bulan</label>
+                                                <select id="by_month_day_select" name="recurring[0][by_month_day][]" class="form-control" multiple>
+                                                    @foreach(range(1,31) as $day)
+                                                        <option value="{{ $day }}">{{ $day }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <small class="form-text text-muted">Pilih satu atau lebih tanggal.</small>
+                                            </div>
+
+                                            <!-- YEARLY -->
+                                            <div class="form-group mb-3" id="by-month-group" style="display:none;">
+                                                <label>Bulan dalam Tahun</label>
+                                                <select name="recurring[0][by_month][]" id="by_month_select" class="form-control" multiple>
+                                                    <option value="">Pilih Bulan</option>
+                                                    @foreach(range(1,12) as $month)
+                                                        <option value="{{ $month }}">{{ \Carbon\Carbon::create()->month($month)->isoFormat('MMMM') }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <!-- UNTIL -->
+                                            <div class="form-group mb-3" id="recurring-until-group">
+                                                <label>Berulang Sampai</label>
+                                                <input type="date" name="recurring[0][until]" class="form-control">
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -147,6 +190,62 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
+<script>
+    function toggleRecurringPanel(selectEl) 
+    {
+        const selectedText = selectEl.options[selectEl.selectedIndex]?.text.toLowerCase();
+        const recurringPanel = document.getElementById('recurring-panel');
+        const freqSelect = document.getElementById('recurring_frequency');
+
+        console.log("here");
+        
+        if (selectedText?.includes('recurring')) {
+            recurringPanel.style.display = 'block';
+
+            // Set default to DAILY and trigger its behavior
+            freqSelect.value = 'DAILY';
+            handleFrequencyChange(freqSelect);
+
+        } else {
+            recurringPanel.style.display = 'none';
+
+            // Reset all inside recurring-panel
+            document.querySelectorAll('#recurring-panel input, #recurring-panel select').forEach(el => {
+                if (el.type === 'checkbox') el.checked = false;
+                else el.value = '';
+            });
+            handleFrequencyChange({ value: '' });
+        }
+    }
+
+    function handleFrequencyChange(selectEl) 
+    {
+        const freq = selectEl.value;
+
+        // Toggle tampilan sesuai frekuensi
+        document.getElementById('by-day-group').style.display = freq === 'WEEKLY' ? 'block' : 'none';
+        document.getElementById('by-month-day-group').style.display = freq === 'MONTHLY' ? 'block' : 'none';
+        document.getElementById('by-month-group').style.display = freq === 'YEARLY' ? 'block' : 'none';
+        document.getElementById('recurring-until-group').style.display = freq ? 'block' : 'none';
+
+        // Inisialisasi Select2 sesuai konteks
+        if (freq === 'MONTHLY') {
+            $('#by_month_day_select').select2({
+                placeholder: 'Pilih tanggal...',
+                allowClear: true,
+                width: '100%'
+            });
+        }
+
+        if (freq === 'YEARLY') {
+            $('#by_month_select').select2({
+                placeholder: 'Pilih bulan...',
+                allowClear: true,
+                width: '100%'
+            });
+        }
+    }
+</script>
 <script>
     $(document).ready(function() 
     {
@@ -390,18 +489,12 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var selectType = document.getElementById('type_id');
-        var dayCheckboxes = document.getElementById('day-checkboxes');
 
         if (selectType) {
             selectType.addEventListener('change', function() {
                 // Ganti dengan UUID dari tipe recurring yang sesuai
                 var recurringUUID = '{{ $dailyTaskTypeRecurring->id }}';
                 
-                if (this.value === recurringUUID) {
-                    dayCheckboxes.style.display = 'block'; // Tampilkan checkbox hari
-                } else {
-                    dayCheckboxes.style.display = 'none'; // Sembunyikan checkbox hari
-                }
             });
         } else {
             console.error('Element with id "type_id" not found.');
