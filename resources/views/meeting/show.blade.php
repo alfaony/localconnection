@@ -40,7 +40,7 @@
                                     <h3 class="info-box-text font-weight-bold text-primary mb-1">{{ $meeting->meeting_name }}</h3>
                                     <span class="info-box-number mb-2">
                                         <i class="fas fa-tag mr-1 text-muted"></i>
-                                        {{ $meeting->meeting_type == 'online' ? 'Rapat Online' : 'Rapat Offline' }}
+                                        {{ $meeting->meeting_type == 'offline' ? 'Rapat Offline' : 'Rapat Online' }}
                                     </span>
                                     <div class="text-muted" style="max-height: 50vh; overflow-y: auto;">
                                         <i class="fas fa-clipboard-list mr-1"></i>
