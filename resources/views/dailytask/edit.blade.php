@@ -36,7 +36,7 @@
     <div class="card shadow-sm p-3 mt-3">
         <div class="card-body">
             <h2>Edit Tugas Harian</h2>
-            <form action="{{ route('dailytask.update', $dailytask->slug) }}" method="POST">
+            <form id="task-form" action="{{ route('dailytask.update', $dailytask->slug) }}" method="POST">
                 @csrf
                 @method('PUT')
 
@@ -242,6 +242,29 @@
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function () 
+    {
+        const form = document.getElementById('task-form');
+
+        if (form) {
+            form.addEventListener('submit', function () {
+                const freq = document.getElementById('recurring_frequency')?.value;
+
+                if (freq !== 'WEEKLY') {
+                    document.querySelectorAll('[name^="recurring[by_day]"]').forEach(el => el.remove());
+                }
+
+                if (freq !== 'MONTHLY' && freq !== 'YEARLY') {
+                    document.querySelectorAll('[name^="recurring[by_month_day]"]').forEach(el => el.remove());
+                }
+
+                if (freq !== 'YEARLY') {
+                    document.querySelectorAll('[name^="recurring[by_month]"]').forEach(el => el.remove());
+                }
+            });
+        }
+    });
+
     function toggleRecurringPanel(selectEl) {
         const selectedText = selectEl.options[selectEl.selectedIndex]?.text.toLowerCase();
         const recurringPanel = document.getElementById('recurring-panel');

@@ -197,7 +197,7 @@
                 alert('Tanggal berakhir harus setelah tanggal mulai');
                 $(this).val('');
             }
-        });
+        }); 
 
         $('#end_time').on('change', function () {
             if ($('#start_date').val() === $('#end_date').val()) {

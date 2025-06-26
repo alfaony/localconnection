@@ -245,7 +245,6 @@ class DailyTaskController extends Controller
 
                 }
 
-
                 $dailyTask = new DailyTask();
                 $dailyTask->user_id = Auth::user()->id;
                 $dailyTask->task_status_id = $status->id;
@@ -262,14 +261,12 @@ class DailyTaskController extends Controller
                 $dailyTask->objective_id = $objectives[$i] ?? NULL;
                 $dailyTask->recurring_days = $recurring_days;
                 
-                $dailyTask->save();
-
+                // Menyimpan recurring
                 if (DailyTaskType::find($typeIds[$i])->name  == ParamSchema::RECURRING) 
                 {
                     $recurring = $request->input("recurring.$i");
 
-                    $check =  RecurringRule::create([
-                        'daily_task_id' => $dailyTask->id,
+                    $recurringRule =  RecurringRule::create([
                         'frequency' => $recurring['frequency'],
                         'interval' => 1,
                         'by_day' => $recurring['by_day'] ?? null,
@@ -279,7 +276,10 @@ class DailyTaskController extends Controller
                         'start_date' => $dailyTask->start_date,
                     ]);
 
+                    $dailyTask->recurring_rule_id = $recurringRule->id;
                 }
+
+                $dailyTask->save();
 
                 // Menyimpan custom_field
                 if (isset($request->custom_field_values)) {
@@ -640,7 +640,7 @@ class DailyTaskController extends Controller
             // dd($request->all());
             // Reccruing
             // if ($oldType != $newType && DailyTaskType::find($newType)->name  == ParamSchema::RECURRING) 
-            if (DailyTaskType::find($newType)->name  == ParamSchema::RECURRING) 
+            if (DailyTaskType::find($newType)->name == ParamSchema::RECURRING) 
             {
                 $rec = $request->input('recurring');
                 $rule = $dailyTask->recurringRule;
@@ -653,27 +653,48 @@ class DailyTaskController extends Controller
                     'by_month' => $rec['by_month'] ?? null,
                     'until' => $rec['until'] ?? null,
                     'start_date' => $dailyTask->start_date,
+                    'description' => $dailyTask->description ?? null,
                 ];
+
+                switch ($rec['frequency']) 
+                {
+                    case 'DAILY':
+
+                    case 'WEEKLY':
+                        $recurringData['by_day'] = $rec['by_day'] ?? null;
+                        break;
+
+                    case 'MONTHLY':
+                        $recurringData['by_month_day'] = $rec['by_month_day'] ?? null;
+                        break;
+
+                    case 'YEARLY':
+                        $recurringData['by_month_day'] = $rec['by_month_day'] ?? null;
+                        $recurringData['by_month'] = $rec['by_month'] ?? null;
+                        break;
+                }
 
                 if ($rule) {
                     $rule->update($recurringData);
-                } else 
-                {
-                    $dailyTask->recurringRule()->create($recurringData);
+                } else {
+                    // Create recurring rule, lalu assign ke task
+                    $newRule = RecurringRule::create($recurringData);
+                    $dailyTask->recurring_rule_id = $newRule->id;
+                    $dailyTask->save();
                 }
-            }else 
+            }
+            else
             {
-                // Jika tadinya recurring tapi sekarang tidak
-                if ($task->recurringRule) 
+                if ($dailyTask->recurringRule) 
                 {
-                    $dailyTask->recurringRule->delete();
+                    $this->setrecurringToNull($dailyTask, true);
                 }
             }
             
-            if ($oldType != $newType && DailyTaskType::find($newType)->name  == "Daily")
-            {
-                $this->setrecurringToNull($dailyTask);
-            } 
+            // if ($oldType != $newType && DailyTaskType::find($newType)->name  == "Daily")
+            // {
+            //     $this->setrecurringToNull($dailyTask);
+            // } 
 
             $this->message($dailyTask->id,'edit','Mengubah Task '.$dailyTask->name);
 
@@ -1788,22 +1809,34 @@ class DailyTaskController extends Controller
         }
     }
 
-    protected function setrecurringToNull($dailyTask)
+    protected function setrecurringToNull(DailyTask $dailyTask, $affectAll = true)
     {
-        $dailyTaskOneGroup = DailyTask::where('recurring_group_id',$dailyTask->recurring_group_id)->get();
-        if($dailyTaskOneGroup->count() != 0)
-        {
-            $types = DailyTaskType::where('name','Daily')->firstOrFail();
+        $rule = $dailyTask->recurringRule;
 
-            foreach ($dailyTaskOneGroup as $task) 
-            {
-                $task->recurring_group_id = NULL;
-                $task->recurring_days = NULL;
-                $task->daily_task_type_id = $types->id;
+        if (!$rule) return;
+
+        $typeDaily = DailyTaskType::where('name', ParamSchema::DAILY)->firstOrFail();
+
+        if ($affectAll) 
+        {
+            $allTasks = $rule->dailyTask()->get();
+
+            foreach ($allTasks as $task) {
+                $task->recurring_rule_id = null;
+                $task->daily_task_type_id = $typeDaily->id;
                 $task->save();
 
-                $this->message($task->id,'trash','System Recurring Tugas '.$task->name.' dihapus');
+                $this->message($task->id, 'trash', 'System Recurring Tugas ' . $task->name . ' dihapus');
             }
+
+            $rule->delete();
+        } else {
+            // Hanya cabut dari 1 task saja
+            $dailyTask->recurring_rule_id = null;
+            $dailyTask->daily_task_type_id = $typeDaily->id;
+            $dailyTask->save();
+
+            $this->message($dailyTask->id, 'trash', 'System Memisahkan Tugas ' . $dailyTask->name . ' dari recurring');
         }
     }
 }

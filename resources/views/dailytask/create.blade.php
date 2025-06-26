@@ -92,7 +92,7 @@
                                             <label for="type_id">Jenis Tugas</label>
                                             <select name="type_id[]" id="type_id" class="form-control" required onchange="toggleRecurringPanel(this)">
                                                 @foreach($types as $type)
-                                                    <option value="{{ $type->id }}" {{ $type->is_dafault ? 'selected' : '' }}>{{ $type->name }}</option>
+                                                    <option value="{{ $type->id }}" {{ $type->is_default ? 'selected' : '' }}>{{ $type->name }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
