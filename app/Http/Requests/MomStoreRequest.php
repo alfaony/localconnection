@@ -20,7 +20,7 @@ class MomStoreRequest extends FormRequest
     {
         return [
             'mom_date' => ['required', 'date'],
-            'project_id' => ['required', 'uuid'],
+            'project_id' => ['nullable', 'uuid', 'exists:projects,id'],
             'meeting_id' => ['nullable', 'exists:meetings,id'],
             'notes' => ['nullable', 'string'],
             'agendas' => ['required', 'array', 'min:1'],

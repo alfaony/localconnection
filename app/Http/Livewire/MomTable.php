@@ -27,7 +27,7 @@ class MomTable extends Component
             ->byCompany(Auth::user()->company_id)
             ->where('mom_date', 'like', "%{$this->search}%")
             ->orWhereHas('project', fn($q) => $q->where('title', 'like', "%{$this->search}%"))
-            ->orderByDesc('mom_date')
+            ->orderByDesc('created_at')
             ->paginate(10);
 
         return view('livewire.mom-table', compact('moms'));

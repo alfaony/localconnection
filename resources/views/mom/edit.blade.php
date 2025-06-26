@@ -2,8 +2,9 @@
 @section('content')
     <div class="row">
         <div class="col-md-12 mx-auto mt-4">
-            <form id="momForm" action="{{ route('mom.store') }}" method="POST">
+            <form action="{{ route('mom.update', $mom->id) }}" method="POST">
                 @csrf
+                @method('PUT')
                 <!-- MoM Info -->
                 <div class="card mb-4">
                     <div class="card-header">
@@ -15,7 +16,7 @@
                                 <label for="mom_date" class="form-label">
                                     <i class="far fa-calendar-alt"></i>Tanggal
                                 </label>
-                                <input type="date" class="form-control" id="mom_date" name="mom_date" value="{{ $mom->mom_date }}" required>
+                                <input type="date" class="form-control" value="{{ $mom->mom_date }}" readonly>
                             </div>
                             <div class="col-md-6 mb-4">
                                 <label for="project_id" class="form-label">
@@ -65,8 +66,16 @@
                             <label for="notes" class="form-label">
                                 <i class="fas fa-sticky-note"></i>Catatan Umum
                             </label>
-                            <input class="thriveEditor form-control" id="description_notes" data-ids="notes" name="notes" placeholder="yang akan dicetak di perjanjian"/>
+                            <input class="thriveEditor form-control" id="description_notes" data-ids="notes" name="notes" value="{{ $mom->notes }}" placeholder="yang akan dicetak di perjanjian"/>
                         </div>
+                    </div>
+                </div>
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-end">
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i> Ubah
+                        </button>
                     </div>
                 </div>
             </form>

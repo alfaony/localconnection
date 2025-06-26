@@ -95,7 +95,7 @@ class MomController extends Controller
      */
     public function show(Mom $mom)
     {
-        //
+        return view('mom.show', compact('mom'));
     }
 
     /**
@@ -123,7 +123,14 @@ class MomController extends Controller
      */
     public function update(Request $request, Mom $mom)
     {
-        //
+        $request->validate([
+            'project_id' => 'nullable|uuid|exists:projects,id',
+            'meeting_id' => 'nullable|exists:meetings,id',
+            'notes' => 'nullable|string',
+        ]);
+
+        $mom->update($request->all());
+        return redirect()->route('mom.index')->with('update', true);
     }
 
     /**
@@ -136,5 +143,25 @@ class MomController extends Controller
     {
         $mom->delete();
         return redirect()->route('mom.index')->with('delete', true);
+    }
+    
+
+    protected function storeDailyTask()
+    {
+        $dailyTask = new DailyTask();
+        $dailyTask->user_id = Auth::user()->id;
+        $dailyTask->task_status_id = $status->id;
+        $dailyTask->start_date = $startDates[$i] ?? NULL; 
+        $dailyTask->end_date = $endDates[$i] ?? NULL;
+        $dailyTask->assignment_user_id = $assignmentUserIds[$i] ?? NULL;
+        $dailyTask->daily_task_category_id = $categoryIds[$i];
+        $dailyTask->daily_task_type_id = $typeIds[$i];
+        $dailyTask->project_id = $dataProjects[$i] ?? NULL;
+        $dailyTask->daily_task_project_id = $projectIds[$i] ?? NULL;
+        $dailyTask->name = $names[$i];
+        $dailyTask->description = $descriptions[$i] ?? null;
+        $dailyTask->point = 0; // Assuming default value is 0
+        $dailyTask->objective_id = $objectives[$i] ?? NULL;
+
     }
 }

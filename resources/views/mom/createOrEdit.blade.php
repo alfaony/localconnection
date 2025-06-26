@@ -246,6 +246,11 @@
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
+                        <label class="form-label">Tanggal Mulai</label>
+                        <input type="date" name="agendas[${agendaIndex}][tasks][${taskIndex}][start_date]" 
+                            class="form-control" value="${task.end_date || ''}">
+                    </div>
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Tanggal Selesai</label>
                         <input type="date" name="agendas[${agendaIndex}][tasks][${taskIndex}][end_date]" 
                             class="form-control" value="${task.end_date || ''}">
@@ -277,13 +282,14 @@
         // Initialize select2
         $('.select2').select2({
             width: '100%',
-            placeholder: 'Pilih User Internal'
+            placeholder: 'Pilih User Internal',
+            allowClear: true
         });
     }
 
     function renderUserOptions(selectedId = null) 
     {
-        let html = '<option value="">-- Pilih User Internal --</option>';
+        let html = '<option>-- Pilih User Internal --</option>';
         internalUsers = @json($users);
         internalUsers.forEach(user => {
             const selected = String(user.id) === String(selectedId) ? 'selected' : '';
@@ -315,6 +321,13 @@
             <div class="row g-4">
                 <div class="col-md-6">
                     <label class="form-label">
+                        <i class="far fa-calendar-alt me-2"></i>Tanggal Mulai
+                    </label>
+                    <input type="date" name="agendas[${agendaIndex}][tasks][${taskIndex}][start_date]" 
+                        class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">
                         <i class="far fa-calendar-alt me-2"></i>Tanggal Selesai
                     </label>
                     <input type="date" name="agendas[${agendaIndex}][tasks][${taskIndex}][end_date]" 
@@ -325,7 +338,7 @@
                         <i class="fas fa-user-tie me-2"></i>Penanggung Jawab
                     </label>
                     <select name="agendas[${agendaIndex}][tasks][${taskIndex}][user_id]" class="form-select select2">
-                        <option value="">-- Pilih User Internal --</option>
+                        <option>-- Pilih User Internal --</option>
                         @foreach($users as $user)
                             <option value="{{ $user->id }}">{{ $user->name }} </option>
                         @endforeach
@@ -355,7 +368,8 @@
         // Initialize select2
         $('.select2').select2({
             width: '100%',
-            placeholder: 'Pilih User Internal'
+            placeholder: 'Pilih User Internal',
+            allowClear: true
         });
         saveDraft();
     }
@@ -690,7 +704,8 @@
             
             $('.select2').select2({
                 width: '100%',
-                placeholder: 'Pilih User Internal'
+                placeholder: 'Pilih User Internal',
+                allowClear: true
             });
             showDraftIndicator('Draft berhasil dimuat!');
 
