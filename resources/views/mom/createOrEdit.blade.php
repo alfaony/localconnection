@@ -1,5 +1,6 @@
 @extends('adminlte::page')
 @section('content')
+@include('components.alert')
     <div class="row">
         <div class="col-md-12 mx-auto mt-4">
             <form id="momForm" action="{{ route('mom.store') }}" method="POST">
@@ -21,7 +22,7 @@
                                 <label for="project_id" class="form-label">
                                     <i class="fas fa-project-diagram"></i>Project
                                 </label>
-                                <select class="form-select" id="project_id" name="project_id" required onchange="loadMeetingsFromProject(this)">
+                                <select class="form-select select2" id="project_id" name="project_id" required onchange="loadMeetingsFromProject(this)">
                                     <option value="" disabled selected>Pilih project</option>
                                     @foreach($projects as $project)
                                         <option value="{{ $project->id }}" data-meetings='@json($project->meetings_json)'>
@@ -37,8 +38,14 @@
                                 <label for="meeting_id" class="form-label">
                                     <i class="fas fa-users"></i>Meeting
                                 </label>
-                                <select class="form-select" id="meeting_id" name="meeting_id" onchange="showMeetingInfo()">
+                                <select class="form-select select2" id="meeting_id" name="meeting_id" onchange="showMeetingInfo()">
                                     <option value="">-- Pilih Meeting --</option>
+                                    @foreach($meetings as $meeting)
+                                        <option value="{{ $meeting->id }}" data-participants='@json($meeting->participantRelasion->map(fn($p) => ["id" => $p->id, "name" => $p->name]))'>
+                                            {{ $meeting->meeting_name }}
+                                        </option>
+                                    @endforeach
+
                                 </select>
                                 <div id="meetingLoading" class="mt-3 text-white bg-primary p-3 rounded" style="display: none;">
                                     <span class="loading-spinner"></span> Memuat data meeting...
@@ -138,6 +145,7 @@
     </div>
 
 @endsection
+
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
@@ -146,12 +154,28 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
 <script>
+    $(document).ready(function () {
+        // Initialize Select2 on form-select elements
+        $('.select2').select2({
+            width: '100%',
+            placeholder: '-- Pilih --',
+            allowClear: true
+        });
+    });
+</script>
+<script>
     // Global variables
     let agendaIndex = 0;
+    let taskCounter = {}; // Untuk melacak jumlah task per agenda
     let sortableAgendas;
+    let internalUsers = @json($users);
+    let objectives = @json($objectives);
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize task counter
+        taskCounter = {};
+        
         // Initialize drag and drop for agendas
         const agendaList = document.getElementById('agendaList');
         sortableAgendas = new Sortable(agendaList, {
@@ -178,6 +202,9 @@
     function addAgenda(data = null) {
         const index = agendaIndex++;
         const agendaList = document.getElementById('agendaList');
+        
+        // Inisialisasi counter untuk agenda ini
+        taskCounter[index] = 0;
         
         // Remove empty state if it's the first agenda
         if (agendaList.querySelector('.empty-state')) {
@@ -209,23 +236,112 @@
                             rows="3" placeholder="Masukkan catatan diskusi">${data?.discussion_notes || ''}</textarea>
                 </div>
                 
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Task</h5>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTask(this, ${index})">
-                        <i class="fas fa-plus me-1"></i>Tambah Task
-                    </button>
-                </div>
-                
-                <div class="task-container" id="taskContainer-${index}">
-                    ${data?.tasks ? renderTasks(data.tasks, index) : `
-                    <div class="alert alert-light border text-center py-4">
-                        <i class="fas fa-info-circle me-2"></i>Belum ada task untuk agenda ini
-                    </div>`}
+                <!-- TASK SECTION BARU -->
+                <div class="task-list-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Task</h5>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="addTaskBtn-${index}" onclick="showTaskForm(${index})">
+                            <i class="fas fa-plus me-1"></i>Tambah Task
+                        </button>
+                    </div>
+                    
+                    <!-- Task Form -->
+                    <div class="task-form mb-4" id="taskForm-${index}" style="display: none;">
+                        <h5 id="taskFormTitle-${index}" class="mb-4">Tambah Task Baru</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Judul Task</label>
+                            <input type="text" id="taskTitle-${index}" class="form-control" placeholder="Masukkan judul task">
+                        </div>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tanggal Mulai</label>
+                                <input type="date" id="taskStartDate-${index}" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tanggal Selesai</label>
+                                <input type="date" id="taskEndDate-${index}" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Penanggung Jawab</label>
+                            <select id="taskResponsible-${index}" class="form-select select2">
+                                <option value="">-- Pilih User Internal --</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- MODIFIKASI BAGIAN INI -->
+                        <div id="internal-fields-${index}" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Objective</label>
+                                <select id="taskObjective-${index}" class="form-select objective-select select2" 
+                                        onchange="loadKeyResults(this, ${index})">
+                                    <option value="" disabled selected>-- Pilih Objective --</option>
+                                    @foreach($objectives as $objective)
+                                        <option value="{{ $objective->id }}">{{ ucfirst($objective->name) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div id="keyresult-fields-container-${index}"></div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Email Eksternal (jika PJ Eksternal)</label>
+                            <input type="email" id="taskExternalEmail-${index}" class="form-control" placeholder="client@perusahaan.com">
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-secondary" onclick="hideTaskForm(${index})">Batal</button>
+                            <button type="button" id="saveTaskBtn-${index}" class="btn btn-primary" onclick="addTaskToList(${index})">Tambah Task</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Task List -->
+                    <ul id="taskList-${index}" class="task-list">
+                        ${data?.tasks ? renderTasks(data.tasks, index) : `
+                        <div class="alert alert-light border text-center py-4">
+                            <i class="fas fa-info-circle me-2"></i>Belum ada task untuk agenda ini
+                        </div>`}
+                    </ul>
                 </div>
             </div>
         </div>`;
         
         agendaList.insertAdjacentHTML('beforeend', agendaHtml);
+
+        initializeSelect2();
+        console.log("RUNNN");
+        
+        
+        // Initialize select2 for responsible select
+
+        
+        // Tambahkan event listener untuk responsible select
+        $(`#taskResponsible-${index}`).on('change', function() {
+            const internalFields = document.getElementById(`internal-fields-${index}`);
+            
+            if (this.value) {
+                // Jika user internal dipilih, tampilkan bagian Objective & Key Result
+                internalFields.style.display = 'block';
+                
+                // Buat field Objective menjadi required
+                $(`#taskObjective-${index}`).prop('required', true);
+            } else {
+                // Jika tidak, sembunyikan dan hapus required
+                internalFields.style.display = 'none';
+                $(`#taskObjective-${index}`).prop('required', false);
+                
+                // Reset nilai
+                $(`#taskObjective-${index}`).val(null).trigger('change');
+                $(`#keyresult-fields-container-${index}`).html('');
+            }
+        });
+        
         saveDraft();
     }
 
@@ -236,142 +352,285 @@
                     </div>`;
         }
         
-        return tasks.map((task, taskIndex) => `
-            <div class="task-item">
-                <div class="mb-3">
-                    <label class="form-label">Judul Task</label>
-                    <input type="text" name="agendas[${agendaIndex}][tasks][${taskIndex}][title]" 
-                        class="form-control" value="${task.title || ''}" placeholder="Judul task" required>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Tanggal Mulai</label>
-                        <input type="date" name="agendas[${agendaIndex}][tasks][${taskIndex}][start_date]" 
-                            class="form-control" value="${task.end_date || ''}">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Tanggal Selesai</label>
-                        <input type="date" name="agendas[${agendaIndex}][tasks][${taskIndex}][end_date]" 
-                            class="form-control" value="${task.end_date || ''}">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Penanggung Jawab</label>
-                        <select name="agendas[${agendaIndex}][tasks][${taskIndex}][user_id]" class="form-select select2">
-                         ${renderUserOptions(task.user_id)}
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Email Eksternal (opsional)</label>
-                    <input type="email" name="agendas[${agendaIndex}][tasks][${taskIndex}][external_email]" 
-                        class="form-control" value="${task.external_email || ''}" 
-                        placeholder="email@example.com">
-                </div>
-                
-                <div class="task-actions">
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.task-item').remove(); saveDraft();">
-                        <i class="fas fa-trash-alt me-1"></i>Hapus Task
-                    </button>
-                </div>
-            </div>
-        `).join('');
-
+        let tasksHtml = '';
         
-        // Initialize select2
-        $('.select2').select2({
-            width: '100%',
-            placeholder: 'Pilih User Internal',
-            allowClear: true
+        // PERBAIKAN 1: Gunakan indeks unik untuk setiap task
+        tasks.forEach((task, taskIndex) => {
+            const userName = getUserName(task.user_id);
+            const objectiveName = task.objective_id ? getObjectiveName(task.objective_id) : '';
+            
+            // PERBAIKAN 2: Simpan semua key result
+            let keyResultsHtml = '';
+            if (task.key_result_ids && task.key_result_ids.length > 0) {
+                task.key_result_ids.forEach(krId => {
+                    keyResultsHtml += `
+                        <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][key_result_ids][]" value="${krId}">
+                    `;
+                });
+            }
+            
+            tasksHtml += `
+                <li class="task-item">
+                    <div class="task-header">
+                        <h5 class="task-title">${task.title}</h5>
+                        <div class="task-actions">
+                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                    onclick="editTask(this, ${agendaIndex})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    onclick="deleteTask(this, ${agendaIndex})">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="task-details">
+                        ${task.start_date ? `<div><i class="far fa-calendar-alt me-2"></i> Mulai: ${task.start_date}</div>` : ''}
+                        ${task.end_date ? `<div><i class="far fa-calendar-check me-2"></i> Selesai: ${task.end_date}</div>` : ''}
+                        ${task.user_id ? `<div><i class="fas fa-user-tie me-2"></i> PJ: ${userName}</div>` : ''}
+                        ${task.external_email ? `<div><i class="fas fa-envelope me-2"></i> Email: ${task.external_email}</div>` : ''}
+                        ${task.objective_id ? `<div><i class="fas fa-bullseye me-2"></i> Objective: ${objectiveName}</div>` : ''}
+                    </div>
+                    <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][title]" value="${task.title}">
+                    <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][start_date]" value="${task.start_date}">
+                    <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][end_date]" value="${task.end_date}">
+                    <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][user_id]" value="${task.user_id}">
+                    <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][external_email]" value="${task.external_email}">
+                    <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][objective_id]" value="${task.objective_id || ''}">
+                    ${keyResultsHtml}
+                </li>
+            `;
+            
+            // Update task counter
+            taskCounter[agendaIndex] = taskIndex + 1;
         });
+        
+        return tasksHtml;
     }
 
-    function renderUserOptions(selectedId = null) 
-    {
-        let html = '<option>-- Pilih User Internal --</option>';
-        internalUsers = @json($users);
-        internalUsers.forEach(user => {
-            const selected = String(user.id) === String(selectedId) ? 'selected' : '';
-            html += `<option value="${user.id}" ${selected}>${user.name}</option>`;
-        });
-        return html;
+    function getObjectiveName(objectiveId) {
+        if (!objectiveId) return '';
+        const objective = objectives.find(o => o.id == objectiveId);
+        return objective ? objective.name : 'Objective tidak ditemukan';
     }
 
-    function addTask(btn, agendaIndex) 
-    {
-        const container = btn.previousElementSibling || btn.parentElement.nextElementSibling;
-        const taskContainer = container.closest('.task-container') || container;
-        const taskIndex = taskContainer.querySelectorAll('.task-item').length;
+    function getUserName(userId) {
+        if (!userId) return 'Belum ditentukan';
+        const user = internalUsers.find(u => u.id == userId);
+        return user ? user.name : 'Belum ditentukan';
+    }
+
+    function showTaskForm(agendaIndex) {
+        const taskForm = document.getElementById(`taskForm-${agendaIndex}`);
+        const addTaskBtn = document.getElementById(`addTaskBtn-${agendaIndex}`);
+        taskForm.style.display = 'block';
+        addTaskBtn.style.display = 'none';
+    }
+
+    function hideTaskForm(agendaIndex) {
+        const taskForm = document.getElementById(`taskForm-${agendaIndex}`);
+        const addTaskBtn = document.getElementById(`addTaskBtn-${agendaIndex}`);
+        taskForm.style.display = 'none';
+        addTaskBtn.style.display = 'block';
         
-        if (taskContainer.querySelector('.alert')) {
-            taskContainer.innerHTML = '';
+        // Reset form
+        document.getElementById(`taskTitle-${agendaIndex}`).value = '';
+        document.getElementById(`taskStartDate-${agendaIndex}`).value = '';
+        document.getElementById(`taskEndDate-${agendaIndex}`).value = '';
+        $(`#taskResponsible-${agendaIndex}`).val(null).trigger('change');
+        document.getElementById(`taskExternalEmail-${agendaIndex}`).value = '';
+        $(`#taskObjective-${agendaIndex}`).val(null).trigger('change');
+        document.getElementById(`keyresult-fields-container-${agendaIndex}`).innerHTML = '';
+        
+        // Reset form title and button
+        document.getElementById(`taskFormTitle-${agendaIndex}`).textContent = 'Tambah Task Baru';
+        document.getElementById(`saveTaskBtn-${agendaIndex}`).textContent = 'Tambah Task';
+    }
+
+    function addTaskToList(agendaIndex) 
+    {
+        const title = document.getElementById(`taskTitle-${agendaIndex}`).value;
+        const startDate = document.getElementById(`taskStartDate-${agendaIndex}`).value;
+        const endDate = document.getElementById(`taskEndDate-${agendaIndex}`).value;
+        const responsible = document.getElementById(`taskResponsible-${agendaIndex}`).value;
+        const externalEmail = document.getElementById(`taskExternalEmail-${agendaIndex}`).value;
+        
+        if (!title) {
+            alert('Judul task harus diisi!');
+            return;
         }
         
-        const taskHtml = `
-        <div class="task-item">
-            <div class="mb-4">
-                <label class="form-label">
-                    <i class="fas fa-heading me-2"></i>Judul Task
-                </label>
-                <input type="text" name="agendas[${agendaIndex}][tasks][${taskIndex}][title]" 
-                    class="form-control" placeholder="Masukkan judul task" required>
-            </div>
-            
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <label class="form-label">
-                        <i class="far fa-calendar-alt me-2"></i>Tanggal Mulai
-                    </label>
-                    <input type="date" name="agendas[${agendaIndex}][tasks][${taskIndex}][start_date]" 
-                        class="form-control">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">
-                        <i class="far fa-calendar-alt me-2"></i>Tanggal Selesai
-                    </label>
-                    <input type="date" name="agendas[${agendaIndex}][tasks][${taskIndex}][end_date]" 
-                        class="form-control">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">
-                        <i class="fas fa-user-tie me-2"></i>Penanggung Jawab
-                    </label>
-                    <select name="agendas[${agendaIndex}][tasks][${taskIndex}][user_id]" class="form-select select2">
-                        <option>-- Pilih User Internal --</option>
-                        @foreach($users as $user)
-                            <option value="{{ $user->id }}">{{ $user->name }} </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            
-            <div class="mt-4">
-                <label class="form-label">
-                    <i class="fas fa-envelope me-2"></i>Email Eksternal (opsional)
-                </label>
-                <input type="email" name="agendas[${agendaIndex}][tasks][${taskIndex}][external_email]" 
-                    class="form-control" placeholder="client@perusahaan.com">
-                <div class="form-text">Masukkan email jika task melibatkan pihak eksternal</div>
-            </div>
-            
-            <div class="task-actions">
-                <button type="button" class="btn btn-outline-danger" onclick="this.closest('.task-item').remove(); saveDraft();">
-                    <i class="fas fa-trash-alt me-2"></i>Hapus Task
-                </button>
-            </div>
-        </div>`;
+        // Validasi untuk task internal
+        let objective = '';
+        let keyResults = [];
         
-        taskContainer.insertAdjacentHTML('beforeend', taskHtml);
-
+        if (responsible) {
+            objective = document.getElementById(`taskObjective-${agendaIndex}`).value;
+            
+            if (!objective) {
+                alert('Objective harus dipilih untuk task internal!');
+                return;
+            }
+            
+            const keyResultContainer = document.getElementById(`keyresult-fields-container-${agendaIndex}`);
+            const keyResultSelect = keyResultContainer.querySelector('select.keyresult-select');
+            
+            if (keyResultSelect) {
+                // PERBAIKAN: Ambil semua key result yang dipilih
+                const selectedOptions = Array.from(keyResultSelect.selectedOptions);
+                
+                if (selectedOptions.length === 0) {
+                    alert('Pilih minimal satu Key Result untuk task internal!');
+                    return;
+                }
+                
+                keyResults = selectedOptions.map(option => option.value);
+            } else {
+                alert('Key Result tidak tersedia untuk objective ini!');
+                return;
+            }
+        }
         
-        // Initialize select2
-        $('.select2').select2({
-            width: '100%',
-            placeholder: 'Pilih User Internal',
-            allowClear: true
+        const taskList = document.getElementById(`taskList-${agendaIndex}`);
+        
+        // Remove placeholder if exists
+        if (taskList.querySelector('.alert')) {
+            taskList.innerHTML = '';
+        }
+        
+        const userName = $(`#taskResponsible-${agendaIndex} option:selected`).text() || 'Belum ditentukan';
+        const objectiveName = objective ? getObjectiveName(objective) : '';
+        
+        // PERBAIKAN 1: Gunakan indeks unik untuk task
+        const taskIndex = taskCounter[agendaIndex] || 0;
+        taskCounter[agendaIndex] = taskIndex + 1;
+        
+        // PERBAIKAN 2: Simpan semua key result
+        let keyResultsHtml = '';
+        keyResults.forEach(krId => {
+            keyResultsHtml += `
+                <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][key_result_ids][]" value="${krId}">
+            `;
         });
+        
+        const taskHtml = `
+            <li class="task-item">
+                <div class="task-header">
+                    <h5 class="task-title">${title}</h5>
+                    <div class="task-actions">
+                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                onclick="editTask(this, ${agendaIndex})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="deleteTask(this, ${agendaIndex})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="task-details">
+                    ${startDate ? `<div><i class="far fa-calendar-alt me-2"></i> Mulai: ${startDate}</div>` : ''}
+                    ${endDate ? `<div><i class="far fa-calendar-check me-2"></i> Selesai: ${endDate}</div>` : ''}
+                    ${responsible ? `<div><i class="fas fa-user-tie me-2"></i> PJ: ${userName}</div>` : ''}
+                    ${externalEmail ? `<div><i class="fas fa-envelope me-2"></i> Email: ${externalEmail}</div>` : ''}
+                    ${objective ? `<div><i class="fas fa-bullseye me-2"></i> Objective: ${objectiveName}</div>` : ''}
+                </div>
+                <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][title]" value="${title}">
+                <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][start_date]" value="${startDate}">
+                <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][end_date]" value="${endDate}">
+                <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][user_id]" value="${responsible}">
+                <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][external_email]" value="${externalEmail}">
+                <input type="hidden" name="agendas[${agendaIndex}][tasks][${taskIndex}][objective_id]" value="${objective}">
+                ${keyResultsHtml}
+            </li>
+        `;
+        
+        taskList.insertAdjacentHTML('beforeend', taskHtml);
+        hideTaskForm(agendaIndex);
         saveDraft();
+    }
+
+    function editTask(btn, agendaIndex) {
+        const taskItem = btn.closest('.task-item');
+        const title = taskItem.querySelector('.task-title').textContent;
+        
+        // Get values from hidden inputs
+        const hiddenInputs = taskItem.querySelectorAll('input[type="hidden"]');
+        const taskData = {
+            title: taskItem.querySelector('input[name$="[title]"]').value,
+            start_date: taskItem.querySelector('input[name$="[start_date]"]').value,
+            end_date: taskItem.querySelector('input[name$="[end_date]"]').value,
+            user_id: taskItem.querySelector('input[name$="[user_id]"]').value,
+            external_email: taskItem.querySelector('input[name$="[external_email]"]').value,
+            objective_id: taskItem.querySelector('input[name$="[objective_id]"]')?.value || '',
+            key_result_ids: []
+        };
+        
+        // Collect key result IDs
+        const keyResultInputs = taskItem.querySelectorAll('input[name$="[key_result_ids][]"]');
+        keyResultInputs.forEach(input => {
+            taskData.key_result_ids.push(input.value);
+        });
+        
+        // Fill the form
+        document.getElementById(`taskTitle-${agendaIndex}`).value = taskData.title;
+        document.getElementById(`taskStartDate-${agendaIndex}`).value = taskData.start_date || '';
+        document.getElementById(`taskEndDate-${agendaIndex}`).value = taskData.end_date || '';
+        $(`#taskResponsible-${agendaIndex}`).val(taskData.user_id).trigger('change');
+        document.getElementById(`taskExternalEmail-${agendaIndex}`).value = taskData.external_email || '';
+        
+        // Handle objective and key results
+        const internalFields = document.getElementById(`internal-fields-${agendaIndex}`);
+        
+        if (taskData.user_id) {
+            internalFields.style.display = 'block';
+            
+            if (taskData.objective_id) {
+                $(`#taskObjective-${agendaIndex}`).val(taskData.objective_id).trigger('change');
+                
+                // Load key results after a delay to allow AJAX to complete
+                setTimeout(() => {
+                    const keyResultContainer = document.getElementById(`keyresult-fields-container-${agendaIndex}`);
+                    const keyResultSelect = keyResultContainer.querySelector('.keyresult-select');
+                    
+                    if (keyResultSelect) {
+                        $(keyResultSelect).val(taskData.key_result_ids).trigger('change');
+                    }
+                }, 500);
+            }
+        } else {
+            internalFields.style.display = 'none';
+        }
+        
+        // Change form title and button
+        document.getElementById(`taskFormTitle-${agendaIndex}`).textContent = 'Edit Task';
+        document.getElementById(`saveTaskBtn-${agendaIndex}`).textContent = 'Update Task';
+        
+        // Show the form
+        showTaskForm(agendaIndex);
+        
+        // Remove the old task item
+        taskItem.remove();
+        
+        // Save draft after removal
+        saveDraft();
+    }
+
+    function deleteTask(btn, agendaIndex) {
+        if (confirm('Apakah Anda yakin ingin menghapus task ini?')) {
+            const taskItem = btn.closest('.task-item');
+            taskItem.remove();
+            
+            const taskList = document.getElementById(`taskList-${agendaIndex}`);
+            if (taskList.children.length === 0) {
+                taskList.innerHTML = `
+                <div class="alert alert-light border text-center py-4">
+                    <i class="fas fa-info-circle me-2"></i>Belum ada task untuk agenda ini
+                </div>`;
+            }
+            
+            saveDraft();
+        }
     }
 
     function loadMeetingsFromProject(select) {
@@ -419,6 +678,27 @@
                 showMeetingInfo();
             }
         }, 800);
+    }
+
+    function initializeSelect2() 
+    {
+        $('.select3').select2({
+            placeholder: 'Pilih',
+            allowClear: true,
+            width: '100%',            
+        });
+
+        $('.select2').select2({
+            placeholder: 'Pilih',
+            allowClear: true,
+            width: '100%',            
+        });
+
+        $('.category-select3').select2();
+
+        $('.attachment-input').on('change', function() {
+            validateAttachments(this);
+        });
     }
 
     function showMeetingInfo() {
@@ -493,34 +773,20 @@
         agendaItems.forEach((item, index) => {
             const title = item.querySelector('input[name*="[title]"]').value;
             const notes = item.querySelector('textarea').value;
-            const tasks = item.querySelectorAll('.task-item');
+            const taskList = item.querySelector('.task-list');
             
             let taskHtml = '';
-            if (tasks.length > 0) {
-                tasks.forEach(task => {
-                    const taskTitle = task.querySelector('input[name*="[title]"]').value || 'Task tanpa judul';
-                    const endDate = task.querySelector('input[name*="[end_date]"]').value || 'Belum ditentukan';
-                    const user = task.querySelector('select[name*="[user_id]"]').options[task.querySelector('select[name*="[user_id]"]').selectedIndex].text || 'Belum ditentukan';
-                    const email = task.querySelector('input[name*="[external_email]"]').value || 'Tidak ada';
+            if (taskList && taskList.children.length > 0) {
+                taskList.querySelectorAll('.task-item').forEach(task => {
+                    const taskTitle = task.querySelector('.task-title').textContent;
+                    const taskDetails = task.querySelector('.task-details').innerHTML;
                     
                     taskHtml += `
                     <li class="list-group-item mb-2 border rounded p-3">
                         <div class="fw-bold">${taskTitle}</div>
-                        <div class="d-flex justify-content-between mt-2">
-                            <div>
-                                <i class="fas fa-calendar-day me-2"></i>
-                                <span>Tanggal: ${endDate}</span>
-                            </div>
-                            <div>
-                                <i class="fas fa-user me-2"></i>
-                                <span>PJ: ${user}</span>
-                            </div>
+                        <div class="task-details mt-2">
+                            ${taskDetails}
                         </div>
-                        ${email ? `
-                        <div class="mt-2">
-                            <i class="fas fa-envelope me-2"></i>
-                            <span>Email: ${email}</span>
-                        </div>` : ''}
                     </li>`;
                 });
             } else {
@@ -636,12 +902,27 @@
             
             const tasks = [];
             item.querySelectorAll('.task-item').forEach(task => {
-                const title = task.querySelector(`input[name$="[title]"]`).value;
+                const title = task.querySelector('.task-title').textContent;
+                const start_date = task.querySelector(`input[name$="[start_date]"]`).value;
                 const end_date = task.querySelector(`input[name$="[end_date]"]`).value;
-                const user_id = task.querySelector(`select[name$="[user_id]"]`).value;
+                const user_id = task.querySelector(`input[name$="[user_id]"]`).value;
                 const external_email = task.querySelector(`input[name$="[external_email]"]`).value;
+                const objective_id = task.querySelector(`input[name$="[objective_id]"]`)?.value || '';
                 
-                tasks.push({ title, end_date, user_id, external_email });
+                const key_result_ids = [];
+                task.querySelectorAll('input[name$="[key_result_ids][]"]').forEach(input => {
+                    key_result_ids.push(input.value);
+                });
+                
+                tasks.push({ 
+                    title, 
+                    start_date, 
+                    end_date, 
+                    user_id, 
+                    external_email,
+                    objective_id,
+                    key_result_ids
+                });
             });
             
             agendas.push({ title, discussion_notes, tasks });
@@ -683,8 +964,6 @@
             // Add agendas from draft
             if (data.agendas && data.agendas.length > 0) {
                 data.agendas.forEach(agenda => {
-                    console.log(agenda);
-                    
                     addAgenda(agenda);
                 });
             } else {
@@ -708,9 +987,6 @@
                 allowClear: true
             });
             showDraftIndicator('Draft berhasil dimuat!');
-
-            console.log("dari 1");
-            
         }
         else if (saved) 
         {
@@ -760,13 +1036,12 @@
             
             $('.select2').select2({
                 width: '100%',
+                allowClear: true,
                 placeholder: 'Pilih User Internal'
             });
             showDraftIndicator('Draft berhasil dimuat!');
-
-            console.log("dari 2");
         } else {
-            alert('Tidak ada draft yang tersimpan.');
+            console.log('Tidak ada draft yang tersimpan.');
         }
     }
 
@@ -833,6 +1108,52 @@
         previewModal.show();
     }
 
+    function loadKeyResults(select, agendaIndex) {
+        const objectiveId = select.value;
+        const container = document.getElementById(`keyresult-fields-container-${agendaIndex}`);
+        const responsible = document.getElementById(`taskResponsible-${agendaIndex}`).value;
+        
+        if (objectiveId && responsible) {
+            // Tampilkan loading
+            container.innerHTML = '<p class="text-center py-2">Memuat key results...</p>';
+            
+            // Kirim parameter is_required
+            fetch(`/objective/getresult/${objectiveId}?index=${agendaIndex}&is_required=true`)
+                .then(response => response.text())
+                .then(data => {
+                    container.innerHTML = data;
+                    // Inisialisasi ulang select2
+                    $(container).find('.select2').select2();
+                    initializeSelect2ForContainer(agendaIndex);
+                })
+                .catch(error => {
+                    container.innerHTML = '<p class="text-danger text-center py-2">Gagal memuat key results</p>';
+                    console.error('Error:', error);
+                });
+        } else {
+            container.innerHTML = '';
+        }
+    }
+
+    function initializeSelect2() 
+    {
+        $('.select3').select2({
+            placeholder: 'Pilih',
+        });
+        $('.category-select3').select2();
+
+        $('.attachment-input').on('change', function() {
+            validateAttachments(this);
+        });
+    }
+
+    function initializeSelect2ForContainer(index) 
+    {
+        $('.select2-single-'+index+', .select2-multiple-'+index+'').select2({
+            width: '100%' // Adjust width as needed
+        });
+    }
+
     // Form submission
     document.getElementById('momForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -849,8 +1170,6 @@
         
         // Show success message
         document.getElementById('momForm').submit();
-        
-        // In a real app, you would submit the form to the server here
     });
 </script>
 @endsection
@@ -861,27 +1180,49 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #3c8dbc;
-            --secondary-color: #f4f4f4;
-            --accent-color: #00c0ef;
-            --danger-color: #dd4b39;
-            --success-color: #00a65a;
-            --warning-color: #f39c12;
+        /* CSS untuk Task Form dan List */
+        .task-list-container {
+            margin-top: 20px;
         }
         
+        .task-form {
+            background-color: #eef7ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .task-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .task-item {
+            background-color: #f8f9fa;
+            border-left: 3px solid #3c8dbc;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* Existing styles */
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding-bottom: 60px;
-        }
-        
-        .header-container {
-            background: linear-gradient(120deg, var(--primary-color), #2672a8);
-            color: white;
-            padding: 25px 0;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
         .card {
@@ -921,15 +1262,6 @@
             text-align: center;
         }
         
-        .meeting-info {
-            background-color: #f0f8ff;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-            border-left: 4px solid var(--accent-color);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        
         .participant-badge {
             background-color: #e3f2fd;
             color: #1565c0;
@@ -941,11 +1273,6 @@
             align-items: center;
             margin: 5px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        
-        .participant-badge i {
-            margin-right: 5px;
-            font-size: 0.9em;
         }
         
         .empty-meeting {
@@ -1000,22 +1327,6 @@
             background-color: #f5f5f5;
             border-radius: 4px;
             margin-right: 10px;
-        }
-        
-        .task-item {
-            background-color: #f9f9f9;
-            border-left: 3px solid var(--accent-color);
-            margin-bottom: 15px;
-            padding: 18px;
-            border-radius: 8px;
-            transition: all 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-        }
-        
-        .task-item:hover {
-            background-color: #f0f8ff;
-            transform: translateX(5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
         }
         
         .empty-state {
@@ -1113,22 +1424,6 @@
             margin-right: 8px;
         }
         
-        .btn-success {
-            background: linear-gradient(to right, var(--success-color), #00c853);
-            border: none;
-        }
-        
-        .btn-info {
-            background: linear-gradient(to right, var(--accent-color), #00bcd4);
-            border: none;
-        }
-        
-        .btn-warning {
-            background: linear-gradient(to right, var(--warning-color), #ff9800);
-            border: none;
-            color: white;
-        }
-        
         .drag-over {
             background-color: rgba(60, 141, 188, 0.15);
             border: 2px dashed var(--primary-color);
@@ -1184,73 +1479,10 @@
                 width: 100%;
             }
         }
-    </style>
-    <style>
-        /* PERBAIKAN UTAMA PADA TASK ITEM */
-        .task-item {
-            background-color: #f9f9f9;
-            border-left: 3px solid var(--accent-color);
-            margin-bottom: 20px;
-            padding: 25px;
-            border-radius: 10px;
-            transition: all 0.2s;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
-        }
         
-        .task-item:hover {
-            background-color: #f0f8ff;
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-        
-        .task-item .form-control,
-        .task-item .form-select {
-            padding: 14px 18px;
-            font-size: 1.05rem;
-            border-radius: 8px;
-            border: 1px solid #d1d1d1;
-            transition: all 0.3s;
-        }
-        
-        .task-item .form-control:focus,
-        .task-item .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(60, 141, 188, 0.2);
-        }
-        
-        .task-item .form-label {
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 1.05rem;
-            margin-bottom: 12px;
-        }
-        
-        .task-actions {
-            margin-top: 25px;
-            display: flex;
-            justify-content: flex-end;
-        }
-        
-        .task-actions .btn {
-            padding: 10px 25px;
-            font-weight: 600;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-        }
-        
-        /* PERBAIKAN TAMBAHAN UNTUK KESELARASAN */
         :root {
             --primary-color: #3c8dbc;
             --accent-color: #00c0ef;
-        }
-        
-        .agenda-item {
-            margin-bottom: 30px;
-        }
-        
-        .agenda-header {
-            padding: 18px 25px;
         }
         .select2-container--default .select2-selection--single 
         {
@@ -1268,5 +1500,6 @@
             color: #fe0700 !important;
             border: 1px solid #007bff !important;
         }
+
     </style>
 @endsection

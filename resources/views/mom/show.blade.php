@@ -122,6 +122,7 @@
                                         </thead>
                                         <tbody>
                                             @foreach ($agenda->tasks as $task)
+                                            {{ dd($task) }}
                                             <tr>
                                                 <td>{{ $task->title }}</td>
                                                 <td>
@@ -138,9 +139,9 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if ($task->end_date)
+                                                    @if ($task->end_date && $task->start_date)
                                                     <span class="{{ \Carbon\Carbon::parse($task->end_date)->isPast() ? 'text-danger' : 'text-success' }}">
-                                                        <i class="far fa-calendar mr-1"></i> {{ $task->end_date }}
+                                                        {{ $task->date_show }}
                                                     </span>
                                                     @else
                                                     <span class="text-muted">-</span>

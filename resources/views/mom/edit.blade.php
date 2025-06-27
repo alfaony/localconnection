@@ -337,12 +337,11 @@
         document.getElementById('participantCount').textContent = '0';
         
         // Simulate loading delay
-        setTimeout(() => {
+        setTimeout(() => 
+        {
             const selectedOption = select.options[select.selectedIndex];
             const meetings = JSON.parse(selectedOption.getAttribute('data-meetings') || '[]');
             const meetingSelected = selectedOption.getAttribute('data-meetingselected') || '';
-
-            console.log(meetingSelected);
             
             
             // Clear and repopulate meeting select
