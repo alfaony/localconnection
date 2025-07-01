@@ -495,6 +495,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('meeting', MeetingController::class);
 });
 
+Route::put('mom/storeTask/{id}', [MomController::class,'storeTask'])->name('mom.storeTask');
+Route::put('mom/updateTask/{id}', [MomController::class,'updateTask'])->name('mom.updateTask');
+Route::delete('mom/deleteTask/{id}', [MomController::class,'deleteTask'])->name('mom.deleteTask');
+
 Route::resource('mom', MomController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');

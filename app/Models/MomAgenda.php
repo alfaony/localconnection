@@ -25,4 +25,6 @@ class MomAgenda extends Model
     {
         return $this->hasMany(MomTask::class, 'agenda_id');
     }
+
+    
 }

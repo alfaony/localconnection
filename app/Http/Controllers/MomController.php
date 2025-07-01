@@ -6,20 +6,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 use App\Http\Requests\MomStoreRequest;
 use App\Schemas\ParamSchema;
 
 use App\Models\Mom;
 use App\Models\User;
+use App\Models\MomTask;
 use App\Models\Project;
 use App\Models\Meeting;
+use App\Models\MomAgenda;
 use App\Models\Objective;
 use App\Models\DailyTask;
 use App\Models\TaskStatus;
 use App\Models\DailyTaskType;
 use App\Models\DailyTaskMessage;
 use App\Models\DailyTaskStatusRecord;
+
 
 use App\Helpers\InboxHelper;
 
@@ -125,7 +129,9 @@ class MomController extends Controller
      */
     public function show(Mom $mom)
     {
-        return view('mom.show', compact('mom'));
+        $users = User::byCompany(Auth::user()->company_id)->get();
+        $objectives = Objective::byCompany(Auth::user()->company_id)->get();
+        return view('mom.show', compact('mom','users', 'objectives'));
     }
 
     /**
@@ -174,37 +180,185 @@ class MomController extends Controller
         $mom->delete();
         return redirect()->route('mom.index')->with('delete', true);
     }
-    protected function storeDailytask(Request $request)
+
+    // Mom Task
+    public function storeTask(Request $request, $id)
+    {
+        $request->validate([
+            'agenda_id' => 'required|exists:mom_agendas,id',
+            'title' => 'required|string',
+            'description' => 'nullable|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'user_id' => 'nullable|uuid|exists:users,id',
+            'objective_id' => 'nullable|uuid|exists:objectives,id',
+            'key_result_0' => 'nullable|array',
+            'key_result_0.*' => 'nullable|uuid|exists:objective_key_results,id',
+        ]);
+
+        $mom = Mom::byCompany(Auth::user()->company_id)->where('id', $id)->first();
+        $agenda = MomAgenda::find($request->agenda_id);
+
+        // dd($agenda);
+        // dd($request->all());
+
+        DB::beginTransaction();
+        try {
+            $dailyTask = null;
+            if($request->user_id) 
+            {
+                $requestDaily = new Request([
+                    'user_id' => Auth::id(),
+                    'assignment_user_id' => $request->user_id,
+                    'start_date' => $request->start_date ?? Carbon::now(),
+                    'end_date' => $request->end_date ?? Carbon::now(),
+                    'project_id' => $mom->project_id ?? null, 
+                    'name' => $request->title,
+                    'description' => $request->description,
+                    'objective_id' => $request->objective_id ?? null,
+                    'key_results' => $request->key_result_0 ?? [],
+                ]);
+    
+                $dailyTask =  $this->storeDailytask($requestDaily);
+            }
+            
+            $agenda->tasks()->create([
+                // 'user_id' => Auth::id(),
+                'title' => $request->title,
+                'description' => $request->description,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'external_email' => $request->external_email,
+                'token' => $request->external_email ? Str::uuid() : null,
+                'daily_task_id' => $dailyTask ? $dailyTask->id : null
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Task berhasil disimpan!');
+        } catch (\Throwable $th) {
+            //throw $th;
+            // dd($th);
+            DB::rollBack();
+            return redirect()->back()->with('error', $th->getMessage());
+        }
+    }
+
+    public function updateTask(Request $request, $id)
+    {
+        $request->validate([
+            'title' => 'required|string',
+            'description' => 'nullable|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'user_id' => 'nullable|uuid|exists:users,id',
+            'objective_id' => 'nullable|uuid|exists:objectives,id',
+            'key_result_0' => 'nullable|array',
+            'key_result_0.*' => 'nullable|uuid|exists:objective_key_results,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $task = MomTask::find($id);
+            $dailyTask = $task->daily_task_id;
+             if($request->user_id && !$task->daily_task_id) 
+            {
+                $requestDaily = new Request([
+                    'user_id' => Auth::id(),
+                    'assignment_user_id' => $request->user_id,
+                    'start_date' => $request->start_date ?? Carbon::now(),
+                    'end_date' => $request->end_date ?? Carbon::now(),
+                    'project_id' => $mom->project_id ?? null, 
+                    'name' => $request->title,
+                    'description' => $request->description,
+                    'objective_id' => $request->objective_id ?? null,
+                    'key_results' => $request->key_result_0 ?? [],
+                ]);
+    
+                $dailyTask =  $this->storeDailytask($requestDaily);
+                $dailyTask = $dailyTask->id;
+            }
+            
+            $task->update([
+                // 'user_id' => Auth::id(),
+                'title' => $request->title,
+                'description' => $request->description,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'external_email' => $request->external_email,
+                'token' => $request->external_email ? Str::uuid() : null,
+                'daily_task_id' => $dailyTask,
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Task berhasil disimpan!');
+        } catch (\Throwable $th) {
+            //throw $th;
+            DB::rollback();
+            dd($th);
+            return redirect()->back()->with('error', $th->getMessage());
+        }
+    }
+
+    
+
+    // 
+    protected function storeDailytask(Request $request, $status = "create")
     {
         try {
-            
-                $status = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
-                $dailyTaskType = DailyTaskType::where('name',ParamSchema::DAILY)->first();
-                
-                $dailyTask = new DailyTask();
-                $dailyTask->user_id = $request->user_id;
-                $dailyTask->task_status_id = $status->id;
-                $dailyTask->start_date = $request->start_date;
-                $dailyTask->end_date = $request->end_date;
-                $dailyTask->assignment_user_id = $request->assignment_user_id;
-                $dailyTask->daily_task_type_id = $dailyTaskType->id;
-                $dailyTask->project_id = $request->project_id ?? NULL;
-                $dailyTask->name = $request->name;
-                $dailyTask->description = $request->description;
-                $dailyTask->point = 0; // Assuming default value is 0
-                $dailyTask->objective_id = $request->objective_id;
-                
-                $dailyTask->save();
-
-
-                $keyResults = $request->key_results ?? [];
-                if (!empty($keyResults)) 
+                if($status == "create")
                 {
-                    $dailyTask->keyResults()->attach($keyResults);
+
+                    $status = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
+                    $dailyTaskType = DailyTaskType::where('name',ParamSchema::DAILY)->first();
+                    
+                    $dailyTask = new DailyTask();
+                    $dailyTask->user_id = $request->user_id;
+                    $dailyTask->task_status_id = $status->id;
+                    $dailyTask->start_date = $request->start_date;
+                    $dailyTask->end_date = $request->end_date;
+                    $dailyTask->assignment_user_id = $request->assignment_user_id;
+                    $dailyTask->daily_task_type_id = $dailyTaskType->id;
+                    $dailyTask->project_id = $request->project_id ?? NULL;
+                    $dailyTask->name = $request->name;
+                    $dailyTask->description = $request->description;
+                    $dailyTask->point = 0; // Assuming default value is 0
+                    $dailyTask->objective_id = $request->objective_id;
+                    
+                    $dailyTask->save();
+    
+    
+                    $keyResults = $request->key_results ?? [];
+                    if (!empty($keyResults)) 
+                    {
+                        $dailyTask->keyResults()->attach($keyResults);
+                    }
+                     $message = ' Membuat Tugas '.$dailyTask->name;
+                }else
+                {
+                    $dailyTask = DailyTask::find($request->id);
+                    $dailyTask->start_date = $request->start_date;
+                    $dailyTask->end_date = $request->end_date;
+                    $dailyTask->assignment_user_id = $request->assignment_user_id;
+                    $dailyTask->daily_task_type_id = $dailyTaskType->id;
+                    $dailyTask->project_id = $request->project_id ?? NULL;
+                    $dailyTask->name = $request->name;
+                    $dailyTask->description = $request->description;
+                    $dailyTask->point = 0; // Assuming default value is 0
+                    $dailyTask->objective_id = $request->objective_id;
+                    $dailyTask->save();
+
+
+                    $keyResults = $request->key_results ?? [];
+                    if (!empty($keyResults)) 
+                    {
+                        $dailyTask->keyResults()->sync($keyResults);
+                    }
+                    $message = ' Membuat Perubahan '.$dailyTask->name;
                 }
 
 
-                $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
+                $this->message($dailyTask->id,$status,$message);
                 $this->statusrecord($dailyTask, $status);
 
                 $directUrl = route('dailytask.show', ['dailytask' => $dailyTask->slug]);
