@@ -61,7 +61,7 @@ class EmployeeChecking extends Model
     public function isToday($startTime = '05:00:00', $endTime = '17:00:00')
     {
         $today = Carbon::today();
-        $start = Carbon::parse($today->toDateString() . ' ' . $startTime);
+        $start = Carbon::parse($today->toDateString() . ' ' . $startTime)->subHours(3);
         $end = Carbon::parse($today->toDateString() . ' ' . $endTime);
 
         return Carbon::now()->between($start, $end);
