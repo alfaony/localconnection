@@ -111,6 +111,8 @@ class RoleController extends Controller
             'item_purchases',
             'chat_messages',
             'meetings',
+            'product_categories',
+            'companies',
         ];
 
         $checked = array_merge($mainMenus);
@@ -251,6 +253,8 @@ class RoleController extends Controller
                 'item_purchases',
                 'chat_messages',
                 'meetings',
+                'product_categories',
+                'companies',
             ];
         $checked = array_merge($mainMenus);
 
@@ -351,6 +355,8 @@ class RoleController extends Controller
                 'item_purchases',
                 'chat_messages',
                 'meetings',
+                'product_categories',
+                'companies',
             ];
         
         $checked = array_merge($mainMenus);

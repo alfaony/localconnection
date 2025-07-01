@@ -57,10 +57,15 @@ class ReportPointProductivityController extends Controller
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->sum('points');
 
-            $dailyTaskPoints = DailyTask::where('assignment_user_id', $user->id)
-                ->whereBetween('submit', [$startDate, $endDate])
-                ->where('task_status_id', $complate)
-                ->sum('point');
+           $dailyTaskPoints = DailyTask::where('assignment_user_id', $user->id)
+            ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                $query
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->whereHas('taskStatus', function ($q) {
+                        $q->where('name', ParamSchema::COMPLATE);
+                    });
+            })
+            ->sum('point');
 
             return [
                 'name' => $user->name,

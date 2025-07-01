@@ -58,16 +58,14 @@ class EmployeeChecking extends Model
      * is today
      */
 
-     public function isToday()
-     {
-         $today = Carbon::today();
-         $createdDate = $this->created_at->toDateString();
-         $createdTime = $this->created_at->toTimeString();
+    public function isToday($startTime = '05:00:00', $endTime = '17:00:00')
+    {
+        $today = Carbon::today();
+        $start = Carbon::parse($today->toDateString() . ' ' . $startTime);
+        $end = Carbon::parse($today->toDateString() . ' ' . $endTime);
 
-         return $createdDate == $today->toDateString() &&
-                strtotime($createdTime) >= strtotime($today->format('Y-m-d').' 05:00:00') &&
-                strtotime($createdTime) <= strtotime($today->format('Y-m-d').' 17:00:00');
-     }
+        return Carbon::now()->between($start, $end);
+    }
 
      
      /**

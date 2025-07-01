@@ -165,7 +165,7 @@
                                             <span class="badge bg-info"><i class="fa fa-hospital"></i></span>
                                                 Izin
                                             @else
-                                                @if($checking->isToday())
+                                                @if($checking->isToday($checking->user->start_time, $checking->user->end_time ))
                                                     <span class="badge bg-warning"><i class="fa fa-clock"></i></span>
                                                 @else
                                                     <span class="badge bg-danger"><i class="fa fa-times"></i></span>
@@ -253,7 +253,7 @@
                                                 <span class="badge bg-danger"><i class="fa fa-times"></i></span>
                                             @endif
                                         @else
-                                            @if($checking->isToday())
+                                            @if($checking->isToday(Auth::user()->start_time, Auth::user()->end_time))
                                             @if($checking->user_id == Auth::user()->id)                    
                                                 @if($checking->is_active && (!$nextChecking || !$nextChecking->is_active))
                                                     <button class="btn btn-info btn-sm" type="button"
