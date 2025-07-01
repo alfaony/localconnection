@@ -91,20 +91,19 @@
         
         .mom-header {
             background: linear-gradient(to right, #f8f9fa, #e9ecef);
-            padding: 1rem 1.5rem;
             border-bottom: 1px solid #e9ecef;
         }
         
         .mom-title {
-            font-weight: 700;
+            /* font-weight: 700; */
             color: #212529;
             margin-bottom: 0.25rem;
-            font-size: 1.25rem;
+            /* font-size: 1.25rem; */
         }
         
         .mom-subtitle {
             color: #6c757d;
-            font-size: 0.9rem;
+            /* font-size: 0.9rem; */
             margin-bottom: 0.5rem;
         }
         
@@ -132,17 +131,17 @@
         .mom-notes {
             background-color: #f8f9fa;
             border-left: 3px solid var(--accent-color);
-            padding: 1rem;
+            /* padding: 1rem; */
             border-radius: 0 4px 4px 0;
-            margin-top: 1rem;
-            font-size: 0.95rem;
+            /* margin-top: 1rem; */
+            /* font-size: 0.95rem; */
         }
         
         .btn-action {
             min-width: 90px;
             margin: 0 4px 8px;
             border-radius: 6px;
-            font-size: 0.85rem;
+            /* font-size: 0.85rem; */
             padding: 0.4rem 0.8rem;
             transition: all 0.2s;
         }
@@ -190,7 +189,7 @@
         .badge-project {
             background-color: #e0f4ff;
             color: #0369a1;
-            font-weight: 500;
+            /* font-weight: 500; */
             padding: 0.35rem 0.8rem;
             border-radius: 50px;
         }
@@ -198,7 +197,7 @@
         .badge-meeting {
             background-color: #f0f9ff;
             color: #0c4a6e;
-            font-weight: 500;
+            /* font-weight: 500; */
             padding: 0.35rem 0.8rem;
             border-radius: 50px;
         }

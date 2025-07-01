@@ -78,6 +78,22 @@
                         </div>
                     </div>
                     @endif
+                    @if($dailytask->momTask)
+                    <div class="form-group row">
+                        <label for="name" class="col-sm-4 col-form-label">Mom:</label>
+                        <div class="col-sm-8">
+                            <p class="form-control-plaintext">
+                                @if($dailytask->momTask->agenda->mom)
+                                <a href="{{ route('mom.show', $dailytask->momTask->agenda->mom) }}" class="btn btn-info badge badge-pill btn-sm badge-md">{{ $dailytask->momTask->agenda->mom->name ?? "" }}</a>
+                                @endif
+                            </p>
+                            <p class="form-control-plaintext">
+                                {!! $dailytask->momTask->agenda->discussion_notes ?? "" !!}
+                            </p>
+                            
+                        </div>
+                    </div>
+                    @endif
 
                     <div class="form-group row">
                         <label for="name" class="col-sm-4 col-form-label">Tugas:</label>

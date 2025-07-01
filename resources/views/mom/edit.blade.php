@@ -1,5 +1,6 @@
 @extends('adminlte::page')
 @section('content')
+@component('components.alert')
     <div class="row">
         <div class="col-md-12 mx-auto mt-4">
             <form action="{{ route('mom.update', $mom->id) }}" method="POST">
@@ -17,6 +18,12 @@
                                     <i class="far fa-calendar-alt"></i>Tanggal
                                 </label>
                                 <input type="date" class="form-control" value="{{ $mom->mom_date }}" readonly>
+                            </div>
+                             <div class="col-md-6 mb-4">
+                                <label for="name" class="form-label">
+                                    <i class="fas fa-heading"></i>Nama
+                                </label>
+                                <input type="text" class="form-control" id="name" name="name" value="{{ $mom->name }}" placeholder="Masukkan nama MoM" required>
                             </div>
                             <div class="col-md-6 mb-4">
                                 <label for="project_id" class="form-label">

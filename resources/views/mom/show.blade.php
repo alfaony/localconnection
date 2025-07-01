@@ -112,12 +112,12 @@
                         <div class="card-body">
                             <div class="callout callout-info mb-4">
                                 <h5><i class="fas fa-comments mr-2"></i>Discussion Notes</h5>
-                                <div class="p-3 border rounded bg-light">{!! nl2br(e($agenda->discussion_notes)) !!}</div>
+                                <div class="p-3 border rounded bg-light">{!! $agenda->discussion_notes !!}</div>
                             </div>
 
                             @if ($agenda->tasks->count())
                             <div class="mt-4">
-                                <h5><i class="fas fa-list-check mr-2"></i>Action Items</h5>
+                                <h5><i class="fas fa-list-check mr-2"></i>Meeting Tasks</h5>
                                 <div class="table-responsive">
                                     <table class="table table-hover table-striped">
                                         <thead class="thead-light">
@@ -132,7 +132,16 @@
                                         <tbody>
                                             @foreach ($agenda->tasks as $task)
                                             <tr>
-                                                <td>{{ $task->title }}</td>
+                                                <td>
+                                                    @if($task->dailyTask)
+                                                    <a href="{{ route('dailytask.show', $task->dailyTask->slug) }}" class="btn btn-sm btn-info badge">
+                                                        <i class="fa fa-eye"></i> {{$task->dailyTask->name}}
+                                                    </a>
+                                                    @else
+                                                        {{ $task->title }}
+                                                    @endif
+
+                                                </td>
                                                 <td>
                                                     @if ($task->dailyTask && $task->dailyTask->assignment_user_id)
                                                     <span class="badge bg-primary">
@@ -147,26 +156,33 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if ($task->end_date && $task->start_date)
-                                                    <span class="{{ \Carbon\Carbon::parse($task->end_date)->isPast() ? 'text-danger' : 'text-success' }}">
+                                                    <span class="{{ $task->isOverdue() ? 'text-danger' : 'text-success' }}">
                                                         {{ $task->date_show }}
                                                     </span>
-                                                    @else
-                                                    <span class="text-muted">-</span>
-                                                    @endif
                                                 </td>
                                                 <td>
-                                                    @if($task->status)
-                                                    <span class="badge 
-                                                        @if($task->status->name === 'Completed') bg-success
-                                                        @elseif($task->status->name === 'In Progress') bg-info
-                                                        @elseif($task->status->name === 'Pending') bg-warning
-                                                        @else bg-secondary @endif">
-                                                        {{ $task->status->name ?? '-' }}
-                                                    </span>
-                                                    @else
-                                                    <span class="badge bg-secondary">-</span>
-                                                    @endif
+                                                    @switch($task->taskStatus->name)
+                                                        @case('backlog')
+                                                            <i class="fa fa-clipboard-list"></i> Backlog
+                                                            @break
+                                                        @case('todo')
+                                                            <i class="fa fa-list-alt"></i> Todo
+                                                            @break
+                                                        @case('doing')
+                                                            <i class="fa fa-hourglass-start"></i> Doing
+                                                            @break
+                                                        @case('in review')
+                                                            <i class="fa fa-eye" style="color: green;"></i> In Review
+                                                            @break
+                                                        @case('not complete')
+                                                            <i class="fa fa-times-circle" style="color: red;"></i> Not Complete
+                                                            @break
+                                                        @case('complete')
+                                                            <i class="fa fa-check" style="color: green;"></i> Complete
+                                                            @break
+                                                        @default
+                                                            {{ $dailytask->taskStatus->name }}
+                                                    @endswitch
                                                 </td>
                                                 <td>
                                                     <div class="task-actions d-flex gap-2">
@@ -185,9 +201,13 @@
                                                                 onclick="openEditTaskModal(this)">
                                                             <i class="fas fa-edit"></i> Edit
                                                         </button>
-                                                        <button type="button" class="btn btn-sm btn-outline-danger mt-1" onclick="this.closest('.task-item').remove(); saveDraft();">
-                                                            <i class="fas fa-trash-alt me-1"></i>Hapus
-                                                        </button>
+                                                        <form action="{{ route('mom.deleteTask', $task->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Yakin ingin menghapus task ini?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger mt-1">
+                                                                <i class="fas fa-trash-alt me-1"></i>Hapus
+                                                            </button>
+                                                        </form>
                                                     </div>
                                                 </td>   
                                             </tr>
@@ -310,7 +330,7 @@
 
           <div class="form-group">
             <label>User Internal</label>
-            <select name="user_id" id="taskResponsible" class="form-control select2" style="width: 100%;">
+            <select name="user_id" id="taskResponsible" class="form-control selectUser2" style="width: 100%;">
             <option value="">-- Pilih User Internal --</option>
               @foreach($users as $user)
                 <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -321,7 +341,7 @@
             <div id="internal-fields" style="display: none;">
                 <div class="mb-3">
                     <label class="form-label">Objective</label>
-                    <select id="taskObjective" name="objective_id" class="form-select objective-select select2" 
+                    <select id="taskObjective" name="objective_id" class="form-select objective-select selectUser2" 
                             onchange="loadKeyResults(this)">
                         <option value="" disabled selected>-- Pilih Objective --</option>
                         @foreach($objectives as $objective)
@@ -539,17 +559,17 @@
     }
 
     // Event listener untuk perubahan objective di modal edit
-   $(document).on('change', '#editTaskObjective', function() 
-   {
-        console.log('Objective changed to:', this.value);
-        const objectiveId = this.value;
-        loadKeyResultsForEdit(objectiveId, null);
-    });
+    $(document).on('change', '#editTaskObjective', function() 
+    {
+            console.log('Objective changed to:', this.value);
+            const objectiveId = this.value;
+            loadKeyResultsForEdit(objectiveId, null);
+        });
 
     // Event listener untuk perubahan user internal di modal edit
-    document.getElementById('editUserInternal')?.addEventListener('change', function() {
+    $(document).on('change', '#editUserInternal', function() {
         const internalFields = document.getElementById('editInternalFields');
-        
+            
         if (this.value) {
             internalFields.style.display = 'block';
             $('#editTaskObjective').prop('required', true);
@@ -641,7 +661,16 @@
         width: '100%'
       }
     );
-  });
+
+    $('.selectUser2').select2(
+      {
+        dropdownParent: $('#addTaskModal'),
+        placeholder: 'Pilih',
+        allowClear: true,
+        width: '100%'
+      }
+    );
+});
 </script>
 <script>
   function openAddTaskModal(agendaId, agendaTitle) 

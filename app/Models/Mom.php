@@ -10,6 +10,7 @@ class Mom extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'name',
         'company_id',
         'user_id',
         'meeting_id',

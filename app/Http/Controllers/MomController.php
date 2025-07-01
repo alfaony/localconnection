@@ -66,6 +66,7 @@ class MomController extends Controller
 
         try {
             $mom = Mom::create([
+                'name' => $request->name,
                 'company_id' => auth()->user()->company_id,
                 'user_id' => auth()->id(),
                 'meeting_id' => $request->meeting_id,
@@ -100,6 +101,7 @@ class MomController extends Controller
                     }
 
                     $agenda->tasks()->create([
+                        'task_status_id' => $taskData['external_email'] || ($dailyTask != null) ? TaskStatus::where('name',ParamSchema::TODO)->firstOrFail()->id : TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail()->id,
                         'title' => $taskData['title'],
                         'description' => $agendaData['discussion_notes'],
                         'start_date' => $taskData['start_date'] ?? null,
@@ -160,6 +162,7 @@ class MomController extends Controller
     public function update(Request $request, Mom $mom)
     {
         $request->validate([
+            'name' => 'required|string',
             'project_id' => 'nullable|uuid|exists:projects,id',
             'meeting_id' => 'nullable|exists:meetings,id',
             'notes' => 'nullable|string',
@@ -223,7 +226,7 @@ class MomController extends Controller
             }
             
             $agenda->tasks()->create([
-                // 'user_id' => Auth::id(),
+                'task_status_id' => $request->external_email || ($dailyTask != null) ? TaskStatus::where('name',ParamSchema::TODO)->firstOrFail()->id : TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail()->id,
                 'title' => $request->title,
                 'description' => $request->description,
                 'start_date' => $request->start_date,
@@ -261,7 +264,7 @@ class MomController extends Controller
         try {
             $task = MomTask::find($id);
             $dailyTask = $task->daily_task_id;
-             if($request->user_id && !$task->daily_task_id) 
+             if($request->user_id) 
             {
                 $requestDaily = new Request([
                     'user_id' => Auth::id(),
@@ -273,9 +276,10 @@ class MomController extends Controller
                     'description' => $request->description,
                     'objective_id' => $request->objective_id ?? null,
                     'key_results' => $request->key_result_0 ?? [],
+                    'daily_task_id' => $dailyTask
                 ]);
     
-                $dailyTask =  $this->storeDailytask($requestDaily);
+                $dailyTask =  $this->storeDailytask($requestDaily, $dailyTask != null ? 'update': 'create');
                 $dailyTask = $dailyTask->id;
             }
             
@@ -295,9 +299,15 @@ class MomController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
             DB::rollback();
-            dd($th);
+            // dd($th);
             return redirect()->back()->with('error', $th->getMessage());
         }
+    }
+
+    public function deleteTask(MomTask $momTask)
+    {
+        $momTask->delete();
+        return redirect()->back()->with('success', 'Task berhasil dihapus!');
     }
 
     
@@ -334,17 +344,17 @@ class MomController extends Controller
                         $dailyTask->keyResults()->attach($keyResults);
                     }
                      $message = ' Membuat Tugas '.$dailyTask->name;
+
+                    $this->statusrecord($dailyTask, $status);
                 }else
                 {
-                    $dailyTask = DailyTask::find($request->id);
+                    $dailyTask = DailyTask::find($request->daily_task_id);
                     $dailyTask->start_date = $request->start_date;
                     $dailyTask->end_date = $request->end_date;
                     $dailyTask->assignment_user_id = $request->assignment_user_id;
-                    $dailyTask->daily_task_type_id = $dailyTaskType->id;
                     $dailyTask->project_id = $request->project_id ?? NULL;
                     $dailyTask->name = $request->name;
                     $dailyTask->description = $request->description;
-                    $dailyTask->point = 0; // Assuming default value is 0
                     $dailyTask->objective_id = $request->objective_id;
                     $dailyTask->save();
 
@@ -359,7 +369,6 @@ class MomController extends Controller
 
 
                 $this->message($dailyTask->id,$status,$message);
-                $this->statusrecord($dailyTask, $status);
 
                 $directUrl = route('dailytask.show', ['dailytask' => $dailyTask->slug]);
         
@@ -374,6 +383,7 @@ class MomController extends Controller
 
             return $dailyTask;
         } catch (\Throwable $th) {
+            dd($th);
             Log::error($th->getMessage());
             throw $th;
         }        

@@ -56,6 +56,12 @@ class MomTask extends Model
         return $this->belongsTo(DailyTask::class)->withTrashed();
     }
 
+    public function taskStatus()
+    {
+        return $this->belongsTo(TaskStatus::class)->withTrashed();
+    }
+    
+
     public function getIsInternalAttribute()
     {
         return !is_null($this->user_id);
@@ -66,13 +72,14 @@ class MomTask extends Model
         return !is_null($this->external_email);
     }
 
+
     public function isOverdue()
     {
         $startDate = Carbon::parse($this->start_date);
         $endDate = Carbon::parse($this->end_date);
         $today = Carbon::today();
 
-        // return ($this->taskStatus->name == \App\Schemas\ParamSchema::DOING || $this->taskStatus->name == \App\Schemas\ParamSchema::INREVIEW || $this->taskStatus->name == \App\Schemas\ParamSchema::TODO ) && $today->gt($endDate);
+        return ($this->taskStatus->name == \App\Schemas\ParamSchema::DOING || $this->taskStatus->name == \App\Schemas\ParamSchema::INREVIEW || $this->taskStatus->name == \App\Schemas\ParamSchema::TODO ) && $today->gt($endDate);
         return false;
     }
 

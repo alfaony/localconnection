@@ -15,7 +15,7 @@
             <div class="col-md-12">
                 @forelse($moms as $mom)
                     <div class="card-mom">
-                        <div class="mom-header d-flex justify-content-between align-items-center">
+                        <div class="mom-header d-flex justify-content-between align-items-center p-2">
                             <div>
                                 <h3 class="mom-title">{{ $mom->name }}</h3>
                                 <div class="d-flex flex-wrap gap-2">
@@ -39,13 +39,13 @@
                             </div>
                         </div>
                         
-                        <div class="mom-detail">
+                        <div class="p-3">
                             <div class="detail-item">
                                 <div class="detail-icon">
                                     <i class="fas fa-sticky-note"></i>
                                 </div>
                                 <div class="detail-content">
-                                    <div class="mom-notes">
+                                    <div class="mom-notes p-3">
                                         {!! \Str::limit($mom->notes, 120) !!}
                                     </div>
                                 </div>

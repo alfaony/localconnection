@@ -19,6 +19,12 @@
                                 <input type="date" class="form-control" id="mom_date" name="mom_date" required>
                             </div>
                             <div class="col-md-6 mb-4">
+                                <label for="name" class="form-label">
+                                    <i class="fas fa-heading"></i>Nama
+                                </label>
+                                <input type="text" class="form-control" id="name" name="name" placeholder="Masukkan nama MoM" required>
+                            </div>
+                            <div class="col-md-6 mb-4">
                                 <label for="project_id" class="form-label">
                                     <i class="fas fa-project-diagram"></i>Project
                                 </label>
@@ -232,8 +238,7 @@
                 </div>
                 <div class="mb-4">
                     <label class="form-label">Catatan Diskusi</label>
-                    <textarea name="agendas[${index}][discussion_notes]" class="form-control" 
-                            rows="3" placeholder="Masukkan catatan diskusi">${data?.discussion_notes || ''}</textarea>
+                    <input class="thriveEditor form-control" id="description_${index}_discussion_notes" data-ids="${index}_discussion_notes" name="agendas[${index}][discussion_notes]" value="${data?.discussion_notes || ''}"  placeholder="yang akan dicetak di perjanjian"/>
                 </div>
                 
                 <!-- TASK SECTION BARU -->
@@ -315,7 +320,7 @@
         agendaList.insertAdjacentHTML('beforeend', agendaHtml);
 
         initializeSelect2();
-        console.log("RUNNN");
+        generateThriveEditor(`${index}_discussion_notes`,data?.discussion_notes || '');
         
         
         // Initialize select2 for responsible select
@@ -898,7 +903,8 @@
         document.querySelectorAll('.agenda-item').forEach(item => {
             const index = item.dataset.index;
             const title = item.querySelector(`input[name="agendas[${index}][title]"]`).value;
-            const discussion_notes = item.querySelector(`textarea[name="agendas[${index}][discussion_notes]"]`).value;
+            const discussion_notes = item.querySelector(`input[name="agendas[${index}][discussion_notes]"]`).value;
+
             
             const tasks = [];
             item.querySelectorAll('.task-item').forEach(task => {

@@ -14,10 +14,12 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\EquipmentReduction;
 use App\Models\TaskAssign;
 use App\Models\Bast;
+use App\Models\DailyTask;
 
 use App\Observers\EquipmentReductionObserver;
 use App\Observers\TaskAssignObserver;
 use App\Observers\BastObserver;
+use App\Observers\DailyTaskObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
         EquipmentReduction::observe(EquipmentReductionObserver::class);
         TaskAssign::observe(TaskAssignObserver::class);
         Bast::observe(BastObserver::class);
+        DailyTask::observe(DailyTaskObserver::class);
 
         Schema::defaultStringLength(191);
         if ($this->app->environment('production') || $this->app->environment('development')) 
