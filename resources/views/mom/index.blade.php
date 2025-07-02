@@ -12,6 +12,14 @@
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.15.10/dist/sweetalert2.all.min.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+    <script>
         // Confirmation for delete action
         document.querySelectorAll('.delete-form').forEach(form => {
             form.addEventListener('submit', function(e) {
@@ -32,26 +40,6 @@
                 confirmButtonText: 'OK'
             });
         @endif
-
-        document.querySelectorAll('.delete-form').forEach(form => {
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, delete it!',
-                    cancelButtonText: 'No, cancel!',
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit(); // Submit the form if confirmed
-                    }
-                });
-            });
-        });
     </script>
 @stop
 
@@ -225,4 +213,35 @@
             }
         }
     </style>
+    <style>
+    .search-box {
+        position: relative;
+    }
+    .search-box i {
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        color: #6c757d;
+    }
+    .search-box input {
+        padding-left: 40px;
+    }
+    .notes-preview {
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    .btn-action {
+        transition: all 0.2s ease;
+    }
+    .btn-action:hover {
+        transform: translateY(-1px);
+    }
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+</style>
 @stop

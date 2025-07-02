@@ -10,10 +10,12 @@ use Illuminate\Support\Str;
 
 use App\Http\Requests\MomStoreRequest;
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
 
 use App\Models\Mom;
 use App\Models\User;
 use App\Models\MomTask;
+use App\Models\Company;
 use App\Models\Project;
 use App\Models\Meeting;
 use App\Models\MomAgenda;
@@ -63,7 +65,6 @@ class MomController extends Controller
     public function store(Request $request)
     {
         DB::beginTransaction();
-
         try {
             $mom = Mom::create([
                 'name' => $request->name,
@@ -101,25 +102,25 @@ class MomController extends Controller
                     }
 
                     $agenda->tasks()->create([
-                        'task_status_id' => $taskData['external_email'] || ($dailyTask != null) ? TaskStatus::where('name',ParamSchema::TODO)->firstOrFail()->id : TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail()->id,
+                        'task_status_id' => TaskStatus::where('name',ParamSchema::TODO)->firstOrFail()->id,
                         'title' => $taskData['title'],
                         'description' => $agendaData['discussion_notes'],
                         'start_date' => $taskData['start_date'] ?? null,
                         'end_date' => $taskData['end_date'] ?? null,
                         'external_email' => $taskData['external_email'] ?? null,
-                        'token' => $taskData['external_email'] ? Str::uuid() : null,
+                        'token' => $taskData['user_id'] ?  null : Str::uuid(),
                         'daily_task_id' => $dailyTask ? $dailyTask->id : null
                     ]);
                 }
             }
 
             DB::commit();
-            return redirect()->route('mom.index')->with('success', 'MoM berhasil disimpan!');
+            return response()->json(['success' => true, 'message' => 'MoM berhasil disimpan!']);
         } catch (\Exception $e) {
             Log::error($e);
             // dd($e);
             DB::rollBack();
-            return back()->withErrors('Terjadi kesalahan saat menyimpan MoM.');
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan saat menyimpan MoM.'], 422);
         }
     }
 
@@ -226,13 +227,13 @@ class MomController extends Controller
             }
             
             $agenda->tasks()->create([
-                'task_status_id' => $request->external_email || ($dailyTask != null) ? TaskStatus::where('name',ParamSchema::TODO)->firstOrFail()->id : TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail()->id,
+                'task_status_id' => TaskStatus::where('name',ParamSchema::TODO)->firstOrFail()->id,
                 'title' => $request->title,
                 'description' => $request->description,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'external_email' => $request->external_email,
-                'token' => $request->external_email ? Str::uuid() : null,
+                'token' => $request->user_id ?  null : Str::uuid(),
                 'daily_task_id' => $dailyTask ? $dailyTask->id : null
             ]);
 
@@ -260,9 +261,16 @@ class MomController extends Controller
             'key_result_0.*' => 'nullable|uuid|exists:objective_key_results,id',
         ]);
 
+
+        $task = MomTask::find($id);
+        
+        if(!$task->isAction())
+        {
+            return redirect()->back()->with('error', 'Task ini sedang berjalan!');
+        }
+
         DB::beginTransaction();
         try {
-            $task = MomTask::find($id);
             $dailyTask = $task->daily_task_id;
              if($request->user_id) 
             {
@@ -282,15 +290,21 @@ class MomController extends Controller
                 $dailyTask =  $this->storeDailytask($requestDaily, $dailyTask != null ? 'update': 'create');
                 $dailyTask = $dailyTask->id;
             }
+
+            if($task->dailyTask && !$request->user_id) 
+            {
+                $task->dailyTask->delete();
+                $dailyTask = null;
+            }
             
             $task->update([
-                // 'user_id' => Auth::id(),
+                'task_status_id' => TaskStatus::where('name',ParamSchema::TODO)->firstOrFail()->id,
                 'title' => $request->title,
                 'description' => $request->description,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
                 'external_email' => $request->external_email,
-                'token' => $request->external_email ? Str::uuid() : null,
+                'token' => $request->user_id ? null : Str::uuid(),
                 'daily_task_id' => $dailyTask,
             ]);
 
@@ -306,11 +320,51 @@ class MomController extends Controller
 
     public function deleteTask(MomTask $momTask)
     {
+        if(!$momTask->isAction())
+        {
+            // dd("here");
+            return redirect()->back()->with('error', 'Task ini sedang berjalan!');
+        }
+
+        // dd("here21");
         $momTask->delete();
         return redirect()->back()->with('success', 'Task berhasil dihapus!');
     }
 
-    
+    public function viewExternalTask($token)
+    {
+        $task = MomTask::where('token', $token)->firstOrFail();
+        return view('mom.external_view', compact('task'));
+    }
+
+    public function submitExternalTask(Request $request, $token)
+    {
+        $this->validate($request, [
+            'method' => 'required|in:todo,doing',
+            'description' => 'nullable|string',
+            'attachment' => 'nullable|file|max:2048',
+        ]);
+
+        $task = MomTask::where('token', $token)->firstOrFail();
+        $action = $this->externalAction($request, $task);
+        return redirect()->back()->with($action['status'], $action['message']);
+    }
+
+    public function approveExternalTask(Request $request, $token)
+    {
+        $this->validate($request, [
+            'status' => 'required|in:decline,approve',
+            'reject_reason' => 'nullable|string',
+        ]);
+
+        $task = MomTask::where('token', $token)->firstOrFail();
+        $task->update([
+            'task_status_id' => $request->status == "approve" ? TaskStatus::where('name',ParamSchema::COMPLATE)->firstOrFail()->id : TaskStatus::where('name',ParamSchema::NOTCOMPLATE)->firstOrFail()->id,
+            'reject_reason' => $request->status == "decline" ? $request->reject_reason : null
+        ]);
+
+        return redirect()->back()->with('success', 'Task berhasil Melakukan Approvement!');
+    }
 
     // 
     protected function storeDailytask(Request $request, $status = "create")
@@ -383,7 +437,7 @@ class MomController extends Controller
 
             return $dailyTask;
         } catch (\Throwable $th) {
-            dd($th);
+            // dd($th);
             Log::error($th->getMessage());
             throw $th;
         }        
@@ -503,5 +557,92 @@ class MomController extends Controller
         ]);
 
         return true;
+    }
+
+    protected function externalAction(Request $request, $dailyTask)
+    {
+
+        try 
+        {
+            if($request->method == \App\Schemas\ParamSchema::TODO)
+            {
+                $dailyTask->update([
+                    'task_status_id' => TaskStatus::where('name',ParamSchema::DOING)->firstOrFail()->id
+                ]);
+                
+                $message = 'Melakukan Pekerjaan';
+
+                // Sent Message
+                $company = Company::where('id', $dailyTask->agenda->mom->company_id)->first();
+                $from = $company->user()->whereHas('role', function ($query) {
+                    $query->where('name', RoleSchema::ROOT)->orWhere('name', RoleSchema::ADMIN)->orWhere('name', RoleSchema::DIRECTOR);
+                })->first();
+
+                $to = $dailyTask->agenda->mom->meeting->participantRelasion ? $dailyTask->agenda->mom->meeting->participantRelasion->pluck('id')->push($dailyTask->agenda->mom->user_id)->unique() : [$dailyTask->agenda->mom->user_id]; 
+                $url = route('external.task.view', $dailyTask->token);
+                $messageInbox = "Seseorang Melakukan Pekerjaan  ".$dailyTask->title." Pada Mom ".$dailyTask->agenda->mom->name;
+
+            }
+
+            if($request->method == \App\Schemas\ParamSchema::DOING)
+            {         
+    
+                $attachment = null;
+                if($request->hasFile('attachment'))
+                {
+                    $attachment = $request->file('attachment')->store('mom/report/task/external', 'public');
+                }
+
+                $dailyTask->update([
+                    'task_status_id' => TaskStatus::where('name',ParamSchema::INREVIEW)->firstOrFail()->id,
+                    'external_note' => $request->description,
+                    'attachment' => $attachment,
+                ]);
+                
+                $message = 'Laporan Berhasil Dikirimkan';
+
+                // Sent Message
+                $company = Company::where('id', $dailyTask->agenda->mom->company_id)->first();
+                $from = $company->user()->whereHas('role', function ($query) {
+                    $query->where('name', RoleSchema::ROOT)->orWhere('name', RoleSchema::ADMIN)->orWhere('name', RoleSchema::DIRECTOR);
+                })->first();
+
+                $to = $dailyTask->agenda->mom->meeting->participantRelasion ? $dailyTask->agenda->mom->meeting->participantRelasion->pluck('id')->push($dailyTask->agenda->mom->user_id)->unique() : [$dailyTask->agenda->mom->user_id]; 
+                $url = route('external.task.view', $dailyTask->token);
+                $messageInbox = "Seseorang Membuat Laporan Pekerjaan  ".$dailyTask->title." Pada Mom ".$dailyTask->agenda->mom->name;
+
+
+            }
+
+            $status = "success";
+            $this->sentMessage($to, $from->id, $messageInbox, $url);
+
+        } catch (\Throwable $th) {
+            dd($th);
+            Log::error($th->getMessage());
+            $meetings = $th->getMessage();
+            $status = "error";
+        }
+
+        return [
+            'status' => $status,
+            'message' => $message
+        ];
+    }
+
+    protected function sentMessage($to, $from , $message, $directUrl)
+    {
+        foreach ($to as $key => $toId) 
+        {
+            $inboxHelper = new InboxHelper();
+            $inboxHelper->sent(
+                $toId,
+                $from, 
+                $message,
+                $directUrl,
+                false,
+                'high'
+            );
+        }
     }
 }

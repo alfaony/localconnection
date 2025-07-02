@@ -25,8 +25,14 @@ class MomTable extends Component
     {
         $moms = Mom::with(['project', 'meeting'])
             ->byCompany(Auth::user()->company_id)
-            ->where('mom_date', 'like', "%{$this->search}%")
-            ->orWhereHas('project', fn($q) => $q->where('title', 'like', "%{$this->search}%"))
+            ->where(function ($query) {
+                $query->where('name', 'like', "%{$this->search}%")
+                    ->orWhere('notes', 'like', "%{$this->search}%")
+                    ->orWhere('mom_date', 'like', "%{$this->search}%")
+                    ->orWhereHas('project', fn($q) => $q->where('title', 'like', "%{$this->search}%"))
+                    ->orWhereHas('meeting', fn($q) => $q->where('meeting_name', 'like', "%{$this->search}%"))
+                    ;
+            })
             ->orderByDesc('created_at')
             ->paginate(10);
 

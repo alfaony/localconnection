@@ -88,6 +88,7 @@ class AppServiceProvider extends ServiceProvider
             $managementCompanyMenu = 
             [
                 'meetings',
+                'moms',
                 'dashboard_weekly_reports',
                 'weekly_reports',
                 'flowcharts',
@@ -549,7 +550,13 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Rapat',
                     'route' => 'meeting.index',
                     'icon' => 'fas fa-chalkboard-teacher',
-                ]
+                ],
+                'moms' => 
+                [
+                    'text' => 'Minutes of Meeting',
+                    'route' => 'mom.index',
+                    'icon' => 'fa fa-file',
+                ],
             ];
 
             foreach ($listMenu as $role) 

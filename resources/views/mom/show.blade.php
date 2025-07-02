@@ -6,9 +6,11 @@
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="m-0">Minutes of Meeting (MoM)</h1>
         <div>
+            @canAccess('update','moms')
             <a href="{{ route('mom.edit', $mom->id) }}" class="btn btn-warning">
                 <i class="fas fa-edit"></i> Edit
             </a>
+            @endcanAccess
             <a href="{{ route('mom.index') }}" class="btn btn-secondary ml-2">
                 <i class="fas fa-arrow-left"></i> Back to List
             </a>
@@ -53,6 +55,7 @@
                 </div>
             </div>
             
+            @if($mom->notes)
             <div class="row mt-4">
                 <div class="col-md-12">
                     <div class="callout callout-info">
@@ -61,6 +64,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     </div>
 
@@ -102,6 +106,7 @@
                          class="collapse {{ $index === 0 ? 'show' : '' }}" 
                          aria-labelledby="heading{{ $index }}" 
                          data-parent="#agendaAccordion">
+                         @canAccess('storeTask','moms')
                          <div class="d-flex justify-content-end align-items-center card-body pb-0 pt-0">
                             <button 
                                 class="btn btn-sm btn-outline-primary mt-3"
@@ -109,6 +114,7 @@
                                 <i class="fas fa-plus-circle mr-1"></i> Tambah Task
                             </button>
                          </div>
+                         @endcanAccess
                         <div class="card-body">
                             <div class="callout callout-info mb-4">
                                 <h5><i class="fas fa-comments mr-2"></i>Discussion Notes</h5>
@@ -147,12 +153,15 @@
                                                     <span class="badge bg-primary">
                                                         <i class="fas fa-user mr-1"></i> {{ $task->dailyTask->assign->name }}
                                                     </span>
-                                                    @elseif ($task->external_email)
-                                                    <span class="badge bg-secondary">
-                                                        <i class="fas fa-envelope mr-1"></i> {{ $task->external_email }}
-                                                    </span>
                                                     @else
-                                                    <span class="text-muted">Not assigned</span>
+                                                        @if($task->token)
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary copy-link-btn" 
+                                                                    onclick="copyLinkAndAlert(event, '{{ route('external.task.view', $task->token) }}')">
+                                                                <i class="fas fa-copy"></i> Copy Link
+                                                            </button>
+                                                        @else
+                                                        <span class="text-muted">Not assigned</span>
+                                                        @endif
                                                     @endif
                                                 </td>
                                                 <td>
@@ -185,7 +194,9 @@
                                                     @endswitch
                                                 </td>
                                                 <td>
+                                                    @if($task->isAction())
                                                     <div class="task-actions d-flex gap-2">
+                                                        @canAccess('editTask','moms')
                                                         <button type="button" class="btn btn-sm btn-outline-warning mr-2 mt-1"
                                                                 data-task-id="{{ $task->id }}"
                                                                 data-agenda-id="{{ $agenda->id }}"
@@ -201,6 +212,9 @@
                                                                 onclick="openEditTaskModal(this)">
                                                             <i class="fas fa-edit"></i> Edit
                                                         </button>
+                                                        @endcanAccess
+
+                                                        @canAccess('deleteTask','moms')
                                                         <form action="{{ route('mom.deleteTask', $task->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Yakin ingin menghapus task ini?')">
                                                             @csrf
                                                             @method('DELETE')
@@ -208,7 +222,11 @@
                                                                 <i class="fas fa-trash-alt me-1"></i>Hapus
                                                             </button>
                                                         </form>
+                                                        @endcanAccess
                                                     </div>
+                                                    @else
+                                                    <span class="text-muted"><i class="fas fa-running mr-2"></i></span>
+                                                    @endif
                                                 </td>   
                                             </tr>
                                             @endforeach
@@ -292,6 +310,7 @@
 </div>
 
 <!-- Modal Create-->
+ @canAccess('storeTask','moms')
 <div class="modal fade" id="addTaskModal" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
     <form id="addTaskForm" action="{{ route('mom.storeTask',$mom->id) }}" method="POST">
@@ -352,9 +371,11 @@
                 <div id="keyresult-fields-container"></div>
             </div>
 
-          <div class="form-group">
-            <label>Email Eksternal (opsional)</label>
-            <input type="email" name="external_email" class="form-control">
+            {{--
+                <div class="form-group">
+                    <label>Email Eksternal (opsional)</label>
+                    <input type="email" name="external_email" class="form-control">
+                    --}}
           </div>
         </div>
         <div class="modal-footer">
@@ -365,8 +386,10 @@
     </form>
   </div>
 </div>
+@endcanAccess
 
 <!-- Modal Edit Task -->
+@canAccess('editTask','moms')
 <div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg" role="document">
     <form id="editTaskForm" method="POST">
@@ -406,7 +429,7 @@
 
           <div class="form-group">
             <label>User Internal</label>
-            <select name="user_id" id="editUserInternal" class="form-control select2" style="width: 100%;">
+            <select name="user_id" id="editUserInternal" class="form-control selectUserUpdate2" style="width: 100%;">
               <option value="">-- Pilih User Internal --</option>
               @foreach($users as $user)
                 <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -427,10 +450,12 @@
             <div id="editKeyresultContainer"></div>
           </div>
 
+          {{-- 
           <div class="form-group">
             <label>Email Eksternal (opsional)</label>
             <input type="email" name="external_email" id="editExternalEmail" class="form-control">
           </div>
+          --}}
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-warning">Update Task</button>
@@ -440,6 +465,7 @@
     </form>
   </div>
 </div>
+@endcanAccess
 @stop
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -447,6 +473,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
+@canAccess('editTask','moms')
 <script>
     // Fungsi untuk membuka modal edit dengan data dari button
     function openEditTaskModal(button) 
@@ -472,7 +499,6 @@
         document.getElementById('editTitle').value = title;
         document.getElementById('editStartDate').value = startDate;
         document.getElementById('editEndDate').value = endDate;
-        document.getElementById('editExternalEmail').value = externalEmail;
 
         const descriptionNoteDiv = document.getElementById('description_notes_div');
         if (descriptionNoteDiv) {
@@ -594,6 +620,9 @@
         }
     });
 </script>
+@endcanAccess
+
+@canAccess('storeTask','mom')
 <script>
     $(`#taskResponsible`).on('change', function() {
         const internalFields = document.getElementById(`internal-fields`);
@@ -652,6 +681,7 @@
         });
     }
 </script>
+@endcanAccess
 <script>
   $(document).ready(function() {
     $('.select2').select2(
@@ -665,6 +695,15 @@
     $('.selectUser2').select2(
       {
         dropdownParent: $('#addTaskModal'),
+        placeholder: 'Pilih',
+        allowClear: true,
+        width: '100%'
+      }
+    );
+
+    $('.selectUserUpdate2').select2(
+      {
+        dropdownParent: $('#editTaskModal'),
         placeholder: 'Pilih',
         allowClear: true,
         width: '100%'
@@ -726,6 +765,32 @@
             }
         });
     });
+
+    function copyLinkAndAlert(event, link) 
+    {
+        event.preventDefault();
+
+        // Gunakan Clipboard API
+        navigator.clipboard.writeText(link)
+            .then(() => {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Link berhasil disalin!',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Gagal menyalin link!',
+                });
+            });
+    }
 </script>
 @stop
 

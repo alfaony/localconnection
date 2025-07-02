@@ -141,6 +141,12 @@ Route::group(['prefix' => 'google'], function () {
   Route::get('oauth/callback', [GoogleMeetController::class, 'handleGoogleCallback']);
 });
 
+Route::group(['prefix' => 'mom/external'], function () 
+{
+  Route::get('task/{token}', [MomController::class, 'viewExternalTask'])->name('external.task.view');
+  Route::post('task/{token}/submit', [MomController::class, 'submitExternalTask'])->name('external.task.submit');
+});
+
 Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
   Route::get('xero',function(){
     
@@ -493,13 +499,14 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
   Route::post('meeting/join', [MeetingController::class, 'join'])->name('meeting.join');
   Route::resource('meeting', MeetingController::class);
+
+  Route::delete('mom/deleteTask/{momTask}', [MomController::class,'deleteTask'])->name('mom.deleteTask');
+  Route::post('mom/approveExternalTask/task/{token}', [MomController::class, 'approveExternalTask'])->name('external.task.approve');
+  Route::put('mom/storeTask/{id}', [MomController::class,'storeTask'])->name('mom.storeTask');
+  Route::put('mom/updateTask/{id}', [MomController::class,'updateTask'])->name('mom.updateTask');
+  
+  Route::resource('mom', MomController::class);
 });
-
-Route::delete('mom/deleteTask/{momTask}', [MomController::class,'deleteTask'])->name('mom.deleteTask');
-Route::put('mom/storeTask/{id}', [MomController::class,'storeTask'])->name('mom.storeTask');
-Route::put('mom/updateTask/{id}', [MomController::class,'updateTask'])->name('mom.updateTask');
-
-Route::resource('mom', MomController::class);
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

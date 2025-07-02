@@ -28,7 +28,7 @@
                                 <label for="project_id" class="form-label">
                                     <i class="fas fa-project-diagram"></i>Project
                                 </label>
-                                <select class="form-select select2" id="project_id" name="project_id" required onchange="loadMeetingsFromProject(this)">
+                                <select class="form-select select2" id="project_id" name="project_id" onchange="loadMeetingsFromProject(this)">
                                     <option value="" disabled selected>Pilih project</option>
                                     @foreach($projects as $project)
                                         <option value="{{ $project->id }}" data-meetings='@json($project->meetings_json)'>
@@ -111,11 +111,8 @@
                     </div>
                     
                     <div class="btn-group">
-                        <button type="button" class="btn btn-info" onclick="previewMom()">
-                            <i class="fas fa-eye me-1"></i>Preview
-                        </button>
                         <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save me-1"></i>Simpan MoM
+                            <i class="fas fa-save me-1"></i>Simpan
                         </button>
                     </div>
                 </div>
@@ -162,6 +159,16 @@
 <script>
     $(document).ready(function () {
         // Initialize Select2 on form-select elements
+        document.addEventListener('change', function(e) {
+            if (e.target.id.startsWith('taskStartDate-')) {
+                const agendaIndex = e.target.id.split('-')[1];
+                const endDateInput = document.getElementById(`taskEndDate-${agendaIndex}`);
+                if (e.target.value && !endDateInput.value) {
+                    endDateInput.value = e.target.value;
+                }
+            }
+        });
+
         $('.select2').select2({
             width: '100%',
             placeholder: '-- Pilih --',
@@ -210,7 +217,8 @@
         const agendaList = document.getElementById('agendaList');
         
         // Inisialisasi counter untuk agenda ini
-        taskCounter[index] = 0;
+        // PERBAIKAN 1: Inisialisasi taskCounter dengan benar
+        taskCounter[index] = data?.tasks?.length || 0;
         
         // Remove empty state if it's the first agenda
         if (agendaList.querySelector('.empty-state')) {
@@ -238,7 +246,7 @@
                 </div>
                 <div class="mb-4">
                     <label class="form-label">Catatan Diskusi</label>
-                    <input class="thriveEditor form-control" id="description_${index}_discussion_notes" data-ids="${index}_discussion_notes" name="agendas[${index}][discussion_notes]" value="${data?.discussion_notes || ''}"  placeholder="yang akan dicetak di perjanjian"/>
+                    <input class="thriveEditor form-control" id="description_${index}_discussion_notes" data-ids="${index}_discussion_notes" name="agendas[${index}][discussion_notes]"  placeholder="yang akan dicetak di perjanjian"/>
                 </div>
                 
                 <!-- TASK SECTION BARU -->
@@ -295,11 +303,6 @@
                             <div id="keyresult-fields-container-${index}"></div>
                         </div>
                         
-                        <div class="mb-4">
-                            <label class="form-label">Email Eksternal (jika PJ Eksternal)</label>
-                            <input type="email" id="taskExternalEmail-${index}" class="form-control" placeholder="client@perusahaan.com">
-                        </div>
-                        
                         <div class="d-flex justify-content-end gap-2">
                             <button type="button" class="btn btn-secondary" onclick="hideTaskForm(${index})">Batal</button>
                             <button type="button" id="saveTaskBtn-${index}" class="btn btn-primary" onclick="addTaskToList(${index})">Tambah Task</button>
@@ -316,6 +319,7 @@
                 </div>
             </div>
         </div>`;
+        console.log(data);
         
         agendaList.insertAdjacentHTML('beforeend', agendaHtml);
 
@@ -350,21 +354,24 @@
         saveDraft();
     }
 
-    function renderTasks(tasks, agendaIndex) {
+    function renderTasks(tasks, agendaIndex) 
+    {
         if (!tasks || tasks.length === 0) {
             return `<div class="alert alert-light border text-center py-4">
                         <i class="fas fa-info-circle me-2"></i>Belum ada task untuk agenda ini
                     </div>`;
         }
+
+        // Reset task counter untuk agenda ini
+        taskCounter[agendaIndex] = tasks.length;
         
         let tasksHtml = '';
         
-        // PERBAIKAN 1: Gunakan indeks unik untuk setiap task
+        // PERBAIKAN: Gunakan indeks berurutan mulai dari 0
         tasks.forEach((task, taskIndex) => {
             const userName = getUserName(task.user_id);
             const objectiveName = task.objective_id ? getObjectiveName(task.objective_id) : '';
             
-            // PERBAIKAN 2: Simpan semua key result
             let keyResultsHtml = '';
             if (task.key_result_ids && task.key_result_ids.length > 0) {
                 task.key_result_ids.forEach(krId => {
@@ -405,9 +412,6 @@
                     ${keyResultsHtml}
                 </li>
             `;
-            
-            // Update task counter
-            taskCounter[agendaIndex] = taskIndex + 1;
         });
         
         return tasksHtml;
@@ -428,6 +432,14 @@
     function showTaskForm(agendaIndex) {
         const taskForm = document.getElementById(`taskForm-${agendaIndex}`);
         const addTaskBtn = document.getElementById(`addTaskBtn-${agendaIndex}`);
+        const startDateInput = document.getElementById(`taskStartDate-${agendaIndex}`);
+        const endDateInput = document.getElementById(`taskEndDate-${agendaIndex}`);
+
+        startDateInput.addEventListener('change', function() {
+            if (!endDateInput.value) {
+                endDateInput.value = this.value;
+            }
+        })
         taskForm.style.display = 'block';
         addTaskBtn.style.display = 'none';
     }
@@ -443,7 +455,6 @@
         document.getElementById(`taskStartDate-${agendaIndex}`).value = '';
         document.getElementById(`taskEndDate-${agendaIndex}`).value = '';
         $(`#taskResponsible-${agendaIndex}`).val(null).trigger('change');
-        document.getElementById(`taskExternalEmail-${agendaIndex}`).value = '';
         $(`#taskObjective-${agendaIndex}`).val(null).trigger('change');
         document.getElementById(`keyresult-fields-container-${agendaIndex}`).innerHTML = '';
         
@@ -458,7 +469,7 @@
         const startDate = document.getElementById(`taskStartDate-${agendaIndex}`).value;
         const endDate = document.getElementById(`taskEndDate-${agendaIndex}`).value;
         const responsible = document.getElementById(`taskResponsible-${agendaIndex}`).value;
-        const externalEmail = document.getElementById(`taskExternalEmail-${agendaIndex}`).value;
+        const externalEmail = "";
         
         if (!title) {
             alert('Judul task harus diisi!');
@@ -481,7 +492,6 @@
             const keyResultSelect = keyResultContainer.querySelector('select.keyresult-select');
             
             if (keyResultSelect) {
-                // PERBAIKAN: Ambil semua key result yang dipilih
                 const selectedOptions = Array.from(keyResultSelect.selectedOptions);
                 
                 if (selectedOptions.length === 0) {
@@ -506,11 +516,10 @@
         const userName = $(`#taskResponsible-${agendaIndex} option:selected`).text() || 'Belum ditentukan';
         const objectiveName = objective ? getObjectiveName(objective) : '';
         
-        // PERBAIKAN 1: Gunakan indeks unik untuk task
-        const taskIndex = taskCounter[agendaIndex] || 0;
-        taskCounter[agendaIndex] = taskIndex + 1;
+        // PERBAIKAN: Gunakan indeks berdasarkan jumlah task yang ada
+        const taskIndex = taskList.querySelectorAll('.task-item').length;
         
-        // PERBAIKAN 2: Simpan semua key result
+        // PERBAIKAN: Simpan semua key result
         let keyResultsHtml = '';
         keyResults.forEach(krId => {
             keyResultsHtml += `
@@ -582,7 +591,6 @@
         document.getElementById(`taskStartDate-${agendaIndex}`).value = taskData.start_date || '';
         document.getElementById(`taskEndDate-${agendaIndex}`).value = taskData.end_date || '';
         $(`#taskResponsible-${agendaIndex}`).val(taskData.user_id).trigger('change');
-        document.getElementById(`taskExternalEmail-${agendaIndex}`).value = taskData.external_email || '';
         
         // Handle objective and key results
         const internalFields = document.getElementById(`internal-fields-${agendaIndex}`);
@@ -907,7 +915,12 @@
 
             
             const tasks = [];
+
+             // PERBAIKAN 4: Gunakan indeks berurutan untuk task
+            let taskIdx = 0;
             item.querySelectorAll('.task-item').forEach(task => {
+                console.log(task);
+                
                 const title = task.querySelector('.task-title').textContent;
                 const start_date = task.querySelector(`input[name$="[start_date]"]`).value;
                 const end_date = task.querySelector(`input[name$="[end_date]"]`).value;
@@ -929,6 +942,8 @@
                     objective_id,
                     key_result_ids
                 });
+                
+                taskIdx++;
             });
             
             agendas.push({ title, discussion_notes, tasks });
@@ -941,6 +956,7 @@
     function loadDraft() {
         const saved = localStorage.getItem('mom_draft');
         const momDb = @json(@$mom) ?? null;
+        taskCounter = {};
         
         if(momDb)
         {
@@ -966,6 +982,10 @@
             // Clear existing agendas
             document.getElementById('agendaList').innerHTML = '';
             agendaIndex = 0;
+    
+            // PERBAIKAN 5: Reset taskCounter saat memuat draft
+            taskCounter = {};
+
             
             // Add agendas from draft
             if (data.agendas && data.agendas.length > 0) {
@@ -1068,6 +1088,10 @@
             document.getElementById('participantCount').textContent = '0';
             
             showDraftIndicator('Draft berhasil dihapus!');
+
+            // setTimeout(() => {
+            //     location.reload();
+            // }, 1500);
         }
     }
 
@@ -1175,7 +1199,44 @@
         saveDraft();
         
         // Show success message
-        document.getElementById('momForm').submit();
+        // document.getElementById('momForm').submit();       
+        const formData = new FormData(this);
+        formData.append('_token', '{{ csrf_token() }}');
+        
+        $.ajax({
+            url: "{{ route('mom.store') }}",
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(data) {
+                if (data.success) {
+                    const toast = $(`
+                        <div class="toast align-items-center position-fixed top-0 end-0 m-3 show" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="toast-header bg-success text-white">
+                                <strong class="me-auto"><i class="fas fa-check-circle me-2"></i> Berhasil</strong>
+                                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                            <div class="toast-body bg-white text-dark">Data MoM berhasil disimpan.</div>
+                        </div>
+                    `).appendTo('body');
+
+                    toast.toast({ delay: 2000 }).toast('show');
+
+                    clearDraft();
+                    setTimeout(() => {
+                        window.location.href = "{{ route('mom.index') }}";
+                    }, 2000);
+                } else {
+                    alert('Gagal menyimpan data MOM!');
+                }
+            },
+            error: function(xhr) {
+                console.error('Error:', xhr);
+            }
+        });
+        
+        
     });
 </script>
 @endsection

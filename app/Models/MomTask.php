@@ -21,8 +21,10 @@ class MomTask extends Model
         'attachment',
         'task_status_id',
         'external_email',
+        'external_note',
         'token',
         'daily_task_id',
+        'reject_reason',
     ];
 
     protected static function boot()
@@ -81,6 +83,11 @@ class MomTask extends Model
 
         return ($this->taskStatus->name == \App\Schemas\ParamSchema::DOING || $this->taskStatus->name == \App\Schemas\ParamSchema::INREVIEW || $this->taskStatus->name == \App\Schemas\ParamSchema::TODO ) && $today->gt($endDate);
         return false;
+    }
+    
+    public function isAction()
+    {
+        return $this->taskStatus->name == \App\Schemas\ParamSchema::TODO || $this->taskStatus->name == \App\Schemas\ParamSchema::NOTCOMPLATE || $this->taskStatus->name == \App\Schemas\ParamSchema::BACKLOG ? true : false;
     }
 
     public function getDateShowAttribute()
