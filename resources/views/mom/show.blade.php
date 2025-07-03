@@ -121,7 +121,8 @@
                                     </button>
                                 @endcanAccess
                             </div>
-
+                            
+                            @if($agenda->is_delete)
                             <div class="d-flex ml-auto">
                                 @canAccess('editTask','moms')
                                 <button 
@@ -131,6 +132,7 @@
                                 </button>
                                 @endcanAccess
                                 @canAccess('deleteAgenda','moms')
+                                
                                 <form action="{{ route('mom.deleteAgenda', $agenda->id) }}" method="POST" class="ml-2">
                                     @csrf
                                     @method('DELETE')
@@ -140,6 +142,7 @@
                                 </form>
                                 @endcanAccess
                             </div>
+                            @endif
                          </div>
                         <div class="card-body">
                             <div class="callout callout-info mb-4">

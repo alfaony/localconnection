@@ -1071,28 +1071,26 @@
         }
     }
 
-    function clearDraft() {
-        if (confirm('Apakah Anda yakin ingin menghapus draft? Semua data yang belum disimpan akan hilang.')) {
-            localStorage.removeItem('mom_draft');
-            document.getElementById('momForm').reset();
-            document.getElementById('agendaList').innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-clipboard-list"></i>
-                <h5 class="mt-3">Belum ada agenda</h5>
-                <p class="mb-0">Klik "Tambah Agenda" untuk menambahkan agenda pertama</p>
-            </div>`;
-            agendaIndex = 0;
-            
-            // Reset meeting info
-            document.getElementById('participantContainer').innerHTML = '<div class="empty-meeting w-100">Pilih meeting untuk melihat peserta</div>';
-            document.getElementById('participantCount').textContent = '0';
-            
-            showDraftIndicator('Draft berhasil dihapus!');
-
-            // setTimeout(() => {
-            //     location.reload();
-            // }, 1500);
+    function clearDraft(noConfirm = false) {
+        if (!noConfirm && !confirm('Apakah Anda yakin ingin menghapus draft? Semua data yang belum disimpan akan hilang.')) {
+            return;
         }
+        
+        localStorage.removeItem('mom_draft');
+        document.getElementById('momForm').reset();
+        document.getElementById('agendaList').innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <h5 class="mt-3">Belum ada agenda</h5>
+            <p class="mb-0">Klik "Tambah Agenda" untuk menambahkan agenda pertama</p>
+        </div>`;
+        agendaIndex = 0;
+        
+        // Reset meeting info
+        document.getElementById('participantContainer').innerHTML = '<div class="empty-meeting w-100">Pilih meeting untuk melihat peserta</div>';
+        document.getElementById('participantCount').textContent = '0';
+        
+        showDraftIndicator('Draft berhasil dihapus!');
     }
 
     function showDraftIndicator(message = 'Draft berhasil disimpan!') {
@@ -1223,7 +1221,7 @@
 
                     toast.toast({ delay: 2000 }).toast('show');
 
-                    clearDraft();
+                    clearDraft(true);
                     setTimeout(() => {
                         window.location.href = "{{ route('mom.index') }}";
                     }, 2000);

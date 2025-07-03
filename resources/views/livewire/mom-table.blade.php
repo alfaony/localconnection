@@ -4,11 +4,11 @@
         <!-- Header Section -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h5 class="mb-0 text-primary">
-                <i class="fas fa-file-contract me-2"></i> Daftar Minutes of Meeting
+                <i class="fas fa-file-contract me-2"></i> Minutes of Meeting
             </h5>
             @canAccess('create','moms')
             <a href="{{ route('mom.create') }}" class="btn btn-primary btn-sm d-none d-md-inline-flex align-items-center">
-                <i class="fas fa-plus me-2"></i> Buat MoM Baru
+                <i class="fas fa-plus me-2"></i> Add
             </a>
             @endcanAccess
         </div>
@@ -120,7 +120,7 @@
                                             <button type="submit" 
                                                     class="btn btn-sm btn-outline-danger rounded-pill px-3 btn-action"
                                                     data-bs-toggle="tooltip" title="Hapus"
-                                                    onclick="return confirm('Apakah Anda yakin ingin menghapus MoM ini?')">
+                                                    >
                                                 <i class="fas fa-trash"></i>
                                                 <span class="d-none d-md-inline ms-1">Hapus</span>
                                             </button>
@@ -142,7 +142,7 @@
                         <p class="text-muted mb-4">Mulai dengan membuat MoM baru untuk pertemuan Anda</p>
                         @canAccess('create','moms')
                         <a href="{{ route('mom.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Buat MoM Baru
+                            <i class="fas fa-plus me-2"></i>Minutes of Meeting
                         </a>
                         @endcanAccess
                     </div>

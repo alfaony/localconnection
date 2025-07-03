@@ -94,8 +94,7 @@
                         <div class="mt-4 pt-3 border-top">
                             <label class="form-label text-muted small mb-1">Proyek Terkait</label>
                             <div class="d-flex align-items-center">
-                                <span class="badge bg-info me-2">TERSEDIA</span>
-                                <p class="mb-0">{{ $task->agenda->mom->project->title ?? '' }}</p>
+                                <span class="badge bg-info me-2">{{ $task->agenda->mom->project->title ?? '' }}</span>
                             </div>
                         </div>
                         @endif
@@ -105,8 +104,7 @@
                         <div class="mt-3">
                             <label class="form-label text-muted small mb-1">Detail Rapat</label>
                             <div class="d-flex align-items-center mb-2">
-                                <span class="badge bg-info me-2">TERSEDIA</span>
-                                <p class="mb-0">{{ $task->agenda->mom->meeting->meeting_name ?? '' }}</p>
+                                <span class="badge bg-info me-2">{{ $task->agenda->mom->meeting->meeting_name ?? '' }}</span>
                             </div>
                             
                             <label class="form-label text-muted small mb-1">Peserta Rapat</label>

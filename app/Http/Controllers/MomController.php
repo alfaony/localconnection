@@ -185,6 +185,13 @@ class MomController extends Controller
      */
     public function destroy(Mom $mom)
     {
+        // hapus mom task jika momtask punya dailytask juga dihpus momAgenda dan mom
+        $mom->tasks()->whereHas('dailyTask', function ($query) {
+            $query->whereNotNull('daily_task_id');
+        })->with('dailyTask')->get()->each(function ($task) {
+            $task->dailyTask->delete();
+        });
+        $mom->agendas()->delete();
         $mom->delete();
         return redirect()->route('mom.index')->with('delete', true);
     }
@@ -367,18 +374,26 @@ class MomController extends Controller
             'reject_reason' => $request->status == "decline" ? $request->reject_reason : null
         ]);
 
-        return redirect()->back()->with('success', 'Task berhasil Melakukan Approvement!');
+        return redirect()->back()->with('success', 'Task berhasil '.$request->status == "approve" ? 'disetujui' : 'ditolak'.'!');
     }
 
     public function deleteAgenda(MomAgenda $momAgenda)
     {
-        if ($momAgenda->tasks()->exists())
+        if (!$momAgenda->is_delete)
         {
             return redirect()->back()->with('error', 'Agenda ini sedang berjalan!');
         }
+        
+        // Hapus semua daily task yang terkait dari mom_tasks
+        foreach ($momAgenda->tasks as $task) 
+        {
+            if ($task->daily_task_id) {
+                DailyTask::where('id', $task->daily_task_id)->delete();
+            }
+            $task->delete(); // opsional: hapus mom_task juga
+        }
 
         $momAgenda->delete();
-
         return redirect()->back()->with('success', 'Agenda berhasil dihapus!');
     }
 
