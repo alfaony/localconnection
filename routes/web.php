@@ -500,6 +500,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('meeting/join', [MeetingController::class, 'join'])->name('meeting.join');
   Route::resource('meeting', MeetingController::class);
 
+  Route::put('mom/storeAgenda/{id}', [MomController::class,'storeAgenda'])->name('mom.storeAgenda');
+  Route::put('mom/updateAgenda/{id}', [MomController::class,'updateAgenda'])->name('mom.updateAgenda');
+  Route::delete('mom/deleteAgenda/{momAgenda}', [MomController::class,'deleteAgenda'])->name('mom.deleteAgenda');
+
   Route::delete('mom/deleteTask/{momTask}', [MomController::class,'deleteTask'])->name('mom.deleteTask');
   Route::post('mom/approveExternalTask/task/{token}', [MomController::class, 'approveExternalTask'])->name('external.task.approve');
   Route::put('mom/storeTask/{id}', [MomController::class,'storeTask'])->name('mom.storeTask');

@@ -26,7 +26,7 @@ class PermissionForMenuMomSeeder extends Seeder
         DB::beginTransaction();
         try {
 
-            $momRequest = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','updateTask', 'editTask','storeTask','deleteTask','approveExternalTask'];
+            $momRequest = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2', 'updateAgenda','storeAgenda','deleteAgenda','updateTask', 'editTask','storeTask','deleteTask','approveExternalTask'];
             
              foreach ($momRequest as $method) 
              {

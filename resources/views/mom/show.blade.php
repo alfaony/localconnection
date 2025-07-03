@@ -76,6 +76,11 @@
             </h3>
             <div class="card-tools">
                 <span class="badge bg-primary">{{ $mom->agendas->count() }} Agendas</span>
+                @canAccess('storeTask','moms')
+                <button type="button" class="btn btn-sm btn-success ml-2" data-toggle="modal" data-target="#addAgendaModal">
+                    <i class="fas fa-plus mr-1"></i> Tambah Agenda
+                </button>
+                @endcanAccess
             </div>
         </div>
         <div class="card-body p-0">
@@ -106,139 +111,161 @@
                          class="collapse {{ $index === 0 ? 'show' : '' }}" 
                          aria-labelledby="heading{{ $index }}" 
                          data-parent="#agendaAccordion">
-                         @canAccess('storeTask','moms')
-                         <div class="d-flex justify-content-end align-items-center card-body pb-0 pt-0">
-                            <button 
-                                class="btn btn-sm btn-outline-primary mt-3"
-                                onclick="openAddTaskModal('{{ $agenda->id }}', '{{ $agenda->title }}')">
-                                <i class="fas fa-plus-circle mr-1"></i> Tambah Task
-                            </button>
+                         <div class="d-flex justify-content-between align-items-center card-body pb-0 pt-0">
+                            <div>
+                                @canAccess('storeTask','moms')
+                                    <button 
+                                        class="btn btn-sm btn-outline-primary mt-3"
+                                        onclick="openAddTaskModal('{{ $agenda->id }}', '{{ $agenda->title }}')">
+                                        <i class="fas fa-plus-circle mr-1"></i> Tambah Task
+                                    </button>
+                                @endcanAccess
+                            </div>
+
+                            <div class="d-flex ml-auto">
+                                @canAccess('editTask','moms')
+                                <button 
+                                    class="btn btn-sm btn-outline-warning mt-3 ml-2"
+                                    onclick="openEditAgendaModal({{ $agenda->id }}, '{{ $agenda->title }}', `{{ $agenda->discussion_notes }}`)">
+                                    <i class="fas fa-edit mr-1"></i> Edit Agenda
+                                </button>
+                                @endcanAccess
+                                @canAccess('deleteAgenda','moms')
+                                <form action="{{ route('mom.deleteAgenda', $agenda->id) }}" method="POST" class="ml-2">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger mt-3" onclick="return confirm('Yakin ingin menghapus agenda ini? Semua task di dalamnya juga akan terhapus.')">
+                                        <i class="fas fa-trash mr-1"></i> Hapus Agenda
+                                    </button>
+                                </form>
+                                @endcanAccess
+                            </div>
                          </div>
-                         @endcanAccess
                         <div class="card-body">
                             <div class="callout callout-info mb-4">
                                 <h5><i class="fas fa-comments mr-2"></i>Discussion Notes</h5>
                                 <div class="p-3 border rounded bg-light">{!! $agenda->discussion_notes !!}</div>
                             </div>
 
-                            @if ($agenda->tasks->count())
-                            <div class="mt-4">
-                                <h5><i class="fas fa-list-check mr-2"></i>Meeting Tasks</h5>
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-striped">
-                                        <thead class="thead-light">
-                                            <tr>
-                                                <th>Task</th>
-                                                <th>Assigned To</th>
-                                                <th>Due Date</th>
-                                                <th>Status</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($agenda->tasks as $task)
-                                            <tr>
-                                                <td>
-                                                    @if($task->dailyTask)
-                                                    <a href="{{ route('dailytask.show', $task->dailyTask->slug) }}" class="btn btn-sm btn-info badge">
-                                                        <i class="fa fa-eye"></i> {{$task->dailyTask->name}}
-                                                    </a>
-                                                    @else
-                                                        {{ $task->title }}
-                                                    @endif
-
-                                                </td>
-                                                <td>
-                                                    @if ($task->dailyTask && $task->dailyTask->assignment_user_id)
-                                                    <span class="badge bg-primary">
-                                                        <i class="fas fa-user mr-1"></i> {{ $task->dailyTask->assign->name }}
-                                                    </span>
-                                                    @else
-                                                        @if($task->token)
-                                                            <button type="button" class="btn btn-sm btn-outline-secondary copy-link-btn" 
-                                                                    onclick="copyLinkAndAlert(event, '{{ route('external.task.view', $task->token) }}')">
-                                                                <i class="fas fa-copy"></i> Copy Link
-                                                            </button>
+                            <!-- ... Bagian task tetap ... -->
+                             @if ($agenda->tasks->count())
+                                <div class="mt-4">
+                                    <h5><i class="fas fa-list-check mr-2"></i>Meeting Tasks</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-striped">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Task</th>
+                                                    <th>Assigned To</th>
+                                                    <th>Due Date</th>
+                                                    <th>Status</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($agenda->tasks as $task)
+                                                <tr>
+                                                    <td>
+                                                        @if($task->dailyTask)
+                                                        <a href="{{ route('dailytask.show', $task->dailyTask->slug) }}" class="btn btn-sm btn-info badge">
+                                                            <i class="fa fa-eye"></i> {{$task->dailyTask->name}}
+                                                        </a>
                                                         @else
-                                                        <span class="text-muted">Not assigned</span>
+                                                            {{ $task->title }}
                                                         @endif
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <span class="{{ $task->isOverdue() ? 'text-danger' : 'text-success' }}">
-                                                        {{ $task->date_show }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    @switch($task->taskStatus->name)
-                                                        @case('backlog')
-                                                            <i class="fa fa-clipboard-list"></i> Backlog
-                                                            @break
-                                                        @case('todo')
-                                                            <i class="fa fa-list-alt"></i> Todo
-                                                            @break
-                                                        @case('doing')
-                                                            <i class="fa fa-hourglass-start"></i> Doing
-                                                            @break
-                                                        @case('in review')
-                                                            <i class="fa fa-eye" style="color: green;"></i> In Review
-                                                            @break
-                                                        @case('not complete')
-                                                            <i class="fa fa-times-circle" style="color: red;"></i> Not Complete
-                                                            @break
-                                                        @case('complete')
-                                                            <i class="fa fa-check" style="color: green;"></i> Complete
-                                                            @break
-                                                        @default
-                                                            {{ $dailytask->taskStatus->name }}
-                                                    @endswitch
-                                                </td>
-                                                <td>
-                                                    @if($task->isAction())
-                                                    <div class="task-actions d-flex gap-2">
-                                                        @canAccess('editTask','moms')
-                                                        <button type="button" class="btn btn-sm btn-outline-warning mr-2 mt-1"
-                                                                data-task-id="{{ $task->id }}"
-                                                                data-agenda-id="{{ $agenda->id }}"
-                                                                data-title="{{ $task->title }}"
-                                                                data-description="{{ $task->description }}"
-                                                                data-start-date="{{ $task->start_date }}"
-                                                                data-end-date="{{ $task->end_date }}"
-                                                                data-user-id="{{ $task->dailyTask ? $task->dailyTask->assignment_user_id : null }}"
-                                                                data-objective-id="{{ $task->dailyTask ? $task->dailyTask->objective_id : null }}"
-                                                                data-key-result-id="{{ $task->key_result_id }}"
-                                                                data-external-email="{{ $task->external_email }}"
-                                                                data-dailytask-id="{{ $task->dailyTask ? $task->dailyTask->id : null }}"
-                                                                onclick="openEditTaskModal(this)">
-                                                            <i class="fas fa-edit"></i> Edit
-                                                        </button>
-                                                        @endcanAccess
 
-                                                        @canAccess('deleteTask','moms')
-                                                        <form action="{{ route('mom.deleteTask', $task->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Yakin ingin menghapus task ini?')">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger mt-1">
-                                                                <i class="fas fa-trash-alt me-1"></i>Hapus
+                                                    </td>
+                                                    <td>
+                                                        @if ($task->dailyTask && $task->dailyTask->assignment_user_id)
+                                                        <span class="badge bg-primary">
+                                                            <i class="fas fa-user mr-1"></i> {{ $task->dailyTask->assign->name }}
+                                                        </span>
+                                                        @else
+                                                            @if($task->token)
+                                                                <button type="button" class="btn btn-sm btn-outline-secondary copy-link-btn" 
+                                                                        onclick="copyLinkAndAlert(event, '{{ route('external.task.view', $task->token) }}')">
+                                                                    <i class="fas fa-copy"></i> Copy Link
+                                                                </button>
+                                                            @else
+                                                            <span class="text-muted">Not assigned</span>
+                                                            @endif
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        <span class="{{ $task->isOverdue() ? 'text-danger' : 'text-success' }}">
+                                                            {{ $task->date_show }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        @switch($task->taskStatus->name)
+                                                            @case('backlog')
+                                                                <i class="fa fa-clipboard-list"></i> Backlog
+                                                                @break
+                                                            @case('todo')
+                                                                <i class="fa fa-list-alt"></i> Todo
+                                                                @break
+                                                            @case('doing')
+                                                                <i class="fa fa-hourglass-start"></i> Doing
+                                                                @break
+                                                            @case('in review')
+                                                                <i class="fa fa-eye" style="color: green;"></i> In Review
+                                                                @break
+                                                            @case('not complete')
+                                                                <i class="fa fa-times-circle" style="color: red;"></i> Not Complete
+                                                                @break
+                                                            @case('complete')
+                                                                <i class="fa fa-check" style="color: green;"></i> Complete
+                                                                @break
+                                                            @default
+                                                                {{ $dailytask->taskStatus->name }}
+                                                        @endswitch
+                                                    </td>
+                                                    <td>
+                                                        @if($task->isAction())
+                                                        <div class="task-actions d-flex gap-2">
+                                                            @canAccess('editTask','moms')
+                                                            <button type="button" class="btn btn-sm btn-outline-warning mr-2 mt-1"
+                                                                    data-task-id="{{ $task->id }}"
+                                                                    data-agenda-id="{{ $agenda->id }}"
+                                                                    data-title="{{ $task->title }}"
+                                                                    data-description="{{ $task->description }}"
+                                                                    data-start-date="{{ $task->start_date }}"
+                                                                    data-end-date="{{ $task->end_date }}"
+                                                                    data-user-id="{{ $task->dailyTask ? $task->dailyTask->assignment_user_id : null }}"
+                                                                    data-objective-id="{{ $task->dailyTask ? $task->dailyTask->objective_id : null }}"
+                                                                    data-key-result-id="{{ $task->key_result_id }}"
+                                                                    data-external-email="{{ $task->external_email }}"
+                                                                    data-dailytask-id="{{ $task->dailyTask ? $task->dailyTask->id : null }}"
+                                                                    onclick="openEditTaskModal(this)">
+                                                                <i class="fas fa-edit"></i> Edit
                                                             </button>
-                                                        </form>
-                                                        @endcanAccess
-                                                    </div>
-                                                    @else
-                                                    <span class="text-muted"><i class="fas fa-running mr-2"></i></span>
-                                                    @endif
-                                                </td>   
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
+                                                            @endcanAccess
+
+                                                            @canAccess('deleteTask','moms')
+                                                            <form action="{{ route('mom.deleteTask', $task->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Yakin ingin menghapus task ini?')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger mt-1">
+                                                                    <i class="fas fa-trash-alt me-1"></i>Hapus
+                                                                </button>
+                                                            </form>
+                                                            @endcanAccess
+                                                        </div>
+                                                        @else
+                                                        <span class="text-muted"><i class="fas fa-running mr-2"></i></span>
+                                                        @endif
+                                                    </td>   
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
-                            @else
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle mr-2"></i>No action items for this agenda.
-                            </div>
-                            @endif
+                                @else
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle mr-2"></i>No action items for this agenda.
+                                </div>
+                                @endif
                         </div>
                     </div>
                 </div>
@@ -310,82 +337,82 @@
 </div>
 
 <!-- Modal Create-->
- @canAccess('storeTask','moms')
-<div class="modal fade" id="addTaskModal" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <form id="addTaskForm" action="{{ route('mom.storeTask',$mom->id) }}" method="POST">
-        @csrf
-        @method('PUT')
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Tambah Task ke Agenda: <span id="modalAgendaTitle"></span></h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" name="agenda_id" id="modalAgendaId">
-
-          <div class="form-group">
-            <label>Judul Task <span class="text-danger">*</span></label>
-            <input type="text" name="title" class="form-control" placeholder="Masukkan judul task" required>
-          </div>
-
-          <div class="form-group">
-            <label>Deskripsi</label>
-            <input class="thriveEditor form-control" id="description_description" data-ids="description" name="description" placeholder="yang akan dicetak di perjanjian"/>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group col-md-6">
-              <label>Tanggal Mulai <span class="text-danger">*</span></label>
-              <input type="date" name="start_date" class="form-control" required>
-            </div>
-            <div class="form-group col-md-6">
-              <label>Tanggal Selesai <span class="text-danger">*</span></label>
-              <input type="date" name="end_date" class="form-control" required>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>User Internal</label>
-            <select name="user_id" id="taskResponsible" class="form-control selectUser2" style="width: 100%;">
-            <option value="">-- Pilih User Internal --</option>
-              @foreach($users as $user)
-                <option value="{{ $user->id }}">{{ $user->name }}</option>
-              @endforeach
-            </select>
-          </div>
-           <!-- MODIFIKASI BAGIAN INI -->
-            <div id="internal-fields" style="display: none;">
-                <div class="mb-3">
-                    <label class="form-label">Objective</label>
-                    <select id="taskObjective" name="objective_id" class="form-select objective-select selectUser2" 
-                            onchange="loadKeyResults(this)">
-                        <option value="" disabled selected>-- Pilih Objective --</option>
-                        @foreach($objectives as $objective)
-                            <option value="{{ $objective->id }}">{{ ucfirst($objective->name) }}</option>
-                        @endforeach
-                    </select>
+@canAccess('storeTask','moms')
+<div class="modal fade" id="addTaskModal" tabindex="-1" role="dialog" aria-labelledby="addTaskModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <form id="addTaskForm" action="{{ route('mom.storeTask',$mom->id) }}" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tambah Task ke Agenda: <span id="modalAgendaTitle"></span></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-                <div id="keyresult-fields-container"></div>
-            </div>
+                <div class="modal-body">
+                    <input type="hidden" name="agenda_id" id="modalAgendaId">
 
-            {{--
-                <div class="form-group">
-                    <label>Email Eksternal (opsional)</label>
-                    <input type="email" name="external_email" class="form-control">
-                    --}}
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Simpan</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
+                    <div class="form-group">
+                        <label>Judul Task <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" placeholder="Masukkan judul task" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Deskripsi</label>
+                        <input class="thriveEditor form-control" id="description_description" data-ids="description"
+                            name="description" placeholder="yang akan dicetak di perjanjian" />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Tanggal Mulai <span class="text-danger">*</span></label>
+                            <input type="date" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Tanggal Selesai <span class="text-danger">*</span></label>
+                            <input type="date" name="end_date" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>User Internal</label>
+                        <select name="user_id" id="taskResponsible" class="form-control selectUserTask2"
+                            style="width: 100%;" onchange="toggleObjectiveFieldsAddTask(this.value)">
+                            <option value="">-- Pilih User Internal --</option>
+                            @foreach($users as $user)
+                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <!-- MODIFIKASI BAGIAN INI -->
+                    <div id="internal-fields" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Objective</label>
+                            <select id="taskObjective" name="objective_id"
+                                class="form-select objective-select selectObjectiveTask2" onchange="loadKeyResults(this)">
+                                <option value="" disabled selected>-- Pilih Objective --</option>
+                                @foreach($objectives as $objective)
+                                <option value="{{ $objective->id }}">{{ ucfirst($objective->name) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div id="keyresult-fields-container"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-1"></i> Simpan
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i> Batal
+                    </button>
+                </div>
+            </div> <!-- /.modal-content -->
+        </form>
+    </div> <!-- /.modal-dialog -->
+</div> <!-- /.modal -->
 @endcanAccess
 
 <!-- Modal Edit Task -->
@@ -466,6 +493,145 @@
   </div>
 </div>
 @endcanAccess
+
+<!-- Modal Tambah Agenda -->
+@canAccess('storeAgenda','moms')
+<div class="modal fade" id="addAgendaModal" tabindex="-1" role="dialog" aria-labelledby="addAgendaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addAgendaModalLabel">Tambah Agenda Baru</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="addAgendaForm" action="{{ route('mom.storeAgenda', $mom->id) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="agendaTitle">Judul Agenda <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="agendaTitle" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="agendaNotes">Catatan Diskusi</label>
+                        <input class="thriveEditor form-control" id="description_agendaNotes" data-ids="agendaNotes" name="discussion_notes" placeholder="Masukkan catatan diskusi"/>
+                    </div>
+                    
+                    <!-- Task Section -->
+                    <div class="task-section mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Task</h5>
+                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                    onclick="showTaskFormInModal()">
+                                <i class="fas fa-plus me-1"></i>Tambah Task
+                            </button>
+                        </div>
+                        
+                        <!-- Task Form -->
+                        <div class="task-form mb-4" id="taskFormInModal" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Judul Task <span class="text-danger">*</span></label>
+                                <input type="text" id="taskTitleInModal" class="form-control" 
+                                        placeholder="Masukkan judul task" >
+                            </div>
+                            
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Tanggal Mulai <span class="text-danger">*</span></label>
+                                    <input type="date" id="taskStartDateInModal" class="form-control"  onchange="setEndDate(this.value)">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Tanggal Selesai <span class="text-danger">*</span></label>
+                                    <input type="date" id="taskEndDateInModal" class="form-control" >
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Penanggung Jawab</label>
+                                <select id="taskUserInModal" class="form-control selectUserAgenda2" onchange="toggleObjectiveFields(this.value)">
+                                    <option value="">-- Pilih User Internal --</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div id="objectiveFieldsContainer" style="display: none;">
+                                <div class="mb-3">
+                                    <label class="form-label">Objective</label>
+                                    <select id="taskObjectiveInModal" class="form-control selectObjective2" onchange="loadKeyResultsForModal(this.value)">
+                                        <option value="">-- Pilih Objective --</option>
+                                        @foreach($objectives as $objective)
+                                            <option value="{{ $objective->id }}">{{ $objective->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                
+                                <!-- Container untuk Key Results -->
+                                <div id="keyresultFieldsContainer"></div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-secondary" 
+                                        onclick="hideTaskFormInModal()"><i class="fas fa-times mr-1"></i> Batal</button>
+                                <button type="button" class="btn btn-primary ml-1" 
+                                        onclick="addTaskToListInModal()"><i class="fas fa-plus mr-1"></i> Task</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Task List -->
+                        <ul id="taskListInModal" class="task-list">
+                            <li class="alert alert-light border text-center py-4 mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Belum ada task untuk agenda ini
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times mr-1"></i> Batal</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i> Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endcanAccess
+
+<!-- Modal Edit Agenda -->
+@canAccess('updateAgenda','moms')
+<div class="modal fade" id="editAgendaModal" tabindex="-1" role="dialog" aria-labelledby="editAgendaModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAgendaModalLabel">Edit Agenda</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="editAgendaForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editAgendaTitle">Judul Agenda</label>
+                        <input type="text" class="form-control" id="editAgendaTitle" name="title" required>
+                    </div>
+                    <div class="form-group" id="description_editAgendaNotes_div">
+                        <label for="editAgendaNotes">Catatan Diskusi</label>
+                        <input class="thriveEditor form-control" id="description_editAgendaNotes" data-ids="editAgendaNotes" name="discussion_notes" placeholder="Masukkan catatan diskusi"/>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endcanAccess
+
 @stop
 @section('js')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -473,6 +639,212 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script src="{{ asset('js/thriveEditor.js') }}"></script>
+<script>
+    $(document).ready(function () {
+        $('.selectUser2').select2({
+            dropdownParent: $('#addAgendaModal'),
+            placeholder: 'Pilih',
+            allowClear: true,
+            width: '100%',});
+    });
+
+    function initializeSelect2ForContainer(index) 
+    {
+        $('.select2-single-'+index+', .select2-multiple-'+index+'').select2({
+            width: '100%' // Adjust width as needed
+        });
+    }
+    // Fungsi untuk mengisi end_date sama dengan start_date
+    function setEndDate(startDate) 
+    {
+        document.getElementById('taskEndDateInModal').value = startDate;
+    }
+
+    // Fungsi untuk modal tambah agenda dengan task
+    function showTaskFormInModal() {
+        document.getElementById('taskFormInModal').style.display = 'block';
+    }
+
+    function hideTaskFormInModal() {
+        document.getElementById('taskFormInModal').style.display = 'none';
+        // Reset form
+        document.getElementById('taskTitleInModal').value = '';
+        document.getElementById('taskStartDateInModal').value = '';
+        document.getElementById('taskEndDateInModal').value = '';
+        document.getElementById('taskUserInModal').value = '';
+        document.getElementById('taskObjectiveInModal').value = '';
+        document.getElementById('keyresultFieldsContainer').innerHTML = '';
+    }
+
+    // Fungsi untuk load key results dalam modal
+    function loadKeyResultsForModal(objectiveId) {
+        const container = document.getElementById('keyresultFieldsContainer');
+        
+        if (!objectiveId) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        // Tampilkan loading
+        container.innerHTML = '<p>Memuat key results...</p>';
+        
+        let url = '{{ route('getresult','id') }}';
+        url = url.replace('id', objectiveId);
+
+        $.ajax({
+            url : url,
+            type: 'GET',
+            data: { is_required: true },
+            success: function(response) {
+                container.innerHTML = response;
+                // Inisialisasi select2
+                initializeSelect2ForContainer(0);
+            },
+            error: function() {
+                container.innerHTML = '<p class="text-danger">Gagal memuat key results</p>';
+            }
+        });
+    }
+
+    // Function untuk menambahkan task ke list di dalam modal
+    function addTaskToListInModal() {
+        const title = document.getElementById('taskTitleInModal').value;
+        const startDate = document.getElementById('taskStartDateInModal').value;
+        const endDate = document.getElementById('taskEndDateInModal').value;
+        const userId = document.getElementById('taskUserInModal').value;
+        const objectiveId = document.getElementById('taskObjectiveInModal').value;
+        let keyResultIds = [];
+        
+        // Validasi
+        if (!title) {
+            alert('Judul task harus diisi!');
+            return;
+        }
+        
+        if (!startDate || !endDate) {
+            alert('Tanggal mulai dan selesai harus diisi!');
+            return;
+        }
+        
+        // Ambil key result yang dipilih
+        const keyResultSelect = document.getElementById('keyresultFieldsContainer').querySelector('select');
+        if (keyResultSelect) {
+            const selectedOptions = Array.from(keyResultSelect.selectedOptions);
+            keyResultIds = selectedOptions.map(option => option.value);
+        }
+        
+        const taskList = document.getElementById('taskListInModal');
+        
+        // Hapus placeholder jika ada
+        if (taskList.querySelector('.alert')) {
+            taskList.innerHTML = '';
+        }
+
+        const index = taskList.children.length;
+        
+        // Generate input hidden untuk task
+        let taskInputs = '';
+        taskInputs += `<input type="hidden" name="tasks[${index}][title]" value="${title}">`;
+        taskInputs += `<input type="hidden" name="tasks[${index}][start_date]" value="${startDate}">`;
+        taskInputs += `<input type="hidden" name="tasks[${index}][end_date]" value="${endDate}">`;
+        taskInputs += `<input type="hidden" name="tasks[${index}][user_id]" value="${userId}">`;
+        taskInputs += `<input type="hidden" name="tasks[${index}][objective_id]" value="${objectiveId}">`;
+        keyResultIds.forEach(krId => {
+            taskInputs += `<input type="hidden" name="tasks[${index}][key_result_ids][]" value="${krId}">`;
+        });
+        
+        // Dapatkan nama user dan objective untuk ditampilkan
+        const userName = $('#taskUserInModal option:selected').text() || 'Belum ditentukan';
+        const objectiveName = $('#taskObjectiveInModal option:selected').text() || 'Belum dipilih';
+        
+        const taskHtml = `
+            <li class="task-item mb-3 p-3 border rounded position-relative">
+                <div class="task-header d-flex justify-content-between align-items-center">
+                    <h5 class="task-title mb-0">${title}</h5>
+                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                            onclick="this.parentElement.parentElement.remove()">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+                <div class="task-details mt-2">
+                    <div><i class="far fa-calendar-alt me-2"></i> Mulai: ${startDate}</div>
+                    <div><i class="far fa-calendar-check me-2"></i> Selesai: ${endDate}</div>
+                    <div><i class="fas fa-user-tie me-2"></i> PJ: ${userName}</div>
+                    <div><i class="fas fa-bullseye me-2"></i> Objective: ${objectiveName}</div>
+                </div>
+                ${taskInputs}
+            </li>
+        `;
+        
+        taskList.insertAdjacentHTML('beforeend', taskHtml);
+        hideTaskFormInModal();
+    }
+
+    function toggleObjectiveFields(userId) 
+    {
+     
+        const objectiveFields = document.getElementById('objectiveFieldsContainer');
+        if (userId) {
+            objectiveFields.style.display = 'block';
+        } else {
+            objectiveFields.style.display = 'none';
+            // Reset nilai objective dan key results
+            document.getElementById('taskObjectiveInModal').value = '';
+            document.getElementById('keyresultFieldsContainer').innerHTML = '';
+        }
+    }
+</script>
+<script>
+    function toggleObjectiveFieldsAddTask(userId) 
+    {
+        const objectiveFields = document.getElementById('internal-fields');
+        if (userId) {
+            objectiveFields.style.display = 'block';
+        } else {
+            objectiveFields.style.display = 'none';
+            // Reset nilai objective dan key results
+            document.getElementById('taskObjectiveInModal').value = '';
+            document.getElementById('keyresultFieldsContainer').innerHTML = '';
+        }
+    }
+    // Fungsi untuk membuka modal tambah agenda
+    function openAddAgendaModal() {
+        $('#addAgendaModal').modal('show');
+    }
+
+    // Fungsi untuk membuka modal edit agenda
+    function openEditAgendaModal(agendaId, title, notes) {
+        // Set nilai form
+        document.getElementById('editAgendaTitle').value = title;
+        
+        // Set action form
+        const form = document.getElementById('editAgendaForm');
+        form.action = "{{ route('mom.updateAgenda', ':id') }}".replace(':id', agendaId);
+        
+        // Generate editor dengan nilai notes
+        const descriptionNoteDiv = document.getElementById('description_editAgendaNotes_div');
+        if (descriptionNoteDiv) {
+            descriptionNoteDiv.querySelectorAll('.ql-snow').forEach(element => {
+                element.remove();
+            });
+        }
+        generateThriveEditor("editAgendaNotes", notes);
+        
+        // Tampilkan modal
+        
+         const modalEditModal = new bootstrap.Modal(document.getElementById('editAgendaModal'));
+        modalEditModal.show();
+    }
+
+    // Inisialisasi editor untuk modal tambah agenda
+    document.addEventListener('DOMContentLoaded', function() {
+        // Pastikan modal tambah agenda sudah ada
+        if (document.getElementById('addAgendaModal')) {
+            // Generate editor untuk catatan diskusi
+            // generateThriveEditor("agendaNotes", '');
+        }
+    });
+</script>
 @canAccess('editTask','moms')
 <script>
     // Fungsi untuk membuka modal edit dengan data dari button
@@ -622,9 +994,11 @@
 </script>
 @endcanAccess
 
-@canAccess('storeTask','mom')
+@canAccess('storeTask','moms')
 <script>
     $(`#taskResponsible`).on('change', function() {
+        console.log('User internal changed to:', this.value);
+        
         const internalFields = document.getElementById(`internal-fields`);
         
         if (this.value) {
@@ -692,7 +1066,26 @@
       }
     );
 
-    $('.selectUser2').select2(
+
+    $('.selectObjectiveTask2').select2(
+      {
+        dropdownParent: $('#addTaskModal'),
+        placeholder: 'Pilih',
+        allowClear: true,
+        width: '100%'
+      }
+    );
+
+    $('.selectUserTask2').select2(
+      {
+        dropdownParent: $('#addTaskModal'),
+        placeholder: 'Pilih',
+        allowClear: true,
+        width: '100%'
+      }
+    );
+
+    $('.selectUserTask2').select2(
       {
         dropdownParent: $('#addTaskModal'),
         placeholder: 'Pilih',
@@ -709,6 +1102,28 @@
         width: '100%'
       }
     );
+
+    $('.selectUserAgenda2').select2(
+      {
+        dropdownParent: $('#addAgendaModal'),
+        placeholder: 'Pilih',
+        allowClear: true,
+        width: '100%'
+      }
+    );
+
+    $('.selectObjective2').select2(
+      {
+        dropdownParent: $('#addAgendaModal'),
+        placeholder: 'Pilih',
+        allowClear: true,
+        width: '100%'
+      }
+    );
+    
+
+                                
+                            
 });
 </script>
 <script>

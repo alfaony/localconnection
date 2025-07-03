@@ -134,7 +134,11 @@ class MomController extends Controller
     {
         $users = User::byCompany(Auth::user()->company_id)->get();
         $objectives = Objective::byCompany(Auth::user()->company_id)->get();
-        return view('mom.show', compact('mom','users', 'objectives'));
+
+        $projects = Project::with(['meetings.participants:id,name'])->byCompany(Auth::user()->company_id)->get();
+        $meetings = Meeting::byCompany(Auth::user()->company_id)->get();
+
+        return view('mom.show', compact('mom','users', 'objectives', 'projects', 'meetings'));
     }
 
     /**
@@ -365,6 +369,100 @@ class MomController extends Controller
 
         return redirect()->back()->with('success', 'Task berhasil Melakukan Approvement!');
     }
+
+    public function deleteAgenda(MomAgenda $momAgenda)
+    {
+        if ($momAgenda->tasks()->exists())
+        {
+            return redirect()->back()->with('error', 'Agenda ini sedang berjalan!');
+        }
+
+        $momAgenda->delete();
+
+        return redirect()->back()->with('success', 'Agenda berhasil dihapus!');
+    }
+
+    public function storeAgenda(Request $request, $id)
+    {
+        // Implement the function logic here
+
+        $this->validate($request, [
+            'title' => 'required|string',
+            'discussion_notes' => 'nullable|string',
+            'tasks' => 'required|array',
+            'tasks.*.title' => 'required|string',
+            'tasks.*.start_date' => 'required|date',
+            'tasks.*.end_date' => 'required|date',
+            'tasks.*.user_id' => 'nullable|uuid|exists:users,id',
+            'tasks.*.objective_id' => 'nullable|uuid|exists:objectives,id',
+            'tasks.*.key_result_ids' => 'nullable|array',
+            'tasks.*.key_result_ids.*' => 'nullable|uuid|exists:objective_key_results,id',
+        ]);
+        $mom = Mom::find($id);
+
+        DB::beginTransaction();
+        try {
+            $agenda = MomAgenda::create([
+               'mom_id' => $id,
+               'title' => $request->title,
+               'discussion_notes' => $request->discussion_notes,
+           ]);
+   
+           foreach ($request->tasks ?? [] as $taskData) {
+               $dailyTask = null;
+                if($taskData['user_id']) 
+                {
+                    $request = new Request([
+                        'user_id' => Auth::id(),
+                        'assignment_user_id' => $taskData['user_id'],
+                        'start_date' => $taskData['start_date'] ?? Carbon::now(),
+                        'end_date' => $taskData['end_date'] ?? Carbon::now(),
+                        'project_id' => $mom->project_id,
+                        'name' => $taskData['title'],
+                        'description' => $request->discussion_notes,
+                        'objective_id' => $taskData['objective_id'] ?? null,
+                        'key_results' => $taskData['key_result_ids'] ?? [],
+                    ]);
+
+                    $dailyTask =  $this->storeDailytask($request);
+                }
+
+                $agenda->tasks()->create([
+                    'task_status_id' => TaskStatus::where('name',ParamSchema::TODO)->firstOrFail()->id,
+                    'title' => $taskData['title'],
+                    'description' => $request->discussion_notes,
+                    'start_date' => $taskData['start_date'] ?? null,
+                    'end_date' => $taskData['end_date'] ?? null,
+                    'external_email' => $taskData['external_email'] ?? null,
+                    'token' => $taskData['user_id'] ?  null : Str::uuid(),
+                    'daily_task_id' => $dailyTask ? $dailyTask->id : null
+                ]);
+           }
+
+           DB::commit();
+           return redirect()->back()->with('success', 'Agenda berhasil disimpan!');
+        } catch (\Throwable $th) {
+            //throw $th;
+            // dd($th);
+            Log::error($th);
+            DB::rollBack();
+
+            return redirect()->back()->with('error', 'Agenda gagal disimpan!');
+        }
+    }
+
+    public function updateAgenda(Request $request, MomAgenda $id)
+    {
+        $request->validate([
+            'title' => 'required|string',
+            'discussion_notes' => 'nullable|string',
+        ]);
+
+        $id->update($request->all());
+
+        return redirect()->back()->with('success', 'Agenda berhasil diupdate!');
+    }
+
 
     // 
     protected function storeDailytask(Request $request, $status = "create")
