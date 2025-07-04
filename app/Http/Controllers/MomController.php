@@ -691,7 +691,7 @@ class MomController extends Controller
                     $query->where('name', RoleSchema::ROOT)->orWhere('name', RoleSchema::ADMIN)->orWhere('name', RoleSchema::DIRECTOR);
                 })->first();
 
-                $to = $dailyTask->agenda->mom->meeting & $dailyTask->agenda->mom->meeting->participantRelasion ? $dailyTask->agenda->mom->meeting->participantRelasion->pluck('id')->push($dailyTask->agenda->mom->user_id)->unique() : [$dailyTask->agenda->mom->user_id]; 
+                $to = $dailyTask->agenda->mom->meeting && $dailyTask->agenda->mom->meeting->participantRelasion ? $dailyTask->agenda->mom->meeting->participantRelasion->pluck('id')->push($dailyTask->agenda->mom->user_id)->unique() : [$dailyTask->agenda->mom->user_id]; 
                 $url = route('external.task.view', $dailyTask->token);
                 $messageInbox = "Seseorang Melakukan Pekerjaan  ".$dailyTask->title." Pada Mom ".$dailyTask->agenda->mom->name;
 
