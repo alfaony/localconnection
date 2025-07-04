@@ -111,7 +111,7 @@
                     </div>
                     
                     <div class="btn-group">
-                        <button type="submit" class="btn btn-success">
+                        <button type="submit" id="submit-btn" class="btn btn-success">
                             <i class="fas fa-save me-1"></i>Simpan
                         </button>
                     </div>
@@ -1208,6 +1208,10 @@
         const formData = new FormData(this);
         formData.append('_token', '{{ csrf_token() }}');
         
+        const submitButton = document.getElementById('submit-btn');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Sedang menyimpan...';
+        
         $.ajax({
             url: "{{ route('mom.store') }}",
             type: 'POST',
@@ -1230,6 +1234,9 @@
 
                     clearDraft(true);
                     setTimeout(() => {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = 'Simpan';
+
                         window.location.href = "{{ route('mom.index') }}";
                     }, 2000);
                 } else {
@@ -1238,6 +1245,9 @@
             },
             error: function(xhr) {
                 console.error('Error:', xhr);
+                
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Simpan';
             }
         });
         
