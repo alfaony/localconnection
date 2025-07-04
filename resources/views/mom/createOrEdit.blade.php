@@ -323,6 +323,13 @@
         
         agendaList.insertAdjacentHTML('beforeend', agendaHtml);
 
+        $(`.select2`).select2({
+            width: '100%',
+            placeholder: '-- Pilih --',
+            allowClear: true
+        });
+        
+
         initializeSelect2();
         generateThriveEditor(`${index}_discussion_notes`,data?.discussion_notes || '');
         
