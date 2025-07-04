@@ -367,14 +367,16 @@ class MomController extends Controller
             'status' => 'required|in:decline,approve',
             'reject_reason' => 'nullable|string',
         ]);
-
+        
         $task = MomTask::where('token', $token)->firstOrFail();
         $task->update([
             'task_status_id' => $request->status == "approve" ? TaskStatus::where('name',ParamSchema::COMPLATE)->firstOrFail()->id : TaskStatus::where('name',ParamSchema::NOTCOMPLATE)->firstOrFail()->id,
             'reject_reason' => $request->status == "decline" ? $request->reject_reason : null
         ]);
-
-        return redirect()->back()->with('success', 'Task berhasil '.$request->status == "approve" ? 'disetujui' : 'ditolak'.'!');
+        
+        $message = $request->status == "approve" ? 'Task berhasil disetujui!' : 'Task berhasil ditolak!';
+        
+        return redirect()->back()->with('success', $message);
     }
 
     public function deleteAgenda(MomAgenda $momAgenda)
@@ -720,11 +722,11 @@ class MomController extends Controller
                     $query->where('name', RoleSchema::ROOT)->orWhere('name', RoleSchema::ADMIN)->orWhere('name', RoleSchema::DIRECTOR);
                 })->first();
 
-                $to = $dailyTask->agenda->mom->meeting->participantRelasion ? $dailyTask->agenda->mom->meeting->participantRelasion->pluck('id')->push($dailyTask->agenda->mom->user_id)->unique() : [$dailyTask->agenda->mom->user_id]; 
+                $to = $dailyTask->agenda->mom->meeting && $dailyTask->agenda->mom->meeting->participantRelasion ? $dailyTask->agenda->mom->meeting->participantRelasion->pluck('id')->push($dailyTask->agenda->mom->user_id)->unique() : [$dailyTask->agenda->mom->user_id]; 
                 $url = route('external.task.view', $dailyTask->token);
                 $messageInbox = "Seseorang Membuat Laporan Pekerjaan  ".$dailyTask->title." Pada Mom ".$dailyTask->agenda->mom->name;
 
-
+                
             }
 
             $status = "success";
