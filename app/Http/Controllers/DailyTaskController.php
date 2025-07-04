@@ -444,7 +444,7 @@ class DailyTaskController extends Controller
             $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
 
             DB::commit();
-            return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap'));
+            return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap','divisions'));
 
         } catch (\Exception $e) {
             // dd($e);
@@ -1039,6 +1039,7 @@ class DailyTaskController extends Controller
             return redirect()->route('dailytask.show', $dailytask->slug)->with('approvement', true);
 
         } catch (\Throwable $th) {
+            dd($th);
             Log::error($th->getMessage());
             DB::rollback();
 

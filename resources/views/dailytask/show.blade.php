@@ -490,22 +490,39 @@
                     @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::INREVIEW)
                         @canAccess('approvement','dailytasks')
                         <h6>Penilaian dan Penyelesaian</h6>
-                        <form action="{{ route('dailytask.approvement', $dailytask->slug) }}" method="POST">
+                        <form id="approvementForm" method="POST">
                             @csrf
-                            @method('PUT')
+                            <input type="hidden" name="slug" value="{{ $dailytask->slug }}" id="submitApprovementSlug">
                             <div class="form-group">
-                                <label for="point">Status Tugas</label>
-                                <select name="task_status" id="" class="form-control select2" required>
+                                <label for="task_status">Status Tugas</label>
+                                <select name="task_status" class="form-control select2" required>
                                     @foreach($approvement as $a)
-                                        <option value="{{ $a->id }}">{{ ucfirst($a->name) }}</option>
+                                    <option value="{{ $a->id }}">{{ ucfirst($a->name) }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="form-group">
+                            @canAccess('checkDivisionQuota','dailytasks')
+                            <div class="form-group mt-2">
                                 <label for="point">Poin</label>
-                                <input type="number" name="point" class="form-control" value="{{ $dailytask->point }}">
+                                <input type="number" name="point" id="pointInput" class="form-control" placeholder="Masukkan Poin">
                             </div>
-                            <button type="submit" class="btn btn-success" onclick="return confirm('Are you sure?')">Simpan Tugas</button>
+
+                            <div id="divisionSection" class="form-group mt-2 d-none">
+                                <label for="task_status">Point Divisi</label>
+                                <select id="divisionSelect" name="division_id" class="form-control">
+                                    <option value="" selected>Pilih Divisi</option>    
+                                    @foreach($divisions as $division)
+                                        <option value="{{ $division->id }}">{{ $division->name }}</option>
+                                    @endforeach
+                                </select>
+                                <small id="quotaInfo" class="text-muted d-none"></small>
+                                <small id="quotaWarning" class="text-danger d-none">Poin melebihi kuota tersedia!</small>
+                            </div>
+                            @endcanAccess
+                            
+                            <div class="d-flex justify-content-start">
+                                <button type="button" id="submitApprovement" class="btn btn-success mt-3">Simpan Tugas</button>
+                            </div>
                         </form>
                         @endcanAccess
                     @elseif($dailytask->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE)
@@ -1044,6 +1061,175 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/browser-image-compression/dist/browser-image-compression.js"></script>
+
+@canAccess('approvement','dailytasks')
+@canAccess('checkDivisionQuota','dailytasks')
+<script>
+    $(document).on('click', '#submitApprovement, #submitAndContinue', function(e) {
+        e.preventDefault();
+
+        // Show confirmation alert
+        Swal.fire({
+            title: 'Anda yakin?',
+            text: "Anda tidak dapat membatalkan ini!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, setujui!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Proceed with form submission
+                let isContinue = $(this).attr('id') === 'submitAndContinue';
+                let nextTaskId = $('#submitAndContinue').data('next-id'); // Assuming you have the next task slug in a data attribute
+
+                var formData = $('#approvementForm').serialize(); // Get all form data
+                var slug = $('#submitApprovementSlug').val(); 
+                let url = "{{ route('dailytask.approvement', ':id') }}";
+                url = url.replace(':id', slug);
+                
+                $.ajax({
+                    url: url,
+                    method: 'PUT',
+                    data: formData + '&_token=' + '{{ csrf_token() }}', // Include CSRF token in the data
+                    beforeSend: function() {
+                        // Show a loading spinner or disable the button during submission
+                        $('#submitApprovement').attr('disabled', true).text('Processing...');
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Task approved successfully!',
+                                timer: 1000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                console.log(isContinue, nextTaskId);
+                                
+
+                                if (isContinue && nextTaskId) 
+                                {
+                                    $("#btn-offcanvas-closed").click();
+
+                                    location.reload();
+
+                                    let bsOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('sidePopup'));
+                                    bsOffcanvas.hide();
+
+                                    // After closing, trigger the click on the next task button
+                                    setTimeout(function() {
+                                        $("#btn-show-" + nextTaskId).click();
+                                    }, 400); // Delay to ensure the popup closes before opening the next one
+                                    
+                                } else 
+                                {
+                                    location.reload();
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to approve the task. Please try again.'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred. Please try again.'
+                        });
+                    },
+                    complete: function() {
+                        // Re-enable the button and reset the text after submission
+                        $('#submitApprovement').attr('disabled', false).text('Simpan Tugas');
+                    }
+                });
+            }
+        });
+    });
+</script>
+<script>
+    let selectedDivisionId = null;
+
+    $(document).on('input', '#pointInput', function () {
+        let point = parseInt($(this).val());
+
+        if (isNaN(point) || point <= 0) {
+            // Poin kosong atau <= 0 → tidak perlu divisi
+            $('#divisionSelect').val('').trigger('change'); // kosongkan dropdown
+            $('#divisionSelect').closest('.form-group').addClass('d-none');
+            $('#quotaInfo').addClass('d-none');
+            $('#quotaWarning').addClass('d-none');
+
+            // Enable tombol submit
+            $('#submitApprovement, #submitAndContinue').prop('disabled', false);
+            return;
+        }
+
+        // Poin valid → tampilkan divisi
+        $('#divisionSelect').closest('.form-group').removeClass('d-none');
+
+        // Reset info kuota
+        $('#quotaInfo').addClass('d-none').text('');
+        $('#quotaWarning').addClass('d-none').text('');
+
+        selectedDivisionId = $('#divisionSelect').val();
+        
+        if (!selectedDivisionId) {
+            $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+            return;
+        }
+
+        // Lanjutkan cek kuota
+        checkQuota(point, selectedDivisionId);
+    });
+
+    $(document).on('change', '#divisionSelect', function () {
+        selectedDivisionId = $(this).val();
+        let point = parseInt($('#pointInput').val());
+
+        if (!selectedDivisionId || isNaN(point) || point <= 0) {
+            $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+            return;
+        }
+
+        checkQuota(point, selectedDivisionId);
+    });
+
+    function checkQuota(point, divisionId) {
+        $.ajax({
+            url: '{{ route("dailytask.checkDivisionQuota") }}',
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                point: point,
+                division_id: divisionId,
+                exclude_task_id: '{{ $dailytask->id ?? null }}' // agar pengecekan edit tetap akurat
+            },
+            success: function (res) {
+                if (res.status === 'fail') {
+                    $('#quotaWarning').removeClass('d-none').text(res.message);
+                    $('#quotaInfo').addClass('d-none');
+                    $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+                } else {
+                    $('#quotaWarning').addClass('d-none');
+                    $('#quotaInfo').removeClass('d-none').text('Sisa kuota: ' + res.remaining + ' poin');
+                    $('#submitApprovement, #submitAndContinue').prop('disabled', false);
+                }
+            },
+            error: function () {
+                $('#quotaWarning').removeClass('d-none').text('Terjadi kesalahan saat cek kuota.');
+                $('#submitApprovement, #submitAndContinue').prop('disabled', true);
+            }
+        });
+    }
+</script>
+@endcanAccess
+@endcanAccess
 <script>
     $(document).ready(function() 
     {
