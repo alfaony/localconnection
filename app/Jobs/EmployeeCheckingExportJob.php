@@ -25,25 +25,27 @@ class EmployeeCheckingExportJob implements ShouldQueue
     protected $today;
     protected $sort;
     protected $role;
+    protected $user;
 
-    public function __construct($filePath, $exportFormat, $company_id, $userId, $start, $end, $today, $sort, $role)
+    public function __construct($filePath, $exportFormat, $user, $userId, $start, $end, $today, $sort, $role)
     {
         $this->filePath = $filePath;
         $this->exportFormat = $exportFormat;
-        $this->company_id = $company_id;
+        $this->company_id = $user->company_id;
         $this->userId = $userId;
         $this->start = $start;
         $this->end = $end;
         $this->today = $today;
         $this->sort = $sort;
         $this->role = $role;
+        $this->user = $user;
     }
 
     public function handle()
     {
         $exportFormat = $this->exportFormat === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
         try {
-            Excel::store(new EmployeeCheckingExport($this->company_id, $this->userId, $this->start, $this->end, $this->today, $this->sort, $this->role), $this->filePath, "public", $exportFormat);
+            Excel::store(new EmployeeCheckingExport($this->user, $this->company_id, $this->userId, $this->start, $this->end, $this->today, $this->sort, $this->role), $this->filePath, "public", $exportFormat);
         } catch (\Exception $e) {
             // dd($e);
             Log::error("Error storing file: " . $e->getMessage());

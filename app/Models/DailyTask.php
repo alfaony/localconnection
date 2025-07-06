@@ -160,6 +160,11 @@ class DailyTask extends Model
         return $this->belongsTo(RecurringRule::class)->withTrashed();
     }
 
+    public function momTask()
+    {
+        return $this->hasOne(MomTask::class, 'daily_task_id','id');
+    }
+
     public function getDateRangeSubmitAttribute()
     {
         if ($this->submit && $this->start_date) {

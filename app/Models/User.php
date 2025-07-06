@@ -487,4 +487,17 @@ class User extends Authenticatable
         //     return $query->where('id', Auth::user()->id);
         // }
     }
+
+     public function scopeByCompanyAccess($query,$user,$companyId, $role)
+    {
+        if($companyId && $role && $role != RoleSchema::ROOT) 
+        {
+            $companyIds = $user->accessibleCompanies->pluck('id')->push($companyId)->unique();
+
+            return $query->whereHas('user', function ($query) use ($companyIds) 
+            {
+                $query->whereIn('company_id', $companyIds);
+            });
+        }
+    }
 }
