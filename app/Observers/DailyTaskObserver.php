@@ -8,7 +8,7 @@ class DailyTaskObserver
 {
     public function updated(DailyTask $dailyTask)
     {
-        if ($dailyTask->isDirty()) 
+        if ($dailyTask->isDirty() && $dailyTask->momTask) 
         {
             $dailyTask->momTask->update([
                 'title' => $dailyTask->name,
