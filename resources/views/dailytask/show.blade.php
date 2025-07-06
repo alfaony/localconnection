@@ -79,6 +79,7 @@
                     </div>
                     @endif
                     @if($dailytask->momTask)
+                    @canAccess('show','moms')
                     <div class="form-group row">
                         <label for="name" class="col-sm-4 col-form-label">Mom:</label>
                         <div class="col-sm-8">
@@ -93,6 +94,7 @@
                             
                         </div>
                     </div>
+                    @endcanAccess
                     @endif
 
                     <div class="form-group row">

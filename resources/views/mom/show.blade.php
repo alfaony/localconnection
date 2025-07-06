@@ -170,9 +170,11 @@
                                                 <tr>
                                                     <td>
                                                         @if($task->dailyTask)
+                                                        @canAccess('show','dailytasks')
                                                         <a href="{{ route('dailytask.show', $task->dailyTask->slug) }}" class="btn btn-sm btn-info badge">
                                                             <i class="fa fa-eye"></i> {{$task->dailyTask->name}}
                                                         </a>
+                                                        @endcanAccess
                                                         @else
                                                             {{ $task->title }}
                                                         @endif

@@ -333,11 +333,12 @@ class MomController extends Controller
     {
         if(!$momTask->isAction())
         {
-            // dd("here");
             return redirect()->back()->with('error', 'Task ini sedang berjalan!');
         }
-
-        // dd("here21");
+        if($momTask->dailyTask)
+        {
+            $momTask->dailyTask->delete();
+        }
         $momTask->delete();
         return redirect()->back()->with('success', 'Task berhasil dihapus!');
     }
