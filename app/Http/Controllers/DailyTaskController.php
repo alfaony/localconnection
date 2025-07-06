@@ -1039,7 +1039,7 @@ class DailyTaskController extends Controller
             return redirect()->route('dailytask.show', $dailytask->slug)->with('approvement', true);
 
         } catch (\Throwable $th) {
-            dd($th);
+            // dd($th);
             Log::error($th->getMessage());
             DB::rollback();
 
