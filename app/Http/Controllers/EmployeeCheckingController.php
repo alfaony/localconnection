@@ -286,9 +286,17 @@ class EmployeeCheckingController extends Controller
                 ->orderBy('updated_at', 'desc')
                 ->first();
 
-            if ($currentCheckinTime->hour < 8 || $currentCheckinTime->hour >= 17) {
-                return response()->json(['status' => false, 'message' => 'Check-in hanya diizinkan antara jam 08:00 dan 17:00'], 200);
-            }
+                $startTime = Carbon::parse($user->start_time); // Misalnya '08:00:00'
+                $endTime = Carbon::parse($user->end_time);     // Misalnya '17:00:00'
+
+                // $currentCheckinTime diasumsikan sudah berupa Carbon instance (misalnya Carbon::now())
+                if ($currentCheckinTime->lt($startTime) || $currentCheckinTime->gte($endTime)) 
+                {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Check-in hanya diizinkan antara jam ' . $startTime->format('H:i') . ' dan ' . $endTime->format('H:i')
+                    ], 200);
+                }
 
             if ($lastScheduledCheckin) {
                 $lastCheckinTime = Carbon::parse($lastScheduledCheckin->checkin_start_time);
@@ -318,7 +326,7 @@ class EmployeeCheckingController extends Controller
     {
         // Determine file name and format
         try {
-            $filename = 'quotes_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
+            $filename = 'employee_checkin_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
             $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
     
             $userId = $request->input('user_id');
@@ -329,7 +337,7 @@ class EmployeeCheckingController extends Controller
             $role = Auth::user()->role->name ?? NULL; 
             
             // Queue the export and store the job file name in session
-            EmployeeCheckingExportJob::dispatch($filename, $exportFormat, Auth::user()->company_id, $userId, $start, $end, $today, $sort, $role);
+            EmployeeCheckingExportJob::dispatch($filename, $exportFormat, Auth::user(), $userId, $start, $end, $today, $sort, $role);
     
     
             $filename = "public/" . $filename;
