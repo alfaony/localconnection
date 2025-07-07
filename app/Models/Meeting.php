@@ -76,6 +76,11 @@ class Meeting extends Model
         return $this->belongsToMany(User::class, 'meeting_user')
                 ->withPivot(['is_attended','join_time']);
     }
+    public function participantRelasion()
+    {
+        return $this->belongsToMany(User::class, 'meeting_user')
+                ->withPivot(['is_attended','join_time']);
+    }
 
     public function user()
     {

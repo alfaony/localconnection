@@ -326,7 +326,7 @@ class EmployeeCheckingController extends Controller
     {
         // Determine file name and format
         try {
-            $filename = 'quotes_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
+            $filename = 'employee_checkin_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
             $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
     
             $userId = $request->input('user_id');
@@ -337,7 +337,7 @@ class EmployeeCheckingController extends Controller
             $role = Auth::user()->role->name ?? NULL; 
             
             // Queue the export and store the job file name in session
-            EmployeeCheckingExportJob::dispatch($filename, $exportFormat, Auth::user()->company_id, $userId, $start, $end, $today, $sort, $role);
+            EmployeeCheckingExportJob::dispatch($filename, $exportFormat, Auth::user(), $userId, $start, $end, $today, $sort, $role);
     
     
             $filename = "public/" . $filename;

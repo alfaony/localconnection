@@ -98,6 +98,7 @@ use App\Http\Controllers\BroadcastAuthController;
 use App\Http\Controllers\PotentialVendorController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\GoogleMeetController;
+use App\Http\Controllers\MomController;
 
 
 
@@ -138,6 +139,12 @@ Route::group(['middleware' => ['auth','web']], function(){
 Route::group(['prefix' => 'google'], function () {
   Route::get('oauth', [GoogleMeetController::class, 'redirectToGoogle'])->name('google.auth')->middleware('auth');
   Route::get('oauth/callback', [GoogleMeetController::class, 'handleGoogleCallback']);
+});
+
+Route::group(['prefix' => 'mom/external'], function () 
+{
+  Route::get('task/{token}', [MomController::class, 'viewExternalTask'])->name('external.task.view');
+  Route::post('task/{token}/submit', [MomController::class, 'submitExternalTask'])->name('external.task.submit');
 });
 
 Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
@@ -492,6 +499,17 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
   Route::post('meeting/join', [MeetingController::class, 'join'])->name('meeting.join');
   Route::resource('meeting', MeetingController::class);
+
+  Route::put('mom/storeAgenda/{id}', [MomController::class,'storeAgenda'])->name('mom.storeAgenda');
+  Route::put('mom/updateAgenda/{id}', [MomController::class,'updateAgenda'])->name('mom.updateAgenda');
+  Route::delete('mom/deleteAgenda/{momAgenda}', [MomController::class,'deleteAgenda'])->name('mom.deleteAgenda');
+
+  Route::delete('mom/deleteTask/{momTask}', [MomController::class,'deleteTask'])->name('mom.deleteTask');
+  Route::post('mom/approveExternalTask/task/{token}', [MomController::class, 'approveExternalTask'])->name('external.task.approve');
+  Route::put('mom/storeTask/{id}', [MomController::class,'storeTask'])->name('mom.storeTask');
+  Route::put('mom/updateTask/{id}', [MomController::class,'updateTask'])->name('mom.updateTask');
+  
+  Route::resource('mom', MomController::class);
 });
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');

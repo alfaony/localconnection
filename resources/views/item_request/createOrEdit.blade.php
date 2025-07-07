@@ -186,7 +186,7 @@
             border: 1px solid #007bff !important;
         }
 
-        .select2-selection__choice__remove
+        
         {
             color: #fe0700 !important;
             border: 1px solid #007bff !important;
