@@ -13,13 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('migration_used_laptop_checks', function (Blueprint $table) {
-             $table->id();
+        Schema::create('used_laptop_repairs', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('used_laptop_id')->constrained()->onDelete('cascade');
-            $table->string('check_item');
-            $table->enum('status', ['baik', 'rusak', 'tidak dicek'])->default('tidak dicek');
-            $table->text('notes')->nullable();
+            $table->string('repair_item'); // input bebas
+            $table->unsignedBigInteger('cost')->default(0);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('migration_used_laptop_checks');
+        Schema::dropIfExists('used_laptop_repairs');
     }
 };

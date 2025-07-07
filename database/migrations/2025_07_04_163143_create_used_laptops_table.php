@@ -17,6 +17,9 @@ return new class extends Migration
             $table->id();
             $table->uuid('user_id');
             $table->uuid('company_id');
+            $table->boolean('is_sold')->default(false); // Sudah terjual atau belum
+            $table->unsignedBigInteger('sold_price')->nullable(); // Harga jual real
+            $table->date('sold_at')->nullable(); // Tanggal jual
             $table->string('name');
             $table->string('processor')->nullable();
             $table->string('ram')->nullable();
