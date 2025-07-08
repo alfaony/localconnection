@@ -333,7 +333,7 @@ class UsedLaptopController extends Controller
                 ->with('success', $laptop ? 'Laptop berhasil diperbarui!' : 'Laptop berhasil ditambahkan!');
                 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             DB::rollBack();
             return back()->withInput()->with('error', 'Gagal menyimpan laptop: ' . $e->getMessage());
         }
