@@ -100,6 +100,7 @@ use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\GoogleMeetController;
 use App\Http\Controllers\MomController;
 use App\Http\Controllers\UsedLaptopController;
+use App\Http\Controllers\MasterCheckItemController;
 
 // LiveWired
 // use App\Http\Livewire\UsedLaptopTable;
@@ -520,6 +521,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::delete('used-laptop/mediaDestroy/{id}', [UsedLaptopController::class,'mediaDestroy'])->name('used-laptop.media.destroy');
   Route::patch('used-laptop/maskAsSold/{slug}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.mark-as-sold');
   Route::resource('used-laptop', UsedLaptopController::class);
+  Route::resource('master-check-item', MasterCheckItemController::class)->only(['index', 'store', 'update', 'destroy']);
 });
 
 

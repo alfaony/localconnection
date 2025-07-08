@@ -24,5 +24,6 @@ class PermissionForMenuUsedComputer extends Seeder
     {
         $this->call(GenerateMasterTypePerCompanySeeder::class);
         $this->call(PermissionForMenuUsedLaptop::class);
+        $this->call(PermissionForMenuMasterCheckItems::class);
     }
 }
