@@ -145,6 +145,7 @@
                                 </div>
                             </div>
 
+                            @auth
                             <div class="info-item mb-3">
                                 <div class="d-flex align-items-center">
                                     <div class="icon-circle bg-primary mr-3">
@@ -156,6 +157,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @endauth
                         </div>
                     </div>
 
@@ -249,7 +251,6 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h5 class="text-primary mb-1">Harga Jual Disarankan</h5>
-                                    <p class="mb-0 text-muted">(Harga beli + perbaikan) + 30%</p>
                                 </div>
                                 <div class="h5 text-success font-weight-bold">
                                     Rp {{ number_format($laptop->suggested_selling_price) }}
@@ -315,7 +316,7 @@
                                 <div class="d-flex align-items-center mb-3">
                                     <i class="fas fa-money-bill-wave fa-2x text-success mr-3"></i>
                                     <div>
-                                        <div class="font-weight-bold">Harga Jual</div>
+                                        <div class="font-weight-bold">Harga Terjual</div>
                                         <div class="h5 text-success font-weight-bold">
                                             Rp {{ number_format($laptop->sold_price) }}
                                         </div>
