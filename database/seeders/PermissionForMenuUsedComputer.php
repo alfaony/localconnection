@@ -23,28 +23,6 @@ class PermissionForMenuUsedComputer extends Seeder
     public function run()
     {
         $this->call(GenerateMasterTypePerCompanySeeder::class);
-
-        $roles = Role::whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::PROCUREMENT, RoleSchema::MANAGER, RoleSchema::MANAGER_FINANCE, RoleSchema::FINANCE])->get();
-        
-        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'maskAsSold','mediaDestroy'];
-
-        foreach ($methods as $method) 
-        {
-            // create permision
-            $permission = Permission::firstOrCreate([
-                'name' => ucwords($method).' Used Laptop',
-            ],[
-                'method' => $method,
-                'table' => 'used_laptops',
-                'model' => 'UsedLaptop',
-                'guard_name' => 'web'
-            ]);
-
-            foreach ($roles as $role) 
-            {
-                PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
-            }
-        }
-
+        $this->call(PermissionForMenuUsedLaptop::class);
     }
 }
