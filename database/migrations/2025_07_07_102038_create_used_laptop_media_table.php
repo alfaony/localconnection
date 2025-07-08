@@ -13,14 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('master_check_items', function (Blueprint $table) {
+        Schema::create('used_laptop_media', function (Blueprint $table) {
             $table->id();
-            $table->uuid('company_id');
-            $table->string('name'); // Contoh: "Keyboard", "Layar", "Speaker
+            $table->foreignId('used_laptop_id')->constrained()->onDelete('cascade');
+            $table->string('file_path'); // atau gunakan storage url
+            $table->string('caption')->nullable(); // opsional
             $table->timestamps();
             $table->softDeletes();
-
-            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
         });
     }
 
@@ -31,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('master_check_items');
+        Schema::dropIfExists('used_laptop_media');
     }
 };

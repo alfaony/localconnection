@@ -61,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
             ];
             $managementRequestItemArray = array();
             $managementCompanyArray = array();
+            $managementUsedArray = array();
             $managementCompanyArray = array();
             $managementSalesArray = array();
             $managementObArray = array();
@@ -84,6 +85,7 @@ class AppServiceProvider extends ServiceProvider
             $productMenu = ['pricelists','products','product_suppliers','supplier_categories'];
             $subcribetionMenu = ['vehicles','subscribe_letters'];
             $managementRequestItemMenu = ['item_requests'];
+            $managementUsedMenu = ['used_laptops'];
 
             $managementCompanyMenu = 
             [
@@ -557,6 +559,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'mom.index',
                     'icon' => 'fa fa-file',
                 ],
+                'used_laptops' =>
+                [
+                    'text' => 'Laptop Bekas',
+                    'route' => 'used-laptop.index',
+                    'icon' => 'fa fa-laptop',
+                ]
             ];
 
             foreach ($listMenu as $role) 
@@ -664,6 +672,14 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($managementUsedMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($managementUsedArray,$menus[$role]);
+                }
+            }
+
             foreach ($managementRequestItemMenu as $role) 
             {
                 if(in_array($role,['item_requests']) && Access::can("index", $role))
@@ -718,6 +734,12 @@ class AppServiceProvider extends ServiceProvider
             [
                 'text'    => 'Manajemen Pekerjaan',
                 'submenu' => $taskMenuArray
+            ];
+
+            $usedMenu = 
+            [
+                'text'    => 'Manajemen Laptop Bekas',
+                'submenu' => $managementUsedArray
             ];
 
             $securityMenu = 
@@ -790,6 +812,11 @@ class AppServiceProvider extends ServiceProvider
             if($taskMenu['submenu'] )
             {
                 $event->menu->add($taskMenu);
+            }
+
+            if($usedMenu['submenu'] )
+            {
+                $event->menu->add($usedMenu);
             }
             
             if($securityMenu['submenu'] )

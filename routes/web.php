@@ -99,6 +99,10 @@ use App\Http\Controllers\PotentialVendorController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\GoogleMeetController;
 use App\Http\Controllers\MomController;
+use App\Http\Controllers\UsedLaptopController;
+
+// LiveWired
+// use App\Http\Livewire\UsedLaptopTable;
 
 
 
@@ -187,6 +191,8 @@ Route::get('employee-checking/report', [EmployeeCheckingController::class, 'repo
 
 Route::get('partnership-agreement/sharePdf/{id}',[PartnershipAgreementController::class,'sharePdf'])->name('partnership-agreement.sharePdf');
 Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementController::class,'signatureShare'])->name('partnership-agreement.signatureShare');
+
+Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
 
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
@@ -510,7 +516,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('mom/updateTask/{id}', [MomController::class,'updateTask'])->name('mom.updateTask');
   
   Route::resource('mom', MomController::class);
+
+  Route::delete('used-laptop/mediaDestroy/{id}', [UsedLaptopController::class,'mediaDestroy'])->name('used-laptop.media.destroy');
+  Route::patch('used-laptop/maskAsSold/{slug}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.mark-as-sold');
+  Route::resource('used-laptop', UsedLaptopController::class);
 });
+
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

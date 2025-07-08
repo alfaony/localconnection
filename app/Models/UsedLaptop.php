@@ -3,10 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class UsedLaptop extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
+        'serial_number',
         'name',
         'processor',
         'ram',
@@ -18,12 +23,30 @@ class UsedLaptop extends Model
         'is_sold',
         'sold_price',
         'sold_at',
+        'qr_code_path',
     ];
 
     protected $casts = [
         'is_sold' => 'boolean',
         'sold_at' => 'date',
     ];
+
+    public function setNameAttribute($value)
+    {
+        $this->attributes['name'] = $value;
+        if (empty($this->slug)) 
+        {
+            $slug = $value."-".$this->serial_number;
+            $this->attributes['slug'] = $this->createUniqueSlug($slug);
+        }
+    }
+    protected function createUniqueSlug($title)
+    {
+        $slug = Str::slug($title);
+        $count = static::where('slug', 'LIKE', "$slug%")->withTrashed()->count();
+
+        return $count ? "{$slug}-{$count}" : $slug;
+    }
 
     // ✅ Relasi
     public function checks()
@@ -34,6 +57,18 @@ class UsedLaptop extends Model
     public function repairs()
     {
         return $this->hasMany(UsedLaptopRepair::class);
+    }
+
+    public function media()
+    {
+        return $this->hasMany(UsedLaptopMedia::class);
+    }
+
+    
+    // ❓ Apakah laptop perlu aksi?
+    public function isAction()
+    {
+        return $this->is_sold ? false : true;
     }
 
     // 💰 Harga jual disarankan = (harga beli + total perbaikan) + 30%
@@ -54,7 +89,7 @@ class UsedLaptop extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function scopeByCompany($query, $companyId)
