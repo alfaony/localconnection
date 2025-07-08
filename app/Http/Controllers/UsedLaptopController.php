@@ -132,7 +132,7 @@ class UsedLaptopController extends Controller
             return redirect()->route('used-laptop.show', $laptop->slug)->with('success', 'Laptop berhasil ditambahkan!');
                 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             DB::rollBack();
             return back()->withInput()->with('error', 'Gagal menambahkan laptop: ' . $e->getMessage());
         }

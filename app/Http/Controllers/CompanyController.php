@@ -166,6 +166,7 @@ class CompanyController extends Controller
                 $asset->save();
             }
             
+            $this->saveMasterCheck($company->id);            
 
             DB::commit();
             return redirect()->back()->with('store',true);
@@ -217,5 +218,31 @@ class CompanyController extends Controller
     {
         $company->delete();
         return redirect()->back()->with('delete',true);
+    }
+
+    protected function saveMasterCheck($companyId)
+    {
+        $components = [
+            'Monitor',
+            'Keyboard',
+            'Battery',
+            'Camera',
+            'Charger',
+            'Mouse Pad',
+            'Body',
+            'Speaker',
+            'Wifi',
+        ];
+
+        foreach ($components as $component) 
+        {
+            $masterCheckItem = \App\Models\MasterCheckItem::where('company_id', $companyId)->where('name', $component)->first();
+            if (!$masterCheckItem) {
+                \App\Models\MasterCheckItem::create([
+                    'company_id' => $companyId,
+                    'name' => $component,
+                ]);
+            }
+        }
     }
 }

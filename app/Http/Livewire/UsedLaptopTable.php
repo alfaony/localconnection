@@ -29,6 +29,8 @@ class UsedLaptopTable extends Component
     public $is_sold = false;
     public $sold_price;
     public $sold_at;
+    public $statusFilter = '';
+
     
     // Modal states
     public $showFormModal = false;
@@ -145,13 +147,29 @@ class UsedLaptopTable extends Component
 
     public function render()
     {
+        
         $laptops = UsedLaptop::query()
-            ->byCompany(auth()->user()->company_id)
-            ->where('name', 'like', '%'.$this->search.'%')
-            ->orWhere('processor', 'like', '%'.$this->search.'%')
-            ->orWhere('ram', 'like', '%'.$this->search.'%')
-            ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
+        ->byCompany(auth()->user()->company_id)
+        ->when($this->search, function ($query) {
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%'.$this->search.'%')
+                ->orWhere('processor', 'like', '%'.$this->search.'%')
+                ->orWhere('ram', 'like', '%'.$this->search.'%')
+                ->orWhere('ssd', 'like', '%'.$this->search.'%')
+                ->orWhere('notes', 'like', '%'.$this->search.'%');
+            });
+        })
+        ->when($this->statusFilter === 'sold', function ($query) {
+            $query->where('is_sold', 1);
+        })
+        ->when($this->statusFilter === 'unsold', function ($query) {
+            $query->where('is_sold', 0);
+        })
+         ->when(!$this->statusFilter, function ($query) {
+            $query->orderBy('is_sold'); // unsold dulu
+        })
+        ->orderBy('created_at', 'desc') // terbaru di atas
+        ->paginate($this->perPage);
 
         return view('livewire.used-laptop-table', [
             'laptops' => $laptops,
