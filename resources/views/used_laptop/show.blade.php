@@ -141,7 +141,7 @@
                             </thead>
                             <tbody>
                                 @foreach($laptop->checks as $check)
-                                @if($check->status && $check->notes)
+                                @if($check->status)
                                 <tr>
                                     <td>
                                         <strong>{{ $check->item->name }}</strong>
