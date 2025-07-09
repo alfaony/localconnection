@@ -12,6 +12,7 @@
 @stop
 
 @section('content')
+@include('components.alert')
 <div class="card card-primary">
     <form action="{{ isset($laptop) ? route('used-laptop.update', $laptop->slug) : route('used-laptop.store') }}" method="POST" enctype="multipart/form-data" id="laptop-form">
         @csrf

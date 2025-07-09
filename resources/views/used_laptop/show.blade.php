@@ -21,7 +21,7 @@
 @stop
 
 @section('content')
-@component('components.alert')
+@include('components.alert')
 <div class="card">
     <div class="card-body">
         <div class="row">
