@@ -33,7 +33,7 @@ class UsedLaptopController extends Controller
      */
     public function create()
     {
-        $checkItems = MasterCheckItem::byCompany(Auth::user()->company_id)->get();
+        $checkItems = MasterCheckItem::where('type', 'laptop_type')byCompany(Auth::user()->company_id)->get();
         return view('used_laptop.createOrEdit', compact('checkItems'));
     }
 
