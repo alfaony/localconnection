@@ -523,12 +523,14 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::delete('used-laptop/mediaDestroy/{id}', [UsedLaptopController::class,'mediaDestroy'])->name('used-laptop.media.destroy');
   Route::patch('used-laptop/maskAsSold/{slug}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.mark-as-sold');
   Route::resource('used-laptop', UsedLaptopController::class);
-  Route::resource('master-check-item', MasterCheckItemController::class)->only(['index', 'store', 'update', 'destroy']);
-});
 
+  Route::resource('master-check-item', MasterCheckItemController::class)->only(['index', 'store', 'update', 'destroy']);
+  
   Route::delete('used-item/mediaDestroy/{id}', [UsedItemController::class,'mediaDestroy'])->name('used-item.media.destroy');
   Route::patch('used-item/maskAsSold/{slug}', [UsedItemController::class,'maskAsSold'])->name('used-item.mark-as-sold');
   Route::resource('used-item', UsedItemController::class);
+});
+
 
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');

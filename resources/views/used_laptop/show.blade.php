@@ -10,7 +10,7 @@
                 <i class="fas fa-arrow-left mr-1"></i> Kembali
             </a>
             @if(!$laptop->is_sold)
-            @canAccess('update','used_laptops')
+            @canAccess('update','used_items')
             <a href="{{ route('used-laptop.edit', $laptop->slug) }}" class="btn btn-primary ml-2">
                 <i class="fas fa-edit mr-1"></i> Edit
             </a>
@@ -296,7 +296,7 @@
             </h5>
         </div>
         <div class="card-body">
-            @canAccess('maskAsSold','used_laptops')
+            @canAccess('maskAsSold','used_items')
             <form action="{{ route('used-laptop.mark-as-sold', $laptop->slug) }}" method="POST" id="sale-form">
                 @csrf
                 @method('PATCH')

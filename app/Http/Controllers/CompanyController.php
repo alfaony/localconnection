@@ -234,6 +234,13 @@ class CompanyController extends Controller
             'Wifi',
         ];
 
+        $itemComponents = [
+          'Kondisi fisik',
+          '⁠Kondisi nyala',
+          '⁠Kondisi kardus', 
+          '⁠Kondisi perlengkapan',  
+        ];
+
         foreach ($components as $component) 
         {
             $masterCheckItem = \App\Models\MasterCheckItem::where('company_id', $companyId)->where('name', $component)->first();
@@ -242,6 +249,18 @@ class CompanyController extends Controller
                     'company_id' => $companyId,
                     'name' => $component,
                 ]);
+            }
+
+            foreach ($itemComponents as $itemComponent) 
+            {
+                $masterCheck = \App\Models\MasterCheck::where('company_id', $companyId)->where('name', $itemComponent)->first();
+                if (!$masterCheck) {
+                    \App\Models\MasterCheck::create([
+                        'company_id' => $companyId,
+                        'name' => $itemComponent,
+                        'type' => 'item_type',
+                    ]);
+                }
             }
         }
     }

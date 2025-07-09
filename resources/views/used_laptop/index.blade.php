@@ -7,7 +7,7 @@
 @stop
 
 @section('content')
-@canAccess('index','used_laptops')
+@canAccess('index','used_items')
     <div class="row">
         <div class="col-md-12">
             @if(session()->has('success'))

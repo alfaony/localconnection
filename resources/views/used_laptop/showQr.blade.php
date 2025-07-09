@@ -210,7 +210,7 @@
 
                     <!-- Kerusakan dan Perbaikan -->
                      @Auth
-                    @canAccess('maskAsSold','used_laptops')
+                    @canAccess('maskAsSold','used_items')
                     <div class="mt-5">
                         <h5 class="text-primary">
                             <i class="fas fa-tools mr-2"></i> Kerusakan dan Perbaikan

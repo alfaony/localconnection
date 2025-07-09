@@ -5,7 +5,7 @@
                 <h3 class="card-title text-white">
                     <i class="fas fa-box mr-2"></i> Manajemen Barang Bekas
                 </h3>
-                @canAccess('create','used_laptops')
+                @canAccess('create','used_items')
                 <a href="{{ route('used-item.create') }}" class="btn btn-success">
                     <i class="fas fa-plus mr-1"></i> Tambah Barang
                 </a>
@@ -92,7 +92,7 @@
                             </td>
                             <td>
                                 <div class="btn-group">
-                                    @canAccess('show','used_laptops')
+                                    @canAccess('show','used_items')
                                     <a 
                                         href="{{ route('used-item.show', $item->slug) }}"
                                         class="btn btn-sm btn-info mr-1 mb-1"
@@ -102,7 +102,7 @@
                                     </a>
                                     @endcanAccess
                                     @if($item->isAction())
-                                    @canAccess('update','used_laptops')
+                                    @canAccess('update','used_items')
                                     <a 
                                         href="{{ route('used-item.edit', $item->slug) }}"
                                         class="btn btn-sm btn-primary mr-1 mb-1"
@@ -111,7 +111,7 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @endcanAccess
-                                    @canAccess('destroy','used_laptops')
+                                    @canAccess('destroy','used_items')
                                     <form 
                                         method="POST"
                                         action="{{ route('used-item.destroy', $item->slug) }}"

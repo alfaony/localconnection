@@ -229,7 +229,7 @@
                                                    onkeyup="formatCurrency(this); calculateTotalRepairCost()" required>
                                         </div>
                                     </div>
-                                    @canAccess('mediaDestroy','used_laptops')
+                                    @canAccess('mediaDestroy','used_items')
                                     <div class="col-md-1 d-flex align-items-center justify-content-center mt-3">
                                         <button type="button" class="btn btn-danger btn-block btn-remove-repair btn-sm">
                                             <i class="fas fa-trash"></i>
@@ -280,7 +280,7 @@
 </div>
 
 <!-- Delete Photo Modal -->
-@canAccess('mediaDestroy', 'used_laptops')
+@canAccess('mediaDestroy', 'used_items')
 <div class="modal fade" id="deletePhotoModal" tabindex="-1" role="dialog" aria-labelledby="deletePhotoModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -357,7 +357,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
     <script src="{{ asset('js/thriveEditor.js') }}"></script>
-    @canAccess('mediaDestroy', 'used_laptops')
+    @canAccess('mediaDestroy', 'used_items')
     <script>
         let deleteUrl = ''; // Simpan URL target
         /// Format angka ke format mata uang Indonesia
