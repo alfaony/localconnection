@@ -180,18 +180,18 @@ class UsedLaptopController extends Controller
      public function update(Request $request, $slug)
     {
         $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
-        $url = route('used-laptop.show-qr', $laptop->slug);
+        // $url = route('used-laptop.show-qr', $laptop->slug);
 
-        $qrPng = QrCode::format('png')->size(300)->generate($url);
+        // $qrPng = QrCode::format('png')->size(300)->generate($url);
 
-        // Simpan ke disk
-        $filename = 'qr_laptop_' . $laptop->slug.'_'.$laptop->serial_number.'.png';
-        Storage::put('public/qrcodes/' . $filename, $qrPng);
+        // // Simpan ke disk
+        // $filename = 'qr_laptop_' . $laptop->slug.'_'.$laptop->serial_number.'.png';
+        // Storage::put('public/qrcodes/' . $filename, $qrPng);
 
-        // Simpan path untuk view
-        $laptop->update([
-            'qr_code_path' => 'qrcodes/' . $filename,
-        ]);
+        // // Simpan path untuk view
+        // $laptop->update([
+        //     'qr_code_path' => 'qrcodes/' . $filename,
+        // ]);
 
         if(!$laptop) 
         {
