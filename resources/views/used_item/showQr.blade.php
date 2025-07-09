@@ -260,6 +260,7 @@
                 </div>
             </div>
             <!-- Form Input Harga Jual (hanya jika belum terjual) -->
+             @auth
             @if(!$usedItem->is_sold)
             <div class="card mt-4">
                 <div class="card-header bg-success text-white">
@@ -310,6 +311,7 @@
                 </div>
             </div>
             @endif
+            @endauth
         </div>
     </div>
 
