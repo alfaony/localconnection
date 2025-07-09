@@ -20,11 +20,19 @@
         <form action="{{ route('master-check-item.index') }}" method="GET" class="form-inline">
             <div class="input-group input-group-sm">
                 <input type="text" name="search" class="form-control" placeholder="Cari item..." value="{{ request('search') }}">
-                <div class="input-group-append">
-                    <button type="submit" class="btn btn-default">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
+            </div>
+            <div class="input-group input-group-sm ml-2">
+                <select name="type" id="type" class="form-control">
+                    <option value="">Semua Tipe</option>
+                    @foreach ($masterType as $key => $value)
+                        <option value="{{ $key }}" {{ request('type') == $key ? 'selected' : '' }}>{{ $value }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="input-group input-group-sm ml-2">
+                <button type="submit" class="btn btn-default btn-sm">
+                    <i class="fas fa-search"></i>
+                </button>
             </div>
         </form>
     </div>
@@ -35,6 +43,7 @@
                 <tr>
                     <th width="5%">#</th>
                     <th>Nama Item</th>
+                    <th width="15%">Tipe</th>
                     <th width="15%">Aksi</th>
                 </tr>
             </thead>
@@ -43,11 +52,13 @@
                 <tr>
                     <td>{{ ($checkItems->currentPage() - 1) * $checkItems->perPage() + $loop->iteration }}</td>
                     <td>{{ $item->name }}</td>
+                    <td>{{ config('custom.master_type_check.'.$item->type) }}</td>
                     <td>
                         @canAccess('edit', 'master_check_items')
                         <button class="btn btn-sm btn-warning edit-item" 
                                 data-id="{{ $item->id }}"
                                 data-name="{{ $item->name }}"
+                                data-type="{{ $item->type }}"
                                 data-toggle="modal" 
                                 data-target="#editModal">
                             <i class="fas fa-edit"></i>
@@ -102,6 +113,15 @@
                         <input type="text" class="form-control" id="name" name="name" required>
                         <small class="form-text text-muted">Contoh: Layar, Keyboard, Touchpad, dll.</small>
                     </div>
+                    <div class="form-group">
+                        <label for="type_id">Tipe Item <span class="text-danger">*</span></label>
+                        <select class="form-control" id="type_id" name="type" required>
+                            <option value="">Pilih Tipe Item</option>
+                            @foreach($masterType as $type => $title)
+                            <option value="{{ $type }}">{{ $title }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
@@ -132,6 +152,15 @@
                     <div class="form-group">
                         <label for="edit_name">Nama Item <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="edit_name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="type_id">Tipe Item <span class="text-danger">*</span></label>
+                        <select class="form-control" id="type_update_id" name="type" required>
+                            <option value="">Pilih Tipe Item</option>
+                            @foreach($masterType as $type => $title)
+                            <option value="{{ $type }}">{{ $title }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -203,9 +232,12 @@
         $('.edit-item').on('click', function() {
             const id = $(this).data('id');
             const name = $(this).data('name');
+            const type = $(this).data('type');
             
             $('#edit_id').val(id);
             $('#edit_name').val(name);
+            $('#type_update_id').val(type).trigger('change');
+
         });
         
         // Handle edit form submission

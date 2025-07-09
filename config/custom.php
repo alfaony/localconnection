@@ -152,4 +152,9 @@ return
          'SA' => 'Sabtu',
          'SU' => 'Minggu',
       ],
+      'master_type_check' => 
+      [
+         'laptop_type' => 'Laptop',
+         'item_type' => 'Barang Lain',
+      ],
 ];

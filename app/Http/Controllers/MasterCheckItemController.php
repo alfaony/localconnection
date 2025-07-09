@@ -12,24 +12,30 @@ class MasterCheckItemController extends Controller
     {
         $companyId = Auth::user()->company_id;
         $search = $request->input('search');
+        $masterType = config('custom.master_type_check');
         
         $checkItems = MasterCheckItem::byCompany($companyId)
+            ->when($request->type, function ($query) use ($request) {
+                return $query->where('type', $request->type);
+            })
             ->when($search, function ($query) use ($search) {
                 return $query->where('name', 'like', '%'.$search.'%');
             })
             ->paginate(10);
             
-        return view('master-check-items.index', compact('checkItems', 'search'));
+        return view('master-check-items.index', compact('checkItems', 'search', 'masterType'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:master_check_items,name,NULL,id,company_id,'.Auth::user()->company_id
+            'name' => 'required|string|max:255|unique:master_check_items,name,NULL,id,company_id,'.Auth::user()->company_id,
+            'type' => 'required|string|max:255|in:'.implode(',', array_keys(config('custom.master_type_check')))
         ]);
         
         MasterCheckItem::create([
             'name' => $request->name,
+            'type' => $request->type,
             'company_id' => Auth::user()->company_id
         ]);
         
@@ -42,11 +48,13 @@ class MasterCheckItemController extends Controller
     public function update(Request $request, MasterCheckItem $masterCheckItem)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:master_check_items,name,'.$masterCheckItem->id.',id,company_id,'.Auth::user()->company_id
+            'name' => 'required|string|max:255|unique:master_check_items,name,'.$masterCheckItem->id.',id,company_id,'.Auth::user()->company_id,
+             'type' => 'required|string|max:255|in:'.implode(',', array_keys(config('custom.master_type_check')))
         ]);
-        
+
         $masterCheckItem->update([
-            'name' => $request->name
+            'name' => $request->name,
+            'type' => $request->type
         ]);
         
         return response()->json([
