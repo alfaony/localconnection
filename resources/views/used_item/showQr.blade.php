@@ -270,7 +270,7 @@
                 </div>
                 <div class="card-body">
                     @canAccess('maskAsSold','used_items')
-                    <form action="{{ route('used-items.mark-as-sold', $usedItem->slug) }}" method="POST" id="sale-form">
+                    <form action="{{ route('used-item.mark-as-sold', $usedItem->slug) }}" method="POST" id="sale-form">
                         @csrf
                         @method('PATCH')
                         

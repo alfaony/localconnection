@@ -138,7 +138,7 @@
                 <!-- Foto Laptop -->
                 <div class="mb-5">
                     <h5 class="text-primary">
-                        <i class="fas fa-camera mr-2"></i> Foto Laptop
+                        <i class="fas fa-camera mr-2"></i> Foto Barang
                     </h5>
                     @if($usedItem->media->count() > 0)
                         <div class="row">
@@ -160,13 +160,13 @@
                 <!-- QR Code -->
                 <div class="mt-5">
                     <h5 class="text-primary">
-                        <i class="fas fa-qrcode mr-2"></i> QR Code Laptop
+                        <i class="fas fa-qrcode mr-2"></i> QR Code Barang
                     </h5>
                     <div class="card border">
                         <div class="card-body text-center">
                             <div id="qrcode" class="mb-3"></div>
                             <p class="text-muted small mb-0">
-                                Scan untuk melihat detail laptop di perangkat mobile
+                                Scan untuk melihat detail Barang di perangkat mobile
                             </p>
                             <a href="{{ Storage::url($usedItem->qr_code_path) }}" download class="btn btn-sm btn-outline-primary mt-2">
                                 <i class="fas fa-download mr-1"></i> Download QR Code
@@ -214,11 +214,11 @@
     <div class="card mt-4">
         <div class="card-header bg-success text-white">
             <h5 class="mb-0">
-                <i class="fas fa-money-bill-wave mr-2"></i> Input Penjualan Laptop
+                <i class="fas fa-money-bill-wave mr-2"></i> Input Penjualan Barang
             </h5>
         </div>
         <div class="card-body">
-            @canAccess('maskAsSold','used_laptops')
+            @canAccess('maskAsSold','used_items')
             <form action="{{ route('used-item.mark-as-sold', $usedItem->slug) }}" method="POST" id="sale-form">
                 @csrf
                 @method('PATCH')
