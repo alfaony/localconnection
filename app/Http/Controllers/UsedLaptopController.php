@@ -33,7 +33,7 @@ class UsedLaptopController extends Controller
      */
     public function create()
     {
-        $checkItems = MasterCheckItem::byCompany(Auth::user()->company_id)->get();
+        $checkItems = MasterCheckItem::where('type', 'laptop_type')->byCompany(Auth::user()->company_id)->get();
         return view('used_laptop.createOrEdit', compact('checkItems'));
     }
 
@@ -60,7 +60,7 @@ class UsedLaptopController extends Controller
                 'notes' => 'nullable|string',
                 'photos' => 'nullable|array',
                 'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
-                'check_items' => 'required|array|min:1',
+                'check_items' => 'nullable|array',
                 'repairs' => 'nullable|array',
             ]);
 
@@ -165,7 +165,7 @@ class UsedLaptopController extends Controller
     public function edit($slug)
     {
         $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
-        $checkItems = MasterCheckItem::byCompany(Auth::user()->company_id)->get();
+        $checkItems = MasterCheckItem::where('type','laptop_type')->byCompany(Auth::user()->company_id)->get();
         return view('used_laptop.createOrEdit', compact('checkItems', 'laptop'));
 
     }
@@ -180,18 +180,18 @@ class UsedLaptopController extends Controller
      public function update(Request $request, $slug)
     {
         $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
-        $url = route('used-laptop.show-qr', $laptop->slug);
+        // $url = route('used-laptop.show-qr', $laptop->slug);
 
-        $qrPng = QrCode::format('png')->size(300)->generate($url);
+        // $qrPng = QrCode::format('png')->size(300)->generate($url);
 
-        // Simpan ke disk
-        $filename = 'qr_laptop_' . $laptop->slug.'_'.$laptop->serial_number.'.png';
-        Storage::put('public/qrcodes/' . $filename, $qrPng);
+        // // Simpan ke disk
+        // $filename = 'qr_laptop_' . $laptop->slug.'_'.$laptop->serial_number.'.png';
+        // Storage::put('public/qrcodes/' . $filename, $qrPng);
 
-        // Simpan path untuk view
-        $laptop->update([
-            'qr_code_path' => 'qrcodes/' . $filename,
-        ]);
+        // // Simpan path untuk view
+        // $laptop->update([
+        //     'qr_code_path' => 'qrcodes/' . $filename,
+        // ]);
 
         if(!$laptop) 
         {

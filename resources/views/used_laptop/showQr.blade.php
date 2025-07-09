@@ -188,7 +188,7 @@
                                 </thead>
                                 <tbody>
                                     @foreach($laptop->checks as $check)
-                                    @if($check->status && $check->notes)
+                                    @if($check->status)
                                     <tr>
                                         <td>
                                             <strong>{{ $check->item->name }}</strong>
@@ -210,7 +210,7 @@
 
                     <!-- Kerusakan dan Perbaikan -->
                      @Auth
-                    @canAccess('maskAsSold','used_laptops')
+                    @canAccess('maskAsSold','used_items')
                     <div class="mt-5">
                         <h5 class="text-primary">
                             <i class="fas fa-tools mr-2"></i> Kerusakan dan Perbaikan

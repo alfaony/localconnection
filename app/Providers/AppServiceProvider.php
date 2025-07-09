@@ -85,7 +85,7 @@ class AppServiceProvider extends ServiceProvider
             $productMenu = ['pricelists','products','product_suppliers','supplier_categories'];
             $subcribetionMenu = ['vehicles','subscribe_letters'];
             $managementRequestItemMenu = ['item_requests'];
-            $managementUsedMenu = ['used_laptops','master_check_items'];
+            $managementUsedMenu = ['master_check_items','used_laptops','used_items'];
 
             $managementCompanyMenu = 
             [
@@ -570,6 +570,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Item Pemeriksaan',
                     'route' => 'master-check-item.index',
                     'icon' => 'fa fa-list',
+                ],
+                'used_items' =>
+                [
+                    'text' => 'Barang Bekas',
+                    'route' => 'used-item.index',
+                    'icon' => 'fa fa-box-open',
                 ]
             ];
 
@@ -744,7 +750,7 @@ class AppServiceProvider extends ServiceProvider
 
             $usedMenu = 
             [
-                'text'    => 'Manajemen Laptop Bekas',
+                'text'    => 'Manajemen Barang Bekas',
                 'submenu' => $managementUsedArray
             ];
 

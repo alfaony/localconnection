@@ -1,11 +1,11 @@
 @extends('adminlte::page')
 
-@section('title', isset($laptop) ? 'Edit Laptop Bekas' : 'Tambah Laptop Bekas')
+@section('title', isset($usedItem) ? 'Edit Barang Bekas' : 'Tambah Barang Bekas')
 
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
-        <h1 class="m-0 text-dark">{{ isset($laptop) ? 'Edit Laptop Bekas' : 'Tambah Laptop Bekas' }}</h1>
-        <a href="{{ route('used-laptop.index') }}" class="btn btn-secondary">
+        <h1 class="m-0 text-dark">{{ isset($usedItem) ? 'Edit Barang Bekas' : 'Tambah Barang Bekas' }}</h1>
+        <a href="{{ route('used-item.index') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left mr-1"></i> Kembali
         </a>
     </div>
@@ -14,17 +14,17 @@
 @section('content')
 @include('components.alert')
 <div class="card card-primary">
-    <form action="{{ isset($laptop) ? route('used-laptop.update', $laptop->slug) : route('used-laptop.store') }}" method="POST" enctype="multipart/form-data" id="laptop-form">
+    <form action="{{ isset($usedItem) ? route('used-item.update', $usedItem->slug) : route('used-item.store') }}" method="POST" enctype="multipart/form-data" id="item-form">
         @csrf
-        @if(isset($laptop))
+        @if(isset($usedItem))
             @method('PUT')
         @endif
         
         <div class="card-body">
-            <!-- Section 1: Detail Laptop -->
+            <!-- Section 1: Detail Barang -->
             <div class="section-header mb-4">
                 <h3 class="text-primary">
-                    <i class="fas fa-laptop mr-2"></i> Detail Laptop
+                    <i class="fas fa-box mr-2"></i> Detail Barang
                 </h3>
                 <div class="border-bottom border-primary mt-2"></div>
             </div>
@@ -32,76 +32,39 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for="name">Nama Laptop <span class="text-danger">*</span></label>
+                        <label for="name">Nama Barang <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="name" name="name" 
-                               value="{{ old('name', $laptop->name ?? '') }}"
+                               value="{{ old('name', $usedItem->name ?? '') }}"
                                placeholder="Contoh: MacBook Pro 2020" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="serial_number">Serial Number <span class="text-danger">*</span></label>
+                        <label for="serial_number">Serial Number </label>
                         <input type="text" class="form-control" id="serial_number" name="serial_number" 
-                            value="{{ old('serial_number', $laptop->serial_number ?? '') }}"
+                            value="{{ old('serial_number', $usedItem->serial_number ?? '') }}"
                             placeholder="Masukkan Serial Number" required>
                     </div>
-
-                    <div class="form-group">
-                        <label for="processor">Processor <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="processor" name="processor" 
-                               value="{{ old('processor', $laptop->processor ?? '') }}"
-                               placeholder="Contoh: Intel Core i7 10th Gen" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="ram">RAM <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="ram" name="ram" 
-                               value="{{ old('ram', $laptop->ram ?? '') }}"
-                               placeholder="Contoh: 16GB DDR4" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="ssd">Memory <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="ssd" name="ssd" 
-                               value="{{ old('ssd', $laptop->ssd ?? '') }}"
-                               placeholder="Contoh: 512GB NVMe SSD" required>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="gpu">GPU</label>
-                        <input type="text" class="form-control" id="gpu" name="gpu" 
-                               value="{{ old('gpu', $laptop->gpu ?? '') }}"
-                               placeholder="Contoh: NVIDIA GeForce RTX 3080">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="operating_system">Sistem Operasi</label>
-                        <input type="text" class="form-control" id="operating_system" name="operating_system" 
-                               value="{{ old('operating_system', $laptop->operating_system ?? '') }}"
-                               placeholder="Contoh: Windows 11 Pro">
-                    </div>
-                    
                     <div class="form-group">
                         <label for="purchase_price">Harga Beli (Rp) <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="purchase_price" name="purchase_price" 
-                               value="{{ isset($laptop) ? number_format($laptop->purchase_price, 0, ',', '.') : (old('purchase_price') ? number_format(old('purchase_price'), 0, ',', '.') : '') }}"
-                               data-raw-value="{{ old('purchase_price', $laptop->purchase_price ?? '') }}"
+                               value="{{ isset($usedItem) ? number_format($usedItem->purchase_price, 0, ',', '.') : (old('purchase_price') ? number_format(old('purchase_price'), 0, ',', '.') : '') }}"
+                               data-raw-value="{{ old('purchase_price', $usedItem->purchase_price ?? '') }}"
                                required onkeyup="formatCurrency(this)">
                     </div>
+                </div>
+                <div class="col-md-6">
                     
                     <div class="form-group">
                         <label for="notes">Catatan</label>
-                        <input class="thriveEditor form-control" id="description_notes" data-ids="notes" name="notes" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('notes', $laptop->notes ?? '') }}"/>
-
+                        <input class="thriveEditor form-control" id="description_notes" data-ids="notes" name="notes" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('notes', $usedItem->notes ?? '') }}"/>
                     </div>
                 </div>
             </div>
             
-            <!-- Section 2: Foto Laptop -->
+            <!-- Section 2: Foto Barang -->
             <div class="section-header mb-4 mt-5">
                 <h3 class="text-primary">
-                    <i class="fas fa-camera mr-2"></i> Foto Laptop
+                    <i class="fas fa-camera mr-2"></i> Foto Barang
                 </h3>
                 <div class="border-bottom border-primary mt-2"></div>
             </div>
@@ -111,15 +74,15 @@
                     <input type="file" class="custom-file-input" id="photos" name="photos[]" multiple>
                     <label class="custom-file-label" for="photos">Pilih beberapa foto</label>
                 </div>
-                <small class="form-text text-muted">Upload foto laptop dari berbagai sudut (maks. 5 foto)</small>
+                <small class="form-text text-muted">Upload foto barang dari berbagai sudut (maks. 5 foto)</small>
             </div>
             
             <!-- Existing photos in edit mode -->
-            @if(isset($laptop) && $laptop->media->count() > 0)
+            @if(isset($usedItem) && $usedItem->media->count() > 0)
                 <div class="mb-3">
                     <label>Foto Saat Ini:</label>
                     <div class="row">
-                        @foreach($laptop->media as $media)
+                        @foreach($usedItem->media as $media)
                         <div class="col-md-2 mb-3 position-relative">
                             <img src="{{ Storage::url($media->file_path) }}" class="img-thumbnail photo-preview">
                             <button type="button" class="btn btn-danger btn-sm position-absolute" 
@@ -145,7 +108,7 @@
             </div>
             
             <div class="alert alert-info">
-                <i class="fas fa-info-circle mr-2"></i> Periksa semua item di bawah ini untuk memastikan kondisi laptop
+                <i class="fas fa-info-circle mr-2"></i> Periksa semua item di bawah ini untuk memastikan kondisi Barang
             </div>
             
             <div class="table-responsive">
@@ -160,7 +123,7 @@
                     <tbody>
                         @foreach($checkItems as $item)
                             @php
-                                $existingCheck = isset($laptop) ? $laptop->checks->firstWhere('master_check_item_id', $item->id) : null;
+                                $existingCheck = isset($usedItem) ? $usedItem->checks->firstWhere('master_check_item_id', $item->id) : null;
                             @endphp
                             <tr>
                                 <td>
@@ -204,8 +167,8 @@
             </div>
             
             <div id="repairs-container">
-                @if(isset($laptop) && $laptop->repairs->count() > 0)
-                    @foreach($laptop->repairs as $index => $repair)
+                @if(isset($usedItem) && $usedItem->repairs->count() > 0)
+                    @foreach($usedItem->repairs as $index => $repair)
                         <div class="repair-item card mb-3">
                             <div class="card-body">
                                 <div class="row">
@@ -229,7 +192,7 @@
                                                    onkeyup="formatCurrency(this); calculateTotalRepairCost()" required>
                                         </div>
                                     </div>
-                                    @canAccess('mediaDestroy','used_items')
+                                    @canAccess('mediaDestroy','used_laptops')
                                     <div class="col-md-1 d-flex align-items-center justify-content-center mt-3">
                                         <button type="button" class="btn btn-danger btn-block btn-remove-repair btn-sm">
                                             <i class="fas fa-trash"></i>
@@ -259,7 +222,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <strong>Total Biaya Perbaikan:</strong>
                                 <span id="total-repair-cost" class="font-weight-bold text-danger">
-                                    Rp {{ isset($laptop) ? number_format($laptop->repairs->sum('cost'), 0, ',', '.') : '0' }}
+                                    Rp {{ isset($usedItem) ? number_format($usedItem->repairs->sum('cost'), 0, ',', '.') : '0' }}
                                 </span>
                             </div>
                         </div>
@@ -270,7 +233,7 @@
         
         <div class="card-footer">
             <button type="submit" class="btn btn-primary ">
-                <i class="fas fa-save mr-1"></i> {{ isset($laptop) ? 'Update Laptop' : 'Simpan Laptop' }}
+                <i class="fas fa-save mr-1"></i> {{ isset($usedItem) ? 'Update Barang' : 'Simpan Barang' }}
             </button>
             <button type="reset" class="btn btn-outline-secondary">
                 <i class="fas fa-undo mr-1"></i> Reset Form
@@ -280,7 +243,7 @@
 </div>
 
 <!-- Delete Photo Modal -->
-@canAccess('mediaDestroy', 'used_items')
+@canAccess('mediaDestroy', 'used_laptops')
 <div class="modal fade" id="deletePhotoModal" tabindex="-1" role="dialog" aria-labelledby="deletePhotoModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -357,7 +320,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
     <script src="{{ asset('js/thriveEditor.js') }}"></script>
-    @canAccess('mediaDestroy', 'used_items')
+    @canAccess('mediaDestroy', 'used_laptops')
     <script>
         let deleteUrl = ''; // Simpan URL target
         /// Format angka ke format mata uang Indonesia
@@ -440,7 +403,7 @@
         });
         
         // Dynamic repair items
-        let repairCounter = {{ isset($laptop) ? $laptop->repairs->count() : 1 }};
+        let repairCounter = {{ isset($usedItem) ? $usedItem->repairs->count() : 1 }};
         
         document.getElementById('add-repair').addEventListener('click', function() {
             const container = document.getElementById('repairs-container');
@@ -517,7 +480,7 @@
         });
         
         // Konversi format mata uang sebelum submit form
-        document.getElementById('laptop-form').addEventListener('submit', function(e) {
+        document.getElementById('item-form').addEventListener('submit', function(e) {
             convertCurrencyToNumber();
             return true;
         });
@@ -530,12 +493,9 @@
             const button = $(event.relatedTarget);
             const mediaId = button.data('media-id');
             const deleteForm = document.getElementById('deletePhotoForm');
-
-            console.log("hore");
             
-
             // Excekcutie
-            let url = "{{ route('used-laptop.media.destroy', ':id') }}";
+            let url = "{{ route('used-item.media.destroy', ':id') }}";
             url = url.replace(':id', mediaId);
             deleteForm.action = url;
         });

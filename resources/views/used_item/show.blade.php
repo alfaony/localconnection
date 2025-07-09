@@ -1,17 +1,17 @@
 @extends('adminlte::page')
 
-@section('title', 'Detail Laptop Bekas')
+@section('title', 'Detail Barang Bekas')
 
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
-        <h1 class="m-0 text-dark">Detail Laptop Bekas</h1>
+        <h1 class="m-0 text-dark">Detail Barang Bekas</h1>
         <div>
-            <a href="{{ route('used-laptop.index') }}" class="btn btn-secondary">
+            <a href="{{ route('used-item.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left mr-1"></i> Kembali
             </a>
-            @if(!$laptop->is_sold)
-            @canAccess('update','used_items')
-            <a href="{{ route('used-laptop.edit', $laptop->slug) }}" class="btn btn-primary ml-2">
+            @if(!$usedItem->is_sold)
+            @canAccess('update','used_laptops')
+            <a href="{{ route('used-item.edit', $usedItem->slug) }}" class="btn btn-primary ml-2">
                 <i class="fas fa-edit mr-1"></i> Edit
             </a>
             @endcanAccess
@@ -28,99 +28,21 @@
             <!-- Kolom Kiri: Detail Utama -->
             <div class="col-md-8">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="text-primary">{{ $laptop->name }}</h3>
+                    <h3 class="text-primary">{{ $usedItem->name }}</h3>
                     <div>
-                        <span class="badge {{ $laptop->is_sold ? 'badge-success' : 'badge-secondary' }} p-2">
-                            {{ $laptop->sale_status }}
+                        <span class="badge {{ $usedItem->is_sold ? 'badge-success' : 'badge-secondary' }} p-2">
+                            {{ $usedItem->sale_status }}
                         </span>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-microchip text-white"></i>
-                                </div>
-                                <div>
-                                    <label class="text-muted">Processor</label>
-                                    <p class="font-weight-bold">{{ $laptop->processor }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-memory text-white"></i>
-                                </div>
-                                <div>
-                                    <label class="text-muted">RAM</label>
-                                    <p class="font-weight-bold">{{ $laptop->ram }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-hdd text-white"></i>
-                                </div>
-                                <div>
-                                    <label class="text-muted">SSD</label>
-                                    <p class="font-weight-bold">{{ $laptop->ssd }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-gamepad text-white"></i>
-                                </div>
-                                <div>
-                                    <label class="text-muted">GPU</label>
-                                    <p class="font-weight-bold">{{ $laptop->gpu ?? '-' }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-window-restore text-white"></i>
-                                </div>
-                                <div>
-                                    <label class="text-muted">Sistem Operasi</label>
-                                    <p class="font-weight-bold">{{ $laptop->operating_system ?? '-' }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-money-bill-wave text-white"></i>
-                                </div>
-                                <div>
-                                    <label class="text-muted">Harga Beli</label>
-                                    <p class="font-weight-bold">Rp {{ number_format($laptop->purchase_price) }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                @if($laptop->notes)
+                @if($usedItem->notes)
                 <div class="mt-4">
                     <h5 class="text-primary">
                         <i class="fas fa-sticky-note mr-2"></i> Catatan
                     </h5>
                     <div class="alert alert-light border">
-                        <p>{!! $laptop->notes !!}</p>
+                        <p>{!! $usedItem->notes !!}</p>
                     </div>
                 </div>
                 @endif
@@ -140,7 +62,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($laptop->checks as $check)
+                                @foreach($usedItem->checks as $check)
                                 @if($check->status)
                                 <tr>
                                     <td>
@@ -166,7 +88,7 @@
                     <h5 class="text-primary">
                         <i class="fas fa-tools mr-2"></i> Kerusakan dan Perbaikan
                     </h5>
-                    @if($laptop->repairs->count() > 0)
+                    @if($usedItem->repairs->count() > 0)
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead class="bg-light">
@@ -176,7 +98,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($laptop->repairs as $repair)
+                                @foreach($usedItem->repairs as $repair)
                                 <tr>
                                     <td>{{ $repair->repair_item }}</td>
                                     <td class="text-danger">Rp {{ number_format($repair->cost) }}</td>
@@ -184,7 +106,7 @@
                                 @endforeach
                                 <tr class="table-warning">
                                     <td class="text-right font-weight-bold">Total Biaya Perbaikan:</td>
-                                    <td class="font-weight-bold text-danger">Rp {{ number_format($laptop->repairs->sum('cost')) }}</td>
+                                    <td class="font-weight-bold text-danger">Rp {{ number_format($usedItem->repairs->sum('cost')) }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -204,7 +126,7 @@
                                 <h5 class="text-primary mb-1">Harga Jual Disarankan</h5>
                             </div>
                             <div class="h5 text-success font-weight-bold">
-                                Rp {{ number_format($laptop->suggested_selling_price) }}
+                                Rp {{ number_format($usedItem->suggested_selling_price) }}
                             </div>
                         </div>
                     </div>
@@ -216,11 +138,11 @@
                 <!-- Foto Laptop -->
                 <div class="mb-5">
                     <h5 class="text-primary">
-                        <i class="fas fa-camera mr-2"></i> Foto Laptop
+                        <i class="fas fa-camera mr-2"></i> Foto Barang
                     </h5>
-                    @if($laptop->media->count() > 0)
+                    @if($usedItem->media->count() > 0)
                         <div class="row">
-                            @foreach($laptop->media as $media)
+                            @foreach($usedItem->media as $media)
                             <div class="col-md-6 mb-3">
                                 <a href="{{ Storage::url($media->file_path) }}" target="_blank">
                                     <img src="{{ Storage::url($media->file_path) }}" class="img-fluid img-thumbnail">
@@ -238,15 +160,15 @@
                 <!-- QR Code -->
                 <div class="mt-5">
                     <h5 class="text-primary">
-                        <i class="fas fa-qrcode mr-2"></i> QR Code Laptop
+                        <i class="fas fa-qrcode mr-2"></i> QR Code Barang
                     </h5>
                     <div class="card border">
                         <div class="card-body text-center">
                             <div id="qrcode" class="mb-3"></div>
                             <p class="text-muted small mb-0">
-                                Scan untuk melihat detail laptop di perangkat mobile
+                                Scan untuk melihat detail Barang di perangkat mobile
                             </p>
-                            <a href="{{ Storage::url($laptop->qr_code_path) }}" download class="btn btn-sm btn-outline-primary mt-2">
+                            <a href="{{ Storage::url($usedItem->qr_code_path) }}" download class="btn btn-sm btn-outline-primary mt-2">
                                 <i class="fas fa-download mr-1"></i> Download QR Code
                             </a>
                         </div>
@@ -254,7 +176,7 @@
                 </div>
 
                 <!-- Info Penjualan -->
-                @if($laptop->is_sold)
+                @if($usedItem->is_sold)
                 <div class="mt-5">
                     <h5 class="text-primary">
                         <i class="fas fa-check-circle mr-2"></i> Info Penjualan
@@ -266,7 +188,7 @@
                                 <div>
                                     <div class="font-weight-bold">Harga Terjual</div>
                                     <div class="h5 text-success font-weight-bold">
-                                        Rp {{ number_format($laptop->sold_price) }}
+                                        Rp {{ number_format($usedItem->sold_price) }}
                                     </div>
                                 </div>
                             </div>
@@ -276,7 +198,7 @@
                                 <div>
                                     <div class="font-weight-bold">Tanggal Terjual</div>
                                     <div class="h4">
-                                        {{ $laptop->sold_at->format('d F Y') }}
+                                        {{ $usedItem->sold_at->format('d F Y') }}
                                     </div>
                                 </div>
                             </div>
@@ -288,16 +210,16 @@
         </div>
     </div>
     <!-- Form Input Harga Jual (hanya jika belum terjual) -->
-    @if(!$laptop->is_sold)
+    @if(!$usedItem->is_sold)
     <div class="card mt-4">
         <div class="card-header bg-success text-white">
             <h5 class="mb-0">
-                <i class="fas fa-money-bill-wave mr-2"></i> Input Penjualan Laptop
+                <i class="fas fa-money-bill-wave mr-2"></i> Input Penjualan Barang
             </h5>
         </div>
         <div class="card-body">
             @canAccess('maskAsSold','used_items')
-            <form action="{{ route('used-laptop.mark-as-sold', $laptop->slug) }}" method="POST" id="sale-form">
+            <form action="{{ route('used-item.mark-as-sold', $usedItem->slug) }}" method="POST" id="sale-form">
                 @csrf
                 @method('PATCH')
                 
@@ -324,7 +246,7 @@
                     <div>
                         <h5 class="text-success">Rekomendasi Harga Jual</h5>
                         <div class="h3 text-success font-weight-bold">
-                            Rp {{ number_format($laptop->suggested_selling_price) }}
+                            Rp {{ number_format($usedItem->suggested_selling_price) }}
                         </div>
                         <small class="text-muted">(Harga beli + perbaikan) + 30%</small>
                     </div>
@@ -408,11 +330,11 @@
     // Generate QR Code
     document.addEventListener('DOMContentLoaded', function() {
         // URL untuk QR code (detail laptop)
-        const url = "{{ route('used-laptop.show', $laptop->id) }}";
+        const url = "{{ route('used-item.show', $usedItem->id) }}";
         
         // Buat QR code
         new QRCode(document.getElementById("qrcode"), {
-            text: "{{ route('used-laptop.show-qr', $laptop->slug) }}",
+            text: "{{ route('used-item.show-qr', $usedItem->slug) }}",
             width: 200,
             height: 200,
             colorDark: "#000000",
@@ -425,8 +347,8 @@
     function downloadQRCode() {
         const link = document.createElement('a');
         
-        link.download = 'qr-code-laptop-' + "{{ basename(Storage::url($laptop->qr_code_path)) }}";
-        link.href = "{{ Storage::url($laptop->qr_code_path) }}";
+        link.download = 'qr-code-laptop-' + "{{ basename(Storage::url($usedItem->qr_code_path)) }}";
+        link.href = "{{ Storage::url($usedItem->qr_code_path) }}";
         link.click();
     }
 </script>

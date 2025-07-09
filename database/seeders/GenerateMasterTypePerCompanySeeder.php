@@ -27,6 +27,13 @@ class GenerateMasterTypePerCompanySeeder extends Seeder
             'Wifi',
         ];
 
+        $itemComponents = [
+          'Kondisi fisik',
+          '⁠Kondisi nyala',
+          '⁠Kondisi kardus', 
+          '⁠Kondisi perlengkapan',  
+        ];
+
         $companies = Company::all();
         foreach ($companies as $value) 
         {
@@ -36,6 +43,17 @@ class GenerateMasterTypePerCompanySeeder extends Seeder
                     \App\Models\MasterCheckItem::create([
                         'company_id' => $value->id,
                         'name' => $component,
+                    ]);
+                }
+            }
+
+            foreach ($itemComponents as $component) {
+                $masterCheckItemType = \App\Models\MasterCheckItem::where('company_id', $value->id)->where('name', $component)->first();
+                if (!$masterCheckItemType) {
+                    \App\Models\MasterCheckItem::create([
+                        'company_id' => $value->id,
+                        'name' => $component,
+                        'type' => "item_type"
                     ]);
                 }
             }

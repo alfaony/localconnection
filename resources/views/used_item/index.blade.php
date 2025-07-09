@@ -1,25 +1,17 @@
 @extends('adminlte::page')
 
-@section('title', 'Manajemen Laptop Bekas')
+@section('title', 'Manajemen Barang Bekas')
 
 @section('content_header')
-    <h1>Manajemen Laptop Bekas</h1>
+    <h1>Manajemen Barang Bekas</h1>
 @stop
 
 @section('content')
-@canAccess('index','used_items')
-    <div class="row">
-        <div class="col-md-12">
-            @if(session()->has('success'))
-                <div class="alert alert-success alert-dismissible fade show">
-                    {{ session('success') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
-            
-            @livewire('used-laptop-table')
+@canAccess('index','used_laptops')
+<div class="row">
+    <div class="col-md-12">            
+            @include('components.alert')
+            @livewire('used-item-table')
         </div>
     </div>
 @endcanAccess
