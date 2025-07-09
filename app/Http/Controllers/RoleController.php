@@ -114,6 +114,9 @@ class RoleController extends Controller
             'product_categories',
             'companies',
             'moms',
+            'master_check_items',
+            'used_laptops',
+            'used_items',
         ];
 
         $checked = array_merge($mainMenus);
@@ -257,6 +260,9 @@ class RoleController extends Controller
                 'product_categories',
                 'companies',
                 'moms',
+                'master_check_items',
+                'used_laptops',
+                'used_items',
             ];
         $checked = array_merge($mainMenus);
 
@@ -360,6 +366,9 @@ class RoleController extends Controller
                 'product_categories',
                 'companies',
                 'moms',
+                'master_check_items',
+                'used_laptops',
+                'used_items',
             ];
         
         $checked = array_merge($mainMenus);
