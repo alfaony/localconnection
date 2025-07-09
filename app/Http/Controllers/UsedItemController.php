@@ -52,7 +52,7 @@ class UsedItemController extends Controller
             'notes' => 'nullable|string',
             'photos' => 'nullable|array',
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'check_items' => 'required|array|min:1',
+            'check_items' => 'nullable|array',
             'repairs' => 'nullable|array',
         ]);
 

@@ -39,7 +39,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="serial_number">Serial Number <span class="text-danger">*</span></label>
+                        <label for="serial_number">Serial Number </label>
                         <input type="text" class="form-control" id="serial_number" name="serial_number" 
                             value="{{ old('serial_number', $usedItem->serial_number ?? '') }}"
                             placeholder="Masukkan Serial Number" required>
