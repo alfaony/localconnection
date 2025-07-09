@@ -9,7 +9,7 @@ class MasterCheckItem extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name','company_id'];
+    protected $fillable = ['name','company_id','type'];
 
     public function checks()
     {
