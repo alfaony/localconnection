@@ -38,10 +38,12 @@ class EmployeeCheckinSheet implements FromView, WithTitle
 
     public function view(): View
     {
-        $query = User::where('is_checkin', true)
+        $query = User::select('id', 'name')
+            ->where('is_checkin', true)
             ->byCompanyAccess($this->user, $this->company_id, $this->role)
             ->with(['employeeCheckings' => function ($query) {
-                $query->whereBetween('scheduled_time', [$this->start, $this->end])
+                $query->select('id', 'user_id', 'scheduled_time', 'checkin_start_time', 'is_completed', 'is_dayoff', 'is_permission')
+                    ->whereBetween('scheduled_time', [$this->start, $this->end])
                     ->orderBy('scheduled_time');
             }]);
 
