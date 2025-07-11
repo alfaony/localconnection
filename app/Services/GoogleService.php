@@ -6,6 +6,7 @@ use App\Models\SettingCompany;
 use Carbon\Carbon;
 use Google\Client as GoogleClient;
 use Google\Service\Calendar;
+use Google\Service\Calendar\EventAttendee;
 use Illuminate\Support\Facades\Log;
 use App\Schemas\ParamSchema;
 
@@ -261,7 +262,7 @@ class GoogleService
     public function addAttendeeToEvent(string $eventId, string $email, ?string $name = null): bool
     {
         try {
-            $service = new Calendar($this->googleClient);
+            $service = new Calendar($this->client);
             $calendarId = 'primary';
 
             // Ambil event yang sudah ada
@@ -294,6 +295,7 @@ class GoogleService
 
             return true;
         } catch (\Exception $e) {
+            // dd($e);
             \Log::error('Failed to add attendee to event: ' . $e->getMessage());
             return false;
         }

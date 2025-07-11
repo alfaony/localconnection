@@ -397,12 +397,6 @@ class MeetingController extends Controller
         
     }
 
-
-    public function ratingPage()
-    {        
-        return view('rating');
-    }
-
     public function saveNotes(Request $request, $id)
     {
         $meeting = Meeting::findOrFail($id); // Ambil data rapat berdasarkan ID
@@ -578,10 +572,67 @@ class MeetingController extends Controller
         }
     }
 
+    public function showPublicJoinForm($slug, $token)
+    {
+        $meeting = Meeting::where('slug', $slug)->where('public_token', $token)->firstOrFail();
+
+        if (!$meeting->public_token_generated_at || Carbon::parse($meeting->public_token_generated_at)->addHours(8)->isPast()) {
+            $this->redirectToPublicError('Token telah kadaluarsa.');
+        }
+
+        $end = Carbon::parse("{$meeting->end_date} {$meeting->end_time}");
+        if (now()->greaterThan($end)) {
+            return $this->redirectToPublicError('Token telah kadaluarsa.');
+        }
+
+        return view('meeting.form_public_join', compact('meeting'));
+    }
+
+    public function submitPublicJoinForm(Request $request, $slug, $token)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'public_code' => 'required|string',
+        ]);
+
+        $meeting = Meeting::where('slug', $slug)->where('public_token', $token)->first();
+
+        if (!$meeting) 
+        {
+            return response()->json(['success' => false, 'message' => 'Meeting tidak ditemukan.'], 404);
+        }
+
+        if ($meeting->public_code !== $request->public_code) 
+        {
+            return response()->json(['success' => false, 'message' => 'Kode public salah.'], 403);
+        }
+
+        $participants = collect($meeting->participants_external);
+        if (!$participants->contains($request->email)) {
+            $participants->push($request->email);
+            $meeting->participants = $participants->values();
+            $meeting->save();
+        }
+
+
+        if ($meeting->google_event_id) 
+        {
+            $google = new GoogleService($meeting->company_id);
+            $google->addAttendeeToEvent($meeting->google_event_id, $request->email);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil bergabung ke meeting.',
+            'redirect' => $meeting->google_meet_link ?? route('home')
+        ]);
+    }
+
     protected function generatePublic($meeting)
     {
         $meeting->update([
             'public_token' => Str::random(10),
+            'public_code' => Str::random(5),
             'public_token_generated_at' => now()
         ]);
     }

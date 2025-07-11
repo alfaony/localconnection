@@ -41,6 +41,7 @@ class Meeting extends Model
         'attachment_link',
         'public_token',
         'public_token_generated_at',
+        'public_code',
     ];
 
     protected $casts = [
