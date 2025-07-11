@@ -38,7 +38,9 @@ class Meeting extends Model
         'pic_name',
         'status',
         'attachment',
-        'attachment_link'
+        'attachment_link',
+        'public_token',
+        'public_token_generated_at',
     ];
 
     protected $casts = [

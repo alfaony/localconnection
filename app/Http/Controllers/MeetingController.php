@@ -24,6 +24,8 @@ use Illuminate\Support\Str;
 use App\Helpers\InboxHelper;
 use App\Schemas\ParamSchema;
 use Carbon\CarbonPeriod;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Session;
 
 use App\Services\GoogleService;
 
@@ -208,6 +210,8 @@ class MeetingController extends Controller
                         'google_event_id' => $googleMeetData->event_id
                     ]);
                 }
+
+                $this->generatePublic($meeting);
             }
 
             DB::commit();
@@ -334,6 +338,11 @@ class MeetingController extends Controller
              {
                 $googleService = new GoogleService(Auth::user()->company_id);
                 $googleService->updateGoogleMeet($meeting, $request->all());
+
+                if(!$meeting->public_token && !$meeting->public_token_generated_at)
+                {
+                    $this->generatePublic($meeting);
+                }
              }
 
             //  Start google meet
@@ -382,7 +391,7 @@ class MeetingController extends Controller
         }
         // Hapus meeting participants
 
-        $meeting->participants()->delete();
+        $meeting->participants()->detach();
         $meeting->delete();
         return redirect()->route('meeting.index')->with('success', 'Rapat berhasil dihapus');
         
@@ -490,6 +499,93 @@ class MeetingController extends Controller
         }
     }
 
+    public function redirectToGooglePublic($slug, $token)
+    {
+        $meeting = Meeting::where('slug', $slug)->where('public_token', $token)->firstOrFail();
+
+        if ($meeting->public_token !== $token) 
+        {
+            $this->redirectToPublicError('Token tidak valid.');
+        }
+
+        if (!$meeting->public_token_generated_at || Carbon::parse($meeting->public_token_generated_at)->addHours(8)->isPast()) {
+            $this->redirectToPublicError('Token telah kadaluarsa.');
+        }
+
+        $end = Carbon::parse("{$meeting->end_date} {$meeting->end_time}");
+        if (now()->greaterThan($end)) 
+        {
+            $this->redirectToPublicError('Rapat telah selesai.');
+        }
+
+        // 🔁 Panggil GoogleService
+        return redirect(GoogleService::getPublicAuthUrl(config('services.google.redirect_url_public'), $meeting));
+    }
+
+    public function handleGoogleCallbackPublic(Request $request)
+    {
+        try {
+            // 1. Validasi input awal
+            $authCode = $request->input('code');
+            $stateEncoded = $request->input('state');
+
+            if (!$authCode || !$stateEncoded) 
+            {
+                $this->redirectToPublicError('Terjadi kesalahan saat bergabung.');
+            }
+
+            // 2. Decode state
+            $decoded = base64_decode($stateEncoded);
+            [$slug, $token] = explode('|', $decoded);
+
+            // 3. Cari meeting
+            $meeting = Meeting::where('slug', $slug)
+                ->where('public_token', $token)
+                ->firstOrFail();
+
+            // 4. Ambil info user dari Google
+            $userInfo = GoogleService::getUserInfoFromCode($authCode, route('meeting.public.callback'), $meeting);
+
+            if (!$userInfo) 
+            {
+                $this->redirectToPublicError('Gagal Login Google');
+            }
+
+            $email = $userInfo['email'];
+            $name = $userInfo['name'];
+
+            // 5. Simpan ke daftar participants eksternal
+            $participants = collect($meeting->participants_external);
+            if (!$participants->contains($email)) {
+                $participants->push($email);
+                $meeting->participants = $participants->values();
+                $meeting->save();
+            }
+
+            // 6. Tambahkan ke Google Calendar Event jika ada
+            if ($meeting->google_event_id) {
+                $google = new GoogleService($meeting->company_id);
+                $google->addAttendeeToEvent($meeting->google_event_id, $email, $name);
+            }
+
+            // 7. Redirect ke Google Meet atau halaman success
+            return redirect($meeting->google_meet_link)->with('success', 'Kamu berhasil bergabung ke meeting.');
+
+        } catch (\Exception $e) {
+            // dd($e);
+            \Log::error('Public Google Join Error', ['msg' => $e->getMessage()]);
+            return redirect()->route('home')->with('error', 'Terjadi kesalahan saat bergabung ke meeting.');
+        }
+    }
+
+    protected function generatePublic($meeting)
+    {
+        $meeting->update([
+            'public_token' => Str::random(10),
+            'public_token_generated_at' => now()
+        ]);
+    }
+
     protected function sentMessage($userToId, $userFromId, $message, $directUrl = null, $isRead = false, $category = "entry")
     {
         $inboxHelper = new InboxHelper();
@@ -510,5 +606,10 @@ class MeetingController extends Controller
             ->get()
             ->pluck('field_value', 'field_title');
         return !empty($settings['google_client_id']) && !empty($settings['google_client_secret']) ?? !empty($settings['google_access_token']) && !empty($settings['google_refresh_token']) ?? false;
+    }
+
+    protected function redirectToPublicError($message)
+    {
+        return redirect()->route('meeting.public.error', ['message' => $message]);
     }
 }

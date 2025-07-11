@@ -88,6 +88,7 @@ return [
     'google' =>
     [
         'redirect_uri' => env('GOOGLE_REDIRECT_URI', 'http://localhost:8000/google/oauth/callback'),
+        'redirect_url_public' => env('GOOGLE_REDIRECT_URI_PUBLIC', 'http://localhost:8000/meeting/public/oauth/callback'),
         'max_description_length' => env('GOOGLE_MAX_DESCRIPTION_LENGTH', 8000),
     ],
 ];
