@@ -6,6 +6,7 @@ use App\Models\SettingCompany;
 use Carbon\Carbon;
 use Google\Client as GoogleClient;
 use Google\Service\Calendar;
+use Google\Service\Calendar\EventAttendee;
 use Illuminate\Support\Facades\Log;
 use App\Schemas\ParamSchema;
 
@@ -255,6 +256,105 @@ class GoogleService
             // dd($e);
             Log::error('Create Google Meet error', ['message' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function addAttendeeToEvent(string $eventId, string $email, ?string $name = null): bool
+    {
+        try {
+            $service = new Calendar($this->client);
+            $calendarId = 'primary';
+
+            // Ambil event yang sudah ada
+            $event = $service->events->get($calendarId, $eventId);
+
+            // Tambah attendee baru ke list yang sudah ada
+            $attendees = $event->getAttendees() ?? [];
+
+            // Cek duplikat email
+            $alreadyAdded = collect($attendees)->contains(function ($a) use ($email) {
+                return strtolower($a->email) === strtolower($email);
+            });
+
+            if ($alreadyAdded) {
+                return true; // Jangan duplikat
+            }
+
+            // Buat attendee baru
+            $attendees[] = new EventAttendee([
+                'email' => $email,
+                'displayName' => $name,
+                'responseStatus' => 'accepted'
+            ]);
+
+            // Set kembali ke event
+            $event->setAttendees($attendees);
+
+            // Update ke Google
+            $service->events->update($calendarId, $event->getId(), $event);
+
+            return true;
+        } catch (\Exception $e) {
+            // dd($e);
+            \Log::error('Failed to add attendee to event: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public static function getPublicAuthUrl(string $redirectUri, $meeting): string
+    {
+        $state = base64_encode("$meeting->slug|$meeting->public_token");
+
+        $google = new GoogleService($meeting->company_id);
+        $client = $google->getClient();
+        $client->setRedirectUri($redirectUri);
+        $client->addScope(['email', 'profile']);
+        $client->setState($state);
+
+
+        return $client->createAuthUrl();
+    }
+
+    public static function getUserInfoFromCode(string $authCode, string $redirectUri, $meeting): ?array
+    {
+        try {
+            $google = new GoogleService($meeting->company_id);
+            $client = $google->getClient();
+            $client->setRedirectUri($redirectUri);
+            $client->addScope(['openid', 'email', 'profile']);
+
+            $token = $client->fetchAccessTokenWithAuthCode($authCode);
+
+            if (isset($token['error'])) {
+                \Log::error('Google OAuth Token Error', ['error' => $token]);
+                return null;
+            }
+
+            $client->setAccessToken($token);
+
+            $oauth2 = new \Google\Service\Oauth2($client);
+            $userInfo = $oauth2->userinfo->get();
+
+            return [
+                'email' => $userInfo->email,
+                'name' => $userInfo->name,
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Google OAuth Info Error', ['message' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    public static function checkGoogleConnection($companyId): bool
+    {
+        try {
+            $service = new GoogleService($companyId);
+            // Test panggil calendar list → jika error, berarti tidak valid
+            $calendarList = $service->getCalendarService()->calendarList->listCalendarList();
+            return true;
+        } catch (\Exception $e) {
+            \Log::warning("[GoogleService] Tidak terhubung ke Google: " . $e->getMessage());
+            return false;
         }
     }
 }

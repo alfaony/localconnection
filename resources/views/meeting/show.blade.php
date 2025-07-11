@@ -218,11 +218,31 @@
                                         </div>
                                         
                                         @if($meeting->google_event_id)
-                                        <div>
+                                        <div class="mb-2">
                                             <div class="text-muted small">ID Google Event</div>
                                             <div class="font-weight-bold">
                                                 {{ $meeting->google_event_id ?? 'Tidak tersedia' }}
                                             </div>
+                                        </div>
+                                        @endif
+
+                                        @if($meeting->public_token && $meeting->public_token_generated_at)
+                                        <div class="mb-3">
+                                            <div class="text-muted small">Link Share</div>
+                                            <div class="font-weight-bold">
+                                                <a href="{{ route('meeting.public.join', ['slug' => $meeting->slug, 'token' => $meeting->public_token]) }}" target="_blank" class="text-primary">
+                                                    <i class="fas fa-share-alt mr-1"></i>Shareable Link
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="text-muted small">Kode Public</div>
+                                            <div class="font-weight-bold">
+                                                {{ $meeting->public_code ?? 'Tidak tersedia' }}
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="copyMeetingInfo()">Copy Info</button>
                                         </div>
                                         @endif
                                     @else
@@ -468,6 +488,23 @@
 </script>
 @endcanAccess
 
+@if($meeting->slug && $meeting->public_token)
+<script>
+function copyMeetingInfo() {
+    const name = @json($meeting->meeting_name);
+    const link = @json(route('meeting.public.join', ['slug' => $meeting->slug, 'token' => $meeting->public_token]));
+    const code = @json($meeting->public_code)
+
+    const text = `${name}\nLink: ${link}\nKode: ${code}`;
+
+    navigator.clipboard.writeText(text).then(function () {
+        toastr.success('Informasi meeting berhasil disalin!');
+    }, function () {
+        toastr.error('Gagal menyalin teks.');
+    });
+}
+</script>
+@endif
 @endsection
 
 @section('css')

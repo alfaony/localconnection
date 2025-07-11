@@ -153,6 +153,17 @@ Route::group(['prefix' => 'mom/external'], function ()
   Route::post('task/{token}/submit', [MomController::class, 'submitExternalTask'])->name('external.task.submit');
 });
 
+// Route::group(['prefix' => 'meeting/public'], function() {
+//     Route::get('oauth/callback', [MeetingController::class, 'handleGoogleCallbackPublic'])->name('meeting.public.callback');
+//     Route::view('error', 'meeting.public.error')->name('meeting.public.error');
+//     Route::get('join/{slug}/{token}', [MeetingController::class, 'redirectToGooglePublic'])->name('meeting.public.join');
+// });
+Route::prefix('meeting/public')->group(function () {
+    Route::view('error', 'meeting.public_error')->name('meeting.public.error');
+    Route::get('join/{slug}/{token}', [MeetingController::class, 'showPublicJoinForm'])->name('meeting.public.join');
+    Route::post('join/{slug}/{token}', [MeetingController::class, 'submitPublicJoinForm'])->name('meeting.public.join.submit');
+});
+
 Route::group(['middleware' => ['auth','web', 'ensure.xero.connected','role.permission']], function(){
   Route::get('xero',function(){
     
