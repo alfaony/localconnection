@@ -607,6 +607,18 @@ class MeetingController extends Controller
             return response()->json(['success' => false, 'message' => 'Kode public salah.'], 403);
         }
 
+        $participants = collect($meeting->participants_external ?? []);
+
+        // Cek apakah email sudah terdaftar
+        if ($participants->contains(function ($value) use ($request) {
+            return strtolower($value) === strtolower($request->email);
+        })) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email sudah terdaftar di meeting ini.'
+            ], 409);
+        }
+
         $participants = collect($meeting->participants_external);
         if (!$participants->contains($request->email)) {
             $participants->push($request->email);

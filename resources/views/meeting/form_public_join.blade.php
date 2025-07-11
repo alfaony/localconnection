@@ -83,8 +83,8 @@
         
         .meeting-name {
             font-weight: 700;
-            color: #182848;
-            background: linear-gradient(120deg, #4b6cb7 0%, #182848 100%);
+            color:rgb(220, 224, 232);
+            background: linear-gradient(120deg, #f6f6f6 0%, #182848 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -121,7 +121,7 @@
                             @csrf
                             
                             <div class="mb-4">
-                                <label class="form-label">Alamat Email</label>
+                                <label class="form-label">Alamat Email (Yang Digunakan Untuk Meeting)</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                     <input type="email" name="email" id="emailInput" class="form-control" placeholder="contoh@email.com" required>
@@ -204,58 +204,62 @@
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
             
-            // This would be your actual fetch implementation:
-            fetch("{{ route('meeting.public.join.submit', [$meeting->slug, $meeting->public_token]) }}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': formData.get('_token'),
-                },
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success toast
-                    Swal.fire({
-                        title: 'Berhasil',
-                        text: data.message,
-                        icon: 'success',
-                        showConfirmButton: false,
-                        timer: 1500,
-                        timerProgressBar: true
-                    }).then(() => {
-                        // Redirect to meeting link if provided
-                        if (data.redirect) 
-                        {
-                            window.location.href = data.redirect;
-                        }
-                    });
+            
+            setTimeout(() => {
+                // This would be your actual fetch implementation:
+                fetch("{{ route('meeting.public.join.submit', [$meeting->slug, $meeting->public_token]) }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': formData.get('_token'),
+                    },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success toast
+                        Swal.fire({
+                            title: 'Berhasil',
+                            text: data.message,
+                            icon: 'success',
+                            showConfirmButton: false,
+                            timer: 1500,
+                            timerProgressBar: true
+                        }).then(() => {
+                            // Redirect to meeting link if provided
+                            if (data.redirect) 
+                            {
+                                window.location.href = data.redirect;
+                            }
+                        });
+                        
+                    } else {
+                        // Show error message
+                        document.getElementById('alert-area').innerHTML = `
+                            <div class="alert alert-danger">${data.message}</div>
+                        `;
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalButtonText;
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
                     
-                } else {
-                    // Show error message
-                    document.getElementById('alert-area').innerHTML = `
-                        <div class="alert alert-danger">${data.message}</div>
-                    `;
                     submitButton.disabled = false;
                     submitButton.innerHTML = originalButtonText;
-                }
-            })
-            .catch(err => {
-                console.log(err);
+                    document.getElementById('alert-area').innerHTML = `
+                        <div class="alert alert-danger">Terjadi kesalahan. Silakan coba lagi.</div>
+                    `;
+                });
+    
                 
+                // Reset button after showing toast
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalButtonText;
-                document.getElementById('alert-area').innerHTML = `
-                    <div class="alert alert-danger">Terjadi kesalahan. Silakan coba lagi.</div>
-                `;
-            });
+                // Simulate redirect after toast
+                
+            }, 1000);
 
-            
-            // Reset button after showing toast
-            submitButton.disabled = false;
-            submitButton.innerHTML = originalButtonText;
-            
-            // Simulate redirect after toast
                 
 
         });
