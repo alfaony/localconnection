@@ -29,7 +29,7 @@ return new class extends Migration
     {
         Schema::table('meetings', function (Blueprint $table) {
             $table->dropColumn('public_token');
-            $table->dropColumn('public_code');
+            // $table->dropColumn('public_code');
             $table->dropColumn('public_token_generated_at');
         });
     }
