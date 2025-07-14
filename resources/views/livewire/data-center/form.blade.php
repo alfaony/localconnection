@@ -1,0 +1,128 @@
+<div>
+    <div class="card card-primary card-outline">
+        <div class="card-header">
+            <h3 class="card-title">Buat Data Center</h3>
+        </div>
+        <form wire:submit.prevent="save">
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Data Center *</label>
+                    <input type="text" class="form-control" wire:model="name" placeholder="Nama Data Center" required>
+                    @error('name') <span class="text-danger">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Kapasitas (MB)*</label>
+                            <input type="number" class="form-control" wire:model="capacity_mb" placeholder="Kapasitas (MB)" required>
+                            @error('capacity_mb') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Biaya/Month*</label>
+                            <input type="number" step="0.01" class="form-control" wire:model="cost_per_month" placeholder="Biaya/Month" required>
+                            @error('cost_per_month') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Tanggal Tagihan*</label>
+                            <input type="date" class="form-control" wire:model="tanggal_tagihan" placeholder="Tanggal Tagihan" required>
+                            @error('tanggal_tagihan') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Jalur Masuk</h3>
+                        <button type="button" class="btn btn-sm btn-primary float-right" wire:click="addEntry">
+                            <i class="fas fa-plus"></i> Add Entry
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        @foreach($entries as $index => $entry)
+                        <div class="row mb-2">
+                            <div class="col-md-5">
+                                <input type="text" class="form-control" placeholder="Nama Entry" 
+                                        wire:model="entries.{{ $index }}.name">
+                                @error('entries.'.$index.'.name') <span class="text-danger">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-5">
+                                <input type="number" class="form-control" placeholder="Kapasitas (MB)" 
+                                        wire:model="entries.{{ $index }}.capacity_mb">
+                                @error('entries.'.$index.'.capacity_mb') <span class="text-danger">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger" 
+                                        wire:click="removeEntry({{ $index }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Hak Akses</label>
+                    <select class="form-control select2" multiple wire:model="selectedUsers">
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <a href="{{ route('data-centers.index') }}" class="btn btn-default">Batalkan</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@push('js')
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script>
+    function initSelect2() {
+        $('.select2').select2();
+        $('.select2').on('change', function (e) {
+            let data = $(this).val();
+            @this.set('selectedUsers', data);
+        });
+    }
+
+    document.addEventListener("livewire:load", function () {
+        initSelect2();
+
+        Livewire.hook('message.processed', function () {
+            initSelect2();
+        });
+    });
+</script>
+@endpush
+
+@push('css')
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container--default .select2-selection--single 
+    {
+        height: 38px !important;
+        padding: 5px 10px !important;
+    }
+    .select2-selection__choice
+    {
+        background-color: #007bff !important;
+        border: 1px solid #007bff !important;
+    }
+
+    .select2-selection__choice__remove
+    {
+        color: #fe0700 !important;
+        border: 1px solid #007bff !important;
+    }
+</style>
+@endpush

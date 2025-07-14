@@ -104,7 +104,8 @@ use App\Http\Controllers\MasterCheckItemController;
 use App\Http\Controllers\UsedItemController;
 
 // LiveWired
-// use App\Http\Livewire\UsedLaptopTable;
+use App\Http\Livewire\DataCenter\Index;
+use App\Http\Livewire\DataCenter\Form;
 
 
 
@@ -542,7 +543,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('used-item', UsedItemController::class);
 });
 
-
+Route::get('data-center', Index::class)->name('data-centers.index');
+Route::get('data-center/create', Form::class)->name('data-centers.create');
+Route::get('data-center/edit/{id}', Form::class)->name('data-centers.edit');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
