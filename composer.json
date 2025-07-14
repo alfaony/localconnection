@@ -24,6 +24,7 @@
         "maatwebsite/excel": "^3.1",
         "pusher/pusher-php-server": "^7.2",
         "ramsey/uuid": "^4.7",
+        "sentry/sentry-laravel": "^4.15",
         "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.6",
         "silvanix/wablas": "*",
