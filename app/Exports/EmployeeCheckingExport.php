@@ -34,7 +34,7 @@ class EmployeeCheckingExport implements WithMultipleSheets
     public function sheets(): array
     {
         return [
-            // new EmployeeCheckinSheet($this->user,$this->company_id, $this->userId, $this->start, $this->end, $this->today, $this->sort, $this->role),
+            new EmployeeCheckinSheet($this->user,$this->company_id, $this->userId, $this->start, $this->end, $this->today, $this->sort, $this->role),
             new DayoffSheet($this->company_id, $this->userId, $this->start, $this->end, $this->today, $this->sort, $this->role),
         ];
     }
