@@ -488,16 +488,27 @@ class User extends Authenticatable
         // }
     }
 
-     public function scopeByCompanyAccess($query,$user,$companyId, $role)
+    // public function scopeByCompanyAccess($query,$user,$companyId, $role)
+    // {
+    //     if($companyId && $role && $role != RoleSchema::ROOT) 
+    //     {
+    //         $companyIds = $user->accessibleCompanies->pluck('id')->push($companyId)->unique();
+
+    //         return $query->whereHas('user', function ($query) use ($companyIds) 
+    //         {
+    //             $query->whereIn('company_id', $companyIds);
+    //         });
+    //     }
+    // }
+
+    public function scopeByCompanyAccess($query, $user, $companyId, $role)
     {
-        if($companyId && $role && $role != RoleSchema::ROOT) 
-        {
+        if ($companyId && $role && $role != RoleSchema::ROOT) {
             $companyIds = $user->accessibleCompanies->pluck('id')->push($companyId)->unique();
 
-            return $query->whereHas('user', function ($query) use ($companyIds) 
-            {
-                $query->whereIn('company_id', $companyIds);
-            });
+            return $query->whereIn('company_id', $companyIds);
         }
+
+        return $query;
     }
 }
