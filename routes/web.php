@@ -107,6 +107,12 @@ use App\Http\Controllers\UsedItemController;
 use App\Http\Livewire\DataCenter\Index;
 use App\Http\Livewire\DataCenter\Form;
 
+use App\Http\Livewire\Pop\PopIndex;
+use App\Http\Livewire\Pop\PopForm;
+
+use App\Http\Livewire\Ods\OdsIndex;
+use App\Http\Livewire\Ods\OdsForm;
+
 
 
 
@@ -541,11 +547,20 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::delete('used-item/mediaDestroy/{id}', [UsedItemController::class,'mediaDestroy'])->name('used-item.media.destroy');
   Route::patch('used-item/maskAsSold/{slug}', [UsedItemController::class,'maskAsSold'])->name('used-item.mark-as-sold');
   Route::resource('used-item', UsedItemController::class);
+  
+  Route::get('data-center', Index::class)->name('data-centers.index');
+  Route::get('data-center/create', Form::class)->name('data-centers.create');
+  Route::get('data-center/edit/{id}', Form::class)->name('data-centers.edit');
+  
+  Route::get('pop', PopIndex::class)->name('pops.index');
+  Route::get('pop/create', PopForm::class)->name('pops.create');
+  Route::get('pop/edit/{id}', PopForm::class)->name('pops.edit');
 });
 
-Route::get('data-center', Index::class)->name('data-centers.index');
-Route::get('data-center/create', Form::class)->name('data-centers.create');
-Route::get('data-center/edit/{id}', Form::class)->name('data-centers.edit');
+
+Route::get('optical-distribution', OdsIndex::class)->name('pops.index');
+Route::get('optical-distribution/create', OdsForm::class)->name('pops.create');
+Route::get('optical-distribution/edit/{id}', OdsForm::class)->name('pops.edit');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

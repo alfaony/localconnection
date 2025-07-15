@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Http\Livewire\DataCenter;
+namespace App\Http\Livewire\Pop;
 
 use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
 use Livewire\WithPagination;
+use App\Models\Pop;
+use Illuminate\Support\Facades\Auth;
 
-use App\Models\DataCenter;
-
-class Index extends Component
+class PopIndex extends Component
 {
     use WithPagination;
 
@@ -44,8 +43,8 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.data-center.index', [
-            'dataCenters' => DataCenter::byCompany(Auth::user()->company_id)
+        return view('livewire.pop.index', [
+            'pops' => Pop::byCompany(Auth::user()->company_id)
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');
             })
@@ -57,7 +56,10 @@ class Index extends Component
     public function delete($id)
     {
         // lakukan penghapusan
-        DataCenter::find($id)?->delete();
+        $pop = Pop::find($id);
+        $pop->dataCenters()->detach();
+        $pop->entries()->delete();
+        $pop->delete();
 
         $this->dispatchBrowserEvent('showDeleteNotification', [
             'message' => 'Data berhasil dihapus'
@@ -67,10 +69,5 @@ class Index extends Component
     public function confirmDelete($id)
     {
         $this->dispatchBrowserEvent('confirmDelete', ['id' => $id]);
-    }
-
-    public static function index()
-    {
-        
     }
 }

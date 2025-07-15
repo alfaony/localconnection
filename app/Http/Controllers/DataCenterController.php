@@ -1,85 +1,22 @@
 <?php
 
-namespace App\Http\Controllers;
-
-use App\Models\DataCenter;
-use Illuminate\Http\Request;
+use App\Http\Livewire\DataCenter\Index;
+use App\Http\Livewire\DataCenter\Form;
 
 class DataCenterController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        //
+        return app(Index::class)->render();
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create()
     {
-        //
+        return app(Form::class)->render();
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function edit($id)
     {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\DataCenter  $dataCenter
-     * @return \Illuminate\Http\Response
-     */
-    public function show(DataCenter $dataCenter)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\DataCenter  $dataCenter
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(DataCenter $dataCenter)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\DataCenter  $dataCenter
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, DataCenter $dataCenter)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\DataCenter  $dataCenter
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(DataCenter $dataCenter)
-    {
-        //
+        return app(Form::class)->mount($id)->render();
     }
 }
