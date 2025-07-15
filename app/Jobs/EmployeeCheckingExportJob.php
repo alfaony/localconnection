@@ -47,7 +47,7 @@ class EmployeeCheckingExportJob implements ShouldQueue
         try {
             Excel::store(new EmployeeCheckingExport($this->user, $this->company_id, $this->userId, $this->start, $this->end, $this->today, $this->sort, $this->role), $this->filePath, "public", $exportFormat);
         } catch (\Exception $e) {
-            // dd($e);
+            dd($e);
             Log::error("Error storing file: " . $e->getMessage());
         }
     }
