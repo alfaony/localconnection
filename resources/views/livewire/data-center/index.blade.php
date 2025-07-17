@@ -100,7 +100,7 @@
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $dc->name }}</td>
-                                    <td class="text-right">{{ number_format($dc->capacity_mb) }}</td>
+                                    <td class="text-right">{{ number_format($dc->capacity_mb,0,',','.') }}</td>
                                     <td class="text-right">Rp{{ number_format($dc->cost_per_month, 2, ',', '.') }}</td>
                                     <td>{{ \Carbon\Carbon::parse($dc->tanggal_tagihan)->locale('id_ID')->isoFormat('D MMMM Y') }}</td>
                                     <td class="text-center py-1">

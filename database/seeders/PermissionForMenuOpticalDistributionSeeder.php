@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class PermissionForMenuPop extends Seeder
+class PermissionForMenuOpticalDistributionSeeder extends Seeder
 {
     /**
      * Run the database seeds.

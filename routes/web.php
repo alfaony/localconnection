@@ -113,6 +113,14 @@ use App\Http\Livewire\Pop\PopForm;
 use App\Http\Livewire\Ods\OdsIndex;
 use App\Http\Livewire\Ods\OdsForm;
 
+use App\Http\Livewire\CoverageService\CoverageServiceIndex;
+use App\Http\Livewire\CoverageService\CoverageServiceForm;
+
+use App\Http\Livewire\InternetPackage\InternetPackageIndex;
+use App\Http\Livewire\InternetPackage\InternetPackageForm;
+
+
+
 
 
 
@@ -555,12 +563,19 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('pop', PopIndex::class)->name('pops.index');
   Route::get('pop/create', PopForm::class)->name('pops.create');
   Route::get('pop/edit/{id}', PopForm::class)->name('pops.edit');
+  
+  Route::get('optical-distribution', OdsIndex::class)->name('optical-distribution.index');
+  Route::get('optical-distribution/create', OdsForm::class)->name('optical-distribution.create');
+  Route::get('optical-distribution/edit/{id}', OdsForm::class)->name('optical-distribution.edit');
+  
+  Route::get('coverage-service', CoverageServiceIndex::class)->name('coverage-service.index');
+  Route::get('coverage-service/create', CoverageServiceForm::class)->name('coverage-service.create');
+  Route::get('coverage-service/edit/{id}', CoverageServiceForm::class)->name('coverage-service.edit');
 });
 
-
-Route::get('optical-distribution', OdsIndex::class)->name('pops.index');
-Route::get('optical-distribution/create', OdsForm::class)->name('pops.create');
-Route::get('optical-distribution/edit/{id}', OdsForm::class)->name('pops.edit');
+  Route::get('internet-package', InternetPackageIndex::class)->name('internet-package.index');
+  Route::get('internet-packagevice/create', InternetPackageForm::class)->name('internet-package.create');
+  Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

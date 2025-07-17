@@ -8,6 +8,8 @@ use App\Models\DataCenter;
 use App\Models\PopEntry;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class PopForm extends Component
@@ -30,7 +32,7 @@ class PopForm extends Component
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'capacity_mb' => 'required|integer|min:1',
+            // 'capacity_mb' => 'required|integer|min:1',
             'monthly_cost' => 'required',
             'lease_expiration_date' => 'required|date|after_or_equal:today',
             'address' => 'nullable|string|max:500',
@@ -118,44 +120,59 @@ class PopForm extends Component
         $this->validate();
 
         // Format biaya
-        
-        $monthly_cost = (int) str_replace('.', '', $this->monthly_cost);
+        DB::beginTransaction();
+        try {
+            $monthly_cost = (int) str_replace('.', '', $this->monthly_cost);
+    
+            $data = [
+                'name' => $this->name,
+                'capacity_mb' => 0,
+                'monthly_cost' => $monthly_cost,
+                'lease_expiration_date' => $this->lease_expiration_date,
+                'address' => $this->address,
+                'company_id' => Auth::user()->company_id,
+                'user_created_id' => Auth::id(),
+                'latitude' => $this->latitude,
+                'longitude' => $this->longitude
+            ];
+    
+    
+            if ($this->pop) 
+            {
+                $this->pop->update($data);
+                $pop = $this->pop;
+                // Update entries
+                $this->updateEntries();
+                $this->pop->entries()->delete();
+                $message = 'POP berhasil diperbarui!';
+            } else 
+            {
+                $pop = Pop::create($data);
+                $this->pop = $pop;
+                $message = 'POP berhasil dibuat!';
+            }
+            
+            foreach ($this->entries as $entry) 
+            {
+                $this->pop->entries()->create($entry);
+            }
+    
+            $this->sumCapasityMb($pop);
+            $this->pop->dataCenters()->sync($this->selectedDataCenters);
+    
+            
+            DB::commit();
+            
+            session()->flash('success', $message);
+            return redirect()->route('pops.index');
+        } catch (\Throwable $th) {
+            //throw $th;
+            dd($th);
+            DB::rollBack();
+            Log::error($th);
 
-        $data = [
-            'name' => $this->name,
-            'capacity_mb' => $this->capacity_mb,
-            'monthly_cost' => $monthly_cost,
-            'lease_expiration_date' => $this->lease_expiration_date,
-            'address' => $this->address,
-            'company_id' => Auth::user()->company_id,
-            'user_created_id' => Auth::id(),
-            'latitude' => $this->latitude,
-            'longitude' => $this->longitude
-        ];
-
-
-        if ($this->pop) 
-        {
-            $this->pop->update($data);
-            // Update entries
-            $this->updateEntries();
-            $this->pop->entries()->delete();
-            $message = 'POP berhasil diperbarui!';
-        } else 
-        {
-            $pop = Pop::create($data);
-            $this->pop = $pop;
-            $message = 'POP berhasil dibuat!';
+            session()->flash('error', 'Terjadi kesalahan saat menyimpan POP.');
         }
-        
-        foreach ($this->entries as $entry) 
-        {
-            $this->pop->entries()->create($entry);
-        }
-        $this->pop->dataCenters()->sync($this->selectedDataCenters);
-
-        session()->flash('success', $message);
-        return redirect()->route('pops.index');
     }
 
     protected function createEntries()
@@ -199,6 +216,12 @@ class PopForm extends Component
             // Delete all entries if not multi data center
             $this->pop->entries()->delete();
         }
+    }
+
+    protected function sumCapasityMb($pop)
+    {
+        $pop->capacity_mb = $pop->entries->sum('capacity_mb') ?? 0;
+        $pop->save();
     }
 
     public function render()

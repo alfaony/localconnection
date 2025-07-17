@@ -13,7 +13,7 @@ use App\Schemas\RoleSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PermissionForMenuOdsSeeder extends Seeder
+class PermissionForMenuPopSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -30,11 +30,11 @@ class PermissionForMenuOdsSeeder extends Seeder
         {
             // create permision
             $permission = Permission::firstOrCreate([
-                'name' => ucwords($method).' Optical Distribution Point',
+                'name' => ucwords($method).' Point of Presence',
             ],[
                 'method' => $method,
-                'table' => 'optical_distributions',
-                'model' => 'OpticalDistribution',
+                'table' => 'pops',
+                'model' => 'Pop',
                 'guard_name' => 'web'
             ]);
 
@@ -46,6 +46,7 @@ class PermissionForMenuOdsSeeder extends Seeder
 
     }
 }
+
 
 
 

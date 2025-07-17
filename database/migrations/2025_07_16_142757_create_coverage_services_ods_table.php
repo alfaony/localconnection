@@ -13,11 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('optical_distribution_pop', function (Blueprint $table) {
+        Schema::create('coverage_service_distributions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pop_id')->constrained('pops')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('coverage_service_id')->constrained('coverage_services')->onDelete('cascade')->onUpdate('cascade');
             $table->foreignId('optical_distribution_id')->constrained('optical_distributions')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -28,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('optical_distribution_pop');
+        Schema::dropIfExists('coverage_service_distributions');
     }
 };

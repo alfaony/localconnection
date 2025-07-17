@@ -13,6 +13,7 @@
                     </div>
     
                     <div class="row">
+                        {{-- 
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Kapasitas (MB)*</label>
@@ -20,66 +21,38 @@
                                 @error('capacity_mb') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        --}}
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label>Biaya/Month*</label>
-                                <input type="number" step="0.01" class="form-control" wire:model="cost_per_month" placeholder="Biaya/Month" required>
-                                @error('cost_per_month') <span class="text-danger">{{ $message }}</span> @enderror
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">Rp</span>
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        wire:model="cost_per_month"
+                                        id="cost_per_month_input"
+                                        class="form-control @error('cost_per_month') is-invalid @enderror"
+                                        placeholder="Contoh: 1.000.000"
+                                    >
+                                    @error('cost_per_month') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label>Tanggal Tagihan*</label>
                                 <input type="date" class="form-control" wire:model="tanggal_tagihan" placeholder="Tanggal Tagihan" required>
                                 @error('tanggal_tagihan') <span class="text-danger">{{ $message }}</span> @enderror
                             </div>
                         </div>
-                        @foreach($entries as $index => $entry)
-                        <div class="col-md-6">
-                            <div class="card card-primary">
-                                <div class="card-header">
-                                    <h3 class="card-title">Jalur {{ $index + 1 }}</h3>
-                                    @if($index > 0)
-                                        <div class="card-tools">
-                                            <button 
-                                                type="button" 
-                                                wire:click="removeEntry({{ $index }})"
-                                                class="btn btn-sm btn-danger"
-                                            >
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    @endif
-                                </div>
-                                <div class="card-body">
-                                    <div class="form-group">
-                                        <label>Nama Jalur</label>
-                                        <input 
-                                            type="text" 
-                                            wire:model="entries.{{ $index }}.name"
-                                            class="form-control @error('entries.'.$index.'.name') is-invalid @enderror"
-                                            placeholder="Contoh: Jalur Utama"
-                                        >
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Kapasitas (MB)</label>
-                                        <input 
-                                            type="number" 
-                                            wire:model="entries.{{ $index }}.capacity_mb"
-                                            class="form-control @error('entries.'.$index.'.capacity_mb') is-invalid @enderror"
-                                            placeholder="Contoh: 500"
-                                        >
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
                     </div>
     
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">Jalur Masuk</h3>
-                            <button type="button" class="btn btn-sm btn-primary float-right" wire:click="addEntry">
+                            <button type="button" class="btn btn-sm btn-primary float-right" wire:click="addEntry" {{ count($this->entries) >= 5 ? 'disabled' : '' }} >
                                 <i class="fas fa-plus"></i> Add Entry
                             </button>
                         </div>
@@ -128,6 +101,7 @@
 @push('js')
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/imask"></script>
 <script>
     function initSelect2() {
         $('.select2').select2();
@@ -139,6 +113,19 @@
 
     document.addEventListener("livewire:load", function () {
         initSelect2();
+
+        const costInput = document.getElementById('cost_per_month_input');
+        if (costInput) {
+            IMask(costInput, {
+                mask: Number,
+                scale: 0,
+                thousandsSeparator: '.',
+                padFractionalZeros: false,
+                normalizeZeros: true,
+                radix: ',',
+                mapToRadix: ['.']
+            });
+        }
 
         Livewire.hook('message.processed', function () {
             initSelect2();

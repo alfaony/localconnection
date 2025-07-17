@@ -99,6 +99,8 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuMomSeeder::class);
         $this->call(PermissionForMenuUsedComputer::class);
         $this->call(PermissionForMenuDataCenter::class);
+        $this->call(PermissionForMenuPopSeeder::class);
         $this->call(PermissionForMenuOdsSeeder::class);
+        $this->call(PermissionForMenuCoverageServiceSeeder::class);
     }
 }

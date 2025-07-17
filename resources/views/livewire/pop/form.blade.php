@@ -21,23 +21,6 @@
                         >
                         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label>Kapasitas (MB) <span class="text-danger">*</span></label>
-                        <input 
-                            type="number" 
-                            wire:model="capacity_mb"
-                            class="form-control @error('capacity_mb') is-invalid @enderror"
-                            placeholder="Contoh: 1000"
-                        >
-                        @error('capacity_mb') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
                     <div class="form-group">
                         <label>Biaya Perbulan <span class="text-danger">*</span></label>
                         <div class="input-group">
@@ -54,8 +37,6 @@
                             @error('monthly_cost') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6">
                     <div class="form-group">
                         <label>Tanggal Perpanjang Sewa <span class="text-danger">*</span></label>
                         <input 
@@ -65,11 +46,6 @@
                         >
                         @error('lease_expiration_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
                     <div class="form-group">
                         <label> Data Center <span class="text-danger">*</span></label>
                         <select class="form-control select2" multiple wire:model="selectedDataCenters">
@@ -104,6 +80,20 @@
 
                     </div>
                 </div>
+                {{-- 
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Kapasitas (MB) <span class="text-danger">*</span></label>
+                        <input 
+                            type="number" 
+                            wire:model="capacity_mb"
+                            class="form-control @error('capacity_mb') is-invalid @enderror"
+                            placeholder="Contoh: 1000"
+                        >
+                        @error('capacity_mb') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                </div>
+                --}}
             </div>
             
             <div class="form-group">
@@ -164,6 +154,7 @@
                                             <div class="invalid-feedback">{{ $message }}</div> 
                                         @enderror
                                     </div>
+
                                     <div class="form-group">
                                         <label>Kapasitas (MB)</label>
                                         <input 

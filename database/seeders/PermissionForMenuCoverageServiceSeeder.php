@@ -13,7 +13,7 @@ use App\Schemas\RoleSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PermissionForMenuOdsSeeder extends Seeder
+class PermissionForMenuCoverageServiceSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -30,11 +30,11 @@ class PermissionForMenuOdsSeeder extends Seeder
         {
             // create permision
             $permission = Permission::firstOrCreate([
-                'name' => ucwords($method).' Optical Distribution Point',
+                'name' => ucwords($method).' Coverage Service Area',
             ],[
                 'method' => $method,
-                'table' => 'optical_distributions',
-                'model' => 'OpticalDistribution',
+                'table' => 'coverage_services',
+                'model' => 'CoverageService',
                 'guard_name' => 'web'
             ]);
 
