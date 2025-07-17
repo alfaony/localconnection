@@ -4,7 +4,7 @@
             <h3>Paket Internet</h3>
             @canAccess('create', 'data_centers')
             <a href="{{ route('internet-package.create') }}" class="btn btn-sm btn-primary">
-                <i class="fas fa-plus mr-1"></i> Add New
+                <i class="fas fa-plus mr-1"></i> Paket Internet
             </a>
             @endcanAccess
         </div>
@@ -29,21 +29,21 @@
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <select wire:model="selectedType" class="form-select">
+                    <select wire:model="selectedType" class="form-control">
                         <option value="">Semua Jenis</option>
                         <option value="dedicated">Dedicated</option>
                         <option value="broadband">Broadband</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <select wire:model="activeFilter" class="form-select">
+                    <select wire:model="activeFilter" class="form-control">
                         <option value="all">Semua Status</option>
                         <option value="active">Aktif</option>
                         <option value="inactive">Non-Aktif</option>
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select wire:model="perPage" class="form-select">
+                    <select wire:model="perPage" class="form-control">
                         <option value="10">10 per halaman</option>
                         <option value="25">25 per halaman</option>
                         <option value="50">50 per halaman</option>
