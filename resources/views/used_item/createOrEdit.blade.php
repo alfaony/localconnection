@@ -232,8 +232,7 @@
         </div>
         
         <div class="card-footer">
-            <button type="submit" class="btn btn-primary" id="submit-btn"
-                onclick="this.disabled = true; this.form.submit(); this.innerHTML = '<i class=\'fas fa-spinner fa-spin mr-1\'></i> Menyimpan...';">
+            <button type="submit" id="submitBtn" class="btn btn-primary">
                 <i class="fas fa-save mr-1"></i> {{ isset($laptop) ? 'Update Laptop' : 'Simpan Laptop' }}
             </button>
             <button type="reset" class="btn btn-outline-secondary">
@@ -483,6 +482,12 @@
         // Konversi format mata uang sebelum submit form
         document.getElementById('item-form').addEventListener('submit', function(e) {
             convertCurrencyToNumber();
+            const btnSubmit = document.getElementById('submitBtn');
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = `
+                <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                Loading...
+            `;
             return true;
         });
         
