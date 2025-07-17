@@ -232,8 +232,9 @@
         </div>
         
         <div class="card-footer">
-            <button type="submit" class="btn btn-primary ">
-                <i class="fas fa-save mr-1"></i> {{ isset($usedItem) ? 'Update Barang' : 'Simpan Barang' }}
+            <button type="submit" class="btn btn-primary" id="submit-btn"
+                onclick="this.disabled = true; this.form.submit(); this.innerHTML = '<i class=\'fas fa-spinner fa-spin mr-1\'></i> Menyimpan...';">
+                <i class="fas fa-save mr-1"></i> {{ isset($laptop) ? 'Update Laptop' : 'Simpan Laptop' }}
             </button>
             <button type="reset" class="btn btn-outline-secondary">
                 <i class="fas fa-undo mr-1"></i> Reset Form
