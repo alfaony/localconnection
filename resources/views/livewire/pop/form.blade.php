@@ -260,6 +260,14 @@
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     function(position) {
+                        const latDb = "{{ $latitude }}" ?? null;
+                        const lngDb = "{{ $longitude }}" ?? null;
+                        if (latDb && lngDb) 
+                            {
+                            initializeMap(latDb, lngDb);
+                            return;
+                        }
+                        
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
                         initializeMap(lat, lng);
@@ -273,6 +281,7 @@
                 initializeMap(-6.175392, 106.827153); // fallback: Monas
             }
         });
+        
     </script>
     <script>
         function initSelect2() {

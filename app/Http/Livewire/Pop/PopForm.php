@@ -79,6 +79,8 @@ class PopForm extends Component
             $this->lease_expiration_date = Carbon::parse($this->pop->lease_expiration_date)->format('Y-m-d');
             $this->address = $this->pop->address;
             $this->coordinates = $this->pop->coordinates;
+            $this->latitude = $this->pop->latitude;
+            $this->longitude = $this->pop->longitude;
 
             if (count($this->pop->entries) > 0) {
                 foreach ($this->pop->entries as $entry) {
