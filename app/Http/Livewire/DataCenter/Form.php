@@ -87,7 +87,7 @@ class Form extends Component
             $dataCenter->users()->sync($this->selectedUsers);
     
             session()->flash('success', $this->dataCenterId ? 'Data Center updated.' : 'Data Center created.');
-            return redirect()->route('data-centers.index');
+            return redirect()->route('data-center.index');
         } catch (\Throwable $th) 
         {
             //throw $th;

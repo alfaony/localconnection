@@ -91,7 +91,7 @@
                 </div>
                 <div class="card-footer">
                     <button type="submit" class="btn btn-primary">Submit</button>
-                    <a href="{{ route('data-centers.index') }}" class="btn btn-default">Batalkan</a>
+                    <a href="{{ route('data-center.index') }}" class="btn btn-default">Batalkan</a>
                 </div>
             </form>
         </div>

@@ -1,16 +1,15 @@
+@canAccess('index', 'internet_packages')
 <div>
     @section('content_header')
         <div class="d-flex justify-content-between align-items-center">
             <h3>Paket Internet</h3>
-            @canAccess('create', 'data_centers')
+            @canAccess('create', 'internet_packages')
             <a href="{{ route('internet-package.create') }}" class="btn btn-sm btn-primary">
                 <i class="fas fa-plus mr-1"></i> Paket Internet
             </a>
             @endcanAccess
         </div>
     @stop
-    @include('components.alert')
-
     <div class="card">
         <div class="card-header bg-primary text-white">
             <div class="row align-items-center">
@@ -30,7 +29,7 @@
                 </div>
                 <div class="col-md-3">
                     <select wire:model="selectedType" class="form-control">
-                        <option value="">Semua Jenis</option>
+                        <option value="">Semua type</option>
                         <option value="dedicated">Dedicated</option>
                         <option value="broadband">Broadband</option>
                     </select>
@@ -52,12 +51,7 @@
                 </div>
             </div>
 
-            @if(session()->has('message'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('message') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
+            @include('components.alert')
 
             <div class="table-responsive">
                 <table class="table table-hover">
@@ -70,7 +64,7 @@
                                 @endif
                             </th>
                             <th class="text-center">Bandwidth</th>
-                            <th>Jenis</th>
+                            <th>Tipe</th>
                             <th wire:click="sortBy('price')" style="cursor: pointer;">
                                 Harga
                                 @if($sortField === 'price')
@@ -93,8 +87,8 @@
                                 </td>
                                 <td class="text-center">{{ $package->bandwidth }} Mbps</td>
                                 <td>
-                                    <span class="badge bg-{{ $package->jenis === 'Dedicated' ? 'info' : 'success' }}">
-                                        {{ $package->jenis }}
+                                    <span class="badge bg-{{ $package->type === 'Dedicated' ? 'info' : 'success' }}">
+                                        {{ $package->type }}
                                     </span>
                                 </td>
                                 <td>Rp {{ number_format($package->price, 0, ',', '.') }}</td>
@@ -111,16 +105,21 @@
                                     </div>
                                 </td>
                                 <td class="text-center">
+                                    @canAccess('edit', 'internet_packages')
                                     <a href="{{ route('internet-package.edit', $package->id) }}" 
                                         class="btn btn-sm btn-warning" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
+                                    @endcanAccess
+
+                                    @canAccess('destroy', 'internet_packages')
                                     <button wire:click="delete({{ $package->id }})" 
                                             class="btn btn-sm btn-danger" 
                                             title="Hapus"
                                             onclick="return confirm('Yakin menghapus paket?') || event.stopImmediatePropagation()">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    @endcanAccess
                                 </td>
                             </tr>
                         @empty
@@ -150,3 +149,4 @@
         </div>
     </div>
 </div>
+@endcanAccess

@@ -2,7 +2,7 @@
     <div class="d-flex justify-content-between align-items-center">
         <h3>Data Centers</h3>
         @canAccess('create', 'data_centers')
-        <a href="{{ route('data-centers.create') }}" class="btn btn-sm btn-primary">
+        <a href="{{ route('data-center.create') }}" class="btn btn-sm btn-primary">
             <i class="fas fa-plus mr-1"></i> Add New
         </a>
         @endcanAccess
@@ -106,7 +106,7 @@
                                     <td class="text-center py-1">
                                         @canAccess('update', 'data_centers')
                                         @canAccess('edit', 'data_centers')
-                                        <a href="{{ route('data-centers.edit', $dc) }}" 
+                                        <a href="{{ route('data-center.edit', $dc) }}" 
                                             class="btn btn-sm btn-warning" 
                                             title="Edit">
                                             <i class="fas fa-edit"></i>

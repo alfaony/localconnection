@@ -102,5 +102,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuPopSeeder::class);
         $this->call(PermissionForMenuOdsSeeder::class);
         $this->call(PermissionForMenuCoverageServiceSeeder::class);
+        $this->call(PermissionForMenuInternetPackageSeeder::class);
     }
 }

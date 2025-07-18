@@ -194,7 +194,7 @@
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save mr-1"></i> Simpan POP
             </button>
-            <a href="{{ route('pops.index') }}" class="btn btn-default float-right">
+            <a href="{{ route('pop.index') }}" class="btn btn-default float-right">
                 Batal
             </a>
         </div>

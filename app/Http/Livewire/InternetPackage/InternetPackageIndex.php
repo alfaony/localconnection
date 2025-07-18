@@ -57,10 +57,11 @@ class InternetPackageIndex extends Component
                 ->byCompany(Auth::user()->company_id)
                 ->when($this->search, function ($query) {
                     $query->where('name', 'like', '%'.$this->search.'%')
-                          ->orWhere('description', 'like', '%'.$this->search.'%');
+                          ->orWhere('description', 'like', '%'.$this->search.'%')
+                          ->orWhere('bandwidth', 'like', '%'.$this->search.'%');
                 })
                 ->when($this->selectedType, function ($query) {
-                    $query->where('jenis', $this->selectedType);
+                    $query->where('type', $this->selectedType);
                 })
                 ->when($this->activeFilter !== 'all', function ($query) {
                     $query->where('is_active', $this->activeFilter === 'active');

@@ -1,5 +1,7 @@
+@canAccess('store', 'internet_packages')
+@canAccess('update', 'internet_packages')
 <div>
-    <div class="card">
+    <div class="card mt-1">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">
                 <i class="fas fa-wifi me-2"></i>
@@ -46,7 +48,8 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="price" class="form-label">Harga (Rp) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="internet_cost_input" wire:model="price" min="0" placeholder="Harga normal">
+                            <input type="hidden" wire:model="price" id="price_hidden">
+                            <input type="text" class="form-control" id="internet_cost_input" wire:ignore placeholder="Harga normal">
                             @error('price') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                     </div>
@@ -54,7 +57,8 @@
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="price_nett" class="form-label">Harga Nett (Rp) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="internet_cost_input" wire:model="price_nett" min="0" placeholder="Harga setelah diskon">
+                            <input type="hidden" wire:model="price_nett" id="price_nett_hidden">
+                            <input type="text" class="form-control" id="internet_cost_input_nett" wire:ignore placeholder="Harga setelah diskon">
                             @error('price_nett') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                     </div>
@@ -93,11 +97,14 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/imask"></script>
     <script>
-        document.addEventListener('livewire:load', function() {
-            // Format input biaya
-            const costInput = document.getElementById('internet_cost_input');
-            if (costInput) {
-                IMask(costInput, {
+        document.addEventListener('livewire:load', function () {
+            // Harga Normal
+            const priceInput = document.getElementById('internet_cost_input');
+            const priceHidden = document.getElementById('price_hidden');
+            let priceMask = null;
+
+            if (priceInput && priceHidden) {
+                priceMask = IMask(priceInput, {
                     mask: Number,
                     scale: 0,
                     thousandsSeparator: '.',
@@ -106,7 +113,47 @@
                     radix: ',',
                     mapToRadix: ['.']
                 });
+
+                // Set nilai awal dari hidden input ke field yang diformat
+                if (priceHidden.value) {
+                    priceMask.value = priceHidden.value;
+                }
+
+                // Sync ke Livewire saat input berubah
+                priceMask.on('accept', () => {
+                    priceHidden.value = priceMask.unmaskedValue;
+                    priceHidden.dispatchEvent(new Event('input'));
+                });
+            }
+
+            // Harga Nett
+            const priceNettInput = document.getElementById('internet_cost_input_nett');
+            const priceNettHidden = document.getElementById('price_nett_hidden');
+            let priceNettMask = null;
+
+            if (priceNettInput && priceNettHidden) {
+                priceNettMask = IMask(priceNettInput, {
+                    mask: Number,
+                    scale: 0,
+                    thousandsSeparator: '.',
+                    padFractionalZeros: false,
+                    normalizeZeros: true,
+                    radix: ',',
+                    mapToRadix: ['.']
+                });
+
+                if (priceNettHidden.value) {
+                    priceNettMask.value = priceNettHidden.value;
+                }
+
+                priceNettMask.on('accept', () => {
+                    priceNettHidden.value = priceNettMask.unmaskedValue;
+                    priceNettHidden.dispatchEvent(new Event('input'));
+                });
             }
         });
     </script>
 @endpush
+
+@endcanAccess
+@endcanAccess

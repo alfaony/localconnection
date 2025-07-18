@@ -4,6 +4,7 @@ namespace App\Http\Livewire\InternetPackage;
 
 use App\Models\InternetPackage;
 use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
 
 class InternetPackageForm extends Component
 {
@@ -46,6 +47,7 @@ class InternetPackageForm extends Component
         $this->validate();
 
         $data = [
+            'company_id' => Auth::user()->company_id,
             'name' => $this->name,
             'bandwidth' => $this->bandwidth,
             'type' => $this->type,
@@ -60,10 +62,9 @@ class InternetPackageForm extends Component
             session()->flash('message', 'Paket berhasil diperbarui.');
         } else {
             InternetPackage::create($data);
-            session()->flash('message', 'Paket berhasil ditambahkan.');
         }
 
-        return redirect()->route('internet-packages.index');
+        return redirect()->route('internet-package.index')->with('success', 'Paket berhasil disimpan.');
     }
 
     public function render()

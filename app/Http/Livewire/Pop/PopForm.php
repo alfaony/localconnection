@@ -164,7 +164,7 @@ class PopForm extends Component
             DB::commit();
             
             session()->flash('success', $message);
-            return redirect()->route('pops.index');
+            return redirect()->route('pop.index');
         } catch (\Throwable $th) {
             //throw $th;
             dd($th);

@@ -3,7 +3,7 @@
         <h1>Manajemen POP ( Point Of Presence ) </h1>
 
         @canAccess('create', 'pops')
-        <a href="{{ route('pops.create') }}" class="btn btn-primary btn-sm">
+        <a href="{{ route('pop.create') }}" class="btn btn-primary btn-sm">
             <i class="fas fa-plus"></i> Tambah POP
         </a>
         @endcanAccess
@@ -123,7 +123,7 @@
                         <td class="py-0 align-middle">
                             <div class="btn-group btn-group-sm">
                                 @canAccess('update','pops')
-                                <a href="{{ route('pops.edit', $pop->id) }}" class="btn btn-info mb-1 mr-1" title="Edit">
+                                <a href="{{ route('pop.edit', $pop->id) }}" class="btn btn-info mb-1 mr-1" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 @endcanAccess
