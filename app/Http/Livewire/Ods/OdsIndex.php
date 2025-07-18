@@ -43,7 +43,7 @@ class OdsIndex extends Component
 
     public function render()
     {
-        return view('livewire.Ods.ods-index', [
+        return view('livewire.ods.ods-index', [
             'opticalDistributions' => OpticalDistribution::byCompany(Auth::user()->company_id)
             ->when($this->search, function ($query) {
                 $query->where('name', 'like', '%' . $this->search . '%');

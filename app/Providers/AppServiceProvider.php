@@ -594,7 +594,7 @@ class AppServiceProvider extends ServiceProvider
                 'optical_distributions' =>
                 [
                     'text' => 'Distribusi Optic',
-                    'route' => 'optica-distribution.index',
+                    'route' => 'optical-distribution.index',
                     'icon' => 'fa fa-fiber-optic',
                 ],
                 'coverage_services' =>
