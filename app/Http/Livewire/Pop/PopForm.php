@@ -164,7 +164,6 @@ class PopForm extends Component
                 }
             }
             
-            dd($this->selectedDataCenters);
             $this->sumCapasityMb($pop);
             $this->pop->dataCenters()->sync($this->selectedDataCenters);
     
@@ -175,7 +174,7 @@ class PopForm extends Component
             return redirect()->route('pop.index');
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             DB::rollBack();
             Log::error($th);
 
