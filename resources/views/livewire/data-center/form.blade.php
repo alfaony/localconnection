@@ -24,20 +24,11 @@
                         --}}
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Biaya/Month*</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">Rp</span>
-                                    </div>
-                                    <input 
-                                        type="text" 
-                                        wire:model="cost_per_month"
-                                        id="cost_per_month_input"
-                                        class="form-control @error('cost_per_month') is-invalid @enderror"
-                                        placeholder="Contoh: 1.000.000"
-                                    >
-                                    @error('cost_per_month') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
+                                <label for="price" class="form-label">Biaya Per Bulan <span class="text-danger">*</span></label>
+                                <input type="hidden" wire:model="cost_per_month" id="price_hidden">
+                                <input type="text" class="form-control" id="internet_cost_input" wire:ignore placeholder="Harga normal">
+                                @error('price') <span class="text-danger small">{{ $message }}</span> @enderror
+                                @error('cost_per_month') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -114,9 +105,12 @@
     document.addEventListener("livewire:load", function () {
         initSelect2();
 
-        const costInput = document.getElementById('cost_per_month_input');
-        if (costInput) {
-            IMask(costInput, {
+        const priceInput = document.getElementById('internet_cost_input');
+        const priceHidden = document.getElementById('price_hidden');
+        let priceMask = null;
+
+        if (priceInput && priceHidden) {
+            priceMask = IMask(priceInput, {
                 mask: Number,
                 scale: 0,
                 thousandsSeparator: '.',
@@ -124,6 +118,17 @@
                 normalizeZeros: true,
                 radix: ',',
                 mapToRadix: ['.']
+            });
+
+            // Set nilai awal dari hidden input ke field yang diformat
+            if (priceHidden.value) {
+                priceMask.value = priceHidden.value;
+            }
+
+            // Sync ke Livewire saat input berubah
+            priceMask.on('accept', () => {
+                priceHidden.value = priceMask.unmaskedValue;
+                priceHidden.dispatchEvent(new Event('input'));
             });
         }
 

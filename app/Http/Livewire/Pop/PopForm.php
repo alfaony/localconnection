@@ -158,15 +158,20 @@ class PopForm extends Component
 
             if(count($this->entries) > 0) 
             {
+                $capacity_mb = 0;
                 foreach ($this->entries as $entry) 
                 {
+                    $capacity_mb += $entry['capacity_mb'];
                     $this->pop->entries()->create($entry);
                 }
+
+                $this->pop->update([
+                    'capacity_mb' => $capacity_mb
+                ]);
             }
-            
-            $this->sumCapasityMb($pop);
+
             $this->pop->dataCenters()->sync($this->selectedDataCenters);
-    
+            
             
             DB::commit();
             
@@ -225,8 +230,11 @@ class PopForm extends Component
         }
     }
 
+
+
     protected function sumCapasityMb($pop)
     {
+        $pop = Pop::byCompany(Auth::user()->company_id)->find($pop);
         $pop->capacity_mb = $pop->entries->sum('capacity_mb') ?? 0;
         $pop->save();
     }

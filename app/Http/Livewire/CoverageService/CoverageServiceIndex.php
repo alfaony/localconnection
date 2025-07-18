@@ -33,12 +33,18 @@ class CoverageServiceIndex extends Component
     {
         $coverageServices = CoverageService::with(['city', 'district', 'subdistrict'])
             ->when($this->search, function ($query) {
-                return $query->whereHas('city', function ($q) {
+                return $query->whereHas('province', function ($q) {
+                    $q->where('name', 'like', "%{$this->search}%");
+                })->orWhereHas('city', function ($q) {
                     $q->where('name', 'like', "%{$this->search}%");
                 })->orWhereHas('district', function ($q) {
                     $q->where('name', 'like', "%{$this->search}%");
                 })->orWhereHas('subdistrict', function ($q) {
                     $q->where('name', 'like', "%{$this->search}%");
+                })->orWhereHas('coverageServiceOds', function ($q) {
+                    $q->whereHas('ods', function ($q) {
+                        $q->where('name', 'like', "%{$this->search}%");
+                    });
                 });
             })
             ->paginate($this->perPage);

@@ -38,7 +38,7 @@ class OdsForm extends Component
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
             'user_assign_id' => 'required|exists:users,id',
-            'location_photo' => 'nullable|image|max:10240',
+            'location_photo' => 'nullable|image|mimetypes:image/jpeg,image/png|max:10240',
         ];
     }
 
