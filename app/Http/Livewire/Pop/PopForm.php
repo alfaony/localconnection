@@ -36,8 +36,11 @@ class PopForm extends Component
             'monthly_cost' => 'required',
             'lease_expiration_date' => 'required|date|after_or_equal:today',
             'address' => 'nullable|string|max:500',
-            'entries.*.name' => 'nullable|string|max:255',
-            'entries.*.capacity_mb' => 'nullable|integer|min:1',
+            'entries' => "nullable|array",
+            'entries.*.name' => 'required|string|max:255',
+            'entries.*.capacity_mb' => 'required|integer|min:1',
+            'selectedDataCenters' => 'required|array',
+            'selectedDataCenters.*' => 'exists:data_centers,id',
         ];
 
         if ($this->pop) {
@@ -152,11 +155,16 @@ class PopForm extends Component
                 $message = 'POP berhasil dibuat!';
             }
             
-            foreach ($this->entries as $entry) 
+
+            if(count($this->entries) > 0) 
             {
-                $this->pop->entries()->create($entry);
+                foreach ($this->entries as $entry) 
+                {
+                    $this->pop->entries()->create($entry);
+                }
             }
-    
+            
+            dd($this->selectedDataCenters);
             $this->sumCapasityMb($pop);
             $this->pop->dataCenters()->sync($this->selectedDataCenters);
     

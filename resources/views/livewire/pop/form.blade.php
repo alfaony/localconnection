@@ -48,7 +48,7 @@
                     </div>
                     <div class="form-group">
                         <label> Data Center <span class="text-danger">*</span></label>
-                        <select class="form-control select2" multiple wire:model="selectedDataCenters">
+                        <select class="form-control select2 @error('selectedDataCenters') is-invalid @enderror" multiple wire:model="selectedDataCenters" required>
                             @foreach($dataCenters as $dataCenter)
                                 <option value="{{ $dataCenter->id }}" >{{ $dataCenter->name }}</option>
                             @endforeach
