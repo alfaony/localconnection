@@ -156,6 +156,7 @@ class UsedLaptopTable extends Component
                 ->orWhere('processor', 'like', '%'.$this->search.'%')
                 ->orWhere('ram', 'like', '%'.$this->search.'%')
                 ->orWhere('ssd', 'like', '%'.$this->search.'%')
+                ->orWhere('serial_number', 'like', '%'.$this->search.'%')
                 ->orWhere('notes', 'like', '%'.$this->search.'%');
             });
         })
