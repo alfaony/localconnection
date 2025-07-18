@@ -87,7 +87,7 @@ class AppServiceProvider extends ServiceProvider
             $subcribetionMenu = ['vehicles','subscribe_letters'];
             $managementRequestItemMenu = ['item_requests'];
             $managementUsedMenu = ['master_check_items','used_laptops','used_items'];
-            $internetManagementMenu = ['data_centers', 'pops','optica_distributions','coverage_services','internet_packages'];
+            $internetManagementMenu = ['data_centers', 'pops','optical_distributions','coverage_services','internet_packages'];
 
             $managementCompanyMenu = 
             [
@@ -591,7 +591,7 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'pop.index',
                     'icon' => 'fa fa-hdd',
                 ],
-                'optica_distributions' =>
+                'optical_distributions' =>
                 [
                     'text' => 'Distribusi Optic',
                     'route' => 'optica-distribution.index',
