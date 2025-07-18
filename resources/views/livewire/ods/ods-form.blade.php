@@ -194,6 +194,11 @@
             let map;
             let marker;
 
+            // Refresh CSRF token setiap 15 menit
+            setInterval(() => {
+                Livewire.emit('refreshCsrfToken');
+            }, 15 * 60 * 1000); // 15 menit
+
             // Fungsi untuk inisialisasi peta
             function initializeMap(lat, lng) {
                 const latLng = [lat, lng];

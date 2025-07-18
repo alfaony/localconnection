@@ -160,6 +160,13 @@ class OdsForm extends Component
         $this->longitude = $lng;
         $this->showMapModal = false;
     }
+    
+    public function refreshCsrfToken()
+    {
+        $this->dispatchBrowserEvent('csrfTokenRefreshed', [
+            'token' => csrf_token()
+        ]);
+    }
 
     public function render()
     {
