@@ -106,25 +106,15 @@ use App\Http\Controllers\UsedItemController;
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
 use App\Http\Livewire\DataCenter\Form;
-
 use App\Http\Livewire\Pop\PopIndex;
 use App\Http\Livewire\Pop\PopForm;
-
 use App\Http\Livewire\Ods\OdsIndex;
 use App\Http\Livewire\Ods\OdsForm;
-
 use App\Http\Livewire\CoverageService\CoverageServiceIndex;
 use App\Http\Livewire\CoverageService\CoverageServiceForm;
-
 use App\Http\Livewire\InternetPackage\InternetPackageIndex;
 use App\Http\Livewire\InternetPackage\InternetPackageForm;
-
-
-
-
-
-
-
+use App\Http\Livewire\InternetCustomer\InternetCustomerForm;
 
 
 /*
@@ -576,6 +566,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-package/create', InternetPackageForm::class)->name('internet-package.create');
   Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
 });
+
+  Route::get('internet-customer', InternetCustomerForm::class)->name('internet-customer.index');
+  Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
+  Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
 
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
