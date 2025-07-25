@@ -1,4 +1,4 @@
-@section('title', Auth::user()->company->name)
+@section('title', $company_name)
 <div class="py-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">
@@ -456,6 +456,17 @@
                                             <p><strong>Nomor Pelanggan:</strong> {{ $code }}</p>
                                         </div>
                                     </div>
+                                </div>
+                                
+                                <!-- Tombol untuk menuju laman detail pelanggan -->
+                                <div class="mt-4">
+                                    <a href="{{ route('internet-customer.customer.show', [
+                                        'companySlug' => $company_slug, 
+                                        'customerId' => $internet_customer_id
+                                    ]) }}" 
+                                    class="btn btn-primary">
+                                        Lihat Detail Pelanggan
+                                    </a>
                                 </div>
                             </div>
                         @endif

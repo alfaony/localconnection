@@ -85,6 +85,10 @@ class InternetCustomerForm extends Component
     // Data Tambahan
     public $device_serial_number;
     public $company_id = null; // Sesuaikan dengan company user
+    public $company_name = null; // Sesuaikan dengan company user
+    public $company_slug = null; // Sesuaikan dengan company user
+    public $internet_customer_id = null;
+
 
     protected $rules = 
     [
@@ -178,6 +182,8 @@ class InternetCustomerForm extends Component
         }
 
         $this->company_id = $companyId->id;
+        $this->company_name = $companyId->name;
+        $this->company_slug = $companyId->slug;
         $this->provinces = Province::all();
         $this->internetPackages = InternetPackage::all();
     }
@@ -389,6 +395,7 @@ class InternetCustomerForm extends Component
                     }   
                 }
 
+                $this->internet_customer_id = $internetCustomer->id;
                 DB::commit();
                 $this->step = 5;
         } catch (\Throwable $th) {

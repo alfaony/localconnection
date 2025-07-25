@@ -43,6 +43,7 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            {{-- 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
@@ -50,6 +51,7 @@
                     </li>
                 </ul>
             </div>
+            --}}
         </div>
     </nav>
 
@@ -71,6 +73,7 @@
     <!-- Bootstrap 5 JS Bundle with Popper -->
      @livewireScripts
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
     @stack('scripts')
 </body>

@@ -92,11 +92,11 @@ class InternetCustomerIndex extends Component
 
             foreach ($photos as $tmpFilename) {
                 $tmpPath = storage_path('app/livewire-tmp/' . $tmpFilename);
-                $newPath = 'public/installation-photos/' . uniqid() . '-' . basename($tmpFilename);
+                $newPath = 'installation-photos/' . uniqid() . '-' . basename($tmpFilename);
 
                 // Pindahkan dari tmp ke public/installation-photos
                 Storage::put(
-                    $newPath,
+                    "public/" . $newPath,
                     file_get_contents($tmpPath)
                 );
 
@@ -207,7 +207,7 @@ class InternetCustomerIndex extends Component
         if(count($userTechnical) > 0)
         {
             $message = "Pembayaran Langganan Internet Untuk Kode ".$customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
-            $directUrl = route('internet-customer.index');
+            $directUrl = route('internet-customer.show',$customer->id);
             foreach($userTechnical as $tech)
             {
                 $this->sentInbox($tech,$message, $directUrl);
