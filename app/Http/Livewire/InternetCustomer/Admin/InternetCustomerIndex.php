@@ -247,11 +247,17 @@ class InternetCustomerIndex extends Component
             $query->where(function ($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
                     ->orWhere('code', 'like', '%' . $this->search . '%')
-                    ->orWhere('address', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('installation', function ($q) {
+                        $q->where('device_serial_number', 'like', '%' . $this->search . '%');
+                    })
+                    ->orWhereHas('userCustomer', function ($q) {
+                        $q->where('name', 'like', '%' . $this->search . '%')->orWhere('email', 'like', '%' . $this->search . '%')->orWhere('phone_number', 'like', '%' . $this->search . '%');
+                    })
+                    ->orWhereHas('company', function ($q) {
+                        $q->where('name', 'like', '%' . $this->search . '%');
+                    })
                     ->orWhere('ktp_number', 'like', '%' . $this->search . '%')
-                    ->orWhere('device_serial_number', 'like', '%' . $this->search . '%')
-                    ->orWhere('phone_number', 'like', '%' . $this->search . '%')
-                    ->orWhere('email', 'like', '%' . $this->search . '%');
+                    ;
             });
         }
 
