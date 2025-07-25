@@ -49,6 +49,7 @@ class EmployeeCheckingExportJob implements ShouldQueue
         } catch (\Exception $e) {
             // dd($e);
             Log::error("Error storing file: " . $e->getMessage());
+            Log::error("Error storing file: " . $e);
         }
     }
 }

@@ -9,7 +9,10 @@
     <div class="card scrollable-div" id="printThis">
         <div class="card-body">
             <div class="col-12 justify-content-center align-items-center">
-                <h4 class="text-center"><strong>SURAT KETERANGAN KERJA</strong></h4>
+                <h4 class="text-center mb-0"><strong>SURAT KETERANGAN KERJA</strong></h4>
+                @if($letterSubmission->number_result)
+                <p class="text-center mt-0"><strong>No. {{ $letterSubmission->number_result }}</strong></p>
+                @endif
                 <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
             </div>
 

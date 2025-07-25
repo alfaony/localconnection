@@ -68,6 +68,7 @@
                             <th>Processor</th>
                             <th>RAM</th>
                             <th>SSD</th>
+                            <th>Serial Number</th>
                             <th>Harga Beli</th>
                             <th>Harga Jual Disarankan</th>
                             <th>Status</th>
@@ -81,6 +82,7 @@
                             <td>{{ $laptop->processor }}</td>
                             <td>{{ $laptop->ram }}</td>
                             <td>{{ $laptop->ssd }}</td>
+                            <td>{{ $laptop->serial_number }}</td>
                             <td>Rp {{ number_format($laptop->purchase_price,0,',','.') }}</td>
                             <td class="font-weight-bold text-success">
                                 Rp {{ number_format($laptop->suggested_selling_price,0,',','.') }}
