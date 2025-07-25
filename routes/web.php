@@ -115,6 +115,8 @@ use App\Http\Livewire\CoverageService\CoverageServiceForm;
 use App\Http\Livewire\InternetPackage\InternetPackageIndex;
 use App\Http\Livewire\InternetPackage\InternetPackageForm;
 use App\Http\Livewire\InternetCustomer\InternetCustomerForm;
+use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerIndex;
+use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 
 
 /*
@@ -212,7 +214,6 @@ Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementCont
 
 Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
 Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->name('used-item.show-qr');
-
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
@@ -565,12 +566,21 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-package', InternetPackageIndex::class)->name('internet-package.index');
   Route::get('internet-package/create', InternetPackageForm::class)->name('internet-package.create');
   Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
-});
 
-  Route::get('internet-customer', InternetCustomerForm::class)->name('internet-customer.index');
-  Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
+  Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
   Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
+  Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
+});
+  Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
 
+Route::get('error/{code?}', function ($code = 500) {
+    return view('public_error', [
+        'code' => $code,
+        'title' => session('title', 'Terjadi Kesalahan'),
+        'message' => session('message', 'Kesalahan tidak diketahui'),
+        'icon' => session('icon', 'fas fa-exclamation-triangle'),
+    ]);
+})->name('public.error');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

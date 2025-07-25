@@ -121,4 +121,13 @@ class ParamSchema
     const INTERNAL = "internal";
 
     const EXTERNAL = "external";
+
+    // Schemas
+    const PERJANJIAN_INTERNET = "perjanjian_berlangganan_internet";
+
+    // Status Interent
+    const PENDING = "pending";
+    const WAITING_PAYMENT_CONFIRMATION = "waiting_payment_confirmation";
+    const PROCESS_INSTALLATION = "process_installation";
+    const INSTALLED = "installed";
 }

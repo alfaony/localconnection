@@ -170,8 +170,20 @@ class OdsForm extends Component
 
     public function render()
     {
+        $users = $userFinance = User::whereHas('role.permissions', function ($q) {
+                    $q->where('method', 'as_technician')
+                    ->where('table', 'internet_customers');
+                })
+                ->where(function ($q)  {
+                    $q->where('company_id', Auth::user()->company_id)
+                    ->orWhereHas('accessibleCompanies', function ($sub) {
+                        $sub->where('companies.id', Auth::user()->company_id);
+                    });
+                })
+                ->get();
+
         return view('livewire.ods.ods-form', [
-            'users' => User::where('company_id', Auth::user()->company_id)->get(),
+            'users' => $users,
             'pops' => Pop::byCompany(Auth::user()->company_id)->get()
         ])->extends('adminlte::page');
     }

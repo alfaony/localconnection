@@ -103,7 +103,6 @@
                         @enderror
                     </div>
                 </div>
-                
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="subdistrict_id" class="control-label">Kelurahan</label>
@@ -115,7 +114,7 @@
                             <option value="">Select Subdistrict</option>
                             @if($subdistricts)
                                 @foreach($subdistricts as $subdistrict)
-                                    <option value="{{ $subdistrict->id }}">{{ $subdistrict->name }}</option>
+                                    <option value="{{ $subdistrict->id }}" {{ $coverageService &&  $coverageService->subdistrict_id == $subdistrict->id ? 'selected' : ($subdistrict->coverageService ? 'disabled' : '') }} >{{ $subdistrict->name }} {{ $coverageService &&  $coverageService->subdistrict_id == $subdistrict->id ? '' : ($subdistrict->coverageService ? '( Sudah Tersedia )' : '') }}</option>
                                 @endforeach
                             @endif
                                 <option value="other">Lainnya</option>

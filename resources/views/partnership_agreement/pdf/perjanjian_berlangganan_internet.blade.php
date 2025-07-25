@@ -14,7 +14,7 @@
                         <p class=" ">Nama/name</p>
                     </div>
                     <div class="col-6">
-                        <p class=" ">: {{ $agreement->getFields("nama ") }} </p>
+                        <p class=" ">: {{ $agreement ? $agreement->getFields("nama ") : "" }} </p>
                     </div>
                 </div>
                 <div class="row">
@@ -22,7 +22,7 @@
                         <p class=" ">KTP/Identity number</p>
                     </div>
                     <div class="col-6">
-                        <p class=" ">: {{ $agreement->getFields("ktp ") }} </p>
+                        <p class=" ">: {{ $agreement ? $agreement->getFields("ktp ") : "" }} </p>
                     </div>
                 </div>
                 <div class="row">
@@ -30,7 +30,7 @@
                         <p class=" ">Alamat/address</p>
                     </div>
                     <div class="col-6">
-                        <p class=" ">: {{ $agreement->getFields("alamat ") }} </p>
+                        <p class=" ">: {{ $agreement ? $agreement->getFields("alamat ")  : ""}} </p>
                     </div>
                 </div>
                 <div class="row">
@@ -38,7 +38,7 @@
                         <p class=" ">Jangka waktu/time period</p>
                     </div>
                     <div class="col-6">
-                        <p class=" ">: {{ $agreement->getFields("jangka_waktu ") }}</p>
+                        <p class=" ">: {{ $agreement ? $agreement->getFields("jangka_waktu ")  : ""}}</p>
                     </div>
                 </div>
             </div>
@@ -61,10 +61,10 @@
                             1
                         </td>
                         <td>
-                            {{ $agreement->getFields("nama_paket ") }}
+                            {{ $agreement ? $agreement->getFields("nama_paket ") : ""}}
                         </td>
                         <td>
-                            {{ $agreement->getFields("detail_paket ") }}
+                            {{ $agreement ? $agreement->getFields("detail_paket ") : ""}}
                         </td>
                     </tr>
                 </table>
@@ -76,7 +76,7 @@
                     </p>
                 </div>
                 <div class="col-6">
-                    <p class=" ">: {{ $agreement->getFields("alamat_pemasangan ") }}</p>
+                    <p class=" ">: {{ $agreement ? $agreement->getFields("alamat_pemasangan ") : "" }}</p>
                 </div>
             </div>
 
@@ -86,7 +86,7 @@
                         Bank Name
                     </td>
                     <td>
-                        : {{ $agreement->getFields("nama_bank ") }}
+                        : {{ $agreement ? $agreement->getFields("nama_bank ") : ""}}
                     </td>
                 </tr>
                 <tr>
@@ -94,7 +94,7 @@
                         Holder Name
                     </td>
                     <td>
-                        : {{ $agreement->getFields(" holder_name") }}
+                        : {{ $agreement ? $agreement->getFields(" holder_name") : ""}}
                     </td>
                 </tr>
                 <tr>
@@ -102,7 +102,7 @@
                         Account Number
                     </td>
                     <td>
-                        : {{ $agreement->getFields("account_number ") }}
+                        : {{ $agreement ? $agreement->getFields("account_number ") : ""}}
                     </td>
                 </tr>
                 <tr>
@@ -110,7 +110,7 @@
                         Branch Office
                     </td>
                     <td>
-                        : {{ $agreement->getFields(" branch_office") }}
+                        : {{ $agreement ? $agreement->getFields(" branch_office") : ""}}
                     </td>
                 </tr>
             </table>
@@ -125,7 +125,7 @@
 
             <div class="row mt-5 mb-5">
                 <div class="col-5 text-center">
-                    @if($agreement->getSignature(1))
+                    @if($agreement && $agreement->getSignature(1))
                     <img src="{{ Storage::url('public/'.$agreement->getSignature(1)->signature) }}" class="img-thumbnail img-signature">
                     @else
                     <div style="min-height: 80px; "></div>
@@ -136,7 +136,7 @@
             <div class="row mt-5 mb-5">
                 <div class="col-5 text-center">
                     <p class=" ">
-                        <strong>{{ $agreement->getFields(" nama") }}</strong>
+                        <strong>{{ $agreement ? $agreement->getFields(" nama") : ""}}</strong>
                     </p>
                 </div>
             </div>
@@ -631,11 +631,11 @@
                                 <table style="border: 0;">
                                     <tr>
                                         <td style="width: 25px;">Telephone</td>
-                                        <td style="width: auto;">: {{ $agreement->getFields(" telephon") }}</td>
+                                        <td style="width: auto;">: {{ $agreement ? $agreement->getFields(" telephon") : ""}}</td>
                                     </tr>
                                     <tr>
                                         <td style="width: 25px;">Email</td>
-                                        <td style="width: auto;">: {{ $agreement->getFields(" email") }}</td>
+                                        <td style="width: auto;">: {{ $agreement ? $agreement->getFields(" email") : ""}}</td>
                                     </tr>
                                 </table>
                             </li>

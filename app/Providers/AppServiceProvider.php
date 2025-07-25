@@ -87,7 +87,7 @@ class AppServiceProvider extends ServiceProvider
             $subcribetionMenu = ['vehicles','subscribe_letters'];
             $managementRequestItemMenu = ['item_requests'];
             $managementUsedMenu = ['master_check_items','used_laptops','used_items'];
-            $internetManagementMenu = ['data_centers', 'pops','optical_distributions','coverage_services','internet_packages'];
+            $internetManagementMenu = ['data_centers', 'pops','optical_distributions','coverage_services','internet_packages', 'internet_customers'];
 
             $managementCompanyMenu = 
             [
@@ -595,7 +595,7 @@ class AppServiceProvider extends ServiceProvider
                 [
                     'text' => 'Distribusi Optic',
                     'route' => 'optical-distribution.index',
-                    'icon' => 'fa fa-fiber-optic',
+                    'icon' => 'fas fa-network-wired',
                 ],
                 'coverage_services' =>
                 [
@@ -608,6 +608,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Paket Internet',
                     'route' => 'internet-package.index',
                     'icon' => 'fa fa-globe',
+                ],
+                'internet_customers' =>
+                [
+                    'text' => 'Pelanggan Internet',
+                    'route' => 'internet-customer.index',
+                    'icon' => 'fa fa-users',
                 ],
             ];
 

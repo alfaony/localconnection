@@ -11,7 +11,7 @@ use App\Schemas\RoleSchema;
 use App\Models\Permission;
 use App\Models\PermissionRole;
 
-class InternetCustomerSeeder extends Seeder
+class PermissionForMenuInternetCustomerSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -74,7 +74,7 @@ class InternetCustomerSeeder extends Seeder
                 return;
             }
 
-            $itemCustomerInternet = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_tecknician','as_finance','closed'];
+            $itemCustomerInternet = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_technician','as_finance','closed'];
             $chatMessage = ['index','store','show','edit'];
             
             
@@ -89,7 +89,7 @@ class InternetCustomerSeeder extends Seeder
                     'model' => 'InternetCustomer',
                     'guard_name' => 'web'
                 ]);
-                if (in_array($method, ['as_tecknician','complete','closed'])) 
+                if (in_array($method, ['as_technician','complete','closed'])) 
                 {
                     PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
                     continue;
@@ -146,50 +146,50 @@ class InternetCustomerSeeder extends Seeder
                 PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
                 }
             
-            $this->command->info('Berhasil Membuat dan Assign Role Sprinter untuk Item Request.');
+            $this->command->info('Berhasil Membuat dan Assign Role Sprinter untuk Internet Customer.');
 
 
-            foreach($chatMessage as $method)
-            {
-                // create permision
-                $permissionChatMessage = Permission::firstOrCreate([
-                    'name' => ucwords($method).' Chat Message',
-                ],[
-                    'method' => $method,
-                    'table' => 'chat_messages',
-                    'model' => 'ChatMessage',
-                    'guard_name' => 'web'
-                ]);
+            // foreach($chatMessage as $method)
+            // {
+            //     // create permision
+            //     $permissionChatMessage = Permission::firstOrCreate([
+            //         'name' => ucwords($method).' Chat Message',
+            //     ],[
+            //         'method' => $method,
+            //         'table' => 'chat_messages',
+            //         'model' => 'ChatMessage',
+            //         'guard_name' => 'web'
+            //     ]);
 
 
-                if ($root) 
-                {
-                    PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permissionChatMessage->id]);
-                }
-                if($admin){
-                    PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permissionChatMessage->id]);
-                }
-                if($finance){
-                    PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permissionChatMessage->id]);
-                }
-                if ($staffFinance) 
-                {
-                    PermissionRole::create(['role_id' => $staffFinance->id, 'permission_id' => $permissionChatMessage->id]);
-                }
-                if ($managerFinance) 
-                {
-                    PermissionRole::create(['role_id' => $managerFinance->id, 'permission_id' => $permissionChatMessage->id]);
-                }
-                if($manager)
-                {
-                    PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permissionChatMessage->id]);
-                }
+            //     if ($root) 
+            //     {
+            //         PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permissionChatMessage->id]);
+            //     }
+            //     if($admin){
+            //         PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permissionChatMessage->id]);
+            //     }
+            //     if($finance){
+            //         PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permissionChatMessage->id]);
+            //     }
+            //     if ($staffFinance) 
+            //     {
+            //         PermissionRole::create(['role_id' => $staffFinance->id, 'permission_id' => $permissionChatMessage->id]);
+            //     }
+            //     if ($managerFinance) 
+            //     {
+            //         PermissionRole::create(['role_id' => $managerFinance->id, 'permission_id' => $permissionChatMessage->id]);
+            //     }
+            //     if($manager)
+            //     {
+            //         PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permissionChatMessage->id]);
+            //     }
     
-                PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permissionChatMessage->id]);
+            //     PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permissionChatMessage->id]);
                 
-            }
+            // }
 
-            $this->command->info('Berhasil Membuat dan Assign Role Sprinter untuk Chat Message.');
+            // $this->command->info('Berhasil Membuat dan Assign Role Sprinter untuk Chat Message.');
             DB::commit();
         } catch (\Throwable $th) {
             //throw $th;
