@@ -197,7 +197,7 @@ class InternetCustomerForm extends Component
             'cities' => $this->province_id ? City::where('province_id', $this->province_id)->get() : [],
             'districts' => $this->city_id ? District::where('city_id', $this->city_id)->get() : [],
             'subdistricts' => $this->district_id ? Subdistrict::where('district_id', $this->district_id)->get() : [],
-            'internetPackages' => InternetPackage::all(),
+            'internetPackages' => InternetPackage::where('company_id',$this->company_id)->where('is_active', true)->get(),
         ])->extends('layouts.app_customer');
     }
 

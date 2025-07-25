@@ -42,6 +42,17 @@ class InternetPackageForm extends Component
         }
     }
 
+    /**
+     * Save the internet package.
+     *
+     * Validate the input and store the data into the database.
+     * If the package already exists, update the existing data.
+     * Otherwise, create a new package.
+     *
+     * Redirect to the package index page after saving.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function save()
     {
         $this->validate();
