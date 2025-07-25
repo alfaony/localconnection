@@ -574,7 +574,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
 });
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
-  Route::get('internet-customer/customer/{companySlug}/{customerId}', CustomerShow::class)->name('internet-customer.customer.show');
+  Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
 
 Route::get('error/{code?}', function ($code = 500) {
     return view('public_error', [

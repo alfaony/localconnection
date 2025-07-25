@@ -191,7 +191,7 @@ class InternetCustomerForm extends Component
     public function render()
     {
         return view('livewire.internet-customer.internet-customer-form', [
-            'settingCompany' => SettingCompany::byCompany($this->company_id)->where('menu','bank')->get()->pluck('field_value','field_title'),
+            'settingCompany' => SettingCompany::byCompany($this->company_id)->where('menu','bank')->orWhere('menu','profile')->get()->pluck('field_value','field_title'),
             'agreement' => new PartnershipAgreement(),
             'provinces' => Province::all(),
             'cities' => $this->province_id ? City::where('province_id', $this->province_id)->get() : [],

@@ -16,10 +16,10 @@ class InternetCustomerShow extends Component
     public $showKtpModal = false;
     public $installationPhotos = [];
     public $showInstallationPhotosModal = false;
+    public $code;
 
-    public function mount($companySlug, $customerId)
+    public function mount($code)
     {
-        $companyId = Company::where('slug', $companySlug)->first();
         $this->customer = InternetCustomer::with([
             'company',
             'province',
@@ -31,9 +31,9 @@ class InternetCustomerShow extends Component
             'userCustomer',
             'purchase',
             'installation'
-        ])->find($customerId);
+        ])->where('code', $code)->first();
 
-        if(!$companyId || !$this->customer) 
+        if(!$this->customer) 
         {
             return redirect()->route('public.error', ['code' => 403])->with([
                 'title' => 'Akses Ditolak',

@@ -65,7 +65,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container text-center">
-            <p class="mb-0">&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+            <p class="mb-0">&copy; {{ date('Y') }} @yield('title').</p>
             <small class="text-muted">Fast and reliable internet connection</small>
         </div>
     </footer>

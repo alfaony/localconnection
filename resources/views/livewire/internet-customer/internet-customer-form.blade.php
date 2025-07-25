@@ -1,4 +1,4 @@
-@section('title', $company_name)
+@section('title', $settingCompany['name'])
 <div class="py-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">
@@ -129,7 +129,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Nomor Telepon</label>
                                     <input type="text" wire:model="phone_number" class="form-control">
-                                    @error('name') <small class="text-danger">{{ $message }}</small> @enderror
+                                    @error('phone_number') <small class="text-danger">{{ $message }}</small> @enderror
                                 </div>
                                 
                                 <div class="col-md-12">
@@ -460,10 +460,7 @@
                                 
                                 <!-- Tombol untuk menuju laman detail pelanggan -->
                                 <div class="mt-4">
-                                    <a href="{{ route('internet-customer.customer.show', [
-                                        'companySlug' => $company_slug, 
-                                        'customerId' => $internet_customer_id
-                                    ]) }}" 
+                                    <a href="{{ route('internet-customer.customer.show', $code) }}" 
                                     class="btn btn-primary">
                                         Lihat Detail Pelanggan
                                     </a>
