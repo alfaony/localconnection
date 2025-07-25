@@ -274,6 +274,10 @@ class InternetCustomerForm extends Component
     private function validateStep3()
     {
         $this->validate([
+            'nama_bank' => 'required_if:payment_method,transfer',
+            'holder_name' => 'required_if:payment_method,transfer',
+            'account_number' => 'required_if:payment_method,transfer',
+            'branch_office' => 'required_if:payment_method,transfer',
             'payment_method' => 'required|in:transfer,qris,e-wallet',
             'payment_proof' => 'required_if:payment_method,transfer|image|max:2048',
         ]);
