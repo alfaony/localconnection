@@ -167,10 +167,15 @@
                                     <label class="form-label">Foto KTP</label>
                                     <input type="file" wire:model="ktp_photo" class="form-control">
                                     @error('ktp_photo') <small class="text-danger">{{ $message }}</small> @enderror
+                                    <div wire:loading wire:target="ktp_photo" class="text-primary">
+                                        <small>Sedang mengunggah file...</small>
+                                    </div>
                                     @if($ktp_photo)
                                         <small class="text-muted">File terpilih: {{ $ktp_photo->getClientOriginalName() }}</small>
                                     @endif
+                                    
                                 </div>
+                                
                                 
                             </div>
                             
@@ -300,6 +305,9 @@
                                             <label class="form-label">Upload Bukti Transfer</label>
                                             <input type="file" wire:model="payment_proof" class="form-control">
                                             @error('payment_proof') <small class="text-danger">{{ $message }}</small> @enderror
+                                            <div wire:loading wire:target="payment_proof" class="text-primary">
+                                                <small>Sedang mengunggah file...</small>
+                                            </div>
                                             @if($payment_proof)
                                                 <small class="text-muted">File terpilih: {{ $payment_proof->getClientOriginalName() }}</small>
                                             @endif
@@ -580,6 +588,8 @@
             // Event untuk tombol Gambar Ulang
             document.getElementById('re-sign')?.addEventListener('click', function() {
                 // Reset canvas
+                console.log('Reset canvas');
+                
                 signaturePad.clear();
                 
                 // Tampilkan canvas container, sembunyikan preview
@@ -743,6 +753,15 @@
                             alert('Harap berikan tanda tangan Anda');
                         }
                     });
+
+                    // ❗ Tambahkan ulang binding untuk tombol Re-sign
+                    document.getElementById('re-sign')?.addEventListener('click', function () {
+                        signaturePad.clear();
+                        document.getElementById('signature-canvas-container').classList.remove('d-none');
+                        document.getElementById('signature-preview-container').classList.add('d-none');
+                        @this.set('signature', null);
+                    });
+
                     setTimeout(() => {
                         signaturePad = initSignaturePad();
                         if (component.get('signature') && signaturePad) {
