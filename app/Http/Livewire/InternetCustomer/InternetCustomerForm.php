@@ -146,6 +146,7 @@ class InternetCustomerForm extends Component
     public function saveSignature($signatureData)
     {
         $this->signature = $signatureData;
+        $this->generateAgreementPreviewJson();
         $this->dispatchBrowserEvent('signature-saved'); // Panggil event JS
     }
 
@@ -259,6 +260,7 @@ class InternetCustomerForm extends Component
             'name' => 'required|min:3',
             'email' => 'required|email|unique:user_customers,email',
             // 'password' => 'required|min:8|confirmed',
+            'phone_number' => 'required|string',
             'address' => 'required|min:10',
             'ktp_number' => 'required|digits:16',
             'ktp_photo' => 'required|image|max:2048',
@@ -401,7 +403,7 @@ class InternetCustomerForm extends Component
         } catch (\Throwable $th) {
             //throw $th;
             DB::rollBack();
-            // dd($th);
+            dd($th);
             session()->flash('error', 'Terjadi kesalahan: ' . $th->getMessage());
             $this->step = 1;
         }
@@ -444,7 +446,7 @@ class InternetCustomerForm extends Component
     private function createPartnershipAgreement($ktpPath)
     {
         try {
-            $letter_number = PartnershipAgreement::byCompany($this->company_id)->withTrashed()->max('letter_number') + 1;
+            $letter_number = PartnershipAgreement::where('company_id',$this->company_id)->withTrashed()->max('letter_number') + 1;
             $date = Carbon::now()->format('m/Y');
             $numberResult = $letter_number.'/'.$date;
             $type = PartnershipAgreementType::where('name_format', ParamSchema::PERJANJIAN_INTERNET)->first();
