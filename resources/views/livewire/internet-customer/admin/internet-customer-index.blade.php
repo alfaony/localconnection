@@ -150,7 +150,7 @@
                                                                 Konfirmasi
                                                             </button>
                                                         @else
-                                                            <span class="text-muted">Belum Upload</span>
+                                                            <span class="text-muted">Proses Konfirmasi Pembayaran</span>
                                                         @endif
                                                     @else
                                                         <span class="badge bg-secondary">-</span>
@@ -163,7 +163,7 @@
                                                         <i class="fas fa-camera me-1"></i> Input Instalasi
                                                     </button>
                                                     @else
-                                                        <span class="text-muted">Belum Upload</span>
+                                                        <span class="text-muted">Proses Instalasi</span>
                                                     @endif
                                                     @break
                                                     
