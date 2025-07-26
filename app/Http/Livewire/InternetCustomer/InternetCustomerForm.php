@@ -412,7 +412,7 @@ class InternetCustomerForm extends Component
             //throw $th;
             DB::rollBack();
             // dd($th);
-            session()->flash('error', 'Terjadi kesalahan: ' . $th->getMessage());
+            session()->flash('error', 'Terjadi kesalahan: Konfirmasikan ke Admin');
             $this->step = 1;
         }
     }

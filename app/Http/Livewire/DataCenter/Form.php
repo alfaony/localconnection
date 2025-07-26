@@ -91,7 +91,7 @@ class Form extends Component
         } catch (\Throwable $th) 
         {
             //throw $th;
-            dd($th);
+            // dd($th);
             Log::error($th);
             session()->flash('error', $th->getMessage());
             return redirect()->back();
