@@ -206,7 +206,18 @@
                                 <i class="fa fa-times-circle" style="color: red;"></i> Not Complete
                                 @break
                             @case('complete')
-                                <i class="fa fa-check" style="color: green;"></i> Complete
+                                @php
+                                    $latestCompleteRecord = $dailytask->statusRecords
+                                        ->filter(fn($r) => optional($r->taskStatus)->name === \App\Schemas\ParamSchema::COMPLATE)
+                                        ->sortByDesc('created_at')
+                                        ->first();
+                                @endphp
+
+                                @if ($latestCompleteRecord)
+                                    <i class="fa fa-check" style="color: green;"></i> Complete
+                                    <br>
+                                    <small>{{ $latestCompleteRecord->created_at->format('d M Y H:i') }}</small>
+                                @endif
                                 @break
                             @default
                                 {{ $dailytask->taskStatus->name }}
