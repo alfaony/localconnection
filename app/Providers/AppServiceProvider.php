@@ -74,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
             $wilayahMenuArray = array();
             $productMenuArray = array();
             $subcribetionMenuArray = array();
+            $internetManagementMenuArray = array();
 
             $equipmentMenu = ['devices','equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
@@ -86,6 +87,7 @@ class AppServiceProvider extends ServiceProvider
             $subcribetionMenu = ['vehicles','subscribe_letters'];
             $managementRequestItemMenu = ['item_requests'];
             $managementUsedMenu = ['master_check_items','used_laptops','used_items'];
+            $internetManagementMenu = ['data_centers', 'pops','optical_distributions','coverage_services','internet_packages', 'internet_customers'];
 
             $managementCompanyMenu = 
             [
@@ -576,7 +578,43 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Barang Bekas',
                     'route' => 'used-item.index',
                     'icon' => 'fa fa-box-open',
-                ]
+                ],
+                'data_centers' =>
+                [
+                    'text' => 'Data Center',
+                    'route' => 'data-center.index',
+                    'icon' => 'fa fa-server',
+                ],
+                'pops' =>
+                [
+                    'text' => 'POP',
+                    'route' => 'pop.index',
+                    'icon' => 'fa fa-hdd',
+                ],
+                'optical_distributions' =>
+                [
+                    'text' => 'Distribusi Optic',
+                    'route' => 'optical-distribution.index',
+                    'icon' => 'fas fa-network-wired',
+                ],
+                'coverage_services' =>
+                [
+                    'text' => 'Layanan Coverage',
+                    'route' => 'coverage-service.index',
+                    'icon' => 'fa fa-signal',
+                ],
+                'internet_packages' =>
+                [
+                    'text' => 'Paket Internet',
+                    'route' => 'internet-package.index',
+                    'icon' => 'fa fa-globe',
+                ],
+                'internet_customers' =>
+                [
+                    'text' => 'Pelanggan Internet',
+                    'route' => 'internet-customer.index',
+                    'icon' => 'fa fa-users',
+                ],
             ];
 
             foreach ($listMenu as $role) 
@@ -692,6 +730,14 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($internetManagementMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($internetManagementMenuArray,$menus[$role]);
+                }
+            }
+
             foreach ($managementRequestItemMenu as $role) 
             {
                 if(in_array($role,['item_requests']) && Access::can("index", $role))
@@ -785,6 +831,11 @@ class AppServiceProvider extends ServiceProvider
                 'submenu'   => $subcribetionMenuArray    
             ];
 
+            $internetManagementMenu = [
+                'text'      => 'Manajemen Internet',
+                'submenu'   => $internetManagementMenuArray    
+            ];
+
 
             if($managementCompanyMenu['submenu'] )
             {
@@ -854,6 +905,11 @@ class AppServiceProvider extends ServiceProvider
             if($subcribetionMenu['submenu'] )
             {
                 $event->menu->add($subcribetionMenu);
+            }
+
+            if($internetManagementMenu['submenu'] )
+            {
+                $event->menu->add($internetManagementMenu);
             }
         });
 

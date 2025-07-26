@@ -117,6 +117,12 @@ class RoleController extends Controller
             'master_check_items',
             'used_laptops',
             'used_items',
+            'data_centers',
+            'pops',
+            'optical_distributions',
+            'coverage_services',
+            'internet_packages',
+            'internet_customers',
         ];
 
         $checked = array_merge($mainMenus);
@@ -263,6 +269,12 @@ class RoleController extends Controller
                 'master_check_items',
                 'used_laptops',
                 'used_items',
+                'data_centers',
+                'pops',
+                'optical_distributions',
+                'coverage_services',
+                'internet_packages',
+                'internet_customers',
             ];
         $checked = array_merge($mainMenus);
 
@@ -369,6 +381,12 @@ class RoleController extends Controller
                 'master_check_items',
                 'used_laptops',
                 'used_items',
+                'data_centers',
+                'pops',
+                'optical_distributions',
+                'coverage_services',
+                'internet_packages',
+                'internet_customers',
             ];
         
         $checked = array_merge($mainMenus);

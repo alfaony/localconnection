@@ -3,6 +3,7 @@
 @inject('layoutHelper', 'JeroenNoten\LaravelAdminLte\Helpers\LayoutHelper')
 
 @section('adminlte_css')
+    @livewireStyles
     @stack('css')
     @yield('css')
     <style>
@@ -68,6 +69,7 @@
     {{-- Include Firebase Initialization --}}
     @include('partials.permission-fcm')
     @include('inbox.inboxscript')
+    @livewireScripts
     @stack('js')
     @yield('js')
 @stop

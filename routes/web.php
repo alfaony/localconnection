@@ -104,11 +104,20 @@ use App\Http\Controllers\MasterCheckItemController;
 use App\Http\Controllers\UsedItemController;
 
 // LiveWired
-// use App\Http\Livewire\UsedLaptopTable;
-
-
-
-
+use App\Http\Livewire\DataCenter\Index;
+use App\Http\Livewire\DataCenter\Form;
+use App\Http\Livewire\Pop\PopIndex;
+use App\Http\Livewire\Pop\PopForm;
+use App\Http\Livewire\Ods\OdsIndex;
+use App\Http\Livewire\Ods\OdsForm;
+use App\Http\Livewire\CoverageService\CoverageServiceIndex;
+use App\Http\Livewire\CoverageService\CoverageServiceForm;
+use App\Http\Livewire\InternetPackage\InternetPackageIndex;
+use App\Http\Livewire\InternetPackage\InternetPackageForm;
+use App\Http\Livewire\InternetCustomer\InternetCustomerForm;
+use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerIndex;
+use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
+use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 
 
 
@@ -207,7 +216,6 @@ Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementCont
 
 Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
 Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->name('used-item.show-qr');
-
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
@@ -540,9 +548,42 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::delete('used-item/mediaDestroy/{id}', [UsedItemController::class,'mediaDestroy'])->name('used-item.media.destroy');
   Route::patch('used-item/maskAsSold/{slug}', [UsedItemController::class,'maskAsSold'])->name('used-item.mark-as-sold');
   Route::resource('used-item', UsedItemController::class);
+  
+  Route::get('data-center', Index::class)->name('data-center.index');
+  Route::get('data-center/create', Form::class)->name('data-center.create');
+  Route::get('data-center/edit/{id}', Form::class)->name('data-center.edit');
+  
+  Route::get('pop', PopIndex::class)->name('pop.index');
+  Route::get('pop/create', PopForm::class)->name('pop.create');
+  Route::get('pop/edit/{id}', PopForm::class)->name('pop.edit');
+  
+  Route::get('optical-distribution', OdsIndex::class)->name('optical-distribution.index');
+  Route::get('optical-distribution/create', OdsForm::class)->name('optical-distribution.create');
+  Route::get('optical-distribution/edit/{id}', OdsForm::class)->name('optical-distribution.edit');
+  
+  Route::get('coverage-service', CoverageServiceIndex::class)->name('coverage-service.index');
+  Route::get('coverage-service/create', CoverageServiceForm::class)->name('coverage-service.create');
+  Route::get('coverage-service/edit/{id}', CoverageServiceForm::class)->name('coverage-service.edit');
+  
+  Route::get('internet-package', InternetPackageIndex::class)->name('internet-package.index');
+  Route::get('internet-package/create', InternetPackageForm::class)->name('internet-package.create');
+  Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
+
+  Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
+  Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
+  Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
 });
+  Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
+  Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
 
-
+Route::get('error/{code?}', function ($code = 500) {
+    return view('public_error', [
+        'code' => $code,
+        'title' => session('title', 'Terjadi Kesalahan'),
+        'message' => session('message', 'Kesalahan tidak diketahui'),
+        'icon' => session('icon', 'fas fa-exclamation-triangle'),
+    ]);
+})->name('public.error');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;

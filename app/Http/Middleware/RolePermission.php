@@ -24,6 +24,10 @@ class RolePermission
             $role = Role::findOrFail($user->role_id);
             $permissions = $role->permissions;
             // get requested action
+            $routeName = $request->route()->getName();
+            if ($routeName) {
+                $routeName = last(explode('.', $routeName));
+            }
             $actionMethod = $request->route()->getActionMethod();
             $firstUrl = $request->segment(1);
             if (isset($firstUrl)) {
@@ -34,7 +38,7 @@ class RolePermission
 
                 // dd($actionMethod,$url);
                 foreach ($permissions as $permission){
-                    if ($actionMethod == $permission->method && $url == $permission->table){
+                    if (($routeName == $permission->method || $actionMethod == $permission->method) && $url == $permission->table){
                         // authorized request
                         return $next($request);
                     }
