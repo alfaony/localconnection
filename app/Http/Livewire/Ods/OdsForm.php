@@ -127,12 +127,12 @@ class OdsForm extends Component
             $ods->update($data);
             $ods->pops()->sync($this->selectedPop);
 
-            session()->flash('success', 'ODS berhasil diperbarui!');
+            session()->flash('message', 'ODS berhasil diperbarui!');
         } else {
             $ods = OpticalDistribution::create($data);
             $ods->pops()->attach($this->selectedPop);
             
-            session()->flash('success', 'ODS berhasil ditambahkan!');
+            session()->flash('message', 'ODS berhasil ditambahkan!');
         }
 
         return redirect()->route('optical-distribution.index');

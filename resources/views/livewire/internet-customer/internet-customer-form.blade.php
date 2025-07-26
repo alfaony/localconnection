@@ -110,8 +110,19 @@
                             </div>
 
                             <div class="d-flex justify-content-end mt-4">
-                                <button wire:click="nextStep" class="btn btn-primary px-4">
-                                    Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
+                                <button 
+                                    wire:click="nextStep"
+                                    wire:loading.attr="disabled"
+                                    wire:target="nextStep"
+                                    class="btn btn-primary px-4"
+                                >
+                                    <span wire:loading.remove wire:target="nextStep">
+                                        Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
+                                    </span>
+                                    <span wire:loading wire:target="nextStep">
+                                        Memproses...
+                                        <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                                    </span>
                                 </button>
                             </div>
                         @endif
@@ -183,8 +194,19 @@
                                 <button wire:click="prevStep" class="btn btn-outline-secondary px-4">
                                     <i class="fas fa-arrow-left me-2"></i> Kembali
                                 </button>
-                                <button wire:click="nextStep" class="btn btn-primary px-4">
-                                    Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
+                                <button 
+                                    wire:click="nextStep"
+                                    wire:loading.attr="disabled"
+                                    wire:target="nextStep"
+                                    class="btn btn-primary px-4"
+                                >
+                                    <span wire:loading.remove wire:target="nextStep">
+                                        Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
+                                    </span>
+                                    <span wire:loading wire:target="nextStep">
+                                        Memproses...
+                                        <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                                    </span>
                                 </button>
                             </div>
                         @endif
@@ -320,8 +342,19 @@
                                 <button wire:click="prevStep" class="btn btn-outline-secondary px-4">
                                     <i class="fas fa-arrow-left me-2"></i> Kembali
                                 </button>
-                                <button wire:click="nextStep" class="btn btn-success px-4">
-                                    Konfirmasi Pembayaran <i class="fas fa-check ms-2"></i>
+                                <button 
+                                    wire:click="nextStep"
+                                    wire:loading.attr="disabled"
+                                    wire:target="nextStep"
+                                    class="btn btn-primary px-4"
+                                >
+                                    <span wire:loading.remove wire:target="nextStep">
+                                        Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
+                                    </span>
+                                    <span wire:loading wire:target="nextStep">
+                                        Memproses...
+                                        <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                                    </span>
                                 </button>
                             </div>
                         @endif
@@ -437,8 +470,19 @@
                                 <button wire:click="prevStep" class="btn btn-outline-secondary px-4">
                                     <i class="fas fa-arrow-left me-2"></i> Kembali
                                 </button>
-                                <button wire:click="nextStep" class="btn btn-primary px-4">
-                                    Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
+                                <button 
+                                    wire:click="nextStep"
+                                    wire:loading.attr="disabled"
+                                    wire:target="nextStep"
+                                    class="btn btn-primary px-4"
+                                >
+                                    <span wire:loading.remove wire:target="nextStep">
+                                        Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
+                                    </span>
+                                    <span wire:loading wire:target="nextStep">
+                                        Memproses...
+                                        <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                                    </span>
                                 </button>
                             </div>
                         @endif
@@ -579,6 +623,7 @@
             document.getElementById('save-signature')?.addEventListener('click', function() {
                 if (signaturePad && !signaturePad.isEmpty()) {
                     const signatureData = signaturePad.toDataURL();
+                                                console.log("save 2");
                     @this.call('saveSignature', signatureData);
                 } else {
                     alert('Harap berikan tanda tangan Anda');
@@ -597,6 +642,8 @@
                 document.getElementById('signature-preview-container').classList.add('d-none');
                 
                 // Reset signature di Livewire
+                console.log("reset 1");
+                
                 @this.set('signature', null);
             });
             
@@ -689,7 +736,8 @@
                     // Fungsi untuk clear signature
                     function handleClear() {
                         signaturePad.clear();
-                        @this.set('signature', null);
+                         console.log("reset 2");
+                        @this.call('saveSignature', null);
                     }
                     
                     // Inisialisasi ukuran pertama kali
@@ -722,7 +770,7 @@
                 {
                     if (signaturePad && !signaturePad.isEmpty()) {
                         const signatureData = signaturePad.toDataURL();
-                        @this.set('signature', signatureData);
+                        @this.call('saveSignature', signatureData);
                     }
                 }
                 
@@ -748,6 +796,9 @@
                      {
                         if (signaturePad && !signaturePad.isEmpty()) {
                             const signatureData = signaturePad.toDataURL();
+
+                            console.log("save 1");
+                            
                             @this.call('saveSignature', signatureData);
                         } else {
                             alert('Harap berikan tanda tangan Anda');
@@ -759,7 +810,9 @@
                         signaturePad.clear();
                         document.getElementById('signature-canvas-container').classList.remove('d-none');
                         document.getElementById('signature-preview-container').classList.add('d-none');
-                        @this.set('signature', null);
+                         console.log("reset 3");
+                        // @this.set('signature', null);
+                        @this.call('saveSignature', null);
                     });
 
                     setTimeout(() => {

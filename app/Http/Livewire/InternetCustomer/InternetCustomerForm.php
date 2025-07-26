@@ -145,9 +145,12 @@ class InternetCustomerForm extends Component
 
     public function saveSignature($signatureData)
     {
+        if($signatureData) 
+            {
+            $this->dispatchBrowserEvent('signature-saved'); // Panggil event JS
+        }
         $this->signature = $signatureData;
         $this->generateAgreementPreviewJson();
-        $this->dispatchBrowserEvent('signature-saved'); // Panggil event JS
     }
 
         // Method untuk handle setelah signature disimpan
@@ -298,6 +301,7 @@ class InternetCustomerForm extends Component
     //     // Lanjutkan ke step berikutnya setelah signature disimpan
     //     $this->step++;
     // }
+    
 
     private function submitForm()
     {
