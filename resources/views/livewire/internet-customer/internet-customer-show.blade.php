@@ -206,17 +206,13 @@
                                                         -
                                                     @endif
                                                 </td>
-                                                @canAccess('as_finance','internet_customers')
                                                 <td>
                                                     @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
                                                         <i class="fas fa-check-circle mr-1 text-success"></i>                   
                                                     @else
-                                                    <button class="btn btn-sm btn-success mt-1" onclick="confirmPayment('{{ $purchase->id }}')">
-                                                        Konfirmasi
-                                                    </button>
+                                                        <span class="badge badge-warning">Menunggu Konfirmasi</span>
                                                     @endif
                                                 </td>
-                                                @endcanAccess
                                             </tr>
                                             @endforeach
                                         </tbody>
