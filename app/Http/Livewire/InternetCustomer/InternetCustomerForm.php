@@ -577,8 +577,8 @@ class InternetCustomerForm extends Component
 
                     if (now()->lt($registerDate)) {
                         // Pendaftaran sebelum register_date: bayar bulan depan
-                        $this->paymentStartMonth = now()->addMonth()->format('F Y');
-                        $this->start_billing_date = now()->addMonth()->firstOfMonth()->format('Y-m-d');
+                        $this->paymentStartMonth = now()->addMonth($activePromo->value)->format('F Y');
+                        $this->start_billing_date = now()->addMonth($activePromo->value)->firstOfMonth()->format('Y-m-d');
                     } else {
                         // Pendaftaran pada/ setelah register_date: bayar 2 bulan dari sekarang
                         $this->paymentStartMonth = now()->addMonths($activePromo->value + 1)->format('F Y');
