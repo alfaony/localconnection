@@ -95,6 +95,7 @@
                                 <td>Rp {{ number_format($package->price_nett, 0, ',', '.') }}</td>
                                 <td class="text-center">
                                     <div class="form-check form-switch d-inline-block">
+                                        @if($isCheck)
                                         <input class="form-check-input" type="checkbox" 
                                             id="status-{{ $package->id }}" 
                                             wire:change="toggleStatus({{ $package->id }})"
@@ -102,6 +103,11 @@
                                         <label class="form-check-label" for="status-{{ $package->id }}">
                                             {{ $package->is_active ? 'Aktif' : 'Non-Aktif' }}
                                         </label>
+                                        @else
+                                        <span class="badge bg-{{ $package->is_active ? 'success' : 'danger' }}">
+                                            {{ $package->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                                        </span> 
+                                        @endif
                                     </div>
                                 </td>
                                 <td class="text-center">

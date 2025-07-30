@@ -7,6 +7,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\Access;
 
 class InternetPackageIndex extends Component
 {
@@ -52,7 +53,10 @@ class InternetPackageIndex extends Component
 
     public function render()
     {
+        $isCheck = Access::can('is_active','internet_packages');
+
         return view('livewire.internet-package.internet-package-index', [
+            'isCheck' => $isCheck,
             'packages' => InternetPackage::query()
                 ->byCompany(Auth::user()->company_id)
                 ->when($this->search, function ($query) {

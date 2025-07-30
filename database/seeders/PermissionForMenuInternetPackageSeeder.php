@@ -24,7 +24,7 @@ class PermissionForMenuInternetPackageSeeder extends Seeder
     {
         $roles = Role::whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::PROCUREMENT, RoleSchema::MANAGER, RoleSchema::MANAGER_FINANCE, RoleSchema::FINANCE])->get();
         
-        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store'];
+        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store','is_active'];
 
         foreach ($methods as $method) 
         {

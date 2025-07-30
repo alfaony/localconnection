@@ -84,7 +84,7 @@ class InternetCustomer extends Model
 
     public function promo()
     {
-        return $this->belongsTo(Promo::class);
+        return $this->belongsTo(Promo::class, 'promo_id')->withTrashed();
     }
 
     public function partnershipAgreement()
