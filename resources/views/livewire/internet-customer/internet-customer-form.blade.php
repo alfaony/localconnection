@@ -176,14 +176,30 @@
                                 
                                 <div class="col-md-6">
                                     <label class="form-label">Foto KTP</label>
-                                    <input type="file" wire:model="ktp_photo" class="form-control">
-                                    @error('ktp_photo') <small class="text-danger">{{ $message }}</small> @enderror
-                                    <div wire:loading wire:target="ktp_photo" class="text-primary">
-                                        <small>Sedang mengunggah file...</small>
+                                    <div class="border rounded p-3 bg-white">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0">
+                                                <i class="fas fa-file-upload fa-2x text-muted"></i>
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <input type="file" wire:model="ktp_photo" class="form-control">
+                                                @if($ktp_photo)
+                                                    <small class="text-success d-block mt-1">
+                                                        <i class="fas fa-check-circle me-1"></i> 
+                                                        File terpilih: {{ $ktp_photo->getClientOriginalName() }}
+                                                    </small>
+                                                @else
+                                                    <small class="text-muted d-block mt-1">
+                                                        Format: JPG, PNG, PDF (maks. 2MB)
+                                                    </small>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        @error('ktp_photo') <small class="text-danger d-block mt-2">{{ $message }}</small> @enderror
+                                        <div wire:loading wire:target="ktp_photo" class="text-primary mt-2">
+                                            <i class="fas fa-spinner fa-spin me-1"></i> Sedang mengunggah file...
+                                        </div>
                                     </div>
-                                    @if($ktp_photo)
-                                        <small class="text-muted">File terpilih: {{ $ktp_photo->getClientOriginalName() }}</small>
-                                    @endif
                                     
                                 </div>
                                 
@@ -211,151 +227,257 @@
                             </div>
                         @endif
 
-                                                @if($step === 3)
+                        @if($step === 3)
                             <!-- STEP 3: PEMBAYARAN -->
-                            <h2 class="mb-4">Pembayaran</h2>
-                            
-                            <div class="card bg-light mb-4">
-                                <div class="card-body">
-                                    <h3 class="h5 card-title mb-3">Detail Tagihan</h3>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>Paket Internet:</span>
-                                        <span class="fw-semibold">{{ $selectedPackage->name }}</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>Harga:</span>
-                                        <span class="fw-semibold">Rp {{ number_format($selectedPackage->price_nett, 0, ',', '.') }}</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between fw-bold mt-3 pt-3 border-top">
-                                        <span>Total:</span>
-                                        <span class="text-primary">Rp {{ number_format($selectedPackage->price_nett, 0, ',', '.') }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="form-label mb-3">Metode Pembayaran</label>
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <div class="form-check card p-3 h-100 {{ $payment_method === 'transfer' ? 'border-primary' : '' }}">
-                                            <input class="form-check-input" type="radio" wire:model="payment_method" value="transfer" id="transfer">
-                                            <label class="form-check-label d-block" for="transfer">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-university fs-4 me-2"></i>
-                                                    <span>Transfer Bank</span>
-                                                </div>
-                                            </label>
+                            <div class="bg-white p-4 rounded-lg shadow-sm">
+                                <h2 class="mb-4 fw-bold text-primary border-bottom pb-3">Pembayaran</h2>
+                                
+                                 @if($hasFreeMonthsPromo)
+                                    <div class="alert alert-success border-start-4 border-success d-flex align-items-center mb-4">
+                                        <i class="fas fa-gift fa-2x me-3"></i>
+                                        <div>
+                                            <h4 class="alert-heading mb-1">Promo Free Months Aktif!</h4>
+                                            <p class="mb-0">
+                                                Anda mendapatkan <strong>{{ $freeMonthsDetails->value }} bulan gratis</strong>.
+                                                Pembayaran akan dimulai pada bulan <strong>{{ $paymentStartMonth }}</strong>.
+                                            </p>
                                         </div>
                                     </div>
-                                    {{-- 
-                                    <div class="col-md-4">
-                                        <div class="form-check card p-3 h-100 {{ $payment_method === 'qris' ? 'border-primary' : '' }}">
-                                            <input class="form-check-input" type="radio" wire:model="payment_method" value="qris" id="qris">
-                                            <label class="form-check-label d-block" for="qris">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-qrcode fs-4 me-2"></i>
-                                                    <span>QRIS</span>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-check card p-3 h-100 {{ $payment_method === 'e-wallet' ? 'border-primary' : '' }}">
-                                            <input class="form-check-input" type="radio" wire:model="payment_method" value="e-wallet" id="e-wallet">
-                                            <label class="form-check-label d-block" for="e-wallet">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="fas fa-wallet fs-4 me-2"></i>
-                                                    <span>E-Wallet</span>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    --}}
-                                </div>
-                                @error('payment_method') <small class="text-danger">{{ $message }}</small> @enderror
-                            </div>
-                            
-                            @if($payment_method === 'transfer')
-                                <div class="card bg-warning bg-opacity-10 mb-4">
+                                @endif
+                                
+                                <div class="card border-0 bg-light-subtle mb-4">
                                     <div class="card-body">
-                                        <h4 class="h6 card-title">Instruksi Transfer:</h4>
-                                        <p>Silakan transfer ke rekening berikut:</p>
-                                        <div class="mt-2">
-                                            <p><strong>Bank:</strong> {{ isset($settingCompany['nama_bank']) ? $settingCompany['nama_bank'] : '-' }}</p>
-                                            <p><strong>Nomor Rekening:</strong> {{ isset($settingCompany['rekening_number']) ? $settingCompany['rekening_number'] : '-' }}</p>
-                                            <p><strong>Atas Nama:</strong> {{ isset($settingCompany['atas_nama']) ? $settingCompany['atas_nama'] : '-' }}</p>
-                                            <p class="fw-bold mt-2">Jumlah: Rp {{ number_format($selectedPackage->price_nett, 0, ',', '.') }}</p>
+                                        <h3 class="h5 card-title mb-3 fw-semibold">Detail Tagihan</h3>
+                                        
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Paket Internet:</span>
+                                            <span class="fw-semibold">{{ $selectedPackage->name }}</span>
                                         </div>
                                         
-                                        <div class="mt-3">
-                                            <h5 class="h6">Informasi Transfer Anda</h5>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Nama Bank Pengirim</label>
-                                                        <input type="text" wire:model="nama_bank" class="form-control">
-                                                        @error('nama_bank') <small class="text-danger">{{ $message }}</small> @enderror
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Nama Pemilik Rekening</label>
-                                                        <input type="text" wire:model="holder_name" class="form-control">
-                                                        @error('holder_name') <small class="text-danger">{{ $message }}</small> @enderror
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Nomor Rekening Pengirim</label>
-                                                        <input type="text" wire:model="account_number" class="form-control">
-                                                        @error('account_number') <small class="text-danger">{{ $message }}</small> @enderror
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Cabang Bank</label>
-                                                        <input type="text" wire:model="branch_office" class="form-control">
-                                                        @error('branch_office') <small class="text-danger">{{ $message }}</small> @enderror
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Harga Bulanan:</span>
+                                            <span class="fw-semibold">Rp {{ number_format($selectedPackage->price_nett, 0, ',', '.') }}</span>
                                         </div>
-
-                                        <div class="mt-3">
-                                            <label class="form-label">Upload Bukti Transfer</label>
-                                            <input type="file" wire:model="payment_proof" class="form-control">
-                                            @error('payment_proof') <small class="text-danger">{{ $message }}</small> @enderror
-                                            <div wire:loading wire:target="payment_proof" class="text-primary">
-                                                <small>Sedang mengunggah file...</small>
-                                            </div>
-                                            @if($payment_proof)
-                                                <small class="text-muted">File terpilih: {{ $payment_proof->getClientOriginalName() }}</small>
-                                            @endif
+                                        
+                                        <div class="d-flex justify-content-between fw-bold mt-3 pt-3 border-top">
+                                            <span>Total Pembayaran:</span>
+                                            <span class="text-primary">
+                                                Rp {{ number_format($selectedPackage->price_nett, 0, ',', '.') }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
-                            @endif
+                                
+                                <!-- Tampilkan metode pembayaran hanya jika ada pembayaran -->
+                                @if(!$hasFreeMonthsPromo)
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold mb-3">Metode Pembayaran</label>
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <div class="card h-100 payment-method-card {{ $payment_method === 'transfer' ? 'border-primary border-2' : '' }}"
+                                                    wire:click="$set('payment_method', 'transfer')">
+                                                    <div class="card-body d-flex flex-column">
+                                                        <div class="form-check d-flex align-items-center mb-0">
+                                                            <input class="form-check-input" type="radio" 
+                                                                wire:model="payment_method" value="transfer" id="transfer">
+                                                            <label class="form-check-label d-block ms-2" for="transfer">
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="fas fa-university fs-4 me-2 text-primary"></i>
+                                                                    <span class="fw-semibold">Transfer Bank</span>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <small class="text-muted">BCA, BRI, BNI, Mandiri, dll</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            {{-- 
+                                            <div class="col-md-4">
+                                                <div class="card h-100 payment-method-card {{ $payment_method === 'qris' ? 'border-primary border-2' : '' }}"
+                                                    wire:click="$set('payment_method', 'qris')">
+                                                    <div class="card-body d-flex flex-column">
+                                                        <div class="form-check d-flex align-items-center mb-0">
+                                                            <input class="form-check-input" type="radio" 
+                                                                wire:model="payment_method" value="qris" id="qris">
+                                                            <label class="form-check-label d-block ms-2" for="qris">
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="fas fa-qrcode fs-4 me-2 text-success"></i>
+                                                                    <span class="fw-semibold">QRIS</span>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <small class="text-muted">Bayar dengan QRIS</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-4">
+                                                <div class="card h-100 payment-method-card {{ $payment_method === 'e-wallet' ? 'border-primary border-2' : '' }}"
+                                                    wire:click="$set('payment_method', 'e-wallet')">
+                                                    <div class="card-body d-flex flex-column">
+                                                        <div class="form-check d-flex align-items-center mb-0">
+                                                            <input class="form-check-input" type="radio" 
+                                                                wire:model="payment_method" value="e-wallet" id="e-wallet">
+                                                            <label class="form-check-label d-block ms-2" for="e-wallet">
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="fas fa-wallet fs-4 me-2 text-warning"></i>
+                                                                    <span class="fw-semibold">E-Wallet</span>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <small class="text-muted">Gopay, OVO, Dana, LinkAja</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            --}}
+                                        </div>
+                                        @error('payment_method') <small class="text-danger d-block mt-2">{{ $message }}</small> @enderror
+                                    </div>
+                                    
+                                    @if($payment_method === 'transfer')
+                                        <div class="card border-warning border-2 mb-4">
+                                            <div class="card-header bg-warning-subtle border-bottom-0">
+                                                <h4 class="h6 card-title mb-0 fw-semibold">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    Instruksi Transfer
+                                                </h4>
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="mb-3">Silakan transfer ke rekening berikut:</p>
+                                                
+                                                <div class="border rounded p-3 mb-4 bg-white">
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <div class="mb-3">
+                                                                <label class="form-label text-muted small mb-1">Bank</label>
+                                                                <p class="fw-semibold mb-0">{{ $settingCompany['nama_bank'] ?? '-' }}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="mb-3">
+                                                                <label class="form-label text-muted small mb-1">Nomor Rekening</label>
+                                                                <p class="fw-semibold mb-0">{{ $settingCompany['rekening_number'] ?? '-' }}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="mb-3">
+                                                                <label class="form-label text-muted small mb-1">Atas Nama</label>
+                                                                <p class="fw-semibold mb-0">{{ $settingCompany['atas_nama'] ?? '-' }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="bg-light p-3 rounded mt-2">
+                                                        <p class="fw-bold mb-0 text-center">
+                                                            Jumlah: Rp {{ number_format($selectedPackage->price_nett, 0, ',', '.') }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <h5 class="h6 fw-semibold mb-3">Informasi Transfer Anda</h5>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Nama Bank Pengirim</label>
+                                                            <input type="text" wire:model="nama_bank" class="form-control" placeholder="Contoh: BCA">
+                                                            @error('nama_bank') <small class="text-danger">{{ $message }}</small> @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Nama Pemilik Rekening</label>
+                                                            <input type="text" wire:model="holder_name" class="form-control" placeholder="Nama sesuai rekening">
+                                                            @error('holder_name') <small class="text-danger">{{ $message }}</small> @enderror
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Nomor Rekening Pengirim</label>
+                                                            <input type="text" wire:model="account_number" class="form-control" placeholder="Contoh: 1234567890">
+                                                            @error('account_number') <small class="text-danger">{{ $message }}</small> @enderror
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Cabang Bank</label>
+                                                            <input type="text" wire:model="branch_office" class="form-control" placeholder="Contoh: Cabang Sudirman">
+                                                            @error('branch_office') <small class="text-danger">{{ $message }}</small> @enderror
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                            <div class="d-flex justify-content-between mt-4">
-                                <button wire:click="prevStep" class="btn btn-outline-secondary px-4">
-                                    <i class="fas fa-arrow-left me-2"></i> Kembali
-                                </button>
-                                <button 
-                                    wire:click="nextStep"
-                                    wire:loading.attr="disabled"
-                                    wire:target="nextStep"
-                                    class="btn btn-primary px-4"
-                                >
-                                    <span wire:loading.remove wire:target="nextStep">
-                                        Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
-                                    </span>
-                                    <span wire:loading wire:target="nextStep">
-                                        Memproses...
-                                        <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
-                                    </span>
-                                </button>
+                                                <div class="mt-3">
+                                                    <label class="form-label fw-semibold">Upload Bukti Transfer</label>
+                                                    <div class="border rounded p-3 bg-white">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="flex-shrink-0">
+                                                                <i class="fas fa-file-upload fa-2x text-muted"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1 ms-3">
+                                                                <input type="file" wire:model="payment_proof" class="form-control">
+                                                                @if($payment_proof)
+                                                                    <small class="text-success d-block mt-1">
+                                                                        <i class="fas fa-check-circle me-1"></i> 
+                                                                        File terpilih: {{ $payment_proof->getClientOriginalName() }}
+                                                                    </small>
+                                                                @else
+                                                                    <small class="text-muted d-block mt-1">
+                                                                        Format: JPG, PNG, PDF (maks. 2MB)
+                                                                    </small>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                        @error('payment_proof') <small class="text-danger d-block mt-2">{{ $message }}</small> @enderror
+                                                        <div wire:loading wire:target="payment_proof" class="text-primary mt-2">
+                                                            <i class="fas fa-spinner fa-spin me-1"></i> Sedang mengunggah file...
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @else
+                                    <div class="alert alert-info border-start-4 border-info d-flex align-items-center mb-4">
+                                        <i class="fas fa-info-circle fa-2x me-3"></i>
+                                        <div>
+                                            <h4 class="alert-heading mb-1">Pembayaran Tidak Diperlukan Sekarang</h4>
+                                            <p class="mb-0">
+                                                Anda tidak perlu melakukan pembayaran untuk bulan ini karena mendapatkan promo gratis.
+                                                Pembayaran akan dimulai pada bulan <strong>{{ $paymentStartMonth }}</strong>.
+                                            </p>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button wire:click="prevStep" class="btn btn-outline-secondary px-4 py-2 fw-semibold">
+                                        <i class="fas fa-arrow-left me-2"></i> Kembali
+                                    </button>
+                                    
+                                    <button 
+                                        wire:click="nextStep"
+                                        wire:loading.attr="disabled"
+                                        wire:target="nextStep"
+                                        class="btn btn-primary px-4 py-2 fw-semibold"
+                                    >
+                                        <span wire:loading.remove wire:target="nextStep">
+                                            Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
+                                        </span>
+                                        <span wire:loading wire:target="nextStep">
+                                            Memproses...
+                                            <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                                        </span>
+                                    </button>
+                                </div>
                             </div>
                         @endif
 

@@ -9,8 +9,11 @@ use App\Models\InternetCustomer;
 use App\Models\InternetPackage;
 use App\Models\User;
 use App\Models\InternetCustomerInstallation;
+use App\Models\InternetCustomerPurchase;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log; 
 use Illuminate\Support\Facades\Storage;
 use App\Helpers\InboxHelper;
 use App\Helpers\Access;
@@ -133,7 +136,10 @@ class InternetCustomerIndex extends Component
                 'photos'
             ]);
 
-            return true;
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'success',
+                'message' => 'Instalasi berhasil disimpan'
+            ]);
 
         } catch (\Exception $e) {
             $this->dispatchBrowserEvent('show-notification', [
@@ -188,33 +194,52 @@ class InternetCustomerIndex extends Component
 
     public function confirmPayment($customerId)
     {
-        $customer = InternetCustomer::findOrFail($customerId);
-        $customer->update([
-            'is_paid' => true,
-            'status' => ParamSchema::PROCESS_INSTALLATION,
-        ]);
+        $internetPurchase = InternetCustomerPurchase::findOrFail($customerId);
 
-        $customer->purchase->update([
-            'confirmation_finance_at' => now(),
-            'user_finance_id' => Auth::user()->id
-        ]);
+        DB::beginTransaction();
+        try {
+            $internetPurchase->update([
+                'confirmation_finance_at' => now(),
+                'user_finance_id' => Auth::user()->id
+            ]);
+    
+            $post =[
+                'is_paid' => true,
+            ];
+    
         
-        $userTechnical = optional($customer->subdistrict?->coverageService?->coverageServiceOds)
-        ->pluck('ods.user_assign_id')
-        ->unique()
-        ->all();
-
-        if(count($userTechnical) > 0)
-        {
-            $message = "Pembayaran Langganan Internet Untuk Kode ".$customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
-            $directUrl = route('internet-customer.show',$customer->id);
-            foreach($userTechnical as $tech)
+    
+            if(!$internetPurchase->customer->installation)
             {
-                $this->sentInbox($tech,$message, $directUrl);
+                $post['status'] = ParamSchema::PROCESS_INSTALLATION;
+                
+                $userTechnical = optional($internetPurchase->customer->subdistrict?->coverageService?->coverageServiceOds)
+                ->pluck('ods.user_assign_id')
+                ->unique()
+                ->all();
+        
+                if(count($userTechnical) > 0)
+                {
+                    $message = "Pembayaran Langganan Internet Untuk Kode ".$internetPurchase->customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
+                    $directUrl = route('internet-customer.show',$internetPurchase->customer->id);
+                    foreach($userTechnical as $tech)
+                    {
+                        $this->sentInbox($tech,$message, $directUrl);
+                    }
+                }
             }
+    
+            $internetPurchase->customer->update($post);
+            DB::commit();
+    
+            $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Pembayaran Langganan Internet Untuk Kode '.$internetPurchase->customer->code.' Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan']);
+        } catch (\Throwable $th) {
+            //throw $th;
+            // dd($th);
+            Log::error($th);
+            DB::rollBack();
+            $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal mengkonfirmasi pembayaran: ' . $th->getMessage()]);
         }
-
-        $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Pembayaran Langganan Internet Untuk Kode '.$customer->code.' Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan']);
     }
 
     public function resetSearch()

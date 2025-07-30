@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+use App\Schemas\RoleSchema;
 
 class Promo extends Model
 {
@@ -28,10 +30,47 @@ class Promo extends Model
         'is_active' => 'boolean',
     ];
 
+    public function isAction()
+    {
+        $access = true;
+        if ($this->start_date && $this->end_date && now()->format('Y-m-d') >= $this->start_date)
+        {
+            $access = false;
+        }
+
+        if($this->internetCustomers->count() > 0)
+        {
+            $access = false;
+        }
+        
+        return $access;
+    }
+
+    public function isActiveTrigger()
+    {
+        $access = true;
+        if ($this->start_date && $this->end_date && now()->format('Y-m-d') < $this->start_date && now()->format('Y-m-d') > $this->end_date)
+        {
+            $access = false;
+        }
+
+        return $access;
+    }
+
     // RELATION: Ke company
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function packageInternets()
+    {
+        return $this->belongsToMany(InternetPackage::class);
+    }
+
+    public function internetCustomers()
+    {
+        return $this->hasMany(InternetCustomer::class);
     }
     
     public function scopeByCompany($query,$companyId)

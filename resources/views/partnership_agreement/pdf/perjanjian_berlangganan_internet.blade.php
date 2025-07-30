@@ -80,6 +80,7 @@
                 </div>
             </div>
 
+            @if($agreement && $agreement->getFields("nama_bank ") != null && $agreement->getFields(" holder_name") != null && $agreement->getFields("account_number ") != null && $agreement->getFields(" branch_office") != null)
             <table style="border: 0">
                 <tr>
                     <td>
@@ -114,6 +115,7 @@
                     </td>
                 </tr>
             </table>
+            @endif
 
             <div class="row mt-5 mb-5">
                 <div class="col-5 text-center">
