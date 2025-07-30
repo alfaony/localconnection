@@ -65,12 +65,20 @@
                     <!-- Nilai -->
                     <div class="mb-4">
                         <label class="form-label">
-                            <i class="fas fa-money-bill-wave me-2"></i> Nilai
+                            @if($type == 'percentage')
+                                <i class="fas fa-percentage"></i> Besaran Persen
+                            @elseif($type == 'free_months')
+                                <i class="fas fa-calendar-check"></i> Jumlah Gratis Bulan
+                            @else
+                                <i class="fas fa-money-bill"></i> Besaran Potongan Harga
+                            @endif
                         </label>
                         <div class="input-group">
                             <span class="input-group-text">
                                 @if($type == 'percentage')
                                     <i class="fas fa-percentage"></i>
+                                @elseif($type == 'free_months')
+                                    <i class="fas fa-calendar-check"></i>
                                 @else
                                     <i class="fas fa-money-bill"></i>
                                 @endif

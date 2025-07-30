@@ -103,11 +103,13 @@
                                             <span class="font-weight-bold text-success">Rp{{ number_format($promo->value, 0, ',', '.') }}</span>
                                         @endif
                                     </td>
-                                    <td class="align-middle">
-                                        <div class="d-flex flex-column">
-                                            <span class="font-weight-bold">{{ \Carbon\Carbon::parse($promo->start_date)->format('d M Y') }}</span>
-                                            <span class="text-muted small">s/d</span>
-                                            <span class="font-weight-bold">{{ \Carbon\Carbon::parse($promo->end_date)->format('d M Y') }}</span>
+                                    <td class="align-middle ">
+                                        <div class="d-flex flex-column align-items-center">
+                                            @if($promo->start_date != null && $promo->end_date != null)
+                                            <span class="font-weight-bold">{{ \Carbon\Carbon::parse($promo->start_date)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($promo->end_date)->format('d M Y') }}</span>
+                                            @else
+                                            <span class="font-weight-bold">Tanpa Masa Berlaku</span>
+                                            @endif
                                         </div>
                                     </td>
                                     <td class="text-center">
