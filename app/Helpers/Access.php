@@ -14,14 +14,32 @@ class Access
         $roleId = $user->role_id;
         $cacheKey = "role_permissions:{$roleId}";
 
-        $permissions = Cache::rememberForever($cacheKey, function () use ($roleId) {
-            $role = Role::with(['permissions'])->find($roleId);
-            return $role->permissions
-                ->map(fn ($perm) => "{$perm->method}:{$perm->table}")
-                ->toArray();
-        });
+        // Ambil dari cache
+        $permissions = Cache::get($cacheKey);
 
-        return in_array("{$method}:{$table}", $permissions);
+        // Jika belum ada di cache, atau permission tidak ditemukan
+        if (!$permissions || !in_array("{$method}:{$table}", $permissions)) {
+            // Ambil langsung dari DB (cek eksistensi)
+            $exists = Role::byId($roleId)
+                ->byPermissionName($method, $table)
+                ->where('guard_name', 'web')
+                ->exists();
+
+            // Jika ada, update ulang cache
+            if ($exists) {
+                $role = Role::with(['permissions'])->find($roleId);
+                $permissions = $role->permissions
+                    ->map(fn ($perm) => "{$perm->method}:{$perm->table}")
+                    ->toArray();
+
+                Cache::forever($cacheKey, $permissions);
+            }
+
+            return $exists;
+        }
+
+        // Jika ditemukan di cache
+        return true;
     }
 
     public static function clearCacheForRole($roleId)
