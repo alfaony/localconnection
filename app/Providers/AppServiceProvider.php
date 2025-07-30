@@ -87,7 +87,7 @@ class AppServiceProvider extends ServiceProvider
             $subcribetionMenu = ['vehicles','subscribe_letters'];
             $managementRequestItemMenu = ['item_requests'];
             $managementUsedMenu = ['master_check_items','used_laptops','used_items'];
-            $internetManagementMenu = ['data_centers', 'pops','optical_distributions','coverage_services','internet_packages', 'internet_customers'];
+            $internetManagementMenu = ['data_centers', 'pops','optical_distributions','coverage_services','internet_packages', 'internet_customers','promos'];
 
             $managementCompanyMenu = 
             [
@@ -615,6 +615,13 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'internet-customer.index',
                     'icon' => 'fa fa-users',
                 ],
+                'promos' => 
+                [
+                    'text' => 'Promosi',
+                    'route' => 'promo.index',
+                    'icon' => 'fa fa-tags',
+                ],
+
             ];
 
             foreach ($listMenu as $role) 
