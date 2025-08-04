@@ -141,12 +141,12 @@
                                     <td>
                                             @switch($customer->status)
                                                 @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION)
-                                                    @if($customer->purchase && $customer->purchase->payment_method === 'transfer')
-                                                        @if($customer->purchase->payment_method && $finance_access)
-                                                            <button class="btn btn-sm btn-outline-primary" wire:click="viewPaymentProof(@js($customer->purchase->payment_proof))">
+                                                    @if($customer->getOldestUnconfirmedPurchase() && $customer->getOldestUnconfirmedPurchase()->payment_method === 'transfer')
+                                                        @if($customer->getOldestUnconfirmedPurchase()->payment_method && $finance_access)
+                                                            <button class="btn btn-sm btn-outline-primary" wire:click="viewPaymentProof(@js($customer->getOldestUnconfirmedPurchase()->payment_proof))">
                                                                 Lihat Bukti
                                                             </button>
-                                                            <button class="btn btn-sm btn-success mt-1" onclick="confirmPayment('{{ $customer->id }}')">
+                                                            <button class="btn btn-sm btn-success mt-1" onclick="confirmPayment('{{ $customer->getOldestUnconfirmedPurchase()->id }}')">
                                                                 Konfirmasi
                                                             </button>
                                                         @else
@@ -163,7 +163,7 @@
                                                         <i class="fas fa-camera me-1"></i> Input Instalasi
                                                     </button>
                                                     @else
-                                                        <span class="text-muted">Proses Instalasi</span>
+                                                        <span class="text-muted">Teknisi Internet</span>
                                                     @endif
                                                     @break
                                                     
@@ -356,6 +356,17 @@
             timer: 3000,
         });
     });
+
+    window.addEventListener('showErrorAlert', function(event) {
+        Swal.fire({
+            icon: 'success',
+            title: event.detail.title,
+            text: event.detail.message,
+            showConfirmButton: false,
+            timerProgressBar: true,
+            timer: 3000,
+        });
+    });
     
 
     document.addEventListener('livewire:load', function() {
@@ -448,6 +459,9 @@
             });
             
             installationModal.hide();
+
+            console.log('Installation selesai');
+            
             window.addEventListener('show-notification', (event) => {
                 const Toast = Swal.mixin({
                     toast: true,
@@ -464,11 +478,8 @@
             });
         } catch (error) {
             // console.log(error);
-            
-            // Livewire.dispatch('show-notification', {
-            //     type: 'error',
-            //     message: 'Gagal mengupload foto: ' + error.message
-            // });
+           console.log(error);
+           
         }
     });
     });

@@ -2,11 +2,24 @@
 
 namespace App\Http\Livewire\InternetCustomer\Admin;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+
 use Livewire\Component;
+use Livewire\WithPagination;
+
 use App\Models\InternetCustomer;
+use App\Models\InternetCustomerPurchase;
+
+use App\Schemas\ParamSchema;
+use App\Helpers\InboxHelper;
+use Carbon\Carbon;
 
 class InternetCustomerShow extends Component
 {
+    use WithPagination;
+
     public $customer;
     public $agreementFields;
     public $paymentProofUrl;
@@ -27,7 +40,7 @@ class InternetCustomerShow extends Component
             'internetPackage',
             'partnershipAgreement',
             'userCustomer',
-            'purchase',
+            'purchases',
             'installation'
         ])->findOrFail($customerId);
 
@@ -36,10 +49,6 @@ class InternetCustomerShow extends Component
             $this->agreementFields = json_decode($this->customer->partnershipAgreement->fields, true);
         }
 
-        // Get payment proof URL if exists
-        if ($this->customer->purchase && $this->customer->purchase->payment_proof) {
-            $this->paymentProofUrl = $this->customer->purchase->payment_proof;
-        }
 
         // Get KTP photo URL
         $this->ktpPhotoUrl = $this->customer->ktp_photo;
@@ -50,14 +59,68 @@ class InternetCustomerShow extends Component
         }
     }
 
-    public function viewPaymentProof()
+  public function viewPaymentProof($purchaseId)
     {
+        $purchase = InternetCustomerPurchase::find($purchaseId);
+        $this->paymentProofUrl = $purchase->payment_proof;
+
         $this->dispatchBrowserEvent('showImageModal', [
-            'title' => 'Bukti Pembayaran',
+            'title' => 'Bukti Pembayaran ' . Carbon::parse($purchase->period)->format('F Y'),
             'imageUrl' => $this->paymentProofUrl
         ]);
     }
 
+    public function confirmPayment($customerId)
+    {
+        $internetPurchase = InternetCustomerPurchase::findOrFail($customerId);
+
+        DB::beginTransaction();
+        try {
+            $internetPurchase->update([
+                'confirmation_finance_at' => now(),
+                'user_finance_id' => Auth::user()->id
+            ]);
+    
+            $post =[
+                'is_paid' => true,
+            ];
+    
+        
+    
+            if(!$internetPurchase->customer->installation)
+            {
+                $post['status'] = ParamSchema::PROCESS_INSTALLATION;
+                
+                $userTechnical = optional($internetPurchase->customer->subdistrict?->coverageService?->coverageServiceOds)
+                ->pluck('ods.user_assign_id')
+                ->unique()
+                ->all();
+        
+                if(count($userTechnical) > 0)
+                {
+                    $message = "Pembayaran Langganan Internet Untuk Kode ".$internetPurchase->customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
+                    $directUrl = route('internet-customer.show',$internetPurchase->customer->id);
+                    foreach($userTechnical as $tech)
+                    {
+                        $this->sentInbox($tech,$message, $directUrl);
+                    }
+                }
+            }
+    
+            $internetPurchase->customer->update($post);
+            DB::commit();
+    
+            $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Pembayaran Langganan Internet Untuk Kode '.$internetPurchase->customer->code.' Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan']);
+        } catch (\Throwable $th) {
+            //throw $th;
+            // dd($th);
+            Log::error($th);
+            DB::rollBack();
+            $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal mengkonfirmasi pembayaran: ' . $th->getMessage()]);
+        }
+    }
+
+    
     public function viewKtpPhoto()
     {
         $this->dispatchBrowserEvent('showImageModal', [
@@ -81,7 +144,20 @@ class InternetCustomerShow extends Component
 
     public function render()
     {
-        return view('livewire.internet-customer.admin.internet-customer-show')
+        $purchases = $this->customer->purchases()->orderby('created_at')->paginate(5);
+        return view('livewire.internet-customer.admin.internet-customer-show', compact('purchases'))
             ->extends('adminlte::page');
+    }
+
+    private function sentInbox($to,$message,$directUrl)
+    {
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $to, 
+            Auth::user()->id, 
+            $message, 
+            $directUrl
+        );
+        return true;
     }
 }

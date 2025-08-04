@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 class InternetPackage extends Model
 {
     use HasFactory, SoftDeletes;
@@ -28,6 +29,27 @@ class InternetPackage extends Model
     public function company()
     {
         return $this->belongsTo(Company::class)->withTrashed();
+    }
+
+    public function promos()
+    {
+        return $this->belongsToMany(Promo::class);
+    }
+
+    public function getPromoActiveAttribute()
+    {
+        return $this->promos()
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('start_date')
+                    ->orWhere(function ($q) {
+                        $today = Carbon::today();
+                        $q->where('start_date', '<=', $today)
+                        ->where('end_date', '>=', $today);
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->first();
     }
 
     public function scopeByCompany($query, $companyId)

@@ -13,7 +13,7 @@ use App\Schemas\RoleSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PermissionForMenuInternetPackageSeeder extends Seeder
+class permissionForMenuPromoSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -24,17 +24,17 @@ class PermissionForMenuInternetPackageSeeder extends Seeder
     {
         $roles = Role::whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::PROCUREMENT, RoleSchema::MANAGER, RoleSchema::MANAGER_FINANCE, RoleSchema::FINANCE])->get();
         
-        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store','is_active'];
+        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'is_active'];
 
         foreach ($methods as $method) 
         {
             // create permision
             $permission = Permission::firstOrCreate([
-                'name' => ucwords($method).' Internet Package',
+                'name' => ucwords($method).' Promo',
             ],[
                 'method' => $method,
-                'table' => 'internet_packages',
-                'model' => 'InternetPackage',
+                'table' => 'promos',
+                'model' => 'Promo',
                 'guard_name' => 'web'
             ]);
 
@@ -46,7 +46,6 @@ class PermissionForMenuInternetPackageSeeder extends Seeder
 
     }
 }
-
 
 
 

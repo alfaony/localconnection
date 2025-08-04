@@ -106,45 +106,10 @@
                                         <th>Harga</th>
                                         <td>Rp {{ number_format($customer->internetPackage->price_nett, 0, ',', '.') }}</td>
                                     </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                @if($customer->purchase)
-                <div class="row mt-4">
-                    <div class="col-md-12">
-                        <h4 class="text-primary mb-3">
-                            <i class="fas fa-credit-card mr-2"></i>Pembayaran
-                        </h4>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <tbody>
+                                    @if($customer->promo)
                                     <tr>
-                                        <th width="25%">Metode Pembayaran</th>
-                                        <td>{{ ucfirst($customer->purchase->payment_method) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Status Pembayaran</th>
-                                        <td>
-                                            @if($customer->is_paid)
-                                            <span class="badge badge-success">Lunas</span>
-                                            @elseif($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION)
-                                                <span class="badge badge-warning">Menunggu Konfirmasi Pembayaran</span>
-                                            @else
-                                                <span class="badge badge-danger">Belum Lunas</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    @if($paymentProofUrl)
-                                    <tr>
-                                        <th>Bukti Pembayaran</th>
-                                        <td>
-                                            <button wire:click="viewPaymentProof" class="btn btn-sm btn-info">
-                                                <i class="fas fa-eye mr-1"></i>Lihat Bukti Pembayaran
-                                            </button>
-                                        </td>
+                                        <th>Promo</th>
+                                        <td>{{ $customer->promo ? $customer->promo->name : '-' }}</td>
                                     </tr>
                                     @endif
                                 </tbody>
@@ -152,7 +117,6 @@
                         </div>
                     </div>
                 </div>
-                @endif
 
                 @if($customer->installation)
                 <div class="row mt-4">
@@ -194,6 +158,77 @@
                 </div>
                 @endif
 
+                @if($purchases->count() > 0)
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card shadow">
+                            <div class="card-header bg-light">
+                                <h4 class="text-primary mb-3">
+                                    <i class="fas fa-credit-card mr-2"></i>Riwayat Pembayaran
+                                </h4>
+                            </div>
+                            <div classa="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped">
+                                        <thead> {{-- Tambahkan header untuk tabel --}}
+                                            <tr>
+                                                <th>Periode</th>
+                                                <th>Metode</th>
+                                                <th>Status</th>
+                                                <th>Jumlah Bayar</th>
+                                                <th>Bukti Pembayaran</th>
+                                                @canAccess('as_finance','internet_customers')
+                                                <th>Konfirmasi Pembayaran</th>
+                                                @endcanAccess
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($purchases as $purchase)
+                                            <tr>
+                                                <td>{{ \Carbon\Carbon::parse($purchase->period)->format('F Y') }}</td>
+                                                <td>{{ ucfirst($purchase->payment_method) }}</td>
+                                                <td>
+                                                    @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
+                                                        <span class="badge badge-success">Lunas</span>
+                                                    @else
+                                                        <span class="badge badge-danger">Belum Lunas</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    Rp {{ number_format($purchase->amount_paid, 0, ',', '.') }}
+                                                </td>
+                                                <td>
+                                                    @if($purchase->payment_proof)
+                                                        <button wire:click="viewPaymentProof('{{ $purchase->id }}')" class="btn btn-sm btn-info">
+                                                            <i class="fas fa-eye mr-1"></i>Lihat
+                                                        </button>
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
+                                                        <i class="fas fa-check-circle mr-1 text-success"></i>                   
+                                                    @else
+                                                        <span class="badge badge-warning">Menunggu Konfirmasi</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="float-right">
+                                        {{ $purchases->links('pagination::bootstrap-4') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 @if($agreementFields)
                 <div class="row mt-4">
                     <div class="col-md-12">
@@ -211,6 +246,9 @@
                                 @if(view()->exists('partnership_agreement.pdf.' . $agreement->type->name_format))
                                 <div class="card scrollable" id="printThis">
                                     @include('partnership_agreement.pdf.' . $agreement->type->name_format, ['agreement' => $agreement])
+                                </div>
+                                <div class="d-flex justify-content-center mt-3">
+                                    <button type="button" id="downloadWorkOrder" class="btn btn-info mb-2 mr-2"><i class="fa fa-file-pdf"></i> Download</button>
                                 </div>
                                 @else
                                 <div class="d-flex justify-content-center">
@@ -280,7 +318,33 @@
     </div>
 </div>
 @push('scripts')
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@if($customer->partnershipAgreement)
+<script>
+    function prinsts() 
+    {
+        let name = "{{$customer->partnershipAgreement->number_result}}" + " {{ $customer->partnershipAgreement->type->name}}";
+        let printContents = document.getElementById("printThis").innerHTML;
+        let originalContents = document.body.innerHTML;
+
+        document.body.innerHTML = printContents;
+
+        window.addEventListener("beforeprint", (event) => {
+            document.title = name;
+        });
+
+        window.print();
+        document.body.innerHTML = originalContents;
+    }
+
+    $(document).ready(function () {
+        $("#downloadWorkOrder").click(function(e) {
+            e.preventDefault();
+            prinsts();
+        });
+    });
+</script>
+@endif
 <script>
     document.addEventListener('livewire:load', function () {  
         window.addEventListener('showImageModal', function(event) {
@@ -330,8 +394,126 @@
 </script>
 @endpush
 @push('styles')
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    .img-signature
+    {
+        background-color: transparent !important; 
+        border: 0px solid #dee2e6 !important;
+        box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.0) !important;       
+        max-height: 100px !important; 
+    }
+    .signature-container {
+        width: fit-content;
+    }
+    .signature-canvas {
+        /* width: 100%; */
+        /* height: 200px; */
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        background-color: white;
+        touch-action: none;
+    }
+    .custom-file-label::after {
+        content: "Browse";
+    }
+    #ktpPreviewImg {
+        max-height: 200px;
+    }
+</style>
+<style>
+   .small-text 
+    {
+        text-align: justify;
+        font-size: 0.79rem;
+    }
+
+    .text-ads a, 
+    .text-ads li, 
+    .text-ads p, 
+    .text-ads div, 
+    .text-ads span, 
+    .text-ads h1, 
+    .text-ads h2, 
+    .text-ads h3, 
+    .text-ads h4, 
+    .text-ads h5, 
+    .text-ads h6 
+    {
+        font-size: 0.92rem;
+    }
+    .small-header
+    {
+        font-size: 1rem;
+        font-weight: bold;
+    }
+    @media print {
+        #printItem {
+            margin-left: 50px;
+            margin-right: 50px;
+        }
+    }
+
+    body {
+        font-family: Arial;
+        /* font-size : 12px; */
+        /* padding: 20px; */
+        /* background-color: #f4f4f4; */
+    }
+
+    .container {
+        /* background-color: #fff; */
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+
+    hr {
+        border: 1px solid black;
+        border-radius: 5px;
+    }
+
+    .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+
+    /* li */
+    .margin {
+        margin-bottom: 15px;
+    }
+
+    .noMargin {
+        margin-bottom: 0px;
+    }
+
+    .scrollable {
+        width: 100%;
+        height: 650px;
+        overflow: auto;
+        border: 1px solid #ccc;
+    }
+</style>
 <style>
     .info-box {
         border-radius: 5px;

@@ -5,6 +5,9 @@ namespace App\Http\Livewire\InternetCustomer;
 use Livewire\Component;
 use App\Models\InternetCustomer;
 use App\Models\Company;
+use App\Models\InternetCustomerPurchase;
+
+use Carbon\Carbon;
 
 class InternetCustomerShow extends Component
 {
@@ -29,7 +32,7 @@ class InternetCustomerShow extends Component
             'internetPackage',
             'partnershipAgreement',
             'userCustomer',
-            'purchase',
+            'purchases',
             'installation'
         ])->where('code', $code)->first();
 
@@ -47,11 +50,6 @@ class InternetCustomerShow extends Component
             $this->agreementFields = json_decode($this->customer->partnershipAgreement->fields, true);
         }
 
-        // Get payment proof URL if exists
-        if ($this->customer->purchase && $this->customer->purchase->payment_proof) {
-            $this->paymentProofUrl = $this->customer->purchase->payment_proof;
-        }
-
         // Get KTP photo URL
         $this->ktpPhotoUrl = $this->customer->ktp_photo;
 
@@ -61,14 +59,15 @@ class InternetCustomerShow extends Component
         }
     }
 
-    public function viewPaymentProof()
+    public function viewPaymentProof($purchaseId)
     {
+        $purchase = InternetCustomerPurchase::find($purchaseId);
+        $this->paymentProofUrl = $purchase->payment_proof;
         $this->dispatchBrowserEvent('showImageModal', [
-            'title' => 'Bukti Pembayaran',
+            'title' => 'Bukti Pembayaran ' . Carbon::parse($purchase->period)->format('F Y'),
             'imageUrl' => $this->paymentProofUrl
         ]);
     }
-
     public function viewKtpPhoto()
     {
         $this->dispatchBrowserEvent('showImageModal', [
@@ -92,7 +91,8 @@ class InternetCustomerShow extends Component
 
     public function render()
     {
-        return view('livewire.internet-customer.internet-customer-show')
+        $purchases = $this->customer->purchases()->orderby('created_at')->paginate(5);
+        return view('livewire.internet-customer.internet-customer-show', compact('purchases'))
             ->extends('layouts.app_customer');
     }
 }

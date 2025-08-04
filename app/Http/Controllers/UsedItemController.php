@@ -56,16 +56,15 @@ class UsedItemController extends Controller
             'repairs' => 'nullable|array',
         ]);
 
-        DB::beginTransaction();
+        // DB::beginTransaction();
         try 
         {
-            $this->saveLaptop($request);
-            DB::commit();
+            return $this->saveLaptop($request);
 
-            return redirect()->route('used-item.index')->with('success', 'Data berhasil disimpan');
+            // return redirect()->route('used-item.index')->with('success', 'Data berhasil disimpan');
         } catch (\Throwable $th) {
             //throw $th;
-            DB::rollBack();
+            // DB::rollBack();
             return redirect()->route('used-item.index')->with('error', 'Data gagal disimpan'. $th->getMessage());
         }
     }
@@ -170,6 +169,7 @@ class UsedItemController extends Controller
             'check_items' => 'required|array|min:1',
             'repairs' => 'nullable|array',
         ]);
+        $new = false;
         
         try {
             
@@ -182,6 +182,7 @@ class UsedItemController extends Controller
                     'notes' => $validated['notes'] ?? null,
                 ]);
             } else {
+                $new = true;
                 $item = UsedItem::create([
                     'company_id' => Auth::user()->company_id,
                     'user_id' => Auth::user()->id,
@@ -260,8 +261,8 @@ class UsedItemController extends Controller
             
             DB::commit();
             
-            return redirect()->route('used-item.index')
-                ->with('success', $item ? 'item berhasil diperbarui!' : 'item berhasil ditambahkan!');
+            return redirect()->route('used-item.show', $item->slug)
+                ->with('success', !$new ? 'item berhasil diperbarui!' : 'item berhasil ditambahkan!');
                 
         } catch (\Exception $e) {
             // dd($e);

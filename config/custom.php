@@ -157,4 +157,8 @@ return
          'laptop_type' => 'Laptop',
          'item_type' => 'Barang Lain',
       ],
+      'promo_type' => 
+      [
+         'free_months' => 'Gratis Bulan',
+      ],
 ];

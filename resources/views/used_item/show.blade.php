@@ -1,10 +1,10 @@
 @extends('adminlte::page')
 
-@section('title', 'Detail Barang Bekas')
+@section('title', 'Detail Barang')
 
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
-        <h1 class="m-0 text-dark">Detail Barang Bekas</h1>
+        <h1 class="m-0 text-dark">Detail Barang</h1>
         <div>
             <a href="{{ route('used-item.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left mr-1"></i> Kembali

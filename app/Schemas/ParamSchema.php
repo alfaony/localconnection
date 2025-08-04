@@ -130,4 +130,7 @@ class ParamSchema
     const WAITING_PAYMENT_CONFIRMATION = "waiting_payment_confirmation";
     const PROCESS_INSTALLATION = "process_installation";
     const INSTALLED = "installed";
+
+    // Promo
+    const PROMO_FREE_MONTH = "free_months";
 }

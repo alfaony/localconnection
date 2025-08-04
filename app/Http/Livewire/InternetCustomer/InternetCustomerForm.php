@@ -89,6 +89,12 @@ class InternetCustomerForm extends Component
     public $company_slug = null; // Sesuaikan dengan company user
     public $internet_customer_id = null;
 
+    // Di dalam class InternetCustomerForm
+    public $hasFreeMonthsPromo = false;
+    public $freeMonthsDetails = null;
+    public $paymentStartMonth = null;
+    public $start_billing_date = null;
+
 
     protected $rules = 
     [
@@ -213,8 +219,11 @@ class InternetCustomerForm extends Component
         if ($this->step === 1) {
             $this->validateStep1();
             $this->checkCoverage();
+            
+            // Cek promo setelah validasi step 1
         } elseif ($this->step === 2) {
             $this->validateStep2();
+            $this->checkPromo();
         } elseif ($this->step === 3) {
             $this->validateStep3();
         } elseif ($this->step === 4) {
@@ -276,14 +285,18 @@ class InternetCustomerForm extends Component
     // Step 3 Validation and Submission
     private function validateStep3()
     {
-        $this->validate([
-            'payment_method' => 'required|in:transfer,qris,e-wallet',
-            'payment_proof' => 'required_if:payment_method,transfer|image|max:2048',
-            'nama_bank' => 'required_if:payment_method,transfer',
-            'holder_name' => 'required_if:payment_method,transfer',
-            'account_number' => 'required_if:payment_method,transfer',
-            'branch_office' => 'required_if:payment_method,transfer',
-        ]);
+        if (!$this->hasFreeMonthsPromo) 
+        {
+            $this->validate([
+                'payment_method' => 'required|in:transfer,qris,e-wallet',
+                'payment_proof' => 'required_if:payment_method,transfer|image|max:2048',
+                'nama_bank' => 'required_if:payment_method,transfer',
+                'holder_name' => 'required_if:payment_method,transfer',
+                'account_number' => 'required_if:payment_method,transfer',
+                'branch_office' => 'required_if:payment_method,transfer',
+            ]);
+        }
+
         $this->generateAgreementPreviewJson();
         $this->step++;
     }
@@ -314,7 +327,6 @@ class InternetCustomerForm extends Component
         if ($this->payment_method === 'transfer' && $this->payment_proof) {
             $paymentProofPath = $this->payment_proof->store('public/payment_proofs');
         }
-
         
         DB::beginTransaction();
         try {
@@ -351,42 +363,52 @@ class InternetCustomerForm extends Component
                 'status' => ParamSchema::WAITING_PAYMENT_CONFIRMATION,
             ]);
             
-            $internetCustomerPurchase = InternetCustomerPurchase::create([
-                'amount_paid' => $this->selectedPackage->price_nett,
-                'internet_customer_id' => $internetCustomer->id,
-                'payment_method' => $this->payment_method,
-                'payment_proof' => $paymentProofPath ? Storage::url($paymentProofPath) : null,
+            $agreement = $this->createPartnershipAgreement($ktpPath);
+        
+            $userCustomer = UserCustomer::create([
+                'name' => $this->name,
+                'phone_number' => $this->phone_number,
+                'email' => $this->email,
+                'company_id' => $this->company_id,
+                'role' => Role::where('name',RoleSchema::CUSTOMER_INTERNET)->first()->id,
+                // 'password' => Hash::make($this->password),
             ]);
 
-                $agreement = $this->createPartnershipAgreement($ktpPath);
-            
-                $userCustomer = UserCustomer::create([
-                    'name' => $this->name,
-                    'phone_number' => $this->phone_number,
-                    'email' => $this->email,
-                    'company_id' => $this->company_id,
-                    'role' => Role::where('name',RoleSchema::CUSTOMER_INTERNET)->first()->id,
-                    // 'password' => Hash::make($this->password),
-                ]);
 
+            $internetCustomer->update([
+                'partnership_agreement_id' => $agreement->id,
+                'user_customer_id' => $userCustomer->id
+            ]);
 
+            if($this->freeMonthsDetails && $this->freeMonthsDetails->type === ParamSchema::PROMO_FREE_MONTH)
+            {
                 $internetCustomer->update([
-                    'partnership_agreement_id' => $agreement->id,
-                    'user_customer_id' => $userCustomer->id
+                    'promo_id' => $this->freeMonthsDetails->id
+                ]);
+                $this->installation($internetCustomer);
+            }else
+            {
+                if($this->payment_method == 'transfer')
+                    $internetCustomerPurchase = InternetCustomerPurchase::create([
+                    'start_billing_date' => $this->start_billing_date,
+                    'amount_paid' => $this->selectedPackage->price_nett,
+                    'internet_customer_id' => $internetCustomer->id,
+                    'payment_method' => $this->payment_method,
+                    'payment_proof' => $paymentProofPath ? Storage::url($paymentProofPath) : null,
                 ]);
 
-
-                 $userFinance = User::whereHas('role.permissions', function ($q) {
+                $userFinance = User::whereHas('role.permissions', function ($q) 
+                {
                     $q->where('method', 'as_finance')
                     ->where('table', 'internet_customers');
                 })
-                    ->where(function ($q) use ($internetCustomer) {
-                        $q->where('company_id', $internetCustomer->company_id)
-                        ->orWhereHas('accessibleCompanies', function ($sub) use ($internetCustomer) {
-                            $sub->where('companies.id', $internetCustomer->company_id);
-                        });
-                })
-                ->get();
+                ->where(function ($q) use ($internetCustomer) {
+                    $q->where('company_id', $internetCustomer->company_id)
+                    ->orWhereHas('accessibleCompanies', function ($sub) use ($internetCustomer) {
+                        $sub->where('companies.id', $internetCustomer->company_id);
+                    });
+                })->get();
+
                 if($userFinance)
                 {
                     $from = User::where('company_id', $internetCustomer->company_id)
@@ -404,10 +426,12 @@ class InternetCustomerForm extends Component
                         $this->sentInbox($finance->id, $from->id, $message, $directUrl);
                     }   
                 }
+            }
 
-                $this->internet_customer_id = $internetCustomer->id;
-                DB::commit();
-                $this->step = 5;
+            $this->internet_customer_id = $internetCustomer->id;
+            DB::commit();
+            $this->step = 5;
+
         } catch (\Throwable $th) {
             //throw $th;
             DB::rollBack();
@@ -527,5 +551,75 @@ class InternetCustomerForm extends Component
             $directUrl
         );
         return true;
+    }
+
+    private function checkPromo()
+    {
+        $this->hasFreeMonthsPromo = false;
+        $this->freeMonthsDetails = null;
+        $this->paymentStartMonth = null;
+        $this->start_billing_date = Carbon::now()->format('Y-m-d');
+
+        // Pastikan paket sudah dipilih
+        if ($this->internet_package_id) {
+            $package = InternetPackage::find($this->internet_package_id);
+            
+            if ($package && $package->promo_active) {
+                $activePromo = $package->promo_active;
+                
+                if ($activePromo && $activePromo->type === 'free_months') {
+                    $this->hasFreeMonthsPromo = true;
+                    $this->freeMonthsDetails = $activePromo;
+                    
+                    // Tentukan kapan pembayaran dimulai
+                    $now = now();
+                    $registerDate = Carbon::parse($activePromo->register_date);
+
+                    if (now()->lt($registerDate)) {
+                        // Pendaftaran sebelum register_date: bayar bulan depan
+                        $this->paymentStartMonth = now()->addMonth($activePromo->value)->format('F Y');
+                        $this->start_billing_date = now()->addMonth($activePromo->value)->firstOfMonth()->format('Y-m-d');
+                    } else {
+                        // Pendaftaran pada/ setelah register_date: bayar 2 bulan dari sekarang
+                        $this->paymentStartMonth = now()->addMonths($activePromo->value + 1)->format('F Y');
+                        $this->start_billing_date = now()->addMonths($activePromo->value + 1)->firstOfMonth()->format('Y-m-d');
+                    }
+                }
+            }
+        }
+    }
+
+    private function installation($customer)
+    {
+        try {
+            $customer->update([
+                'status' => ParamSchema::PROCESS_INSTALLATION,
+            ]);
+            
+            $userTechnical = optional($customer->subdistrict?->coverageService?->coverageServiceOds)
+            ->pluck('ods.user_assign_id')
+            ->unique()
+            ->all();
+            
+            $from = User::where('company_id', $customer->company_id)
+                    ->where(function ($query) {
+                        $query->whereHas('role', function ($q)  {
+                            $q->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]);
+                        });
+                    })
+                    ->first();
+
+            if(count($userTechnical) > 0)
+            {
+                $message = "Pembayaran Langganan Internet Untuk Kode ".$customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
+                $directUrl = route('internet-customer.show',$customer->id);
+                foreach($userTechnical as $tech)
+                {
+                    $this->sentInbox($tech,$from->id, $message, $directUrl);
+                }
+            }
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 }

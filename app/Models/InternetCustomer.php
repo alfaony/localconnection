@@ -43,6 +43,7 @@ class InternetCustomer extends Model
         'ktp_photo',
         'is_paid',
         'status',
+        'promo_id'
     ];
 
     // ✅ RELATIONS
@@ -81,19 +82,36 @@ class InternetCustomer extends Model
         return $this->belongsTo(InternetPackage::class);
     }
 
+    public function promo()
+    {
+        return $this->belongsTo(Promo::class, 'promo_id')->withTrashed();
+    }
+
     public function partnershipAgreement()
     {
         return $this->belongsTo(PartnershipAgreement::class);
     }
 
-    public function purchase()
-    {
-        return $this->hasOne(InternetCustomerPurchase::class);
-    }
-
-    public function installation()
+     public function installation()
     {
         return $this->hasOne(InternetCustomerInstallation::class);
+    }
+
+    public function getOldestUnconfirmedPurchase()
+    {
+        if ($this->purchases()->exists()) {
+            return $this->purchases()
+                ->whereNull('user_finance_id')
+                ->whereNull('confirmation_finance_at')
+                ->orderBy('created_at', 'asc')
+                ->first();
+        }
+
+        return null; // Tidak ada purchases
+    }
+    public function purchases()
+    {
+        return $this->hasMany(InternetCustomerPurchase::class);
     }
 
     public function getStatusBadgeAttribute()

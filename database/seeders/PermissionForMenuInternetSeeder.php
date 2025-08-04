@@ -20,5 +20,6 @@ class PermissionForMenuInternetSeeder extends Seeder
         $this->call(PermissionForMenuCoverageServiceSeeder::class);
         $this->call(PermissionForMenuInternetPackageSeeder::class);
         $this->call(PermissionForMenuInternetCustomerSeeder::class);
+        $this->call(permissionForMenuPromoSeeder::class);
     }
 }

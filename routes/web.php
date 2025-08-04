@@ -118,6 +118,8 @@ use App\Http\Livewire\InternetCustomer\InternetCustomerForm;
 use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerIndex;
 use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
+use App\Http\Livewire\Promo\PromoIndex;
+use App\Http\Livewire\Promo\PromoForm;
 
 
 
@@ -572,7 +574,13 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
   Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
   Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
+  
+  Route::get('promo', PromoIndex::class)->name('promo.index');
+  Route::get('promo/create', PromoForm::class)->name('promo.create');
+  Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
 });
+
+
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
 
