@@ -565,7 +565,7 @@ class InternetCustomerForm extends Component
             $package = InternetPackage::find($this->internet_package_id);
             
             if ($package && $package->promo_active) {
-                $activePromo = $package->promos->where('is_active', true)->first();
+                $activePromo = $package->promo_active;
                 
                 if ($activePromo && $activePromo->type === 'free_months') {
                     $this->hasFreeMonthsPromo = true;
