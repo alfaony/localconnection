@@ -132,7 +132,7 @@
                                 <input type="date" wire:model="register_date" class="form-control">
                             </div>
                             <div class="form-text mt-2">
-                                <i class="fas fa-info-circle me-1"></i> Promo ini berlaku sebelum batas pendaftaran di tanggal tersebut
+                                <i class="fas fa-info-circle me-1"></i> Promo ini berlaku sebelum batas pendaftaran di tanggal tersebut, jika lebih dari tanggal pendaftaran maka promo terhitung pada bulan berikutnya
                             </div>
                         </div>
                     @endif

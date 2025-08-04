@@ -1,10 +1,10 @@
 @extends('adminlte::page')
 
-@section('title', isset($usedItem) ? 'Edit Barang Bekas' : 'Tambah Barang Bekas')
+@section('title', isset($usedItem) ? 'Edit Barang' : 'Tambah Barang')
 
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
-        <h1 class="m-0 text-dark">{{ isset($usedItem) ? 'Edit Barang Bekas' : 'Tambah Barang Bekas' }}</h1>
+        <h1 class="m-0 text-dark">{{ isset($usedItem) ? 'Edit Barang' : 'Tambah Barang' }}</h1>
         <a href="{{ route('used-item.index') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left mr-1"></i> Kembali
         </a>

@@ -3,7 +3,7 @@
         <div class="card-header bg-primary">
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title text-white">
-                    <i class="fas fa-box mr-2"></i> Manajemen Barang Bekas
+                    <i class="fas fa-box mr-2"></i> Manajemen Barang
                 </h3>
                 @canAccess('create','used_items')
                 <a href="{{ route('used-item.create') }}" class="btn btn-success">
