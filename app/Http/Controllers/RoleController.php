@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\Role;
 use App\Models\Permission;
 use App\Models\PermissionRole;
+use App\Helpers\Access;
 
 class RoleController extends Controller
 {
@@ -422,6 +423,7 @@ class RoleController extends Controller
             $role->save();
     
             DB::table("permission_role")->where("permission_role.role_id",$role->id)->delete();
+            Access::clearCacheForRole($role->id);
             foreach ($request->permission as $key => $value) 
             {
                 $permissionRole = new PermissionRole();
