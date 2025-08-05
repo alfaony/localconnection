@@ -55,9 +55,7 @@ class AppServiceProvider extends ServiceProvider
         {
 
             $listMenu = [
-                'homes',
-                'pricelists',
-                'roles',
+                // 'roles',
             ];
             $managementRequestItemArray = array();
             $managementCompanyArray = array();
@@ -75,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
             $productMenuArray = array();
             $subcribetionMenuArray = array();
             $internetManagementMenuArray = array();
+            $settingMenuArray = array();
 
             $equipmentMenu = ['devices','equipment','equipment_reductions'];
             $taskMenu = ['report_points','tasks','task_assigns'];
@@ -88,7 +87,8 @@ class AppServiceProvider extends ServiceProvider
             $managementRequestItemMenu = ['item_requests'];
             $managementUsedMenu = ['master_check_items','used_laptops','used_items'];
             $internetManagementMenu = ['data_centers', 'pops','optical_distributions','coverage_services','internet_packages', 'internet_customers','promos'];
-
+            $settingMenu = ['setting_companies','roles'];
+            
             $managementCompanyMenu = 
             [
                 'meetings',
@@ -108,7 +108,6 @@ class AppServiceProvider extends ServiceProvider
                 'employees',
                 'users',
                 'companies',
-                'setting_companies',
             ];
             $managementSalesMenu = 
             [
@@ -133,6 +132,8 @@ class AppServiceProvider extends ServiceProvider
                 'shifting_obs',
                 'schedule_obs',
             ];
+            
+
 
             $menus = [
                 'homes' => [
@@ -758,6 +759,14 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            foreach ($settingMenu as $role) 
+            {
+                if(Access::can("index", $role))
+                {
+                    array_push($settingMenuArray,$menus[$role]);
+                }
+            }
+
             $managementRequestItemMenu = 
             [
                 'text'    => 'Manajemen Pengajuan Barang',
@@ -843,82 +852,157 @@ class AppServiceProvider extends ServiceProvider
                 'submenu'   => $internetManagementMenuArray    
             ];
 
+            $serviceMenu = [
+                'text'      => 'Setting',
+                'submenu'   => $settingMenuArray    
+            ];
 
-            if($managementCompanyMenu['submenu'] )
-            {
-                $event->menu->add($managementCompanyMenu);
-            }
 
-            if($productMenu['submenu'] )
-            {
-                $event->menu->add($productMenu);
-            }
+            // if($managementCompanyMenu['submenu'] )
+            // {
+            //     $event->menu->add($managementCompanyMenu);
+            // }
+
+            // if($productMenu['submenu'] )
+            // {
+            //     $event->menu->add($productMenu);
+            // }
             
-            if($managementSalesMenu['submenu'] )
-            {
-                $event->menu->add($managementSalesMenu);
-            }
+            // if($managementSalesMenu['submenu'] )
+            // {
+            //     $event->menu->add($managementSalesMenu);
+            // }
 
-            if($managementRequestItemMenu['submenu'] )
-            {
-                $event->menu->add($managementRequestItemMenu);
-            }
+            // if($managementRequestItemMenu['submenu'] )
+            // {
+            //     $event->menu->add($managementRequestItemMenu);
+            // }
 
-            if($productivityMenu['submenu'] )
-            {
-                $event->menu->add($productivityMenu);
-            }
+            // if($productivityMenu['submenu'] )
+            // {
+            //     $event->menu->add($productivityMenu);
+            // }
 
-            if($managementObMenu['submenu'] )
-            {
-                $event->menu->add($managementObMenu);
-            }
+            // if($managementObMenu['submenu'] )
+            // {
+            //     $event->menu->add($managementObMenu);
+            // }
 
-            if($equipmentMenu['submenu'] )
-            {
-                $event->menu->add($equipmentMenu);
-            }
+            // if($equipmentMenu['submenu'] )
+            // {
+            //     $event->menu->add($equipmentMenu);
+            // }
 
-            if($taskMenu['submenu'] )
-            {
-                $event->menu->add($taskMenu);
-            }
+            // if($taskMenu['submenu'] )
+            // {
+            //     $event->menu->add($taskMenu);
+            // }
 
-            if($usedMenu['submenu'] )
-            {
-                $event->menu->add($usedMenu);
-            }
+            // if($usedMenu['submenu'] )
+            // {
+            //     $event->menu->add($usedMenu);
+            // }
             
-            if($securityMenu['submenu'] )
-            {
-                $event->menu->add($securityMenu);
-            }
+            // if($securityMenu['submenu'] )
+            // {
+            //     $event->menu->add($securityMenu);
+            // }
 
-            if($warehouseMenu['submenu'] )
-            {
-                $event->menu->add($warehouseMenu);
-            }
+            // if($warehouseMenu['submenu'] )
+            // {
+            //     $event->menu->add($warehouseMenu);
+            // }
 
-            if($shippingMenu['submenu'] )
-            {
-                $event->menu->add($shippingMenu);
-            }
+            // if($shippingMenu['submenu'] )
+            // {
+            //     $event->menu->add($shippingMenu);
+            // }
 
-            if($wilayahMenu['submenu'] )
-            {
-                $event->menu->add($wilayahMenu);
-            }
+            // if($wilayahMenu['submenu'] )
+            // {
+            //     $event->menu->add($wilayahMenu);
+            // }
 
-            if($subcribetionMenu['submenu'] )
-            {
-                $event->menu->add($subcribetionMenu);
-            }
+            // if($subcribetionMenu['submenu'] )
+            // {
+            //     $event->menu->add($subcribetionMenu);
+            // }
 
-            if($internetManagementMenu['submenu'] )
-            {
-                $event->menu->add($internetManagementMenu);
+            // if($internetManagementMenu['submenu'] )
+            // {
+            //     $event->menu->add($internetManagementMenu);
+            // }
+
+            //refactor
+            $masterMenu = [
+                [
+                    'text' => 'Dashboard',
+                    'url'  => 'home',
+                    'icon' => 'fa fa-home',
+                ],
+                [
+                    'text' => 'Manajemen Umum',
+                    'submenu' => [
+                        $managementCompanyMenu,
+                        $wilayahMenu,
+                        $warehouseMenu,
+                        $subcribetionMenu
+                    ]
+                ],
+                [
+                    'text' => 'Manajemen Produk & Barang',
+                    'submenu' => [
+                        $productMenu,
+                        $usedMenu,
+                        $managementRequestItemMenu,
+                        $equipmentMenu
+                    ]
+                ],
+                [
+                    'text' => 'Operasional & Penjualan',
+                    'submenu' => [
+                        $managementSalesMenu,
+                        $shippingMenu,
+                        $managementObMenu,
+                        $taskMenu,
+                        $productivityMenu
+                    ]
+                ],
+                [
+                    'text' => 'Keamanan & Internet',
+                    'submenu' => [
+                        $securityMenu,
+                        $internetManagementMenu
+                    ]
+                ],
+                [
+                    'text' => 'Setting',
+                    'submenu' => [
+                        $settingMenu
+                    ]
+                ]
+            ];
+
+            foreach ($masterMenu as $menuGroup) {
+                // Cek apakah punya submenu
+                if (isset($menuGroup['submenu'])) {
+                    // Filter submenu yang tidak kosong
+                    $filteredSubmenu = array_filter($menuGroup['submenu'], function ($subMenuItem) {
+                        return isset($subMenuItem['submenu']) && !empty($subMenuItem['submenu']);
+                    });
+    
+                    // Tambahkan hanya jika masih ada submenu yang valid
+                    if (!empty($filteredSubmenu)) {
+                        $menuGroup['submenu'] = $filteredSubmenu;
+                        $event->menu->add($menuGroup);
+                    }
+                } else {
+                    // Menu tanpa submenu (misalnya dashboard)
+                    $event->menu->add($menuGroup);
+                }
             }
         });
+
 
         // die;
         Blade::if('canAccess', function($method, $table){
