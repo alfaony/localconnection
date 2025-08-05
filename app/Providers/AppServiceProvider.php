@@ -852,7 +852,7 @@ class AppServiceProvider extends ServiceProvider
                 'submenu'   => $internetManagementMenuArray    
             ];
 
-            $serviceMenu = [
+            $settingMenu = [
                 'text'      => 'Setting',
                 'submenu'   => $settingMenuArray    
             ];
