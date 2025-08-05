@@ -61,6 +61,10 @@ class UsedItem extends Model
         return $this->hasMany(UsedItemMedia::class);
     }
 
+    public function categories()
+    {
+        return $this->belongsToMany(ItemCategory::class);
+    }
     
     // ❓ Apakah laptop perlu aksi?
     public function isAction()

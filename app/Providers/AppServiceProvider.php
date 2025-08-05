@@ -570,7 +570,7 @@ class AppServiceProvider extends ServiceProvider
                 ],
                 'master_check_items' =>
                 [
-                    'text' => 'Item Pemeriksaan',
+                    'text' => 'Master Pemeriksaan',
                     'route' => 'master-check-item.index',
                     'icon' => 'fa fa-list',
                 ],
