@@ -210,7 +210,7 @@
                     </div>
                     
                     <div>
-                        {{ $internetCustomers->links('pagination::bootstrap-5') }}
+                        {{ $internetCustomers->links() }}
                     </div>
                     
                     <div class="text-muted">

@@ -9,7 +9,7 @@ class MasterCheckItem extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name','company_id','type'];
+    protected $fillable = ['name','company_id','type','item_category_id'];
 
     public function checks()
     {
@@ -19,6 +19,11 @@ class MasterCheckItem extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function itemCategory()
+    {
+        return $this->belongsTo(ItemCategory::class, 'item_category_id')->withTrashed();
     }
 
     public function scopeByCompany($query, $companyId)

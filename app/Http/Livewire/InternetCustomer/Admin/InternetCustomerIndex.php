@@ -23,6 +23,7 @@ class InternetCustomerIndex extends Component
 {
     use WithPagination;
     use WithFileUploads;
+    protected $paginationTheme = 'bootstrap';
 
     public $search = '';
     public $perPage = 10;

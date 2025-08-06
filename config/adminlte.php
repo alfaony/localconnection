@@ -295,6 +295,13 @@ return [
             'type'         => 'fullscreen-widget',
             'topnav_right' => true,
         ],
+        [
+            'type' => 'sidebar-menu-search',
+            'text' => 'Cari.....',                // Placeholder for the underlying input.
+            'method' => 'post',                // 'get' or 'post' ('get' by default).
+            'input_name' => 'searchVal',       // Name for the underlying input ('adminlteSearch' by default).
+            'id' => 'sidebarSearch'            // ID attribute for the underlying input (optional).
+        ],
 
         // Sidebar items:
         // [
