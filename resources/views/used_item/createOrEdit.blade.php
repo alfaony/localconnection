@@ -83,10 +83,18 @@
                     <label>Foto Saat Ini:</label>
                     <div class="row">
                         @foreach($usedItem->media as $media)
-                        <div class="col-md-2 mb-3 position-relative">
-                            <img src="{{ Storage::url($media->file_path) }}" class="img-thumbnail photo-preview">
-                            <button type="button" class="btn btn-danger btn-sm position-absolute" 
-                                    style="top: -10px; right: -10px; border-radius: 50%; padding: 2px 8px;"
+                        <!-- <div class="photo-wrapper position-relative">
+                            <img src="${e.target.result}" class="img-thumbnail photo-preview w-100" style="object-fit: cover;">
+                            <button type="button" class="btn btn-danger btn-sm remove-new-photo" 
+                                    style="position: absolute; top: 4px; right: 4px; border-radius: 50%; padding: 2px 6px;"
+                                    data-index="${index}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div> -->
+                        <div class="col-md-2 mb-3 photo-wrapper position-relative">
+                            <img src="{{ Storage::url($media->file_path) }}" class="img-thumbnail photo-preview w-100" style="object-fit: cover;">
+                            <button type="button" class="btn btn-danger btn-sm" 
+                                    style="position: absolute; top: 4px; right: 4px; border-radius: 50%; padding: 2px 6px;"
                                     data-toggle="modal" data-target="#deletePhotoModal" 
                                     data-media-id="{{ $media->id }}">
                                 <i class="fas fa-times"></i>
@@ -379,6 +387,16 @@
             color: white;
         }
 
+        .photo-wrapper {
+            aspect-ratio: 1/1; /* agar square */
+            overflow: hidden;
+        }
+
+        .photo-wrapper img {
+            height: 100%;
+            object-fit: cover;
+        }
+
     </style>
 @stop
 
@@ -523,10 +541,10 @@
                     div.className = 'col-md-2 mb-3 position-relative new-photo';
                     div.dataset.index = index;
                     div.innerHTML = `
-                        <div class="position-relative">
-                            <img src="${e.target.result}" class="img-thumbnail photo-preview">
-                            <button type="button" class="btn btn-danger btn-sm position-absolute remove-new-photo" 
-                                    style="top: -10px; right: -10px; border-radius: 50%; padding: 2px 8px;"
+                         <div class="photo-wrapper position-relative">
+                            <img src="${e.target.result}" class="img-thumbnail photo-preview w-100" style="object-fit: cover;">
+                            <button type="button" class="btn btn-danger btn-sm remove-new-photo" 
+                                    style="position: absolute; top: 4px; right: 4px; border-radius: 50%; padding: 2px 6px;"
                                     data-index="${index}">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -558,8 +576,6 @@
                 // Update label
                 this.nextElementSibling.textContent = `${selectedFiles.length} file dipilih`;
                 
-                // Update input file temporary
-                updateTempInput();
             }
         });
         
@@ -570,7 +586,7 @@
                 const index = e.target.closest('.remove-new-photo').dataset.index;
                 selectedFiles.splice(index, 1);
                 showPhotoPreviews(selectedFiles);
-                updateTempInput();
+
                 
                 // Update label
                 const fileInput = document.getElementById('photos');
@@ -661,7 +677,7 @@
         
         // Remove photo preview
         document.addEventListener('click', function(e) {
-            if (e.target && e.target.closest('.btn-danger') && e.target.closest('.position-absolute')) {
+            if (e.target && e.target.closest('.btn-danger') && e.target.closest('.position-absolute') && e.target.closest('.remove-new-photo')) {
                 const photoPreview = e.target.closest('.col-md-2');
                 if (photoPreview) {
                     photoPreview.remove();
@@ -685,6 +701,11 @@
         document.getElementById('item-form').addEventListener('submit', function(e) {
             convertCurrencyToNumber();
             console.log("submit");
+            const input = document.getElementById('photos');
+            const dataTransfer = new DataTransfer();
+            selectedFiles.forEach(file => dataTransfer.items.add(file));
+            input.files = dataTransfer.files;
+            
             
             const btnSubmit = document.getElementById('submitBtn');
             btnSubmit.disabled = true;

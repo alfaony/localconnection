@@ -12,6 +12,7 @@ use App\Helpers\Access;
 class InternetPackageIndex extends Component
 {
     use WithPagination;
+    protected $paginationTheme = 'bootstrap';
 
     public $search = '';
     public $perPage = 10;
