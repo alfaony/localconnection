@@ -181,7 +181,7 @@
                             <p class="mb-0">Menampilkan {{ $promos->firstItem() }} - {{ $promos->lastItem() }} dari {{ $promos->total() }} promo</p>
                         </div>
                         <div class="ml-auto">
-                            {{ $promos->links('pagination::bootstrap-4') }}
+                            {{ $promos->links() }}
                         </div>
                     </div>
                 </div>
