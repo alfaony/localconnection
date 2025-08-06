@@ -114,10 +114,13 @@
             {{-- Filter Kategori --}}
             @php
                 // Jika edit, ambil ID dari relasi belongsToMany
-                $selectedCategories = isset($usedItem)
-                    ? $usedItem->categories->pluck('id')->toArray()
-                    : []; // Jika create, default kosong
-            @endphp
+                $selectedCategories = collect($checkItems)
+                                    ->map(fn($item) => $item->item_category_id)
+                                    ->filter() // skip null
+                                    ->unique()
+                                    ->values()
+                                    ->toArray();
+                @endphp
             
             <div class="form-group">
                 <label for="category_ids">Pilih Kategori Item</label>
