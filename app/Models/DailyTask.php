@@ -16,7 +16,7 @@ class DailyTask extends Model
     use HasFactory, SoftDeletes;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
-    protected $keyType = 'string'; // Tipe kunci primer adalah string
+protected $keyType = 'string'; // Tipe kunci primer adalah string
     
     protected static function boot()
     {

@@ -145,7 +145,8 @@ class DailyTaskController extends Controller
             // Get data for dropdowns
             $users = User::byCompany($companyId)
                 ->select('id', 'name', 'email')
-                ->get();
+                ->get()
+                ;
                 
             $categories = DailyTaskCategory::byCompany($companyId)
                 ->select('id', 'name')
@@ -164,10 +165,11 @@ class DailyTaskController extends Controller
             $taskRecurring = DailyTaskType::where('name', ParamSchema::RECURRING)
                 ->select('id', 'name')
                 ->first();
-                
+    
             $divisionIds = $user->divisions->pluck('id');
-            
-            if ($divisionIds->isEmpty()) {
+
+            if ($divisionIds->isEmpty()) 
+            {
                 return response()->json([
                     'success' => false,
                     'message' => 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.'
@@ -177,13 +179,14 @@ class DailyTaskController extends Controller
             $objectives = Objective::whereHas('division', function($query) use ($divisionIds) {
                     $query->whereIn('id', $divisionIds);
                 })
-                ->select('id', 'name', 'division_id')
-                ->with(['division:id,name'])
+                ->select('id', 'name')
+                // ->with(['division:id,name'])
                 ->get();
                 
-            $divisions = $user->divisions()
-                ->select('id', 'name')
-                ->get();
+                
+            // $divisions = $user->divisions()
+            // ->select('divisions.id', 'name')
+            // ->get();
 
             return response()->json([
                 'success' => true,
@@ -197,7 +200,7 @@ class DailyTaskController extends Controller
                     'today' => $today,
                     'min_date' => $minDate,
                     'task_recurring' => $taskRecurring,
-                    'divisions' => $divisions
+                    // 'divisions' => $divisions
                 ]
             ]);
             

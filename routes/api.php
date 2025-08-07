@@ -9,6 +9,7 @@ use App\Http\Controllers\API\CustomerController;
 use App\Http\Controllers\API\QuoteController;
 use App\Http\Controllers\API\WorkOrderController;
 use App\Http\Controllers\API\AgreementLetterController;
+use App\Http\Controllers\API\DailyTaskController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,4 +40,11 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
     Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');;
     Route::resource('agreement-letter', AgreementLetterController::class);
+
+    Route::resource('dailytask', DailyTaskController::class);
+    
+    // Endpoint tambahan
+    Route::post('dailytask/{slug}/report', [DailyTaskController::class, 'report']);
+    Route::post('dailytask/{slug}/approve', [DailyTaskController::class, 'approvement']);
+    Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);
 });
