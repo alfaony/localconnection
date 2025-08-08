@@ -152,6 +152,11 @@ class User extends Authenticatable
     {
         return $this->hasMany(ItemRequest::class, 'user_id');
     }
+
+    public function usedItems()
+    {
+        return $this->hasMany(UsedItem::class);
+    }
     
     public function getFirstDivisionAttribute()
     {

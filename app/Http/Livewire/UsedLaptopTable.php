@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 class UsedLaptopTable extends Component
 {
     use WithPagination;
+    protected $paginationTheme = 'bootstrap'; // ⬅️ INI YANG PENTING
 
     public $search = '';
     public $sortField = 'name';

@@ -28,26 +28,71 @@
             </div>
         </div>
         
-        <!-- Filter Status Terjual/Belum Terjual -->
+        <!-- Gabungan Semua Filter -->
         <div class="card-header bg-light py-2">
-            <div class="d-flex align-items-center flex-wrap">
-                <span class="mr-2 font-weight-bold">Filter Status:</span>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" 
-                            class="btn {{ $statusFilter === '' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                            wire:click="$set('statusFilter', '')">
-                        Semua
-                    </button>
-                    <button type="button" 
-                            class="btn {{ $statusFilter === 'unsold' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                            wire:click="$set('statusFilter', 'unsold')">
-                        <i class="fas fa-times-circle mr-1"></i> Belum Terjual
-                    </button>
-                    <button type="button" 
-                            class="btn {{ $statusFilter === 'sold' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                            wire:click="$set('statusFilter', 'sold')">
-                        <i class="fas fa-check-circle mr-1"></i> Terjual
-                    </button>
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                <div class="d-flex flex-wrap align-items-center mb-2 mb-md-0">
+                    <span class="mr-2 font-weight-bold">Filter:</span>
+                    
+                    <!-- Filter Status -->
+                    <div class="btn-group btn-group-sm mr-3" role="group">
+                        <button type="button" 
+                                class="btn {{ $statusFilter === '' ? 'btn-primary' : 'btn-outline-secondary' }}"
+                                wire:click="$set('statusFilter', '')">
+                            Semua Status
+                        </button>
+                        <button type="button" 
+                                class="btn {{ $statusFilter === 'unsold' ? 'btn-primary' : 'btn-outline-secondary' }}"
+                                wire:click="$set('statusFilter', 'unsold')">
+                            <i class="fas fa-times-circle mr-1"></i> Belum Terjual
+                        </button>
+                        <button type="button" 
+                                class="btn {{ $statusFilter === 'sold' ? 'btn-primary' : 'btn-outline-secondary' }}"
+                                wire:click="$set('statusFilter', 'sold')">
+                            <i class="fas fa-check-circle mr-1"></i> Terjual
+                        </button>
+                    </div>
+                    
+                    <!-- Filter User -->
+                    <div class="d-flex align-items-center mr-3">
+                        <span class="mr-2 font-weight-bold">User:</span>
+                        <select wire:model="userFilter" class="form-control form-control-sm">
+                            <option value="">Semua User</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Filter Tanggal -->
+                <div class="d-flex align-items-center ml-auto">
+                    <span class="mr-2 font-weight-bold">Tanggal:</span>
+                    <div class="d-flex flex-wrap">
+                        <input 
+                            type="date" 
+                            wire:model="startDate" 
+                            class="form-control form-control-sm mr-2"
+                            max="{{ now()->toDateString() }}"
+                            style="max-width: 150px;"
+                        >
+                        <span class="mr-2 align-self-center">s/d</span>
+                        <input 
+                            type="date" 
+                            wire:model="endDate" 
+                            class="form-control form-control-sm mr-2"
+                            max="{{ now()->toDateString() }}"
+                            style="max-width: 150px;"
+                        >
+                        @if($startDate || $endDate)
+                            <button 
+                                wire:click="resetDateFilter" 
+                                class="btn btn-sm btn-outline-danger"
+                            >
+                                <i class="fas fa-times"></i> Reset
+                            </button>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -65,9 +110,15 @@
                                     <i class="fas fa-sort float-right mt-1"></i>
                                 @endif
                             </th>
+                            <th>
+                                Serial Number
+                            </th>
                             <th>Harga Beli</th>
                             <th>Harga Jual Disarankan</th>
                             <th>Status</th>
+                            <th>
+                                Dibuat
+                            </th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -75,6 +126,7 @@
                         @forelse($items as $item)
                         <tr>
                             <td>{{ $item->name }}</td>
+                            <td>{{ $item->serial_number }}</td>
                             <td>Rp {{ number_format($item->purchase_price,0,',','.') }}</td>
                             <td class="font-weight-bold text-success">
                                 Rp {{ number_format($item->suggested_selling_price,0,',','.') }}
@@ -90,8 +142,14 @@
                                     </span>
                                 @endif
                             </td>
+                            <td>{{ $item->created_at->format('d-m-Y H:i') }} ({{ $item->user->name }})</td>
                             <td>
                                 <div class="btn-group">
+                                    @if($item->qr_code_path)
+                                    <a href="{{ Storage::url($item->qr_code_path) }}" download class="btn btn-sm btn-outline-primary mr-1 mb-1">
+                                        <i class="fas fa-qrcode mr-1"></i>
+                                    </a>
+                                    @endif
                                     @canAccess('show','used_items')
                                     <a 
                                         href="{{ route('used-item.show', $item->slug) }}"
@@ -145,7 +203,7 @@
         
         <div class="card-footer clearfix">
             <div class="float-right">
-                {{ $items->links('vendor.pagination.bootstrap-4') }}
+                {{ $items->links() }}
             </div>
             <div class="float-left mt-1">
                 <select wire:model="perPage" class="form-control form-control-sm">
@@ -156,23 +214,5 @@
                 </select>
             </div>
         </div>
-    </div>
-
-    <!-- Form Modal -->
-    <div class="modal fade" id="formModal" tabindex="-1" role="dialog" 
-         aria-labelledby="formModalLabel" aria-hidden="true" wire:ignore.self>
-        <!-- ... (modal content tetap sama) ... -->
-    </div>
-
-    <!-- Detail Modal -->
-    <div class="modal fade" id="detailModal" tabindex="-1" role="dialog" 
-         aria-labelledby="detailModalLabel" aria-hidden="true" wire:ignore.self>
-        <!-- ... (modal content tetap sama) ... -->
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" 
-         aria-labelledby="deleteModalLabel" aria-hidden="true" wire:ignore.self>
-        <!-- ... (modal content tetap sama) ... -->
     </div>
 </div>

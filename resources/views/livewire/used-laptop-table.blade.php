@@ -153,7 +153,7 @@
         
         <div class="card-footer clearfix">
             <div class="float-right">
-                {{ $laptops->links('vendor.pagination.bootstrap-4') }}
+                {{ $laptops->links() }}
             </div>
             <div class="float-left mt-1">
                 <select wire:model="perPage" class="form-control form-control-sm">

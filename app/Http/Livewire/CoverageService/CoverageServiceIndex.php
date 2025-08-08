@@ -13,6 +13,7 @@ class CoverageServiceIndex extends Component
     public $search = '';
     public $perPage = 10;
     protected $queryString = ['search' => ['except' => ''], 'perPage'];
+    protected $paginationTheme = 'bootstrap';
 
     public function delete($id)
     {

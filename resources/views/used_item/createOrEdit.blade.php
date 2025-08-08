@@ -83,10 +83,10 @@
                     <label>Foto Saat Ini:</label>
                     <div class="row">
                         @foreach($usedItem->media as $media)
-                        <div class="col-md-2 mb-3 position-relative">
-                            <img src="{{ Storage::url($media->file_path) }}" class="img-thumbnail photo-preview">
-                            <button type="button" class="btn btn-danger btn-sm position-absolute" 
-                                    style="top: -10px; right: -10px; border-radius: 50%; padding: 2px 8px;"
+                        <div class="col-md-2 mb-3 photo-wrapper position-relative">
+                            <img src="{{ Storage::url($media->file_path) }}" class="img-thumbnail photo-preview w-100" style="object-fit: cover;">
+                            <button type="button" class="btn btn-danger btn-sm" 
+                                    style="position: absolute; top: 4px; right: 4px; border-radius: 50%; padding: 2px 6px;"
                                     data-toggle="modal" data-target="#deletePhotoModal" 
                                     data-media-id="{{ $media->id }}">
                                 <i class="fas fa-times"></i>
@@ -106,11 +106,34 @@
                 </h3>
                 <div class="border-bottom border-primary mt-2"></div>
             </div>
-            
+
             <div class="alert alert-info">
                 <i class="fas fa-info-circle mr-2"></i> Periksa semua item di bawah ini untuk memastikan kondisi Barang
             </div>
+
+            {{-- Filter Kategori --}}
+            @php
+                // Jika edit, ambil ID dari relasi belongsToMany
+                $selectedCategories = collect($checkItems)
+                                    ->map(fn($item) => $item->item_category_id)
+                                    ->filter() // skip null
+                                    ->unique()
+                                    ->values()
+                                    ->toArray();
+                @endphp
             
+            <div class="form-group">
+                <label for="category_ids">Pilih Kategori Item</label>
+                <select class="form-control select2" id="categoryFilter" name="category_ids[]" multiple>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}"
+                            {{ in_array($category->id, $selectedCategories) ? 'selected' : '' }}>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead class="bg-light">
@@ -120,12 +143,12 @@
                             <th>Catatan</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="checkItemsBody">
                         @foreach($checkItems as $item)
                             @php
                                 $existingCheck = isset($usedItem) ? $usedItem->checks->firstWhere('master_check_item_id', $item->id) : null;
                             @endphp
-                            <tr>
+                            <tr data-category="{{ $item->item_category_id ?? '' }}">
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <div class="icon-circle bg-primary mr-3">
@@ -134,15 +157,33 @@
                                         <div>
                                             <strong>{{ $item->name }}</strong>
                                             <div class="text-muted small">{{ $item->description }}</div>
+                                            @if($item->category)
+                                                <span class="badge badge-secondary mt-1">
+                                                    <i class="fas fa-tag mr-1"></i> {{ $item->category->name }}
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
                                 <td>
-                                    <select class="form-control" name="check_items[{{ $item->id }}][condition]" >
-                                        <option value="" {{ is_null($existingCheck) && !old("check_items.{$item->id}.condition") ? 'selected' : '' }}> Pilih </option>
-                                        <option value="good" {{ ($existingCheck->status ?? old("check_items.{$item->id}.condition")) == 'good' ? 'selected' : '' }}>Baik</option>
-                                        <option value="damaged" {{ ($existingCheck->status ?? old("check_items.{$item->id}.condition")) == 'damaged' ? 'selected' : '' }}>Rusak</option>
-                                    </select>
+                                    <input type="hidden" name="check_items[{{ $item->id }}][condition]" value="">
+                                   <div class="form-check form-check-inline">
+                                        <input class="form-check-input exclusive-checkbox" type="checkbox"
+                                            name="check_items[{{ $item->id }}][condition]"
+                                            value="good"
+                                            data-group="{{ $item->id }}"
+                                            {{ ($existingCheck->status ?? old("check_items.{$item->id}.condition")) == 'good' ? 'checked' : '' }}>
+                                        <label class="form-check-label">Baik</label>
+                                    </div>
+
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input exclusive-checkbox" type="checkbox"
+                                            name="check_items[{{ $item->id }}][condition]"
+                                            value="damaged"
+                                            data-group="{{ $item->id }}"
+                                            {{ ($existingCheck->status ?? old("check_items.{$item->id}.condition")) == 'damaged' ? 'checked' : '' }}>
+                                        <label class="form-check-label">Rusak</label>
+                                    </div>
                                 </td>
                                 <td>
                                     <input type="text" class="form-control" name="check_items[{{ $item->id }}][notes]" value="{{ $existingCheck->notes ?? old("check_items.{$item->id}.notes") }}" placeholder="Catatan kondisi...">
@@ -233,9 +274,9 @@
         
         <div class="card-footer">
             <button type="submit" id="submitBtn" class="btn btn-primary">
-                <i class="fas fa-save mr-1"></i> {{ isset($laptop) ? 'Update Laptop' : 'Simpan Laptop' }}
+                <i class="fas fa-save mr-1"></i> {{ isset($laptop) ? 'Update Barang' : 'Simpan Barang' }}
             </button>
-            <button type="reset" class="btn btn-outline-secondary">
+            <button type="reset" id="resetForm" class="btn btn-outline-secondary">
                 <i class="fas fa-undo mr-1"></i> Reset Form
             </button>
         </div>
@@ -308,6 +349,46 @@
             background-color: #f8f9fa;
             border-left: 4px solid #dc3545;
         }
+
+        .select2-container--default .select2-selection--multiple {
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        .select2-selection__choice {
+            background-color: #007bff !important;
+            border: 1px solid #007bff !important;
+            color: white;
+            padding: 0 5px;
+            margin-top: 5px;
+        }
+
+        .select2-selection__choice__remove {
+            color: #fe0700 !important;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            display: inline-block;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+            background-color: #e3342f;
+            color: white;
+        }
+
+        .photo-wrapper {
+            aspect-ratio: 1/1; /* agar square */
+            overflow: hidden;
+        }
+
+        .photo-wrapper img {
+            height: 100%;
+            object-fit: cover;
+        }
+
     </style>
 @stop
 
@@ -320,6 +401,72 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
     <script src="{{ asset('js/thriveEditor.js') }}"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+    $(document).on('change', '.exclusive-checkbox', function () {
+        const group = $(this).data('group');
+        if ($(this).is(':checked')) {
+            $(`.exclusive-checkbox[data-group="${group}"]`).not(this).prop('checked', false);
+        }
+    });
+
+    $(document).ready(function () {
+        const $categoryFilter = $('#categoryFilter');
+
+        // Init select2
+        $categoryFilter.select2({
+            placeholder: 'Pilih kategori...',
+            allowClear: true,
+            width: '100%'
+        });
+        
+
+        function filterItems() 
+        {
+            const selectedCategories = $categoryFilter.val(); // array of string
+            $('tbody tr').each(function () {
+                const $row = $(this);
+                const categoryId = $row.data('category') || '';
+
+                // Jika tidak ada kategori yang dipilih, tampilkan semua
+                if (!selectedCategories || selectedCategories.length === 0) {
+                    $row.show();
+                    return;
+                }
+
+                // Jika item tidak punya kategori dan ada kategori yang dipilih, sembunyikan + clear
+                if (!categoryId) {
+                    clearRowInputs($row);
+                    $row.hide();
+                    return;
+                }
+
+                // Tampilkan jika kategori item ada di yang dipilih
+                if (selectedCategories.includes(categoryId.toString())) {
+                    $row.show();
+                } else {
+                    clearRowInputs($row);
+                    $row.hide();
+                }
+            });
+        }
+
+       function clearRowInputs($row) 
+       {
+            // Kosongkan nilai input teks, hidden, select, dan textarea
+            $row.find('input[type="text"], input[type="hidden"], select, textarea').val('');
+
+            // Uncheck checkbox dan radio
+            $row.find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
+        }
+
+        $categoryFilter.on('change', filterItems);
+
+        // Auto-trigger on load
+        filterItems();
+    });
+</script>
     @canAccess('mediaDestroy', 'used_laptops')
     <script>
         let deleteUrl = ''; // Simpan URL target
@@ -372,26 +519,25 @@
         }
 
         // Preview uploaded photos
-        document.getElementById('photos').addEventListener('change', function(e) {
+        let selectedFiles = [];
+        
+        // Fungsi untuk menampilkan preview foto
+        function showPhotoPreviews(files) {
             const previewContainer = document.getElementById('photo-preview');
             previewContainer.innerHTML = '';
             
-            if (this.files.length > 5) {
-                alert('Maksimal 5 foto yang dapat diupload');
-                this.value = '';
-                return;
-            }
-            
-            for (const file of this.files) {
+            Array.from(files).forEach((file, index) => {
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = function(e) {
                     const div = document.createElement('div');
-                    div.className = 'col-md-2 mb-3';
+                    div.className = 'col-md-2 mb-3 position-relative new-photo';
+                    div.dataset.index = index;
                     div.innerHTML = `
-                        <div class="position-relative">
-                            <img src="${event.target.result}" class="img-thumbnail photo-preview">
-                            <button type="button" class="btn btn-danger btn-sm position-absolute" 
-                                    style="top: -10px; right: -10px; border-radius: 50%; padding: 2px 8px;">
+                         <div class="photo-wrapper position-relative">
+                            <img src="${e.target.result}" class="img-thumbnail photo-preview w-100" style="object-fit: cover;">
+                            <button type="button" class="btn btn-danger btn-sm remove-new-photo" 
+                                    style="position: absolute; top: 4px; right: 4px; border-radius: 50%; padding: 2px 6px;"
+                                    data-index="${index}">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -399,7 +545,71 @@
                     previewContainer.appendChild(div);
                 };
                 reader.readAsDataURL(file);
+            });
+        }
+        
+        // Event ketika memilih file
+        document.getElementById('photos').addEventListener('change', function(e) {
+            if (this.files && this.files.length > 0) {
+                // Tambahkan file baru ke array selectedFiles
+                Array.from(this.files).forEach(file => {
+                    selectedFiles.push(file);
+                });
+                
+                // Batasi maksimal 5 file
+                if (selectedFiles.length > 5) {
+                    selectedFiles = selectedFiles.slice(0, 5);
+                    alert('Maksimal 5 foto yang dapat diupload');
+                }
+                
+                // Update preview
+                showPhotoPreviews(selectedFiles);
+                
+                // Update label
+                this.nextElementSibling.textContent = `${selectedFiles.length} file dipilih`;
+                
             }
+        });
+        
+        // Event untuk menghapus foto baru
+        document.addEventListener('click', function(e) {
+            // Hapus foto baru
+            if (e.target.classList.contains('remove-new-photo') || e.target.closest('.remove-new-photo')) {
+                const index = e.target.closest('.remove-new-photo').dataset.index;
+                selectedFiles.splice(index, 1);
+                showPhotoPreviews(selectedFiles);
+
+                
+                // Update label
+                const fileInput = document.getElementById('photos');
+                fileInput.nextElementSibling.textContent = selectedFiles.length > 0 ? 
+                    `${selectedFiles.length} file dipilih` : 'Pilih beberapa foto (maks. 5)';
+            }
+            
+            // Hapus foto yang sudah disimpan (saat edit)
+            if (e.target.classList.contains('delete-saved-photo') || e.target.closest('.delete-saved-photo')) {
+                const photoElement = e.target.closest('.saved-photo');
+                photoElement.remove();
+            }
+        });
+        
+        // Fungsi untuk update input file temporary
+        function updateTempInput() {
+            const tempInput = document.getElementById('photos-temp');
+            const dataTransfer = new DataTransfer();
+            
+            selectedFiles.forEach(file => {
+                dataTransfer.items.add(file);
+            });
+            
+            tempInput.files = dataTransfer.files;
+        }
+        
+        // Reset form
+        document.getElementById('resetForm').addEventListener('click', function() {
+            selectedFiles = [];
+            document.getElementById('photo-preview').innerHTML = '';
+            document.getElementById('photos').nextElementSibling.textContent = 'Pilih beberapa foto (maks. 5)';
         });
         
         // Dynamic repair items
@@ -459,7 +669,7 @@
         
         // Remove photo preview
         document.addEventListener('click', function(e) {
-            if (e.target && e.target.closest('.btn-danger') && e.target.closest('.position-absolute')) {
+            if (e.target && e.target.closest('.btn-danger') && e.target.closest('.position-absolute') && e.target.closest('.remove-new-photo')) {
                 const photoPreview = e.target.closest('.col-md-2');
                 if (photoPreview) {
                     photoPreview.remove();
@@ -482,6 +692,13 @@
         // Konversi format mata uang sebelum submit form
         document.getElementById('item-form').addEventListener('submit', function(e) {
             convertCurrencyToNumber();
+            console.log("submit");
+            const input = document.getElementById('photos');
+            const dataTransfer = new DataTransfer();
+            selectedFiles.forEach(file => dataTransfer.items.add(file));
+            input.files = dataTransfer.files;
+            
+            
             const btnSubmit = document.getElementById('submitBtn');
             btnSubmit.disabled = true;
             btnSubmit.innerHTML = `

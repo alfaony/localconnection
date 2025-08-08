@@ -7,6 +7,8 @@ use App\Models\MasterCheckItem;
 use App\Models\UsedItemMedia;
 use App\Models\UsedItemCheck;
 use App\Models\UsedItemRepair;
+use App\Models\ItemCategory;
+
 
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Http\Request;
@@ -33,8 +35,9 @@ class UsedItemController extends Controller
      */
     public function create()
     {
-        $checkItems = MasterCheckItem::where('type', 'item_type')->byCompany(Auth::user()->company_id)->get();
-        return view('used_item.createOrEdit', compact('checkItems'));
+        $checkItems = MasterCheckItem::with('itemCategory')->where('type', 'item_type')->byCompany(Auth::user()->company_id)->get();
+        $categories = ItemCategory::where('type', 'item_type')->where('company_id', auth()->user()->company_id)->get();
+        return view('used_item.createOrEdit', compact('checkItems', 'categories'));
     }
 
     /**
@@ -97,7 +100,9 @@ class UsedItemController extends Controller
     {
         $usedItem = UsedItem::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
         $checkItems = MasterCheckItem::where('type','item_type')->byCompany(Auth::user()->company_id)->get();
-        return view('used_item.createOrEdit', compact('checkItems', 'usedItem'));
+        $categories = ItemCategory::where('type', 'item_type')->where('company_id', auth()->user()->company_id)->get();
+
+        return view('used_item.createOrEdit', compact('checkItems', 'usedItem', 'categories'));
 
     }
 
@@ -168,6 +173,8 @@ class UsedItemController extends Controller
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:20480',
             'check_items' => 'required|array|min:1',
             'repairs' => 'nullable|array',
+            'category_ids' => 'nullable|array',
+            'category_ids.*' => 'nullable|exists:item_categories,id',
         ]);
         $new = false;
         
@@ -206,6 +213,9 @@ class UsedItemController extends Controller
                 ]);
             }
             
+            // Simpan kategori
+            $item->categories()->sync($validated['category_ids'] ?? []);
+
             // Simpan foto baru
             if ($request->hasFile('photos')) {
                 foreach ($request->file('photos') as $photo) {
