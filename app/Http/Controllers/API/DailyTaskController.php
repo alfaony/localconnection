@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-use App\Http\Requests\DailyTaskStoreRequest;
+use App\Http\Requests\DailyTaskStoreApiRequest;
 use App\Http\Requests\DailyTaskRequest;
 use App\Http\Requests\DailyTaskSubTaskRequest;
 
@@ -37,6 +37,7 @@ use App\Models\SettingCompany;
 use App\Models\Division;
 use App\Models\DivisionQuotaLock;
 use App\Models\RecurringRule;
+use App\Models\Project;
 
 use App\Helpers\InboxHelper;
 use Ramsey\Uuid\Uuid;
@@ -45,95 +46,192 @@ class DailyTaskController extends Controller
 {
     public function index(Request $request)
     {
-        $userId = Auth::id();
+        $authUser = Auth::user();
+
+        // Helper: normalize input to array (supports array or comma-separated string)
+        $toArray = function ($val) {
+            if (is_null($val) || $val === '') return [];
+            if (is_array($val)) return array_values(array_filter($val, fn($v) => $v !== '' && $v !== null));
+            return array_values(array_filter(array_map('trim', explode(',', (string)$val)), fn($v) => $v !== ''));
+        };
+
+        // ===== Filters from request (support arrays) =====
+        $taskFilterArr        = $toArray($request->input('task', 'today')); // ['today','overdue','upcoming','all']
+        $userCreateArr        = $toArray($request->input('user_create'));   // creator (users.name or users.id)
+        $userAssignArr        = $toArray($request->input('user_assign'));   // assignee (assign.name or assign.id)
+        $statusFilterArr      = $toArray($request->input('status'));
+        $divisionArr          = $toArray($request->input('division'));
+        $dailyTaskProjectsArr = $toArray($request->input('daily_task_project'));// DailyTaskProject: name or id
+        $projectArr           = $toArray($request->input('project'));       // Project: name or id
         
-        // Ambil filter dari request
-        $taskFilter = $request->input('task', 'today');
-        $userFilter = $request->input('user');
-        $statusFilter = $request->input('status');
+
+        // dd($taskFilterArr, $userCreateArr, $userAssignArr, $statusFilterArr, $divisionArr, $dailyTaskProjectsArr, $projectArr);
         $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null;
-        $end_date = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
-        $search = $request->input('search');
-        $division = $request->input('division');
-        $dailyTaskProjects = $request->input('daily_task_project');
-        $perPage = $request->input('per_page', 10);
+        $end_date   = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
 
-        $query = DailyTask::orderBy('created_at', $request->input('sort', 'desc'));
+        $search     = trim((string) $request->input('search', ''));
+        $perPage    = (int) $request->input('per_page', 10);
+        $sortDir    = $request->input('sort', 'desc') === 'asc' ? 'asc' : 'desc';
 
-        if(!$statusFilter && !$search && $taskFilter != 'all') {
-            $query->whereHas('taskStatus', function ($query) {
-                $query->where(function($query) {
-                    $query->where('name',ParamSchema::DOING)
-                          ->orWhere('name',ParamSchema::INREVIEW)
-                          ->orWhere('name',ParamSchema::TODO)
-                          ->orWhere('name',ParamSchema::NOTCOMPLATE);
+        $query = DailyTask::orderBy('created_at', $sortDir);
+
+        // ===== Default status filter when not provided and task != all and search empty =====
+        $taskFilterIncludesAll = in_array('all', array_map('strtolower', $taskFilterArr), true);
+        if (empty($statusFilterArr) && $search === '' && !$taskFilterIncludesAll) {
+            $query->whereHas('taskStatus', function ($q) {
+                $q->whereIn('name', [
+                    ParamSchema::DOING,
+                    ParamSchema::INREVIEW,
+                    ParamSchema::TODO,
+                    ParamSchema::NOTCOMPLATE,
+                ]);
+            });
+        }
+
+        // dd($taskFilterArr, $userCreateArr, $userAssignArr, $statusFilterArr, $divisionArr, $dailyTaskProjectsArr, $projectArr);
+        // ===== Task timeframe filter (supports multiple values; OR logic across selections) =====
+        if (!empty($taskFilterArr)) {
+            // Normalize to lowercase keywords
+            $filters = array_map('strtolower', $taskFilterArr);
+            if (!in_array('all', $filters, true)) {
+                $query->where(function ($q) use ($filters) {
+                    if (in_array('overdue', $filters, true)) {
+                        $q->orWhere(function ($qq) {
+                            $qq->whereDate('start_date', '<', now())
+                               ->whereDate('end_date', '<', now());
+                        });
+                    }
+                    if (in_array('today', $filters, true)) {
+                        $q->orWhere(function ($qq) {
+                            $qq->whereDate('start_date', '<=', now())
+                               ->whereDate('end_date', '>=', now());
+                        });
+                    }
+                    if (in_array('upcoming', $filters, true)) {
+                        $q->orWhere(function ($qq) {
+                            $qq->where('start_date', '>', now());
+                        });
+                    }
+                });
+            }
+            // if 'all' present -> no-op
+        }
+
+        // ===== User filters =====
+        // Creator (user relationship)
+        if (!empty($userCreateArr)) 
+            {
+            $query->whereHas('user', function ($q) use ($userCreateArr) {
+                // Support both IDs and names
+                $q->whereIn('id', $userCreateArr);
+            });
+        }
+
+        // Assignee (assign relationship)
+        if (!empty($userAssignArr)) {
+            $query->whereHas('assign', function ($q) use ($userAssignArr) {
+                $ids   = array_filter($userAssignArr, fn($v) => ctype_digit((string)$v));
+                $names = array_diff($userAssignArr, $ids);
+                $q->where(function ($qq) use ($ids, $names) {
+                    if (!empty($ids))   { $qq->orWhereIn('id', $ids); }
+                    if (!empty($names)) { $qq->orWhereIn('name', $names); }
                 });
             });
         }
 
-        // Filter berdasarkan task
-        if ($taskFilter) {
-            switch ($taskFilter) {
-                case 'overdue':
-                    $query->whereDate('start_date', '<', now())->whereDate('end_date', '<', now());
-                    break;
-                case 'today':
-                    $query->whereDate('start_date', '<=', now())->whereDate('end_date', '>=', now());
-                    break;
-                case 'upcoming':
-                    $query->where('start_date', '>', now());
-                    break;
-            }
+        // Fallback: if no userCreate/userAssign provided, limit to tasks relevant to current user
+        if (empty($userCreateArr) && empty($userAssignArr)) {
+            // dd("here");
+            $query->UserTasks($authUser->id);
         }
 
-        // Filter berdasarkan user
-        if ($userFilter) {   
-            if($userFilter != ParamSchema::ALL) {
-                $query->whereHas('assign', function ($q) use ($userFilter) {
-                    $q->where('name', $userFilter);
-                });
-            }
-        } else {
-            $query->UserTasks($userId);
-        }
-
-        // Filter berdasarkan status
-        if ($statusFilter) {
-            $query->whereHas('taskStatus', function ($q) use ($statusFilter) {
-                $q->where('name', $statusFilter);
+        // ===== Status filter =====
+        if (!empty($statusFilterArr)) {
+            // dd($statusFilterArr);
+            $query->whereHas('taskStatus', function ($q) use ($statusFilterArr) {
+                $q->whereIn('id', $statusFilterArr);
             });
-        } else {
-            $query->whereHas('taskStatus', function ($query) {
-                $query->where('name','!=',ParamSchema::BACKLOG);
-            });
-        }
+        } 
+        // else 
+        // {
+        //     $query->whereHas('taskStatus', function ($q) {
+        //         $q->where('name', '!=', ParamSchema::BACKLOG);
+        //     });
+        // }
 
-        // Filter berdasarkan tanggal
+        // ===== Date range =====
         if ($start_date && $end_date) {
             $query->byDateRange($start_date, $end_date);
         }
-        
-        if ($search) {
-            $query->where('name', 'like', "%{$search}%");
-        }
 
-        // Filter berdasarkan divisi
-        if ($division) {
-            $query->whereHas('user.divisions', function ($q) use ($division) {
-                $q->where('name', $division);
-            });
-        }
-        
-        // Filter berdasarkan project
-        if ($dailyTaskProjects) {
-            $query->whereHas('project', function ($q) use ($dailyTaskProjects) {
-                $q->where('name', $dailyTaskProjects);
+        // ===== Search (split by space; AND across terms; match name) =====
+        if ($search !== '') {
+            $terms = array_values(array_filter(explode(' ', $search), fn($t) => $t !== ''));
+            $query->where(function ($q) use ($terms) {
+                foreach ($terms as $t) {
+                    $q->where('name', 'like', "%{$t}%");
+                }
             });
         }
 
-        $dailyTasks = $query->byCompany(Auth::user()->company_id)->paginate($perPage);
+        // ===== Division filter (support ids or names) =====
+        if (!empty($divisionArr)) {
+            $query->whereHas('user.divisions', function ($q) use ($divisionArr) {
+                $q->whereIn('division_id', $divisionArr);
+            });
+        }
 
-        return new DailyTaskCollection($dailyTasks);
+        // ===== DailyTaskProject filter (relation `project` - support ids or names) =====
+        if (!empty($dailyTaskProjectsArr)) {
+            $query->whereHas('project', function ($q) use ($dailyTaskProjectsArr) {
+                $q->whereIn('id', $dailyTaskProjectsArr);
+            });
+        }
+
+        // ===== Project filter (Project model via column project_id or relation daily Project) =====
+        if (!empty($projectArr)) {
+            $ids   = array_filter($projectArr, fn($v) => ctype_digit((string)$v));
+            $names = array_diff($projectArr, $ids);
+
+            if (!empty($ids)) {
+                $query->whereIn('project_id', $ids);
+            }
+            if (!empty($names)) {
+                $query->whereHas('dataProject', function ($q) use ($names) {
+                    // NOTE: if relation name differs, adjust to your actual relation to Project
+                    $q->whereIn('name', $names);
+                });
+            }
+        }
+
+        // ===== Company scope + pagination =====
+        $dailyTasks = $query->byCompany($authUser->company_id)->paginate($perPage);
+
+        // ===== Build filters payload for client =====
+        $divisions = $authUser->divisions()->get();
+        $taskTimeFrame = [ 'overdue' => 'Overdue', 'today' => 'Today', 'upcoming' => 'Upcoming' ];
+        $users = User::byCompany($authUser->company_id)->get();
+        $taskStatuss = TaskStatus::bySort()->get();
+        $dailyTaskProjects = DailyTaskProject::select('id', 'name')
+            ->byCompany($authUser->company_id)
+            ->whereHas('tasks')
+            ->get();
+        $projects = Project::byCompany($authUser->company_id)
+            ->select('id', 'title')
+            ->whereHas('dailyTasks')
+            ->get();
+
+        return (new DailyTaskCollection($dailyTasks))
+            ->additional([
+                'filters' => [
+                    'divisions'           => $divisions,
+                    'task_time_frame'     => $taskTimeFrame,
+                    'users'               => $users,
+                    'task_statuses'       => $taskStatuss,
+                    'daily_task_projects' => $dailyTaskProjects,
+                    'projects'            => $projects,
+                ],
+            ]);
     }
 
     public function create()
@@ -215,7 +313,7 @@ class DailyTaskController extends Controller
         }
     }
 
-    public function store(DailyTaskStoreRequest $request)
+    public function store(DailyTaskStoreApiRequest $request)
     {
         DB::beginTransaction();
         try {
@@ -233,8 +331,8 @@ class DailyTaskController extends Controller
             
             $createdTasks = [];
             
-            for ($i = 0; $i < count($names); $i++) {
-                if($startDates[$i] && $endDates[$i] && $assignmentUserIds[$i]) {
+                if($startDates && $endDates && $assignmentUserIds) 
+                {
                     $status = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
                 } else {
                     $status = TaskStatus::where('name',ParamSchema::BACKLOG)->firstOrFail();
@@ -243,21 +341,21 @@ class DailyTaskController extends Controller
                 $dailyTask = new DailyTask();
                 $dailyTask->user_id = Auth::id();
                 $dailyTask->task_status_id = $status->id;
-                $dailyTask->start_date = $startDates[$i] ?? NULL; 
-                $dailyTask->end_date = $endDates[$i] ?? NULL;
-                $dailyTask->assignment_user_id = $assignmentUserIds[$i] ?? NULL;
-                $dailyTask->daily_task_category_id = $categoryIds[$i];
-                $dailyTask->daily_task_type_id = $typeIds[$i];
-                $dailyTask->project_id = $dataProjects[$i] ?? NULL;
-                $dailyTask->daily_task_project_id = $projectIds[$i] ?? NULL;
-                $dailyTask->name = $names[$i];
-                $dailyTask->description = $descriptions[$i] ?? null;
+                $dailyTask->start_date = $startDates ?? NULL; 
+                $dailyTask->end_date = $endDates ?? NULL;
+                $dailyTask->assignment_user_id = $assignmentUserIds ?? NULL;
+                $dailyTask->daily_task_category_id = $categoryIds;
+                $dailyTask->daily_task_type_id = $typeIds;
+                $dailyTask->project_id = $dataProjects ?? NULL;
+                $dailyTask->daily_task_project_id = $projectIds ?? NULL;
+                $dailyTask->name = $names;
+                $dailyTask->description = $descriptions ?? null;
                 $dailyTask->point = 0;
-                $dailyTask->objective_id = $objectives[$i] ?? NULL;
+                $dailyTask->objective_id = $objectives ?? NULL;
                 $dailyTask->recurring_days = $recurring_days;
                 
-                if (DailyTaskType::find($typeIds[$i])->name == ParamSchema::RECURRING) {
-                    $recurring = $request->input("recurring.$i");
+                if (DailyTaskType::find($typeIds)->name == ParamSchema::RECURRING) {
+                    $recurring = $request->input("recurring");
 
                     $recurringRule = RecurringRule::create([
                         'frequency' => $recurring['frequency'],
@@ -294,13 +392,13 @@ class DailyTaskController extends Controller
                     }
                 }
 
-                $keyResults = $request->input('key_result_' . $i);
+                $keyResults = $request->input('key_result');
                 if (!empty($keyResults)) {
                     $dailyTask->keyResults()->attach($keyResults);
                 }
 
-                if ($request->hasFile('attachments_' . $i)) {
-                    foreach ($request->file('attachments_' . $i) as $file) {
+                if ($request->hasFile('attachments')) {
+                    foreach ($request->file('attachments') as $file) {
                         $timestamp = time();
                         $randomString = rand(100, 999);
                         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
@@ -322,7 +420,8 @@ class DailyTaskController extends Controller
                 $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
                 $this->statusrecord($dailyTask, $status);
 
-                $directUrl = route('api.dailytask.show', ['dailytask' => $dailyTask->slug]);
+                // $directUrl = route('api.dailytask.show', ['dailytask' => $dailyTask->slug]);
+                $directUrl = url('api/dailytask/'.$dailyTask->slug);
         
                 $inboxHelper = new InboxHelper();
                 $inboxHelper->sent(
@@ -333,7 +432,7 @@ class DailyTaskController extends Controller
                 );
 
                 $createdTasks[] = $dailyTask;
-            }
+            // }
 
             DB::commit();
 
@@ -343,7 +442,8 @@ class DailyTaskController extends Controller
                 'data' => DailyTaskResource::collection($createdTasks)
             ], 201);
 
-        } catch (\Throwable $th) {
+        } catch (\Throwable $th) 
+        {
             DB::rollback();
             Log::error($th->getMessage());
 
@@ -358,27 +458,11 @@ class DailyTaskController extends Controller
     public function show($slug)
     {
         try {
-            $dailytask = DailyTask::byCompany(Auth::user()->company_id)
-                          ->where('slug', $slug)
-                          ->with([
-                              'user', 
-                              'assign', 
-                              'taskStatus', 
-                              'category', 
-                              'type', 
-                              'project',
-                              'media',
-                              'messages.user',
-                              'extend',
-                              'keyResults'
-                          ])
-                          ->firstOrFail();
-
+            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             return new DailyTaskResource($dailytask);
 
         } catch (\Exception $e) {
             Log::error($e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'message' => 'Task not found.'
@@ -668,7 +752,39 @@ class DailyTaskController extends Controller
         }
     }
 
-    // ... (Lanjutkan dengan method lainnya yang dibutuhkan)
+    public function statuschange(Request $request, $slug)
+    {
+        try {
+            $dailyTask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            if($dailyTask->taskStatus->name != ParamSchema::TODO || !$dailyTask->taskStatus->name != ParamSchema::BACKLOG)
+            {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Task update failed!, Status hanya dizinkan untuk TODO dan BACKLOG',
+                ]);
+            }
+            $doing = TaskStatus::where('name', ParamSchema::DOING)->firstOrFail();
+            $dailyTask->task_status_id = $doing->id;
+            $dailyTask->save();
+
+            // Record the action and update status
+            $this->message($dailyTask->id, 'report', 'Tugas ' . $dailyTask->name . ' dikerjakan');
+            $this->statusrecord($dailyTask, $doing);
+
+            // If the request is an Ajax call, return a JSON response
+            return response()->json([
+                'success' => true,
+                'data' => new DailyTaskResource($dailyTask),
+                'message' => 'Task status updated successfully!',
+            ]);
+        } catch (\Exception $e) {
+            // Handle the exception and return error response
+            return response()->json([
+                'success' => false,
+                'message' => 'Task update failed!',
+            ]);
+        }
+    }
 
     protected function message($dailyTaskId, $template, $message, $filePath = null)
     {

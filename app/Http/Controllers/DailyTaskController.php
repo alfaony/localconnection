@@ -102,14 +102,6 @@ class DailyTaskController extends Controller
                     $q->where('name', $userFilter);
                 });
             }
-            // else
-            // {
-            //     $query->where(function($query) 
-            //     {
-            //         $query->where('assignment_user_id',Auth::user()->id)->orWhere('user_id',Auth::user()->id);
-            //     }
-            //     );
-            // }
         }
         
         else

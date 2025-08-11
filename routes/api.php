@@ -42,8 +42,8 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::resource('agreement-letter', AgreementLetterController::class);
 
     Route::resource('dailytask', DailyTaskController::class);
-    
     // Endpoint tambahan
+    Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
     Route::post('dailytask/{slug}/report', [DailyTaskController::class, 'report']);
     Route::post('dailytask/{slug}/approve', [DailyTaskController::class, 'approvement']);
     Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);

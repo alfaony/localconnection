@@ -30,7 +30,7 @@ class DailyTaskResource extends JsonResource
                 'email' => $this->assign->email,
             ] : null,
             'category' => $this->category ? $this->category->name : null,
-            'type' => $this->type->name,
+            'type' => $this->type ? $this->type->name : null,
             'project' => $this->project ? $this->project->name : null,
             'media' => $this->media->map(function($media) {
                 return [

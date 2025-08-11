@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 use Carbon\Carbon;
@@ -16,7 +17,7 @@ class DailyTask extends Model
     use HasFactory, SoftDeletes;
 
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
-protected $keyType = 'string'; // Tipe kunci primer adalah string
+    protected $keyType = 'string'; // Tipe kunci primer adalah string
     
     protected static function boot()
     {
@@ -59,6 +60,23 @@ protected $keyType = 'string'; // Tipe kunci primer adalah string
         }
 
         return $slug;
+    }
+
+
+    /**
+     * Determine if the current user can take action on this task.
+     * @return bool
+     */
+    public function isAction()
+    {
+        $user = Auth::user();
+        return ($this->user_id == $user->id) ||
+        (
+            isset($user->role) &&
+            $user->role->name == \App\Schemas\RoleSchema::MANAGER &&
+            $this->taskStatus &&
+            $this->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE
+        );
     }
 
     public function assign()
