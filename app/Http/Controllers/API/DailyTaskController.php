@@ -431,10 +431,24 @@ class DailyTaskController extends Controller
 
     public function edit($slug)
     {
+        $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+        if(!$dailyTask)
+        {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tugas tidak ditemukan',
+            ], 404);
+        }
         try {
+            if(!$dailytask->isAction())
+            {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tugas tidak diizinkan untuk akses',
+                ], 404);
+            }
             $user = Auth::user();
             $companyId = $user->company_id;
-            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             
             // Get data for dropdowns
             $users = User::byCompany($companyId)
@@ -533,12 +547,19 @@ class DailyTaskController extends Controller
 
     public function update(DailyTaskStoreApiRequest $request, $slug)
     {
+        $dailyTask = DailyTask::byCompany(Auth::user()->company_id)
+        ->where('slug', $slug)
+        ->firstOrFail();
+        if(!$dailyTask)
+        {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tugas tidak ditemukan',
+            ], 404);
+        }
+        
         DB::beginTransaction();
         try {
-            $dailyTask = DailyTask::byCompany(Auth::user()->company_id)
-                          ->where('slug', $slug)
-                          ->firstOrFail();
-
             if(!$dailyTask->isAction())
             {
                 return response()->json([

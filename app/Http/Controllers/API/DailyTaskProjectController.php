@@ -41,6 +41,13 @@ class DailyTaskProjectController extends BaseController
                 },
             ])
             ->findOrFail($projectId);
+        if(!$project)
+        {
+            return response()->json([
+                'success' => false,
+                'message' => 'Main proyek tidak ditemukan',
+            ], 404);
+        }
 
         $selectedValues = [];
         $selectedDataProjectId = null;

@@ -27,6 +27,12 @@ class ObjectiveController extends BaseController
         try {
             $objective = Objective::byCompany(Auth::user()->company_id)->where('id', $slug)->firstOrFail();
             // Ambil semua key results milik objective
+            if(!$objective) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Objective tidak ditemukan',
+                ], 404);
+            }
             $keyResults = $objective->keyResults()
                 ->select('id', 'result')
                 ->orderBy('result')
