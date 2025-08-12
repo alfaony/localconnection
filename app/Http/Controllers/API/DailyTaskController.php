@@ -431,15 +431,15 @@ class DailyTaskController extends Controller
 
     public function edit($slug)
     {
-        $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-        if(!$dailyTask)
-        {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tugas tidak ditemukan',
-            ], 404);
-        }
         try {
+            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->first();
+            if(!$dailyTask)
+            {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tugas tidak ditemukan',
+                ], 404);
+            }
             if(!$dailytask->isAction())
             {
                 return response()->json([
@@ -533,7 +533,13 @@ class DailyTaskController extends Controller
     public function show($slug)
     {
         try {
-            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->first();
+            if(!$dailytask){
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tugas tidak ditemukan',
+                ], 404);
+            }
             return new DailyTaskResource($dailytask);
 
         } catch (\Exception $e) {
@@ -547,19 +553,19 @@ class DailyTaskController extends Controller
 
     public function update(DailyTaskStoreApiRequest $request, $slug)
     {
-        $dailyTask = DailyTask::byCompany(Auth::user()->company_id)
-        ->where('slug', $slug)
-        ->firstOrFail();
-        if(!$dailyTask)
-        {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tugas tidak ditemukan',
-            ], 404);
-        }
         
         DB::beginTransaction();
         try {
+            $dailyTask = DailyTask::byCompany(Auth::user()->company_id)
+            ->where('slug', $slug)
+            ->first();
+            if(!$dailyTask)
+            {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tugas tidak ditemukan',
+                ], 404);
+            }
             if(!$dailyTask->isAction())
             {
                 return response()->json([

@@ -25,7 +25,7 @@ class ObjectiveController extends BaseController
     public function getresult(Request $request, $slug)
     {
         try {
-            $objective = Objective::byCompany(Auth::user()->company_id)->where('id', $slug)->firstOrFail();
+            $objective = Objective::byCompany(Auth::user()->company_id)->where('id', $slug)->first();
             // Ambil semua key results milik objective
             if(!$objective) {
                 return response()->json([

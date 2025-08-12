@@ -40,7 +40,7 @@ class DailyTaskProjectController extends BaseController
                     $q->orderBy('ordering');
                 },
             ])
-            ->findOrFail($projectId);
+            ->find($projectId);
         if(!$project)
         {
             return response()->json([
