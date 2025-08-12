@@ -266,7 +266,7 @@ class DailyTaskController extends Controller
                     'users' => $users,
                     'categories' => $categories,
                     'types' => $types,
-                    'projects' => $projects,
+                    'daily_task_projects' => $projects,
                     'objectives' => $objectives,
                     'days' => $days,
                     'today' => $today,
@@ -433,7 +433,7 @@ class DailyTaskController extends Controller
     {
         try {
             $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->first();
-            if(!$dailyTask)
+            if(!$dailytask)
             {
                 return response()->json([
                     'success' => false,
