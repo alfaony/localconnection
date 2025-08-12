@@ -8,6 +8,7 @@ class DailyTaskResource extends JsonResource
 {
     public function toArray($request)
     {
+        // dd($this->media);
         return [
             'id' => $this->id,
             'slug' => $this->slug,
@@ -31,8 +32,16 @@ class DailyTaskResource extends JsonResource
             ] : null,
             'category' => $this->category ? $this->category->name : null,
             'type' => $this->type ? $this->type->name : null,
-            'project' => $this->project ? $this->project->name : null,
-            'media' => $this->media->map(function($media) {
+            'daily_task_project' => $this->project ? $this->project->name : null,
+            'project' => $this->dataProject ? $this->dataProject->title : null,
+            'media_detail' => $this->taskMedia->map(function($media) {
+                return [
+                    'id' => $media->id,
+                    'file_path' => asset('storage/'.$media->file_path),
+                    'file_type' => $media->file_type
+                ];
+            }),
+            'media_report' => $this->media->map(function($media) {
                 return [
                     'id' => $media->id,
                     'file_path' => asset('storage/'.$media->file_path),

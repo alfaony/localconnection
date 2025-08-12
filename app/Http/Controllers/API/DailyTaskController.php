@@ -16,6 +16,7 @@ use App\Http\Requests\DailyTaskSubTaskRequest;
 
 use App\Http\Resources\DailyTaskResource;
 use App\Http\Resources\DailyTaskCollection;
+use App\Http\Resources\DailyTaskEditResource;
 
 use Carbon\Carbon;
 use App\Helpers\Access;
@@ -56,16 +57,14 @@ class DailyTaskController extends Controller
         };
 
         // ===== Filters from request (support arrays) =====
-        $taskFilterArr        = $toArray($request->input('task', 'today')); // ['today','overdue','upcoming','all']
+        $taskFilterArr        = $toArray($request->input('task', 'all')); // ['today','overdue','upcoming','all']
         $userCreateArr        = $toArray($request->input('user_create'));   // creator (users.name or users.id)
         $userAssignArr        = $toArray($request->input('user_assign'));   // assignee (assign.name or assign.id)
         $statusFilterArr      = $toArray($request->input('status'));
         $divisionArr          = $toArray($request->input('division'));
         $dailyTaskProjectsArr = $toArray($request->input('daily_task_project'));// DailyTaskProject: name or id
         $projectArr           = $toArray($request->input('project'));       // Project: name or id
-        
 
-        // dd($taskFilterArr, $userCreateArr, $userAssignArr, $statusFilterArr, $divisionArr, $dailyTaskProjectsArr, $projectArr);
         $start_date = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : null;
         $end_date   = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : null;
 
@@ -129,35 +128,21 @@ class DailyTaskController extends Controller
 
         // Assignee (assign relationship)
         if (!empty($userAssignArr)) {
-            $query->whereHas('assign', function ($q) use ($userAssignArr) {
-                $ids   = array_filter($userAssignArr, fn($v) => ctype_digit((string)$v));
-                $names = array_diff($userAssignArr, $ids);
-                $q->where(function ($qq) use ($ids, $names) {
-                    if (!empty($ids))   { $qq->orWhereIn('id', $ids); }
-                    if (!empty($names)) { $qq->orWhereIn('name', $names); }
-                });
-            });
+            $query->whereIn('assignment_user_id', $userAssignArr);
         }
 
         // Fallback: if no userCreate/userAssign provided, limit to tasks relevant to current user
-        if (empty($userCreateArr) && empty($userAssignArr)) {
-            // dd("here");
+        if (empty($userCreateArr) && empty($userAssignArr)) 
+            {
             $query->UserTasks($authUser->id);
         }
 
         // ===== Status filter =====
         if (!empty($statusFilterArr)) {
-            // dd($statusFilterArr);
             $query->whereHas('taskStatus', function ($q) use ($statusFilterArr) {
                 $q->whereIn('id', $statusFilterArr);
             });
         } 
-        // else 
-        // {
-        //     $query->whereHas('taskStatus', function ($q) {
-        //         $q->where('name', '!=', ParamSchema::BACKLOG);
-        //     });
-        // }
 
         // ===== Date range =====
         if ($start_date && $end_date) {
@@ -190,18 +175,7 @@ class DailyTaskController extends Controller
 
         // ===== Project filter (Project model via column project_id or relation daily Project) =====
         if (!empty($projectArr)) {
-            $ids   = array_filter($projectArr, fn($v) => ctype_digit((string)$v));
-            $names = array_diff($projectArr, $ids);
-
-            if (!empty($ids)) {
-                $query->whereIn('project_id', $ids);
-            }
-            if (!empty($names)) {
-                $query->whereHas('dataProject', function ($q) use ($names) {
-                    // NOTE: if relation name differs, adjust to your actual relation to Project
-                    $q->whereIn('name', $names);
-                });
-            }
+           $query->whereIn('project_id', $projectArr);
         }
 
         // ===== Company scope + pagination =====
@@ -209,8 +183,8 @@ class DailyTaskController extends Controller
 
         // ===== Build filters payload for client =====
         $divisions = $authUser->divisions()->get();
-        $taskTimeFrame = [ 'overdue' => 'Overdue', 'today' => 'Today', 'upcoming' => 'Upcoming' ];
-        $users = User::byCompany($authUser->company_id)->get();
+        $taskTimeFrame = [ 'overdue' => 'Overdue', 'today' => 'Today', 'upcoming' => 'Upcoming', 'all' => 'All' ];
+        $users = User::select('id', 'name')->byCompany($authUser->company_id)->get();
         $taskStatuss = TaskStatus::bySort()->get();
         $dailyTaskProjects = DailyTaskProject::select('id', 'name')
             ->byCompany($authUser->company_id)
@@ -322,8 +296,8 @@ class DailyTaskController extends Controller
             $assignmentUserIds = $request->assignment_user_id;
             $categoryIds = $request->category_id;
             $typeIds = $request->type_id;
-            $projectIds = $request->project_id;
-            $dataProjects = $request->data_project_id;
+            $projectIds = $request->daily_task_project_id;
+            $dataProjects = $request->project_id;
             $names = $request->name;
             $descriptions = $request->description ?? [];
             $objectives = $request->objective ?? [];
@@ -346,8 +320,8 @@ class DailyTaskController extends Controller
                 $dailyTask->assignment_user_id = $assignmentUserIds ?? NULL;
                 $dailyTask->daily_task_category_id = $categoryIds;
                 $dailyTask->daily_task_type_id = $typeIds;
-                $dailyTask->project_id = $dataProjects ?? NULL;
                 $dailyTask->daily_task_project_id = $projectIds ?? NULL;
+                $dailyTask->project_id = $dataProjects ?? NULL;
                 $dailyTask->name = $names;
                 $dailyTask->description = $descriptions ?? null;
                 $dailyTask->point = 0;
@@ -439,7 +413,7 @@ class DailyTaskController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Tasks created successfully',
-                'data' => DailyTaskResource::collection($createdTasks)
+                'data' => new DailyTaskResource($dailyTask)
             ], 201);
 
         } catch (\Throwable $th) 
@@ -451,6 +425,93 @@ class DailyTaskController extends Controller
                 'success' => false,
                 'message' => 'Failed to create tasks',
                 'error' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function edit($slug)
+    {
+        try {
+            $user = Auth::user();
+            $companyId = $user->company_id;
+            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            
+            // Get data for dropdowns
+            $users = User::byCompany($companyId)
+                ->select('id', 'name', 'email')
+                ->get()
+                ;
+                
+            $categories = DailyTaskCategory::byCompany($companyId)
+                ->select('id', 'name')
+                ->get();
+                
+            $types = DailyTaskType::select('id', 'name')->get();
+            
+            $projects = DailyTaskProject::byCompany($companyId)
+                ->select('id', 'name')
+                ->get();
+                
+            $today = strtolower(Carbon::now()->format('l'));
+            $days = config('custom.day_name_code');
+            $minDate = Carbon::now()->format('Y-m-d');
+            
+            $taskRecurring = DailyTaskType::where('name', ParamSchema::RECURRING)
+                ->select('id', 'name')
+                ->first();
+    
+            $divisionIds = $user->divisions->pluck('id');
+
+            if ($divisionIds->isEmpty()) 
+            {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak tergabung dalam divisi manapun. Hubungi admin atau manager Anda.'
+                ], 400);
+            }
+            
+            $objectives = Objective::whereHas('division', function($query) use ($divisionIds) {
+                    $query->whereIn('id', $divisionIds);
+                })
+                ->select('id', 'name')
+                // ->with(['division:id,name'])
+                ->get();
+                
+                
+            // $divisions = $user->divisions()
+            // ->select('divisions.id', 'name')
+            // ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    // Use a dedicated resource so the payload matches the expected edit payload shape
+                    'form' => new DailyTaskEditResource($dailytask),
+
+                    // dropdown data
+                    'users' => $users,
+                    'categories' => $categories,
+                    'types' => $types,
+
+                    // Separate the two "project" concepts to avoid name collisions
+                    'daily_task_projects' => $projects, // previously $projects is DailyTaskProject list
+                    'projects' => Project::byCompany($companyId)->select('id', 'title')->whereHas('dailyTasks')->get(),
+
+                    'objectives' => $objectives,
+                    'days' => $days,
+                    'today' => $today,
+                    'min_date' => $minDate,
+                    'task_recurring' => $taskRecurring,
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to get create task data: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get create task data',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -470,13 +531,21 @@ class DailyTaskController extends Controller
         }
     }
 
-    public function update(DailyTaskRequest $request, $slug)
+    public function update(DailyTaskStoreApiRequest $request, $slug)
     {
         DB::beginTransaction();
         try {
             $dailyTask = DailyTask::byCompany(Auth::user()->company_id)
                           ->where('slug', $slug)
                           ->firstOrFail();
+
+            if(!$dailyTask->isAction())
+            {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki izin untuk menghapus tugas ini'
+                ], 403);
+            }
 
             $message = "";
             if($request->start_date && $request->end_date && $request->assignment_user_id && ($dailyTask->taskStatus->name == ParamSchema::BACKLOG)) {
@@ -539,8 +608,8 @@ class DailyTaskController extends Controller
             $dailyTask->point = $request->point ?? 0;
             $dailyTask->name = $request->name;
             $dailyTask->description = $request->description;
-            $dailyTask->daily_task_project_id = $request->project_id ?? NULL;
-            $dailyTask->project_id = $request->data_project_id[0] ?? NULL;
+            $dailyTask->daily_task_project_id = $request->daily_task_project ?? NULL;
+            $dailyTask->project_id = $request->project_id ?? NULL;
             $dailyTask->daily_task_category_id = $request->category_id;
             $dailyTask->objective_id = $request->objective;
             
@@ -644,10 +713,30 @@ class DailyTaskController extends Controller
     public function destroy($slug)
     {
         try {
-            $dailytask = DailyTask::byCompany(Auth::user()->company_id)
-                          ->where('slug', $slug)
-                          ->firstOrFail();
+            $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)
+            ->firstOrFail();
 
+            if(!$dailytask->isAction())
+            {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki izin untuk menghapus tugas ini'
+                ], 403);
+            }
+
+            if($dailytask->head)
+            {
+                $redirectTo = $dailytask->head->slug;
+                if($dailytask->head->user_id == $dailytask->head->assignment_user_id)
+                {
+                    $this->sentInbox($dailytask->head->user_id,Auth::user()->name.' Menghapus Sub Tugas ' . $dailytask->name, null);
+                }else
+                {
+                    $this->sentInbox($dailytask->head->user_id,Auth::user()->name.' Menghapus Sub Tugas ' . $dailytask->name, null);
+                    $this->sentInbox($dailytask->head->assignment_user_id,Auth::user()->name.' Menghapus Sub Tugas ' . $dailytask->name, null);
+                }
+            }
+        
             $dailytask->delete();
 
             return response()->json([
@@ -658,6 +747,7 @@ class DailyTaskController extends Controller
         } catch (\Exception $e) {
             Log::error($e->getMessage());
 
+            // dd($e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete task'
@@ -669,7 +759,7 @@ class DailyTaskController extends Controller
     {
         $request->validate([
             'note' => 'required|string',
-            'media.*' => 'required|file|max:10240'
+            'media.*' => 'nullable|file|max:10240'
         ]);
 
         DB::beginTransaction();
@@ -714,7 +804,7 @@ class DailyTaskController extends Controller
             $this->statusrecord($dailytask, $inReview);
             $dailytask->save();
 
-            $directUrl = route('api.dailytask.show', ['dailytask' => $dailytask->slug]);
+            $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
             
             if(Auth::id() == $dailytask->assignment_user_id) {
                 $userTo = $dailytask->user_id;
@@ -756,7 +846,7 @@ class DailyTaskController extends Controller
     {
         try {
             $dailyTask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-            if($dailyTask->taskStatus->name != ParamSchema::TODO || !$dailyTask->taskStatus->name != ParamSchema::BACKLOG)
+            if(!$dailyTask->taskStatus->name == ParamSchema::TODO || !$dailyTask->taskStatus->name == ParamSchema::BACKLOG)
             {
                 return response()->json([
                     'success' => false,

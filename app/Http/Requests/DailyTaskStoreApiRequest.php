@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class DailyTaskStoreApiRequest extends FormRequest
 {
@@ -13,13 +14,48 @@ class DailyTaskStoreApiRequest extends FormRequest
 
     public function rules()
     {
+        $objectiveId   = $this->input('objective');        // uuid objectives.id
+        $projectId     = $this->input('daily_task_project_id');       // uuid/str daily_task_projects.id
+        // $companyId     = optional($this->user())->company_id; // kalau mau batasi per company
+
         return [
+             'objective' => [
+                'required',
+                'uuid',
+                Rule::exists('objectives', 'id')
+                    // ->when($companyId, fn($q) => $q->where('company_id', $companyId)),
+            ],
+
+            // key_result harus array of uuid yang semuanya punya objective_id = objective
+            'key_result'   => ['required','array','min:1'],
+            'key_result.*' => [
+                'uuid',
+                Rule::exists('objective_key_results', 'id')
+                    // ->where(fn($q) => $q->where('objective_id', $objectiveId))
+            ],
+
+            // daily_task_project yang dipilih (opsional contoh pakai exists + scope company)
+            'daily_task_project_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('daily_task_projects', 'id')
+                    // ->when($companyId, fn($q) => $q->where('company_id', $companyId)),
+            ],
+
+            // data_project_id harus benar2 milik project_id di atas
+            'project_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('projects', 'id')
+                    ->where(fn($q) => $q->where('daily_task_project_id', $projectId))
+            ],
+
             'objective' => 'required|uuid|exists:objectives,id',
             'key_result' => 'required|array',
             'key_result.*' => 'uuid|exists:objective_key_results,id',
 
-            'project_id' => 'nullable|uuid|exists:daily_task_projects,id',
-            'data_project_id' => 'nullable|uuid|exists:projects,id',
+            'daily_task_project_id' => 'nullable|uuid|exists:daily_task_projects,id',
+            'project_id' => 'nullable|uuid|exists:projects,id',
 
             'custom_field_values' => 'nullable|array',
 

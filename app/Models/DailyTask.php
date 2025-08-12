@@ -39,7 +39,7 @@ class DailyTask extends Model
 
     public function setNameAttribute($value)
     {
-       if ($this->name != $value || $this->slug == '') {
+       if ($this->slug == '' || $this->slug == null) {
             $this->attributes['name'] = $value;
             $this->attributes['slug'] = $this->createUniqueSlug($value);
         } else {
