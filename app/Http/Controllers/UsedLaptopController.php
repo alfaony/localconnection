@@ -243,7 +243,7 @@ class UsedLaptopController extends Controller
                 'purchase_price' => 'required|numeric|min:0',
                 'notes' => 'nullable|string',
                 'photos' => 'nullable|array',
-                'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
                 'check_items' => 'required|array|min:1',
                 'repairs' => 'nullable|array',
             ]);
