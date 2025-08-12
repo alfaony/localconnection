@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Models\DailyTaskType;
+use App\Schemas\ParamSchema;
 
 class DailyTaskStoreApiRequest extends FormRequest
 {
@@ -49,6 +51,29 @@ class DailyTaskStoreApiRequest extends FormRequest
                 Rule::exists('projects', 'id')
                     ->where(fn($q) => $q->where('daily_task_project_id', $projectId))
             ],
+            
+            'recurring' => [
+            'array',
+            'min:1',
+                Rule::requiredIf(function () {
+                    $type = DailyTaskType::find($this->input('type_id'));
+                    return $type && $type->name === ParamSchema::RECURRING;
+                }),
+            ],
+
+            // Karena kamu pakai 1 object (bukan list) di controller, bisa validasi langsung object-nya:
+            'recurring.frequency'   => 'required_with:recurring|in:DAILY,WEEKLY,MONTHLY,YEARLY',
+            // 'recurring.until'       => 'required_with:recurring|date',
+
+            // Opsional sesuai frequency
+            'recurring.by_day'        => 'nullable|array',
+            'recurring.by_day.*'      => 'string|in:MO,TU,WE,TH,FR,SA,SU',
+
+            'recurring.by_month_day'   => 'nullable|array',
+            'recurring.by_month_day.*' => 'integer|min:1|max:31',
+
+            'recurring.by_month'       => 'nullable|array',
+            'recurring.by_month.*'     => 'integer|min:1|max:12',
 
             'objective' => 'required|uuid|exists:objectives,id',
             'key_result' => 'required|array',
@@ -69,10 +94,10 @@ class DailyTaskStoreApiRequest extends FormRequest
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
 
-            'recurring' => 'nullable|array',
-            'attachments.*' => 'nullable|file|max:10240',
-            'days' => 'nullable|string|in:MO,TU,WE,TH,FR,SA,SU',
-            'recurring_frequency' => 'nullable|string|in:DAILY,WEEKLY,MONTHLY,YEARLY',
+            // 'recurring' => 'nullable|array',
+            // 'attachments.*' => 'nullable|file|max:10240',
+            // 'days' => 'nullable|string|in:MO,TU,WE,TH,FR,SA,SU',
+            // 'recurring_frequency' => 'nullable|string|in:DAILY,WEEKLY,MONTHLY,YEARLY',
         ];
     }
 

@@ -251,6 +251,7 @@ class DailyTaskController extends Controller
             $objectives = Objective::whereHas('division', function($query) use ($divisionIds) {
                     $query->whereIn('id', $divisionIds);
                 })
+                ->with(['keyResults'])
                 ->select('id', 'name')
                 // ->with(['division:id,name'])
                 ->get();
@@ -394,8 +395,8 @@ class DailyTaskController extends Controller
                 $this->message($dailyTask->id,'create',' Membuat Tugas '.$dailyTask->name);
                 $this->statusrecord($dailyTask, $status);
 
-                // $directUrl = route('api.dailytask.show', ['dailytask' => $dailyTask->slug]);
-                $directUrl = url('api/dailytask/'.$dailyTask->slug);
+                // $directUrl = route('dailytask.show', ['dailytask' => $dailyTask->slug]);
+                $directUrl = url('dailytask/'.$dailyTask->slug);
         
                 $inboxHelper = new InboxHelper();
                 $inboxHelper->sent(
@@ -418,6 +419,7 @@ class DailyTaskController extends Controller
 
         } catch (\Throwable $th) 
         {
+            dd($th);
             DB::rollback();
             Log::error($th->getMessage());
 
@@ -587,7 +589,7 @@ class DailyTaskController extends Controller
             }
         
             if($message) {
-                $directUrl = route('api.dailytask.show', ['dailytask' => $dailyTask->slug]);
+                $directUrl = route('dailytask.show', ['dailytask' => $dailyTask->slug]);
                 if(Auth::id() == $request->assignment_user_id) {
                     $userTo = $dailyTask->user_id;
                 } elseif(Auth::id() == $dailyTask->user_id) {
