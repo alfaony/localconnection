@@ -27,7 +27,12 @@ class DailyTaskEditResource extends JsonResource
             'assignment_user_id' => $this->assignment_user_id,
             'category_id' => $this->daily_task_category_id,
             'type_id' => $this->daily_task_type_id,
-            'recurring' => $this->recurring ?? [],
+            'recurring' => $this->recurringRule ? [
+                'frequency'     => $this->recurringRule['frequency'] ?? null,
+                'until'         => $this->recurringRule['until'] ?? null,
+                'by_month'      => $this->recurringRule['by_month'] ?? [],
+                'by_month_day'  => $this->recurringRule['by_month_day'] ?? [],
+            ] : [],
             'name' => $this->name,
             'description' => $this->description,
         ];
