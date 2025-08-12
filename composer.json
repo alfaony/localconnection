@@ -10,6 +10,7 @@
         "barryvdh/laravel-dompdf": "^3.0",
         "dcblogdev/laravel-xero": "^1.1",
         "doctrine/dbal": "^3.7",
+        "evilfreelancer/routeros-api-php": "^1.5",
         "google/apiclient": "^2.0",
         "guzzlehttp/guzzle": "^7.2",
         "jeroennoten/laravel-adminlte": "^3.9",

@@ -505,6 +505,51 @@
                         </div>
                     </div>
 
+                    <div class="card">
+                        <div class="card-header" id="headingMikrotik">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseMikrotik" aria-expanded="false" aria-controls="collapseMikrotik">
+                                    Mikrotik Credential
+                                </button>
+                            </h2>
+                        </div>
+                        <div id="collapseMikrotik" class="collapse" aria-labelledby="headingMikrotik" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="mikrotik_host">Mikrotik Host</label>
+                                    <input type="text" name="mikrotik_host" class="form-control" value="{{ old('mikrotik_host', isset($data['mikrotik_host']) ? $data['mikrotik_host'] : '') }}">
+                                    @error('mikrotik_host')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="mikrotik_port">Mikrotik Port</label>
+                                    <input type="text" name="mikrotik_port" class="form-control" value="{{ old('mikrotik_port', isset($data['mikrotik_port']) ? $data['mikrotik_port'] : '8728') }}">
+                                    @error('mikrotik_port')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="mikrotik_username">Mikrotik Username</label>
+                                    <input type="text" name="mikrotik_username" class="form-control" value="{{ old('mikrotik_username', isset($data['mikrotik_username']) ? $data['mikrotik_username'] : '') }}">
+                                    @error('mikrotik_username')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="mikrotik_password">Mikrotik Password</label>
+                                    <input type="text" name="mikrotik_password" class="form-control" value="{{ old('mikrotik_password', isset($data['mikrotik_password']) ? $data['mikrotik_password'] : '') }}">
+                                    @error('mikrotik_password')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
 
