@@ -1,67 +1,87 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Services;
 
-use App\Services\MikrotikService;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use RouterOS\Client;
+use RouterOS\Query;
+use RouterOS\Exceptions\ClientException;
+use RouterOS\Exceptions\ConfigException;
 
-class HotspotUserController extends Controller
+class MikrotikService
 {
-    public function __construct(private MikrotikService $mt) {}
+    protected Client $client;
 
-    /** GET /mikrotik/hotspot-users */
-    public function index(Request $req)
+    public function __construct(?array $override = null)
     {
-        $filters = $req->only(['name','server','profile','disabled']);
-        return response()->json($this->mt->listHotspotUsers($filters));
+        $cfg = $override ?: [
+            'host'    => config('services.mikrotik.host'),
+            'user'    => config('services.mikrotik.user'),
+            'pass'    => config('services.mikrotik.pass'),
+            'port'    => (int) config('services.mikrotik.port', 8728),
+            'ssl'     => (bool) config('services.mikrotik.ssl', false),
+            'timeout' => (int) config('services.mikrotik.timeout', 10),
+            'attempts'=> 1,
+            'legacy'  => false,
+        ];
+        $this->client = new Client($cfg);
     }
 
-    /** GET /mikrotik/hotspot-users/{id}  (id = .id mikrotik, contoh: *3) */
-    public function show(string $id)
+    /** ===== Hotspot User CRUD ===== */
+
+    public function listHotspotUsers(array $filters = []): array
     {
-        $row = $this->mt->getHotspotUserById($id);
-        if (!$row) return response()->json(['message' => 'Not found'], 404);
-        return response()->json($row);
+        $q = new Query('/ip/hotspot/user/print');
+        foreach (['name','server','profile','disabled'] as $k) {
+            if (!empty($filters[$k])) $q->where($k, $filters[$k]);
+        }
+        return $this->client->query($q)->read();
     }
 
-    /** POST /mikrotik/hotspot-users */
-    public function store(Request $req)
+    public function getHotspotUserById(string $id): ?array
     {
-        $data = $req->validate([
-            'server'       => 'required|string',
-            'name'         => 'required|string',
-            'password'     => 'required|string|min:4',
-            'profile'      => 'nullable|string',
-            'comment'      => 'nullable|string',
-            'limit_uptime' => 'nullable|string',
-            'disabled'     => ['nullable', Rule::in(['yes','no'])],
-        ]);
-
-        $res = $this->mt->createHotspotUser($data);
-        return response()->json(['message' => 'Created', 'result' => $res], 201);
+        $q = (new Query('/ip/hotspot/user/print'))->where('.id', $id);
+        $res = $this->client->query($q)->read();
+        return $res[0] ?? null;
     }
 
-    /** PUT /mikrotik/hotspot-users/{id} */
-    public function update(Request $req, string $id)
+    public function createHotspotUser(array $data): array
     {
-        $payload = $req->validate([
-            'name'         => 'sometimes|string',
-            'password'     => 'sometimes|string|min:4',
-            'profile'      => 'sometimes|nullable|string',
-            'comment'      => 'sometimes|nullable|string',
-            'limit_uptime' => 'sometimes|nullable|string',
-            'disabled'     => ['sometimes', Rule::in(['yes','no'])],
-        ]);
+        $q = (new Query('/ip/hotspot/user/add'))
+            ->equal('server', $data['server'])
+            ->equal('name', $data['name'])
+            ->equal('password', $data['password']);
 
-        $res = $this->mt->updateHotspotUser($id, $payload);
-        return response()->json(['message' => 'Updated', 'result' => $res]);
+        foreach ([
+            'profile' => 'profile',
+            'comment' => 'comment',
+            'limit_uptime' => 'limit-uptime', // e.g. 1d, 12:00:00
+            'disabled' => 'disabled',         // yes/no
+        ] as $in => $ros) {
+            if (isset($data[$in]) && $data[$in] !== null && $data[$in] !== '') {
+                $q->equal($ros, $data[$in]);
+            }
+        }
+        return $this->client->query($q)->read();
     }
 
-    /** DELETE /mikrotik/hotspot-users/{id} */
-    public function destroy(string $id)
+    public function updateHotspotUser(string $id, array $data): array
     {
-        $res = $this->mt->deleteHotspotUser($id);
-        return response()->json(['message' => 'Deleted', 'result' => $res]);
+        $q = (new Query('/ip/hotspot/user/set'))->equal('.id', $id);
+
+        foreach ($data as $k => $v) {
+            if ($v === null) continue;
+            $rosKey = match ($k) {
+                'limit_uptime' => 'limit-uptime',
+                default => str_replace('_','-',$k),
+            };
+            $q->equal($rosKey, $v);
+        }
+        return $this->client->query($q)->read();
+    }
+
+    public function deleteHotspotUser(string $id): array
+    {
+        $q = (new Query('/ip/hotspot/user/remove'))->equal('.id', $id);
+        return $this->client->query($q)->read();
     }
 }
