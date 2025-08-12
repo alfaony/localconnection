@@ -546,6 +546,16 @@
                                     <span class="text-danger text-sm">{{ $message }}</span>
                                     @enderror
                                 </div>
+                                <div class="form-group">
+                                    <label for="mikrotik_ssl">Mikrotik SSL</label>
+                                    <select name="mikrotik_ssl" class="form-control">
+                                        <option value="true" {{ old('mikrotik_ssl', isset($data['mikrotik_ssl']) ? $data['mikrotik_ssl'] : '') == 'true' ? 'selected' : '' }}>True</option>
+                                        <option value="false" {{ old('mikrotik_ssl', isset($data['mikrotik_ssl']) ? $data['mikrotik_ssl'] : '') == 'false' ? 'selected' : '' }}>False</option>
+                                    </select>
+                                    @error('mikrotik_ssl')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
                     </div>

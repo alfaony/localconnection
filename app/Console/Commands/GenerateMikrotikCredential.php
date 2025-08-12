@@ -49,6 +49,7 @@ class GenerateMikrotikCredential extends Command
             'mikrotik_port' => "8728",
             'mikrotik_username' => "",
             'mikrotik_password' => "",
+            'mikrotik_ssl' => "false",
         ];
         foreach ($companies as $company) 
         {
