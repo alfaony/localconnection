@@ -254,7 +254,7 @@
                                     <h5 class="text-primary mb-1">Harga Jual Disarankan</h5>
                                 </div>
                                 <div class="h5 text-success font-weight-bold">
-                                    Rp {{ number_format($laptop->suggested_selling_price) }}
+                                    Rp {{ number_format($laptop->suggested_selling_price,0,',','.') }}
                                 </div>
                             </div>
                         </div>

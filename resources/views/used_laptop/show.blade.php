@@ -325,7 +325,7 @@
                     <div>
                         <h5 class="text-success">Rekomendasi Harga Jual</h5>
                         <div class="h3 text-success font-weight-bold">
-                            Rp {{ number_format($laptop->suggested_selling_price) }}
+                            Rp {{ number_format($laptop->suggested_selling_price,0,',','.') }}
                         </div>
                         <small class="text-muted">(Harga beli + perbaikan) + 30%</small>
                     </div>
