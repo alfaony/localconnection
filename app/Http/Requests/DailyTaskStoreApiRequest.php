@@ -63,7 +63,7 @@ class DailyTaskStoreApiRequest extends FormRequest
 
             // Karena kamu pakai 1 object (bukan list) di controller, bisa validasi langsung object-nya:
             'recurring.frequency'   => 'required_with:recurring|in:DAILY,WEEKLY,MONTHLY,YEARLY',
-            // 'recurring.until'       => 'required_with:recurring|date',
+            'recurring.until'       => 'nullable|date',
 
             // Opsional sesuai frequency
             'recurring.by_day'        => 'nullable|array',
