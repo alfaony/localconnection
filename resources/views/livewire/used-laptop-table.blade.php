@@ -100,6 +100,11 @@
                             </td>
                             <td>
                                 <div class="btn-group">
+                                    @if($laptop->qr_code_path)
+                                    <a href="{{ Storage::url($laptop->qr_code_path) }}" download class="btn btn-sm btn-primary mr-1 mb-1">
+                                        <i class="fas fa-qrcode mr-1"></i>
+                                    </a>
+                                    @endif
                                     @canAccess('show','used_laptops')
                                     <a 
                                         href="{{ route('used-laptop.show', $laptop->slug) }}"

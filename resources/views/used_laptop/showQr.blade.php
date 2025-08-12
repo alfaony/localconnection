@@ -74,6 +74,7 @@
                 <div class="col-md-8">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h3 class="text-primary">{{ $laptop->name }}</h3>
+                        <p class="text-muted">Serial Number: {{ $laptop->serial_number }}</p>           
                         <div>
                             <span class="badge {{ $laptop->is_sold ? 'badge-success' : 'badge-secondary' }} p-2">
                                 {{ $laptop->is_sold ? 'Terjual' : 'Belum Terjual' }}
