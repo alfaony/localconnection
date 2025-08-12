@@ -35,7 +35,7 @@ class DailyTaskStoreRequest extends FormRequest
 
             'recurring' => 'nullable|array',
             'recurring.*.frequency' => 'required|string|in:DAILY,WEEKLY,MONTHLY,YEARLY',
-            'recurring.*.until' => 'required|date',
+            'recurring.*.until' => 'nullable|date',
 
             // WEEKLY: require by_day with values MO..SU
             'recurring.*.by_day' => 'required_if:recurring.*.frequency,WEEKLY|array|min:1',
