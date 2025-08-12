@@ -313,10 +313,10 @@ class DailyTaskController extends Controller
                 }
 
                 $dailyTask = new DailyTask();
-                $dailyTask->user_id = Auth::id();
                 $dailyTask->task_status_id = $status->id;
                 $dailyTask->start_date = $startDates ?? NULL; 
                 $dailyTask->end_date = $endDates ?? NULL;
+                $dailyTask->user_id = $request->user_id ?? Auth::id();
                 $dailyTask->assignment_user_id = $assignmentUserIds ?? NULL;
                 $dailyTask->daily_task_category_id = $categoryIds;
                 $dailyTask->daily_task_type_id = $typeIds;

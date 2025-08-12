@@ -61,7 +61,7 @@ class DailyTaskStoreApiRequest extends FormRequest
 
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
-
+            'user_id' => 'required|uuid|exists:users,id',
             'assignment_user_id' => 'required|uuid|exists:users,id',
             'category_id' => 'required|string|exists:daily_task_categories,id',
             'type_id' => 'required|uuid|exists:daily_task_types,id',
