@@ -9,6 +9,7 @@ use App\Http\Controllers\API\CustomerController;
 use App\Http\Controllers\API\QuoteController;
 use App\Http\Controllers\API\WorkOrderController;
 use App\Http\Controllers\API\AgreementLetterController;
+use App\Http\Controllers\MikrotikController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,4 +40,12 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
     Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');;
     Route::resource('agreement-letter', AgreementLetterController::class);
+
+});
+
+Route::group(['middleware' => ['auth:api']], function() 
+{
+    Route::post('provision', [MikrotikController::class, 'provision']);   
+    Route::post('cut', [MikrotikController::class, 'cut']);
+    Route::post('restore', [MikrotikController::class, 'restore']);
 });
