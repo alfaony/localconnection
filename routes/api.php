@@ -54,5 +54,5 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
     // Route::post('dailytask/{slug}/approve', [DailyTaskController::class, 'approvement']);
     // Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);
-    // Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');
+    Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');
 });
