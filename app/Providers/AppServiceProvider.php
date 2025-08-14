@@ -87,7 +87,7 @@ class AppServiceProvider extends ServiceProvider
             $managementRequestItemMenu = ['item_requests'];
             $managementUsedMenu = ['master_check_items','used_laptops','used_items'];
             $internetManagementMenu = ['data_centers', 'pops','optical_distributions','coverage_services','internet_packages', 'internet_customers','promos'];
-            $settingMenu = ['setting_companies','roles'];
+            $settingMenu = ['setting_companies','roles','webhook_settings'];
             
             $managementCompanyMenu = 
             [
@@ -622,6 +622,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'promo.index',
                     'icon' => 'fa fa-tags',
                 ],
+                'webhook_settings' => 
+                [
+                    'text' => 'Pengaturan Webhook',
+                    'route' => 'webhook-setting',
+                    'icon' => 'fa fa-cogs',
+                ]
 
             ];
 
