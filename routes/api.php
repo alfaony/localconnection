@@ -39,25 +39,20 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::get('quote/downloadPdf/pdf/{slug}',[QuoteController::class,'downloadPdf']);
     Route::resource('quote', QuoteController::class);
     
-    // Route::get('work-order/downloadPdf/pdf/{slug}',[WorkOrderController::class,'downloadPdf']);
-    // Route::resource('work-order', WorkOrderController::class);
+    Route::get('work-order/downloadPdf/pdf/{slug}',[WorkOrderController::class,'downloadPdf']);
+    Route::resource('work-order', WorkOrderController::class);
 
-    // Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');;
-    // Route::resource('agreement-letter', AgreementLetterController::class);
+    Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');;
+    Route::resource('agreement-letter', AgreementLetterController::class);
 
-    // Route::resource('dailytask', DailyTaskController::class);
-    // Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
-    // Route::put('dailytask/report/{slug}', [DailyTaskController::class, 'report']);
+    Route::resource('dailytask', DailyTaskController::class);
+    Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
+    Route::put('dailytask/report/{slug}', [DailyTaskController::class, 'report']);
 
-    // Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
+    Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
 
-    // Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
-    // // Route::post('dailytask/{slug}/approve', [DailyTaskController::class, 'approvement']);
-    // // Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);
-    // // Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');
+    Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
+    // Route::post('dailytask/{slug}/approve', [DailyTaskController::class, 'approvement']);
+    // Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);
+    // Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');
 });
-
-
-// Route::post('test',function(Request $request){
-//     return true;
-// });
