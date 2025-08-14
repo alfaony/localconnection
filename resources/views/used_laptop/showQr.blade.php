@@ -73,7 +73,11 @@
                 <!-- Kolom Kiri: Detail Utama -->
                 <div class="col-md-8">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h3 class="text-primary">{{ $laptop->name }}</h3>
+                    <div class="mr-auto">
+                        <h3 class="text-primary mb-0">{{ $laptop->name }}</h3>
+                        <p class="text-secondary mt-0 mb-0"><strong>Serial Number:</strong> {{ $laptop->serial_number }}</p>
+                        <p class="text-secondary mt-0 mb-0"><strong>Brand:</strong> {{ $laptop->brand }}</p>
+                    </div>          
                         <div>
                             <span class="badge {{ $laptop->is_sold ? 'badge-success' : 'badge-secondary' }} p-2">
                                 {{ $laptop->is_sold ? 'Terjual' : 'Belum Terjual' }}
@@ -253,7 +257,7 @@
                                     <h5 class="text-primary mb-1">Harga Jual Disarankan</h5>
                                 </div>
                                 <div class="h5 text-success font-weight-bold">
-                                    Rp {{ number_format($laptop->suggested_selling_price) }}
+                                    Rp {{ number_format($laptop->suggested_selling_price,0,',','.') }}
                                 </div>
                             </div>
                         </div>

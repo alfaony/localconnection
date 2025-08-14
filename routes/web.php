@@ -120,6 +120,7 @@ use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
+use App\Http\Livewire\WebhookSettingTable;
 
 
 
@@ -579,6 +580,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('promo/create', PromoForm::class)->name('promo.create');
   Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
 });
+  Route::get('webhook-setting', WebhookSettingTable::class);
 
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');

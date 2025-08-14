@@ -13,5 +13,6 @@ class UsedItemMedia extends Model
     {
         return $this->belongsTo(UsedItem::class);
     }
+
 }
 

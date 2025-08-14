@@ -37,6 +37,13 @@
                                value="{{ old('name', $laptop->name ?? '') }}"
                                placeholder="Contoh: MacBook Pro 2020" required>
                     </div>
+
+                    <div class="form-group">
+                        <label for="name">Merk <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="brand" name="brand" 
+                               value="{{ old('brand', $laptop->brand ?? '') }}"
+                               placeholder="Apple" required>
+                    </div>
                     
                     <div class="form-group">
                         <label for="serial_number">Serial Number <span class="text-danger">*</span></label>
@@ -120,10 +127,10 @@
                     <label>Foto Saat Ini:</label>
                     <div class="row">
                         @foreach($laptop->media as $media)
-                        <div class="col-md-2 mb-3 photo-wrapper position-relative">
-                            <img src="{{ Storage::url($media->file_path) }}" class="img-thumbnail photo-preview w-100" style="object-fit: cover;">
-                            <button type="button" class="btn btn-danger btn-sm" 
-                                    style="position: absolute; top: 4px; right: 4px; border-radius: 50%; padding: 2px 6px;"
+                        <div class="col-md-2 mb-3 position-relative">
+                            <img src="{{ Storage::url($media->file_path) }}" class="img-thumbnail photo-preview">
+                            <button type="button" class="btn btn-danger btn-sm position-absolute" 
+                                    style="top: -10px; right: -10px; border-radius: 50%; padding: 2px 8px;"
                                     data-toggle="modal" data-target="#deletePhotoModal" 
                                     data-media-id="{{ $media->id }}">
                                 <i class="fas fa-times"></i>
@@ -345,15 +352,6 @@
             background-color: #f8f9fa;
             border-left: 4px solid #dc3545;
         }
-        .photo-wrapper {
-            aspect-ratio: 1/1; /* agar square */
-            overflow: hidden;
-        }
-
-        .photo-wrapper img {
-            height: 100%;
-            object-fit: cover;
-        }
     </style>
 @stop
 
@@ -434,11 +432,10 @@
                     const div = document.createElement('div');
                     div.className = 'col-md-2 mb-3';
                     div.innerHTML = `
-                        <div class="photo-wrapper position-relative new-photo">
-                            <img src="${e.target.result}" class="img-thumbnail photo-preview w-100" style="object-fit: cover;">
-                            <button type="button" class="btn btn-danger btn-sm remove-new-photo" 
-                                    style="position: absolute; top: 4px; right: 4px; border-radius: 50%; padding: 2px 6px;"
-                                    data-index="${index}">
+                        <div class="position-relative">
+                            <img src="${event.target.result}" class="img-thumbnail photo-preview">
+                            <button type="button" class="btn btn-danger btn-sm position-absolute" 
+                                    style="top: -10px; right: -10px; border-radius: 50%; padding: 2px 8px;">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -506,7 +503,7 @@
         
         // Remove photo preview
         document.addEventListener('click', function(e) {
-            if (e.target && e.target.closest('.btn-danger') && e.target.closest('.position-absolute') && e.target.closest('.remove-new-photo')) {
+            if (e.target && e.target.closest('.btn-danger') && e.target.closest('.position-absolute')) {
                 const photoPreview = e.target.closest('.col-md-2');
                 if (photoPreview) {
                     photoPreview.remove();
