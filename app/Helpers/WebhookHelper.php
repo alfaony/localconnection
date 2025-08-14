@@ -19,7 +19,7 @@ class WebhookHelper
                 event:     $event // atau 'created'
             );
         } catch (\Throwable $e) {
-            dd($e);
+            // dd($e);
             Log::error('Webhook error', [
                 'exception' => $e,
             ]);
