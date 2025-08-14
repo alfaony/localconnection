@@ -579,7 +579,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('promo', PromoIndex::class)->name('promo.index');
   Route::get('promo/create', PromoForm::class)->name('promo.create');
   Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
-  Route::get('webhook-setting', WebhookSettingTable::class);
+  Route::get('webhook-setting', WebhookSettingTable::class)->name('webhook-setting.index');
 });
 
 

@@ -625,7 +625,7 @@ class AppServiceProvider extends ServiceProvider
                 'webhook_settings' => 
                 [
                     'text' => 'Pengaturan Webhook',
-                    'route' => 'webhook-setting',
+                    'route' => 'webhook-setting.index',
                     'icon' => 'fa fa-cogs',
                 ]
 
