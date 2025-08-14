@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 
 use App\Helpers\WebhookHelper;
-use App\Resources\UsedLaptopResource;
 
 class UsedLaptopController extends Controller
 {
@@ -58,6 +57,7 @@ class UsedLaptopController extends Controller
             // Validasi data utama laptop
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
+                'brand' => 'required|string|max:255',
                 'serial_number' => 'required|string|max:255',
                 'processor' => 'required|string|max:255',
                 'ram' => 'required|string|max:255',
@@ -76,6 +76,7 @@ class UsedLaptopController extends Controller
             // Simpan data laptop
             $laptop = new UsedLaptop();
             $laptop->company_id = Auth::user()->company_id;
+            $laptop->brand = $validated['brand'];
             $laptop->user_id = Auth::user()->id;
             $laptop->name = $validated['name'];
             $laptop->serial_number = $validated['serial_number'];
@@ -136,16 +137,26 @@ class UsedLaptopController extends Controller
                 }
             }
 
-            $shouldRun = WebhookSetting::byCompany(Auth::user()->company_id)
-            ->hasApp($this->appName)
-            ->exists();
-            if($shouldRun)
-            {
-                $payload = new UsedLaptopResource($laptop);
-                dd($payload);
+            $payload = [
+                'id' => $laptop->id,
+                'is_sold' => $laptop->is_sold,
+                'serial_number' => $laptop->serial_number,
+                'brand' => $laptop->brand,
+                'slug' => $laptop->slug,
+                'name' => $laptop->name,
+                'processor' => $laptop->processor,
+                'ram' => $laptop->ram,
+                'ssd' => $laptop->ssd,
+                'gpu' => $laptop->gpu,
+                'operating_system' => $laptop->operating_system,
+                'notes' => $laptop->notes,
+                'selling_price' => $laptop->suggested_selling_price,
+                'images' => $laptop->media()->get()->map(function ($media) {
+                    return env('APP_URL') . Storage::url($media->file_path);
+                })->toArray(),
+            ];
 
-                WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'store', $payload);                               
-            }
+            WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'store', $payload);                               
             
             DB::commit();
             
@@ -219,6 +230,27 @@ class UsedLaptopController extends Controller
                 'sold_at' => $request->sold_at,
             ]);
             
+            $payload = [
+                'id' => $laptop->id,
+                'is_sold' => $laptop->is_sold,
+                'serial_number' => $laptop->serial_number,
+                'brand' => $laptop->brand,
+                'slug' => $laptop->slug,
+                'name' => $laptop->name,
+                'processor' => $laptop->processor,
+                'ram' => $laptop->ram,
+                'ssd' => $laptop->ssd,
+                'gpu' => $laptop->gpu,
+                'operating_system' => $laptop->operating_system,
+                'notes' => $laptop->notes,
+                'selling_price' => $laptop->suggested_selling_price,
+                'images' => $laptop->media()->get()->map(function ($media) {
+                    return env('APP_URL') . Storage::url($media->file_path);
+                })->toArray(),
+            ];
+
+            WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'sold', $payload);    
+
             DB::commit();
             return redirect()->route('used-laptop.show', $laptop->slug)->with('success', 'Laptop berhasil ditandai sebagai terjual!');
         } catch (\Exception $e) {
@@ -243,6 +275,7 @@ class UsedLaptopController extends Controller
             // Validasi data utama laptop
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
+                'brand' => 'required|string|max:255',
                 'processor' => 'required|string|max:255',
                 'ram' => 'required|string|max:255',
                 'ssd' => 'required|string|max:255',
@@ -260,6 +293,7 @@ class UsedLaptopController extends Controller
             if ($laptop) {
                 $laptop->update([
                     'name' => $validated['name'],
+                    'brand' => $validated['brand'],
                     'processor' => $validated['processor'],
                     'ram' => $validated['ram'],
                     'ssd' => $validated['ssd'],
@@ -271,6 +305,7 @@ class UsedLaptopController extends Controller
             } else {
                 $laptop = UsedLaptop::create([
                     'name' => $validated['name'],
+                    'brand' => $validated['brand'],
                     'processor' => $validated['processor'],
                     'ram' => $validated['ram'],
                     'ssd' => $validated['ssd'],
@@ -346,8 +381,24 @@ class UsedLaptopController extends Controller
 
             if($shouldRun)
             {
-                $payload = new UsedLaptopResource($laptop);
-                dd($payload);
+                $payload = [
+                    'id' => $laptop->id,
+                    'is_sold' => $laptop->is_sold,
+                    'serial_number' => $laptop->serial_number,
+                    'brand' => $laptop->brand,
+                    'slug' => $laptop->slug,
+                    'name' => $laptop->name,
+                    'processor' => $laptop->processor,
+                    'ram' => $laptop->ram,
+                    'ssd' => $laptop->ssd,
+                    'gpu' => $laptop->gpu,
+                    'operating_system' => $laptop->operating_system,
+                    'notes' => $laptop->notes,
+                    'selling_price' => $laptop->suggested_selling_price,
+                    'images' => $laptop->media()->get()->map(function ($media) {
+                        return env('APP_URL') . Storage::url($media->file_path);
+                    })->toArray(),
+                ];
 
                 WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'update', $payload);                
             }
@@ -367,7 +418,13 @@ class UsedLaptopController extends Controller
     public function destroy($slug)
     {
         $laptop = UsedLaptop::where('slug', $slug)->firstOrFail();
+        $payload = [
+            'id' => $laptop->id,
+        ];
         $laptop->delete();
+
+
+        WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'delete', $payload);  
         return redirect()->route('used-laptop.index')->with('success', 'Laptop berhasil dihapus!');
     }
 
