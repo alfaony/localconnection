@@ -7,12 +7,17 @@ use App\Models\MasterCheckItem;
 use App\Models\UsedLaptopMedia;
 use App\Models\UsedLaptopCheck;
 use App\Models\UsedLaptopRepair;
+use App\Models\WebhookSetting;
 
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
+
+use App\Helpers\WebhookHelper;
+use App\Resources\UsedLaptopResource;
 
 class UsedLaptopController extends Controller
 {
@@ -21,6 +26,8 @@ class UsedLaptopController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    protected $appName = 'used_laptops';
+
     public function index()
     {
         return view('used_laptop.index');
@@ -45,6 +52,7 @@ class UsedLaptopController extends Controller
      */
     public function store(Request $request)
     {
+        
         DB::beginTransaction();
         try {
             // Validasi data utama laptop
@@ -64,6 +72,7 @@ class UsedLaptopController extends Controller
                 'repairs' => 'nullable|array',
             ]);
 
+            // dd()
             // Simpan data laptop
             $laptop = new UsedLaptop();
             $laptop->company_id = Auth::user()->company_id;
@@ -126,6 +135,17 @@ class UsedLaptopController extends Controller
                     ]);
                 }
             }
+
+            $shouldRun = WebhookSetting::byCompany(Auth::user()->company_id)
+            ->hasApp($this->appName)
+            ->exists();
+            if($shouldRun)
+            {
+                $payload = new UsedLaptopResource($laptop);
+                dd($payload);
+
+                WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'store', $payload);                               
+            }
             
             DB::commit();
             
@@ -180,18 +200,6 @@ class UsedLaptopController extends Controller
      public function update(Request $request, $slug)
     {
         $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
-        // $url = route('used-laptop.show-qr', $laptop->slug);
-
-        // $qrPng = QrCode::format('png')->size(300)->generate($url);
-
-        // // Simpan ke disk
-        // $filename = 'qr_laptop_' . $laptop->slug.'_'.$laptop->serial_number.'.png';
-        // Storage::put('public/qrcodes/' . $filename, $qrPng);
-
-        // // Simpan path untuk view
-        // $laptop->update([
-        //     'qr_code_path' => 'qrcodes/' . $filename,
-        // ]);
 
         if(!$laptop) 
         {
@@ -327,6 +335,23 @@ class UsedLaptopController extends Controller
                 UsedLaptopRepair::destroy($repairsToDelete);
             }
             
+            $shouldRun = WebhookSetting::byCompany(Auth::user()->company_id)
+            ->hasApp($this->appName)
+            ->exists();
+
+             $setting = WebhookSetting::byCompany(Auth::user()->company_id)
+            ->hasApp($this->appName)
+            ->first();
+
+
+            if($shouldRun)
+            {
+                $payload = new UsedLaptopResource($laptop);
+                dd($payload);
+
+                WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'update', $payload);                
+            }
+
             DB::commit();
             
             return redirect()->route('used-laptop.index')

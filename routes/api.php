@@ -9,6 +9,8 @@ use App\Http\Controllers\API\CustomerController;
 use App\Http\Controllers\API\QuoteController;
 use App\Http\Controllers\API\WorkOrderController;
 use App\Http\Controllers\API\AgreementLetterController;
+use App\Http\Controllers\API\UsedLaptopController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -39,4 +41,11 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
     Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');;
     Route::resource('agreement-letter', AgreementLetterController::class);
+
+    Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');
+});
+
+
+Route::post('test',function(Request $request){
+    return true;
 });
