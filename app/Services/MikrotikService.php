@@ -46,6 +46,7 @@ class MikrotikService {
         $rows = $this->client
             ->query((new Query('/ppp/active/print'))->where('name', $name))
             ->read();
+        // dd($rows);
         foreach ($rows as $r) {
             if (!empty($r['.id'])) {
                 $this->client

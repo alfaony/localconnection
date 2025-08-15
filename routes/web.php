@@ -103,6 +103,8 @@ use App\Http\Controllers\UsedLaptopController;
 use App\Http\Controllers\MasterCheckItemController;
 use App\Http\Controllers\UsedItemController;
 use App\Http\Controllers\MikrotikSecretController;
+use App\Http\Controllers\MikrotikProfileController;
+
 
 
 // LiveWired
@@ -584,8 +586,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
 Route::group(['middleware' => ['auth']], function()
 {
-    Route::resource('mikrotik-secrets', MikrotikSecretController::class);
-    Route::post('mikrotik/secrets/{username}/disconnect', [MikrotikSecretController::class, 'disconnect'])->name('mikrotik-secrets.disconnect');
+    Route::post('mikrotik/secrets/{username}/disconnect', [MikrotikSecretController::class, 'disconnect'])->name('mikrotik-secret.disconnect');
+    Route::post('mikrotik/secrets/{username}/reconnect', [MikrotikSecretController::class, 'reconnect'])->name('mikrotik-secret.reconnect');
+    Route::resource('mikrotik-profile', MikrotikProfileController::class);
+    Route::resource('mikrotik-secret', MikrotikSecretController::class);
 });
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');

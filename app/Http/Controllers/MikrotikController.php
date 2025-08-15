@@ -48,6 +48,7 @@ class MikrotikController extends Controller
 
         $mt = new MikrotikService($data['company_id']);
         $sec = $mt->secretFind($data['username']);
+        // dd($sec);
         if ($sec) {
             $mt->secretSet($sec['.id'], ['disabled' => 'yes']);
             $mt->activeDisconnectByName($data['username']);
