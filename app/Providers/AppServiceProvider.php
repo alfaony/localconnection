@@ -1087,7 +1087,7 @@ class AppServiceProvider extends ServiceProvider
             ];
 
             $sectionTokoOnline = [
-                'text'    => 'Manajemen Toko Online',
+                'text'    => 'Manajemen Toko & Online Store',
                 'submenu' => $managementTokoOnlineMenuArray,
             ];
 
