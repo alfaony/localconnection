@@ -47,12 +47,14 @@
                 <tr>
                     <td>{{ $secret['name'] ?? '-' }}</td>
                     <td>
+                        @if(isset($secret['service']))
                         <span class="badge bg-{{ 
                             $secret['service'] == 'pppoe' ? 'primary' : 
                             ($secret['service'] == 'pptp' ? 'info' : 'warning') 
                         }}">
                             {{ $secret['service'] ?? '-' }}
                         </span>
+                        @endif
                     </td>
                     <td>{{ $secret['profile'] ?? '-' }}</td>
                     <td>{{ $secret['remote-address'] ?? '-' }}</td>
