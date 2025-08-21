@@ -85,6 +85,7 @@ class UserController extends Controller
         $user = new User();
         $user->name = $request->post('name');
         $user->email = $request->post('email');
+        $user->email_gmail = $request->post('email_gmail');
         $user->phone = $request->post('phone');
         $user->role_id = $request->post('role') ?? Auth::user()->role_id;
         $user->company_id = $request->post('company') ?? Auth::user()->company_id;
@@ -215,6 +216,7 @@ class UserController extends Controller
     {        
         $user->name = $request->post('name');
         $user->email = $request->post('email');
+        $user->email_gmail = $request->post('email_gmail');
         $user->phone = $request->post('phone');
         $user->role_id = $request->post('role') ?? $user->role_id;
         $user->approvement_user_id = $request->post('approvement_user_id') ?? NULL;
@@ -342,6 +344,7 @@ class UserController extends Controller
         $user->address = $request->post('address');
         $user->id_card = $request->post('id_card');
         $user->npwp_number = $request->post('npwp_number');
+        $user->email_gmail = $request->post('email_gmail');
 
         if ($request->hasFile('id_card_image')) 
         {

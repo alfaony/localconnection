@@ -200,7 +200,7 @@ class GoogleService
             // Tambahkan PIC (hanya satu, dari user_id)
             if ($meeting->user) 
             {
-                $attendees[] = ['email' => $meeting->user->email];
+                $attendees[] = ['email' => $meeting->user->email_gmail ? $meeting->user->email_gmail : $meeting->user->email];
             }
 
             // Waktu mulai dan akhir
