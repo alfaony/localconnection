@@ -57,82 +57,142 @@ class AppServiceProvider extends ServiceProvider
             $listMenu = [
                 // 'roles',
             ];
-            $managementRequestItemArray = array();
-            $managementCompanyArray = array();
-            $managementUsedArray = array();
-            $managementCompanyArray = array();
-            $managementSalesArray = array();
-            $managementObArray = array();
-            $equipmentMenuArray = array();
-            $taskMenuArray = array();
-            $securityMenuArray = array();
-            $productivityMenuArray = array();
-            $warehouseMenuArray = array();
-            $shippingMenuArray = array();
-            $wilayahMenuArray = array();
-            $productMenuArray = array();
-            $subcribetionMenuArray = array();
-            $internetManagementMenuArray = array();
-            $settingMenuArray = array();
+            // $managementRequestItemArray = array();
+            // $managementCompanyArray = array();
+            // $managementUsedArray = array();
+            // $managementCompanyArray = array();
+            // $managementSalesArray = array();
+            // $managementObArray = array();
+            // $equipmentMenuArray = array();
+            // $taskMenuArray = array();
+            // $securityMenuArray = array();
+            // $productivityMenuArray = array();
+            // $warehouseMenuArray = array();
+            // $shippingMenuArray = array();
+            // $wilayahMenuArray = array();
+            // $productMenuArray = array();
+            // $subcribetionMenuArray = array();
+            // $internetManagementMenuArray = array();
+            // $settingMenuArray = array();
 
-            $equipmentMenu = ['devices','equipment','equipment_reductions'];
-            $taskMenu = ['report_points','tasks','task_assigns'];
-            $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
-            $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
-            $warehouseMenu = ['sensors','warehouses','zones','racks'];
-            $shippingMenu = ['providers','shipping_rates','shipping_calculations'];
-            $wilayahMenu = ['provinces','cities','districts','subdistricts','postal_codes'];
-            $productMenu = ['pricelists','products','product_suppliers','supplier_categories'];
-            $subcribetionMenu = ['vehicles','subscribe_letters'];
-            $managementRequestItemMenu = ['item_requests'];
-            $managementUsedMenu = ['master_check_items','used_laptops','used_items'];
-            $internetManagementMenu = ['data_centers', 'pops','optical_distributions','coverage_services','internet_packages', 'internet_customers','promos'];
-            $settingMenu = ['setting_companies','roles'];
+            // $equipmentMenu = ['devices','equipment','equipment_reductions'];
+            // $taskMenu = ['report_points','tasks','task_assigns'];
+            // $securityMenu = ['assets','security_checks','cctv_checks','tickets'];
+            // $productivityMenu = ['report_productivities','project_dashboards','division_budgets','visions','divisions','objectives', 'daily_task_projects','daily_task_categories', 'dailytasks','trainings','ip_rights','sales_achievements'];
+            // $warehouseMenu = ['sensors','warehouses','zones','racks'];
+            // $shippingMenu = ['providers','shipping_rates','shipping_calculations'];
+            // $wilayahMenu = ['provinces','cities','districts','subdistricts','postal_codes'];
+            // $productMenu = ['pricelists','products','product_suppliers','supplier_categories'];
+            // $subcribetionMenu = ['vehicles','subscribe_letters'];
+            // $managementRequestItemMenu = ['item_requests'];
+            // $managementUsedMenu = ['master_check_items','used_laptops','used_items'];
+            // $internetManagementMenu = ['data_centers', 'pops','optical_distributions','coverage_services','internet_packages', 'internet_customers','promos'];
+            // $settingMenu = ['setting_companies','roles'];
             
-            $managementCompanyMenu = 
-            [
-                'meetings',
-                'moms',
-                'dashboard_weekly_reports',
-                'weekly_reports',
-                'flowcharts',
-                'ask_bos',
-                'decisions',
-                'dayoffs',
-                'kyes',
-                'partnership_agreements',
-                'national_holidays',
-                'employee_checkings',
-                'letter_submissions',
-                'positions',
-                'employees',
-                'users',
-                'companies',
-            ];
-            $managementSalesMenu = 
-            [
-                'managers',
-                // 'products',
-                'product_categories',
-                'customers',
-                'quotes',
-                'work_orders',
-                'agreement_letters',
-                'projects',
-                'supliers',
-                'report_projects',
-                'basts',
-                'invoices',
-                'reports',
+            // $managementCompanyMenu = 
+            // [
+            //     'meetings',
+            //     'moms',
+            //     'dashboard_weekly_reports',
+            //     'weekly_reports',
+            //     'flowcharts',
+            //     'ask_bos',
+            //     'decisions',
+            //     'dayoffs',
+            //     'kyes',
+            //     'partnership_agreements',
+            //     'national_holidays',
+            //     'employee_checkings',
+            //     'letter_submissions',
+            //     'positions',
+            //     'employees',
+            //     'users',
+            //     'companies',
+            // ];
+            // $managementSalesMenu = 
+            // [
+            //     'managers',
+            //     // 'products',
+            //     'product_categories',
+            //     'customers',
+            //     'quotes',
+            //     'work_orders',
+            //     'agreement_letters',
+            //     'projects',
+            //     'supliers',
+            //     'report_projects',
+            //     'basts',
+            //     'invoices',
+            //     'reports',
+            // ];
+
+            // $managementObMenu = 
+            // [
+            //     'attendances',
+            //     'shifting_obs',
+            //     'schedule_obs',
+            // ];
+
+            $managementUmumMenuArray = Array();
+            $managementKaryawanMenuArray = Array();
+            $managementInternetMenuArray = Array();
+            $managementTokoOnlineMenuArray = Array();
+            $managementGedungAsetMenuArray = Array();
+            $managementProduktifitasMenuArray = Array();
+            $managementPenjualanMenuArray = Array();
+            $managementMasterDataMenuArray = Array();
+            $managementSettingMenuArray = Array();
+
+            $managementUmumMenu = [
+                'meetings','moms','dashboard_weekly_reports','weekly_reports','flowcharts',
+                'ask_bos','decisions','partnership_agreements','national_holidays',
+                'letter_submissions','companies'
             ];
 
-            $managementObMenu = 
-            [
-                'attendances',
-                'shifting_obs',
-                'schedule_obs',
+            $managementKaryawanMenu = [
+                'employees','users','positions','managers','attendances',
+                'shifting_obs','schedule_obs','dayoffs','employee_checkings','trainings'
             ];
-            
+
+            $managementInternetMenu = 
+            [
+                'data_centers','pops','optical_distributions','coverage_services',
+                'internet_packages','internet_customers','promos'
+            ];
+
+            $managementTokoOnlineMenu = [
+                'pricelists','products','product_suppliers','supplier_categories',
+                'product_categories','supliers','customers','item_requests',
+                'providers','shipping_rates','shipping_calculations'
+            ];
+
+            $managementGedungMenu = 
+            [
+                'warehouses','zones','racks','sensors',
+                'assets','security_checks','cctv_checks','tickets',
+                'devices','equipment','equipment_reductions',
+                'master_check_items','used_laptops','used_items',
+                'vehicles','subscribe_letters'
+            ];
+
+            $managementProduktifitasMenu = [
+                'report_productivities','project_dashboards','division_budgets','visions',
+                'divisions','objectives','daily_task_projects','daily_task_categories',
+                'dailytasks','report_points','tasks','task_assigns',
+                'ip_rights','sales_achievements'
+            ];
+
+            $managementPenjualanMenu = 
+            [
+            'quotes','work_orders','agreement_letters','projects',
+            'report_projects','basts','invoices','reports'
+            ];
+
+            $managementMasterDataMenu = [
+            'provinces','cities','districts','subdistricts','postal_codes'
+            ];
+
+            $managementSettingMenu = ['setting_companies','roles'];
 
 
             $menus = [
@@ -625,237 +685,237 @@ class AppServiceProvider extends ServiceProvider
 
             ];
 
-            foreach ($listMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    $event->menu->add($menus[$role]);
-                }
-            }
+            // foreach ($listMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         $event->menu->add($menus[$role]);
+            //     }
+            // }
 
-            foreach ($managementSalesMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($managementSalesArray,$menus[$role]);
-                }
-            }
+            // foreach ($managementSalesMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($managementSalesArray,$menus[$role]);
+            //     }
+            // }
             
-            foreach ($managementCompanyMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($managementCompanyArray,$menus[$role]);
-                }
-            }
+            // foreach ($managementCompanyMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($managementCompanyArray,$menus[$role]);
+            //     }
+            // }
 
-            foreach ($managementObMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($managementObArray,$menus[$role]);
-                }
-            }
+            // foreach ($managementObMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($managementObArray,$menus[$role]);
+            //     }
+            // }
 
-            foreach ($equipmentMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($equipmentMenuArray,$menus[$role]);
-                }
-            }
+            // foreach ($equipmentMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($equipmentMenuArray,$menus[$role]);
+            //     }
+            // }
 
-            foreach ($taskMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($taskMenuArray,$menus[$role]);
-                }
-            }
+            // foreach ($taskMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($taskMenuArray,$menus[$role]);
+            //     }
+            // }
 
-            foreach ($securityMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($securityMenuArray,$menus[$role]);
-                }
-            }
+            // foreach ($securityMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($securityMenuArray,$menus[$role]);
+            //     }
+            // }
 
-            foreach ($productivityMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($productivityMenuArray,$menus[$role]);
-                }
-            }
+            // foreach ($productivityMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($productivityMenuArray,$menus[$role]);
+            //     }
+            // }
 
-            foreach ($warehouseMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($warehouseMenuArray,$menus[$role]);
-                }
-            }
-
-
-            foreach ($shippingMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($shippingMenuArray,$menus[$role]);
-                }
-            }
-
-            foreach ($wilayahMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($wilayahMenuArray,$menus[$role]);
-                }
-            }
-
-            foreach ($productMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($productMenuArray,$menus[$role]);
-                }
-            }
-
-            foreach ($subcribetionMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($subcribetionMenuArray,$menus[$role]);
-                }
-            }
-
-            foreach ($managementUsedMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($managementUsedArray,$menus[$role]);
-                }
-            }
-
-            foreach ($internetManagementMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($internetManagementMenuArray,$menus[$role]);
-                }
-            }
-
-            foreach ($managementRequestItemMenu as $role) 
-            {
-                if(in_array($role,['item_requests']) && Access::can("index", $role))
-                {
-                    array_push($managementRequestItemArray,$menus["list_sprinter"]);
-                }
-
-                if(Access::can("index", $role))
-                {
-                    array_push($managementRequestItemArray,$menus[$role]);
-                }
-            }
-
-            foreach ($settingMenu as $role) 
-            {
-                if(Access::can("index", $role))
-                {
-                    array_push($settingMenuArray,$menus[$role]);
-                }
-            }
-
-            $managementRequestItemMenu = 
-            [
-                'text'    => 'Manajemen Pengajuan Barang',
-                'submenu' => $managementRequestItemArray
-            ];
-
-            $managementSalesMenu = 
-            [
-                'text'    => 'Manajemen Penjualan',
-                'submenu' => $managementSalesArray
-            ];
+            // foreach ($warehouseMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($warehouseMenuArray,$menus[$role]);
+            //     }
+            // }
 
 
-            $productivityMenu = 
-            [
-                'text'    => 'Produktifitas',
-                'submenu' => $productivityMenuArray
-            ];
+            // foreach ($shippingMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($shippingMenuArray,$menus[$role]);
+            //     }
+            // }
 
-            $managementCompanyMenu = 
-            [
-                'text'    => 'Manajemen Perusahaan',
-                'submenu' => $managementCompanyArray
-            ];
+            // foreach ($wilayahMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($wilayahMenuArray,$menus[$role]);
+            //     }
+            // }
+
+            // foreach ($productMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($productMenuArray,$menus[$role]);
+            //     }
+            // }
+
+            // foreach ($subcribetionMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($subcribetionMenuArray,$menus[$role]);
+            //     }
+            // }
+
+            // foreach ($managementUsedMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($managementUsedArray,$menus[$role]);
+            //     }
+            // }
+
+            // foreach ($internetManagementMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($internetManagementMenuArray,$menus[$role]);
+            //     }
+            // }
+
+            // foreach ($managementRequestItemMenu as $role) 
+            // {
+                // if(in_array($role,['item_requests']) && Access::can("index", $role))
+                // {
+                //     array_push($managementRequestItemArray,$menus["list_sprinter"]);
+                // }
+
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($managementRequestItemArray,$menus[$role]);
+            //     }
+            // }
+
+            // foreach ($settingMenu as $role) 
+            // {
+            //     if(Access::can("index", $role))
+            //     {
+            //         array_push($settingMenuArray,$menus[$role]);
+            //     }
+            // }
+
+            // $managementRequestItemMenu = 
+            // [
+            //     'text'    => 'Manajemen Pengajuan Barang',
+            //     'submenu' => $managementRequestItemArray
+            // ];
+
+            // $managementSalesMenu = 
+            // [
+            //     'text'    => 'Manajemen Penjualan',
+            //     'submenu' => $managementSalesArray
+            // ];
+
+
+            // $productivityMenu = 
+            // [
+            //     'text'    => 'Produktifitas',
+            //     'submenu' => $productivityMenuArray
+            // ];
+
+            // $managementCompanyMenu = 
+            // [
+            //     'text'    => 'Manajemen Perusahaan',
+            //     'submenu' => $managementCompanyArray
+            // ];
             
-            $managementObMenu = 
-            [
-                'text'    => 'Manajemen OB',
-                'submenu' => $managementObArray
-            ];
+            // $managementObMenu = 
+            // [
+            //     'text'    => 'Manajemen OB',
+            //     'submenu' => $managementObArray
+            // ];
 
-            $equipmentMenu = 
-            [
-                'text'    => 'Perlengkapan',
-                'submenu' => $equipmentMenuArray
-            ];
+            // $equipmentMenu = 
+            // [
+            //     'text'    => 'Perlengkapan',
+            //     'submenu' => $equipmentMenuArray
+            // ];
 
-            $taskMenu = 
-            [
-                'text'    => 'Manajemen Pekerjaan',
-                'submenu' => $taskMenuArray
-            ];
+            // $taskMenu = 
+            // [
+            //     'text'    => 'Manajemen Pekerjaan',
+            //     'submenu' => $taskMenuArray
+            // ];
 
-            $usedMenu = 
-            [
-                'text'    => 'Manajemen Barang',
-                'submenu' => $managementUsedArray
-            ];
+            // $usedMenu = 
+            // [
+            //     'text'    => 'Manajemen Barang',
+            //     'submenu' => $managementUsedArray
+            // ];
 
-            $securityMenu = 
-            [
-                'text'    => 'Manajemen Keamanan',
-                'submenu' => $securityMenuArray
-            ];
+            // $securityMenu = 
+            // [
+            //     'text'    => 'Manajemen Keamanan',
+            //     'submenu' => $securityMenuArray
+            // ];
 
-            $warehouseMenu = [
-                'text'      => 'Daftar Gudang',
-                'submenu'   => $warehouseMenuArray
-            ];
+            // $warehouseMenu = [
+            //     'text'      => 'Daftar Gudang',
+            //     'submenu'   => $warehouseMenuArray
+            // ];
 
-            $shippingMenu = [
-                'text'      => 'Manajemen Pengiriman',
-                'submenu'   => $shippingMenuArray
-            ];
+            // $shippingMenu = [
+            //     'text'      => 'Manajemen Pengiriman',
+            //     'submenu'   => $shippingMenuArray
+            // ];
 
-            $wilayahMenu = [
-                'text'      => 'Wilayah',
-                'submenu'   => $wilayahMenuArray    
-            ];
+            // $wilayahMenu = [
+            //     'text'      => 'Wilayah',
+            //     'submenu'   => $wilayahMenuArray    
+            // ];
 
-            $productMenu = [
-                'text'      => 'Manajemen Produk',
-                'submenu'   => $productMenuArray    
-            ];
+            // $productMenu = [
+            //     'text'      => 'Manajemen Produk',
+            //     'submenu'   => $productMenuArray    
+            // ];
 
-            $subcribetionMenu = [
-                'text'      => 'Manajemen Perpanjangan',
-                'submenu'   => $subcribetionMenuArray    
-            ];
+            // $subcribetionMenu = [
+            //     'text'      => 'Manajemen Perpanjangan',
+            //     'submenu'   => $subcribetionMenuArray    
+            // ];
 
-            $internetManagementMenu = [
-                'text'      => 'Manajemen Internet',
-                'submenu'   => $internetManagementMenuArray    
-            ];
+            // $internetManagementMenu = [
+            //     'text'      => 'Manajemen Internet',
+            //     'submenu'   => $internetManagementMenuArray    
+            // ];
 
-            $settingMenu = [
-                'text'      => 'Setting',
-                'submenu'   => $settingMenuArray    
-            ];
+            // $settingMenu = [
+            //     'text'      => 'Setting',
+            //     'submenu'   => $settingMenuArray    
+            // ];
 
 
             // if($managementCompanyMenu['submenu'] )
@@ -934,71 +994,142 @@ class AppServiceProvider extends ServiceProvider
             // }
 
             //refactor
-            $masterMenu = [
-                [
-                    'text' => 'Dashboard',
-                    'url'  => 'home',
-                    'icon' => 'fa fa-home',
-                ],
-                [
-                    'text' => 'Manajemen Umum',
-                    'submenu' => [
-                        $managementCompanyMenu,
-                        $wilayahMenu,
-                        $warehouseMenu,
-                        $subcribetionMenu
-                    ]
-                ],
-                [
-                    'text' => 'Manajemen Produk & Barang',
-                    'submenu' => [
-                        $productMenu,
-                        $usedMenu,
-                        $managementRequestItemMenu,
-                        $equipmentMenu
-                    ]
-                ],
-                [
-                    'text' => 'Operasional & Penjualan',
-                    'submenu' => [
-                        $managementSalesMenu,
-                        $shippingMenu,
-                        $managementObMenu,
-                        $taskMenu,
-                        $productivityMenu
-                    ]
-                ],
-                [
-                    'text' => 'Keamanan & Internet',
-                    'submenu' => [
-                        $securityMenu,
-                        $internetManagementMenu
-                    ]
-                ],
-                [
-                    'text' => 'Setting',
-                    'submenu' => [
-                        $settingMenu
-                    ]
-                ]
+            // $masterMenu = [
+            //     [
+            //         'text' => 'Dashboard',
+            //         'url'  => 'home',
+            //         'icon' => 'fa fa-home',
+            //     ],
+            //     [
+            //         'text' => 'Manajemen Umum',
+            //         'submenu' => [
+            //             $managementCompanyMenu,
+            //             $wilayahMenu,
+            //             $warehouseMenu,
+            //             $subcribetionMenu
+            //         ]
+            //     ],
+            //     [
+            //         'text' => 'Manajemen Produk & Barang',
+            //         'submenu' => [
+            //             $productMenu,
+            //             $usedMenu,
+            //             $managementRequestItemMenu,
+            //             $equipmentMenu
+            //         ]
+            //     ],
+            //     [
+            //         'text' => 'Operasional & Penjualan',
+            //         'submenu' => [
+            //             $managementSalesMenu,
+            //             $shippingMenu,
+            //             $managementObMenu,
+            //             $taskMenu,
+            //             $productivityMenu
+            //         ]
+            //     ],
+            //     [
+            //         'text' => 'Keamanan & Internet',
+            //         'submenu' => [
+            //             $securityMenu,
+            //             $internetManagementMenu
+            //         ]
+            //     ],
+            //     [
+            //         'text' => 'Setting',
+            //         'submenu' => [
+            //             $settingMenu
+            //         ]
+            //     ]
+            // ];
+
+            // ====== Helper: build submenu dari daftar role ======
+            $buildSubmenu = function(array $roles) use ($menus) {
+                $result = [];
+                foreach ($roles as $role) {
+                    if(in_array($role,['item_requests']) && Access::can("index", $role))
+                    {
+                        $result[] = $menus["list_sprinter"]; // atau array_push($result, $menus[$role]);
+                    }
+
+                    if (Access::can('index', $role) && isset($menus[$role])) {
+                        $result[] = $menus[$role]; // atau array_push($result, $menus[$role]);
+                    }
+                }
+                return $result;
+            };
+
+            // ====== Bangun masing-masing submenu ======
+            $managementUmumMenuArray          = $buildSubmenu($managementUmumMenu);
+            $managementKaryawanMenuArray      = $buildSubmenu($managementKaryawanMenu);
+            $managementInternetMenuArray      = $buildSubmenu($managementInternetMenu);
+            $managementTokoOnlineMenuArray    = $buildSubmenu($managementTokoOnlineMenu);
+            $managementGedungMenuArray        = $buildSubmenu($managementGedungMenu);
+            $managementProduktifitasMenuArray = $buildSubmenu($managementProduktifitasMenu);
+            $managementPenjualanMenuArray     = $buildSubmenu($managementPenjualanMenu);
+            $managementMasterDataMenuArray    = $buildSubmenu($managementMasterDataMenu);
+            $managementSettingMenuArray       = $buildSubmenu($managementSettingMenu);
+
+            // ====== Definisi section menu (judul + submenu) ======
+            $sectionUmum = [
+                'text'    => 'Manajemen Umum',
+                'submenu' => $managementUmumMenuArray,
             ];
 
-            foreach ($masterMenu as $menuGroup) {
-                // Cek apakah punya submenu
-                if (isset($menuGroup['submenu'])) {
-                    // Filter submenu yang tidak kosong
-                    $filteredSubmenu = array_filter($menuGroup['submenu'], function ($subMenuItem) {
-                        return isset($subMenuItem['submenu']) && !empty($subMenuItem['submenu']);
-                    });
-    
-                    // Tambahkan hanya jika masih ada submenu yang valid
-                    if (!empty($filteredSubmenu)) {
-                        $menuGroup['submenu'] = $filteredSubmenu;
-                        $event->menu->add($menuGroup);
-                    }
-                } else {
-                    // Menu tanpa submenu (misalnya dashboard)
-                    $event->menu->add($menuGroup);
+            $sectionKaryawan = [
+                'text'    => 'Manajemen Karyawan',
+                'submenu' => $managementKaryawanMenuArray,
+            ];
+
+            $sectionInternet = [
+                'text'    => 'Manajemen Internet',
+                'submenu' => $managementInternetMenuArray,
+            ];
+
+            $sectionTokoOnline = [
+                'text'    => 'Manajemen Toko & Online Store',
+                'submenu' => $managementTokoOnlineMenuArray,
+            ];
+
+            $sectionGedung = [
+                'text'    => 'Manajemen Gedung & Aset',
+                'submenu' => $managementGedungMenuArray,
+            ];
+
+            $sectionProduktifitas = [
+                'text'    => 'Produktifitas',
+                'submenu' => $managementProduktifitasMenuArray,
+            ];
+
+            $sectionPenjualan = [
+                'text'    => 'Manajemen Penjualan',
+                'submenu' => $managementPenjualanMenuArray,
+            ];
+
+            $sectionMasterData = [
+                'text'    => 'Master Data',
+                'submenu' => $managementMasterDataMenuArray,
+            ];
+
+            $sectionSetting = [
+                'text'    => 'Setting',
+                'submenu' => $managementSettingMenuArray,
+            ];
+
+            // ====== Add ke $event->menu hanya jika ada isi ======
+            foreach ([
+                $sectionUmum,
+                $sectionKaryawan,
+                $sectionInternet,
+                $sectionTokoOnline,
+                $sectionGedung,
+                $sectionProduktifitas,
+                $sectionPenjualan,
+                $sectionMasterData,
+                $sectionSetting,
+            ] as $section) {
+                if (!empty($section['submenu'])) {
+                    $event->menu->add($section);
                 }
             }
         });
