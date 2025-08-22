@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -124,6 +125,8 @@ use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
+use App\Http\Livewire\Mikrotik\MikrotikForm;
+use App\Http\Livewire\Mikrotik\MikrotikIndex;
 
 
 
@@ -586,6 +589,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
 Route::group(['middleware' => ['auth']], function()
 {
+  Route::get('router', MikrotikIndex::class)->name('router.index');
+  Route::get('router/create', MikrotikForm::class)->name('router.create');
+  Route::get('router/edit/{mikrotik}', MikrotikForm::class)->name('router.edit');
     Route::post('mikrotik/secrets/{username}/disconnect', [MikrotikSecretController::class, 'disconnect'])->name('mikrotik-secret.disconnect');
     Route::post('mikrotik/secrets/{username}/reconnect', [MikrotikSecretController::class, 'reconnect'])->name('mikrotik-secret.reconnect');
     Route::resource('mikrotik-profile', MikrotikProfileController::class);

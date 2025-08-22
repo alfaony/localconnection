@@ -10,6 +10,9 @@ use App\Models\InternetPackage;
 use App\Models\User;
 use App\Models\InternetCustomerInstallation;
 use App\Models\InternetCustomerPurchase;
+use App\Models\JobsProvisioning;
+use App\Jobs\ProvisionCustomerJob;
+
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +27,7 @@ class InternetCustomerIndex extends Component
     use WithPagination;
     use WithFileUploads;
     protected $paginationTheme = 'bootstrap';
+    
 
     public $search = '';
     public $perPage = 10;
@@ -45,6 +49,8 @@ class InternetCustomerIndex extends Component
     public $installationModal = false;
     public $currentInstallationCustomer;
     public $isSubmitting = false;
+
+    public $plain_password = null; // di-bind dari modal/input ketika activate
 
     public $canApprove;
     public $canTechnical;
@@ -322,6 +328,74 @@ class InternetCustomerIndex extends Component
         ])->extends('adminlte::page');
     }
 
+    public function activate(string $id)
+    {
+        // validasi opsional: minta password plaintext saat pertama kali create secret
+        $this->validate([
+            'plain_password' => ['nullable','string','min:6','max:64'],
+        ]);
+
+        try {
+            $cust = InternetCustomer::findOrFail($id);
+            // Hindari kerja sia-sia kalau sudah active
+            if ($cust->status === 'active') {
+                $this->dispatchBrowserEvent('toast', ['type'=>'info','message'=>'Customer already active']);
+                return;
+            }
+    
+            // Update status dulu (SoT = DB)
+            $cust->update(['status' => 'active']);
+    
+            // (opsional) catat log provisioning khusus
+            JobsProvisioning::create([
+                'type' => JobsProvisioning::TYPE_PROVISION,
+                'internet_customer_id' => $cust->id,
+                'router_id' => $cust->router_id,
+                'status' => JobsProvisioning::STATUS_QUEUED,
+                'payload' => [
+                    'initial_plain_password' => $this->plain_password,
+                ],
+            ]);
+    
+            dd("here");
+            // Dispatch job ke queue (pass plaintext hanya saat create secret pertama)
+            dispatch(new ProvisionCustomerJob($cust->id, $this->plain_password));
+            dd("ok");
+    
+            // Kosongkan field password input agar tidak tersisa di memori form
+            $this->plain_password = null;
+    
+            $this->dispatchBrowserEvent('toast', ['type'=>'success','message'=>'Activated & provisioning dispatched']);
+        } catch (\Throwable $th) {
+            //throw $th;
+            dd($th);
+        }
+    }
+
+    public function suspend(string $id)
+    {
+        $cust = InternetCustomer::findOrFail($id);
+
+        if ($cust->status === 'suspended') {
+            $this->dispatchBrowserEvent('toast', ['type'=>'info','message'=>'Customer already suspended']);
+            return;
+        }
+
+        $cust->update(['status' => 'suspended']);
+
+        JobsProvisioning::create([
+            'type' => JobsProvisioning::TYPE_SUSPEND,
+            'internet_customer_id' => $cust->id,
+            'router_id' => $cust->router_id,
+            'status' => JobsProvisioning::STATUS_QUEUED,
+            'payload' => null,
+        ]);
+
+        dispatch(new ProvisionCustomerJob($cust->id));
+
+        $this->dispatchBrowserEvent('toast', ['type'=>'success','message'=>'Suspension dispatched']);
+    }
+
     private function sentInbox($to,$message,$directUrl)
     {
         $inboxHelper = new InboxHelper();
@@ -333,6 +407,7 @@ class InternetCustomerIndex extends Component
         );
         return true;
     }
+    
 
     // Tambahkan fungsi lainnya (delete, edit, dll) sesuai kebutuhan
 }

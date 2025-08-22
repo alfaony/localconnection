@@ -43,7 +43,17 @@ class InternetCustomer extends Model
         'ktp_photo',
         'is_paid',
         'status',
-        'promo_id'
+        'promo_id',
+        'router_id',
+        'access_type',
+        'username',
+        'pass_hash',
+        'ip_address',
+        'mac_address',
+        'vlan_id',
+        'expires_at',
+        'ros_comment_uuid',
+        'meta',
     ];
 
     // ✅ RELATIONS
@@ -79,7 +89,7 @@ class InternetCustomer extends Model
 
     public function internetPackage()
     {
-        return $this->belongsTo(InternetPackage::class);
+        return $this->belongsTo(InternetPackage::class, 'internet_package_id')->withTrashed();
     }
 
     public function promo()
@@ -90,6 +100,11 @@ class InternetCustomer extends Model
     public function partnershipAgreement()
     {
         return $this->belongsTo(PartnershipAgreement::class);
+    }
+
+    public function router()
+    {
+        return $this->belongsTo(Router::class);
     }
 
      public function installation()

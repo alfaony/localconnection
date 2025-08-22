@@ -122,6 +122,8 @@ class ParamSchema
 
     const EXTERNAL = "external";
 
+    const UP = 'UP';
+
     // Schemas
     const PERJANJIAN_INTERNET = "perjanjian_berlangganan_internet";
 

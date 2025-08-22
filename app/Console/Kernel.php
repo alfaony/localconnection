@@ -20,6 +20,14 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        // SYNC Router
+        foreach (\App\Models\Router::all() as $router) 
+        {
+            if($router->active == \App\Schemas\ParamSchema::UP)
+            {
+                $schedule->job(new \App\Jobs\SyncActiveSessionsJob($router->id))->everyFiveMinutes();
+            }
+        }
 
 
         // Tetapkan zona waktu Asia/Jakarta
