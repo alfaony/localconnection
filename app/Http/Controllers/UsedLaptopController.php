@@ -235,6 +235,7 @@ class UsedLaptopController extends Controller
             // Validasi data utama laptop
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
+                'serial_number' => 'required|string|max:255',
                 'processor' => 'required|string|max:255',
                 'ram' => 'required|string|max:255',
                 'ssd' => 'required|string|max:255',
@@ -251,6 +252,7 @@ class UsedLaptopController extends Controller
             // Simpan atau update data laptop
             if ($laptop) {
                 $laptop->update([
+                    'serial_number' => $validated['serial_number'],
                     'name' => $validated['name'],
                     'processor' => $validated['processor'],
                     'ram' => $validated['ram'],
