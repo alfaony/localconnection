@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Models\InternetCustomerInstallation;
 use App\Models\InternetCustomerPurchase;
 use App\Models\JobsProvisioning;
+use App\Models\Router;
+
 use App\Jobs\ProvisionCustomerJob;
 
 
@@ -18,6 +20,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log; 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+
 use App\Helpers\InboxHelper;
 use App\Helpers\Access;
 use App\Schemas\ParamSchema;
@@ -40,6 +44,11 @@ class InternetCustomerIndex extends Component
     public $dateTo = '';
     public $selectedCustomer = null;
     public $selectedPaymentProof;
+
+    public $routers = [];
+    public $routerId = null;
+    public $username = null;
+    public $password = null;
 
     public $currentInstallationId; 
     public $currentInstallationName;
@@ -71,6 +80,7 @@ class InternetCustomerIndex extends Component
     public function openInstallationModal($customerId)
     {
         $customer = InternetCustomer::find($customerId);
+        $ods = $customer->subdistrict?->coverageService?->coverageServiceOds ?? collect();
         
         $this->currentInstallationId = $customer->id;
         $this->currentInstallationName = $customer->name;
@@ -80,21 +90,31 @@ class InternetCustomerIndex extends Component
         $this->dispatchBrowserEvent('open-installation-modal', [
             'customerName' => $customer->name,
             'customerCode' => $customer->code,
-            'serialNumber' => $customer->device_serial_number ?? ''
+            'serialNumber' => $customer->device_serial_number ?? '',
+            'routers' => $customer->candidateRouters(),
         ]);
         
         $this->installationModal = true;
     }
 
     // Method untuk validasi dan submit
-    public function completeInstallation($serialNumber, $photos, $notes)
+    public function completeInstallation($serialNumber, $photos, $notes, $routerId, $username, $password)
     {
-        // Validasi tambahan
-        $this->validate([
+        Validator::make([
+            'currentInstallationId' => $this->currentInstallationId,
+            'serialNumber' => $serialNumber,
+            'photos' => $photos,
+            'routerId' => $routerId,
+            'username' => $username,
+            'password' => $password,
+        ], [
             'currentInstallationId' => 'required|exists:internet_customers,id',
             'photos' => 'required|array|min:1',
-            'photos.*' => 'image|max:10240' // Max 2MB per file
-        ]);
+            'photos.*' => 'required|string',
+            'routerId' => 'required|exists:routers,id',
+            'username' => 'required',
+            'password' => 'required',
+        ])->validate();
 
         try {
             // Upload foto
@@ -116,13 +136,15 @@ class InternetCustomerIndex extends Component
                 unlink($tmpPath);
             }
 
-            // dd($uploadedPaths);
-
             // Update data
             $customer = InternetCustomer::find($this->currentInstallationId);
             $customer->update([
-                'status' => ParamSchema::INSTALLED 
+                'status' => ParamSchema::INSTALLED, 
+                'router_id' => $routerId,
+                'username' => $username,
+                'password' => $password,
             ]);
+
             $customerInstallation = InternetCustomerInstallation::create([
                 'internet_customer_id' => $customer->id,
                 'photos' => json_encode($uploadedPaths),
@@ -131,6 +153,8 @@ class InternetCustomerIndex extends Component
                 'installed_at' => now(),
                 'technical_user_id' => Auth::id(),
             ]);
+
+            $this->activate($customer->id);
 
             // Reset form
             $this->reset([
@@ -149,6 +173,7 @@ class InternetCustomerIndex extends Component
             ]);
 
         } catch (\Exception $e) {
+            // dd($e);
             $this->dispatchBrowserEvent('show-notification', [
                 'type' => 'error',
                 'message' => 'Gagal menyimpan instalasi: ' . $e->getMessage()
@@ -324,11 +349,12 @@ class InternetCustomerIndex extends Component
             'finance_access' => Access::can('as_finance', 'internet_customers'),
             'technical_access' => Access::can('as_technician', 'internet_customers'),
             'internetCustomers' => $internetCustomers,
-            'packages' => $packages
+            'packages' => $packages,
+            'routers' => $this->routers
         ])->extends('adminlte::page');
     }
 
-    public function activate(string $id)
+    protected function activate(string $id)
     {
         // validasi opsional: minta password plaintext saat pertama kali create secret
         $this->validate([
@@ -338,10 +364,13 @@ class InternetCustomerIndex extends Component
         try {
             $cust = InternetCustomer::findOrFail($id);
             // Hindari kerja sia-sia kalau sudah active
-            if ($cust->status === 'active') {
-                $this->dispatchBrowserEvent('toast', ['type'=>'info','message'=>'Customer already active']);
-                return;
-            }
+            // if ($cust->status === 'active') {
+            //     $this->dispatchBrowserEvent('show-notification', [
+            //         'type' => 'success',
+            //         'message' => 'Customer sudah aktif'
+            //     ]);
+            //     return;
+            // }
     
             // Update status dulu (SoT = DB)
             $cust->update(['status' => 'active']);
@@ -353,22 +382,19 @@ class InternetCustomerIndex extends Component
                 'router_id' => $cust->router_id,
                 'status' => JobsProvisioning::STATUS_QUEUED,
                 'payload' => [
-                    'initial_plain_password' => $this->plain_password,
+                    'initial_plain_password' => $this->password,
                 ],
             ]);
     
-            dd("here");
-            // Dispatch job ke queue (pass plaintext hanya saat create secret pertama)
-            dispatch(new ProvisionCustomerJob($cust->id, $this->plain_password));
-            dd("ok");
+            dispatch(new ProvisionCustomerJob($cust->id, $this->password));
     
             // Kosongkan field password input agar tidak tersisa di memori form
-            $this->plain_password = null;
+            $this->password = null;
     
-            $this->dispatchBrowserEvent('toast', ['type'=>'success','message'=>'Activated & provisioning dispatched']);
+            return true;
+
         } catch (\Throwable $th) {
-            //throw $th;
-            dd($th);
+            throw $th;
         }
     }
 
@@ -377,7 +403,7 @@ class InternetCustomerIndex extends Component
         $cust = InternetCustomer::findOrFail($id);
 
         if ($cust->status === 'suspended') {
-            $this->dispatchBrowserEvent('toast', ['type'=>'info','message'=>'Customer already suspended']);
+            $this->dispatchBrowserEvent('show-notification', ['type'=>'info','message'=>'Customer already suspended']);
             return;
         }
 
@@ -393,7 +419,7 @@ class InternetCustomerIndex extends Component
 
         dispatch(new ProvisionCustomerJob($cust->id));
 
-        $this->dispatchBrowserEvent('toast', ['type'=>'success','message'=>'Suspension dispatched']);
+        $this->dispatchBrowserEvent('show-notification', ['type'=>'success','message'=>'Suspension dispatched']);
     }
 
     private function sentInbox($to,$message,$directUrl)

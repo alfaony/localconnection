@@ -129,6 +129,18 @@ class InternetCustomer extends Model
         return $this->hasMany(InternetCustomerPurchase::class);
     }
 
+    public function candidateRouters()
+    {
+        $ods = $this->subdistrict?->coverageService?->coverageServiceOds ?? collect();
+        if ($ods->isEmpty()) return collect();
+
+        $odIds = $ods->pluck('optical_distribution_id');
+
+        return \App\Models\Router::select('id','name')->whereHas('pop.opticalDistributions', fn($q)=>
+            $q->whereIn('optical_distributions.id',$odIds)
+        )->distinct()->get();
+    }
+
     public function getStatusBadgeAttribute()
     {
         $status = $this->attributes['status'] ?? '';

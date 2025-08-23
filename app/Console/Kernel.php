@@ -4,7 +4,9 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Jobs\{SyncRouterInventoryJob, SyncActiveSessionsJob};
 
+use App\Models\Router;
 use App\Models\SettingCompany;
 use App\Models\Company;
 use App\Models\EmployeeChecking;
@@ -21,13 +23,30 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // SYNC Router
-        foreach (\App\Models\Router::all() as $router) 
+        Router::cursor()->each(function ($router) use ($schedule) 
         {
-            if($router->active == \App\Schemas\ParamSchema::UP)
+            if($router->active == "UP")
             {
-                $schedule->job(new \App\Jobs\SyncActiveSessionsJob($router->id))->everyFiveMinutes();
+                // Hitung offset menit biar nggak barengan (mod 30 menit)
+                 $off = $r->id % 30;
+
+                // Harian: interfaces + pools (+ pppoe)
+                $schedule->call(function () use ($r) 
+                {
+                    dispatch(new SyncRouterInventoryJob($r->id, withProfiles:false, withSecrets:false, withSessions:false, withPppoe:true));
+                })->dailyAt(sprintf('03:%02d',$off))->onOneServer()->name("router-sync-{$r->id}");
+
+                // Hourly: profiles + secrets (opsional)
+                $schedule->call(function () use ($r) 
+                {
+                    dispatch(new SyncRouterInventoryJob($r->id, withProfiles:true, withSecrets:true));
+                })->hourlyAt($off)->onOneServer()->name("router-profsec-{$r->id}");
+
+                // Tiap 5 menit: sessions (IP/MAC)
+                $schedule->job(new SyncActiveSessionsJob($r->id))
+                        ->everyFiveMinutes()->onOneServer()->name("router-sessions-{$r->id}");
             }
-        }
+        });
 
 
         // Tetapkan zona waktu Asia/Jakarta

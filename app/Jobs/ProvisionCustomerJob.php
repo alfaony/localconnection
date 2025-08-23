@@ -12,10 +12,11 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Foundation\Bus\Dispatchable;
 
 class ProvisionCustomerJob implements ShouldQueue
 {
-    use InteractsWithQueue, Queueable, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels, Dispatchable;
 
     public function __construct(public string $internetCustomerId, public ?string $initialPlainPassword = null) {}
 
@@ -31,6 +32,7 @@ class ProvisionCustomerJob implements ShouldQueue
         // dd($router, $pkg);
         $map = PackageRouterProfile::where('router_id',$router->id)
               ->where('package_id',$pkg->id)->first();
+        // dd($map);
 
         $profile = $map->ros_profile ?? ('PKG_' . $pkg->id);           // fallback nama profile
         $fup     = $profile.'_FUP';

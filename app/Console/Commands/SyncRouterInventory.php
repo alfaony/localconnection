@@ -3,57 +3,34 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
+use RouterOS\Query;
+
 use App\Models\Router;
 use App\Services\RouterOSService;
-use RouterOS\Query;
 use App\Models\RouterInterface;
 use App\Models\AddressPool;
-use Illuminate\Support\Str;
+use App\Models\InternetPackage;
+use App\Models\PackageRouterProfile;
+use App\Models\InternetCustomer;
+use App\Jobs\SyncRouterInventoryJob;
 
 class SyncRouterInventory extends Command
 {
-    protected $signature = 'sync:router {router_id}';
-    protected $description = 'Sync interfaces & IP pools from MikroTik';
+    protected $signature = 'sync:router {router_id}
+                            {--profiles : Scan PPP profiles & auto-map ke packages}
+                            {--secrets  : Rekonsiliasi PPP secrets ke internet_customers (meta saja)}
+                            {--sessions : Tarik /ppp active untuk update ip/mac pelanggan}
+                            {--pppoe    : Import daftar PPPoE server dari router}
+                            {--ensureProfiles : Pastikan semua profiles ada di router}
+                            '
+                            ;
 
-    public function handle(RouterOSService $svc)
+    protected $description = 'Sync interfaces, VLANs, IP pools, dan (opsional) profiles, secrets, sessions dari MikroTik ke DB';
+
+    public function handle()
     {
-        $router = Router::findOrFail($this->argument('router_id'));
-        $c = $svc->client($router);
-
-
-        // Interfaces
-        $ifs = $c->query(new Query('/interface/print'))->read();
-        foreach ($ifs as $row) {
-            $name = $row['name'] ?? null;
-            if (!$name) continue;
-
-            RouterInterface::updateOrCreate(
-                ['router_id' => $router->id, 'name' => $name],
-                ['role' => 'access', 'meta' => $row]
-            );
-        }
-
-        // VLANs (optional)
-        $vlans = $c->query(new Query('/interface/vlan/print'))->read();
-        foreach ($vlans as $v) {
-            $name = $v['name'] ?? null;
-            if (!$name) continue;
-
-            RouterInterface::updateOrCreate(
-                ['router_id'=>$router->id, 'name'=>$name],
-                ['role'=>'access', 'vlan_id'=>(int)($v['vlan-id'] ?? 0), 'meta'=>$v]
-            );
-        }
-
-        // IP Pools
-        $pools = $c->query(new Query('/ip/pool/print'))->read();
-        foreach ($pools as $p) {
-            $id = AddressPool::firstOrCreate(
-                ['name' => $p['name']],
-                ['id' => (string) Str::uuid(), 'cidr' => $p['ranges'] ?? '', 'meta' => $p]
-            )->id;
-        }
-
-        $this->info('Sync done for router '.$router->name);
+        SyncRouterInventoryJob::dispatch($this->argument('router_id'), $this->option('profiles'), $this->option('secrets'), $this->option('sessions'), $this->option('pppoe'), $this->option('ensureProfiles'));
+        $this->info('🎉 Sync Run for router');
     }
 }

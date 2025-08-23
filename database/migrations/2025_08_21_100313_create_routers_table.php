@@ -10,8 +10,10 @@ return new class extends Migration
     {
         Schema::create('routers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('pop_id')->constrained('pops')->onDelete('cascade')->onUpdate('cascade');
             $table->foreignUuid('company_id')->constrained('companies')->onDelete('cascade')->onUpdate('cascade');
             $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade')->onUpdate('cascade');
+            $table->string('name')->nullable();
             $table->string('host')->nullable();
             $table->string('port')->default('8728');
             $table->string('username')->nullable();

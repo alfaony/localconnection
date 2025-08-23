@@ -12,8 +12,10 @@ class Router extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'pop_id',
         'company_id',
         'user_id',
+        'name',
         'host',
         'port',
         'username',
@@ -30,6 +32,11 @@ class Router extends Model
     public function company()
     {
         return $this->belongsTo(Company::class)->withTrashed();
+    }
+
+    public function pop()
+    {
+        return $this->belongsTo(Pop::class, 'pop_id')->withTrashed();
     }
 
     public function getActiveAttribute($value)

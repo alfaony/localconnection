@@ -125,8 +125,10 @@ use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
-use App\Http\Livewire\Mikrotik\MikrotikForm;
-use App\Http\Livewire\Mikrotik\MikrotikIndex;
+use App\Http\Livewire\Router\RouterForm;
+use App\Http\Livewire\Router\RouterIndex;
+use App\Http\Livewire\Router\RouterInventory;
+use App\Http\Livewire\Router\PackageProfileMapping;
 
 
 
@@ -589,9 +591,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
 Route::group(['middleware' => ['auth']], function()
 {
-  Route::get('router', MikrotikIndex::class)->name('router.index');
-  Route::get('router/create', MikrotikForm::class)->name('router.create');
-  Route::get('router/edit/{mikrotik}', MikrotikForm::class)->name('router.edit');
+  Route::get('router', RouterIndex::class)->name('router.index');
+  Route::get('router/create', RouterForm::class)->name('router.create');
+  Route::get('router/edit/{mikrotik}', RouterForm::class)->name('router.edit');
+  Route::get('router/show/{routerId}', RouterInventory::class)->name('router.show');
+  Route::get('router/mapping/{routerId}', PackageProfileMapping::class)->name('router.mapping');
+
     Route::post('mikrotik/secrets/{username}/disconnect', [MikrotikSecretController::class, 'disconnect'])->name('mikrotik-secret.disconnect');
     Route::post('mikrotik/secrets/{username}/reconnect', [MikrotikSecretController::class, 'reconnect'])->name('mikrotik-secret.reconnect');
     Route::resource('mikrotik-profile', MikrotikProfileController::class);

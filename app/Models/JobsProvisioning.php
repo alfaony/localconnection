@@ -13,6 +13,8 @@ class JobsProvisioning extends Model
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
 
+    protected $table = 'jobs_provisioning';
+
     protected static function boot()
     {
         parent::boot();
