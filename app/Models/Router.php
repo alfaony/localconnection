@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Services\MikrotikService;
+use Illuminate\Support\Facades\Cache;
 
 class Router extends Model
 {
@@ -41,13 +42,15 @@ class Router extends Model
 
     public function getActiveAttribute($value)
     {
-        try {
-            //code...
-            $status = new MikrotikService($this->id);
-            return $status->ping()->original ? "UP" : "DOWN";
-        } catch (\Throwable $th) {
-            return "WRONG". $th->getMessage();
-        }
+        return Cache::remember("router_{$this->id}_active", now()->addMinutes(5), function () {
+            try {
+                //code...
+                $status = new MikrotikService($this->id);
+                return $status->ping()->original ? "UP" : "DOWN";
+            } catch (\Throwable $th) {
+                return "WRONG \n". $th->getMessage();
+            }
+        });
     }
 
     public function user()

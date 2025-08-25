@@ -5,6 +5,7 @@ namespace App\Http\Livewire\Router;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Services\MikrotikService;
+use App\Jobs\SyncRouterInventoryJob;
 
 use App\Models\Router;
 use App\Models\Pop;
@@ -68,13 +69,17 @@ class RouterForm extends Component
 
         if ($this->mikrotikId) {
             Router::find($this->mikrotikId)->update($data);
+
+            SyncRouterInventoryJob::dispatch($this->mikrotikId ,true, true, true, true, true);
             session()->flash('message', 'Mikrotik updated successfully.');
         } else {
-            Router::create($data);
+            $mikrotik = Router::create($data);
+
+            SyncRouterInventoryJob::dispatch($mikrotik->id ,true, true, true, true, true);
             session()->flash('message', 'Mikrotik created successfully.');
         }
 
-        return redirect()->route('router.index');
+        return redirect()->route('router.show', $mikrotik->id);
     }
 
     public function render()

@@ -8,10 +8,14 @@
     
     <div class="container-fluid py-4">
         <div class="row mb-4">
+            @include('components.alert')
             <div class="col-12">
                 <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <h1 class="h3 mb-0 text-gray-800 router-title"><i class="bi bi-router me-2"></i>Router Inventory</h1>
                     <div class="d-flex">
+                        <a href="{{ route('router.edit', $router->id) }}" class="btn btn-info btn-action me-2 mb-2 mr-1">
+                            <i class="bi bi-pencil me-1"></i> Edit
+                        </a>
                         <button wire:click="resyncLight" class="btn btn-secondary btn-action me-2 mb-2 mr-1">
                             <i class="bi bi-arrow-repeat me-1"></i> Resync Now
                         </button>

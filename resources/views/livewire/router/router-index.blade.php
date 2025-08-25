@@ -50,10 +50,10 @@
                             @endswitch
                         </td>
                         <td>
-                            <a href="{{ route('router.mapping', $mikrotik) }}" class="btn btn-secondary btn-sm"><i class="fas fa-map-marked-alt"></i></a>
-                            <a href="{{ route('router.show', $mikrotik) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
-                            <a href="{{ route('router.edit', $mikrotik) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="confirm('Yakin ingin menghapus router ini?') && @this.delete({{ $mikrotik->id }})"><i class="fas fa-trash"></i></button>
+                            <a href="{{ route('router.mapping', $mikrotik) }}" class="btn btn-secondary btn-sm mb-1"><i class="fas fa-sitemap"></i></a>
+                            <a href="{{ route('router.show', $mikrotik) }}" class="btn btn-primary btn-sm mb-1"><i class="fas fa-eye"></i></a>
+                            <a href="{{ route('router.edit', $mikrotik) }}" class="btn btn-warning btn-sm mb-1"><i class="fas fa-edit"></i></a>
+                            <button type="button" class="btn btn-danger btn-sm mb-1" onclick="confirm('Yakin ingin menghapus router ini?') && @this.delete({{ $mikrotik->id }})"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                     @endforeach

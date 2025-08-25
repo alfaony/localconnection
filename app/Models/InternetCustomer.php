@@ -154,6 +154,14 @@ class InternetCustomer extends Model
                 return '<span class="badge badge-primary">Process Installation</span>';
             case 'installed':
                 return '<span class="badge badge-success">Installed</span>';
+            case 'active':
+                return '<span class="badge badge-success">Active</span>';
+            case 'expired':
+                return '<span class="badge badge-danger">Expired</span>';
+            case 'cancelled':
+                return '<span class="badge badge-danger">Cancelled</span>';
+            case 'suspended':
+                return '<span class="badge badge-secondary">Suspended</span>';
             default:
                 return '<span class="badge badge-secondary">Unknown</span>';
         }

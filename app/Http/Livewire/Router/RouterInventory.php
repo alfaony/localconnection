@@ -31,7 +31,7 @@ class RouterInventory extends Component
 
     public function resyncProfiles()
     {
-        dispatch(new SyncRouterInventoryJob($this->routerId, withProfiles:true));
+        dispatch(new SyncRouterInventoryJob($this->routerId, withProfiles:true, ensureProfiles:true));
         $this->dispatchBrowserEvent('toast', ['type'=>'info','message'=>'Profile scan dispatched']);
     }
 

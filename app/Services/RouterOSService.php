@@ -24,6 +24,14 @@ class RouterOSService
         ]);
     }
 
+    // helper simple health check sebelum sync berat
+    public function quickPing(\RouterOS\Client $c): bool {
+        try {
+            $c->query(new \RouterOS\Query('/system/identity/print'))->read();
+            return true;
+        } catch (\Throwable $e) { return false; }
+    }
+
     public function ensurePppProfile(Client $c, InternetPackage $pkg, string $rosProfile, ?string $fupProfile = null): void
     {
         // cek profile utama

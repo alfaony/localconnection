@@ -142,7 +142,7 @@ class InternetCustomerIndex extends Component
                 'status' => ParamSchema::INSTALLED, 
                 'router_id' => $routerId,
                 'username' => $username,
-                'password' => $password,
+                'pass_hash' => $password,
             ]);
 
             $customerInstallation = InternetCustomerInstallation::create([
@@ -153,8 +153,8 @@ class InternetCustomerIndex extends Component
                 'installed_at' => now(),
                 'technical_user_id' => Auth::id(),
             ]);
-
-            $this->activate($customer->id);
+            
+            $this->activate($customer->id, $password);
 
             // Reset form
             $this->reset([
@@ -358,7 +358,7 @@ class InternetCustomerIndex extends Component
     {
         // validasi opsional: minta password plaintext saat pertama kali create secret
         $this->validate([
-            'plain_password' => ['nullable','string','min:6','max:64'],
+            'password' => ['nullable','string','min:6','max:64'],
         ]);
 
         try {
