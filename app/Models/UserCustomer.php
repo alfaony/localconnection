@@ -34,7 +34,8 @@ class UserCustomer extends Authenticatable implements MustVerifyEmail
         'phone_number',
         'company_id',
         'role_id',
-        'start_billing_date'
+        'start_billing_date',
+        'end_billing_date',
     ];
 
     protected $hidden = [
