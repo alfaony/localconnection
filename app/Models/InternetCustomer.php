@@ -162,6 +162,8 @@ class InternetCustomer extends Model
         switch ($status) {
             case 'pending':
                 return '<span class="badge badge-warning">Pending</span>';
+            case 'waiting_payment_subscription':
+                return '<span class="badge badge-info">Waiting Payment Subscription</span>';
             case 'waiting_payment_confirmation':
                 return '<span class="badge badge-info">Waiting Payment Confirmation</span>';
             case 'process_installation':

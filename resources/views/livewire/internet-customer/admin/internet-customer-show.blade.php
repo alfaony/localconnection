@@ -150,6 +150,29 @@
                                         <td>{{ $customer->installation->device_serial_number }}</td>
                                     </tr>
                                     <tr>
+                                        <th>IP Address</th>
+                                        <td>{{ $customer->ip_address }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Username</th>
+                                        <td>{{ $customer->username }}</td>
+                                    </tr>
+                                    <!-- <tr>
+                                        <th>Password</th>
+                                        <td>
+                                            @if($customer->pass_hash)
+                                                <button wire:click="showInstallationPassword" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye mr-1"></i>Lihat Password
+                                                </button>
+                                                <div class="mt-2" style="display: none;" wire:id="installation-password-{{ $customer->id }}">
+                                                    {{ $customer->pass_hash }}
+                                                </div>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                    </tr> -->
+                                    <tr>
                                         <th>Catatan Instalasi</th>
                                         <td>{{ $customer->installation->notes ?? '-' }}</td>
                                     </tr>
@@ -200,7 +223,7 @@
                                             @foreach($purchases as $purchase)
                                             <tr>
                                                 <td>{{ \Carbon\Carbon::parse($purchase->period)->format('F Y') }}</td>
-                                                <td>{{ ucfirst($purchase->payment_method) }}</td>
+                                                <td>{{ ucfirst($purchase->payment_method ?? '-') }}</td>
                                                 <td>
                                                     @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
                                                         <span class="badge badge-success">Lunas</span>
@@ -222,13 +245,19 @@
                                                 </td>
                                                 @canAccess('as_finance','internet_customers')
                                                 <td>
-                                                    @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
-                                                        <i class="fas fa-check-circle mr-1 text-success"></i>                   
-                                                    @else
-                                                    <button class="btn btn-sm btn-success mt-1" onclick="confirmPayment('{{ $purchase->id }}')">
-                                                        Konfirmasi
-                                                    </button>
-                                                    @endif
+                                                    @switch($customer->status)
+                                                        @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION)
+                                                            @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
+                                                                <i class="fas fa-check-circle mr-1 text-success"></i>                   
+                                                            @else
+                                                            <button class="btn btn-sm btn-success mt-1" onclick="confirmPayment('{{ $purchase->id }}')">
+                                                                Konfirmasi
+                                                            </button>
+                                                            @endif
+                                                            @break
+                                                        @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION)
+                                                            @break
+                                                    @endswitch
                                                 </td>
                                                 @endcanAccess
                                             </tr>

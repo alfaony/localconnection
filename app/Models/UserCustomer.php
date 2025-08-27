@@ -59,4 +59,9 @@ class UserCustomer extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsTo(Company::class)->withTrashed();
     }
+
+    public function internetCustomer()
+    {
+        return $this->hasOne(InternetCustomer::class);
+    }
 }

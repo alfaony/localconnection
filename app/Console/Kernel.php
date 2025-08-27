@@ -94,6 +94,7 @@ class Kernel extends ConsoleKernel
         // Tetapkan zona waktu Asia/Jakarta
         // Jadwalkan pekerjaan 'project:reccuring' setiap hari pada pukul 00:00
         // $schedule->command('project:reccuring')->timezone('Asia/Jakarta')->dailyAt('00:00');
+        $schedule->command('billing-or-isolir:generate')->timezone('Asia/Jakarta')->dailyAt('07:00');
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('recurring:generate')->timezone('Asia/Jakarta')->dailyAt('01:00');

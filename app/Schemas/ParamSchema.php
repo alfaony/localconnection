@@ -129,6 +129,7 @@ class ParamSchema
 
     // Status Interent
     const PENDING = "pending";
+    const WAITING_PAYMENT_SUBSCRIPTION = "waiting_payment_subscription";
     const WAITING_PAYMENT_CONFIRMATION = "waiting_payment_confirmation";
     const PROCESS_INSTALLATION = "process_installation";
     const INSTALLED = "installed";

@@ -1,6 +1,7 @@
 @section('title', $customer->company->name)
 
 <div class="row mb-4">
+    @include('components.alert')
     <div class="col-md-12">
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
@@ -176,17 +177,14 @@
                                                 <th>Metode</th>
                                                 <th>Status</th>
                                                 <th>Jumlah Bayar</th>
-                                                <th>Bukti Pembayaran</th>
-                                                @canAccess('as_finance','internet_customers')
-                                                <th>Konfirmasi Pembayaran</th>
-                                                @endcanAccess
+                                                <th>Pembayaran</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach($purchases as $purchase)
                                             <tr>
                                                 <td>{{ \Carbon\Carbon::parse($purchase->period)->format('F Y') }}</td>
-                                                <td>{{ ucfirst($purchase->payment_method) }}</td>
+                                                <td>{{ ucfirst($purchase->payment_method ?? '-') }}</td>
                                                 <td>
                                                     @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
                                                         <span class="badge badge-success">Lunas</span>
@@ -198,20 +196,22 @@
                                                     Rp {{ number_format($purchase->amount_paid, 0, ',', '.') }}
                                                 </td>
                                                 <td>
-                                                    @if($purchase->payment_proof)
-                                                        <button wire:click="viewPaymentProof('{{ $purchase->id }}')" class="btn btn-sm btn-info">
-                                                            <i class="fas fa-eye mr-1"></i>Lihat
-                                                        </button>
-                                                    @else
-                                                        -
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
-                                                        <i class="fas fa-check-circle mr-1 text-success"></i>                   
-                                                    @else
-                                                        <span class="badge badge-warning">Menunggu Konfirmasi</span>
-                                                    @endif
+                                                    @switch($customer->status)
+                                                        @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION)
+                                                            @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
+                                                            <button wire:click="viewPaymentProof('{{ $purchase->id }}')" class="btn btn-sm btn-info">
+                                                                <i class="fas fa-eye mr-1"></i>Lihat
+                                                            </button>
+                                                            @else
+                                                                <span class="badge badge-warning">Menunggu Konfirmasi</span>
+                                                            @endif
+                                                            @break
+                                                        @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION)
+                                                            <button class="btn btn-sm btn-success mt-1" wire:click="showPaymentModal({{ $purchase->id }})">
+                                                                Konfirmasi
+                                                            </button>
+                                                            @break
+                                                    @endswitch
                                                 </td>
                                             </tr>
                                             @endforeach
@@ -317,6 +317,97 @@
         </div>
     </div>
 </div>
+
+<!-- Payment Modal -->
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentModalLabel">Konfirmasi Pembayaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Detail Tagihan -->
+                <div class="payment-detail bg-light p-3 rounded mb-3">
+                    <h6 class="fw-bold mb-3">Detail Tagihan</h6>
+                    <div class="row mb-2">
+                        <div class="col-sm-5">Paket Internet:</div>
+                        <div class="col-sm-7"><strong id="modal-package">-</strong></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-5">Harga Bulanan:</div>
+                        <div class="col-sm-7" id="modal-monthly-price">-</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-5">Total Pembayaran:</div>
+                        <div class="col-sm-7"><strong id="modal-total">-</strong></div>
+                    </div>
+                </div>
+
+                <!-- Metode Pembayaran -->
+                <div class="mb-3">
+                    <h6 class="fw-bold">Metode Pembayaran</h6>
+                    <p class="mb-0" id="modal-method">-</p>
+                </div>
+
+                <!-- Informasi Bank -->
+                <div class="bank-info bg-info bg-opacity-10 p-3 rounded mb-3">
+                    <h6 class="fw-bold mb-3">Informasi Transfer</h6>
+                    <div class="row mb-2">
+                        <div class="col-sm-5">Bank:</div>
+                        <div class="col-sm-7"><strong id="modal-bank">-</strong></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-5">Nomor Rekening:</div>
+                        <div class="col-sm-7"><strong id="modal-account">-</strong></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-5">Atas Nama:</div>
+                        <div class="col-sm-7"><strong id="modal-account-name">-</strong></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-5">Jumlah:</div>
+                        <div class="col-sm-7"><strong class="text-success" id="modal-amount">-</strong></div>
+                    </div>
+                </div>
+
+                <!-- Form Upload Bukti Pembayaran -->
+                <form id="payment-proof-form">
+                    <div>
+                        <h6 class="fw-bold mb-3">Upload Bukti Pembayaran</h6>
+                        
+                        <!-- File Upload Area -->
+                        <div class="file-upload-area mb-3">
+                            <div id="payment-drop-area" class="border-dashed border-2 border-gray-300 rounded p-5 text-center"
+                                 style="cursor: pointer;">
+                                <div class="mb-2">
+                                    <i class="fas fa-cloud-upload-alt fa-2x text-muted"></i>
+                                </div>
+                                <p class="mb-1">Klik untuk upload atau drag & drop</p>
+                                <p class="text-muted small">PNG, JPG, GIF (Maks. 2MB)</p>
+                                <input id="payment_proof" 
+                                       type="file" 
+                                       class="d-none"
+                                       accept="image/*">
+                            </div>
+                            
+                            <!-- Preview Area -->
+                            <div id="payment-preview" class="mt-3"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i>Kirim Bukti Pembayaran
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 @if($customer->partnershipAgreement)
@@ -346,7 +437,259 @@
 </script>
 @endif
 <script>
+    document.addEventListener('livewire:load', function() {
+        // Format angka ke Rupiah
+        const formatRupiah = (number) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
+        };
+
+        // Variabel untuk menyimpan data modal
+        let paymentModal = null;
+        let currentPurchaseId = null;
+
+        // Event untuk menampilkan modal pembayaran
+        window.addEventListener('show-payment-modal', function(event) {
+            // Simpan data untuk penggunaan nanti
+            currentPurchaseId = event.detail.purchaseId || null;
+            
+            // Isi data ke dalam modal
+            document.getElementById('modal-package').textContent = event.detail.packageName;
+            document.getElementById('modal-monthly-price').textContent = formatRupiah(event.detail.amount);
+            document.getElementById('modal-total').textContent = formatRupiah(event.detail.amount);
+            document.getElementById('modal-method').textContent = event.detail.method;
+            document.getElementById('modal-bank').textContent = event.detail.bank;
+            document.getElementById('modal-account').textContent = event.detail.account;
+            document.getElementById('modal-account-name').textContent = event.detail.accountName;
+            document.getElementById('modal-amount').textContent = formatRupiah(event.detail.amount);
+            
+            // Tampilkan modal
+            paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            paymentModal.show();
+        });
+
+        // Event untuk menyembunyikan modal pembayaran
+        window.addEventListener('hide-payment-modal', function() {
+            if (paymentModal) {
+                paymentModal.hide();
+            }
+            
+            // Reset form
+            document.getElementById('payment-proof-form').reset();
+            document.getElementById('payment-preview').innerHTML = '';
+        });
+
+        // Handle form submission
+        document.getElementById('payment-proof-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Dapatkan file yang diupload
+            const fileInput = document.getElementById('payment_proof');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Silakan pilih file bukti pembayaran');
+                return;
+            }
+            
+            // Kirim ke Livewire
+            @this.upload('payment_proof', file, function() {
+                // Set purchase_id jika diperlukan
+                if (currentPurchaseId) {
+                    @this.set('purchase_id', currentPurchaseId);
+                }
+                
+                // Panggil method submit
+                @this.call('submitPaymentProof');
+            });
+        });
+
+        // Handle file preview
+        document.getElementById('payment_proof').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('payment-preview');
+            
+            if (file) {
+                if (file.type.match('image.*')) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        preview.innerHTML = `
+                            <div class="text-center">
+                                <img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;">
+                                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="clearFileInput()">
+                                    <i class="fas fa-times me-1"></i>Hapus
+                                </button>
+                            </div>
+                        `;
+                    };
+                    
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.innerHTML = `
+                        <div class="alert alert-warning">
+                            File harus berupa gambar (JPG, PNG, GIF)
+                        </div>
+                    `;
+                    document.getElementById('payment_proof').value = '';
+                }
+            } else {
+                preview.innerHTML = '';
+            }
+        });
+
+        // Fungsi untuk menghapus file input
+        window.clearFileInput = function() {
+            document.getElementById('payment_proof').value = '';
+            document.getElementById('payment-preview').innerHTML = '';
+        };
+
+        // Handle drag and drop
+        const dropArea = document.getElementById('payment-drop-area');
+        if (dropArea) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.classList.add('highlight');
+            }
+            
+            function unhighlight() {
+                dropArea.classList.remove('highlight');
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length) {
+                    document.getElementById('payment_proof').files = files;
+                    const event = new Event('change', { bubbles: true });
+                    document.getElementById('payment_proof').dispatchEvent(event);
+                }
+            }
+        }
+    });
+</script>
+<script>
     document.addEventListener('livewire:load', function () {  
+        function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+
+        if (files.length) {
+            const fileInput = document.getElementById('payment_proof');
+
+            // Buat DataTransfer baru dan isi file-nya
+            const dataTransfer = new DataTransfer();
+            for (let i = 0; i < files.length; i++) {
+                dataTransfer.items.add(files[i]);
+            }
+
+            // Set file ke input
+            fileInput.files = dataTransfer.files;
+
+            // Penting: Trigger event agar Livewire tahu file sudah dipilih
+            fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+        window.addEventListener('show-payment-modal', () => {
+
+        // Format angka ke Rupiah
+        const formatRupiah = (number) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
+        };
+        
+        // Isi data ke dalam modal
+        document.getElementById('modal-package').textContent = event.detail.packageName;
+        document.getElementById('modal-monthly-price').textContent = formatRupiah(event.detail.amount);
+        document.getElementById('modal-total').textContent = formatRupiah(event.detail.amount);
+        document.getElementById('modal-method').textContent = event.detail.method;
+        document.getElementById('modal-bank').textContent = event.detail.bank;
+        document.getElementById('modal-account').textContent = event.detail.account;
+        document.getElementById('modal-account-name').textContent = event.detail.accountName;
+        document.getElementById('modal-amount').textContent = formatRupiah(event.detail.amount);
+        
+        // Tampilkan modal
+        const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        paymentModal.show();
+        
+        });
+    
+    // Event untuk menyembunyikan modal
+    window.addEventListener('hide-payment-modal', () => {
+        var paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+        paymentModal.hide();
+    });
+    
+    // Drag and drop functionality
+    const dropArea = document.querySelector('.file-upload-area .border-dashed');
+    if (dropArea) 
+        {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.classList.add('bg-light');
+        }
+        
+        function unhighlight() {
+            dropArea.classList.remove('bg-light');
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length) {
+                document.getElementById('payment_proof').files = files;
+                // Trigger Livewire file upload
+                const event = new Event('change', { bubbles: true });
+                document.getElementById('payment_proof').dispatchEvent(event);
+            }
+        }
+    }
         window.addEventListener('showImageModal', function(event) {
             console.log("showImageModal");
             
@@ -554,5 +897,18 @@
         width: 2rem;
         height: 2rem;
     }
+</style>
+<style>
+.border-dashed {
+    border-style: dashed !important;
+}
+#payment-drop-area:hover {
+    border-color: #0d6efd !important;
+    background-color: #f8f9fa;
+}
+#payment-drop-area.highlight {
+    border-color: #0d6efd !important;
+    background-color: rgba(13, 110, 253, 0.1);
+}
 </style>
 @endpush

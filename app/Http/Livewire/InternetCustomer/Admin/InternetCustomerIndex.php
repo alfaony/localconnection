@@ -316,6 +316,9 @@ class InternetCustomerIndex extends Component
                         $this->sentInbox($tech,$message, $directUrl);
                     }
                 }
+            }else
+            {
+                $post['status'] = ParamSchema::INSTALLED;
             }
     
             $internetPurchase->customer->update($post);
