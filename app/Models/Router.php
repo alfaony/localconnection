@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Services\MikrotikService;
+use App\Services\RouterOSService;
+
 use Illuminate\Support\Facades\Cache;
 
 class Router extends Model
@@ -38,6 +40,15 @@ class Router extends Model
     public function pop()
     {
         return $this->belongsTo(Pop::class, 'pop_id')->withTrashed();
+    }
+
+    public function defaultPool()
+    {
+        return $this->belongsTo(AddressPool::class, 'default_pool_id');
+    }
+    public function pppoeServers()
+    {
+        return $this->hasMany(PppoeServer::class, 'router_id');
     }
 
     public function getActiveAttribute($value)

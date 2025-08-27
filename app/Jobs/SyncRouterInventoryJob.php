@@ -40,16 +40,16 @@ class SyncRouterInventoryJob implements ShouldQueue
         public bool $ensureProfiles   = false  // create/update profile di router sesuai paket
     ) {}
 
-    // public function middleware(): array
-    // {
-    //     return [
-    //         // Lock per-router agar job tidak tumpang tindih
-    //         (new WithoutOverlapping("sync-router-{$this->routerId}"))->expireAfter(300),
+    public function middleware(): array
+    {
+        return [
+            // Lock per-router agar job tidak tumpang tindih
+            (new WithoutOverlapping("sync-router-{$this->routerId}"))->expireAfter(300),
 
-    //         // Rate limit per-router (opsional; pastikan rate limiter "mikrotik-{id}" ada/terpakai)
-    //         (new RateLimited("mikrotik-{$this->routerId}"))->dontRelease(),
-    //     ];
-    // }
+            // Rate limit per-router (opsional; pastikan rate limiter "mikrotik-{id}" ada/terpakai)
+            (new RateLimited("mikrotik-{$this->routerId}"))->dontRelease(),
+        ];
+    }
 
     public function handle(RouterOSService $svc): void
     {
@@ -193,8 +193,14 @@ class SyncRouterInventoryJob implements ShouldQueue
 
             // skema kamu unique(['name','cidr']) → kunci dengan dua kolom
             AddressPool::updateOrCreate(
-                ['name' => $name, 'cidr' => $cidr],
-                ['meta' => $row]
+                [
+                    'router_id' => $router->id,
+                    'name'      => $name,
+                ],
+                [
+                    'cidr' => $cidr,
+                    'meta' => $row,
+                ]
             );
         }
     }
@@ -272,46 +278,6 @@ class SyncRouterInventoryJob implements ShouldQueue
 
 
             $this->ensureMissingSecrets($c, $router);
-            // ensure profile normal
-            // $existing = $c->query((new Query('/ppp/profile/print'))->where('name', $targetProfile))->read();
-            // if (empty($existing)) {
-            //     $c->query(
-            //         (new Query('/ppp/profile/add'))
-            //             ->equal('name', $targetProfile)
-            //             ->equal('only-one', 'yes')
-            //             ->equal('rate-limit', $rate)
-            //     )->read();
-            // } else {
-            //     $c->query(
-            //         (new Query('/ppp/profile/set'))
-            //             ->equal('.id', $existing[0]['.id'])
-            //             ->equal('rate-limit', $rate)
-            //             ->equal('only-one', 'yes')
-            //     )->read();
-            // }
-
-            // // ensure FUP profile jika paket berkuota
-            // if (($pkg->quota_bytes ?? 0) > 0) {
-            //     $fupRate = "{$pkg->fup_rate_down_mbps}M/{$pkg->fup_rate_up_mbps}M";
-            //     $fupName = "{$targetProfile}_FUP";
-
-            //     $fExist = $c->query((new Query('/ppp/profile/print'))->where('name', $fupName))->read();
-            //     if (empty($fExist)) {
-            //         $c->query(
-            //             (new Query('/ppp/profile/add'))
-            //                 ->equal('name', $fupName)
-            //                 ->equal('only-one', 'yes')
-            //                 ->equal('rate-limit', $fupRate)
-            //         )->read();
-            //     } else {
-            //         $c->query(
-            //             (new Query('/ppp/profile/set'))
-            //                 ->equal('.id', $fExist[0]['.id'])
-            //                 ->equal('rate-limit', $fupRate)
-            //                 ->equal('only-one', 'yes')
-            //         )->read();
-            //     }
-            // }
         }
     }
 

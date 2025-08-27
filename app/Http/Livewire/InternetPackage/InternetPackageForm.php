@@ -16,6 +16,14 @@ class InternetPackageForm extends Component
     public $price_nett;
     public $description;
     public $is_active = true;
+    public $access_type = 'pppoe';
+    public $rate_down_mbps;
+    public $rate_up_mbps;
+    public $fup_rate_down_mbps = 0;
+    public $fup_rate_up_mbps = 0;
+    public $quota_bytes = 0;
+    // public $version;
+    // public $meta;
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -24,7 +32,13 @@ class InternetPackageForm extends Component
         'price' => 'required|numeric|min:0',
         'price_nett' => 'required|numeric|min:0',
         'description' => 'nullable|string',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'access_type' => 'required|in:pppoe,hotspot,ipoe',
+        'rate_down_mbps' => 'required|integer|min:1',
+        'rate_up_mbps' => 'required|integer|min:1',
+        'fup_rate_down_mbps' => 'nullable|integer|min:0',
+        'fup_rate_up_mbps' => 'nullable|integer|min:0',
+        'quota_bytes' => 'nullable|integer|min:0',
     ];
 
     public function mount($id = null)
@@ -39,6 +53,15 @@ class InternetPackageForm extends Component
             $this->price_nett = $package->price_nett;
             $this->description = $package->description;
             $this->is_active = $package->is_active;
+            $this->access_type = $package->access_type;
+            $this->rate_down_mbps = $package->rate_down_mbps ?? $this->bandwidth;
+            $this->rate_up_mbps = $package->rate_up_mbps ?? $this->bandwidth;
+            $this->fup_rate_down_mbps = $package->fup_rate_down_mbps;
+            $this->fup_rate_up_mbps = $package->fup_rate_up_mbps;
+            $this->quota_bytes = $package->quota_bytes;
+            // $this->version = $package->version;
+            // $this->meta = $package->meta;
+            
         }
     }
 
@@ -65,7 +88,15 @@ class InternetPackageForm extends Component
             'price' => $this->price,
             'price_nett' => $this->price_nett,
             'description' => $this->description,
-            'is_active' => $this->is_active
+            'is_active' => $this->is_active,
+            'access_type' => $this->access_type,
+            'rate_down_mbps' => $this->rate_down_mbps,
+            'rate_up_mbps' => $this->rate_up_mbps,
+            'fup_rate_down_mbps' => $this->fup_rate_down_mbps,
+            'fup_rate_up_mbps' => 0,
+            'quota_bytes' => 0,
+            // 'version' => $this->version,
+            // 'meta' => $this->meta
         ];
 
         if ($this->packageId) {

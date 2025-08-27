@@ -132,7 +132,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <span class="badge bg-success">
+                                        <span class="badge bg-{{ $customer->status  }}">
                                             {{ $customer->internetPackage->name }}
                                         </span>
                                     </td>
@@ -172,6 +172,17 @@
                                                     <span class="badge bg-success">
                                                         <i class="fas fa-check-circle me-1"></i> Sudah Diinstalasi
                                                     </span>
+                                                    @break
+                                                @case(\App\Schemas\ParamSchema::ACTIVE)
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Anda yakin ingin menon-aktifkan pelanggan ini?') ? @this.call('suspend', @js($customer->id)) : false">
+                                                        <i class="fas fa-pause me-1"></i> Suspend
+                                                    </button>
+                                                    @break
+
+                                                @case(\App\Schemas\ParamSchema::SUSPENDED)
+                                                    <button class="btn btn-sm btn-outline-success" onclick="return confirm('Anda yakin ingin mengaktifkan kembali pelanggan ini?') ? @this.call('reactivate', @js($customer->id)) : false">
+                                                        <i class="fas fa-play me-1"></i> Aktifkan
+                                                    </button>
                                                     @break
                                             @endswitch
                                         </td>
@@ -226,7 +237,7 @@
 @endcanAccess
 
 <!-- Modal Instalasi -->
-<div class="modal fade" id="installationModal" tabindex="-1" wire:ignore.self>
+<div class="modal fade" id="installationModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
@@ -246,9 +257,24 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Router</label>
-                        <select id="routerSelect" class="form-control" wire:model="router_id">
+                        <select id="routerSelect" class="form-control">
                             <!-- Opsi akan diisi melalui JavaScript -->
                         </select>
+                        <input type="hidden" id="routerSelectMirror" wire:model="router_id">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Pilih IP Pool (opsional)</label>
+                        <select class="form-control" wire:model="override_pool_id" 
+                                wire:key="pool-select-{{ $router_id }}-{{ count($availablePools) }}" id="selectPool">
+                            <option value="">— Ikuti mapping otomatis —</option>
+                            @foreach($availablePools as $pool)
+                                <option value="{{ $pool['id'] }}">{{ $pool['label'] }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">
+                            Kosongkan jika ingin pakai pool default/PPPoE server router.
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -391,6 +417,25 @@
 
         // Handle buka modal
         // Di JavaScript - Tambahkan kode untuk mengisi select
+        window.addEventListener('pools-options', (e) => {
+            const select = document.querySelector('select[wire\\:model="override_pool_id"]');
+            if (!select) return;
+
+            // Hapus semua option kecuali yang pertama (placeholder)
+            select.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
+
+            const options = e.detail.options || [];
+            options.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.label;
+                select.appendChild(opt);
+            });
+
+            // trigger change untuk sync ke Livewire kalau perlu
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        
         window.addEventListener('open-installation-modal', (e) => {
             const { customerName, customerCode, serialNumber, routers } = e.detail;
             
@@ -411,13 +456,27 @@
             
             // Isi dengan router yang tersedia
             routers.forEach(router => {
-                console.log(router);
-                
+                // console.log(router);
                 const option = document.createElement('option');
                 option.value = router.id;
                 option.textContent = router.name;
                 routerSelect.appendChild(option);
             });
+
+            // Reset router select and mirror, and Livewire property
+            routerSelect.value = '';
+            document.getElementById('routerSelectMirror').value = '';
+            @this.set('router_id', '');
+            @this.set('override_pool_id', '');
+
+            // Assign change listener to update Livewire and hidden input, and reset pool
+            routerSelect.onchange = function (e) {
+                const val = e.target.value || '';
+                document.getElementById('routerSelectMirror').value = val; // keep mirror in sync
+                @this.set('router_id', val);
+                @this.set('override_pool_id', ''); // reset pool when router changes
+                @this.call('loadPoolsForRouter', val);
+            };
             
             // Reset form lainnya
             document.getElementById('modalNotes').value = '';
@@ -457,11 +516,12 @@
      document.getElementById('submitInstallation').addEventListener('click', async function() {
 
         const serialNumber = document.getElementById('modalSerialNumber').value;
-        const routerId = document.getElementById('routerSelect').value;
+        const routerId = document.getElementById('routerSelectMirror').value;
         const username = document.getElementById('modalUsername').value;
         const password = document.getElementById('modalPassword').value;
         const notes = document.getElementById('modalNotes').value;
         const files = document.getElementById('modalPhotos').files;
+        const override_pool_id = document.getElementById('selectPool').value;
         
         // Validasi
         if (!serialNumber) {
@@ -501,6 +561,7 @@
         formData.append('routerId', routerId);
         formData.append('username', username);
         formData.append('password', password);
+        formData.append('override_pool_id', override_pool_id);
         
         // Tambahkan semua file ke FormData
         for (let i = 0; i < files.length; i++) {
@@ -516,7 +577,8 @@
                     notes,
                     routerId,
                     username,
-                    password
+                    password,
+                    override_pool_id
                 );
             });
             

@@ -15,6 +15,7 @@ class RouterInventory extends Component
     public function render()
     {
         $router = Router::findOrFail($this->routerId);
+        
         return view('livewire.router.router-inventory', [
             'router'     => $router,
             'interfaces' => RouterInterface::where('router_id',$router->id)->orderBy('name')->get(),

@@ -36,11 +36,21 @@ class SyncActiveSessionsJob implements ShouldQueue
             $cust = InternetCustomer::where('router_id',$router->id)
                      ->where('username',$user)->first();
             if (!$cust) continue;
-
-            $cust->update([
-                'ip_address' => $row['address']    ?? $cust->ip_address,
-                'mac_address'=> $row['caller-id']  ?? $cust->mac_address,
-            ]);
+            
+            if($cust->isActiveConneciton())
+            {
+                $cust->update([
+                    'ip_address' => $row['address']    ?? $cust->ip_address,
+                    'mac_address'=> $row['caller-id']  ?? $cust->mac_address,
+                ]);
+            }else
+            {
+                $cust->update([
+                    'status'     => 'disconnected',
+                    'ip_address' => null,
+                    'mac_address'=> null,
+                ]);
+            }
         }
     }
 }

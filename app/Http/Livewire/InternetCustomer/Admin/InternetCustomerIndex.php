@@ -5,6 +5,7 @@ namespace App\Http\Livewire\InternetCustomer\Admin;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Hash;
 use App\Models\InternetCustomer;
 use App\Models\InternetPackage;
 use App\Models\User;
@@ -31,6 +32,9 @@ class InternetCustomerIndex extends Component
     use WithPagination;
     use WithFileUploads;
     protected $paginationTheme = 'bootstrap';
+
+    public ?string $override_pool_id = null;
+    public array $availablePools = [];
     
 
     public $search = '';
@@ -46,7 +50,7 @@ class InternetCustomerIndex extends Component
     public $selectedPaymentProof;
 
     public $routers = [];
-    public $routerId = null;
+    public $router_id = null;
     public $username = null;
     public $password = null;
 
@@ -77,28 +81,67 @@ class InternetCustomerIndex extends Component
     ];
 
     // Method untuk membuka modal
-    public function openInstallationModal($customerId)
+    public function openInstallationModal(string $customerId)
     {
-        $customer = InternetCustomer::find($customerId);
-        $ods = $customer->subdistrict?->coverageService?->coverageServiceOds ?? collect();
+        $cust = InternetCustomer::with([
+            'internetPackage',
+            'subdistrict.coverageService.coverageServiceOds.ods.pops.routers',
+        ])->findOrFail($customerId);
+            
+        $this->currentInstallationId = $cust->id;
+
+        // === FILTER ROUTER ===
+        // 1) Ambil router yang terkait cakupan pelanggan (OD -> POP -> Routers)
+        $routerIds = collect(
+            $cust->subdistrict?->coverageService?->coverageServiceOds ?? []
+        )
+        ->flatMap(function ($csod) {
+            return collect($csod->opticalDistribution?->pops ?? [])
+                ->flatMap(fn($pop) => collect($pop->routers ?? [])->pluck('id'));
+        })
+        ->unique()
+        ->values();
+
+        if ($routerIds->isEmpty()) 
+        {
+            // fallback: semua router aktif yang punya PPPoE server
+            $routers = Router::query()
+                // ->where('active','UP')
+                ->whereHas('pppoeServers')
+                ->orderBy('name')
+                ->get(['id','name']);
+        }else
+        {
+            // 2) Query router aktif + (opsional) punya PPPoE server & pool
+            $routers = Router::query()
+            ->whereIn('id', $routerIds)
+            // ->where('active', 'UP')
+            ->whereHas('pppoeServers', fn($q) => $q->whereNotNull('address_pool_id'))
+            ->whereHas('addressPools') // jika pakai address_pools.router_id
+            ->withCount(['pppoeServers' => fn($q) => $q->whereNotNull('address_pool_id')])
+            ->orderBy('name')
+            ->get(['id','name']);
+        }
+
         
-        $this->currentInstallationId = $customer->id;
-        $this->currentInstallationName = $customer->name;
-        $this->currentInstallationCode = $customer->code;
-        $this->deviceSerialNumber = $customer->device_serial_number ?? '';
-        
-        $this->dispatchBrowserEvent('open-installation-modal', [
-            'customerName' => $customer->name,
-            'customerCode' => $customer->code,
-            'serialNumber' => $customer->device_serial_number ?? '',
-            'routers' => $customer->candidateRouters(),
-        ]);
-        
-        $this->installationModal = true;
+
+        // 3) Siapkan data untuk modal
+        $payload = [
+            'customerName'  => $cust->name,
+            'customerCode'  => $cust->code,
+            'serialNumber'  => '',                  // kalau ada default isikan di sini
+            'routers'       => $routers->map(fn($r) => [
+                'id'   => $r->id,
+                'name' => $r->name . ' (PPPoE: '.$r->pppoe_servers_count.')',
+            ])->values(),
+        ];
+
+        // kirim ke JS (Blade kamu sudah listen event ini)
+        $this->dispatchBrowserEvent('open-installation-modal', $payload);
     }
 
     // Method untuk validasi dan submit
-    public function completeInstallation($serialNumber, $photos, $notes, $routerId, $username, $password)
+    public function completeInstallation($serialNumber, $photos, $notes, $routerId, $username, $password, $override_pool_id)
     {
         Validator::make([
             'currentInstallationId' => $this->currentInstallationId,
@@ -107,7 +150,9 @@ class InternetCustomerIndex extends Component
             'routerId' => $routerId,
             'username' => $username,
             'password' => $password,
+            'override_pool_id' => $override_pool_id
         ], [
+            'override_pool_id' => 'nullable|exists:address_pools,id',
             'currentInstallationId' => 'required|exists:internet_customers,id',
             'photos' => 'required|array|min:1',
             'photos.*' => 'required|string',
@@ -115,6 +160,7 @@ class InternetCustomerIndex extends Component
             'username' => 'required',
             'password' => 'required',
         ])->validate();
+
 
         try {
             // Upload foto
@@ -135,7 +181,7 @@ class InternetCustomerIndex extends Component
                 // Hapus file tmp
                 unlink($tmpPath);
             }
-
+            
             // Update data
             $customer = InternetCustomer::find($this->currentInstallationId);
             $customer->update([
@@ -143,7 +189,10 @@ class InternetCustomerIndex extends Component
                 'router_id' => $routerId,
                 'username' => $username,
                 'pass_hash' => $password,
+                'override_pool_id'  => $override_pool_id ?: null,
             ]);
+
+            dispatch(new \App\Jobs\ProvisionCustomerJob($customer->id));
 
             $customerInstallation = InternetCustomerInstallation::create([
                 'internet_customer_id' => $customer->id,
@@ -288,33 +337,51 @@ class InternetCustomerIndex extends Component
     {
         $user = Auth::user();
 
-        $query = InternetCustomer::query()->with([
-            'company',
-            'province',
-            'city',
-            'district',
-            'subdistrict',
-            'internetPackage',
-            'partnershipAgreement',
-            'userCustomer'
-        ]);
+        // kolom yang memang dipakai di tabel/index
+        $columns = [
+            'id', 'name', 'code', 'status',
+            'internet_package_id', 'user_customer_id', 'company_id',
+            'ktp_number', 'created_at'
+        ];
 
-        // Pencarian data
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('code', 'like', '%' . $this->search . '%')
-                    ->orWhereHas('installation', function ($q) {
-                        $q->where('device_serial_number', 'like', '%' . $this->search . '%');
-                    })
-                    ->orWhereHas('userCustomer', function ($q) {
-                        $q->where('name', 'like', '%' . $this->search . '%')->orWhere('email', 'like', '%' . $this->search . '%')->orWhere('phone_number', 'like', '%' . $this->search . '%');
-                    })
-                    ->orWhereHas('company', function ($q) {
-                        $q->where('name', 'like', '%' . $this->search . '%');
-                    })
-                    ->orWhere('ktp_number', 'like', '%' . $this->search . '%')
-                    ;
+        // whitelist kolom sort
+        $allowedSorts = ['created_at', 'name', 'status', 'code'];
+        if (!in_array($this->sortField, $allowedSorts, true)) {
+            $this->sortField = 'created_at';
+        }
+        $this->sortDirection = strtolower($this->sortDirection) === 'asc' ? 'asc' : 'desc';
+
+        $query = InternetCustomer::query()
+            ->byCompany($user->company_id) // batasi dataset sesuai akses
+            ->select($columns)
+            // eager load minimal yang dipakai di blade
+            ->with([
+                'installation:id,internet_customer_id,device_serial_number',
+                'userCustomer:id,name,email,phone_number',
+                'company:id,name',
+                'internetPackage:id,name'
+            ]);
+
+        // Pencarian
+        if ($this->search !== '') {
+            $term = trim($this->search);
+            $like = "%{$term}%";
+
+            $query->where(function ($q) use ($like) {
+                $q->where('name', 'like', $like)
+                ->orWhere('code', 'like', $like)
+                ->orWhere('ktp_number', 'like', $like)
+                ->orWhereHas('installation', function ($q) use ($like) {
+                    $q->where('device_serial_number', 'like', $like);
+                })
+                ->orWhereHas('userCustomer', function ($q) use ($like) {
+                    $q->where('name', 'like', $like)
+                        ->orWhere('email', 'like', $like)
+                        ->orWhere('phone_number', 'like', $like);
+                })
+                ->orWhereHas('company', function ($q) use ($like) {
+                    $q->where('name', 'like', $like);
+                });
             });
         }
 
@@ -328,29 +395,30 @@ class InternetCustomerIndex extends Component
             $query->where('status', $this->statusFilter);
         }
 
-        // Filter tanggal
-        if ($this->dateFrom) {
-            $query->whereDate('created_at', '>=', $this->dateFrom);
+        // Filter tanggal (gabung jadi range)
+        if ($this->dateFrom || $this->dateTo) {
+            $from = $this->dateFrom ?: '1970-01-01';
+            $to   = $this->dateTo   ?: now()->toDateString();
+            $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
         }
 
-        if ($this->dateTo) {
-            $query->whereDate('created_at', '<=', $this->dateTo);
-        }
+        // Sorting + paginate
+        $internetCustomers = $query
+            ->byCompany($user->company_id)
+            ->orderBy($this->sortField, $this->sortDirection)
+            ->paginate($this->perPage)
+            ->withQueryString();
 
-        // Sorting
-        $internetCustomers = $query->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
-
-        // Get filter options
-
-        $packages = InternetPackage::byCompany($user->company_id)->orderBy('name')->get();
+        $packages = InternetPackage::byCompany($user->company_id)
+            ->orderBy('name')
+            ->get(['id','name']);
 
         return view('livewire.internet-customer.admin.internet-customer-index', [
-            'finance_access' => Access::can('as_finance', 'internet_customers'),
-            'technical_access' => Access::can('as_technician', 'internet_customers'),
+            'finance_access'    => Access::can('as_finance', 'internet_customers'),
+            'technical_access'  => Access::can('as_technician', 'internet_customers'),
             'internetCustomers' => $internetCustomers,
-            'packages' => $packages,
-            'routers' => $this->routers
+            'packages'          => $packages,
+            'routers'           => $this->routers,
         ])->extends('adminlte::page');
     }
 
@@ -373,7 +441,8 @@ class InternetCustomerIndex extends Component
             // }
     
             // Update status dulu (SoT = DB)
-            $cust->update(['status' => 'active']);
+            // $cust->update(['pass_hash' => $this->password]);
+            $cust->userCustomer->update(['password' => Hash::make($this->password)]);
     
             // (opsional) catat log provisioning khusus
             JobsProvisioning::create([
@@ -386,7 +455,7 @@ class InternetCustomerIndex extends Component
                 ],
             ]);
     
-            dispatch(new ProvisionCustomerJob($cust->id, $this->password));
+            dispatch(new ProvisionCustomerJob($cust->id));
     
             // Kosongkan field password input agar tidak tersisa di memori form
             $this->password = null;
@@ -398,16 +467,16 @@ class InternetCustomerIndex extends Component
         }
     }
 
-    public function suspend(string $id)
+    public function reactivate(string $id)
     {
         $cust = InternetCustomer::findOrFail($id);
 
-        if ($cust->status === 'suspended') {
-            $this->dispatchBrowserEvent('show-notification', ['type'=>'info','message'=>'Customer already suspended']);
+        if ($cust->status === ParamSchema::INSTALLED || $cust->status === ParamSchema::ACTIVE) {
+            $this->dispatchBrowserEvent('show-notification', ['type'=>'info','message'=>'Customer already Installed']);
             return;
         }
 
-        $cust->update(['status' => 'suspended']);
+        $cust->update(['status' => ParamSchema::REACTIVATED]);
 
         JobsProvisioning::create([
             'type' => JobsProvisioning::TYPE_SUSPEND,
@@ -417,9 +486,64 @@ class InternetCustomerIndex extends Component
             'payload' => null,
         ]);
 
+        
+        dispatch(new ProvisionCustomerJob($cust->id));
+
+        $this->dispatchBrowserEvent('show-notification', ['type'=>'success','message'=>'Reactivation dispatched']);
+    }
+    public function suspend(string $id)
+    {
+        $cust = InternetCustomer::findOrFail($id);
+
+        if ($cust->status === ParamSchema::SUSPENDED) {
+            $this->dispatchBrowserEvent('show-notification', ['type'=>'info','message'=>'Customer already suspended']);
+            return;
+        }
+
+        $cust->update(['status' => ParamSchema::SUSPENDED]);
+
+        JobsProvisioning::create([
+            'type' => JobsProvisioning::TYPE_SUSPEND,
+            'internet_customer_id' => $cust->id,
+            'router_id' => $cust->router_id,
+            'status' => JobsProvisioning::STATUS_QUEUED,
+            'payload' => null,
+        ]);
+
+        
         dispatch(new ProvisionCustomerJob($cust->id));
 
         $this->dispatchBrowserEvent('show-notification', ['type'=>'success','message'=>'Suspension dispatched']);
+    }
+
+    public function updatedRouterId($v)
+    {
+
+        // Livewire often sends "" (empty string) or string numbers from the DOM
+        $this->loadPoolsForRouter(($v === '' || $v === null) ? null : (int) $v);
+    }
+
+    public function loadPoolsForRouter($routerId): void
+    {
+        // Coerce incoming value (can be "", null, or string number) to int or null
+        $id = (is_numeric($routerId) && $routerId !== '' && $routerId !== null) ? (int) $routerId : null;
+
+        if (!$id) {
+            $this->availablePools = [];
+            return;
+        }
+
+        $this->availablePools = \App\Models\AddressPool::query()
+            ->where('router_id', $id) // scope pools to the selected router
+            ->orderBy('name')
+            ->get(['id','name','cidr','gateway'])
+            ->map(fn($p) => [
+                'id'    => $p->id,
+                'label' => $p->name.' — '.$p->cidr.($p->gateway ? ' (gw '.$p->gateway.')' : '')
+            ])
+            ->toArray();
+
+        $this->dispatchBrowserEvent('pools-options', ['options' => $this->availablePools]);
     }
 
     private function sentInbox($to,$message,$directUrl)

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use App\Schemas\RoleSchema;
+use App\Services\RouterOSService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InternetCustomer extends Model
@@ -54,6 +55,7 @@ class InternetCustomer extends Model
         'expires_at',
         'ros_comment_uuid',
         'meta',
+        'override_pool_id'
     ];
 
     // ✅ RELATIONS
@@ -97,6 +99,11 @@ class InternetCustomer extends Model
         return $this->belongsTo(Promo::class, 'promo_id')->withTrashed();
     }
 
+    public function overridePool()
+    {
+        return $this->belongsTo(AddressPool::class, 'override_pool_id');
+    }
+
     public function partnershipAgreement()
     {
         return $this->belongsTo(PartnershipAgreement::class);
@@ -127,6 +134,13 @@ class InternetCustomer extends Model
     public function purchases()
     {
         return $this->hasMany(InternetCustomerPurchase::class);
+    }
+
+    public function isActiveConneciton()
+    {
+        $ros = new RouterOSService();
+        $client = $ros->client($this->router);
+        return $ros->isUserActive($client, $this->username);
     }
 
     public function candidateRouters()
@@ -162,6 +176,10 @@ class InternetCustomer extends Model
                 return '<span class="badge badge-danger">Cancelled</span>';
             case 'suspended':
                 return '<span class="badge badge-secondary">Suspended</span>';
+            case 'disconnected':
+                return '<span class="badge badge-danger">Disconnected</span>';
+            case "reactivated":
+                return '<span class="badge badge-success">Reactivated</span>';
             default:
                 return '<span class="badge badge-secondary">Unknown</span>';
         }

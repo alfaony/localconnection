@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('address_pools', function (Blueprint $t) 
         {
             $t->uuid('id')->primary();
-            $t->unsignedBigInteger('pop_id')->nullable();
+            $t->unsignedBigInteger('router_id')->nullable();
             $t->string('name');
             $t->string('cidr', 64);   // ex: 10.10.10.0/24
             $t->string('gateway', 45)->nullable();
@@ -25,9 +25,9 @@ return new class extends Migration
             $t->softDeletes();
 
 
-            $t->foreign('pop_id')->references('id')->on('pops')->nullOnDelete();
+            $t->foreign('router_id')->references('id')->on('routers')->nullOnDelete();
             $t->unique(['name','cidr']);
-            $t->index('pop_id');
+            $t->index('router_id');
         });
     }
 

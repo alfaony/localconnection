@@ -366,6 +366,7 @@ class InternetCustomerForm extends Component
             $agreement = $this->createPartnershipAgreement($ktpPath);
         
             $userCustomer = UserCustomer::create([
+                'start_billing_date' => $this->start_billing_date,
                 'name' => $this->name,
                 'phone_number' => $this->phone_number,
                 'email' => $this->email,
