@@ -19,6 +19,8 @@ use App\Helpers\InboxHelper;
 use App\Helpers\Access;
 use App\Schemas\ParamSchema;
 
+use Carbon\Carbon;
+
 class InternetCustomerIndex extends Component
 {
     use WithPagination;
@@ -196,6 +198,7 @@ class InternetCustomerIndex extends Component
     public function confirmPayment($customerId)
     {
         $internetPurchase = InternetCustomerPurchase::findOrFail($customerId);
+        $internetCustomers = $internetPurchase->customer->userCustomer;
 
         DB::beginTransaction();
         try {
@@ -203,12 +206,17 @@ class InternetCustomerIndex extends Component
                 'confirmation_finance_at' => now(),
                 'user_finance_id' => Auth::user()->id
             ]);
-    
+
+            $date = Carbon::now();
+            
+            $internetCustomers->update([
+                'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
+                'end_billing_date' => $date->addDays(config('service.internet_custom.end_billing_of_days'))->format('Y-m-d')
+            ]);
+
             $post =[
                 'is_paid' => true,
             ];
-    
-        
     
             if(!$internetPurchase->customer->installation)
             {
