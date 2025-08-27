@@ -171,8 +171,12 @@ class AppServiceProvider extends ServiceProvider
                 'warehouses','zones','racks','sensors',
                 'assets','security_checks','cctv_checks','tickets',
                 'devices','equipment','equipment_reductions',
-                'master_check_items','used_laptops','used_items',
                 'vehicles','subscribe_letters'
+            ];
+
+            $managementProductionMenu =
+            [
+                'master_check_items','used_laptops','used_items',
             ];
 
             $managementProduktifitasMenu = [
@@ -1063,6 +1067,7 @@ class AppServiceProvider extends ServiceProvider
             $managementUmumMenuArray          = $buildSubmenu($managementUmumMenu);
             $managementKaryawanMenuArray      = $buildSubmenu($managementKaryawanMenu);
             $managementInternetMenuArray      = $buildSubmenu($managementInternetMenu);
+            $managementProductionMenuArray    = $buildSubmenu($managementProductionMenu);
             $managementTokoOnlineMenuArray    = $buildSubmenu($managementTokoOnlineMenu);
             $managementGedungMenuArray        = $buildSubmenu($managementGedungMenu);
             $managementProduktifitasMenuArray = $buildSubmenu($managementProduktifitasMenu);
@@ -1089,6 +1094,11 @@ class AppServiceProvider extends ServiceProvider
             $sectionTokoOnline = [
                 'text'    => 'Manajemen Toko & Online Store',
                 'submenu' => $managementTokoOnlineMenuArray,
+            ];
+
+            $sectionProduction = [
+                'text'    => 'Manajemen Produksi',
+                'submenu' => $managementProductionMenuArray,
             ];
 
             $sectionGedung = [
@@ -1122,6 +1132,7 @@ class AppServiceProvider extends ServiceProvider
                 $sectionKaryawan,
                 $sectionInternet,
                 $sectionTokoOnline,
+                $sectionProduction,
                 $sectionGedung,
                 $sectionProduktifitas,
                 $sectionPenjualan,

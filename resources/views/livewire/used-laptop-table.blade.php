@@ -25,9 +25,14 @@
                         </span>
                     </div>
                 </div>
+                {{-- Loading indikator saat search --}}
+                <div class="mt-1 text-center" wire:loading.delay wire:target="search">
+                    <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                    <small class="text-muted">Mencari...</small>
+                </div>
             </div>
         </div>
-        
+
         <!-- Filter Status Terjual/Belum Terjual -->
         <div class="card-header bg-light py-2">
             <div class="d-flex align-items-center flex-wrap">
@@ -35,20 +40,28 @@
                 <div class="btn-group btn-group-sm" role="group">
                     <button type="button" 
                             class="btn {{ $statusFilter === '' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                            wire:click="$set('statusFilter', '')">
+                            wire:click="$set('statusFilter', '')"
+                            wire:loading.attr="disabled">
                         Semua
                     </button>
                     <button type="button" 
                             class="btn {{ $statusFilter === 'unsold' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                            wire:click="$set('statusFilter', 'unsold')">
+                            wire:click="$set('statusFilter', 'unsold')"
+                            wire:loading.attr="disabled">
                         <i class="fas fa-times-circle mr-1"></i> Belum Terjual
                     </button>
                     <button type="button" 
                             class="btn {{ $statusFilter === 'sold' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                            wire:click="$set('statusFilter', 'sold')">
+                            wire:click="$set('statusFilter', 'sold')"
+                            wire:loading.attr="disabled">
                         <i class="fas fa-check-circle mr-1"></i> Terjual
                     </button>
                 </div>
+            </div>
+            {{-- Loading indikator saat filter status diubah --}}
+            <div class="mt-2" wire:loading.delay wire:target="statusFilter">
+                <span class="spinner-border spinner-border-sm text-secondary" role="status"></span>
+                <small class="text-muted">Memfilter data...</small>
             </div>
         </div>
         
