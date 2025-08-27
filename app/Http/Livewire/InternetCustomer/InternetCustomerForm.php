@@ -562,6 +562,7 @@ class InternetCustomerForm extends Component
         $this->freeMonthsDetails = null;
         $this->paymentStartMonth = null;
         $this->start_billing_date = Carbon::now()->format('Y-m-d');
+        $this->end_billing_date = Carbon::now()->addDays(config('service.internet_custom.end_billing_of_days'))->format('Y-m-d');
 
         // Pastikan paket sudah dipilih
         if ($this->internet_package_id) {
@@ -582,16 +583,16 @@ class InternetCustomerForm extends Component
                         // Pendaftaran sebelum register_date: bayar bulan depan
                         $this->paymentStartMonth = now()->addMonth($activePromo->value)->format('F Y');
                         $this->start_billing_date = now()->addMonth($activePromo->value)->firstOfMonth()->format('Y-m-d');
+                        $this->end_billing_date = now()->addMonth($activePromo->value)->firstOfMonth()->addDays(config('service.internet_custom.end_billing_of_days'))->format('Y-m-d');
                     } else {
                         // Pendaftaran pada/ setelah register_date: bayar 2 bulan dari sekarang
                         $this->paymentStartMonth = now()->addMonths($activePromo->value + 1)->format('F Y');
                         $this->start_billing_date = now()->addMonths($activePromo->value + 1)->firstOfMonth()->format('Y-m-d');
+                        $this->end_billing_date = now()->addMonths($activePromo->value + 1)->firstOfMonth()->addDays(config('service.internet_custom.end_billing_of_days'))->format('Y-m-d');
                     }
                 }
             }
         }
-
-        $this->end_billing_date = Carbon::parse($this->start_billing_date)->addDays(config('service.app.end_billing_of_days'))->endOfMonth()->format('Y-m-d');
     }
 
     private function installation($customer)
