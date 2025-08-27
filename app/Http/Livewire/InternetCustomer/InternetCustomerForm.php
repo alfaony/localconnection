@@ -94,6 +94,7 @@ class InternetCustomerForm extends Component
     public $freeMonthsDetails = null;
     public $paymentStartMonth = null;
     public $start_billing_date = null;
+    public $end_billing_date = null;
 
 
     protected $rules = 
@@ -371,6 +372,8 @@ class InternetCustomerForm extends Component
                 'email' => $this->email,
                 'company_id' => $this->company_id,
                 'role' => Role::where('name',RoleSchema::CUSTOMER_INTERNET)->first()->id,
+                'start_billing_date' => $this->start_billing_date,
+                'end_billing_date' => $this->end_billing_date,
                 // 'password' => Hash::make($this->password),
             ]);
 
@@ -390,7 +393,6 @@ class InternetCustomerForm extends Component
             {
                 if($this->payment_method == 'transfer')
                     $internetCustomerPurchase = InternetCustomerPurchase::create([
-                    'start_billing_date' => $this->start_billing_date,
                     'amount_paid' => $this->selectedPackage->price_nett,
                     'internet_customer_id' => $internetCustomer->id,
                     'payment_method' => $this->payment_method,
@@ -587,6 +589,8 @@ class InternetCustomerForm extends Component
                 }
             }
         }
+
+        $this->end_billing_date = Carbon::parse($this->start_billing_date)->addDays(config('service.app.end_billing_of_days'))->endOfMonth()->format('Y-m-d');
     }
 
     private function installation($customer)

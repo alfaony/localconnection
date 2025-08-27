@@ -91,4 +91,9 @@ return [
         'redirect_url_public' => env('GOOGLE_REDIRECT_URI_PUBLIC', 'http://localhost:8000/meeting/public/oauth/callback'),
         'max_description_length' => env('GOOGLE_MAX_DESCRIPTION_LENGTH', 8000),
     ],
+    
+    'internet_custom' =>
+    [
+        'end_billing_of_days' => env('END_BILLING_OF_DAYS', 15),
+    ]
 ];
