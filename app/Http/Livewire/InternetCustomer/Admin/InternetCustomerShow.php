@@ -73,12 +73,18 @@ class InternetCustomerShow extends Component
     public function confirmPayment($customerId)
     {
         $internetPurchase = InternetCustomerPurchase::findOrFail($customerId);
+        $internetCustomers = $internetPurchase->customer->userCustomer;
 
         DB::beginTransaction();
         try {
             $internetPurchase->update([
                 'confirmation_finance_at' => now(),
                 'user_finance_id' => Auth::user()->id
+            ]);
+
+            $internetCustomers->update([
+                'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
+                'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
             ]);
     
             $post =[

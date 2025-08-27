@@ -291,7 +291,7 @@ class InternetCustomerIndex extends Component
             
             $internetCustomers->update([
                 'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
-                'end_billing_date' => $date->addDays(config('service.internet_custom.end_billing_of_days'))->format('Y-m-d')
+                'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
             ]);
 
             $post =[
