@@ -422,7 +422,7 @@ class InternetCustomerForm extends Component
                     ->first();
                     
                     $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar. Silakan periksa detail pendaftaran dan tindak lanjuti.";
-                    $directUrl = route('internet-customer.index');
+                    $directUrl = route('internet-customer.show',$internetCustomer->id);
                     foreach($userFinance as $finance)
                     {
                         $this->sentInbox($finance->id, $from->id, $message, $directUrl);
