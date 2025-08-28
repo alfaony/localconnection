@@ -207,7 +207,7 @@ class InternetCustomerIndex extends Component
                 'user_finance_id' => Auth::user()->id
             ]);
 
-            $date = Carbon::now();
+            $date = Carbon::parse($internetCustomers->start_billing_date);
             
             $internetCustomers->update([
                 'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
