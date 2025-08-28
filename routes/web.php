@@ -587,16 +587,16 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('promo', PromoIndex::class)->name('promo.index');
   Route::get('promo/create', PromoForm::class)->name('promo.create');
   Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
-});
 
-Route::group(['middleware' => ['auth']], function()
-{
   Route::get('router', RouterIndex::class)->name('router.index');
   Route::get('router/create', RouterForm::class)->name('router.create');
   Route::get('router/edit/{mikrotik}', RouterForm::class)->name('router.edit');
   Route::get('router/show/{routerId}', RouterInventory::class)->name('router.show');
   Route::get('router/mapping/{routerId}', PackageProfileMapping::class)->name('router.mapping');
+});
 
+Route::group(['middleware' => ['auth']], function()
+{
     Route::post('mikrotik/secrets/{username}/disconnect', [MikrotikSecretController::class, 'disconnect'])->name('mikrotik-secret.disconnect');
     Route::post('mikrotik/secrets/{username}/reconnect', [MikrotikSecretController::class, 'reconnect'])->name('mikrotik-secret.reconnect');
     Route::resource('mikrotik-profile', MikrotikProfileController::class);

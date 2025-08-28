@@ -5,9 +5,11 @@
     <div class="card card-primary card-outline mt-5">
         <div class="card-header">
             <h3 class="card-title">Daftar Router - Mikrotik</h3>
+            @canAccess('create','routers')
             <div class="card-tools">
                 <a href="{{ route('router.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i></a>
             </div>
+            @endcanAccess
         </div>
         <div class="card-body">
             @if (session()->has('message'))
@@ -50,10 +52,21 @@
                             @endswitch
                         </td>
                         <td>
-                            <a href="{{ route('router.mapping', $mikrotik) }}" class="btn btn-secondary btn-sm mb-1"><i class="fas fa-sitemap"></i></a>
-                            <a href="{{ route('router.show', $mikrotik) }}" class="btn btn-primary btn-sm mb-1"><i class="fas fa-eye"></i></a>
-                            <a href="{{ route('router.edit', $mikrotik) }}" class="btn btn-warning btn-sm mb-1"><i class="fas fa-edit"></i></a>
-                            <button type="button" class="btn btn-danger btn-sm mb-1" onclick="confirm('Yakin ingin menghapus router ini?') && @this.delete({{ $mikrotik->id }})"><i class="fas fa-trash"></i></button>
+                            @canAccess('mapping','routers')
+                            <a href="{{ route('router.mapping', $mikrotik) }}" class="btn btn-secondary btn-sm mb-1" title="Mapping Paket Profile"><i class="fas fa-sitemap"></i></a>
+                            @endcanAccess
+
+                            @canAccess('show','routers')
+                            <a href="{{ route('router.show', $mikrotik) }}" class="btn btn-primary btn-sm mb-1" title="Detail Router"><i class="fas fa-eye"></i></a>
+                            @endcanAccess
+
+                            @canAccess('edit','routers')
+                            <a href="{{ route('router.edit', $mikrotik) }}" class="btn btn-warning btn-sm mb-1" title="Edit Router"><i class="fas fa-edit"></i></a>
+                            @endcanAccess
+
+                            @canAccess('destroy','routers')
+                            <button type="button" class="btn btn-danger btn-sm mb-1" onclick="confirm('Yakin ingin menghapus router ini?') && @this.delete({{ $mikrotik->id }})" title="Hapus Router"><i class="fas fa-trash"></i></button>
+                            @endcanAccess
                         </td>
                     </tr>
                     @endforeach

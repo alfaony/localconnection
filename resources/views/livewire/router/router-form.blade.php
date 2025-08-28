@@ -1,5 +1,7 @@
 <div>
     @include('components.alert')
+    @canAccess('store','routers')
+    @canAccess('update','routers')
     <div class="card card-primary card-outline mt-5">
         <div class="card-header">
             <h3 class="card-title">{{ $mikrotikId ? 'Edit' : 'Create' }}  Router - Mikrotik</h3>
@@ -65,4 +67,6 @@
             </div>
         </form>
     </div>
+    @endcanAccess
+    @endcanAccess
 </div>
