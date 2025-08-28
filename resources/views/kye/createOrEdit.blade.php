@@ -162,19 +162,18 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="house_photo"><i class="fas fa-home"></i> Foto Rumah Saat Ini</label>
-                        <input type="hidden" name="house_photo" id="house_photo">
+                        <label for="ktp_family">
+                            <i class="fas fa-id-card"></i> Foto Rumah Saat Ini
+                        </label>
+                        <input type="file" name="house_photo" id="house_photo" class="form-control-file"
+                            accept=".jpeg,.jpg,.png" onchange="compressAndPreviewImage();" required>
                         <div class="d-flex align-items-center mt-2">
-                            <button type="button" id="house_photo_btn" class="btn btn-outline-primary btn-sm me-2"
-                                onclick="openCamera('house_photo', 'house_photo_preview'); this.disabled = true;">
-                                <i class="fas fa-camera"></i> Ambil Foto Rumah
-                            </button>
-                            <div id="house_photo_preview" class="ms-2">
+                            <div id="ktp_family_preview">
                                 @if(@$kye->house_photo)
-                                <img src="{{ asset('storage/' . @$kye->house_photo) }}" alt="House Photo"
-                                    class="img-thumbnail" width="100">
+                                <img id="photo-preview" src="{{ asset('storage/' . @$kye->house_photo) }}" alt="KTP Orang Tua/Saudara"
+                                    class="img-thumbnail mt-2" width="120">
                                 @else
-                                <p class="text-muted mb-0"><i class="fas fa-image"></i> Belum ada foto.</p>
+                                <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-fluid mt-3"/>
                                 @endif
                             </div>
                         </div>
