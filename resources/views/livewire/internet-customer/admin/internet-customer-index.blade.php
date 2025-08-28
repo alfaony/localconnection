@@ -40,8 +40,12 @@
                             <option value="">Semua Status</option>
                             <option value="pending">Pending</option>
                             <option value="waiting_payment_confirmation">Menunggu Pembayaran</option>
+                            <option value="waiting_payment_subscription">Menunggu Pembayaran Subscription</option>
                             <option value="process_installation">Proses Instalasi</option>
                             <option value="installed">Terpasang</option>
+                            <option value="reactivated">Reaktivasi</option>
+                            <option value="active">Aktif</option>
+                            <option value="suspended">Dihentikan</option>
                         </select>
                     </div>
                     <div class="col-md-2">

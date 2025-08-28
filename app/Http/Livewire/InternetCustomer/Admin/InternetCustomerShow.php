@@ -82,6 +82,13 @@ class InternetCustomerShow extends Component
                 'user_finance_id' => Auth::user()->id
             ]);
 
+             $startDate = Carbon::parse($internetCustomers->start_billing_date);
+            if ($startDate->isSameMonth(now())) {
+                $date = $startDate; // tetap Carbon object
+            } else {
+                $date = now();
+            }
+            
             $internetCustomers->update([
                 'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
                 'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
@@ -111,6 +118,9 @@ class InternetCustomerShow extends Component
                         $this->sentInbox($tech,$message, $directUrl);
                     }
                 }
+            }else
+            {
+                $post['status'] = ParamSchema::REACTIVATED;
             }
     
             $internetPurchase->customer->update($post);

@@ -332,7 +332,6 @@ class InternetCustomerIndex extends Component
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Pembayaran Langganan Internet Untuk Kode '.$internetPurchase->customer->code.' Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan']);
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
             Log::error($th);
             DB::rollBack();
             $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal mengkonfirmasi pembayaran: ' . $th->getMessage()]);
@@ -355,7 +354,7 @@ class InternetCustomerIndex extends Component
 
         // kolom yang memang dipakai di tabel/index
         $columns = [
-            'id', 'name', 'code', 'status',
+            'id', 'name', 'code', 'status','address',
             'internet_package_id', 'user_customer_id', 'company_id',
             'ktp_number', 'created_at'
         ];

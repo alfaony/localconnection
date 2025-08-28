@@ -45,21 +45,22 @@ class SentMessageToCustomer implements ShouldQueue
             $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
             if($client->status())
             {
-                $potentialVendors = $this->itemRequest->potentialVendors()->get();
+                $userTagihan = $this->itemRequest->user;
                 foreach ($potentialVendors as $potentialVendor) 
                 {
                     $url = route('vendor.respond', ['id' => $potentialVendor->id, 'token' => $potentialVendor->response_token]);
 
-                    $message ="Hai Kak, perkenalkan kami dari Thrive.\n\n" 
-                        ."Kami membutuhkan barang berikut:\n\n"
-                        . "Nama: {$this->itemRequest->item_name}\n"
-                        . "Qty: {$this->itemRequest->qty}\n"
-                        . "Estimasi Harga: {$this->itemRequest->price_with_format}\n\n"
-                        . "Apakah di toko {$potentialVendor->productSupplier->store_name} tersedia untuk produk tersebut?\n"
-                        . "Jika tersedia, mohon konfirmasinya ya Kak.\n\n"
-                        . "Untuk melakukan penawaran, silakan klik link di bawah ini:\n"
-                        . "{$url}\n\n"
-                        . "Terima kasih🙏😊";
+                    $message = "Hai Kak {$customer->name}, kami dari Thrive ingin menginformasikan mengenai tagihan layanan internet Anda.\n\n"
+                                . "📌 *Detail Tagihan:*\n"
+                                . "Nama Pelanggan: {$customer->name}\n"
+                                . "Layanan: Internet Rumah\n"
+                                . "Periode: Agustus 2025\n"
+                                . "Jumlah Tagihan: Rp {$tagihan->formatted_total}\n\n"
+                                . "Untuk melakukan pembayaran atau konfirmasi, silakan klik tautan berikut:\n"
+                                . "{$url}\n\n"
+                                . "Mohon segera melakukan pembayaran sebelum jatuh tempo agar layanan tetap aktif.\n\n"
+                                . "Terima kasih atas kepercayaannya menggunakan layanan Thrive.\n\n"
+                                . "*Admin Thrive* 🙏";
 
                     $this->sendMessage($client, $potentialVendor->productSupplier->phone_number, $message);
                 }
