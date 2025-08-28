@@ -27,3 +27,13 @@ Broadcast::channel('chat.item-request.{id}', function ($user, $id) {
 Broadcast::channel('user.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+
+// QR untuk tampilan laptop
+Broadcast::channel('office.barcode.{companyId}', function ($user, $companyId) {
+    return (int) $user->company_id === (int) $companyId;
+});
+
+// Notifikasi ke user yang melakukan scan
+Broadcast::channel('office.scan.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

@@ -102,6 +102,8 @@ use App\Http\Controllers\MomController;
 use App\Http\Controllers\UsedLaptopController;
 use App\Http\Controllers\MasterCheckItemController;
 use App\Http\Controllers\UsedItemController;
+use App\Http\Controllers\BarcodeAttendanceController;
+use App\Http\Controllers\OfficeAttendanceController;
 
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
@@ -580,6 +582,15 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
 });
 
+// Barcode Generator
+Route::post('barcode/generate', [BarcodeAttendanceController::class, 'generate'])->middleware('auth');
+
+// Scan Barcode
+Route::get('office-attendance', [OfficeAttendanceController::class, 'index'])->name('office-attendance.index')->middleware('auth');
+Route::get('office-attendance/scan/{code}', [OfficeAttendanceController::class, 'scan'])->middleware('auth');
+
+// Lengkapi data absen (foto + lokasi)
+Route::post('office-attendance/complete', [OfficeAttendanceController::class, 'complete'])->middleware('auth');
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
