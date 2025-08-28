@@ -265,16 +265,21 @@ class InternetCustomerIndex extends Component
     {
         $user = Auth::user();
 
-        $query = InternetCustomer::query()->with([
-            'company',
-            'province',
-            'city',
-            'district',
-            'subdistrict',
-            'internetPackage',
-            'partnershipAgreement',
-            'userCustomer'
-        ]);
+        $columns = [
+            'id', 'name', 'code', 'status','address',
+            'internet_package_id', 'user_customer_id', 'company_id',
+            'ktp_number', 'created_at'
+        ];
+        $query = InternetCustomer::query()
+            ->byCompany($user->company_id) // batasi dataset sesuai akses
+            ->select($columns)
+            // eager load minimal yang dipakai di blade
+            ->with([
+                'installation:id,internet_customer_id,device_serial_number',
+                'userCustomer:id,name,email,phone_number',
+                'company:id,name',
+                'internetPackage:id,name'
+            ]);
 
         // Pencarian data
         if ($this->search) {
