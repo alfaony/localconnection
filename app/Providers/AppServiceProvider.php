@@ -150,6 +150,7 @@ class AppServiceProvider extends ServiceProvider
             ];
 
             $managementKaryawanMenu = [
+                'kyes',
                 'employees','users','positions','managers','attendances',
                 'shifting_obs','schedule_obs','dayoffs','employee_checkings','trainings'
             ];
