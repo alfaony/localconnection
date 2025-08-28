@@ -88,6 +88,26 @@
                                             {{ $customer->province->name ?? '-' }}
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <th>Tanggal Pembayaran Selanjutnya</th>
+                                        <td>
+                                            @if($customer->userCustomer->start_billing_date)
+                                                <span class="badge badge-success">{{ \Carbon\Carbon::parse($customer->userCustomer->start_billing_date)->format('d M Y') }}</span>
+                                            @else
+                                                <span class="badge badge-secondary">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Batas Pembayaran Selanjutnya</th>
+                                        <td>
+                                            @if($customer->userCustomer->end_billing_date)
+                                                <span class="badge badge-warning">{{ \Carbon\Carbon::parse($customer->userCustomer->end_billing_date)->format('d M Y') }}</span>
+                                            @else
+                                                <span class="badge badge-secondary">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -222,7 +242,7 @@
                                         <tbody>
                                             @foreach($purchases as $purchase)
                                             <tr>
-                                                <td>{{ \Carbon\Carbon::parse($purchase->period)->format('F Y') }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($purchase->created_at)->format('F Y') }}</td>
                                                 <td>{{ ucfirst($purchase->payment_method ?? '-') }}</td>
                                                 <td>
                                                     @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
@@ -256,6 +276,9 @@
                                                             @endif
                                                             @break
                                                         @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION)
+                                                            @break
+                                                        @default
+                                                            <i class="fas fa-check-circle mr-1 text-success"></i>
                                                             @break
                                                     @endswitch
                                                 </td>

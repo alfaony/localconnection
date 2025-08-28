@@ -81,6 +81,26 @@
                                             {{ $customer->province->name ?? '-' }}
                                         </td>
                                     </tr>
+                                     <tr>
+                                        <th>Tanggal Pembayaran Selanjutnya</th>
+                                        <td>
+                                            @if($customer->userCustomer->start_billing_date)
+                                                <span class="badge badge-success">{{ \Carbon\Carbon::parse($customer->userCustomer->start_billing_date)->format('d M Y') }}</span>
+                                            @else
+                                                <span class="badge badge-secondary">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Batas Pembayaran Selanjutnya</th>
+                                        <td>
+                                            @if($customer->userCustomer->end_billing_date)
+                                                <span class="badge badge-warning">{{ \Carbon\Carbon::parse($customer->userCustomer->end_billing_date)->format('d M Y') }}</span>
+                                            @else
+                                                <span class="badge badge-secondary">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -183,7 +203,7 @@
                                         <tbody>
                                             @foreach($purchases as $purchase)
                                             <tr>
-                                                <td>{{ \Carbon\Carbon::parse($purchase->period)->format('F Y') }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($purchase->created_at)->format('F Y') }}</td>
                                                 <td>{{ ucfirst($purchase->payment_method ?? '-') }}</td>
                                                 <td>
                                                     @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
@@ -206,10 +226,16 @@
                                                                 <span class="badge badge-warning">Menunggu Konfirmasi</span>
                                                             @endif
                                                             @break
-                                                        @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION)
-                                                            <button class="btn btn-sm btn-success mt-1" wire:click="showPaymentModal({{ $purchase->id }})">
-                                                                Konfirmasi
+                                                        @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION || \App\Schemas\ParamSchema::SUSPENDED)
+                                                            @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
+                                                            <button wire:click="viewPaymentProof('{{ $purchase->id }}')" class="btn btn-sm btn-info">
+                                                                <i class="fas fa-eye mr-1"></i>Lihat
                                                             </button>
+                                                            @else
+                                                                <button class="btn btn-sm btn-success mt-1" wire:click="showPaymentModal({{ $purchase->id }})">
+                                                                    Konfirmasi
+                                                                </button>
+                                                            @endif
                                                             @break
                                                     @endswitch
                                                 </td>

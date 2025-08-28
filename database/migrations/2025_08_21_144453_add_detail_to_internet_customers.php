@@ -18,7 +18,7 @@ return new class extends Migration
             // --- kolom teknis AAA / Mikrotik ---
             $table->foreignId('router_id')->nullable()->constrained('routers')->nullOnDelete();
             $table->enum('access_type', ['pppoe','hotspot','ipoe'])->default('pppoe');
-            $table->string('username')->nullable()->unique();   // PPPoE/Hotspot username
+            $table->string('username')->nullable();   // PPPoE/Hotspot username
             $table->string('pass_hash')->nullable();            // hash password
             $table->string('ip_address', 45)->nullable();
             $table->string('mac_address', 32)->nullable();

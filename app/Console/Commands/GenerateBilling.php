@@ -33,8 +33,9 @@ class GenerateBilling extends Command
             }
 
             if (Carbon::parse($customer->end_billing_date) == $today && in_array($customer->internetCustomer->status, [
-                ParamSchema::ACTIVE,
-                ParamSchema::INSTALLED,
+                // ParamSchema::ACTIVE,
+                // ParamSchema::INSTALLED,
+                ParamSchema::WAITING_PAYMENT_CONFIRMATION
             ]))
             {
                 GenerateIsolirJob::dispatch($customer);

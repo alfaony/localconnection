@@ -13,6 +13,7 @@ use App\Helpers\InboxHelper;
 use App\Models\User;
 use App\Schemas\RoleSchema;
 use App\Schemas\ParamSchema;
+use App\Jobs\ProvisionCustomerJob;
 
 
 class InternetCustomerShow extends Component
@@ -106,6 +107,11 @@ class InternetCustomerShow extends Component
             $purchase = InternetCustomerPurchase::findOrFail($this->purchase_id);
             $internetCustomer = $purchase->customer;
 
+            if($internetCustomer->status == ParamSchema::SUSPENDED)
+            {
+                dispatch(new ProvisionCustomerJob($cust->id));
+            }
+            
             $internetCustomer->update([
                 'status' => ParamSchema::WAITING_PAYMENT_CONFIRMATION
             ]);
@@ -170,7 +176,7 @@ class InternetCustomerShow extends Component
         $this->paymentProofUrl = $purchase->payment_proof ? Storage::url($purchase->payment_proof) : null;
         
         if ($this->paymentProofUrl) {
-            $this->dispatchBrowserEvent('show-image-modal', [
+            $this->dispatchBrowserEvent('showImageModal', [
                 'title' => 'Bukti Pembayaran ' . Carbon::parse($purchase->period)->format('F Y'),
                 'imageUrl' => $this->paymentProofUrl
             ]);
@@ -180,7 +186,7 @@ class InternetCustomerShow extends Component
     public function viewKtpPhoto()
     {
         if ($this->ktpPhotoUrl) {
-            $this->dispatchBrowserEvent('show-image-modal', [
+            $this->dispatchBrowserEvent('showImageModal', [
                 'title' => 'Foto KTP',
                 'imageUrl' => $this->ktpPhotoUrl
             ]);
@@ -194,7 +200,7 @@ class InternetCustomerShow extends Component
                 return Storage::url($path);
             }, $this->installationPhotos);
             
-            $this->dispatchBrowserEvent('show-gallery-modal', [
+            $this->dispatchBrowserEvent('showGalleryModal', [
                 'title' => 'Foto Instalasi',
                 'images' => $fullUrls
             ]);

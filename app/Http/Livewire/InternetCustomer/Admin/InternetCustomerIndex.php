@@ -287,7 +287,12 @@ class InternetCustomerIndex extends Component
                 'user_finance_id' => Auth::user()->id
             ]);
 
-            $date = Carbon::parse($internetCustomers->start_billing_date);
+            $startDate = Carbon::parse($internetCustomers->start_billing_date);
+            if ($startDate->isSameMonth(now())) {
+                $date = $startDate; // tetap Carbon object
+            } else {
+                $date = now();
+            }
             
             $internetCustomers->update([
                 'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
@@ -318,7 +323,7 @@ class InternetCustomerIndex extends Component
                 }
             }else
             {
-                $post['status'] = ParamSchema::INSTALLED;
+                $post['status'] = ParamSchema::REACTIVATED;
             }
     
             $internetPurchase->customer->update($post);
