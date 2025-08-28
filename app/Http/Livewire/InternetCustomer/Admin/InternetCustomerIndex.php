@@ -352,12 +352,21 @@ class InternetCustomerIndex extends Component
     {
         $user = Auth::user();
 
-        // kolom yang memang dipakai di tabel/index
         $columns = [
             'id', 'name', 'code', 'status','address',
             'internet_package_id', 'user_customer_id', 'company_id',
             'ktp_number', 'created_at'
         ];
+        $query = InternetCustomer::query()
+            ->byCompany($user->company_id) // batasi dataset sesuai akses
+            ->select($columns)
+            // eager load minimal yang dipakai di blade
+            ->with([
+                'installation:id,internet_customer_id,device_serial_number',
+                'userCustomer:id,name,email,phone_number',
+                'company:id,name',
+                'internetPackage:id,name'
+            ]);
 
         // whitelist kolom sort
         $allowedSorts = ['created_at', 'name', 'status', 'code'];

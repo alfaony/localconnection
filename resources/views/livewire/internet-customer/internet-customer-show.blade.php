@@ -197,7 +197,8 @@
                                                 <th>Metode</th>
                                                 <th>Status</th>
                                                 <th>Jumlah Bayar</th>
-                                                <th>Pembayaran</th>
+                                                <th>Bukti Pembayaran</th>
+                                                <th>Konfirmasi Pembayaran</th>
                                             </tr>
                                         </thead>
                                         <tbody>
