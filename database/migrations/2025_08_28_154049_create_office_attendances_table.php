@@ -18,6 +18,9 @@ return new class extends Migration
             $table->foreignUuid('company_id')->constrained('companies');
             $table->foreignUuid('user_id')->constrained('users');
             $table->foreignUuid('barcode_attendance_id')->nullable()->constrained('barcode_attendances');
+            $table->string('location_lat')->nullable();
+            $table->string('location_long')->nullable();
+            $table->string('selfie_path')->nullable(); // bisa gunakan Laravel File Storage
             $table->timestamp('time')->nullable();
             $table->timestamps();
         });

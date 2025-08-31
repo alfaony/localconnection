@@ -10,9 +10,9 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class BarcodeVerifiedSuccess
+class BarcodeVerifiedSuccess implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, SerializesModels;
 
     /**
      * Create a new event instance.
@@ -20,9 +20,11 @@ class BarcodeVerifiedSuccess
      * @return void
      */
     public $userId;
-    public function __construct($userId)
+    public $verified;
+    public function __construct(String $userId, Bool $verified)
     {
         $this->userId = $userId;
+        $this->verified = $verified;
     }
 
     /**
@@ -30,8 +32,17 @@ class BarcodeVerifiedSuccess
      *
      * @return \Illuminate\Broadcasting\Channel|array
      */
-    public function broadcastOn()
+    public function broadcastOn(): PrivateChannel
     {
-        return new Channel('office.scan.' . $this->userId);
+        return new PrivateChannel('office.scan.' . $this->userId);
+    }
+
+    public function broadcastWith(): array
+    {
+        return 
+        [
+            'user_id' => $this->userId,
+            'verified' => $this->verified,
+        ];
     }
 }

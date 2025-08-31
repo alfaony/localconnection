@@ -7,51 +7,195 @@ use App\Models\OfficeAttendance;
 use App\Jobs\ProcessScanAttendanceJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Helpers\Access;
 
 class OfficeAttendanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('office_attendance.index');
+        $companyId = auth()->user()->company_id;
+        
+        // Data absensi dengan pagination
+        $query = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendance'))
+            ->with('user');
+
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
+        }
+
+        if ($request->filled('employee')) {
+            $query->where('user_id', $request->employee);
+        }
+
+        if ($request->filled('filter')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->filter . '%')
+                  ->orWhere('email', 'like', '%' . $request->filter . '%');
+            });
+        }
+
+        if ($request->sort === 'oldest') {
+            $query->orderBy('created_at', 'asc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $officeAttendance = $query->paginate(10);
+        
+        // Data karyawan
+        $employees = User::byCompany($companyId)->where('wfo_check_in', true)->get();
+        
+        // Statistik untuk dashboard
+        $totalAttendance = OfficeAttendance::byCompany($companyId)
+            ->selectRaw('count(*) as total_attendance')
+            ->groupBy('user_id')
+            ->get()
+            ->sum('total_attendance');
+        $todayAttendance = OfficeAttendance::byCompany($companyId)
+            ->whereDate('created_at', today())
+            ->count();
+        
+        $averageAttendancePerDay = OfficeAttendance::byCompany($companyId)
+            ->selectRaw('count(*) as total_attendance')
+            ->groupByRaw('date(created_at)')
+            ->pluck('total_attendance')
+            ->avg();
+            
+        $totalEmployees = User::byCompany($companyId)->where('wfo_check_in', true)->count();
+        
+        $locationCount = OfficeAttendance::byCompany($companyId)
+            ->whereNotNull('location_lat')
+            ->whereNotNull('location_long')
+            ->count();
+        
+        return view('office_attendance.index', compact(
+            'officeAttendance', 
+            'employees',
+            'totalAttendance',
+            'todayAttendance',
+            'totalEmployees',
+            'locationCount'
+        ));
     }
     
     public function scan($code)
     {
-        $barcode = BarcodeAttendance::where('code', $code)->firstOrFail();
+        if(!Auth::user()->wfo_check_in || Access::can('scan','office_attendance'))
+        {
+            return redirect()->route('office-attendance.index')->with('error', 'Absensi WFH belum diaktifkan. Silahkan hubungi admin.');
+        }
 
+        $timesPerDay = config('services.checking_setting.times_per_day');
+        $todayCount = OfficeAttendance::byCompany(auth()->user()->company_id)
+            ->whereDate('created_at', today())
+            ->where('user_id', auth()->id())
+            ->count();
+
+        if($todayCount >= $timesPerDay)
+        {
+            return redirect()->route('office-attendance.index')->with('error', 'Absensi sudah mencapai batas maksimum hari ini. Silahkan coba lagi besok.');
+        }
+        
+        if($todayCount >= $timesPerDay)
+        {
+            return redirect()->route('office-attendance.index')->with('error', 'Absensi sudah mencapai batas maksimum hari ini. Silahkan coba lagi besok.');
+        }
+
+        $verified = $this->verified($code);
+        if($verified)
+        {
+            return $verified;
+        }
+        
+        $barcode = BarcodeAttendance::where('code', $code)->first();
+        // Dispatch Job untuk memproses verifikasi absensi
         ProcessScanAttendanceJob::dispatch(
             $barcode->id,
             auth()->id(),
             auth()->user()->company_id
         );
 
-        return response()->json([
-            'message' => 'Scan berhasil, sedang diverifikasi...',
-            'status' => 'processing'
-        ]);
+        // Kembalikan status "processing" ke halaman status verifikasi
+        return view('office_attendance.attendance', compact('barcode'))->with('success', 'QR code sedang diverifikasi. Harap tunggu...');
     }
 
-    public function complete(Request $request)
+    public function complete(Request $request, $code)
     {
         $request->validate([
-            'location_lat' => 'required',
-            'location_long' => 'required',
-            'selfie' => 'required|image|max:2048',
+            'latitude' => 'required',
+            'longitude' => 'required',
+            'photo' => 'required'
+        ], [
+            'location_lat.required' => 'Lokasi harus diisi',
+            'location_long.required' => 'Lokasi harus diisi',
+            'photo.required' => 'Foto selfie harus diisi',
+        ]);
+        
+        $verified = $this->verified($code);
+        if($verified)
+        {
+            // dd($verified);
+            return $verified;
+        }
+        $barcode = BarcodeAttendance::where('code', $code)->first();
+
+        $foto = null;
+        if ($request->photo) 
+        {
+            $foto = $this->saveBase64ImageToStorage($request->photo, 'office_attendance');
+        }
+
+
+        $officeAttendance = new OfficeAttendance();
+        $officeAttendance->create([
+            'company_id' => auth()->user()->company_id,
+            'user_id' => auth()->id(),
+            'barcode_attendance_id' => $barcode->id,
+            'time' => now(),
+            'location_lat' => $request->latitude,
+            'location_long' => $request->longitude,
+            'selfie_path' => $foto
         ]);
 
-        $latestAttendance = OfficeAttendance::where('user_id', auth()->id())->latest('time')->firstOrFail();
+        return redirect()->route('office-attendance.index')->with('success', 'Absensi lengkap dengan foto dan lokasi.');
+    }
 
-        $path = $request->file('selfie')->store('selfie-attendance', 'public');
+    private function verified($code)
+    {
+        $barcode = BarcodeAttendance::where('code', $code)
+            ->where(function($query) {
+                $query->where('is_used', false)
+                    ->orWhere(function($query) {
+                        $query->where('user_id', auth()->id())
+                            ->where('is_used', true);
+                    });
+            })
+            ->first();
+        if (!$barcode) 
+        {
+            return redirect()->route('office-attendance.index')->with('error', 'QR code tidak ditemukan atau sudah digunakan.');
+        }
 
-        $latestAttendance->update([
-            'location_lat' => $request->location_lat,
-            'location_long' => $request->location_long,
-            'selfie_path' => $path,
-        ]);
+        $officeAttendance = OfficeAttendance::where('barcode_attendance_id', $barcode->id)->first();
+        if($officeAttendance) 
+        {
+            return redirect()->route('office-attendance.index')->with('error', 'QR code sudah digunakan.');   
+        }
+    }
 
-        return response()->json([
-            'message' => 'Absensi lengkap dengan foto dan lokasi.',
-            'status' => 'completed'
-        ]);
+    protected function saveBase64ImageToStorage($base64Image, $folder)
+    {
+        $fileName = uniqid() . '.png';
+
+        // Decode Base64 image
+        $imageData = base64_decode(str_replace(['data:image/png;base64,', ' '], ['', '+'], $base64Image));
+
+        // Use Storage facade to save the file in the public directory
+        $filePath = "$folder/$fileName";
+        Storage::put("public/$filePath", $imageData);
+
+        return $filePath; // Return the file path as is
     }
 }

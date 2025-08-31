@@ -3,43 +3,41 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class BarcodeAttendance extends Model
+class OfficeAttendance extends Model
 {
-    use HasFactory, SoftDeletes;
-
-    protected $table = 'barcode_attendances';
-
-    protected $keyType = 'string'; // Karena UUID
-    public $incrementing = false;
+    use HasFactory;
 
     protected $fillable = [
-        'id',
         'company_id',
-        'code',
-        'is_used',
-        'expires_at'
+        'user_id',
+        'barcode_attendance_id',
+        'time',
+        'location_lat',
+        'location_long',
+        'selfie_path',
     ];
 
-    protected $casts = [
-        'expires_at' => 'datetime',
-        'is_used' => 'boolean',
-    ];
-
-    public function company()
+    public function barcode()
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(BarcodeAttendance::class, 'barcode_attendance_id');
     }
 
-    public function scopeByCompany($query,$companyId)
+    public function user()
     {
-        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+        return $this->belongsTo(User::class);
+    }
 
-        if($companyIds && Auth::user()->role->name != RoleSchema::ROOT)
+    public function scopeByCompany($query, $companyIds, $access = false)
+    {
+        if($access) 
         {
-            return $query->whereIn("company_id",$companyIds);
+            $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyIds)->unique();   
+            return $query->whereIn('company_id', $companyIds);
+        }else
+        {
+            return $query->where('user_id', auth()->user()->id);
         }
     }
 }

@@ -10,7 +10,6 @@ class BarcodeAttendance extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'barcode_attendances';
 
     protected $keyType = 'string'; // Karena UUID
     public $incrementing = false;

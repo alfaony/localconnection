@@ -10,9 +10,9 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class NewBarcodeGenerated
+class NewBarcodeGenerated implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, SerializesModels;
 
     /**
      * Create a new event instance.
@@ -20,9 +20,11 @@ class NewBarcodeGenerated
      * @return void
      */
     public $companyId;
-    public function __construct($companyId)
+    public $barcode;
+    public function __construct($barcode, $companyId)
     {
         $this->companyId = $companyId;
+        $this->barcode = $barcode;
     }
 
     /**
@@ -30,8 +32,16 @@ class NewBarcodeGenerated
      *
      * @return \Illuminate\Broadcasting\Channel|array
      */
-    public function broadcastOn()
+    public function broadcastOn(): PrivateChannel
     {
-        return new Channel('office.barcode.' . $this->companyId);
+        return new PrivateChannel('office.barcode.' . $this->companyId);
+    }
+
+    public function broadcastWith(): array
+    {
+        return 
+        [
+            'barcode' => $this->barcode,
+        ];
     }
 }

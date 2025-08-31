@@ -30,10 +30,12 @@ Broadcast::channel('user.{id}', function ($user, $id) {
 
 // QR untuk tampilan laptop
 Broadcast::channel('office.barcode.{companyId}', function ($user, $companyId) {
-    return (int) $user->company_id === (int) $companyId;
+    // return (int) $user->company_id === (int) $companyId;
+    return true;
 });
 
 // Notifikasi ke user yang melakukan scan
 Broadcast::channel('office.scan.{userId}', function ($user, $userId) {
-    return (int) $user->id === (int) $userId;
+    // return (int) $user->id === (int) $userId;
+    return true;
 });

@@ -18,9 +18,7 @@ return new class extends Migration
             $table->foreignUuid('company_id')->constrained('companies')->onDelete('cascade')->onUpdate('cascade');
             $table->uuid('code');
             $table->boolean('is_used')->default(false);
-            $table->string('location_lat')->nullable();
-            $table->string('location_long')->nullable();
-            $table->string('selfie_path')->nullable(); // bisa gunakan Laravel File Storage
+            $table->Uuid('user_id')->nullable()->constrained('users')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamp('expires_at')->nullable(); // opsional masa berlaku
             $table->timestamps();
             $table->softDeletes();
@@ -34,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('barcode_office_attendances');
+        Schema::dropIfExists('barcode_attendances');
     }
 };
