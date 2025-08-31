@@ -179,9 +179,15 @@ class KyeController extends Controller
             //     ? $this->saveBase64ImageToStorage($request->ktp_family, 'ktp_family_photos')
             //     : $kye->ktp_family;
 
-            $data['house_photo'] = $request->house_photo
-                ? $this->saveBase64ImageToStorage($request->house_photo, 'house_photos')
-                : $kye->house_photo;
+            // $data['house_photo'] = $request->house_photo
+            //     ? $this->saveBase64ImageToStorage($request->house_photo, 'house_photos')
+            //     : $kye->house_photo;
+            if ($request->house_photo) 
+            {
+                $data['house_photo'] = 'house_photos/' . uniqid() . '.' . $request->file('house_photo')->extension();
+                Storage::put('public/' . $data['house_photo'], file_get_contents($request->file('house_photo')->getRealPath()));
+            }
+            
             if ($request->skck) 
             {
                 if (isset($kye->skck)) 
