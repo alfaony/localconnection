@@ -20,58 +20,65 @@
                 </div>
                 <div class="card-body">
                     <!-- Filter Section -->
-                    <form method="GET" action="{{ route('office-attendance.index') }}" class="row mb-4">
-                        <div class="col-md-2 col-sm-6">
-                            <div class="form-group">
-                                <label for="dateRange">Tanggal</label>
-                                <input type="text" class="form-control" id="dateRange" placeholder="Pilih rentang tanggal" autocomplete="off">
-                                <input type="hidden" name="start_date" id="start_date" value="{{ request('start_date') }}">
-                                <input type="hidden" name="end_date" id="end_date" value="{{ request('end_date') }}">
+                  <form method="GET" action="{{ route('office-attendance.index') }}" class="mb-4">
+                        <div class="row g-3">
+
+                            {{-- Filter Tanggal (Date Range) --}}
+                            <div class="col-md-4">
+                                <label for="daterange" class="form-label">Tanggal (Rentang)</label>
+                                <input type="text" class="form-control" id="daterange" name="daterange" placeholder="Pilih rentang tanggal" />
                             </div>
-                        </div>
-                        <div class="col-md-2 col-sm-6">
-                            <div class="form-group">
-                                <label for="employeeFilter">Filter Karyawan</label>
+
+                            {{-- Filter Karyawan --}}
+                            <div class="col-md-4">
+                                <label for="employeeFilter" class="form-label">Karyawan</label>
                                 <select class="form-control select2" name="employee">
                                     <option value="">Semua Karyawan</option>
                                     @foreach($employees as $employee)
-                                        <option value="{{ $employee->id }}" {{ request('employee') == $employee->id ? 'selected' : '' }}>{{ $employee->name }}</option>
+                                        <option value="{{ $employee->id }}" {{ request('employee') == $employee->id ? 'selected' : '' }}>
+                                            {{ $employee->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
-                        </div>
-                        <div class="col-md-2 col-sm-6">
-                            <div class="form-group">
-                                <label for="sortBy">Urutkan Berdasarkan</label>
+
+                            {{-- Filter Urutan --}}
+                            <div class="col-md-4">
+                                <label for="sortBy" class="form-label">Urutkan</label>
                                 <select class="form-control" id="sortBy" name="sort">
                                     <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Terbaru</option>
                                     <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Terlama</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="col-md-2 col-sm-6">
-                            <div class="form-group">
-                                <label for="filter">Cari Email/Nama</label>
-                                <input type="text" class="form-control" id="filter" name="filter" value="{{ request('filter') }}" placeholder="Cari email/nama...">
+
+                            {{-- Cari Nama/Email --}}
+                            <div class="col-md-4">
+                                <label for="filter" class="form-label">Cari Nama / Email</label>
+                                <input type="text" class="form-control" id="filter" name="filter" placeholder="Cari..." value="{{ request('filter') }}">
                             </div>
+
+                            {{-- Tombol Filter --}}
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search me-1"></i> Filter
+                                </button>
+                            </div>
+
+                            {{-- Tombol Reset --}}
+                            <div class="col-md-2 d-flex align-items-end">
+                                <a href="{{ route('office-attendance.index') }}" class="btn btn-outline-secondary w-100">
+                                    <i class="fas fa-sync-alt me-1"></i> Reset
+                                </a>
+                            </div>
+                            @canAccess('export','office_attendances')
+                            <div class="col-md-3 d-flex align-items-end">
+                                <a href="{{ route('office_attendance.export', request()->query()) }}" class="btn btn-success w-100">
+                                    <i class="fas fa-file-excel mr-2"></i> Export Excel
+                                </a>
+                            </div>
+                            @endcanAccess
+
                         </div>
-                        <div class="col-md-2 col-sm-6 d-flex align-items-center justify-content-center">
-                            <button type="submit" class="btn btn-primary btn-block mt-3">
-                                <i class="fas fa-search mr-2"></i>
-                            </button>
-                        </div>
-                        <div class="col-md-2 col-sm-6 d-flex align-items-center justify-content-center">
-                            <a href="{{ route('office-attendance.index') }}" class="btn btn-secondary mt-3">
-                                <i class="fas fa-sync-alt mr-2"></i>Reset Filter
-                            </a>
-                        </div>
-                        @canAccess('export','office_attendances')
-                        <div class="col-md-3">
-                            <a href="{{ route('office_attendance.export', request()->query()) }}" class="btn btn-success w-100">
-                                <i class="fas fa-file-excel mr-2"></i> Export Excel
-                            </a>
-                        </div>
-                        @endcanAccess
                     </form>
 
                     <!-- Statistics Cards -->
