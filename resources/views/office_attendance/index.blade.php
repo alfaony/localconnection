@@ -109,6 +109,7 @@
                                 </div>
                             </div>
                         </div>
+                        {{-- 
                         <div class="col-md-3 col-sm-6">
                             <div class="info-box bg-warning">
                                 <span class="info-box-icon"><i class="fas fa-clock"></i></span>
@@ -124,6 +125,7 @@
                                 </div>
                             </div>
                         </div>
+                        --}}
                         <div class="col-md-3 col-sm-6">
                             <div class="info-box bg-danger">
                                 <span class="info-box-icon"><i class="fas fa-map-marker-alt"></i></span>

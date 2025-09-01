@@ -76,6 +76,8 @@ class OfficeAttendanceController extends Controller
             ->whereNotNull('location_lat')
             ->whereNotNull('location_long')
             ->count();
+
+        
         
         return view('office_attendance.index', compact(
             'officeAttendance', 
