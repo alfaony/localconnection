@@ -51,20 +51,17 @@ class OfficeAttendanceController extends Controller
         $employees = User::byCompany($companyId)->where('wfo_check_in', true)->get();
         
         // Statistik untuk dashboard
-        $totalAttendance = OfficeAttendance::byCompany($companyId)
-            ->byCompany($companyId, Access::can('general_access', 'office_attendances'))
+        $totalAttendance = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendances'))
             ->selectRaw('count(*) as total_attendance')
             ->groupBy('user_id')
             ->get()
             ->sum('total_attendance');
 
-        $todayAttendance = OfficeAttendance::byCompany($companyId)
-            ->byCompany($companyId, Access::can('general_access', 'office_attendances'))
+        $todayAttendance = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendances'))
             ->whereDate('created_at', today())
             ->count();
         
-        $averageAttendancePerDay = OfficeAttendance::byCompany($companyId)
-            ->byCompany($companyId, Access::can('general_access', 'office_attendances'))
+        $averageAttendancePerDay = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendances'))
             ->selectRaw('count(*) as total_attendance')
             ->groupByRaw('date(created_at)')
             ->pluck('total_attendance')
@@ -72,8 +69,7 @@ class OfficeAttendanceController extends Controller
             
         $totalEmployees = User::byCompany($companyId)->where('wfo_check_in', true)->count();
         
-        $locationCount = OfficeAttendance::byCompany($companyId)
-            ->byCompany($companyId, Access::can('general_access', 'office_attendances'))
+        $locationCount = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendances'))
             ->whereNotNull('location_lat')
             ->whereNotNull('location_long')
             ->count();
