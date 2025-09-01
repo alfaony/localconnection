@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class BarcodeAttendance extends Model
+{
+    use HasFactory, SoftDeletes;
+
+
+    protected $keyType = 'string'; // Karena UUID
+    public $incrementing = false;
+
+    protected $fillable = [
+        'id',
+        'company_id',
+        'code',
+        'is_used',
+        'expires_at'
+    ];
+
+    protected $casts = [
+        'expires_at' => 'datetime',
+        'is_used' => 'boolean',
+    ];
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+}

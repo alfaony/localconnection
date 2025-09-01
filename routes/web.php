@@ -102,6 +102,8 @@ use App\Http\Controllers\MomController;
 use App\Http\Controllers\UsedLaptopController;
 use App\Http\Controllers\MasterCheckItemController;
 use App\Http\Controllers\UsedItemController;
+use App\Http\Controllers\BarcodeAttendanceController;
+use App\Http\Controllers\OfficeAttendanceController;
 
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
@@ -578,6 +580,18 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('promo', PromoIndex::class)->name('promo.index');
   Route::get('promo/create', PromoForm::class)->name('promo.create');
   Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
+  
+  // Barcode 
+  Route::get('barcode', [BarcodeAttendanceController::class, 'index'])->name('barcode.index');
+  Route::post('barcode/generate', [BarcodeAttendanceController::class, 'generate'])->name('barcode.generate');
+  
+  // Scan Barcode
+  Route::get('office-attendance/export', [OfficeAttendanceController::class, 'export'])->name('office_attendance.export');
+  Route::get('office-attendance', [OfficeAttendanceController::class, 'index'])->name('office-attendance.index');
+  Route::get('office-attendance/scan/{code}', [OfficeAttendanceController::class, 'scan'])->name('office-attendance.scan');
+  
+  // Lengkapi data absen (foto + lokasi)
+  Route::put('office-attendance/complete/{code}', [OfficeAttendanceController::class, 'complete'])->name('office-attendance.complete');
 });
 
 

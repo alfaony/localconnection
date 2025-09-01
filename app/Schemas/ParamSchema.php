@@ -133,4 +133,8 @@ class ParamSchema
 
     // Promo
     const PROMO_FREE_MONTH = "free_months";
+
+    const WFO = "wfo";
+
+    const WFH = "wfh";
 }

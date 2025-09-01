@@ -152,7 +152,7 @@ class AppServiceProvider extends ServiceProvider
             $managementKaryawanMenu = [
                 'kyes',
                 'employees','users','positions','managers','attendances',
-                'shifting_obs','schedule_obs','dayoffs','employee_checkings','trainings'
+                'shifting_obs','schedule_obs','dayoffs','barcodes','employee_checkings','office_attendances','trainings'
             ];
 
             $managementInternetMenu = 
@@ -687,7 +687,19 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'promo.index',
                     'icon' => 'fa fa-tags',
                 ],
+                'office_attendances' =>
+                [
+                    'text' => 'Absensi WFO',
+                    'route' => 'office-attendance.index',
+                    'icon' => 'fa fa-user-check',
+                ],
+                'barcodes' => 
+                [
+                    'text' => 'WFO Absensi QR',
+                    'route' => 'barcode.index',
+                    'icon' => 'fa fa-qrcode',
 
+                ]
             ];
 
             // foreach ($listMenu as $role) 
