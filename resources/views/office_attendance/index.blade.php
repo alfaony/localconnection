@@ -128,10 +128,10 @@
                                     <span class="info-box-text">Lokasi Terdeteksi</span>
                                     <span class="info-box-number">{{ $locationCount }}</span>
                                     <div class="progress">
-                                        <div class="progress-bar" style="width: {{ ($locationCount/$totalAttendance)*100 }}%"></div>
+                                        <div class="progress-bar" style="width: {{ $totalAttendance > 0 ? ($locationCount/$totalAttendance)*100 : 0 }}%"></div>
                                     </div>
                                     <span class="progress-description">
-                                        {{ round(($locationCount/$totalAttendance)*100, 2) }}% dari total
+                                        {{ $totalAttendance > 0 ? round(($locationCount/$totalAttendance)*100, 2) : 0 }}% dari total
                                     </span>
                                 </div>
                             </div>
