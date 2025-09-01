@@ -586,6 +586,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::post('barcode/generate', [BarcodeAttendanceController::class, 'generate'])->name('barcode.generate');
   
   // Scan Barcode
+  Route::get('office-attendance/export', [OfficeAttendanceController::class, 'export'])->name('office_attendance.export');
   Route::get('office-attendance', [OfficeAttendanceController::class, 'index'])->name('office-attendance.index');
   Route::get('office-attendance/scan/{code}', [OfficeAttendanceController::class, 'scan'])->name('office-attendance.scan');
   

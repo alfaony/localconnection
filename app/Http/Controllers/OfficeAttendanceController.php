@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Helpers\Access;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\AttendanceExport;
 
 class OfficeAttendanceController extends Controller
 {
@@ -18,11 +20,11 @@ class OfficeAttendanceController extends Controller
         $companyId = auth()->user()->company_id;
         
         // Data absensi dengan pagination
-        $query = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendance'))
+        $query = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendances'))
             ->with('user');
 
-        if ($request->filled('date')) {
-            $query->whereDate('created_at', $request->date);
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('time', [$request->start_date, $request->end_date]);
         }
 
         if ($request->filled('employee')) {
@@ -53,6 +55,7 @@ class OfficeAttendanceController extends Controller
             ->groupBy('user_id')
             ->get()
             ->sum('total_attendance');
+
         $todayAttendance = OfficeAttendance::byCompany($companyId)
             ->whereDate('created_at', today())
             ->count();
@@ -82,7 +85,7 @@ class OfficeAttendanceController extends Controller
     
     public function scan($code)
     {
-        if(!Auth::user()->wfo_check_in || Access::can('scan','office_attendance'))
+        if(!Auth::user()->wfo_check_in || !Access::can('scan','office_attendances'))
         {
             return redirect()->route('office-attendance.index')->with('error', 'Absensi WFH belum diaktifkan. Silahkan hubungi admin.');
         }
@@ -162,7 +165,12 @@ class OfficeAttendanceController extends Controller
         return redirect()->route('office-attendance.index')->with('success', 'Absensi lengkap dengan foto dan lokasi.');
     }
 
-    private function verified($code)
+    public function export(Request $request)
+    {
+        return Excel::download(new AttendanceExport($request), 'absensi_' . now()->format('Ymd_His') . '.xlsx');
+    }
+
+    protected function verified($code)
     {
         $barcode = BarcodeAttendance::where('code', $code)
             ->where(function($query) {

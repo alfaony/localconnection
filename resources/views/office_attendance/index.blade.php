@@ -21,14 +21,15 @@
                 <div class="card-body">
                     <!-- Filter Section -->
                     <form method="GET" action="{{ route('office-attendance.index') }}" class="row mb-4">
-                        <div class="col-md-3 col-sm-6">
+                        <div class="col-md-2 col-sm-6">
                             <div class="form-group">
-                                <label for="dateFilter">Filter Tanggal</label>
-                                <input type="date" class="form-control" id="dateFilter" name="date" value="{{ request('date') }}">
+                                <label for="dateRange">Tanggal</label>
+                                <input type="text" class="form-control" id="dateRange" placeholder="Pilih rentang tanggal" autocomplete="off">
+                                <input type="hidden" name="start_date" id="start_date" value="{{ request('start_date') }}">
+                                <input type="hidden" name="end_date" id="end_date" value="{{ request('end_date') }}">
                             </div>
                         </div>
-                        @canAccess('general_access','office_attendance')
-                        <div class="col-md-3 col-sm-6">
+                        <div class="col-md-2 col-sm-6">
                             <div class="form-group">
                                 <label for="employeeFilter">Filter Karyawan</label>
                                 <select class="form-control select2" name="employee">
@@ -39,8 +40,7 @@
                                 </select>
                             </div>
                         </div>
-                        @endcanAccess
-                        <div class="col-md-3 col-sm-6">
+                        <div class="col-md-2 col-sm-6">
                             <div class="form-group">
                                 <label for="sortBy">Urutkan Berdasarkan</label>
                                 <select class="form-control" id="sortBy" name="sort">
@@ -55,16 +55,23 @@
                                 <input type="text" class="form-control" id="filter" name="filter" value="{{ request('filter') }}" placeholder="Cari email/nama...">
                             </div>
                         </div>
-                        <div class="col-md-1 col-sm-6 d-flex align-items-center justify-content-center">
+                        <div class="col-md-2 col-sm-6 d-flex align-items-center justify-content-center">
                             <button type="submit" class="btn btn-primary btn-block mt-3">
                                 <i class="fas fa-search mr-2"></i>
                             </button>
                         </div>
-                        <div class="col-md-12 mt-2">
-                            <a href="{{ route('office-attendance.index') }}" class="btn btn-secondary">
+                        <div class="col-md-2 col-sm-6 d-flex align-items-center justify-content-center">
+                            <a href="{{ route('office-attendance.index') }}" class="btn btn-secondary mt-3">
                                 <i class="fas fa-sync-alt mr-2"></i>Reset Filter
                             </a>
                         </div>
+                        @canAccess('export','office_attendances')
+                        <div class="col-md-3">
+                            <a href="{{ route('office_attendance.export', request()->query()) }}" class="btn btn-success w-100">
+                                <i class="fas fa-file-excel mr-2"></i> Export Excel
+                            </a>
+                        </div>
+                        @endcanAccess
                     </form>
 
                     <!-- Statistics Cards -->
@@ -250,6 +257,8 @@
 @section('css')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <!-- Daterangepicker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <style>
         .avatar-sm {
             width: 40px;
@@ -290,16 +299,67 @@
             padding: 0.25rem 0.5rem;
             border: none;
         }
+        .select2-container--default .select2-selection--single {
+            border: 1px solid #ced4da !important;
+            height: 38px !important;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 2.1;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 38px !important;
+        }
     </style>
 @endsection
 
 @section('js')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- jQuery dan Moment.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <script>
+        $(function() {
+            const start = "{{ request('start_date') }}";
+            const end = "{{ request('end_date') }}";
+
+            $('#dateRange').daterangepicker({
+                autoUpdateInput: false,
+                locale: {
+                    format: 'YYYY-MM-DD',
+                    applyLabel: 'Terapkan',
+                    cancelLabel: 'Batal'
+                }
+            });
+
+            $('#dateRange').on('apply.daterangepicker', function(ev, picker) {
+                $('#start_date').val(picker.startDate.format('YYYY-MM-DD'));
+                $('#end_date').val(picker.endDate.format('YYYY-MM-DD'));
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' s/d ' + picker.endDate.format('YYYY-MM-DD'));
+            });
+
+            $('#dateRange').on('cancel.daterangepicker', function(ev, picker) {
+                $('#start_date').val('');
+                $('#end_date').val('');
+                $(this).val('');
+            });
+
+            // Set value saat reload form (jika ada filter sebelumnya)
+            if (start && end) {
+                $('#dateRange').val(start + ' s/d ' + end);
+            }
+        });
+    </script>
     <script>
         $(document).ready(function() {
             // Initialize Select2
-            $('.select2').select2());
+            $('.select2').select2();
 
             // Initialize map variable
             let map = null;
