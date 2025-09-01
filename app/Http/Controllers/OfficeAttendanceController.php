@@ -57,10 +57,12 @@ class OfficeAttendanceController extends Controller
             ->get()
             ->sum('total_attendance');
 
-        $todayAttendance = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendances'))
-            ->whereDate('created_at', today())
-            ->groupBy('user_id')
-            ->count();
+       $todayAttendance = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendances'))
+        ->whereDate('time', Carbon::today())
+        ->selectRaw('user_id, COUNT(*) as total_absen')
+        ->groupBy('user_id')
+        ->get()->count('user_id');
+
         
         $averageAttendancePerDay = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendances'))
             ->selectRaw('count(*) as total_attendance')

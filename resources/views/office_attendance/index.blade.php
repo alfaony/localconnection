@@ -99,7 +99,7 @@
                                 <span class="info-box-icon"><i class="fas fa-user-check"></i></span>
                                 <div class="info-box-content">
                                     <span class="info-box-text">Hadir Hari Ini</span>
-                                    <span class="info-box-number">{{ "$todayAttendance" }}</span>
+                                    <span class="info-box-number">{{ $todayAttendance }}</span>
                                     <div class="progress">
                                         <div class="progress-bar" style="width: {{ ($todayAttendance/$totalEmployees)*100 }}%"></div>
                                     </div>
