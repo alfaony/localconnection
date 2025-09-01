@@ -59,6 +59,7 @@ class OfficeAttendanceController extends Controller
 
         $todayAttendance = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendances'))
             ->whereDate('created_at', today())
+            ->groupBy('user_id')
             ->count();
         
         $averageAttendancePerDay = OfficeAttendance::byCompany($companyId, Access::can('general_access', 'office_attendances'))
