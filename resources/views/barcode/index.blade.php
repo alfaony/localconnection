@@ -33,6 +33,11 @@
                         <li>Tunggu hingga notifikasi absensi berhasil muncul</li>
                         <li>Setelah notifikasi muncul, Anda akan diminta untuk melakukan foto lokasi, selesai</li>
                     </ol>
+                    @canAccess('generate','barcodes')
+                    <button id="generate-barcode-btn" class="btn btn-primary mt-4">
+                        <i class="fas fa-sync-alt mr-1"></i> Generate
+                    </button>
+                    @endcanAccess
                 </div>
                 {{ $barcode->code }}
 
@@ -117,6 +122,45 @@
                     location.reload();
                 }, 1500);
             });
+
+        $('#generate-barcode-btn').click(function() {
+            $.ajax({
+                url: "{{ route('barcode.generate') }}",
+                method: "POST",
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                beforeSend: function () {
+                    $('#generate-barcode-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menghasilkan...');
+                },
+                success: function(response) {
+                    // Notifikasi akan datang dari event broadcast
+                    console.log('Generate request sent');
+                },
+                complete: function() 
+                {
+                    $('#generate-barcode-btn').prop('disabled', false).html('<i class="fas fa-sync-alt mr-1"></i> Generate');
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer)
+                            toast.addEventListener('mouseleave', Swal.resumeTimer)
+                        }
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Generate request sent'
+                    });
+                },
+                error: function(xhr) {
+                    alert('Gagal generate barcode. Silakan coba lagi.');
+                }
+            });
+        });
             
         setInterval(() => {
             const qrContainer = document.querySelector('.qr-container');

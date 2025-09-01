@@ -28,7 +28,7 @@ class BarcodeAttendanceController extends Controller
         ]);
 
         // Broadcast agar QR baru ditampilkan di layar
-        broadcast(new NewBarcodeGenerated($barcode))->toOthers();
+        broadcast(new NewBarcodeGenerated($barcode, $companyId))->toOthers();
 
         return response()->json([
             'message' => 'QR baru berhasil dibuat',
