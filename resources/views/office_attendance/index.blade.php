@@ -25,8 +25,10 @@
 
                             {{-- Filter Tanggal (Date Range) --}}
                             <div class="col-md-4">
-                                <label for="daterange" class="form-label">Tanggal (Rentang)</label>
-                                <input type="text" class="form-control" id="daterange" name="daterange" placeholder="Pilih rentang tanggal" />
+                                <label for="dateRange">Tanggal</label>
+                                <input type="text" class="form-control" id="dateRange" placeholder="Pilih rentang tanggal" autocomplete="off">
+                                <input type="hidden" name="start_date" id="start_date" value="{{ request('start_date') }}">
+                                <input type="hidden" name="end_date" id="end_date" value="{{ request('end_date') }}">
                             </div>
 
                             {{-- Filter Karyawan --}}
@@ -51,27 +53,21 @@
                                 </select>
                             </div>
 
-                            {{-- Cari Nama/Email --}}
-                            <div class="col-md-4">
-                                <label for="filter" class="form-label">Cari Nama / Email</label>
-                                <input type="text" class="form-control" id="filter" name="filter" placeholder="Cari..." value="{{ request('filter') }}">
-                            </div>
-
                             {{-- Tombol Filter --}}
-                            <div class="col-md-2 d-flex align-items-end">
+                            <div class="col-md-2 d-flex align-items-end mt-2 mb-2">
                                 <button type="submit" class="btn btn-primary w-100">
                                     <i class="fas fa-search me-1"></i> Filter
                                 </button>
                             </div>
 
                             {{-- Tombol Reset --}}
-                            <div class="col-md-2 d-flex align-items-end">
+                            <div class="col-md-2 d-flex align-items-end mt-2 mb-2">
                                 <a href="{{ route('office-attendance.index') }}" class="btn btn-outline-secondary w-100">
                                     <i class="fas fa-sync-alt me-1"></i> Reset
                                 </a>
                             </div>
                             @canAccess('export','office_attendances')
-                            <div class="col-md-3 d-flex align-items-end">
+                            <div class="col-md-3 d-flex align-items-end mt-2 mb-2">
                                 <a href="{{ route('office_attendance.export', request()->query()) }}" class="btn btn-success w-100">
                                     <i class="fas fa-file-excel mr-2"></i> Export Excel
                                 </a>

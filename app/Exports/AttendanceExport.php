@@ -29,10 +29,7 @@ class AttendanceExport implements FromQuery, WithHeadings, WithMapping
             $q->where('user_id', $this->request->employee);
         })
         ->when($this->request->filled('start_date') && $this->request->filled('end_date'), function ($q) {
-            $q->whereBetween('office_attendances.created_at', [
-                $this->request->start_date,
-                $this->request->end_date
-            ]);
+            $q->whereBetween('office_attendances.time', [Carbon::parse($this->request->start_date)->startOfDay(), Carbon::parse($this->request->end_date)->endOfDay()]);
         })
         ->orderBy('users.name')
         ->orderBy('office_attendances.time');

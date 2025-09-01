@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Helpers\Access;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
+use Carbon\Carbon;
 
 class OfficeAttendanceController extends Controller
 {
@@ -24,7 +25,7 @@ class OfficeAttendanceController extends Controller
             ->with('user');
 
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('time', [$request->start_date, $request->end_date]);
+            $query->whereBetween('time', [Carbon::parse($request->start_date)->startOfDay(), Carbon::parse($request->end_date)->endOfDay()]);
         }
 
         if ($request->filled('employee')) {
