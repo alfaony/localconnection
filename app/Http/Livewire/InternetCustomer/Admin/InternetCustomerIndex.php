@@ -60,7 +60,7 @@ class InternetCustomerIndex extends Component
     public $currentInstallationName;
     public $currentInstallationCode;
     public $deviceSerialNumber, $photos = [], $installationNotes;
-    public $installationCustomerName, $installationCustomerCode, $installationCustomerId;
+    public $installationCustomerName, $installationCustomerCode, $installationCustomerId, $local_address;
     public $installationModal = false;
     public $currentInstallationCustomer;
     public $isSubmitting = false;
@@ -143,7 +143,7 @@ class InternetCustomerIndex extends Component
     }
 
     // Method untuk validasi dan submit
-    public function completeInstallation($serialNumber, $photos, $notes, $routerId, $username, $password, $override_pool_id)
+    public function completeInstallation($serialNumber, $photos, $notes, $routerId, $username, $password, $override_pool_id, $local_address)
     {
         Validator::make([
             'currentInstallationId' => $this->currentInstallationId,
@@ -152,7 +152,8 @@ class InternetCustomerIndex extends Component
             'routerId' => $routerId,
             'username' => $username,
             'password' => $password,
-            'override_pool_id' => $override_pool_id
+            'override_pool_id' => $override_pool_id,
+            'local_address' => $local_address
         ], [
             'override_pool_id' => 'nullable|exists:address_pools,id',
             'currentInstallationId' => 'required|exists:internet_customers,id',
@@ -161,6 +162,7 @@ class InternetCustomerIndex extends Component
             'routerId' => 'required|exists:routers,id',
             'username' => 'required',
             'password' => 'required',
+            'local_address' => 'nullable|ip',
         ])->validate();
 
 
@@ -188,6 +190,7 @@ class InternetCustomerIndex extends Component
             $customer = InternetCustomer::find($this->currentInstallationId);
             $customer->update([
                 'status' => ParamSchema::INSTALLED, 
+                'local_address' => $local_address,
                 'router_id' => $routerId,
                 'username' => $username,
                 'pass_hash' => $password,

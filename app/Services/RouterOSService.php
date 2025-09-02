@@ -77,7 +77,7 @@ class RouterOSService
         }
     }
 
-    public function upsertPppSecret(Client $c, InternetCustomer $cust, string $profile): void
+    public function upsertPppSecret(Client $c, InternetCustomer $cust, string $profile, $localAddress = null): void
     {
         $q = (new Query('/ppp/secret/print'))->where('name', $cust->username);
         $row = $c->query($q)->read()[0] ?? null;
@@ -90,6 +90,7 @@ class RouterOSService
                 ->equal('name', $cust->username)
                 ->equal('password', $pwd)            // kirim plaintext
                 ->equal('service', 'pppoe')
+                ->equal('local-address', $localAddress)  // Menambahkan local_address
                 ->equal('profile', $profile)
                 ->equal('comment', $cust->ros_comment_uuid ?? ('uuid:' . $cust->id))
             )->read();
@@ -98,6 +99,9 @@ class RouterOSService
 
             $q = (new Query('/ppp/secret/set'))
                 ->equal('.id', $id)
+                ->equal('name', $cust->username)
+                 ->equal('password', $pwd)   
+                ->equal('local-address', $localAddress)  // Update local_address
                 ->equal('profile', $profile);
 
             $c->query($q)->read(); // akan return [] → itu normal

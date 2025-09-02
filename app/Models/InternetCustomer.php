@@ -50,6 +50,7 @@ class InternetCustomer extends Model
         'username',
         'pass_hash',
         'ip_address',
+        'local_address',
         'mac_address',
         'vlan_id',
         'expires_at',

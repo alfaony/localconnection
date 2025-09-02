@@ -280,7 +280,10 @@
                             Kosongkan jika ingin pakai pool default/PPPoE server router.
                         </div>
                     </div>
-
+                    <div class="mb-3">
+                        <label class="form-label">Local Address</label>
+                        <input type="text" class="form-control" wire:model="local_address" id="local_address">
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Username</label>
                         <input type="text" class="form-control" wire:model="username" id="modalUsername">
@@ -526,6 +529,7 @@
         const notes = document.getElementById('modalNotes').value;
         const files = document.getElementById('modalPhotos').files;
         const override_pool_id = document.getElementById('selectPool').value;
+        const local_address = document.getElementById('local_address').value;
         
         // Validasi
         if (!serialNumber) {
@@ -566,6 +570,7 @@
         formData.append('username', username);
         formData.append('password', password);
         formData.append('override_pool_id', override_pool_id);
+        formData.append('local_address', local_address);
         
         // Tambahkan semua file ke FormData
         for (let i = 0; i < files.length; i++) {
@@ -582,7 +587,8 @@
                     routerId,
                     username,
                     password,
-                    override_pool_id
+                    override_pool_id,
+                    local_address
                 );
             });
             

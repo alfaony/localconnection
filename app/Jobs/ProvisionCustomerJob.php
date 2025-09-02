@@ -61,7 +61,7 @@ class ProvisionCustomerJob implements ShouldQueue
                 // $ros->ensurePppProfile($client, $pkg, $profile, $fup, $cust->router_id);
 
                     // upsert secret + enable/disable by status
-                $ros->upsertPppSecret($client, $cust, $profile);
+                $ros->upsertPppSecret($client, $cust, $profile, $cust->local_address);
             }
             elseif ($cust->status == ParamSchema::SUSPENDED)
             {
@@ -108,7 +108,7 @@ class ProvisionCustomerJob implements ShouldQueue
                 $ros->ensurePppProfile($client, $pkg, $profile, null, $cust->router_id, $poolName, $gateway);
                 
                 // upsert secret & pastikan enable dengan profil normal
-                $ros->upsertPppSecret($client, $cust, $profile, true);
+                $ros->upsertPppSecret($client, $cust, $profile, $cust->local_address);
 
                 // opsional: update meta untuk tracking
                 $row = $client->query(

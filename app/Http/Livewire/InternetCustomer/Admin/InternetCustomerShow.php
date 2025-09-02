@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
+use App\Jobs\ProvisionCustomerJob;
+
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -28,6 +30,12 @@ class InternetCustomerShow extends Component
     public $showKtpModal = false;
     public $installationPhotos = [];
     public $showInstallationPhotosModal = false;
+
+        // Properties untuk edit data pribadi
+    public $name, $email, $phone_number, $start_billing_date, $end_billing_date;
+    
+    // Properties untuk edit data instalasi
+    public $P, $username, $pass_hash, $device_serial_number;
 
     public function mount($customerId)
     {
@@ -59,8 +67,137 @@ class InternetCustomerShow extends Component
         }
     }
 
-  public function viewPaymentProof($purchaseId)
+    // Buka modal edit data pribadi
+    public function openEditPribadiModal()
     {
+        $this->name = $this->customer->name;
+        $this->email = $this->customer->userCustomer->email ?? '';
+        $this->phone_number = $this->customer->userCustomer->phone_number ?? '';
+        $this->start_billing_date = $this->customer->userCustomer->start_billing_date ?? '';
+        $this->end_billing_date = $this->customer->userCustomer->end_billing_date ?? '';
+        
+        $this->dispatchBrowserEvent('showEditPribadiModal', [
+            'name' => $this->customer->name,
+            'email' => $this->customer->userCustomer->email ?? '',
+            'phone_number' => $this->customer->userCustomer->phone_number ?? '',
+            'start_billing_date' => $this->customer->userCustomer->start_billing_date ?? '',
+            'end_billing_date' => $this->customer->userCustomer->end_billing_date ?? '',
+        ]);
+    }
+
+    // Simpan data pribadi
+    public function savePribadi()
+    {
+        $this->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email',
+            'phone_number' => 'nullable|string',
+            'start_billing_date' => 'nullable|date',
+            'end_billing_date' => 'nullable|date|after:start_billing_date',
+        ], [
+            'name.required' => 'Nama harus diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'phone_number.string' => 'Nomor telepon harus berupa angka.',
+            'start_billing_date.date' => 'Format tanggal mulai tagihan tidak valid.',
+            'end_billing_date.date' => 'Format tanggal akhir tagihan tidak valid.',
+            'end_billing_date.after' => 'Tanggal akhir tagihan harus setelah tanggal mulai tagihan.',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Update data customer
+            $this->customer->update([
+                'name' => $this->name,
+            ]);
+
+            // Update data user customer
+            if ($this->customer->userCustomer) {
+                $this->customer->userCustomer->update([
+                    'name' => $this->name,
+                    'email' => $this->email,
+                    'phone_number' => $this->phone_number,
+                    'start_billing_date' => $this->start_billing_date,
+                    'end_billing_date' => $this->end_billing_date,
+                ]);
+            }
+
+            DB::commit();
+            $this->dispatchBrowserEvent('hideEditPribadiModal');
+            $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data pribadi berhasil diperbarui']);
+            
+            // Refresh data
+            $this->mount($this->customer->id);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal memperbarui data pribadi: ' . $e->getMessage()]);
+        }
+    }
+
+    // Buka modal edit data instalasi
+    public function openEditInstalasiModal()
+    {
+        $this->local_address = $this->customer->local_address ?? '';
+        $this->username = $this->customer->username ?? '';
+        $this->pass_hash = $this->customer->pass_hash ?? '';
+        $this->device_serial_number = $this->customer->installation->device_serial_number ?? '';
+        
+        $this->dispatchBrowserEvent('showEditInstalasiModal',
+        [
+            'local_address' => $this->customer->local_address ?? '',
+            'username' => $this->customer->username ?? '',
+            'pass_hash' => $this->customer->pass_hash ?? '',
+            'device_serial_number' => $this->customer->installation->device_serial_number ?? '',
+        ]);
+    }
+
+    // Simpan data instalasi
+    public function saveInstalasi()
+    {
+        $this->validate([
+            'local_address' => 'nullable|ip',
+            'username' => 'nullable|string|max:255',
+            'pass_hash' => 'nullable|string|max:255',
+            'device_serial_number' => 'nullable|string|max:255',
+        ],[
+            'local_address.ip' => 'Format IP tidak valid.',
+            'username.string' => 'Username harus berupa teks.',
+            'pass_hash.string' => 'Password harus berupa teks.',
+            'device_serial_number.string' => 'Nomor seri perangkat harus berupa teks.',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Update data customer
+            $this->customer->update([
+                'status' => ParamSchema::REACTIVATED,
+                'local_address' => $this->local_address,
+                'username' => $this->username,
+                'pass_hash' => $this->pass_hash,
+            ]);
+
+            // Update data instalasi
+            if ($this->customer->installation) {
+                $this->customer->installation->update([
+                    'device_serial_number' => $this->device_serial_number,
+                ]);
+            }
+
+        dispatch(new ProvisionCustomerJob($this->customer->id));
+            
+            DB::commit();
+            $this->dispatchBrowserEvent('hideEditInstalasiModal');
+            $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data instalasi berhasil diperbarui']);
+            
+            // Refresh data
+            $this->mount($this->customer->id);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal memperbarui data instalasi: ' . $e->getMessage()]);
+        }
+    }
+
+  public function viewPaymentProof($purchaseId)
+  {
         $purchase = InternetCustomerPurchase::find($purchaseId);
         $this->paymentProofUrl = $purchase->payment_proof;
 
