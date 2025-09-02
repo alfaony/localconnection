@@ -126,6 +126,7 @@ class RoleController extends Controller
             'internet_packages',
             'internet_customers',
             'promos',
+            'routers',
         ];
 
         $checked = array_merge($mainMenus);
@@ -279,6 +280,7 @@ class RoleController extends Controller
                 'internet_packages',
                 'internet_customers',
                 'promos',
+                'routers',
             ];
         $checked = array_merge($mainMenus);
 
@@ -393,6 +395,7 @@ class RoleController extends Controller
                 'internet_packages',
                 'internet_customers',
                 'promos',
+                'routers',
             ];
         
         $checked = array_merge($mainMenus);
