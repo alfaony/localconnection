@@ -9,14 +9,15 @@ use App\Jobs\DispatchWebhooksForAppJob;
 
 class WebhookHelper
 {
-    public static function sendWebhook(string $companyId, string $appName, String $event, Array $payload): void
+    public static function sendWebhook(string $companyId, string $appName, String $event, Array $payload, $settingId = null): void
     {
         try {
             DispatchWebhooksForAppJob::dispatch(
                 companyId: $companyId,
                 appName:   $appName,
                 payload:   $payload,
-                event:     $event // atau 'created'
+                event:     $event, // atau 'created'
+                settingId: $settingId
             );
         } catch (\Throwable $e) {
             // dd($e);

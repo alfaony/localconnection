@@ -148,6 +148,17 @@ class WebhookSettingTable extends Component
         $this->resetPage();
     }
 
+    public function sync($id)
+    {
+        $setting = WebhookSetting::find($id);
+
+        dispatch(new \App\Jobs\SendWebhookSettingJob($setting));
+
+        // Tampilkan pesan toast
+        $this->dispatchBrowserEvent('show-toast', [
+            'message' => 'Proses Sync sedang berjalan. Silakan cek kembali nanti untuk status pengiriman.'
+        ]);
+    }
     // Test connection
     public function testConnection()
     {

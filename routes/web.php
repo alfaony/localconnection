@@ -582,6 +582,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('webhook-setting', WebhookSettingTable::class)->name('webhook-setting.index');
 });
 
+  Route::post('api/test', function (\Illuminate\Http\Request $request) {
+      Log::info('test log', $request->all());
+      return true;
+  })->name('api.test')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');

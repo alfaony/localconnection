@@ -19,16 +19,18 @@ class DispatchWebhooksForAppJob implements ShouldQueue
     public string $appName;
     public array $payload;
     public string $event;
+    public ?string $settingId;
 
     /**
      * Buat job baru.
      */
-    public function __construct(int|string $companyId, string $appName, array $payload, string $event)
+    public function __construct(int|string $companyId, string $appName, array $payload, string $event, $settingId = null)
     {
         $this->companyId = $companyId;
         $this->appName   = $appName;    // contoh: 'used_laptops'
         $this->payload   = $payload;    // bebas: data yang mau di-push
         $this->event     = $event;      // contoh: 'created' | 'updated' | 'deleted'
+        $this->settingId = $settingId ?? null;
     }
 
     /**
@@ -42,9 +44,20 @@ class DispatchWebhooksForAppJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $settings = WebhookSetting::byCompany($this->companyId)
-            ->hasApp($this->appName)
-            ->get();
+        $query = WebhookSetting::query();
+        
+        if($this->settingId) 
+        {
+            dd("here1");
+            $query->where('id', $this->settingId);
+        }else
+        {
+            $query->byCompany($this->companyId)->hasApp($this->appName);
+        }
+        
+        $settings = $query->get();
+
+        // dd($settings, $this->settingId, $this->companyId, $this->appName);
 
         if ($settings->isEmpty()) {
             Log::info('Webhook: tidak ada subscriber', [
@@ -87,6 +100,7 @@ class DispatchWebhooksForAppJob implements ShouldQueue
                     ]);
                 }
             } catch (\Throwable $e) {
+                // dd($e);
                 Log::error('Webhook exception', [
                     'setting_id' => $setting->id,
                     'endpoint'   => $endpoint,

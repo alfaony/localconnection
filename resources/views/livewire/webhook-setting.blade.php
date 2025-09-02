@@ -152,6 +152,14 @@
                                     </td>
                                     <td>
                                         <button 
+                                            wire:click="sync({{ $setting['id'] }})"
+                                            class="btn btn-sm btn-info"
+                                            title="Sync"
+                                        >
+                                            <i class="fas fa-sync"></i>
+                                        </button>
+                                        
+                                        <button 
                                             wire:click="edit({{ $setting['id'] }})"
                                             class="btn btn-sm btn-warning"
                                             title="Edit"
@@ -186,6 +194,18 @@
     // Add any custom JavaScript if needed
     document.addEventListener('livewire:load', function () {
         // Livewire specific JS can go here
+        window.addEventListener('show-toast', event => {
+            // Jika pakai SweetAlert2
+            Swal.fire({
+                icon: 'info',
+                title: 'Sync Dimulai',
+                text: event.detail.message,
+                toast: true,
+                timer: 4000,
+                position: 'top-end',
+                showConfirmButton: false
+            });
+        });
     });
 </script>
 @endpush
