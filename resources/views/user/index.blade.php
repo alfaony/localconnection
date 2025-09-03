@@ -117,7 +117,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                         <option value="">-- Pilih Metode Check-In --</option>
                         <option value="wfo" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfo' ? 'selected' : '' }}>WFO Check-In</option>
                         <option value="wfh" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfh' ? 'selected' : '' }}>WFH Check-In</option>
-                        <option value="shift" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfh' ? 'selected' : '' }}>Shift Kehadiran</option>
+                        <option value="shift" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'shift' ? 'selected' : '' }}>Shift Kehadiran</option>
                     </select>
                 </div>
 
