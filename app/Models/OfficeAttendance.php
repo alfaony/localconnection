@@ -29,13 +29,23 @@ class OfficeAttendance extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function scopeByCompany($query, $companyIds, $access = false)
+    public function scopeByCompany($query, $companyIds, $accessGeneral = false, $accessDivision = false)
     {
-        if($access) 
+        if($accessGeneral) 
         {
             $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyIds)->unique();   
             return $query->whereIn('company_id', $companyIds);
-        }else
+        }
+        elseif ($accessDivision) 
+        {
+            // Filter hanya attendance milik user yang berada pada division yang sama dengan user saat ini
+            $divisionIds = auth()->user()->divisions()->pluck('divisions.id');
+
+            return $query->whereHas('user.divisions', function ($q) use ($divisionIds) {
+                $q->whereIn('divisions.id', $divisionIds);
+            });
+        }
+        else
         {
             return $query->where('user_id', auth()->user()->id);
         }

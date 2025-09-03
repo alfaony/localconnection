@@ -411,13 +411,13 @@ class AppServiceProvider extends ServiceProvider
                     'icon' => 'fa fa-check',
                 ],
                 'shifting_obs' => [
-                    'text' => 'Shifting OB',
+                    'text' => 'Shifting',
                     'route' => 'shifting-ob.index',
                     'icon' => 'fa fa-calendar',
                 ],
                 'schedule_obs' => 
                 [
-                    'text' => 'Schedule OB',
+                    'text' => 'Jadwal',
                     'route' => 'schedule-ob.index',
                     'icon' => 'fa fa-clock',
                 ],

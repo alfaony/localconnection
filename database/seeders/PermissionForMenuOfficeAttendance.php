@@ -21,12 +21,12 @@ class PermissionForMenuOfficeAttendance extends Seeder
     public function run()
     {
         // Cari role staff
-        $roles = Role::WhereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE])->get();
+        $roles = Role::WhereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM, RoleSchema::FINANCE, RoleSchema::MANAGER])->get();
 
         DB::beginTransaction();
         try {   
 
-            $roleOffices = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2', 'export','checkExportStatus','clearsession','scan','general_access','complete'];
+            $roleOffices = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2', 'export','checkExportStatus','clearsession','scan','general_access','complete','division_access'];
             $roleBarcodes = ['index','generate'];
             
              foreach ($roleOffices as $method) 
@@ -44,7 +44,24 @@ class PermissionForMenuOfficeAttendance extends Seeder
 
                 foreach ($roles as $role) 
                 {
-                    PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
+                    if ($method === 'division_access') 
+                    {
+                        // Hanya role MANAGER yang mendapat permission division_access
+                        if ($role->name === RoleSchema::MANAGER) {
+                            PermissionRole::firstOrCreate([
+                                'role_id' => $role->id,
+                                'permission_id' => $permission->id,
+                            ]);
+                        }
+                    }
+                     else 
+                    {
+                        // Semua role mendapat permission selain division_access
+                        PermissionRole::firstOrCreate([
+                            'role_id' => $role->id,
+                            'permission_id' => $permission->id,
+                        ]);
+                    }
                 }
             }
 
@@ -76,7 +93,3 @@ class PermissionForMenuOfficeAttendance extends Seeder
         }
     }
 }
-
-
-
-
