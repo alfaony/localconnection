@@ -101,7 +101,7 @@
                                     <span class="info-box-text">Hadir Hari Ini</span>
                                     <span class="info-box-number">{{ $todayAttendance }}</span>
                                     <div class="progress">
-                                        <div class="progress-bar" style="width: {{ ($todayAttendance/$totalEmployees)*100 }}%"></div>
+                                        <div class="progress-bar" style="width: {{ $totalEmployees > 0 ? ($todayAttendance/$totalEmployees)*100 : 0 }}%"></div>
                                     </div>
                                     <span class="progress-description">
                                         {{ $totalEmployees }} total karyawan
