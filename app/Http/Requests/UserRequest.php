@@ -37,7 +37,7 @@ class UserRequest extends FormRequest
                 'phone' => ['nullable','regex:/^(\+62|0|62)[0-9]{9,13}$/'],
                 'password' => 'required|min:6',
                 'confirmPassword' => 'required|same:password',
-                'is_checkin' => 'nullable|string|in:wfo,wfh',
+                'is_checkin' => 'nullable|string|in:wfo,wfh,shift',
                 'manual_checkin' => 'nullable|boolean',
                 'requires_photo' => 'nullable|boolean',
                 'requires_location' => 'nullable|boolean',
