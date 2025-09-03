@@ -116,8 +116,8 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <select name="is_checkin" id="is_checkin" class="form-control">
                         <option value="">-- Pilih Metode Check-In --</option>
                         <option value="wfo" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfo' ? 'selected' : '' }}>WFO Check-In</option>
-                        <option value="wfh" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfh' ? 'selected' : '' }}>WFH / Hybrid Check-In</option>
-                        <option value="shift" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfh' ? 'selected' : '' }}>Shift Absensi</option>
+                        <option value="wfh" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfh' ? 'selected' : '' }}>WFH Check-In</option>
+                        <option value="shift" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfh' ? 'selected' : '' }}>Shift Kehadiran</option>
                     </select>
                 </div>
 
@@ -374,7 +374,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                         <option value="">-- Pilih Metode Check-In --</option>
                         <option value="wfo" {{ @$userEdit->wfo_check_in ? 'selected' : '' }}>WFO Check-In</option>
                         <option value="wfh" {{ @$userEdit->is_checkin ? 'selected' : '' }}>WFH / Hybrid Check-In</option>
-                        <option value="shift" {{ @$userEdit->is_shift_attendance ? 'selected' : '' }}>Shift Attendance</option>
+                        <option value="shift" {{ @$userEdit->is_shift_attendance ? 'selected' : '' }}>Shift Kehadiran</option>
                     </select>
                 </div>
 
