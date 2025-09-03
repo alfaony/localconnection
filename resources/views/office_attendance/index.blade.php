@@ -218,7 +218,7 @@
                             Menampilkan {{ $officeAttendance->firstItem() }} hingga {{ $officeAttendance->lastItem() }} dari {{ $officeAttendance->total() }} entri
                         </div>
                         <div class="d-flex justify-content-center">
-                            {{ $officeAttendance->links() }}
+                            {{ $officeAttendance->withQueryString()->links('vendor.pagination.bootstrap-4') }}
                         </div>
                     </div>
                 </div>

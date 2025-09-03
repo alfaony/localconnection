@@ -24,9 +24,10 @@ class ProductSupplier extends Model
 
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId)
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+        if($companyIds)
         {
-            $query->where('company_id', $companyId);
+            $query->whereIn('company_id', $companyIds);
         }
     }
 }
