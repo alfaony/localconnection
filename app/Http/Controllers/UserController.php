@@ -95,6 +95,7 @@ class UserController extends Controller
         $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
         $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
         // Checkin
+        $user->is_shift_attendance = $request->post('is_checkin') ==  ParamSchema::SHIFT ? true : false;
         $user->is_checkin = $request->post('is_checkin') == ParamSchema::WFH ? true : false; 
         $user->wfo_check_in = $request->post('is_checkin') == ParamSchema::WFO ? true : false; 
         $user->manual_checkin = $request->post('manual_checkin', 0);
@@ -248,6 +249,7 @@ class UserController extends Controller
         $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
 
         // 
+        $user->is_shift_attendance = $request->post('is_checkin') ==  ParamSchema::SHIFT ? true : false;
         $user->is_checkin = $request->post('is_checkin') ==  ParamSchema::WFH ? true : false;
         $user->wfo_check_in = $request->post('is_checkin') ==  ParamSchema::WFO ? true : false;
 
