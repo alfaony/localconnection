@@ -48,7 +48,6 @@ class DispatchWebhooksForAppJob implements ShouldQueue
         
         if($this->settingId) 
         {
-            dd("here1");
             $query->where('id', $this->settingId);
         }else
         {
