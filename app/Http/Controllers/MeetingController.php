@@ -577,7 +577,14 @@ class MeetingController extends Controller
         $meeting = Meeting::where('slug', $slug)->where('public_token', $token)->firstOrFail();
 
         if (!$meeting->public_token_generated_at || Carbon::parse($meeting->public_token_generated_at)->addHours(8)->isPast()) {
-            $this->redirectToPublicError('Token telah kadaluarsa.');
+            $start = Carbon::parse("{$meeting->start_date} {$meeting->start_time}");
+            $end = Carbon::parse("{$meeting->end_date} {$meeting->end_time}");
+            if (now()->lessThanOrEqualTo($start) || now()->between($start, $end)) 
+            {
+                $meeting->public_token_generated_at = now();
+            } else {
+                $this->redirectToPublicError('Token telah kadaluarsa.');
+            }
         }
 
         $end = Carbon::parse("{$meeting->end_date} {$meeting->end_time}");
