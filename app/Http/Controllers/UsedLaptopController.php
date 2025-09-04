@@ -56,6 +56,7 @@ class UsedLaptopController extends Controller
         try {
             // Validasi data utama laptop
             $validated = $request->validate([
+                'weight' => 'nullable|numeric|min:0',
                 'name' => 'required|string|max:255',
                 'brand' => 'required|string|max:255',
                 'serial_number' => 'required|string|max:255',
@@ -150,6 +151,7 @@ class UsedLaptopController extends Controller
                 'gpu' => $laptop->gpu,
                 'operating_system' => $laptop->operating_system,
                 'notes' => $laptop->notes,
+                'buying_price' => $laptop->purchase_price,
                 'selling_price' => $laptop->suggested_selling_price,
                 'images' => $laptop->media()->get()->map(function ($media) {
                     return env('APP_URL') . Storage::url($media->file_path);
@@ -243,6 +245,7 @@ class UsedLaptopController extends Controller
                 'gpu' => $laptop->gpu,
                 'operating_system' => $laptop->operating_system,
                 'notes' => $laptop->notes,
+                'buying_price' => $laptop->purchase_price,
                 'selling_price' => $laptop->suggested_selling_price,
                 'images' => $laptop->media()->get()->map(function ($media) {
                     return env('APP_URL') . Storage::url($media->file_path);
@@ -274,6 +277,7 @@ class UsedLaptopController extends Controller
         try {
             // Validasi data utama laptop
             $validated = $request->validate([
+                'weight' => 'nullable|numeric|min:0',
                 'name' => 'required|string|max:255',
                 'brand' => 'required|string|max:255',
                 'processor' => 'required|string|max:255',
@@ -292,6 +296,7 @@ class UsedLaptopController extends Controller
             // Simpan atau update data laptop
             if ($laptop) {
                 $laptop->update([
+                    'weight' => $validated['weight'] ?? null,
                     'name' => $validated['name'],
                     'brand' => $validated['brand'],
                     'processor' => $validated['processor'],
@@ -304,6 +309,7 @@ class UsedLaptopController extends Controller
                 ]);
             } else {
                 $laptop = UsedLaptop::create([
+                    'weight' => $validated['weight'] ?? null,
                     'name' => $validated['name'],
                     'brand' => $validated['brand'],
                     'processor' => $validated['processor'],
@@ -394,6 +400,7 @@ class UsedLaptopController extends Controller
                     'gpu' => $laptop->gpu,
                     'operating_system' => $laptop->operating_system,
                     'notes' => $laptop->notes,
+                    'buying_price' => $laptop->purchase_price,
                     'selling_price' => $laptop->suggested_selling_price,
                     'images' => $laptop->media()->get()->map(function ($media) {
                         return env('APP_URL') . Storage::url($media->file_path);

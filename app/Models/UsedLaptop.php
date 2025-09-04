@@ -12,6 +12,7 @@ class UsedLaptop extends Model
 
     protected $fillable = [
         'serial_number',
+        'weight',
         'name',
         'brand',
         'processor',
