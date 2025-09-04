@@ -12,7 +12,9 @@ use App\Models\User;
 use App\Models\Company;
 use App\Models\Delivery;
 use App\Models\ItemRequest;
+use App\Models\SupplierType;
 use App\Models\SettingCompany;
+use App\Models\ProductSupplier;
 use App\Models\SupplierCategory;
 
 use App\Jobs\SentMessageToVendor;
@@ -40,19 +42,23 @@ class ItemRequestController extends Controller
     {                
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
         $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
+        $types = SupplierType::byCompany(Auth::user()->company_id)->get();
+
         $shareWa = $client->status() ?? false;
 
-        $existsSprinter = User::where('company_id', Auth::user()->company_id)
+        $sprinters = User::where('company_id', Auth::user()->company_id)
             ->whereHas('role.permissions', function ($q) {
                 $q->where('method', 'as_sprinter')
                 ->where('table', 'item_requests');
             })
-            ->exists();
+            ->get();
+
+        $existsSprinter = $sprinters->count() > 0;
 
         
         // $statusShareWa = 
         $categories = SupplierCategory::byCompany(Auth::user()->company_id)->get();
-        return view('item_request.createOrEdit', compact('categories', 'shareWa', 'existsSprinter'));
+        return view('item_request.createOrEdit', compact('categories', 'shareWa', 'existsSprinter','types','sprinters'));
     }
 
     public function store(Request $request)
@@ -96,16 +102,20 @@ class ItemRequestController extends Controller
 
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
         $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
+        $types = SupplierType::byCompany(Auth::user()->company_id)->get();
+
         $shareWa = $client->status() ?? false;
 
-        $existsSprinter = User::where('company_id', Auth::user()->company_id)
+        $sprinters = User::where('company_id', Auth::user()->company_id)
             ->whereHas('role.permissions', function ($q) {
                 $q->where('method', 'as_sprinter')
                 ->where('table', 'item_requests');
             })
-            ->exists();
+            ->get();
 
-        return view('item_request.createOrEdit', compact('itemRequest', 'categories', 'shareWa','existsSprinter'));
+        $existsSprinter = $sprinters->count() > 0;
+
+        return view('item_request.createOrEdit', compact('itemRequest', 'categories', 'shareWa','existsSprinter','types', 'sprinters'));
     }
 
     public function show(ItemRequest $itemRequest)
@@ -479,5 +489,30 @@ class ItemRequestController extends Controller
             $directUrl
         );
         return;
+    }
+    /**
+     * Handle AJAX request to fetch ProductSuppliers based on supplier_category_id and supplier_type_id.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function fetchProductSuppliers(Request $request)
+    {
+        $request->validate([
+            'supplier_category_id' => 'required|exists:supplier_categories,id',
+            'supplier_type_id' => 'required|exists:supplier_types,id',
+        ]);
+    
+       $suppliers = ProductSupplier::where('company_id', Auth::user()->company_id)
+        ->where('supplier_type_id', $request->supplier_type_id)
+        ->whereHas('supplierCategories', function ($query) use ($request) {
+            $query->where('supplier_category_id', $request->supplier_category_id);
+        })
+        ->get();
+    
+        return response()->json([
+            'success' => true,
+            'data' => $suppliers
+        ]);
     }
 }

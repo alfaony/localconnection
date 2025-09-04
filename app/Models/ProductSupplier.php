@@ -15,6 +15,7 @@ class ProductSupplier extends Model
         'sales_information', 'additional_information', 
         'store_photo', 'ktp_photo',
         'company_id',
+        'supplier_type_id'
     ];
 
     public function supplierCategories()

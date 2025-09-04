@@ -122,6 +122,7 @@ use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
+use App\Http\Livewire\ProductSupplierTypeIndex;
 
 
 
@@ -594,6 +595,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('office-attendance/complete/{code}', [OfficeAttendanceController::class, 'complete'])->name('office-attendance.complete');
 });
 
+  Route::post('item-request/fetch-suppliers', [ItemRequestController::class, 'fetchProductSuppliers'])->name('item-request.fetch-suppliers');
+
+  Route::get('supplier-type', ProductSupplierTypeIndex::class)->name('supplier-type.index');
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
