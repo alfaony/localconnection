@@ -334,6 +334,7 @@
                     <p class="text-center mb-0">PASAL 9</p>
                     <p class="text-center mb-2">KEAMANAN</p>
                     <ol>
+                        {{--
                         <li>
                             <strong>PIHAK PERTAMA</strong> memberikan akses kepada <strong>PIHAK KEDUA</strong> ke
                             lantai tempat Unit self storage
@@ -350,6 +351,7 @@
                                 </li>
                             </ol>
                         </li>
+                        --}}
                         <li>
                             <strong>PIHAK PERTAMA</strong> menyediakan sistem keamanan CCTV yang dipantau 24 jam untuk
                             memantau
@@ -360,9 +362,11 @@
                             untuk
                             meningkatkan keamanan Unit Self Storage dan fasilitas Self Storage secara keseluruhan.
                         </li>
+                        {{-- 
                         <li>
                             <strong>PIHAK KEDUA</strong> diwajibkan untuk memasang pengaman tambahan berupa gembok.
                         </li>
+                        --}}
                         <li>
                             <strong>PIHAK KEDUA</strong> wajib mengikuti instruksi keamanan yang diberikan oleh
                             <strong>PIHAK PERTAMA</strong>.
