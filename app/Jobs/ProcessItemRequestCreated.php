@@ -27,10 +27,14 @@ class ProcessItemRequestCreated implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $itemRequestId;
+    protected $assigned_pic_id;
+    protected $product_supplier_id;
 
-    public function __construct($itemRequestId)
+    public function __construct($itemRequestId, $assigned_pic_id = null, $product_supplier_id = null)
     {
         $this->itemRequestId = $itemRequestId;
+        $this->assigned_pic_id = $assigned_pic_id;
+        $this->product_supplier_id = $product_supplier_id;
     }
 
     public function handle()
@@ -40,29 +44,34 @@ class ProcessItemRequestCreated implements ShouldQueue
             $adminRole = Role::where('name', RoleSchema::ADMIN)->first();
             $rootRole = Role::where('name', RoleSchema::ROOT)->first();
             
-            // ✅ Cari Sprinter (semua user)
-            $users = User::where('company_id', $itemRequest->company_id)
-            ->whereHas('role.permissions', function ($q) {
-                $q->where('method', 'as_sprinter')
-                ->where('table', 'item_requests');
-            })
-            ->withCount('assignedRequests') // hitung semua assigned tanpa filter status
-            ->get();
+            // ✅ Cari Sprinter (semua user) jika assigned_pic_id belum diisi
+            if (!$itemRequest->assigned_pic_id) {
+                $users = User::where('company_id', $itemRequest->company_id)
+                ->whereHas('role.permissions', function ($q) {
+                    $q->where('method', 'as_sprinter')
+                    ->where('table', 'item_requests');
+                })
+                ->withCount('assignedRequests') // hitung semua assigned tanpa filter status
+                ->get();
+
+                if (!$users->isEmpty()) 
+                {
+                    $min = $users->min('assigned_requests_count');
+                    $candidates = $users->where('assigned_requests_count', $min);
+                    $selected = $candidates->random();
+                    // dd($selected->name);
             
-            if (!$users->isEmpty()) 
-            {
-                $min = $users->min('assigned_requests_count');
-                $candidates = $users->where('assigned_requests_count', $min);
-                $selected = $candidates->random();
-        
-                $itemRequest->assigned_pic_id = $selected->id;
-                $itemRequest->save();
-                
-            }else
-            {
-                $selected = $itemRequest->requester->approvement_user_id ? $itemRequest->requester->approver : $itemRequest->requester ;
-                $itemRequest->assigned_pic_id = $selected->id;
-                $itemRequest->save();
+                    $itemRequest->assigned_pic_id = $this->assigned_pic_id ?? $selected->id;
+                    $itemRequest->save();
+                    
+                }else
+                {
+                    $selected = $itemRequest->requester->approvement_user_id ? $itemRequest->requester->approver : $itemRequest->requester ;
+                    $itemRequest->assigned_pic_id = $this->assigned_pic_id ?? $selected->id;
+                    $itemRequest->save();
+                }
+            } else {
+                $selected = $itemRequest->assignedPic ?? $itemRequest->requester;
             }
 
              $user = User::where('company_id', $itemRequest->company_id)
@@ -85,9 +94,19 @@ class ProcessItemRequestCreated implements ShouldQueue
             );
 
             // ✅ Cari Vendor Potensial (berdasarkan kategori)
-            $vendors = ProductSupplier::whereHas('supplierCategories', function ($q) use ($itemRequest) {
-                $q->where('supplier_categories.id', $itemRequest->supplier_category_id);
-            })->get();
+            $vendors = collect();
+            if (!$itemRequest->product_supplier_id || (is_array($itemRequest->product_supplier_id) && count($itemRequest->product_supplier_id) === 0)) 
+            {
+                $vendors = ProductSupplier::whereHas('supplierCategories', function ($q) use ($itemRequest) {
+                    $q->where('supplier_category_id', $itemRequest->supplier_category_id);
+                })
+                ->where('supplier_type_id', $itemRequest->supplier_type_id)
+                ->where('company_id', $itemRequest->company_id)
+                ->get();
+            }else
+            {
+                $vendors = ProductSupplier::whereIn('id', $itemRequest->product_supplier_id)->get();
+            }
             
             foreach ($vendors as $vendor) 
             {

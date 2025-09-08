@@ -43,6 +43,7 @@ class ItemRequestController extends Controller
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
         $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
         $types = SupplierType::byCompany(Auth::user()->company_id)->get();
+        $productSuppliers = collect();
 
         $shareWa = $client->status() ?? false;
 
@@ -58,7 +59,7 @@ class ItemRequestController extends Controller
         
         // $statusShareWa = 
         $categories = SupplierCategory::byCompany(Auth::user()->company_id)->get();
-        return view('item_request.createOrEdit', compact('categories', 'shareWa', 'existsSprinter','types','sprinters'));
+        return view('item_request.createOrEdit', compact('categories', 'shareWa', 'existsSprinter','types','sprinters', 'productSuppliers'));
     }
 
     public function store(Request $request)
@@ -71,6 +72,8 @@ class ItemRequestController extends Controller
             'qty'=> "required|numeric|min:1"
         ]);
 
+        // dd(collect($request->product_supplier_id));
+        // dd($request->all());
         // $userCandidate = $this->findCandidate(Auth::user()->company_id);
 
         if ($request->hasFile('picture')) 
@@ -82,10 +85,11 @@ class ItemRequestController extends Controller
         $validated['user_id'] = auth()->id();
         $validated['company_id'] = auth()->user()->company_id;
         $validated['status'] = 'REQUESTED';
+        $validated['supplier_type_id'] = $request->type;
 
         $item = ItemRequest::create($validated);
 
-        dispatch(new ProcessItemRequestCreated($item->id));
+        dispatch(new ProcessItemRequestCreated($item->id, $request->assigned_pic_id, $request->product_supplier_id));
 
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
 
@@ -103,6 +107,7 @@ class ItemRequestController extends Controller
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
         $client = new WablasClient($settingCompany['server_wablas'], $settingCompany['token_wablas'], $settingCompany['webhook_key_wablas']);
         $types = SupplierType::byCompany(Auth::user()->company_id)->get();
+        $productSuppliers = ProductSupplier::byCompany(Auth::user()->company_id)->get();
 
         $shareWa = $client->status() ?? false;
 
@@ -115,7 +120,7 @@ class ItemRequestController extends Controller
 
         $existsSprinter = $sprinters->count() > 0;
 
-        return view('item_request.createOrEdit', compact('itemRequest', 'categories', 'shareWa','existsSprinter','types', 'sprinters'));
+        return view('item_request.createOrEdit', compact('itemRequest', 'categories', 'shareWa','existsSprinter','types', 'sprinters', 'productSuppliers'));
     }
 
     public function show(ItemRequest $itemRequest)
@@ -132,6 +137,8 @@ class ItemRequestController extends Controller
             'estimated_price' => 'required|numeric|min:1',
             'qty' => 'required|numeric|min:1',
         ]);
+        
+        $validated['supplier_type_id'] = $request->type;
 
         $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');
 
@@ -139,6 +146,7 @@ class ItemRequestController extends Controller
         {
             dispatch(new SentMessageToVendor($itemRequest));
         }
+        
 
         if ($request->hasFile('picture')) 
         {

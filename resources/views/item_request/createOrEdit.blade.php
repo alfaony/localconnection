@@ -27,13 +27,12 @@
                         @endforeach
                     </select>
                 </div>
-
                 <div class="form-group">
                     <label for="type"><i class="fas fa-list mr-1"></i>Type Supplier</label>
-                    <select name="type" id="supplier_type_id" class="form-control select2" style="width: 100%;" required>
+                    <select name="type" id="supplier_type_id" class="form-control select2" style="width: 100%;">
                         <option value="">-- Pilih Tipe --</option>
                         @foreach($types as $type)
-                            <option value="{{ $type->id }}" @selected(old('type', $itemRequest->type ?? '') == $type->id)>
+                            <option value="{{ $type->id }}" @selected(old('type', $itemRequest->supplier_type_id ?? '') == $type->id)>
                                 {{ $type->name }}
                             </option>
                         @endforeach
@@ -43,6 +42,11 @@
                 <div class="form-group">
                     <label for="product_supplier_id">Pilih Product Supplier</label>
                     <select id="product_supplier_id" name="product_supplier_id[]" class="form-control select2" multiple>
+                        @foreach($productSuppliers as $productSupplier)
+                            <option value="{{ $productSupplier->id }}" @selected(old('product_supplier_id', $itemRequest->product_supplier_id ?? '') == $productSupplier->id)>
+                                {{ $productSupplier->store_name  ." - ". $productSupplier->owner_name}}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -98,6 +102,7 @@
                 <div class="form-group">
                     <label for="sprinter_ids"><i class="fas fa-user-friends mr-1"></i>Sprinter</label>
                     <select name="assigned_pic_id" id="sprinter_ids" class="form-control select2" style="width: 100%;">
+                        <option value="" disabled selected>-- Pilih Sprinter --</option>
                         @foreach($sprinters->pluck('name', 'id') as $id => $name)
                             <option value="{{ $id }}" @if(isset($itemRequest) && $itemRequest->assigned_pic_id == $id) selected @endif>
                                 {{ $name }}

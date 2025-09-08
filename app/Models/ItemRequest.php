@@ -14,6 +14,7 @@ class ItemRequest extends Model
         'company_id',
         'user_id',
         'supplier_category_id',
+        'supplier_type_id',
         'item_name',
         'description',
         'estimated_price',
