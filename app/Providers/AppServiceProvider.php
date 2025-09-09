@@ -162,7 +162,7 @@ class AppServiceProvider extends ServiceProvider
             ];
 
             $managementTokoOnlineMenu = [
-                'pricelists','products','product_suppliers','supplier_categories',
+                'pricelists','products','supplier_types','product_suppliers','supplier_categories',
                 'product_categories','supliers','customers','item_requests',
                 'providers','shipping_rates','shipping_calculations'
             ];
@@ -608,6 +608,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Pengajuan Barang',
                     'route' => 'item-request.index',
                     'icon' => 'fa fa-shopping-cart',
+                ],
+                'supplier_types' => 
+                [
+                    'text' => 'Jenis Supplier',
+                    'route' => 'supplier-type.index',
+                    'icon' => 'fa fa-list',
                 ],
                 'list_sprinter' =>
                 [

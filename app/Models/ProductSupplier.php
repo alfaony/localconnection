@@ -23,6 +23,11 @@ class ProductSupplier extends Model
         return $this->belongsToMany(SupplierCategory::class, 'supplier_category_product_supplier');
     }
 
+    public function supplierType()
+    {
+        return $this->belongsTo(SupplierType::class)->withTrashed();
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();

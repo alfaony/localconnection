@@ -66,6 +66,7 @@ class PermissionForRoleSprinter extends Seeder
             $itemRequest = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_sprinter','as_finance','closed','fetchProductSupplier'];
             $itemPurchase = ['store','update','edit','show','destroy','payment','complete'];
             $chatMessage = ['index','store','show','edit'];
+            $ProductSupplierTypeIndex = ['index','store','show','edit','update','destroy'];
             
             
              foreach ($itemRequest as $method) 
@@ -248,6 +249,43 @@ class PermissionForRoleSprinter extends Seeder
                 }
     
                 PermissionRole::create(['role_id' => $sprinterRole->id, 'permission_id' => $permissionChatMessage->id]);
+                
+            }
+
+            foreach($ProductSupplierTypeIndex as $method)
+            {
+                // create permision
+                $permissionProductSupplierTypeIndex = Permission::firstOrCreate([
+                    'name' => ucwords($method).' Supplier Type',
+                ],[
+                    'method' => $method,
+                    'table' => 'supplier_types',
+                    'model' => 'SupplierType',
+                    'guard_name' => 'web'
+                ]);
+
+                if ($root) 
+                {
+                    PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permissionProductSupplierTypeIndex->id]);
+                }
+                if($admin){
+                    PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permissionProductSupplierTypeIndex->id]);
+                }
+                if($finance){
+                    PermissionRole::create(['role_id' => $finance->id, 'permission_id' => $permissionProductSupplierTypeIndex->id]);
+                }
+                if ($staffFinance) 
+                {
+                    PermissionRole::create(['role_id' => $staffFinance->id, 'permission_id' => $permissionProductSupplierTypeIndex->id]);
+                }
+                if ($managerFinance) 
+                {
+                    PermissionRole::create(['role_id' => $managerFinance->id, 'permission_id' => $permissionProductSupplierTypeIndex->id]);
+                }
+                if($manager)
+                {
+                    PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permissionProductSupplierTypeIndex->id]);
+                }
                 
             }
 

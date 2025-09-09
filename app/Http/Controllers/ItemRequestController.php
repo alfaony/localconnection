@@ -245,7 +245,7 @@ class ItemRequestController extends Controller
         if(Access::can('show','item_requests') && Access::can('workflow','item_requests'))
         {
             $pdf = [
-                'name' => 'show',
+                'name' => 'Show',
                 'route' => 'item-request.show',
                 'id' => true,
             ];
@@ -287,7 +287,7 @@ class ItemRequestController extends Controller
             $item->status = $item->status_badge;
             if(!$item->action_permission)
             {
-                $item->action = '<span class="badge badge-danger">CLOSED</span>';
+                $item->action = '<span class="badge badge-danger"><i class="fas fa-times"></i></span>';
             }
         }
 

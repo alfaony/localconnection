@@ -594,10 +594,11 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   
   // Lengkapi data absen (foto + lokasi)
   Route::put('office-attendance/complete/{code}', [OfficeAttendanceController::class, 'complete'])->name('office-attendance.complete');
+  
+  Route::get('supplier-type', ProductSupplierTypeIndex::class)->name('supplier-type.index');
 });
 
 
-  Route::get('supplier-type', ProductSupplierTypeIndex::class)->name('supplier-type.index');
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');

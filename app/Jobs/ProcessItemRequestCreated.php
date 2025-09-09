@@ -45,7 +45,7 @@ class ProcessItemRequestCreated implements ShouldQueue
             $rootRole = Role::where('name', RoleSchema::ROOT)->first();
             
             // ✅ Cari Sprinter (semua user) jika assigned_pic_id belum diisi
-            if (!$itemRequest->assigned_pic_id) {
+            if (!$this->assigned_pic_id) {
                 $users = User::where('company_id', $itemRequest->company_id)
                 ->whereHas('role.permissions', function ($q) {
                     $q->where('method', 'as_sprinter')
@@ -70,8 +70,11 @@ class ProcessItemRequestCreated implements ShouldQueue
                     $itemRequest->assigned_pic_id = $this->assigned_pic_id ?? $selected->id;
                     $itemRequest->save();
                 }
-            } else {
-                $selected = $itemRequest->assignedPic ?? $itemRequest->requester;
+            } else 
+            {
+                $selected = $this->assigned_pic_id ? User::find($this->assigned_pic_id) : $itemRequest->requester;
+                $itemRequest->assigned_pic_id = $this->assigned_pic_id;
+                $itemRequest->save();
             }
 
              $user = User::where('company_id', $itemRequest->company_id)
