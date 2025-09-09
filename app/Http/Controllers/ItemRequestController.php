@@ -555,7 +555,7 @@ class ItemRequestController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function fetchProductSuppliers(Request $request)
+    public function fetchProductSupplier(Request $request)
     {
         $request->validate([
             'supplier_category_id' => 'required|exists:supplier_categories,id',

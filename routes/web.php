@@ -522,6 +522,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   
   Route::get('item-request/workflow/{id}', [ItemRequestController::class, 'workflow'])->name('item-request.workflow');
   Route::get('item-request/dataTableJson', [ItemRequestController::class, 'dataTableJson'])->name('item-request.datatable');
+  Route::post('item-request/fetchProductSupplier', [ItemRequestController::class, 'fetchProductSupplier'])->name('item-request.fetch-suppliers');
   Route::post('item-request/closed/{id}', [ItemRequestController::class, 'closed'])->name('item-request.closed');
   Route::put('item-request/delivery/{id}', [ItemRequestController::class, 'delivery'])->name('item-request.delivery');
   Route::resource('item-request', ItemRequestController::class);
@@ -595,7 +596,6 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('office-attendance/complete/{code}', [OfficeAttendanceController::class, 'complete'])->name('office-attendance.complete');
 });
 
-  Route::post('item-request/fetch-suppliers', [ItemRequestController::class, 'fetchProductSuppliers'])->name('item-request.fetch-suppliers');
 
   Route::get('supplier-type', ProductSupplierTypeIndex::class)->name('supplier-type.index');
 
