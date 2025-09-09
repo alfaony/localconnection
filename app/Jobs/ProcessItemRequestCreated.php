@@ -89,7 +89,8 @@ class ProcessItemRequestCreated implements ShouldQueue
             $inboxHelper = new InboxHelper();
             $inboxHelper->sent(
                 $selected->id, 
-                $user->id,
+                // $itemRequest$user->id,
+                $itemRequest->user_id,
                 $message, 
                 $directUrl,
                 false,
