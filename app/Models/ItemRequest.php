@@ -26,7 +26,7 @@ class ItemRequest extends Model
         'close_reason',
     ];
 
-    protected $appends = ['status_badge','price_with_format','status_open'];
+    protected $appends = ['status_badge','price_with_format','status_open','action_permission'];
 
     public function requester()
     {
@@ -42,6 +42,7 @@ class ItemRequest extends Model
     {
         return $this->belongsTo(SupplierCategory::class,'supplier_category_id');
     }
+
 
     public function potentialVendors()
     {
@@ -91,6 +92,16 @@ class ItemRequest extends Model
             default:
                 return '<span class="badge badge-dark"><i class="fas fa-question-circle mr-1"></i>'.$status.'</span>';
         }
+    }
+
+    public function getActionPermissionAttribute()
+    {
+        $status = strtoupper($this->status); // pastikan uppercase
+        if (in_array($status, ['WAITING_PAYMENT', 'WAITING_DELIVERY_CONFIRMATION', 'DELIVERED', 'CLOSED'])) 
+        {
+            return false;
+        }
+        return true;
     }
 
     public function getPriceWithFormatAttribute()

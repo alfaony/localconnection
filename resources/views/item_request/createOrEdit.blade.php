@@ -38,12 +38,11 @@
                         @endforeach
                     </select>
                 </div>
-
                 <div class="form-group">
                     <label for="product_supplier_id">Pilih Product Supplier</label>
                     <select id="product_supplier_id" name="product_supplier_id[]" class="form-control select2" multiple>
                         @foreach($productSuppliers as $productSupplier)
-                            <option value="{{ $productSupplier->id }}" @selected(old('product_supplier_id', $itemRequest->product_supplier_id ?? '') == $productSupplier->id)>
+                            <option value="{{ $productSupplier->id }}" @selected(in_array($productSupplier->id, old('product_supplier_id', isset($itemRequest) && $itemRequest->potentialVendors ? $itemRequest->potentialVendors->pluck('product_supplier_id')->toArray() : [])))>
                                 {{ $productSupplier->store_name  ." - ". $productSupplier->owner_name}}
                             </option>
                         @endforeach
