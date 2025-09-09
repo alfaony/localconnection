@@ -469,7 +469,7 @@
 
         // Function to validate attachments
         function validateAttachments(input) {
-            var maxSize = 1 * 1024 * 1024; // 1 MB
+            var maxSize = 100 * 1024 * 1024; // 100 MB
             var files = input.files;
             var validFiles = new DataTransfer(); // DataTransfer object to hold valid files
 

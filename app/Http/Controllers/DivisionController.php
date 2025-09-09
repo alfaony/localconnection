@@ -46,7 +46,7 @@ class DivisionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'point_quota_monthly' => 'required|integer|min:0',
+            'point_quota_monthly' => 'required|integer|min:0|max:200',
         ]);
 
         DB::beginTransaction();
@@ -161,7 +161,7 @@ class DivisionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'point_quota_monthly' => 'required|integer|min:0',
+            'point_quota_monthly' => 'required|integer|min:0|max:200',
         ]);
 
         DB::beginTransaction();

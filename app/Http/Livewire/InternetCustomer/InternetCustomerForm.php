@@ -271,10 +271,10 @@ class InternetCustomerForm extends Component
     {
         $this->validate([
             'name' => 'required|min:3',
-            'email' => 'required|email|unique:user_customers,email',
+            // 'email' => 'required|email|unique:user_customers,email',
             // 'password' => 'required|min:8|confirmed',
-            'phone_number' => 'required|string',
-            'address' => 'required|min:10',
+            // 'phone_number' => 'required|string',
+            // 'address' => 'required|min:10',
             // 'ktp_number' => 'required|digits:16',
             // 'ktp_photo' => 'required|image|max:2048',
         ]);
