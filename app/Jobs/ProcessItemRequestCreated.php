@@ -99,7 +99,7 @@ class ProcessItemRequestCreated implements ShouldQueue
 
             // ✅ Cari Vendor Potensial (berdasarkan kategori)
             $vendors = collect();
-            if (!$itemRequest->product_supplier_id || (is_array($itemRequest->product_supplier_id) && count($itemRequest->product_supplier_id) === 0)) 
+            if (!$this->product_supplier_id || (is_array($this->product_supplier_id) && count($this->product_supplier_id) === 0)) 
             {
                 $vendors = ProductSupplier::whereHas('supplierCategories', function ($q) use ($itemRequest) {
                     $q->where('supplier_category_id', $itemRequest->supplier_category_id);
@@ -109,7 +109,7 @@ class ProcessItemRequestCreated implements ShouldQueue
                 ->get();
             }else
             {
-                $vendors = ProductSupplier::whereIn('id', $itemRequest->product_supplier_id)->get();
+                $vendors = ProductSupplier::whereIn('id', $this->product_supplier_id)->get();
             }
             
             foreach ($vendors as $vendor) 

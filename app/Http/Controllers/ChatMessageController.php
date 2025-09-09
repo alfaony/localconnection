@@ -7,6 +7,7 @@ use App\Models\ItemRequest;
 use App\Models\ChatMessage;
 use App\Events\ChatMessageSent;
 use Illuminate\Support\Facades\Auth;   
+use Illuminate\Support\Facades\Log;
 use App\Helpers\InboxHelper;
 use App\Jobs\SentInbox;
 
@@ -35,7 +36,7 @@ class ChatMessageController extends Controller
     {
         $data = $request->validate([
             'item_request_id' => 'required|exists:item_requests,id',
-            'message' => 'required|string|max:1000',
+            'message' => 'nullable|string|max:1000',
             'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
         $path = null;
@@ -44,45 +45,51 @@ class ChatMessageController extends Controller
             $path = $request->file('file')->store('chat_uploads', 'public');
         }
         
-        $chat = ChatMessage::create([
-            'company_id' => auth()->user()->company_id,
-            'user_id' => auth()->id(),
-            'item_request_id' => $data['item_request_id'],
-            'message' => $data['message'],
-            'attachment' => $path
-        ]);
-
-        
-        
-        broadcast(new ChatMessageSent(
-            $chat->sender->name ?? 'Anonim',
-            $chat->message,
-            $chat->created_at,
-            $chat->item_request_id,
-            Auth::user()->id
-        ))->toOthers();
-        
-
-         $userIds = ChatMessage::where('item_request_id', $data['item_request_id'])
-        ->where('user_id', '!=', auth()->id())
-        ->distinct()
-        ->pluck('user_id')->push($chat->user_id)->push($chat->itemRequest->user_id)->push($chat->itemRequest->assigned_pic_id)->unique();
-
-        // Kirim inbox ke user-user tersebut
-        $directUrl = route('item-request.show', $data['item_request_id']);
-        $message = $request->message;
-
-        foreach ($userIds as $userId) 
-        {
-            if($userId != Auth::user()->id)
+        try {
+            $chat = ChatMessage::create([
+                'company_id' => auth()->user()->company_id,
+                'user_id' => auth()->id(),
+                'item_request_id' => $data['item_request_id'],
+                'message' => $request->message,
+                'attachment' => $path
+            ]);
+    
+            
+            
+            broadcast(new ChatMessageSent(
+                $chat->sender->name ?? 'Anonim',
+                $chat->message ?? '',
+                $chat->created_at,
+                $chat->item_request_id,
+                Auth::user()->id
+            ))->toOthers();
+            
+    
+             $userIds = ChatMessage::where('item_request_id', $data['item_request_id'])
+            ->where('user_id', '!=', auth()->id())
+            ->distinct()
+            ->pluck('user_id')->push($chat->user_id)->push($chat->itemRequest->user_id)->push($chat->itemRequest->assigned_pic_id)->unique();
+    
+            // Kirim inbox ke user-user tersebut
+            $directUrl = route('item-request.show', $data['item_request_id']);
+            $message = $request->message;
+    
+            foreach ($userIds as $userId) 
             {
-                SentInbox::dispatch(Auth::user()->id,$userId,$message, $directUrl);
+                if($userId != Auth::user()->id)
+                {
+                    SentInbox::dispatch(Auth::user()->id,$userId,$message, $directUrl);
+                }
             }
-        }
-
-            return response()->json(['success' => true]);
-        }
-
+    
+                return response()->json(['success' => true]);
+            } catch (\Throwable $th) {
+                //throw $th;
+                Log::error($th);
+                return response()->json(['success' => false]);
+            }
+            
+    }
     public function sentInbox($to,$message,$directUrl)
     {
         $inboxHelper = new InboxHelper();
