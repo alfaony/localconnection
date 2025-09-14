@@ -66,7 +66,7 @@ class PermissionForRoleSprinter extends Seeder
             $itemRequest = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_sprinter','as_finance','closed','fetchProductSupplier'];
             $itemPurchase = ['store','update','edit','show','destroy','payment','complete'];
             $chatMessage = ['index','store','show','edit'];
-            $ProductSupplierTypeIndex = ['index','store','show','edit','update','destroy'];
+            $ProductSupplierTypeIndex = ['create','index','store','show','edit','update','destroy'];
             
             
              foreach ($itemRequest as $method) 
