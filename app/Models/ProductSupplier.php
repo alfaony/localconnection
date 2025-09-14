@@ -15,11 +15,17 @@ class ProductSupplier extends Model
         'sales_information', 'additional_information', 
         'store_photo', 'ktp_photo',
         'company_id',
+        'supplier_type_id'
     ];
 
     public function supplierCategories()
     {
         return $this->belongsToMany(SupplierCategory::class, 'supplier_category_product_supplier');
+    }
+
+    public function supplierType()
+    {
+        return $this->belongsTo(SupplierType::class)->withTrashed();
     }
 
     public function scopeByCompany($query,$companyId)

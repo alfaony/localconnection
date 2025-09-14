@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProductSupplierImportJob;
+
+use App\Models\ImportProgress;
 use App\Models\ProductSupplier;
 use App\Models\SupplierCategory;
+use App\Models\SupplierType;
+
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use App\Models\ImportProgress;
-use App\Jobs\ProductSupplierImportJob;
-use Illuminate\Support\Str;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class ProductSupplierController extends Controller
@@ -46,7 +50,8 @@ class ProductSupplierController extends Controller
     public function create()
     {
         $categories = SupplierCategory::byCompany(Auth::user()->company_id)->get();
-        return view('product_supplier.createOrEdit', compact('categories'));
+        $types = SupplierType::byCompany(Auth::user()->company_id)->get();
+        return view('product_supplier.createOrEdit', compact('categories', 'types'));
     }
 
     public function store(Request $request)
@@ -56,6 +61,7 @@ class ProductSupplierController extends Controller
             'store_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:20',
             'location' => 'required|string|max:255',
+            'supplier_type_id' => 'nullable|exists:supplier_types,id',
             // 'supplier_categories' => 'required|array|min:1'
         ]);
 
@@ -69,7 +75,8 @@ class ProductSupplierController extends Controller
                 'phone_number' => $request->phone_number,
                 'location' => $request->location,
                 'sales_information' => $request->sales_information ?? null,
-                'additional_information' => $request->additional_information ?? null
+                'additional_information' => $request->additional_information ?? null,
+                'supplier_type_id' => $request->supplier_type_id
             ]);
             
             // Proses Supplier Categories (Buat baru jika belum ada)
@@ -111,7 +118,9 @@ class ProductSupplierController extends Controller
     public function edit(ProductSupplier $productSupplier)
     {
         $categories = SupplierCategory::byCompany(Auth::user()->company_id)->get();
-        return view('product_supplier.createOrEdit', compact('productSupplier', 'categories'));
+        $types = SupplierType::byCompany(Auth::user()->company_id)->get();
+
+        return view('product_supplier.createOrEdit', compact('productSupplier', 'categories', 'types'));
     }
 
     public function update(Request $request, ProductSupplier $productSupplier)
@@ -121,7 +130,7 @@ class ProductSupplierController extends Controller
             'store_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:20',
             'location' => 'required|string|max:255',
-            // 'supplier_categories' => 'required|array|min:1'
+            'supplier_type_id' => 'nullable|exists:supplier_types,id',
         ]);
 
         DB::beginTransaction();
@@ -133,7 +142,8 @@ class ProductSupplierController extends Controller
                 'phone_number' => $request->phone_number,
                 'location' => $request->location,
                 'sales_information' => $request->sales_information ?? null,
-                'additional_information' => $request->additional_information ?? null
+                'additional_information' => $request->additional_information ?? null,
+                'supplier_type_id' => $request->supplier_type_id
             ]);
 
             // Proses Supplier Categories (Buat baru jika belum ada)
