@@ -505,6 +505,88 @@
                         </div>
                     </div>
 
+                    <div class="card">
+                        <div class="card-header" id="headingWFO">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseWFO" aria-expanded="false" aria-controls="collapseWFO">
+                                    Punishment WFO & WFH RULES
+                                </button>
+                            </h2>
+                        </div>
+                        <div id="collapseWFO" class="collapse" aria-labelledby="headingWFO" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="card">
+                                    <div class="card-header">
+                                        WFH Rules
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="range_start_date">Rentang Tanggal Mulai</label>
+                                            <input type="number" name="range_start_date" class="form-control" value="{{ old('range_start_date', $data['range_start_date'] ?? 21) }}">
+                                            @error('range_start_date')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="range_end_date">Rentang Tanggal Akhir</label>
+                                            <input type="number" name="range_end_date" class="form-control" value="{{ old('range_end_date', $data['range_end_date'] ?? 20) }}">
+                                            @error('range_end_date')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="presence_checkin">Presensi Check-in</label>
+                                            <input type="number" name="presence_checkin" class="form-control" value="{{ old('presence_checkin', $data['presence_checkin'] ?? 70) }}">
+                                            @error('presence_checkin')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="overdue_task">Tugas Keterlambatan</label>
+                                            <input type="number" name="overdue_task" class="form-control" value="{{ old('overdue_task', $data['overdue_task'] ?? 50) }}">
+                                            @error('overdue_task')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                         WFO Rules
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="entry_time">Waktu Masuk</label>
+                                            <input type="time" name="entry_time" class="form-control timepicker" value="{{ old('entry_time', $data['entry_time'] ?? '08:00') }}">
+                                            @error('entry_time')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="tolerance">Basis Toleransi</label>
+                                            <input type="number" name="tolerance" class="form-control" value="{{ old('tolerance', $data['tolerance'] ?? 20) }}">
+                                            @error('tolerance')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="checkin_onday">Standar Check-in Setiap Hari</label>
+                                            <input type="number" name="checkin_onday" class="form-control" value="{{ old('checkin_onday', $data['checkin_onday'] ?? 4) }}">
+                                            @error('checkin_onday')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
 
