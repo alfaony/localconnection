@@ -48,7 +48,9 @@ class GeneratePunishmentFormatAllCompany extends Command
             'range_start_date' => "21", // Range date
             'range_end_date' => "20", // Range date
             'presence_checkin' => 70, // Presence check-in
-            'overdue_task' => 50, // Overdue task
+            'punishment_point_wfh' => 10, // Punishment point WFH
+            'punishment_point_wfo' => 10, // Punishment point WFH
+            'overdue_task' => 40, // Overdue task
             'entry_time' => "08:00", // Entry time
             'tolerance' => 20, // Tolerance basis
             'checkin_onday' => 4, // Check-in on the same day

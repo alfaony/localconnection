@@ -123,6 +123,7 @@ use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
 use App\Http\Livewire\ProductSupplierTypeIndex;
+use App\Http\Livewire\PunishmentUserTable;
 
 
 
@@ -598,6 +599,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('supplier-type', ProductSupplierTypeIndex::class)->name('supplier-type.index');
 });
 
+  Route::get('punishment-user', PunishmentUserTable::class)->name('punishment.users');
 
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');

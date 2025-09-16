@@ -37,9 +37,25 @@ class Kernel extends ConsoleKernel
         $company = Company::all();
         foreach ($company as $a) 
         {
-            $settingCompany = SettingCompany::byCompany($a->id)->get()->pluck('field_value','field_title');
-            $sentTime = $settingCompany['sent_time'] ?? NULL;
+            $schedule->command("validity:userOfCompany --id={$a->id} --type=wfo")->timezone('Asia/Jakarta')->dailyAt('23:00');
 
+            $settingCompany = SettingCompany::byCompany($a->id)->get()->pluck('field_value','field_title');
+
+            $rangeEndDate = $settingCompany['range_end_date'] ?? NULL;
+            if($rangeEndDate != "")
+            {
+                $dateRun = Carbon::now()->startOfMonth()->setDay($rangeEndDate);
+
+                // Jika hari ini adalah $dateRun, jadwalkan command pada pukul 23:00
+                if (Carbon::now('Asia/Jakarta')->isSameDay($dateRun)) {
+                    $schedule->command("validity:userOfCompany --id={$a->id} --type=wfh")
+                        ->timezone('Asia/Jakarta')
+                        ->dailyAt('23:00')
+                        ;
+                }
+            }
+
+            $sentTime = $settingCompany['sent_time'] ?? NULL;
             if($sentTime != "")
             {
                 $schedule->command('project:send-expiration-notifications')->timezone('Asia/Jakarta')->dailyAt($sentTime);
