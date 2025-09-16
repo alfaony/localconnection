@@ -7,7 +7,7 @@
                 <i class="fas fa-file-contract me-2"></i> Minutes of Meeting
             </h5>
             @canAccess('create','moms')
-            <a href="{{ route('mom.create') }}" class="btn btn-primary btn-sm d-none d-md-inline-flex align-items-center">
+            <a href="{{ route('mom.create') }}" class="btn btn-primary btn-sm d-md-inline-flex align-items-center">
                 <i class="fas fa-plus me-2"></i> Add
             </a>
             @endcanAccess
@@ -93,40 +93,38 @@
                                     </div>
 
                                     <!-- Action Buttons -->
-                                    <div class="d-flex gap-2">
-                                        @canAccess('show','moms')
-                                        <a href="{{ route('mom.show', $mom->id) }}" 
-                                           class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-action"
-                                           data-bs-toggle="tooltip" title="Lihat detail">
-                                            <i class="fas fa-eye"></i>
-                                            <span class="d-none d-md-inline ms-1">Lihat</span>
-                                        </a>
-                                        @endcanAccess
-                                        
-                                        @canAccess('update','moms')
-                                        <a href="{{ route('mom.edit', $mom->id) }}" 
-                                           class="btn btn-sm btn-outline-secondary rounded-pill px-3 btn-action"
-                                           data-bs-toggle="tooltip" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                            <span class="d-none d-md-inline ms-1">Edit</span>
-                                        </a>
-                                        @endcanAccess
-                                        
-                                        @canAccess('destroy','moms')
-                                        @if($mom->isDelete())
-                                        <form action="{{ route('mom.destroy', $mom->id) }}" method="POST" class="delete-form d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" 
-                                                    class="btn btn-sm btn-outline-danger rounded-pill px-3 btn-action"
-                                                    data-bs-toggle="tooltip" title="Hapus"
-                                                    >
-                                                <i class="fas fa-trash"></i>
-                                                <span class="d-none d-md-inline ms-1">Hapus</span>
-                                            </button>
-                                        </form>
-                                        @endif
-                                        @endcanAccess
+                                    <div class="row">
+                                        <div class="col-12 text-end">
+                                            @canAccess('show','moms')
+                                            <a href="{{ route('mom.show', $mom->id) }}" 
+                                               class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-action"
+                                               data-bs-toggle="tooltip" title="Lihat detail">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @endcanAccess
+                                            
+                                            @canAccess('update','moms')
+                                            <a href="{{ route('mom.edit', $mom->id) }}" 
+                                               class="btn btn-sm btn-outline-secondary rounded-pill px-3 btn-action"
+                                               data-bs-toggle="tooltip" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            @endcanAccess
+                                            
+                                            @canAccess('destroy','moms')
+                                            @if($mom->isDelete())
+                                            <form action="{{ route('mom.destroy', $mom->id) }}" method="POST" class="delete-form d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" 
+                                                        class="btn btn-sm btn-outline-danger rounded-pill px-3 btn-action"
+                                                        data-bs-toggle="tooltip" title="Hapus">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                            @endif
+                                            @endcanAccess
+                                        </div>
                                     </div>
                                 </div>
                             </div>
