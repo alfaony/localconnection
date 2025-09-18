@@ -597,9 +597,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('office-attendance/complete/{code}', [OfficeAttendanceController::class, 'complete'])->name('office-attendance.complete');
   
   Route::get('supplier-type', ProductSupplierTypeIndex::class)->name('supplier-type.index');
+  
+  Route::get('punishment-user', PunishmentUserTable::class)->name('punishment-user.index');
 });
 
-  Route::get('punishment-user', PunishmentUserTable::class)->name('punishment.users');
 
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');

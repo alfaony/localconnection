@@ -521,6 +521,13 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="form-group">
+                                            <label for="punishment_point_wfh">Poin Sanksi WFH</label>
+                                            <input type="number" name="punishment_point_wfh" class="form-control" value="{{ old('punishment_point_wfh', $data['punishment_point_wfh'] ?? 10) }}">
+                                            @error('punishment_point_wfh')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <div class="form-group">
                                             <label for="range_start_date">Rentang Tanggal Mulai</label>
                                             <input type="number" name="range_start_date" class="form-control" value="{{ old('range_start_date', $data['range_start_date'] ?? 21) }}">
                                             @error('range_start_date')
@@ -559,6 +566,13 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="form-group">
+                                            <label for="punishment_point_wfo">Poin Sanksi WFO</label>
+                                            <input type="number" name="punishment_point_wfo" class="form-control" value="{{ old('punishment_point_wfo', $data['punishment_point_wfo'] ?? 0) }}">
+                                            @error('punishment_point_wfo')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <div class="form-group">
                                             <label for="entry_time">Waktu Masuk</label>
                                             <input type="time" name="entry_time" class="form-control timepicker" value="{{ old('entry_time', $data['entry_time'] ?? '08:00') }}">
                                             @error('entry_time')
@@ -567,7 +581,7 @@
                                         </div>
         
                                         <div class="form-group">
-                                            <label for="tolerance">Basis Toleransi</label>
+                                            <label for="tolerance">Basis Toleransi (menit)</label>
                                             <input type="number" name="tolerance" class="form-control" value="{{ old('tolerance', $data['tolerance'] ?? 20) }}">
                                             @error('tolerance')
                                             <span class="text-danger text-sm">{{ $message }}</span>

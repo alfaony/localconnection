@@ -37,7 +37,10 @@ class Kernel extends ConsoleKernel
         $company = Company::all();
         foreach ($company as $a) 
         {
-            $schedule->command("validity:userOfCompany --id={$a->id} --type=wfo")->timezone('Asia/Jakarta')->dailyAt('23:00');
+            $schedule->command("validity:userOfCompany --id={$a->id} --type=wfo")->timezone('Asia/Jakarta')
+            ->dailyAt('23:00')
+                        // ->dailyAt('14:36')
+            ;
 
             $settingCompany = SettingCompany::byCompany($a->id)->get()->pluck('field_value','field_title');
 
@@ -50,6 +53,7 @@ class Kernel extends ConsoleKernel
                 if (Carbon::now('Asia/Jakarta')->isSameDay($dateRun)) {
                     $schedule->command("validity:userOfCompany --id={$a->id} --type=wfh")
                         ->timezone('Asia/Jakarta')
+                        // ->dailyAt('14:36')
                         ->dailyAt('23:00')
                         ;
                 }

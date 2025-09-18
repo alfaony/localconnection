@@ -55,6 +55,7 @@
                         <td><span class="badge bg-danger">{{ $punishment->point }}</span></td>
                         <td>{{ $punishment->created_at->format('d M Y, H:i') }}</td>
                         <td>
+                            @canAccess('destroy','punishment_users')
                             <button class="btn btn-xs btn-default text-danger mx-1 shadow" 
                                 onclick="if (confirm('Apakah kamu yakin ingin menghapus data ini?')) { 
                                     @this.call('delete', {{ $punishment->id }}) 
@@ -62,6 +63,7 @@
                                 title="Delete">
                                 <i class="fa fa-lg fa-fw fa-trash"></i>
                             </button>
+                            @endcanAccess
                         </td>
                     </tr>
                     @empty
