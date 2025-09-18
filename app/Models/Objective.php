@@ -138,7 +138,7 @@ class Objective extends Model
     {
         if($companyId)
         {
-            $companyIds = $user->accessibleCompanies->pluck('id')->push($companyId)->unique();
+            $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
             return $query->whereHas('user', function ($query) use ($companyIds) 
             {
                 $query->whereIn('company_id', $companyIds);
