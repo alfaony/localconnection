@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('product_stores', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('barcode')->nullable();
+            $table->string('barcode')->nullable();
             $table->unsignedBigInteger('category_product_store_id')->nullable();
             $table->unsignedBigInteger('brand_product_store_id')->nullable();
             $table->string('name');

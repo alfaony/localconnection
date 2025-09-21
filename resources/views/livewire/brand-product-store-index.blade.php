@@ -11,7 +11,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h3 class="card-title">Merk Produk Toko</h3>
-                        @canAccess('create','supplier_types')
+                        @canAccess('create','brand_product_stores')
                         <button wire:click="create" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus"></i> Tambah Baru
                         </button>
@@ -44,14 +44,14 @@
                                     <td>{{ $type->name }}</td>
                                     <td>{{ $type->created_at->format('d M Y') }}</td>
                                     <td>
-                                        @canAccess('edit','supplier_types')
+                                        @canAccess('edit','brand_product_stores')
                                         <button wire:click="edit({{ $type->id }})" 
                                                 class="btn btn-warning btn-sm">
                                             <i class="fas fa-edit"></i> Ubah
                                         </button>
                                         @endcanAccess
 
-                                        @canAccess('destroy','supplier_types')
+                                        @canAccess('destroy','brand_product_stores')
                                         <button wire:click="delete({{ $type->id }})" 
                                                 class="btn btn-danger btn-sm"
                                                 onclick="return confirm('Apakah Anda yakin?')">
@@ -92,8 +92,8 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    @canAccess('store','supplier_types')
-                    @canAccess('update','supplier_types')
+                    @canAccess('store','brand_product_stores')
+                    @canAccess('update','brand_product_stores')
                     <form wire:submit.prevent="{{ $isEdit ? 'update' : 'store' }}">
                         <div class="form-group">
                             <label for="name">Nama</label>

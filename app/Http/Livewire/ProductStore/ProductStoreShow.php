@@ -14,6 +14,7 @@ class ProductStoreShow extends Component
     public $barcode2Svg;
     public $qrCodeSvg;
 
+
     public function mount($id)
     {
         $this->product = ProductStore::with(['category', 'brand', 'creator', 'modifier', 'company'])

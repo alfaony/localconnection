@@ -67,7 +67,7 @@ class ProductStoreForm extends Component
     public function createProduct()
     {
         $this->resetForm();
-        $this->barcode = (string) \Illuminate\Support\Str::uuid();
+        $this->barcode = $this->generateBarcode();
     }
 
     public function save()
@@ -115,5 +115,14 @@ class ProductStoreForm extends Component
     {
         $this->emit('closeForm');
         $this->resetForm();
+    }
+
+    protected static function generateBarcode()
+    {
+        do {
+            $barcode = now()->format('Y') . str_pad(mt_rand(0, 999999999), 9, '0', STR_PAD_LEFT);
+        } while (ProductStore::withTrashed()->where('barcode', $barcode)->exists());
+
+        return $barcode;
     }
 }

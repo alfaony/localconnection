@@ -81,15 +81,15 @@
                                     </td>
                                     <td class="text-center align-middle">
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{{ route('product-store.show', $product->id) }}" class="btn btn-info" title="View">
+                                            <a href="{{ route('product-store.show', $product->id) }}" class="btn btn-info mr-1 mb-1" title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <button wire:click="editProduct('{{ $product->id }}')" 
-                                                    class="btn btn-primary" title="Edit">
+                                                    class="btn btn-primary mr-1 mb-1" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button wire:click="confirmDelete('{{ $product->id }}')" 
-                                                    class="btn btn-danger" title="Delete">
+                                                    class="btn btn-danger mr-1 mb-1" title="Delete">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -136,3 +136,26 @@
         </div>
     </div>
 </div>
+@push('js')
+<script>
+    document.addEventListener('livewire:load', function () {
+        window.addEventListener('swal:confirm', function (event) {
+            Swal.fire({
+                title: event.detail.title || 'Are you sure?',
+                text: event.detail.text || "You won't be able to revert this!",
+                icon: event.detail.type || 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                console.log(result);
+                
+                if (result.isConfirmed) {
+                    Livewire.emit('deleteProduct', event.detail.id);
+                }
+            });
+        });
+    });
+</script>
+@endpush

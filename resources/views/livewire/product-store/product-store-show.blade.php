@@ -14,6 +14,9 @@
                             <a href="{{ route('product-store.index') }}" class="btn btn-light btn-sm">
                                 <i class="fas fa-arrow-left mr-1"></i> Kembali ke Produk
                             </a>
+                            <button wire:click="editProduct('{{ $product->id }}')" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit mr-1"></i> Edit Produk
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -141,45 +144,39 @@
                             <div class="row text-center">
                                 <!-- Barcode 1 -->
                                 <div class="col-md-4 mb-4">
-                                    <div class="barcode-card">
-                                        <div class="barcode-header">
-                                            <h5 class="font-weight-bold">CODE 128</h5>
-                                        </div>
-                                        <div class="barcode-container">
-                                            {!! $barcode1Svg !!}
-                                        </div>
-                                        <div class="barcode-footer">
-                                            <p class="barcode-number">{{ $product->barcode }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-        
-                                <!-- Barcode 2 -->
-                                <div class="col-md-4 mb-4">
-                                    <div class="barcode-card">
-                                        <div class="barcode-header">
-                                            <h5 class="font-weight-bold">CODE 39</h5>
-                                        </div>
-                                        <div class="barcode-container">
-                                            {!! $barcode2Svg !!}
-                                        </div>
-                                        <div class="barcode-footer">
-                                            <p class="barcode-number">{{ $product->barcode }}</p>
+                                    <div class="barcode-card text-center p-2 pl-4">
+                                        <div class="d-flex justify-content-center flex-column">
+                                            <h3 class="font-weight-bold mb-0 p-2">{{ $product->name }}</h3>
+                                            <div class="barcode-container flex-fill p-2">
+                                                {!! $barcode1Svg !!}
+                                            </div>
+                                            <div class="p-2 ml-4">
+                                                <p class="text-left h3">Rp. {{ number_format($product->selling_price, 0, ',', '.') }}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
         
                                 <!-- QR Code -->
                                 <div class="col-md-4 mb-4">
-                                    <div class="barcode-card">
-                                        <div class="barcode-header">
-                                            <h5 class="font-weight-bold">QR CODE</h5>
-                                        </div>
-                                        <div class="qr-container">
-                                            {!! $qrCodeSvg !!}
-                                        </div>
-                                        <div class="barcode-footer">
-                                            <p class="barcode-number">{{ $product->name }}</p>
+                                    <div class="barcode-card" style="border: 2px solid #000; padding: 20px;">
+                                        <div class="row align-items-center">
+                                            <!-- Informasi Produk -->
+                                            <div class="col-6">
+                                                <h4 class="font-weight-bold mb-1" style="font-size: 1.4rem; color: #000;">BERGY SHOP</h4>
+                                                <p class="mb-1" style="font-size: 1.1rem; color: #333;">{{ $product->brand->name ?? '-' }}</p>
+                                                <p class="mb-1" style="font-size: 1.1rem; color: #333;">Size {{ $product->variant ?? '-' }}</p>
+                                                <p class="h4 mt-2 mb-0" style="font-weight: bold; color: #000;">
+                                                    IDR {{ number_format($product->selling_price, 0, ',', '.') }}
+                                                </p>
+                                            </div>
+                                            
+                                            <!-- QR Code -->
+                                            <div class="col-6 text-center">
+                                                <div class="d-inline-block">
+                                                    {!! $qrCodeSvg !!}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -265,15 +262,6 @@
             padding: 0.75rem;
         }
         
-        .barcode-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 1.5rem 1rem;
-            background: white;
-            min-height: 150px;
-        }
-        
         .qr-container {
             display: flex;
             justify-content: center;
@@ -325,6 +313,26 @@
             
             .card {
                 border: none !important;
+                box-shadow: none !important;
+            }
+        }
+    </style>
+    <style>
+        .barcode-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .barcode-card:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        @media print {
+            .barcode-card {
+                border: 2px solid #000 !important;
                 box-shadow: none !important;
             }
         }

@@ -51,7 +51,7 @@ class ProductStore extends Model
                 $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
             }
 
-            $model->barcode = Uuid::uuid4()->toString();
+            $model->barcode = self::generateBarcode();
             $model->user_create_id = auth()->id();
             $model->company_id = auth()->user()->company_id;
             $model->dimension = $model->length . ' x ' . $model->width . ' x ' . $model->height;
@@ -61,6 +61,15 @@ class ProductStore extends Model
             $model->user_modified_id = auth()->id();
             $model->dimension = $model->length . ' x ' . $model->width . ' x ' . $model->height;
         });
+    }
+
+    protected static function generateBarcode()
+    {
+        do {
+            $barcode = now()->format('Y') . str_pad(mt_rand(0, 999999999), 9, '0', STR_PAD_LEFT);
+        } while (self::withTrashed()->where('barcode', $barcode)->exists());
+
+        return $barcode;
     }
 
     public function scopeSearch($query, $value)

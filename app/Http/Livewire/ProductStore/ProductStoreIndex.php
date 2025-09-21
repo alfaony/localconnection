@@ -16,7 +16,7 @@ class ProductStoreIndex extends Component
     public $selectedProductId;
     public $showFormModal = false;
 
-    protected $listeners = ['productSaved', 'closeForm'];
+    protected $listeners = ['productSaved', 'closeForm','deleteProduct'];
 
     public function render()
     {
