@@ -11,8 +11,8 @@ class ProductStorePrint extends Component
     public $products;
     public $selectedProducts = [];
     public $barcodeType = 'QRCODE';
-    public $width = 100;
-    public $height = 100;
+    public $width = 170;
+    public $height = 80;
     public $paperSize = 'A4';
     public $barcodePreviews = [];
 
@@ -33,8 +33,9 @@ class ProductStorePrint extends Component
     {
         $this->barcodePreviews = [];
 
-        $widthCode = (int) $this->width / 80;
-        $heightCode = (int) $this->height /60;
+        $widthCode = (int) $this->width /80;
+        $heightCode = (int) $this->height /40;
+        $code = (int) $this->width /5;
         
         foreach ($this->selectedProducts as $productId) {
             $product = ProductStore::find($productId);
@@ -44,7 +45,7 @@ class ProductStorePrint extends Component
                     $barcodeSvg = DNS2D::getBarcodeSVG($product->barcode, 'QRCODE', $widthCode, $heightCode);
                 } else {
                     $barcodeType = $this->barcodeType === 'CODE128' ? 'C128' : 'C39';
-                    $barcodeSvg = DNS1D::getBarcodeSVG($product->barcode, $barcodeType, 1, 50);
+                    $barcodeSvg = DNS1D::getBarcodeSVG($product->barcode, $barcodeType, 1, $code);
                 }
 
                 // Inject properti preserveAspectRatio ke SVG supaya scalable
@@ -53,6 +54,8 @@ class ProductStorePrint extends Component
                 $this->barcodePreviews[] = [
                     'id' => $product->id,
                     'name' => $product->name,
+                    'brand' => $product->brand ? $product->brand->name : '',
+                    'variant' => $product->variant,
                     'barcode' => $product->barcode,
                     'price' => $product->selling_price,
                     'svg' => $barcodeSvg

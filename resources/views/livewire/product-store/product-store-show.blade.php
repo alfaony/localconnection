@@ -163,7 +163,7 @@
                                         <div class="row align-items-center">
                                             <!-- Informasi Produk -->
                                             <div class="col-6">
-                                                <h4 class="font-weight-bold mb-1" style="font-size: 1.4rem; color: #000;">BERGY SHOP</h4>
+                                                <h4 class="font-weight-bold mb-1" style="font-size: 1.4rem; color: #000;">{{ $product->name  }}</h4>
                                                 <p class="mb-1" style="font-size: 1.1rem; color: #333;">{{ $product->brand->name ?? '-' }}</p>
                                                 <p class="mb-1" style="font-size: 1.1rem; color: #333;">Size {{ $product->variant ?? '-' }}</p>
                                                 <p class="h4 mt-2 mb-0" style="font-weight: bold; color: #000;">
@@ -181,12 +181,14 @@
                                     </div>
                                 </div>
                             </div>
-        
+
+                            {{--
                             <div class="text-center mt-4">
                                 <button wire:click="printBarcodes" class="btn btn-primary btn-lg">
                                     <i class="fas fa-print mr-2"></i> Cetak Kode Barcode
                                 </button>
                             </div>
+                            --}}
                         </div>
                     </div>
                 </div>

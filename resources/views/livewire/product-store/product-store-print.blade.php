@@ -32,7 +32,7 @@
                             <div class="form-group">
                                 <label class="font-weight-bold">Select Products</label>
                                 <div wire:ignore>
-                                    <select multiple class="form-control select2" id="productSelect">
+                                    <select multiple class="form-control" id="productSelect">
                                         @foreach($products as $product)
                                             <option value="{{ $product->id }}">{{ $product->name }} - {{ $product->barcode }}</option>
                                         @endforeach
@@ -90,20 +90,30 @@
                         <div class="card-body">
                             <div class="row mr-3 mb-3" id="barcode-preview">
                                 @foreach($barcodePreviews as $barcode)
-                                    <div class="barcode-card" style="width: {{ (int)$width }}px; height: {{ (int)$height }}px;">
-                                        <div class="label-inner">
-                                            <div class="info">
-                                                <h5 class="label-title">BERGY SHOP</h5>
-                                                <p class="label-text">{{ $barcode['name'] }}</p>
-                                                <p class="label-text">IDR {{ number_format($barcode['price'], 0, ',', '.') }}</p>
+                                <div class="barcode-card" style="width: {{ (int)$width }}px; height: {{ (int)$height }}px;">
+                                        @if($barcodeType === 'QRCODE')
+                                        <div class="row align-items-center">
+                                            <div class="col-6">
+                                                <h5 class="label-title">{{ $barcode['name']  }}</h5>
+                                                <p class="label-text">{{ $barcode['brand'] ?? '' }}</p>
+                                                <p class="label-text">{{ $barcode['variant'] ?? '' }}</p>
+                                                <p class="label-text text-bold">Rp. {{ number_format($barcode['price'], 0, ',', '.') }}</p>
                                             </div>
-                                            <div class="barcode-box">
-                                                <div class="barcode-svg">
+                                            <div class="col-6 text-center">
+                                                <div class="d-inline-block">
                                                     {!! $barcode['svg'] !!}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="code-text">{{ $barcode['barcode'] }}</div>
+                                        @elseif($barcodeType === 'CODE128' || $barcodeType === 'CODE39')
+                                        <div class="barcode-label text-center">
+                                            <h5 class="label-title mb-1 font-weight-bold">{{ $barcode['name'] }}</h5>
+                                            <div class="barcode-container">
+                                                {!! $barcode['svg'] !!}
+                                            </div>
+                                            <p class="barcode-price text-left mb-0 ml-3">Rp. {{ number_format($barcode['price'], 0, ',', '.') }}</p>
+                                        </div>
+                                        @endif
                                     </div>
                                 @endforeach
 
@@ -120,7 +130,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 @section('css')
@@ -187,6 +196,39 @@
             max-width: 100% !important;
             max-height: 100% !important;
             object-fit: contain; /* ini kunci: selalu menyesuaikan */
+        }
+
+        .barcode-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100%;
+            padding: 4px;
+        }
+
+        .barcode-container {
+            width: 100%;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .barcode-container svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .barcode-code {
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .barcode-price {
+            font-size: 14px;
+            font-weight: bold;
+            align-self: flex-start;
         }
 
         /* Kode di bawah label */
@@ -268,6 +310,28 @@
         @page {
             size: {{ $paper }};
             margin: 0.5cm;
+        }
+
+        .select2-container--default .select2-selection--multiple {
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            padding: 6px;
+            height: auto;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+            padding: 3px 10px;
+        }
+        .select2-selection__rendered {
+            line-height: 31px !important;
+        }
+        .select2-container .select2-selection--single {
+            height: 38px !important;
+        }
+        .select2-selection__arrow {
+            height: 36px !important;
         }
     </style>
 @endsection
