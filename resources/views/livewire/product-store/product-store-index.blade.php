@@ -6,13 +6,16 @@
                     <div class="row align-items-center">
                         <div class="col-md-6">
                             <h3 class="card-title text-white">
-                                <i class="fas fa-boxes mr-2"></i> Product Store
+                                <i class="fas fa-boxes mr-2"></i> Produk Toko
                             </h3>
                         </div>
                         <div class="col-md-6 text-right">
-                            <button wire:click="createProduct" class="btn btn-light btn-sm">
+                            <button wire:click="createProduct" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus-circle mr-1"></i> Add New Product
                             </button>
+                            <a href="{{ route('product-store.print') }}" class="btn btn-info btn-sm ml-2">
+                                <i class="fas fa-print mr-1"></i> Print Barcodes
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -43,31 +46,33 @@
                         <table class="table table-bordered table-hover table-striped">
                             <thead class="thead-light">
                                 <tr>
+                                    <th class="align-middle">Kode Barcode</th>
                                     <th wire:click="sortBy('name')" style="cursor: pointer;" class="align-middle">
-                                        Name
+                                        Nama Produk
                                         @if($sortField === 'name')
                                             <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} float-right"></i>
                                         @else
                                             <i class="fas fa-sort text-muted float-right"></i>
                                         @endif
                                     </th>
-                                    <th class="align-middle">Category</th>
-                                    <th class="align-middle">Brand</th>
-                                    <th class="align-middle">Variant</th>
+                                    <th class="align-middle">Kategori</th>
+                                    <th class="align-middle">Merek</th>
+                                    <th class="align-middle">Varian</th>
                                     <th wire:click="sortBy('selling_price')" style="cursor: pointer;" class="align-middle">
-                                        Price
+                                        Harga Jual
                                         @if($sortField === 'selling_price')
                                             <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} float-right"></i>
                                         @else
                                             <i class="fas fa-sort text-muted float-right"></i>
                                         @endif
                                     </th>
-                                    <th class="text-center align-middle" style="width: 120px;">Actions</th>
+                                    <th class="text-center align-middle" style="width: 120px;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($products as $product)
                                 <tr>
+                                    <td class="align-middle">{{ $product->barcode ?? '-' }}</td>
                                     <td class="align-middle">{{ $product->name }}</td>
                                     <td class="align-middle">
                                         <span class="badge badge-info">{{ $product->category->name ?? '-' }}</span>
@@ -97,7 +102,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-4">
+                                    <td colspan="7" class="text-center py-4">
                                         <i class="fas fa-box-open fa-2x text-muted mb-2"></i>
                                         <p class="text-muted">No products found. Add your first product!</p>
                                     </td>
@@ -120,7 +125,7 @@
                             <div class="modal-header bg-gradient-primary">
                                 <h5 class="modal-title text-white">
                                     <i class="fas {{ $selectedProductId ? 'fa-edit' : 'fa-plus-circle' }} mr-2"></i>
-                                    {{ $selectedProductId ? 'Edit' : 'Create' }} Product
+                                    {{ $selectedProductId ? 'Edit' : 'Create' }} Produk
                                 </h5>
                                 <button type="button" class="close text-white" wire:click="closeForm" aria-label="Close">
                                     <span aria-hidden="true">×</span>

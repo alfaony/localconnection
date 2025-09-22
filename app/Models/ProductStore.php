@@ -76,7 +76,9 @@ class ProductStore extends Model
     {
         return $query->where('name', 'like', '%' . $value . '%')
                     ->orWhere('variant', 'like', '%' . $value . '%')
-                    ->orWhere('specification', 'like', '%' . $value . '%');
+                    ->orWhere('specification', 'like', '%' . $value . '%')
+                    ->orWhere('barcode', 'like', '%' . $value . '%')
+                    ;
     }
 
     public function scopeByCompany($query,$companyId)
