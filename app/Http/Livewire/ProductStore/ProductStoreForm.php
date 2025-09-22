@@ -22,6 +22,7 @@ class ProductStoreForm extends Component
     public $weight;
     public $selling_price_view;
     public $selling_price;
+    public $createAgain = false;
 
     public function updatedSellingPriceView($value)
     {
@@ -98,8 +99,15 @@ class ProductStoreForm extends Component
             ProductStore::create($data);
         }
 
-        $this->emit('productSaved');
-        $this->resetForm();
+        if ($this->createAgain) {
+            $this->createProduct(); // panggil createProduct agar form baru siap
+        } else 
+        {            
+            $this->resetForm();
+            $this->emit('closeForm');
+
+            return redirect()->route('product-store.index')->with('message', 'Produk berhasil disimpan.');
+        }
     }
 
     private function resetForm()

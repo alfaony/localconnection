@@ -141,8 +141,11 @@
             <button type="button" class="btn btn-secondary" wire:click="cancel">
                 <i class="fas fa-times mr-1"></i> Batal
             </button>
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn btn-primary" wire:click="$set('createAgain', false)">
                 <i class="fas fa-save mr-1"></i> Simpan
+            </button>
+            <button type="submit" class="btn btn-success" wire:click="$set('createAgain', true)">
+                <i class="fas fa-plus-circle mr-1"></i> Simpan & Buat Lagi
             </button>
         </div>
     </form>

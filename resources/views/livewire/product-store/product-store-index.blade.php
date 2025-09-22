@@ -2,20 +2,25 @@
     <div class="row">
         <div class="col-md-12 mt-3">
             <div class="card">
-                <div class="card-header bg-gradient-primary">
+                <div class="card-header bg-gradient">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <h3 class="card-title text-white">
+                            <h3 class="card-title">
                                 <i class="fas fa-boxes mr-2"></i> Produk Toko
                             </h3>
                         </div>
                         <div class="col-md-6 text-right">
+                            @canAccess('create','product_stores')
                             <button wire:click="createProduct" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus-circle mr-1"></i> Add New Product
                             </button>
+                            @endcanAccess
+
+                            @canAccess('print','product_stores')
                             <a href="{{ route('product-store.print') }}" class="btn btn-info btn-sm ml-2">
                                 <i class="fas fa-print mr-1"></i> Print Barcodes
                             </a>
+                            @endcanAccess
                         </div>
                     </div>
                 </div>
@@ -86,17 +91,25 @@
                                     </td>
                                     <td class="text-center align-middle">
                                         <div class="btn-group btn-group-sm">
+                                            @canAccess('show','product_stores')
                                             <a href="{{ route('product-store.show', $product->id) }}" class="btn btn-info mr-1 mb-1" title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            @endcanAccess
+
+                                            @canAccess('edit','product_stores')
                                             <button wire:click="editProduct('{{ $product->id }}')" 
                                                     class="btn btn-primary mr-1 mb-1" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
+                                            @endcanAccess
+
+                                            @canAccess('destroy','product_stores')
                                             <button wire:click="confirmDelete('{{ $product->id }}')" 
                                                     class="btn btn-danger mr-1 mb-1" title="Delete">
                                                 <i class="fas fa-trash"></i>
                                             </button>
+                                            @endcanAccess
                                         </div>
                                     </td>
                                 </tr>
@@ -141,9 +154,40 @@
         </div>
     </div>
 </div>
+@push('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css">
+<style>
+    .select2-container--default .select2-selection--single {
+        border: 1px solid #aaa;
+        border-radius: 4px;
+        padding: 2px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        padding-left: 10px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__choice {
+        background-color: #ddd;
+        border: none;
+        color: inherit;
+    }
+</style>
+@endpush
 @push('js')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     document.addEventListener('livewire:load', function () {
+        initSelect2();
+
+        Livewire.hook('message.processed', (message, component) => {
+            initSelect2();
+        });
+
+        function initSelect2() {
+            $('.select2').select2({
+                placeholder: '-- Select --',
+                allowClear: true
+            });
+        }
         window.addEventListener('swal:confirm', function (event) {
             Swal.fire({
                 title: event.detail.title || 'Are you sure?',
