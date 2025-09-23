@@ -105,6 +105,7 @@ class ParamSchema
     const PENANGGUNGJAWAB = "penanggung_jawab";
 
     const TARGET_CHECKIN = 10;
+    const TARGET_ABSENCE = 4;
 
     const DRAF = "draft";
 

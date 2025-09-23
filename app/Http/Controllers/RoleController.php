@@ -129,6 +129,7 @@ class RoleController extends Controller
             'barcodes',
             'office_attendances',
             'supplier_types',
+            'punishment_users',
         ];
 
         $checked = array_merge($mainMenus);
@@ -285,6 +286,7 @@ class RoleController extends Controller
                 'barcodes',
                 'office_attendances',
                 'supplier_types',
+                'punishment_users',
             ];
         $checked = array_merge($mainMenus);
 
@@ -402,6 +404,7 @@ class RoleController extends Controller
                 'barcodes',
                 'office_attendances',
                 'supplier_types',
+                'punishment_users',
             ];
         
         $checked = array_merge($mainMenus);
