@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="{{ public_path('vendor/adminlte/plugins/bootstrap/css/bootstrap.min.css') }}">
     <style>
     /* General font size */
+    body, html {
+        font-family: DejaVu Sans, sans-serif !important; /* ✅ font default dompdf */
+        font-size: 12px;
+    }
     body,
     html {
         font-size: 12px;
