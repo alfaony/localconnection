@@ -9,6 +9,8 @@ class AgreementSignature extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
+
     public function getTransalateSignature()
     {
         switch ($this->order) 
