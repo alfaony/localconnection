@@ -140,7 +140,7 @@ class validityUserOfCompany extends Command
                         if ($totalCheckin < $checkinTarget || $terlambat) {
                             // Tambahkan user ke dalam hasil atau lakukan aksi
                             $this->addPoint($user,"belum memenuhi target check-in atau terlambat", $setting['punishment_point_wfo']);
-                            Log::info("User {$user->name} belum memenuhi target check-in atau terlambat.");
+                            // Log::info("User {$user->name} belum memenuhi target check-in atau terlambat.");
                         }
                     }
                 }
