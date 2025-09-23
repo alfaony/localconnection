@@ -79,6 +79,18 @@ class UsedLaptop extends Model
         return round($base * 1.3);
     }
 
+    public function getJakartaPriceAttribute()
+    {
+
+        return $this->suggested_selling_price + config('services.used_laptop_charge.totebag_charge') + config('services.used_laptop_charge.totebag_cover_charge');
+    }
+
+    public function getJambiPriceAttribute()
+    {
+
+        return $this->suggested_selling_price + $this->jakarta_price + config('services.used_laptop_charge.totebag_charge') + config('services.used_laptop_charge.expedition_charge');
+    }
+
     // 🟢 Status Jual (label helper opsional)
     public function getSaleStatusAttribute()
     {

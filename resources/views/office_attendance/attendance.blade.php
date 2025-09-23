@@ -64,7 +64,7 @@
                         </div>
 
                         <div class="form-group text-center mt-4">
-                            <button type="submit" class="btn btn-primary btn-sm">
+                            <button type="submit" id="submit-btn" class="btn btn-primary btn-sm">
                                 <i class="fas fa-paper-plane mr-2"></i>Kirim Absensi
                             </button>
                         </div>
@@ -203,5 +203,12 @@
             document.getElementById('latitude').value = 'Geolocation tidak didukung browser ini';
             document.getElementById('longitude').value = 'Geolocation tidak didukung browser ini';
         }
+
+        // Tambah animasi loading & disable button submit agar tidak double klik
+        document.getElementById('attendance-form').addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+        });
     </script>
 @endsection

@@ -96,5 +96,11 @@ return [
     'internet_custom' =>
     [
         'end_billing_of_days' => env('END_BILLING_OF_DAYS', 15),
-    ]
+    ],
+    'used_laptop_charge' =>
+    [
+        'expedition_charge' => env('USED_LAPTOP_EXPEDITION_CHARGE', 60000),
+        'totebag_charge' => env('USED_LAPTOP_TOTE_BAG_CHARGE', 46421),
+        'totebag_cover_charge' => env('USED_LAPTOP_TOTE_BAG_COVER_CHARGE', 3800),
+    ],
 ];
