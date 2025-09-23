@@ -8,6 +8,10 @@
     <style>
         /* General font size */
         body, html {
+            font-family: DejaVu Sans, sans-serif !important; /* ✅ font default dompdf */
+            font-size: 12px;
+        }
+        body, html {
             font-size: 12px; /* Smaller default font size */
             margin: 0;
             padding: 0;
