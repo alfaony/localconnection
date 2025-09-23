@@ -52,4 +52,12 @@ class PunishmentUser extends Model
         }
         return $query;
     }
+
+    public function scopeByCompany($query, $company_id)
+    {
+        $company_ids = auth()->user()->accessibleCompanies->pluck('id')->push($company_id)->unique();
+        return $query->whereHas('user', function($q) use ($company_ids) {
+            $q->whereIn('company_id', $company_ids);
+        });
+    }
 }

@@ -57,7 +57,7 @@ class PunishmentUserTable extends Component
         // Get users by company
         $companyUsers = User::byCompany(Auth::user())->get();
         
-        $punishments = PunishmentUser::with(['user', 'dailytask'])
+        $punishments = PunishmentUser::with(['user', 'dailytask'])->byCompany(Auth::user()->company_id)
             ->when($this->selectedUser, function($query) {
                 $query->where('user_id', $this->selectedUser);
             })
