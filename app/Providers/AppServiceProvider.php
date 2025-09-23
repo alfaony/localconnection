@@ -709,7 +709,7 @@ class AppServiceProvider extends ServiceProvider
                 ],
                 'punishment_users' =>
                 [
-                    'text' => 'Punishment User',
+                    'text' => 'Pelanggaran Pegawai',
                     'route' => 'punishment-user.index',
                     'icon' => 'fa fa-user-slash',
                 ]
