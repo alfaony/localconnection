@@ -20,6 +20,7 @@ use App\Models\NationalHoliday;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
+use App\Helpers\InboxHelper;
 
 class validityUserOfCompany extends Command
 {
@@ -94,6 +95,8 @@ class validityUserOfCompany extends Command
                         $this->addPoint($user, 'Jumlah task overdue melebihi batas '.$setting['overdue_task'], $setting['punishment_point_wfh']);
                     }
                 }
+
+                $this->info('Punishment WFH check completed.');
             }
             if ($type == 'wfo') 
             {
@@ -141,6 +144,8 @@ class validityUserOfCompany extends Command
                         }
                     }
                 }
+
+                $this->info('Punishment WFO check completed.');
             }
 
         } catch (\Throwable $th) {
@@ -185,6 +190,9 @@ class validityUserOfCompany extends Command
         $punishment->dailytask_id = $dailyTask->id;
         $punishment->point = $point;
         $punishment->save();
+
+        $url = route('dailytask.show', $dailyTask->slug);
+        $this->sentInbox($admin->id, $user->id, $naming, $url);
     }
 
 
@@ -308,5 +316,18 @@ class validityUserOfCompany extends Command
     private function isNationalHoliday($date)
     {
         return NationalHoliday::where('date', $date->toDateString())->exists();
+    }
+
+    public function sentInbox($from, $to,$message,$directUrl)
+    {
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $to, 
+            $from,
+            $message, 
+            $directUrl
+        );
+
+        return;
     }
 }

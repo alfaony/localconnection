@@ -18,6 +18,8 @@ use App\Models\PunishmentUser;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
+
+use App\Helpers\InboxHelper;
 class CheckWeeklyReportCompliance extends Command
 {
     protected $signature = 'weekly:check-compliance';
@@ -208,6 +210,13 @@ class CheckWeeklyReportCompliance extends Command
         $dailyTaskMessage->file_path = $filePath ?? NULL;
         $dailyTaskMessage->save();
 
+        $this->sentInbox(
+            $dailyTask->user_id,
+            $dailyTask->assignment_user_id,
+            $message,
+            route('dailytask.show', $dailyTask->slug)
+        );
+        
         return true;
     }   
 
@@ -220,5 +229,18 @@ class CheckWeeklyReportCompliance extends Command
         ]);
 
         return true;
+    }
+
+    public function sentInbox($from, $to,$message,$directUrl)
+    {
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $to, 
+            $from,
+            $message, 
+            $directUrl
+        );
+
+        return;
     }
 }
