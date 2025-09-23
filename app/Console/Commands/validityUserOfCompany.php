@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use App\Models\PunishmentUser;
 use App\Models\SettingCompany;
+use App\Models\NationalHoliday;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
@@ -96,6 +97,18 @@ class validityUserOfCompany extends Command
             }
             if ($type == 'wfo') 
             {
+                $today = Carbon::today();
+                if ($this->isNationalHoliday($today)) {
+                    $this->info("Hari ini adalah hari libur nasional. Tidak ada jadwal check-in.");
+                    return;
+                }
+
+                if ($today->isWeekend()) 
+                {
+                    $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
+                    return;
+                }
+
                 $entryTime = Carbon::createFromFormat('H:i', $setting['entry_time']);
                 $toleranceMinutes = (int) $setting['tolerance'];
                 $checkinTarget = (int) $setting['checkin_onday'];
@@ -104,25 +117,28 @@ class validityUserOfCompany extends Command
 
                 foreach ($users as $user) {
                     // Ambil semua attendance hari ini
-                    $attendances = OfficeAttendance::where('user_id', $user->id)
-                        ->whereDate('created_at', Carbon::today())
-                        ->orderBy('created_at', 'asc')
-                        ->get();
-
-                    $totalCheckin = $attendances->count();
-                    $firstCheckin = $attendances->first();
-
-                    $terlambat = false;
-                    if ($firstCheckin) {
-                        $actualCheckin = Carbon::parse($firstCheckin->created_at);
-                        $graceTime = $entryTime->copy()->addMinutes($toleranceMinutes);
-                        $terlambat = $actualCheckin->gt($graceTime);
-                    }
-
-                    if ($totalCheckin < $checkinTarget || $terlambat) {
-                        // Tambahkan user ke dalam hasil atau lakukan aksi
-                        $this->addPoint($user,"belum memenuhi target check-in atau terlambat", $setting['punishment_point_wfo']);
-                        Log::info("User {$user->name} belum memenuhi target check-in atau terlambat.");
+                    if(!$user->isDayoff())
+                    {
+                        $attendances = OfficeAttendance::where('user_id', $user->id)
+                            ->whereDate('created_at', Carbon::today())
+                            ->orderBy('created_at', 'asc')
+                            ->get();
+    
+                        $totalCheckin = $attendances->count();
+                        $firstCheckin = $attendances->first();
+    
+                        $terlambat = false;
+                        if ($firstCheckin) {
+                            $actualCheckin = Carbon::parse($firstCheckin->created_at);
+                            $graceTime = $entryTime->copy()->addMinutes($toleranceMinutes);
+                            $terlambat = $actualCheckin->gt($graceTime);
+                        }
+    
+                        if ($totalCheckin < $checkinTarget || $terlambat) {
+                            // Tambahkan user ke dalam hasil atau lakukan aksi
+                            $this->addPoint($user,"belum memenuhi target check-in atau terlambat", $setting['punishment_point_wfo']);
+                            Log::info("User {$user->name} belum memenuhi target check-in atau terlambat.");
+                        }
                     }
                 }
             }
@@ -287,5 +303,10 @@ class validityUserOfCompany extends Command
         ]);
 
         return true;
+    }
+
+    private function isNationalHoliday($date)
+    {
+        return NationalHoliday::where('date', $date->toDateString())->exists();
     }
 }
