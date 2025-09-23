@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\ProductStore;
 use App\Models\CategoryProductStore;
 use App\Models\BrandProductStore;
+use Illuminate\Support\Facades\Auth;
 
 class ProductStoreForm extends Component
 {
@@ -34,17 +35,27 @@ class ProductStoreForm extends Component
 
     protected $listeners = ['editProduct', 'createProduct'];
 
-    public function mount()
+    public function mount($id = null)
     {
-        $this->categories = CategoryProductStore::all();
-        $this->brands = BrandProductStore::all();
+        $this->categories = CategoryProductStore::byCompany(Auth::user()->company_id)->get();
+        $this->brands = BrandProductStore::byCompany(Auth::user()->company_id)->get();
+        if($id)
+        {
+            $this->editProduct($id);
+        }
     }
 
     public function render()
     {
+        if(!$this->barcode)
+        {
+            $this->barcode = $this->generateBarcode();
+        }
+
         return view('livewire.product-store.product-store-form')
             ->extends('adminlte::page')
-            ->section('content');
+            // ->section('content')
+            ;
     }
 
     public function editProduct($id)
@@ -67,7 +78,7 @@ class ProductStoreForm extends Component
 
     public function createProduct()
     {
-        $this->resetForm();
+        // $this->resetForm();
         $this->barcode = $this->generateBarcode();
     }
 
@@ -100,7 +111,11 @@ class ProductStoreForm extends Component
         }
 
         if ($this->createAgain) {
-            $this->createProduct(); // panggil createProduct agar form baru siap
+
+            $this->resetForm();
+            $this->emit('closeForm');
+
+            return redirect()->route('product-store.create')->with('store', 'Produk berhasil disimpan.');
         } else 
         {            
             $this->resetForm();

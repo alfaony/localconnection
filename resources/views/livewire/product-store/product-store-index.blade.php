@@ -11,14 +11,14 @@
                         </div>
                         <div class="col-md-6 text-right">
                             @canAccess('create','product_stores')
-                            <button wire:click="createProduct" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus-circle mr-1"></i> Add New Product
-                            </button>
+                            <a href="{{ route('product-store.create') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus-circle mr-1"></i> Produk
+                            </a>
                             @endcanAccess
 
                             @canAccess('print','product_stores')
                             <a href="{{ route('product-store.print') }}" class="btn btn-info btn-sm ml-2">
-                                <i class="fas fa-print mr-1"></i> Print Barcodes
+                                <i class="fas fa-print mr-1"></i> Print Barcode
                             </a>
                             @endcanAccess
                         </div>
@@ -98,10 +98,9 @@
                                             @endcanAccess
 
                                             @canAccess('edit','product_stores')
-                                            <button wire:click="editProduct('{{ $product->id }}')" 
-                                                    class="btn btn-primary mr-1 mb-1" title="Edit">
+                                            <a href="{{ route('product-store.edit', $product->id) }}" class="btn btn-primary mr-1 mb-1" title="Edit">
                                                 <i class="fas fa-edit"></i>
-                                            </button>
+                                            </a>
                                             @endcanAccess
 
                                             @canAccess('destroy','product_stores')

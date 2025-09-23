@@ -49,6 +49,11 @@
                                 </select>
                             </div>
 
+                            <div class="form-group">
+                                <label class="font-weight-bold">Jumlah Copy</label>
+                                <input type="number" class="form-control" wire:model="copies" min="1" max="100">
+                            </div>
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -90,31 +95,35 @@
                         <div class="card-body">
                             <div class="row mr-3 mb-3" id="barcode-preview">
                                 @foreach($barcodePreviews as $barcode)
-                                <div class="barcode-card" style="width: {{ (int)$width }}px; height: {{ (int)$height }}px;">
-                                        @if($barcodeType === 'QRCODE')
-                                        <div class="row align-items-center">
-                                            <div class="col-6">
-                                                <h5 class="label-title">{{ $barcode['name']  }}</h5>
-                                                <p class="label-text">{{ $barcode['brand'] ?? '' }}</p>
-                                                <p class="label-text">{{ $barcode['variant'] ?? '' }}</p>
-                                                <p class="label-text text-bold">Rp. {{ number_format($barcode['price'], 0, ',', '.') }}</p>
-                                            </div>
-                                            <div class="col-6 text-center">
-                                                <div class="d-inline-block">
-                                                    {!! $barcode['svg'] !!}
+                                    @for($i = 0; $i < $copies; $i++)
+                                        <div class="barcode-card">
+                                            @if($barcodeType === 'QRCODE')
+                                                <div class="row align-items-center">
+                                                    <div class="col-6">
+                                                        <h5 class="label-title mb-1">{{ $barcode['name'] }}</h5>
+                                                        <p class="label-text mb-1">{{ $barcode['brand'] ?? '' }}</p>
+                                                        <p class="label-text mb-1">{{ $barcode['variant'] ?? '' }}</p>
+                                                        <p class="label-text text-bold">Rp. {{ number_format($barcode['price'], 0, ',', '.') }}</p>
+                                                    </div>
+                                                    <div class="col-6 text-center">
+                                                        <div class="d-inline-block">
+                                                            {!! $barcode['svg'] !!}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            @elseif($barcodeType === 'CODE128' || $barcodeType === 'CODE39')
+                                                <div class="barcode-label text-center">
+                                                    <h5 class="label-title mb-1 font-weight-bold">{{ $barcode['name'] }}</h5>
+                                                    <div class="barcode-container">
+                                                        {!! $barcode['svg'] !!}
+                                                    </div>
+                                                    <p class="barcode-price text-left mb-0 ml-3">
+                                                        Rp. {{ number_format($barcode['price'], 0, ',', '.') }}
+                                                    </p>
+                                                </div>
+                                            @endif
                                         </div>
-                                        @elseif($barcodeType === 'CODE128' || $barcodeType === 'CODE39')
-                                        <div class="barcode-label text-center">
-                                            <h5 class="label-title mb-1 font-weight-bold">{{ $barcode['name'] }}</h5>
-                                            <div class="barcode-container">
-                                                {!! $barcode['svg'] !!}
-                                            </div>
-                                            <p class="barcode-price text-left mb-0 ml-3">Rp. {{ number_format($barcode['price'], 0, ',', '.') }}</p>
-                                        </div>
-                                        @endif
-                                    </div>
+                                    @endfor
                                 @endforeach
 
                                 @if(count($barcodePreviews) === 0)
@@ -143,6 +152,12 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;            /* cegah konten keluar kotak */
+        }
+
+        /* A5 Specific Layout */
+        .barcode-preview-container[data-paper-size="A5"] {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 8px;
         }
 
         /* Grid 2 kolom: info (kiri) dan barcode (kanan) */
@@ -242,74 +257,100 @@
             text-overflow: ellipsis;
         }
 
-        #barcode-preview {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: flex-start; /* mulai dari atas */
-            justify-content: flex-start; /* mulai dari kiri */
-            gap: 4px; /* jarak antar label (atur sesuai kebutuhan) */
-            margin: 0 !important;
-            padding: 0 !important;
-        }
+        .barcode-preview-container[data-paper-size="A4"] .barcode-item {
+                font-size: 13px;
+                width: 25%;
+                float: left;
+                padding: 5px;
+                box-sizing: border-box;
+                height: 120px;
+            }
+
+            /* A5 Print Layout - More compact */
+            .barcode-preview-container[data-paper-size="A5"] .barcode-item {
+                font-size: 13px;
+                width: 31%; /* sedikit lebih kecil dari 33.33% */
+                padding: 2px;
+                box-sizing: border-box;
+            }
 
         .barcode-card {
-            margin: 0 !important;
+            /* margin: 0 !important; */
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         /* PRINT */
         @media print {
-            body * { visibility: hidden; }
-            #barcode-preview, #barcode-preview * { visibility: visible; }
-            #barcode-preview {
-                display: block !important; /* jangan flex, pakai block */
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-
-            .barcode-card {
-                display: inline-block !important;
-                border: 2px solid #000 !important; 
-                box-shadow: none !important; 
-                vertical-align: top;
-                margin: 0 !important;
-                page-break-inside: avoid;
-            }
-            /* @page akan disisipkan dinamis via JS sesuai pilihan (A4/A5) */
-        }
-        /* Optional scaling khusus A5: aktifkan dengan data attribute di <body> dari JS */
-        @media print {
-            body[data-paper="A5"] .barcode-card {
-                transform: scale(0.88);
-                transform-origin: top left;
-            }
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 100% !important;
+            width: 100% !important;
         }
 
-        @media print {
-            #barcode-preview {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: flex-start !important;
-                align-items: flex-start !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-            }
-
-            .barcode-card {
-                margin: 0 !important;
-                page-break-inside: avoid;
-            }
+        body * {
+            visibility: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
+        #barcode-preview, #barcode-preview * {
+            visibility: visible !important;
+        }
+
+        #barcode-preview {
+            margin: 0 !important;
+            padding: 0 !important;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: flex-start !important;
+            align-items: flex-start !important;
+            width: 100% !important;
+
+            /* kunci: biar nempel atas kiri */
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+        }
+
+        .barcode-card {
+            padding: 10px !important;
+            display: inline-block !important;
+            border: 1px solid #000 !important;
+            box-shadow: none !important;
+            margin: 2px !important;
+            page-break-inside: avoid !important;
+            box-sizing: border-box;
+        }
+
+        /* Layout A4: 4 kolom */
+        #barcode-preview[data-paper-size="A4"] .barcode-card {
+            width: 50mm !important;
+            height: auto !important;
+        }
+
+        /* A5 Layout: 2 kolom biar proporsional */
+        #barcode-preview[data-paper-size="A5"] .barcode-card {
+            width: 70mm !important;
+            height: auto !important;
+        }
+    }
+
+    @page {
+        size: A5;
+        margin: 0 !important;   /* ✅ hilangkan margin kosong */
+    }
+
+        /* PAGE SETTINGS */
         @page {
-            size: {{ $paper }};
+            size: A4;
             margin: 0.5cm;
+        }
+
+        body[data-paper="A5"] @page {
+            size: A5;
+            margin: 0.3cm;
         }
 
         .select2-container--default .select2-selection--multiple {
@@ -355,26 +396,55 @@ document.addEventListener('livewire:load', function () {
     });
 
     // ✅ Tangkap event dari dispatchBrowserEvent (window-level)
-    window.addEventListener('print-barcodes', function (event) {
-        const paper = (event.detail && event.detail.paperSize) ? event.detail.paperSize : 'A4';
+    window.addEventListener('print-barcodes', function (event) 
+    {
+                const paperSize = @this.paperSize || 'A4';
+                
+                // Update data attribute for CSS
+                const previewContainer = document.getElementById('barcode-preview');
+                if (previewContainer) {
+                    previewContainer.setAttribute('data-paper-size', paperSize);
+                }
 
-        // Tandai data-paper di body (untuk scaling opsional A5)
-        document.body.setAttribute('data-paper', paper);
+                // Dynamic @page styling
+                let style = document.getElementById('dynamic-print-style');
+                if (!style) {
+                    style = document.createElement('style');
+                    style.id = 'dynamic-print-style';
+                    document.head.appendChild(style);
+                }
+                
+                // Set page size based on selection
+                if (paperSize === 'A5') {
+                    console.log("A5");
+                    
+                    style.textContent = `
+                        @page { 
+                            size: A5; 
+                            margin: 0.3cm;
+                        }
+                        body { 
+                            margin: 0.3cm !important;
+                        }
+                    `;
+                }
+                 else {
+                    style.textContent = `
+                        @page { 
+                            size: A4; 
+                            margin: 0.5cm;
+                        }
+                        body { 
+                            margin: 0.5cm !important; 
+                        }
+                    `;
+                }
 
-        // Sisipkan / replace style @page dinamis
-        let styleEl = document.getElementById('dynamic-print-style');
-        if (!styleEl) {
-            styleEl = document.createElement('style');
-            styleEl.id = 'dynamic-print-style';
-            document.head.appendChild(styleEl);
-        }
-        styleEl.textContent = `
-            @page { size: ${paper}; margin: 0.5cm; }
-        `;
-
-        // Pastikan style sudah ter-apply dulu, baru print
-        setTimeout(() => window.print(), 50);
+                // Wait for styles to apply then print
+                setTimeout(() => {
+                    window.print();
+                }, 100);
+            });
     });
-});
 </script>
 @endsection

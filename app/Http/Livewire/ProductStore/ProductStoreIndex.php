@@ -11,10 +11,13 @@ class ProductStoreIndex extends Component
     use WithPagination;
 
     public $search = '';
-    public $sortField = 'name';
-    public $sortDirection = 'asc';
+    public $sortField = 'created_at';
+    public $sortDirection = 'desc';
     public $selectedProductId;
     public $showFormModal = false;
+    public $category_product_store_id;
+    public $brand_product_store_id;
+    protected $paginationTheme = 'bootstrap';
 
     protected $listeners = ['productSaved', 'closeForm','deleteProduct'];
 

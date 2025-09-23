@@ -11,10 +11,11 @@ class ProductStorePrint extends Component
     public $products;
     public $selectedProducts = [];
     public $barcodeType = 'QRCODE';
-    public $width = 170;
-    public $height = 80;
+    public $width = 221;
+    public $height = 95;
     public $paperSize = 'A4';
     public $barcodePreviews = [];
+    public $copies = 1;
 
     protected $listeners = ['updatePreview', 'printBarcodes'];
 
