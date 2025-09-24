@@ -272,17 +272,17 @@ class CompanyController extends Controller
                 ]);
             }
 
-            foreach ($itemComponents as $itemComponent) 
-            {
-                $masterCheck = \App\Models\MasterCheck::where('company_id', $companyId)->where('name', $itemComponent)->first();
-                if (!$masterCheck) {
-                    \App\Models\MasterCheck::create([
-                        'company_id' => $companyId,
-                        'name' => $itemComponent,
-                        'type' => 'item_type',
-                    ]);
-                }
-            }
+            // foreach ($itemComponents as $itemComponent) 
+            // {
+            //     $masterCheck = \App\Models\MasterCheck::where('company_id', $companyId)->where('name', $itemComponent)->first();
+            //     if (!$masterCheck) {
+            //         \App\Models\MasterCheck::create([
+            //             'company_id' => $companyId,
+            //             'name' => $itemComponent,
+            //             'type' => 'item_type',
+            //         ]);
+            //     }
+            // }
         }
     }
 }
