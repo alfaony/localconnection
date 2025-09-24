@@ -103,14 +103,14 @@ class ImportInternetCustomer extends Command
 
                 
                 // Validate required fields
-                if (empty($data['email'])) {
-                    $failures[] = [
-                        'row' => $rowNumber,
-                        'email' => $data['email'],
-                        'reason' => 'Email tidak boleh kosong'
-                    ];
-                    continue;
-                }
+                // if (empty($data['email'])) {
+                //     $failures[] = [
+                //         'row' => $rowNumber,
+                //         'email' => $data['email'],
+                //         'reason' => 'Email tidak boleh kosong'
+                //     ];
+                //     continue;
+                // }
                 
                 // Check if email already exists
                 $existingCustomer = UserCustomer::where('email', $data['email'])->first();
@@ -516,6 +516,7 @@ class ImportInternetCustomer extends Command
                 }
             }
         } catch (\Exception $e) {
+            // dd($e);
             throw $e;
         }
     }
