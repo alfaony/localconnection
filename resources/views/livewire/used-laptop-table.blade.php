@@ -83,7 +83,8 @@
                             <th>SSD</th>
                             <th>Serial Number</th>
                             <th>Harga Beli</th>
-                            <th>Harga Jual Disarankan</th>
+                            <th>Harga Jual Jakarta</th>
+                            <th>Harga Jual Jambi</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
@@ -98,7 +99,10 @@
                             <td>{{ $laptop->serial_number }}</td>
                             <td>Rp {{ number_format($laptop->purchase_price,0,',','.') }}</td>
                             <td class="font-weight-bold text-success">
-                                Rp {{ number_format($laptop->suggested_selling_price,0,',','.') }}
+                                Rp {{ number_format($laptop->jakarta_price,0,',','.') }}
+                            </td>
+                            <td class="font-weight-bold text-success">
+                                Rp {{ number_format($laptop->jambi_price,0,',','.') }}
                             </td>
                             <td>
                                 @if($laptop->is_sold)

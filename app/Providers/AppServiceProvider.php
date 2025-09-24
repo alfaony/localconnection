@@ -144,6 +144,7 @@ class AppServiceProvider extends ServiceProvider
             $managementSettingMenuArray = Array();
 
             $managementUmumMenu = [
+                'punishment_users',
                 'meetings','moms','dashboard_weekly_reports','weekly_reports','flowcharts',
                 'ask_bos','decisions','partnership_agreements','national_holidays',
                 'letter_submissions','companies'
@@ -725,6 +726,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'product-store.index',
                     'icon' => 'fa fa-boxes',
                 ],
+                'punishment_users' =>
+                [
+                    'text' => 'Pelanggaran Pegawai',
+                    'route' => 'punishment-user.index',
+                    'icon' => 'fa fa-user-slash',
+                ]
             ];
 
             // foreach ($listMenu as $role) 

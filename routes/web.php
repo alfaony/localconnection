@@ -131,6 +131,7 @@ use App\Http\Livewire\BrandProductStoreIndex;
 use App\Http\Livewire\CategoryProductStoreIndex;
 
 
+use App\Http\Livewire\PunishmentUserTable;
 
 
 
@@ -615,6 +616,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('product-store/{id}', ProductStoreShow::class)->name('product-store.show');
   Route::get('product-store', ProductStoreIndex::class)->name('product-store.index');
   Route::get('product-store/print', ProductStorePrint::class)->name('product-store.print');
+  
+  Route::get('punishment-user', PunishmentUserTable::class)->name('punishment-user.index');
 });
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
