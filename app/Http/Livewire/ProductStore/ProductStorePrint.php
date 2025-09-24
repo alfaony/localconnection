@@ -46,7 +46,7 @@ class ProductStorePrint extends Component
                     $barcodeSvg = DNS2D::getBarcodeSVG($product->barcode, 'QRCODE', $widthCode, $heightCode);
                 } else {
                     $barcodeType = $this->barcodeType === 'CODE128' ? 'C128' : 'C39';
-                    $barcodeSvg = DNS1D::getBarcodeSVG($product->barcode, $barcodeType, 1, $code);
+                    $barcodeSvg = DNS1D::getBarcodeSVG($product->barcode, $barcodeType, $code - 5, $code);
                 }
 
                 // Inject properti preserveAspectRatio ke SVG supaya scalable

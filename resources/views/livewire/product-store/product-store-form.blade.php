@@ -82,7 +82,7 @@
                                 <div class="form-group">
                                     <label for="length" class="font-weight-bold">Panjang (cm)</label>
                                     <div class="input-group">
-                                        <input type="number" step="0.01" wire:model="length" id="length" class="form-control" placeholder="0.00">
+                                        <input type="number" step="0.01" wire:model="length" id="length" class="form-control" placeholder="0.00" min="0">
                                         <div class="input-group-append">
                                             <span class="input-group-text">cm</span>
                                         </div>
@@ -94,7 +94,7 @@
                                 <div class="form-group">
                                     <label for="width" class="font-weight-bold">Lebar (cm)</label>
                                     <div class="input-group">
-                                        <input type="number" step="0.01" wire:model="width" id="width" class="form-control" placeholder="0.00">
+                                        <input type="number" step="0.01" wire:model="width" id="width" class="form-control" placeholder="0.00" min="0">
                                         <div class="input-group-append">
                                             <span class="input-group-text">cm</span>
                                         </div>
@@ -106,7 +106,7 @@
                                 <div class="form-group">
                                     <label for="height" class="font-weight-bold">Tinggi (cm)</label>
                                     <div class="input-group">
-                                        <input type="number" step="0.01" wire:model="height" id="height" class="form-control" placeholder="0.00">
+                                        <input type="number" step="0.01" wire:model="height" id="height" class="form-control" placeholder="0.00" min="0">
                                         <div class="input-group-append">
                                             <span class="input-group-text">cm</span>
                                         </div>
@@ -115,13 +115,13 @@
                                 </div>
                             </div>
                         </div>
-    
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="weight" class="font-weight-bold">Berat (gram)</label>
                                     <div class="input-group">
-                                        <input type="number" step="0.01" wire:model="weight" id="weight" class="form-control" placeholder="0.00">
+                                        <input type="number" step="0.01" wire:model="weight" id="weight" class="form-control" placeholder="0.00" min="0">
                                         <div class="input-group-append">
                                             <span class="input-group-text">g</span>
                                         </div>
@@ -191,30 +191,41 @@
 
         const priceInput = document.getElementById('internet_cost_input');
         const priceHidden = document.getElementById('price_hidden');
-            let priceMask = null;
+        
+        if (priceInput && priceHidden) {
+            let priceMask = IMask(priceInput, {
+                mask: Number,
+                scale: 0,
+                thousandsSeparator: '.',
+                padFractionalZeros: false,
+                normalizeZeros: true,
+                radix: ',',
+                mapToRadix: ['.'],
+                min: 0 // Tambahkan ini untuk mencegah nilai negatif
+            });
 
-            if (priceInput && priceHidden) {
-                priceMask = IMask(priceInput, {
-                    mask: Number,
-                    scale: 0,
-                    thousandsSeparator: '.',
-                    padFractionalZeros: false,
-                    normalizeZeros: true,
-                    radix: ',',
-                    mapToRadix: ['.']
-                });
-
-                // Set nilai awal dari hidden input ke field yang diformat
-                if (priceHidden.value) {
-                    priceMask.value = priceHidden.value;
-                }
-
-                // Sync ke Livewire saat input berubah
-                priceMask.on('accept', () => {
-                    priceHidden.value = priceMask.unmaskedValue;
-                    priceHidden.dispatchEvent(new Event('input'));
-                });
+            // Set nilai awal
+            if (priceHidden.value) {
+                priceMask.value = priceHidden.value;
             }
+
+            // Sync ke Livewire
+            priceMask.on('accept', () => {
+                // Pastikan nilai tidak negatif
+                const unmaskedValue = Math.max(0, priceMask.unmaskedValue);
+                priceHidden.value = unmaskedValue;
+                priceHidden.dispatchEvent(new Event('input'));
+            });
+
+            // Validasi manual saat input berubah
+            priceInput.addEventListener('blur', () => {
+                if (priceMask.unmaskedValue < 0) {
+                    priceMask.value = 0;
+                    priceHidden.value = 0;
+                    priceHidden.dispatchEvent(new Event('input'));
+                }
+            });
+        }
 
         Livewire.hook('message.processed', (message, component) => {
             initSelect2Bindings(); // Re-init setiap Livewire update

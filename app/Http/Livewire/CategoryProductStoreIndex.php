@@ -61,7 +61,7 @@ class CategoryProductStoreIndex extends Component
             'name' => $this->name
         ]);
 
-        session()->flash('message', 'Kategori Produk Type created successfully.');
+        session()->flash('message', 'Kategori Produk Toko created successfully.');
         $this->resetInput();
     }
 
@@ -89,7 +89,7 @@ class CategoryProductStoreIndex extends Component
                 'name' => $this->name
             ]);
 
-            session()->flash('message', 'Kategori Produk Type updated successfully.');
+            session()->flash('message', 'Kategori Produk Toko updated successfully.');
             $this->resetInput();
         }
     }
@@ -97,7 +97,7 @@ class CategoryProductStoreIndex extends Component
     public function delete($id)
     {
         CategoryProductStore::find($id)->delete();
-        session()->flash('message', 'Kategori Produk Type deleted successfully.');
+        session()->flash('message', 'Kategori Produk Toko deleted successfully.');
     }
 
     public function cancel()
