@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Ramsey\Uuid\Uuid;
+
+class ProductStore extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
+    protected $keyType = 'string'; // Tipe kunci primer adalah string
+
+    protected $fillable = [
+        'barcode',
+        'category_product_store_id',
+        'brand_product_store_id',
+        'name',
+        'variant',
+        'specification',
+        'length',
+        'width',
+        'height',
+        'dimension',
+        'weight',
+        'selling_price',
+        'user_create_id',
+        'user_modified_id',
+        'company_id'
+    ];
+
+    protected $casts = [
+        'id' => 'string',
+        'barcode' => 'string',
+        'user_create_id' => 'string',
+        'user_modified_id' => 'string',
+        'company_id' => 'string',
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->id)) 
+            {
+                $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
+            }
+
+            $model->barcode = self::generateBarcode();
+            $model->user_create_id = auth()->id();
+            $model->company_id = auth()->user()->company_id;
+            $model->dimension = $model->length . ' x ' . $model->width . ' x ' . $model->height;
+        });
+
+        static::updating(function ($model) {
+            $model->user_modified_id = auth()->id();
+            $model->dimension = $model->length . ' x ' . $model->width . ' x ' . $model->height;
+        });
+    }
+
+    protected static function generateBarcode()
+    {
+        do {
+            $barcode = now()->format('Y') . str_pad(mt_rand(0, 999999999), 9, '0', STR_PAD_LEFT);
+        } while (self::withTrashed()->where('barcode', $barcode)->exists());
+
+        return $barcode;
+    }
+
+    public function scopeSearch($query, $value)
+    {
+        return $query->where('name', 'like', '%' . $value . '%')
+                    ->orWhere('variant', 'like', '%' . $value . '%')
+                    ->orWhere('specification', 'like', '%' . $value . '%')
+                    ->orWhere('barcode', 'like', '%' . $value . '%')
+                    ;
+    }
+
+    public function scopeByCompany($query,$companyId)
+    {
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+        return $query->whereIn('company_id', $companyIds);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(CategoryProductStore::class, 'category_product_store_id');
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(BrandProductStore::class, 'brand_product_store_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_create_id');
+    }
+
+    public function modifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_modified_id');
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
+}

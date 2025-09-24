@@ -123,6 +123,14 @@ use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
 use App\Http\Livewire\ProductSupplierTypeIndex;
+use App\Http\Livewire\ProductStore\ProductStoreIndex;
+use App\Http\Livewire\ProductStore\ProductStoreShow;
+use App\Http\Livewire\ProductStore\ProductStoreForm;
+use App\Http\Livewire\ProductStore\ProductStorePrint;
+use App\Http\Livewire\BrandProductStoreIndex;
+use App\Http\Livewire\CategoryProductStoreIndex;
+
+
 use App\Http\Livewire\PunishmentUserTable;
 
 
@@ -597,11 +605,20 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('office-attendance/complete/{code}', [OfficeAttendanceController::class, 'complete'])->name('office-attendance.complete');
   
   Route::get('supplier-type', ProductSupplierTypeIndex::class)->name('supplier-type.index');
+
+  Route::get('brand-product-store', BrandProductStoreIndex::class)->name('brand-product-store.index');
+  
+  Route::get('category-product-store', CategoryProductStoreIndex::class)->name('category-product-store.index');
+
+  Route::get('product-store/print', ProductStorePrint::class)->name('product-store.print');
+  Route::get('product-store/create', ProductStoreForm::class)->name('product-store.create');
+  Route::get('product-store/edit/{id}', ProductStoreForm::class)->name('product-store.edit');
+  Route::get('product-store/{id}', ProductStoreShow::class)->name('product-store.show');
+  Route::get('product-store', ProductStoreIndex::class)->name('product-store.index');
+  Route::get('product-store/print', ProductStorePrint::class)->name('product-store.print');
   
   Route::get('punishment-user', PunishmentUserTable::class)->name('punishment-user.index');
 });
-
-
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');

@@ -165,7 +165,8 @@ class AppServiceProvider extends ServiceProvider
             $managementTokoOnlineMenu = [
                 'pricelists','products','supplier_types','product_suppliers','supplier_categories',
                 'product_categories','supliers','customers','item_requests',
-                'providers','shipping_rates','shipping_calculations'
+                'providers','shipping_rates','shipping_calculations',
+                'brand_product_stores','category_product_stores','product_stores'
             ];
 
             $managementGedungMenu = 
@@ -705,7 +706,25 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'WFO Absensi QR',
                     'route' => 'barcode.index',
                     'icon' => 'fa fa-qrcode',
+                ],
 
+                'brand_product_stores' =>
+                [
+                    'text' => 'Merk Toko',
+                    'route' => 'brand-product-store.index',
+                    'icon' => 'fa fa-tags',
+                ],
+                'category_product_stores' =>
+                [
+                    'text' => 'Kategori Toko',
+                    'route' => 'category-product-store.index',
+                    'icon' => 'fa fa-list',
+                ],
+                'product_stores' =>
+                [
+                    'text' => 'Produk Toko',
+                    'route' => 'product-store.index',
+                    'icon' => 'fa fa-boxes',
                 ],
                 'punishment_users' =>
                 [
