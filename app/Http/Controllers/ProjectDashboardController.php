@@ -376,8 +376,8 @@ class ProjectDashboardController extends Controller
                 $query->where('division_id', $divisionId);
             });
         }
-
-        $overdueTasks = $overdueTasksQuery->get();
+        
+        $overdueTasks = $overdueTasksQuery->having('daily_task_assigns_count', '>', 0)->get();
 
         return response()->json($overdueTasks);
     }
@@ -405,7 +405,7 @@ class ProjectDashboardController extends Controller
             });
         }
 
-        $upcomingTasks = $upcomingTasksQuery->get();
+        $upcomingTasks = $upcomingTasksQuery->having('daily_task_assigns_count', '>', 0)->get();
 
         return response()->json($upcomingTasks);
     }
