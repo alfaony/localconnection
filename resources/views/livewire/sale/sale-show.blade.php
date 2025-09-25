@@ -40,7 +40,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($sale->saleItems as $item)
+                                    @foreach($sale->items as $item)
                                         <tr>
                                             <td>
                                                 @if($item->productStore->product)

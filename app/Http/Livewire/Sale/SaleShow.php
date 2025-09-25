@@ -22,7 +22,7 @@ class SaleShow extends Component
     {
         $this->sale = Sale::with([
             'user', 
-            'saleItems.productStore.product'
+            'items.productStore'
         ])->findOrFail($this->saleId);
     }
 

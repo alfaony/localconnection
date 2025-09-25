@@ -44,7 +44,7 @@ class SaleIndex extends Component
 
     public function render()
     {
-        $sales = Sale::byCompany(auth()->user()->company_id)->with(['user', 'saleItems.productStore'])
+        $sales = Sale::byCompany(auth()->user()->company_id)->with(['user', 'items.productStore'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('transaction_code', 'like', '%' . $this->search . '%')
