@@ -113,14 +113,20 @@ class ImportInternetCustomer extends Command
                 // }
                 
                 // Check if email already exists
-                $existingCustomer = UserCustomer::where('email', $data['email'])->first();
-                if ($existingCustomer) {
-                    $failures[] = [
-                        'row' => $rowNumber,
-                        'email' => $data['email'],
-                        'reason' => 'Email sudah terdaftar'
-                    ];
-                    continue;
+                if($data['email'] != null || $data['email'] != "")
+                {
+                    $existingCustomer = UserCustomer::where('email', $data['email'])->first();
+                    if ($existingCustomer) {
+                        $failures[] = [
+                            'row' => $rowNumber,
+                            'email' => $data['email'],
+                            'reason' => 'Email sudah terdaftar'
+                        ];
+                        continue;
+                    }
+                }else
+                {
+                    $data['email'] = null;
                 }
                 
                 // Process the row
