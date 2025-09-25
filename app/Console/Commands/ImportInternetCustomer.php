@@ -53,7 +53,7 @@ class ImportInternetCustomer extends Command
         $filename = $this->argument('file');
         $companySlug = $this->argument('slug');
         
-        $filePath = storage_path('internet_customer/' . $filename);
+        $filePath = public_path('internet_customer/' . $filename);
         
         // Validasi file exists
         if (!file_exists($filePath)) {
