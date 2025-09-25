@@ -625,6 +625,9 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/sales', \App\Http\Livewire\Sale\SaleIndex::class)->name('sales.index');
+    Route::get('/sales/{id}', \App\Http\Livewire\Sale\SaleShow::class)->name('sales.show');
+    
     Route::get('/store-selling', [SaleController::class, 'index'])->name('store-selling.index');
     Route::post('/store-selling/search-product', [SaleController::class, 'searchProduct'])->name('store-selling.search-product');
     Route::post('/store-selling/process-payment', [SaleController::class, 'processPayment'])->name('store-selling.process-payment');
