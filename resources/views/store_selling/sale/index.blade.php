@@ -1,200 +1,37 @@
-{{-- resources/views/store-selling/index.blade.php --}}
 @extends('adminlte::page')
 
 @section('title', 'Store Selling')
 
 @section('content')
 <div id="app">
-    <div class="row">
-        <div class="col-md-8">
-            <!-- Scanner Section -->
-            <div class="card card-primary">
-                <div class="card-header">
-                    <h3 class="card-title">Scan Produk</h3>
-                </div>
-                <div class="card-body">
-                    <div class="input-group">
-                        <input type="text" 
-                               class="form-control form-control-lg" 
-                               placeholder="Scan barcode atau ketik kode produk..."
-                               v-model="barcodeInput"
-                               @keyup.enter="searchProduct"
-                               ref="barcodeInput"
-                               autofocus>
-                        <div class="input-group-append">
-                            <button class="btn btn-primary" @click="searchProduct">
-                                <i class="fas fa-search"></i> Cari
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs" id="saleTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" @click="resetTransaction" id="new-tab" data-toggle="tab" href="#new" role="tab" aria-controls="new" aria-selected="true">
+                Transaksi Baru
+            </a>
+        </li>
+        <li class="nav-item" v-for="draft in drafts" :key="draft.id">
+            <a class="nav-link" :id="'draft-' + draft.id + '-tab'" data-toggle="tab" 
+               :href="'#draft-' + draft.id" role="tab" :aria-controls="'draft-' + draft.id" 
+               aria-selected="false" @click="loadDraft(draft)">
+                Draft @{{ draft.transaction_code }}
+                <button type="button" class="close ml-2" @click.stop="deleteDraft(draft.id)">&times;</button>
+            </a>
+        </li>
+    </ul>
 
-            <!-- Product List -->
-            <div class="card card-info">
-                <div class="card-header">
-                    <h3 class="card-title">Daftar Produk</h3>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Produk</th>
-                                    <th width="100">Harga</th>
-                                    <th width="120">Qty</th>
-                                    <th width="120">Subtotal</th>
-                                    <th width="80">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(item, index) in cartItems" :key="item.id">
-                                    <td>
-                                        <strong>@{{ item.name }}</strong><br>
-                                        <small class="text-muted">@{{ item.code }}</small>
-                                    </td>
-                                    <td>@{{ formatCurrency(item.price) }}</td>
-                                    <td>
-                                        <div class="input-group input-group-sm">
-                                            <button class="btn btn-outline-secondary" 
-                                                    @click="updateQuantity(index, item.quantity - 1)"
-                                                    :disabled="item.quantity <= 1">-</button>
-                                            <input type="number" 
-                                                   class="form-control text-center" 
-                                                   v-model.number="item.quantity"
-                                                   @change="validateQuantity(item)"
-                                                   min="1">
-                                            <button class="btn btn-outline-secondary" 
-                                                    @click="updateQuantity(index, item.quantity + 1)">+</button>
-                                        </div>
-                                    </td>
-                                    <td>@{{ formatCurrency(item.quantity * item.price) }}</td>
-                                    <td>
-                                        <button class="btn btn-danger btn-sm" @click="removeItem(index)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr v-if="cartItems.length === 0">
-                                    <td colspan="5" class="text-center text-muted py-4">
-                                        Belum ada produk yang ditambahkan
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <!-- Tab Content -->
+    <div class="tab-content" id="saleTabsContent">
+        <!-- New Transaction Tab -->
+        <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
+            @include('store_selling.sale.partials.transaction-form')
         </div>
 
-        <div class="col-md-4">
-            <!-- Summary Section -->
-            <div class="card card-success">
-                <div class="card-header">
-                    <h3 class="card-title">Ringkasan</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-2">
-                        <div class="col-6">Total Item:</div>
-                        <div class="col-6 text-right">@{{ totalItems }}</div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-6">Subtotal:</div>
-                        <div class="col-6 text-right">@{{ formatCurrency(subtotal) }}</div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-6">Pajak (10%):</div>
-                        <div class="col-6 text-right">@{{ formatCurrency(tax) }}</div>
-                    </div>
-                    <hr>
-                    <div class="row mb-3">
-                        <div class="col-6"><strong>Total:</strong></div>
-                        <div class="col-6 text-right"><strong>@{{ formatCurrency(grandTotal) }}</strong></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payment Section -->
-            <div class="card card-warning" v-if="cartItems.length > 0">
-                <div class="card-header">
-                    <h3 class="card-title">Pembayaran</h3>
-                </div>
-                <div class="card-body">
-                    <!-- Payment Method Selection -->
-                    <div class="form-group">
-                        <label>Metode Pembayaran</label>
-                        <select class="form-control" v-model="paymentMethod">
-                            <option value="cash">Tunai</option>
-                            <option value="debit_credit">Kartu Debit/Kredit</option>
-                            <option value="qris">QRIS</option>
-                        </select>
-                    </div>
-
-                    <!-- Cash Payment -->
-                    <div v-if="paymentMethod === 'cash'" class="form-group">
-                        <label>Jumlah Bayar</label>
-                        <input type="number" class="form-control" v-model="cashAmount" 
-                               placeholder="Masukkan jumlah bayar">
-                        <div v-if="cashAmount > 0" class="mt-2">
-                            <strong>Kembalian: @{{ formatCurrency(cashAmount - grandTotal) }}</strong>
-                        </div>
-                    </div>
-
-                    <!-- Card Payment -->
-                    <div v-if="paymentMethod === 'debit_credit'">
-                        <div class="form-group">
-                            <label>Nomor Kartu</label>
-                            <input type="text" class="form-control" v-model="paymentDetails.cardNumber"
-                                   placeholder="1234 5678 9012 3456">
-                        </div>
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label>CVV</label>
-                                    <input type="text" class="form-control" v-model="paymentDetails.cvv"
-                                           placeholder="123" maxlength="3">
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label>Expiry</label>
-                                    <input type="text" class="form-control" v-model="paymentDetails.expiry"
-                                           placeholder="MM/YY">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- QRIS Payment -->
-                    <div v-if="paymentMethod === 'qris'" class="form-group">
-                        <label>Kode QRIS</label>
-                        <input type="text" class="form-control" v-model="paymentDetails.qrisCode"
-                               placeholder="Scan atau masukkan kode QRIS">
-                    </div>
-
-                    <!-- Customer Email -->
-                    <div class="form-group">
-                        <label>Email Customer (Opsional)</label>
-                        <input type="email" class="form-control" v-model="customerEmail"
-                               placeholder="customer@example.com">
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-success btn-lg" 
-                                @click="processPayment"
-                                :disabled="!canProcessPayment">
-                            <i class="fas fa-credit-card"></i> Bayar
-                        </button>
-                        <button class="btn btn-info" @click="saveDraft">
-                            <i class="fas fa-save"></i> Simpan Draft
-                        </button>
-                        <button class="btn btn-secondary" @click="resetTransaction">
-                            <i class="fas fa-times"></i> Batal
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <!-- Draft Tabs -->
+        <div class="tab-pane fade" v-for="draft in drafts" :key="draft.id" 
+             :id="'draft-' + draft.id" role="tabpanel" :aria-labelledby="'draft-' + draft.id + '-tab'">
+            @include('store_selling.sale.partials.transaction-form')
         </div>
     </div>
 
@@ -204,6 +41,9 @@
             <div class="modal-content">
                 <div class="modal-header bg-success">
                     <h5 class="modal-title text-white">Transaksi Berhasil</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
                 <div class="modal-body text-center">
                     <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
@@ -226,6 +66,7 @@
 @endsection
 
 @section('css')
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
     .table td {
         vertical-align: middle;
@@ -238,22 +79,36 @@
         -webkit-appearance: none;
         margin: 0;
     }
+    .nav-tabs .close {
+        font-size: 1.2rem;
+        line-height: 1;
+    }
+    .tax-input-group {
+        max-width: 120px;
+    }
 </style>
 @endsection
 
 @section('js')
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
+<!-- jQuery (wajib sebelum Bootstrap JS) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Bootstrap Bundle (sudah termasuk Popper.js) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const { createApp, ref, computed, onMounted } = Vue;
 
 createApp({
     setup() {
+        const operatorName = ref('');
         const barcodeInput = ref('');
         const cartItems = ref([]);
         const paymentMethod = ref('cash');
         const cashAmount = ref(0);
         const customerEmail = ref('');
+        const taxValue = ref(10); // Default tax 10%
         const paymentDetails = ref({
             cardNumber: '',
             cvv: '',
@@ -261,6 +116,8 @@ createApp({
             qrisCode: ''
         });
         const transactionResult = ref({});
+        const drafts = ref(@json($drafts));
+        const currentDraftId = ref(null);
 
         // Computed properties
         const totalItems = computed(() => {
@@ -272,7 +129,8 @@ createApp({
         });
 
         const tax = computed(() => {
-            return subtotal.value * 0.1;
+            const val = Number(taxValue.value) || 0;
+            return subtotal.value * (val / 100);
         });
 
         const grandTotal = computed(() => {
@@ -307,10 +165,17 @@ createApp({
                     const product = response.data.product;
                     addToCart(product);
                     barcodeInput.value = '';
+                    // Auto-focus kembali ke input barcode
+                    // document.querySelector('input[v-model="barcodeInput"]').focus();
+                    if(barcodeInput.value) 
+                    {
+                        barcodeInput.value.focus();   
+                    }
                 } else {
                     alert('Produk tidak ditemukan');
                 }
             } catch (error) {
+                console.error('Error mencari produk:', error);
                 alert('Error mencari produk');
             }
         };
@@ -325,7 +190,7 @@ createApp({
                     id: product.id,
                     code: product.code,
                     name: product.name,
-                    price: product.price,
+                    price: product.selling_price,
                     quantity: 1
                 });
             }
@@ -356,44 +221,182 @@ createApp({
                     items: items,
                     payment_method: paymentMethod.value,
                     customer_email: customerEmail.value,
-                    payment_details: paymentDetails.value
+                    payment_details: paymentDetails.value,
+                    tax_value: taxValue.value
                 });
 
                 if (response.data.success) {
                     transactionResult.value = response.data.sale;
                     $('#successModal').modal('show');
+                    
+                    // Reset form setelah sukses
+                    resetTransaction();
+                    
+                    // Refresh drafts list
+                    loadDrafts();
                 } else {
                     alert('Error processing payment: ' + response.data.message);
                 }
             } catch (error) {
-                alert('Error processing payment');
+                console.error('Error processing payment:', error);
+                alert('Error processing payment: ' + error.response?.data?.message || error.message);
             }
         };
 
-        const saveDraft = () => {
-            // Implement draft saving logic
-            alert('Draft disimpan');
+        const saveDraft = async () => {
+            if (cartItems.value.length === 0) {
+                alert('Tidak ada item untuk disimpan sebagai draft');
+                return;
+            }
+            
+            console.log(taxValue.value);
+            
+
+            try {
+                const items = cartItems.value.map(item => ({
+                    product_store_id: item.id,
+                    quantity: item.quantity,
+                    unit_price: item.price
+                }));
+
+                const response = await axios.post('/store-selling/save-draft', {
+                    items: items,
+                    payment_method: paymentMethod.value,
+                    customer_email: customerEmail.value,
+                    payment_details: paymentDetails.value,
+                    tax_value: taxValue.value
+                });
+
+                if (response.data.success) {
+                    // Tambahkan draft ke list
+                    drafts.value.unshift(response.data.draft);
+                    
+                    // Reset current transaction
+                    resetTransaction();
+                    
+                    // Switch to the new draft tab
+                    setTimeout(() => {
+                        $(`#draft-${response.data.draft.id}-tab`).tab('show');
+                    }, 100);
+                    
+                    alert('Draft berhasil disimpan');
+                } else {
+                    alert('Error menyimpan draft: ' + response.data.message);
+                }
+            } catch (error) {
+                console.error('Error saving draft:', error);
+                alert('Error menyimpan draft: ' + error.response?.data?.message || error.message);
+            }
+        };
+
+        const loadDraft = async (draft) => {
+            try {
+                const response = await axios.get(`/store-selling/load-draft/${draft.id}`);
+                if (response.data.success) {
+                    const draftData = response.data.draft;
+                    console.log('draftData', draftData);
+                    
+                    
+                    // Load data dari draft
+                    cartItems.value = draftData.items.map(item => ({
+                        id: item.product_store_id,
+                        code: item.product_store.code,
+                        name: item.product_store.name,
+                        price: item.unit_price,
+                        quantity: item.quantity
+                    }));
+                    
+                    paymentMethod.value = draftData.payment_method;
+                    customerEmail.value = draftData.customer_email || '';
+                    taxValue.value = draftData.tax_value;
+                    currentDraftId.value = draftData.id;
+                    
+                    // Load payment details jika ada
+                    if (draftData.payment_details) {
+                        paymentDetails.value = { ...draftData.payment_details };
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading draft:', error);
+                alert('Error loading draft');
+            }
+        };
+
+        const deleteDraft = async (draftId) => {
+            if (!confirm('Hapus draft ini?')) return;
+
+            try {
+                const response = await axios.delete(`/store-selling/delete-draft/${draftId}`);
+                if (response.data.success) {
+                    // Remove dari list drafts
+                    drafts.value = drafts.value.filter(draft => draft.id !== draftId);
+                    
+                    // Jika draft yang dihapus sedang aktif, reset form
+                    if (currentDraftId.value === draftId) {
+                        resetTransaction();
+                        $('#new-tab').tab('show');
+                    }
+                    
+                    alert('Draft berhasil dihapus');
+                }
+            } catch (error) {
+                console.error('Error deleting draft:', error);
+                alert('Error menghapus draft');
+            }
+        };
+
+        const loadDrafts = async () => {
+            try {
+                const response = await axios.get('/store-selling/drafts');
+                if (response.data.success) {
+                    drafts.value = response.data.drafts;
+                }
+            } catch (error) {
+                console.error('Error loading drafts:', error);
+            }
         };
 
         const resetTransaction = () => {
-            if (confirm('Batalkan transaksi?')) {
-                cartItems.value = [];
-                cashAmount.value = 0;
-                customerEmail.value = '';
-                paymentDetails.value = {
-                    cardNumber: '',
-                    cvv: '',
-                    expiry: '',
-                    qrisCode: ''
-                };
-            }
+            cartItems.value = [];
+            cashAmount.value = 0;
+            customerEmail.value = '';
+            taxValue.value = 10;
+            paymentMethod.value = 'cash';
+            paymentDetails.value = {
+                cardNumber: '',
+                cvv: '',
+                expiry: '',
+                qrisCode: ''
+            };
+            currentDraftId.value = null;
         };
 
         const printReceipt = async () => {
             try {
                 const response = await axios.get(`/store-selling/print-receipt/${transactionResult.value.id}`);
                 // Implement print logic here
-                window.print();
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>Struk ${transactionResult.value.transaction_code}</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; margin: 20px; }
+                                .header { text-align: center; margin-bottom: 20px; }
+                                .item { margin-bottom: 10px; }
+                                .total { font-weight: bold; margin-top: 10px; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="header">
+                                <h2>STRUK PENJUALAN</h2>
+                                <p>${transactionResult.value.transaction_code}</p>
+                            </div>
+                            <!-- Isi struk -->
+                        </body>
+                    </html>
+                `);
+                printWindow.print();
             } catch (error) {
                 alert('Error printing receipt');
             }
@@ -410,7 +413,13 @@ createApp({
 
         onMounted(() => {
             // Auto-focus barcode input
-            document.querySelector('input[ref="barcodeInput"]').focus();
+            const barcodeInputEl = document.querySelector('input[v-model="barcodeInput"]');
+            if (barcodeInputEl) {
+                barcodeInputEl.focus();
+            }
+
+            // Load drafts on mount
+            loadDrafts();
         });
 
         return {
@@ -419,8 +428,11 @@ createApp({
             paymentMethod,
             cashAmount,
             customerEmail,
+            taxValue,
             paymentDetails,
             transactionResult,
+            drafts,
+            currentDraftId,
             totalItems,
             subtotal,
             tax,
@@ -433,6 +445,9 @@ createApp({
             removeItem,
             processPayment,
             saveDraft,
+            loadDraft,
+            deleteDraft,
+            loadDrafts,
             resetTransaction,
             printReceipt,
             sendReceiptByEmail

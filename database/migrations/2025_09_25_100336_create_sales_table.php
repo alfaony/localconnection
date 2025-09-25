@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('transaction_number')->nullable();
             $table->decimal('total_amount', 15, 2);
             $table->decimal('tax_amount', 15, 2)->default(0)->nullable();
+            $table->integer('tax_value')->default(0)->nullable();
             $table->decimal('discount_amount', 15, 2)->default(0)->nullable();
             $table->decimal('final_amount', 15, 2)->nullable();
             $table->string('payment_method')->nullable();

@@ -32,6 +32,7 @@ class Sale extends Model
         'transaction_code',
         'total_amount',
         'tax_amount',
+        'tax_value',
         'discount_amount',
         'final_amount',
         'payment_method',
