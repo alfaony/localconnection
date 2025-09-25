@@ -362,13 +362,13 @@ class ImportInternetCustomer extends Command
                     if ($now->lt($registerDate)) {
                         // Pendaftaran sebelum register_date: bayar bulan depan
                         $paymentStartMonth = $now->addMonth($activePromo->value)->format('F Y');
-                        $startBillingDate = $now->addMonth($activePromo->value)->firstOfMonth()->format('Y-m-d');
-                        $endBillingDate = $now->addMonth($activePromo->value)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days', 30))->format('Y-m-d');
+                        $startBillingDate = $now->copy()->addMonth($activePromo->value)->firstOfMonth()->format('Y-m-d');
+                        $endBillingDate = $now->copy()->addMonth($activePromo->value)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days', 30))->format('Y-m-d');
                     } else {
                         // Pendaftaran pada/ setelah register_date: bayar 2 bulan dari sekarang
                         $paymentStartMonth = $now->addMonths($activePromo->value + 1)->format('F Y');
-                        $startBillingDate = $now->addMonths($activePromo->value + 1)->firstOfMonth()->format('Y-m-d');
-                        $endBillingDate = $now->addMonths($activePromo->value + 1)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days', 30))->format('Y-m-d');
+                        $startBillingDate = $now->copy()->addMonths($activePromo->value + 1)->firstOfMonth()->format('Y-m-d');
+                        $endBillingDate = $now->copy()->addMonths($activePromo->value + 1)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days', 30))->format('Y-m-d');
                     }
                 }
             }
