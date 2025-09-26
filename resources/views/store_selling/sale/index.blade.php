@@ -1,21 +1,65 @@
 @extends('adminlte::page')
 
-@section('title', 'Store Selling')
+@section('title', 'Store Selling - Point of Sale')
 
 @section('content')
 <div id="app">
+    <!-- Loading Overlay -->
+    <div v-if="isLoading" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <h5 class="text-white">@{{ loadingMessage }}</h5>
+        </div>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="steps">
+                <div class="step" :class="{ 'active': currentStep === 1, 'completed': currentStep > 1 }">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Pilih Produk</div>
+                </div>
+                <div class="step-line" :class="{ 'completed': currentStep > 1 }"></div>
+                <div class="step" :class="{ 'active': currentStep === 2, 'completed': currentStep > 2 }">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Pembayaran</div>
+                </div>
+                <div class="step-line" :class="{ 'completed': currentStep > 2 }"></div>
+                <div class="step" :class="{ 'active': currentStep === 3, 'completed': currentStep > 3 }">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Selesai</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="info-card">
+                <div class="info-item">
+                    <i class="fas fa-calendar-alt text-primary"></i>
+                    <span class="info-text">{{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-user text-success"></i>
+                    <span class="info-text">{{ Auth::user()->name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Tab Navigation -->
-    <ul class="nav nav-tabs" id="saleTabs" role="tablist">
+    <ul class="nav nav-tabs mb-3" id="saleTabs" role="tablist">
         <li class="nav-item">
-            <a class="nav-link active" @click="resetTransaction" id="new-tab" data-toggle="tab" href="#new" role="tab" aria-controls="new" aria-selected="true">
-                Transaksi Baru
+            <a class="nav-link active" id="new-tab" data-toggle="tab" href="#new" role="tab" 
+               @click="switchToNewTransaction()">
+                <i class="fas fa-plus-circle"></i> Transaksi Baru
             </a>
         </li>
         <li class="nav-item" v-for="draft in drafts" :key="draft.id">
             <a class="nav-link" :id="'draft-' + draft.id + '-tab'" data-toggle="tab" 
-               :href="'#draft-' + draft.id" role="tab" :aria-controls="'draft-' + draft.id" 
-               aria-selected="false" @click="loadDraft(draft)">
-                Draft @{{ draft.transaction_code }}
+               :href="'#draft-' + draft.id" role="tab" @click="loadDraft(draft)">
+                <i class="fas fa-file-alt"></i> @{{ draft.transaction_code }}
                 <button type="button" class="close ml-2" @click.stop="deleteDraft(draft.id)">&times;</button>
             </a>
         </li>
@@ -23,41 +67,162 @@
 
     <!-- Tab Content -->
     <div class="tab-content" id="saleTabsContent">
-        <!-- New Transaction Tab -->
+        <!-- All tabs will use the same transaction form -->
         <div class="tab-pane fade show active" id="new" role="tabpanel" aria-labelledby="new-tab">
             @include('store_selling.sale.partials.transaction-form')
         </div>
-
-        <!-- Draft Tabs -->
+        
         <div class="tab-pane fade" v-for="draft in drafts" :key="draft.id" 
              :id="'draft-' + draft.id" role="tabpanel" :aria-labelledby="'draft-' + draft.id + '-tab'">
             @include('store_selling.sale.partials.transaction-form')
         </div>
     </div>
 
-    <!-- Success Modal -->
-    <div class="modal fade" id="successModal" tabindex="-1">
-        <div class="modal-dialog">
+    <!-- Payment Confirmation Modal -->
+    <div class="modal fade" id="paymentConfirmationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-success">
-                    <h5 class="modal-title text-white">Transaksi Berhasil</h5>
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-exclamation-triangle"></i> Konfirmasi Pembayaran
+                    </h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body text-center">
-                    <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
-                    <h4>@{{ formatCurrency(transactionResult.final_amount) }}</h4>
-                    <p>Kode Transaksi: <strong>@{{ transactionResult.transaction_code }}</strong></p>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <h4>Total Pembayaran</h4>
+                        <h2 class="text-primary">@{{ formatCurrency(grandTotal) }}</h2>
+                    </div>
+                    
+                    <div class="payment-details">
+                        <div class="row">
+                            <div class="col-6"><strong>Metode Pembayaran:</strong></div>
+                            <div class="col-6 text-right">@{{ getPaymentMethodLabel(paymentMethod) }}</div>
+                        </div>
+                        <div v-if="paymentMethod === 'cash'" class="row mt-2">
+                            <div class="col-6"><strong>Dibayar:</strong></div>
+                            <div class="col-6 text-right">@{{ formatCurrency(cashAmount) }}</div>
+                        </div>
+                        <div v-if="paymentMethod === 'cash'" class="row mt-1">
+                            <div class="col-6"><strong>Kembalian:</strong></div>
+                            <div class="col-6 text-right">@{{ formatCurrency(cashAmount - grandTotal) }}</div>
+                        </div>
+                        <div v-if="customerEmail" class="row mt-2">
+                            <div class="col-6"><strong>Email Customer:</strong></div>
+                            <div class="col-6 text-right">@{{ customerEmail }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> Pastikan semua data sudah benar sebelum melanjutkan.
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-primary" @click="printReceipt">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-edit"></i> Perbaiki
+                    </button>
+                    <button type="button" class="btn btn-success" @click="confirmPayment" :disabled="isLoading">
+                        <i class="fas fa-check"></i> Konfirmasi & Bayar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-check-circle"></i> Transaksi Berhasil
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                        <h3>Pembayaran Berhasil Diproses</h3>
+                        <p class="lead">Kode Transaksi: <strong>@{{ transactionResult.transaction_code }}</strong></p>
+                    </div>
+                    
+                    <div class="receipt-preview bg-light p-4 rounded">
+                        <div class="text-center mb-3">
+                            <h5><strong>STRUK PENJUALAN</strong></h5>
+                            <p class="mb-1"><strong>@{{ transactionResult.transaction_code }}</strong></p>
+                            <small>@{{ new Date().toLocaleString('id-ID') }}</small>
+                            <hr>
+                        </div>
+                        
+                        <div class="receipt-operator mb-3">
+                            <div class="row">
+                                <div class="col-6"><strong>Kasir:</strong></div>
+                                <div class="col-6 text-right">{{ Auth::user()->name }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6"><strong>Metode Bayar:</strong></div>
+                                <div class="col-6 text-right">@{{ getPaymentMethodLabel(transactionResult.payment_method) }}</div>
+                            </div>
+                            <hr>
+                        </div>
+                        
+                        <div class="receipt-items mb-3">
+                            <div v-for="item in transactionResult.items" :key="item.id" class="receipt-item">
+                                <div class="d-flex justify-content-between">
+                                    <div class="item-name">
+                                        <strong>@{{ item.product_store.name }}</strong>
+                                    </div>
+                                    <div class="item-total">@{{ formatCurrency(item.subtotal) }}</div>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">@{{ item.quantity }} x @{{ formatCurrency(item.unit_price) }}</small>
+                                    <small class="text-muted">SKU: @{{ item.product_store.code }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="receipt-totals">
+                            <div class="d-flex justify-content-between">
+                                <span>Subtotal:</span>
+                                <span>@{{ formatCurrency(transactionResult.total_amount) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Pajak (@{{ transactionResult.tax_value }}%):</span>
+                                <span>@{{ formatCurrency(transactionResult.tax_amount) }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between total-line">
+                                <strong>TOTAL:</strong>
+                                <strong>@{{ formatCurrency(transactionResult.final_amount) }}</strong>
+                            </div>
+                            <div v-if="transactionResult.payment_method === 'cash'" class="d-flex justify-content-between mt-2">
+                                <span>Dibayar:</span>
+                                <span>@{{ formatCurrency(transactionResult.payment_details?.cash_amount || cashAmount) }}</span>
+                            </div>
+                            <div v-if="transactionResult.payment_method === 'cash'" class="d-flex justify-content-between">
+                                <span>Kembalian:</span>
+                                <span>@{{ formatCurrency((transactionResult.payment_details?.cash_amount || cashAmount) - transactionResult.final_amount) }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <small class="text-muted">Terima kasih atas kunjungan Anda</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" @click="printReceipt" :disabled="isLoading">
                         <i class="fas fa-print"></i> Cetak Struk
                     </button>
-                    <button class="btn btn-success" @click="sendReceiptByEmail">
+                    <button class="btn btn-success" @click="sendReceiptByEmail" 
+                            :disabled="!transactionResult.customer_email || isLoading">
                         <i class="fas fa-envelope"></i> Kirim Email
                     </button>
-                    <button class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                    <button class="btn btn-outline-secondary" @click="startNewTransaction">
+                        <i class="fas fa-plus"></i> Transaksi Baru
+                    </button>
                 </div>
             </div>
         </div>
@@ -66,25 +231,307 @@
 @endsection
 
 @section('css')
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFGL54KgFHzqc0QLb3+gfRS0lM9F9NTv4M78HaRh4VM3YEH46Q" crossorigin="anonymous">
 <style>
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    
+    .loading-content {
+        text-align: center;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 2rem;
+        border-radius: 10px;
+    }
+
+    /* Progress Steps */
+    .steps {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        padding: 1rem 0;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .step-line {
+        width: 100px;
+        height: 3px;
+        background-color: #dee2e6;
+        transition: background-color 0.3s ease;
+        margin: 0 10px;
+    }
+    
+    .step-line.completed {
+        background-color: #28a745;
+    }
+    
+    .step-number {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background-color: #dee2e6;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .step.active .step-number {
+        background-color: #007bff;
+        color: white;
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        animation: pulse 2s infinite;
+    }
+    
+    .step.completed .step-number {
+        background-color: #28a745;
+        color: white;
+        transform: scale(1.05);
+    }
+    
+    @keyframes pulse {
+        0% { box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); }
+        50% { box-shadow: 0 4px 25px rgba(0, 123, 255, 0.5); }
+        100% { box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3); }
+    }
+    
+    .step-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 500;
+        text-align: center;
+    }
+    
+    .step.active .step-label {
+        color: #007bff;
+        font-weight: 600;
+    }
+    
+    .step.completed .step-label {
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    /* Info Card */
+    .info-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        border-radius: 5px;
+        background: rgba(0,0,0,0.02);
+    }
+    
+    .info-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .info-item i {
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+    }
+    
+    .info-text {
+        font-weight: 600;
+    }
+
+    /* Step Content */
+    .step-content {
+        display: none;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    .step-content.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards Enhancement */
+    .card {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: none;
+        border-radius: 10px;
+        transition: transform 0.2s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    /* Table Styles */
     .table td {
         vertical-align: middle;
+        border-top: 1px solid rgba(0,0,0,0.05);
     }
+    
+    .table thead th {
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+    }
+    
     .input-group input[type="number"] {
         -moz-appearance: textfield;
     }
+    
     .input-group input[type="number"]::-webkit-outer-spin-button,
     .input-group input[type="number"]::-webkit-inner-spin-button {
         -webkit-appearance: none;
         margin: 0;
     }
+
+    /* Receipt Styles */
+    .receipt-preview {
+        font-family: 'Courier New', monospace;
+        background: white !important;
+        border: 2px solid #dee2e6;
+    }
+    
+    .receipt-item {
+        border-bottom: 1px dashed #dee2e6;
+        padding: 8px 0;
+    }
+    
+    .receipt-item:last-child {
+        border-bottom: none;
+    }
+    
+    .total-line {
+        border-top: 2px solid #000;
+        padding-top: 8px;
+        margin-top: 8px;
+        font-size: 1.1em;
+    }
+
+    /* Navigation Tabs */
     .nav-tabs .close {
         font-size: 1.2rem;
         line-height: 1;
+        margin-left: 5px;
+        transition: color 0.2s ease;
     }
-    .tax-input-group {
-        max-width: 120px;
+    
+    .nav-tabs .close:hover {
+        color: #dc3545;
+    }
+
+    /* Payment Method Cards */
+    .payment-method-card {
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+        background: white;
+    }
+    
+    .payment-method-card:hover {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
+    }
+    
+    .payment-method-card.active {
+        border-color: #007bff;
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    }
+    
+    .payment-method-card i {
+        font-size: 1.8rem;
+        margin-right: 15px;
+    }
+
+    /* Button Enhancements */
+    .btn {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .btn-lg {
+        padding: 12px 24px;
+        font-weight: 600;
+    }
+
+    /* Animations */
+    .animate__animated {
+        animation-duration: 0.5s;
+    }
+    
+    .animate__fadeIn {
+        animation-name: fadeIn;
+    }
+
+    /* Responsive Improvements */
+    @media (max-width: 768px) {
+        .steps {
+            flex-direction: column;
+        }
+        
+        .step-line {
+            width: 3px;
+            height: 30px;
+            margin: 10px 0;
+        }
+        
+        .payment-method-card {
+            padding: 15px;
+        }
+        
+        .payment-method-card i {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
     }
 </style>
 @endsection
@@ -92,32 +539,31 @@
 @section('js')
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
-<!-- jQuery (wajib sebelum Bootstrap JS) -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-<!-- Bootstrap Bundle (sudah termasuk Popper.js) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-const { createApp, ref, computed, onMounted } = Vue;
+const { createApp, ref, computed, onMounted, watch } = Vue;
 
 createApp({
     setup() {
-        const operatorName = ref('');
+        const currentStep = ref(1);
         const barcodeInput = ref('');
         const cartItems = ref([]);
         const paymentMethod = ref('cash');
         const cashAmount = ref(0);
         const customerEmail = ref('');
-        const taxValue = ref(10); // Default tax 10%
+        const taxValue = ref(0);
         const paymentDetails = ref({
             cardNumber: '',
-            cvv: '',
-            expiry: '',
-            qrisCode: ''
+            bankName: '',
+            cardEdcApprover : '',
+            qrisBank: ''
         });
         const transactionResult = ref({});
         const drafts = ref(@json($drafts));
         const currentDraftId = ref(null);
+        const isLoading = ref(false);
+        const loadingMessage = ref('Memproses...');
 
         // Computed properties
         const totalItems = computed(() => {
@@ -137,24 +583,79 @@ createApp({
             return subtotal.value + tax.value;
         });
 
-        const canProcessPayment = computed(() => {
-            if (cartItems.value.length === 0) return false;
+        const canGoToStep2 = computed(() => {
+            return cartItems.value.length > 0;
+        });
+
+        const canGoToStep3 = computed(() => {
             if (paymentMethod.value === 'cash') {
                 return cashAmount.value >= grandTotal.value;
+            } else if (paymentMethod.value === 'debit_credit') {
+                return (
+                    paymentDetails.value.cardNumber &&
+                    paymentDetails.value.bankName &&
+                    paymentDetails.value.cardEdcApprover
+                );
+            } else if (paymentMethod.value === 'qris') {
+                return paymentDetails.value.bankName;
             }
             return true;
         });
 
         // Methods
+        const setLoading = (loading, message = 'Memproses...') => {
+            isLoading.value = loading;
+            loadingMessage.value = message;
+        };
+
+        const setLoadingResult = (header, message, success) => {
+            setLoading(false);
+
+            Swal.fire({
+                title: header,
+                text: message,
+                icon: success ? 'success' : 'error',
+                timer: 2000,
+                timerProgressBar: true,
+                showConfirmButton: false
+            });
+        }
+
         const formatCurrency = (amount) => {
+            if (!amount) return 'Rp 0';
             return new Intl.NumberFormat('id-ID', {
                 style: 'currency',
                 currency: 'IDR'
             }).format(amount);
         };
 
+        const getPaymentMethodLabel = (method) => {
+            const labels = {
+                'cash': 'Tunai',
+                'debit_credit': 'Kartu Debit/Kredit',
+                'qris': 'QRIS'
+            };
+            return labels[method] || method;
+        };
+
+        const nextStep = () => {
+            if (currentStep.value === 1 && canGoToStep2.value) {
+                currentStep.value = 2;
+            } else if (currentStep.value === 2 && canGoToStep3.value) {
+                $('#paymentConfirmationModal').modal('show');
+            }
+        };
+
+        const prevStep = () => {
+            if (currentStep.value > 1) {
+                currentStep.value--;
+            }
+        };
+
         const searchProduct = async () => {
             if (!barcodeInput.value.trim()) return;
+
+            setLoading(true, 'Mencari produk...');
 
             try {
                 const response = await axios.post('/store-selling/search-product', {
@@ -165,18 +666,19 @@ createApp({
                     const product = response.data.product;
                     addToCart(product);
                     barcodeInput.value = '';
-                    // Auto-focus kembali ke input barcode
-                    // document.querySelector('input[v-model="barcodeInput"]').focus();
-                    if(barcodeInput.value) 
-                    {
-                        barcodeInput.value.focus();   
-                    }
+                    setTimeout(() => {
+                        const barcodeInputEl = document.querySelector('input[v-model="barcodeInput"]');
+                        if (barcodeInputEl) barcodeInputEl.focus();
+                    }, 100);
                 } else {
-                    alert('Produk tidak ditemukan');
+                    // alert('Produk tidak ditemukan');
+                    setLoadingResult('Produk tidak ditemukan', response.data.message, false);
                 }
             } catch (error) {
                 console.error('Error mencari produk:', error);
-                alert('Error mencari produk');
+                setLoadingResult('Error mencari produk',null, false);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -209,6 +711,12 @@ createApp({
             cartItems.value.splice(index, 1);
         };
 
+        const confirmPayment = async () => {
+            $('#paymentConfirmationModal').modal('hide');
+            setLoading(true, 'Memproses pembayaran...');
+            await processPayment();
+        };
+
         const processPayment = async () => {
             try {
                 const items = cartItems.value.map(item => ({
@@ -217,40 +725,57 @@ createApp({
                     unit_price: item.price
                 }));
 
+                if (paymentMethod.value === 'cash') {
+                    paymentDetails.value.cash_amount = cashAmount.value;
+                }
+
                 const response = await axios.post('/store-selling/process-payment', {
                     items: items,
                     payment_method: paymentMethod.value,
                     customer_email: customerEmail.value,
                     payment_details: paymentDetails.value,
-                    tax_value: taxValue.value
+                    tax_value: taxValue.value,
+                    draft_id: currentDraftId.value
                 });
 
                 if (response.data.success) {
                     transactionResult.value = response.data.sale;
-                    $('#successModal').modal('show');
                     
-                    // Reset form setelah sukses
-                    resetTransaction();
+                    // Remove draft tab if processing from draft
+                    if (currentDraftId.value) {
+                        drafts.value = drafts.value.filter(draft => draft.id !== currentDraftId.value);
+                        
+                        // Switch to new transaction tab
+                        setTimeout(() => {
+                            $('#new-tab').tab('show');
+                        }, 100);
+                    }
                     
-                    // Refresh drafts list
-                    loadDrafts();
+                    currentStep.value = 3;
+                    setTimeout(() => {
+                        $('#successModal').modal('show');
+                    }, 500);
                 } else {
-                    alert('Error processing payment: ' + response.data.message);
+                    // alert('Error processing payment: ' + response.data.message);
+                    setLoadingResult('Error processing payment', response.data.message, false);
                 }
             } catch (error) {
                 console.error('Error processing payment:', error);
-                alert('Error processing payment: ' + error.response?.data?.message || error.message);
+                // alert('Error processing payment: ' + (error.response?.data?.message || error.message));
+                setLoadingResult('Error processing payment', error.response?.data?.message || error.message, false);
+            } finally {
+                setLoading(false);
             }
         };
 
         const saveDraft = async () => {
             if (cartItems.value.length === 0) {
-                alert('Tidak ada item untuk disimpan sebagai draft');
+                // alert('Tidak ada item untuk disimpan sebagai draft');
+                setLoadingResult('Tidak ada item untuk disimpan sebagai draft', null, false);
                 return;
             }
-            
-            console.log(taxValue.value);
-            
+
+            setLoading(true, 'Menyimpan draft...');
 
             try {
                 const items = cartItems.value.map(item => ({
@@ -264,40 +789,44 @@ createApp({
                     payment_method: paymentMethod.value,
                     customer_email: customerEmail.value,
                     payment_details: paymentDetails.value,
-                    tax_value: taxValue.value
+                    tax_value: taxValue.value,
+                    draft_id: currentDraftId.value
                 });
 
                 if (response.data.success) {
-                    // Tambahkan draft ke list
-                    drafts.value.unshift(response.data.draft);
-                    
-                    // Reset current transaction
-                    resetTransaction();
-                    
-                    // Switch to the new draft tab
-                    setTimeout(() => {
-                        $(`#draft-${response.data.draft.id}-tab`).tab('show');
-                    }, 100);
-                    
-                    alert('Draft berhasil disimpan');
-                } else {
-                    alert('Error menyimpan draft: ' + response.data.message);
+                    // Update existing draft or add new draft
+                    if (currentDraftId.value) {
+                        const existingIndex = drafts.value.findIndex(d => d.id === currentDraftId.value);
+                        if (existingIndex !== -1) {
+                            drafts.value[existingIndex] = response.data.draft;
+                        }
+                    } else {
+                        drafts.value.unshift(response.data.draft);
+                        currentDraftId.value = response.data.draft.id;
+                        setTimeout(() => {
+                            $(`#draft-${response.data.draft.id}-tab`).tab('show');
+                        }, 100);
+                    }
+                    // alert('Draft berhasil disimpan');
+                    setLoadingResult('Draft berhasil disimpan', null, true);
                 }
             } catch (error) {
                 console.error('Error saving draft:', error);
-                alert('Error menyimpan draft: ' + error.response?.data?.message || error.message);
+                // alert('Error menyimpan draft');
+                setLoadingResult('Error menyimpan draft', null, false);
+            } finally {
+                setLoading(false);
             }
         };
 
         const loadDraft = async (draft) => {
+            setLoading(true, 'Memuat draft...');
+            
             try {
                 const response = await axios.get(`/store-selling/load-draft/${draft.id}`);
                 if (response.data.success) {
                     const draftData = response.data.draft;
-                    console.log('draftData', draftData);
                     
-                    
-                    // Load data dari draft
                     cartItems.value = draftData.items.map(item => ({
                         id: item.product_store_id,
                         code: item.product_store.code,
@@ -311,104 +840,277 @@ createApp({
                     taxValue.value = draftData.tax_value;
                     currentDraftId.value = draftData.id;
                     
-                    // Load payment details jika ada
                     if (draftData.payment_details) {
                         paymentDetails.value = { ...draftData.payment_details };
+                        if (draftData.payment_method === 'cash') {
+                            cashAmount.value = draftData.payment_details.cash_amount || 0;
+                        }
                     }
+                    
+                    currentStep.value = 1;
                 }
             } catch (error) {
                 console.error('Error loading draft:', error);
-                alert('Error loading draft');
+                // alert('Error loading draft');
+                setLoadingResult('Error loading draft', null, false);
+            } finally {
+                setLoading(false);
             }
         };
 
         const deleteDraft = async (draftId) => {
             if (!confirm('Hapus draft ini?')) return;
 
+            setLoading(true, 'Menghapus draft...');
+
             try {
                 const response = await axios.delete(`/store-selling/delete-draft/${draftId}`);
                 if (response.data.success) {
-                    // Remove dari list drafts
                     drafts.value = drafts.value.filter(draft => draft.id !== draftId);
-                    
-                    // Jika draft yang dihapus sedang aktif, reset form
                     if (currentDraftId.value === draftId) {
                         resetTransaction();
                         $('#new-tab').tab('show');
                     }
-                    
-                    alert('Draft berhasil dihapus');
+                    // alert('Draft berhasil dihapus');
+                    setLoadingResult('Draft berhasil dihapus', null, true);
                 }
             } catch (error) {
                 console.error('Error deleting draft:', error);
-                alert('Error menghapus draft');
+                // alert('Error menghapus draft');
+                setLoadingResult('Error menghapus draft', null, false);
+            } finally {
+                setLoading(false);
             }
         };
 
-        const loadDrafts = async () => {
-            try {
-                const response = await axios.get('/store-selling/drafts');
-                if (response.data.success) {
-                    drafts.value = response.data.drafts;
-                }
-            } catch (error) {
-                console.error('Error loading drafts:', error);
-            }
+        const switchToNewTransaction = () => {
+            resetTransaction();
+            currentStep.value = 1;
+        };
+
+        const startNewTransaction = () => {
+            $('#successModal').modal('hide');
+            resetTransaction();
+            currentStep.value = 1;
+            $('#new-tab').tab('show');
         };
 
         const resetTransaction = () => {
             cartItems.value = [];
             cashAmount.value = 0;
             customerEmail.value = '';
-            taxValue.value = 10;
+            taxValue.value = 0;
             paymentMethod.value = 'cash';
             paymentDetails.value = {
                 cardNumber: '',
-                cvv: '',
-                expiry: '',
-                qrisCode: ''
+                bankName: '',
+                cardEdcApprover : '',
+                qrisBank: ''
             };
             currentDraftId.value = null;
         };
 
         const printReceipt = async () => {
+            setLoading(true, 'Menyiapkan struk...');
+            
             try {
                 const response = await axios.get(`/store-selling/print-receipt/${transactionResult.value.id}`);
-                // Implement print logic here
                 const printWindow = window.open('', '_blank');
-                printWindow.document.write(`
+                const receiptContent = `
                     <html>
                         <head>
                             <title>Struk ${transactionResult.value.transaction_code}</title>
                             <style>
-                                body { font-family: Arial, sans-serif; margin: 20px; }
-                                .header { text-align: center; margin-bottom: 20px; }
-                                .item { margin-bottom: 10px; }
-                                .total { font-weight: bold; margin-top: 10px; }
+                                body { 
+                                    font-family: 'Courier New', monospace; 
+                                    margin: 20px; 
+                                    font-size: 12px; 
+                                    line-height: 1.4;
+                                }
+                                .header { 
+                                    text-align: center; 
+                                    margin-bottom: 20px; 
+                                    border-bottom: 2px solid #000; 
+                                    padding-bottom: 10px; 
+                                }
+                                .info-section {
+                                    margin-bottom: 15px;
+                                    border-bottom: 1px dashed #000;
+                                    padding-bottom: 10px;
+                                }
+                                .info-row {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    margin-bottom: 3px;
+                                }
+                                .item { 
+                                    margin-bottom: 8px; 
+                                    border-bottom: 1px dotted #ccc;
+                                    padding-bottom: 5px;
+                                }
+                                .item-header {
+                                    display: flex; 
+                                    justify-content: space-between;
+                                    font-weight: bold;
+                                    margin-bottom: 2px;
+                                }
+                                .item-details {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    font-size: 10px;
+                                    color: #666;
+                                }
+                                .totals { 
+                                    margin-top: 15px;
+                                    border-top: 1px dashed #000;
+                                    padding-top: 10px;
+                                }
+                                .total-row {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    margin-bottom: 3px;
+                                }
+                                .grand-total { 
+                                    font-weight: bold; 
+                                    border-top: 2px solid #000; 
+                                    padding-top: 5px; 
+                                    margin-top: 5px; 
+                                    font-size: 14px;
+                                }
+                                .payment-info {
+                                    margin-top: 15px;
+                                    border-top: 1px dashed #000;
+                                    padding-top: 10px;
+                                }
+                                .thank-you { 
+                                    text-align: center; 
+                                    margin-top: 20px; 
+                                    font-style: italic; 
+                                    font-size: 10px;
+                                }
+                                @media print {
+                                    body { margin: 0; font-size: 10px; }
+                                    .no-print { display: none; }
+                                }
                             </style>
                         </head>
                         <body>
                             <div class="header">
                                 <h2>STRUK PENJUALAN</h2>
-                                <p>${transactionResult.value.transaction_code}</p>
+                                <p><strong>${transactionResult.value.transaction_code}</strong></p>
+                                <p>${new Date().toLocaleString('id-ID')}</p>
                             </div>
-                            <!-- Isi struk -->
+                            
+                            <div class="info-section">
+                                <div class="info-row">
+                                    <span>Kasir:</span>
+                                    <span>{{ Auth::user()->name }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span>Metode Bayar:</span>
+                                    <span>${getPaymentMethodLabel(transactionResult.value.payment_method)}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="items-section">
+                                ${transactionResult.value.items.map(item => `
+                                    <div class="item">
+                                        <div class="item-header">
+                                            <span>${item.product_store.name}</span>
+                                            <span>${formatCurrency(item.subtotal)}</span>
+                                        </div>
+                                        <div class="item-details">
+                                            <span>${item.quantity} x ${formatCurrency(item.unit_price)}</span>
+                                            <span>SKU: ${item.product_store.code}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+                            <div class="totals">
+                                <div class="total-row">
+                                    <span>Subtotal:</span>
+                                    <span>${formatCurrency(transactionResult.value.total_amount)}</span>
+                                </div>
+                                <div class="total-row">
+                                    <span>Pajak (${transactionResult.value.tax_value}%):</span>
+                                    <span>${formatCurrency(transactionResult.value.tax_amount)}</span>
+                                </div>
+                                <div class="total-row grand-total">
+                                    <span>TOTAL:</span>
+                                    <span>${formatCurrency(transactionResult.value.final_amount)}</span>
+                                </div>
+                            </div>
+                            
+                            ${transactionResult.value.payment_method === 'cash' ? `
+                                <div class="payment-info">
+                                    <div class="total-row">
+                                        <span>Dibayar:</span>
+                                        <span>${formatCurrency(transactionResult.value.payment_details?.cash_amount || cashAmount.value)}</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span>Kembalian:</span>
+                                        <span>${formatCurrency((transactionResult.value.payment_details?.cash_amount || cashAmount.value) - transactionResult.value.final_amount)}</span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="thank-you">
+                                <p>Terima kasih atas kunjungan Anda</p>
+                                <p>Barang yang sudah dibeli tidak dapat dikembalikan</p>
+                            </div>
                         </body>
                     </html>
-                `);
+                `;
+                printWindow.document.write(receiptContent);
+                printWindow.document.close();
                 printWindow.print();
             } catch (error) {
-                alert('Error printing receipt');
+                // alert('Error printing receipt');
+                Log.error('Error printing receipt', error);
+                setLoadingResult('Error printing receipt', null, false);
+            } finally {
+                setLoading(false);
             }
         };
 
         const sendReceiptByEmail = async () => {
-            if (!customerEmail.value) {
-                alert('Email customer diperlukan untuk mengirim struk');
+            if (!transactionResult.value.customer_email) {
+                setLoadingResult('Email customer diperlukan untuk mengirim struk', null, false);
                 return;
             }
-            // Implement email sending logic
-            alert('Struk dikirim ke ' + customerEmail.value);
+            
+            setLoading(true, 'Mengirim email...');
+            
+            try {
+                const response = await axios.post('/store-selling/send-receipt-email', {
+                    sale_id: transactionResult.value.id,
+                    customer_email: transactionResult.value.customer_email
+                });
+
+                if (response.data.success) {
+                    setLoadingResult('Struk berhasil dikirim ke ' + transactionResult.value.customer_email, null, true);
+                } else {
+                    setLoadingResult('Gagal mengirim email', response.data.message, false);
+                }
+            } catch (error) {
+                console.error('Error sending email:', error);
+                setLoadingResult(
+                    'Error mengirim email', 
+                    error.response?.data?.message || 'Terjadi kesalahan saat mengirim email', 
+                    false
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // Keyboard shortcut for space bar
+        const handleKeyPress = (event) => {
+            if (event.code === 'Space' && event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA') {
+                event.preventDefault();
+                nextStep();
+            }
         };
 
         onMounted(() => {
@@ -418,11 +1120,22 @@ createApp({
                 barcodeInputEl.focus();
             }
 
-            // Load drafts on mount
-            loadDrafts();
+            // Add keyboard event listener
+            document.addEventListener('keypress', handleKeyPress);
+
+            // Load drafts
+            setLoading(true, 'Memuat data...');
+            axios.get('/store-selling/drafts').then(response => {
+                if (response.data.success) {
+                    drafts.value = response.data.drafts;
+                }
+            }).finally(() => {
+                setLoading(false);
+            });
         });
 
         return {
+            currentStep,
             barcodeInput,
             cartItems,
             paymentMethod,
@@ -433,21 +1146,31 @@ createApp({
             transactionResult,
             drafts,
             currentDraftId,
+            isLoading,
+            loadingMessage,
             totalItems,
             subtotal,
             tax,
             grandTotal,
-            canProcessPayment,
+            canGoToStep2,
+            canGoToStep3,
+            setLoading,
+            setLoadingResult,
             formatCurrency,
+            getPaymentMethodLabel,
+            nextStep,
+            prevStep,
             searchProduct,
             updateQuantity,
             validateQuantity,
             removeItem,
+            confirmPayment,
             processPayment,
             saveDraft,
             loadDraft,
             deleteDraft,
-            loadDrafts,
+            switchToNewTransaction,
+            startNewTransaction,
             resetTransaction,
             printReceipt,
             sendReceiptByEmail

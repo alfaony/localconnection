@@ -5,7 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
+use Carbon\Carbon;
 
 class Sale extends Model
 {
@@ -23,7 +26,10 @@ class Sale extends Model
             {
                 $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
             }
-            $this->genreateTransactionCode();
+            if(empty($model->transaction_code))
+            {
+                $model->genreateTransactionCode();
+            }
         });
     }
 
@@ -38,7 +44,8 @@ class Sale extends Model
         'payment_details',
         'status',
         'user_id',
-        'customer_email'
+        'customer_email',
+        'transaction_number',
     ];
 
     protected $casts = [
@@ -62,13 +69,15 @@ class Sale extends Model
             ->orderBy('transaction_number', 'desc')
             ->first();
 
-        $nextNumber = $lastSale ? intval($lastSale->transaction_number) + 1 : 1;
+        
+        $nextNumber = $lastSale && $lastSale->transaction_number !== null ? intval($lastSale->transaction_number) + 1 : 1;
 
         // Format with leading zeroes (e.g. 0001)
-        $formattedNumber = str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
-        $sale->transaction_number = $formattedNumber;
-        $sale->transaction_code = "{$formattedNumber}-{$month}-{$year}";
+        $this->transaction_number = $nextNumber;
+        $randomCode = Str::random(6);
+        $nowTransaction = Carbon::now()->format('h-i-s');
+        $this->transaction_code = "{$nextNumber}-{$month}-{$year}-{$randomCode}-{$nowTransaction}";
     }
     public function user()
     {

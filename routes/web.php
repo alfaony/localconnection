@@ -128,6 +128,8 @@ use App\Http\Livewire\ProductStore\ProductStoreIndex;
 use App\Http\Livewire\ProductStore\ProductStoreShow;
 use App\Http\Livewire\ProductStore\ProductStoreForm;
 use App\Http\Livewire\ProductStore\ProductStorePrint;
+use App\Http\Livewire\Sale\SaleIndex;
+use App\Http\Livewire\Sale\SaleShow;
 use App\Http\Livewire\BrandProductStoreIndex;
 use App\Http\Livewire\CategoryProductStoreIndex;
 
@@ -625,17 +627,18 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/sales', \App\Http\Livewire\Sale\SaleIndex::class)->name('sales.index');
-    Route::get('/sales/{id}', \App\Http\Livewire\Sale\SaleShow::class)->name('sales.show');
-    
-    Route::get('/store-selling', [SaleController::class, 'index'])->name('store-selling.index');
-    Route::post('/store-selling/search-product', [SaleController::class, 'searchProduct'])->name('store-selling.search-product');
-    Route::post('/store-selling/process-payment', [SaleController::class, 'processPayment'])->name('store-selling.process-payment');
-    Route::post('/store-selling/save-draft', [SaleController::class, 'saveDraft'])->name('store-selling.save-draft');
-    Route::get('/store-selling/load-draft/{draft}', [SaleController::class, 'loadDraft'])->name('store-selling.load-draft');
-    Route::delete('/store-selling/delete-draft/{draft}', [SaleController::class, 'deleteDraft'])->name('store-selling.delete-draft');
-    Route::get('/store-selling/print-receipt/{sale}', [SaleController::class, 'printReceipt'])->name('store-selling.print-receipt');
-    Route::get('/store-selling/drafts', [SaleController::class, 'getDrafts'])->name('store-selling.drafts');
+      Route::get('/sales', \App\Http\Livewire\Sale\SaleIndex::class)->name('sales.index');
+      Route::get('/sales/{id}', \App\Http\Livewire\Sale\SaleShow::class)->name('sales.show');
+
+    Route::get('store-selling', [SaleController::class, 'index'])->name('store-selling.index');
+    Route::post('/store-selling/send-receipt-email', [SaleController::class, 'sendReceiptByEmail'])->name('store-selling.send-receipt-email');
+    Route::post('store-selling/search-product', [SaleController::class, 'searchProduct'])->name('store-selling.search-product');
+    Route::post('store-selling/process-payment', [SaleController::class, 'processPayment'])->name('store-selling.process-payment');
+    Route::post('store-selling/save-draft', [SaleController::class, 'saveDraft'])->name('store-selling.save-draft');
+    Route::get('store-selling/load-draft/{draft}', [SaleController::class, 'loadDraft'])->name('store-selling.load-draft');
+    Route::delete('store-selling/delete-draft/{draft}', [SaleController::class, 'deleteDraft'])->name('store-selling.delete-draft');
+    Route::get('store-selling/print-receipt/{sale}', [SaleController::class, 'printReceipt'])->name('store-selling.print-receipt');
+    Route::get('store-selling/drafts', [SaleController::class, 'getDrafts'])->name('store-selling.drafts');
 });
 
 Route::get('error/{code?}', function ($code = 500) {

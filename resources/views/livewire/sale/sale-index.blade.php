@@ -16,7 +16,7 @@
             @if($sales->isEmpty())
                 <div class="text-center py-5">
                     <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">Tidak ada penjualan yang ditemukan</p>
+                    <p class="text-muted">Tidak ada penjualan ditemukan</p>
                 </div>
             @else
                 <div class="table-responsive">
@@ -25,8 +25,8 @@
                             <tr>
                                 <th>Kode Transaksi</th>
                                 <th>Email Pelanggan</th>
-                                <th>Total</th>
-                                <th>Total Akhir</th>
+                                <th>Jumlah Total</th>
+                                <th>Jumlah Akhir</th>
                                 <th>Status</th>
                                 <th>Metode Pembayaran</th>
                                 <th>Tanggal</th>

@@ -9,12 +9,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Helpers\EmailNotifHelper;
+use App\Models\SettingCompany; // Assuming you have this model for SMTP configuration
 
 class SaleController extends Controller
 {
     public function index()
     {
-        // Ambil draft sales untuk ditampilkan di tab
         $drafts = Sale::where('status', 'draft')
             ->where('user_id', Auth::id())
             ->with('items.productStore')
@@ -58,7 +59,8 @@ class SaleController extends Controller
                 'payment_method' => 'required|in:cash,debit_credit,qris',
                 'customer_email' => 'nullable|email',
                 'payment_details' => 'nullable|array',
-                'tax_value' => 'required|numeric|min:0|max:100'
+                'tax_value' => 'required|numeric|min:0|max:100',
+                'draft_id' => 'nullable|exists:sales,id' // Tambahkan validasi untuk draft_id
             ]);
 
             // Calculate totals
@@ -70,19 +72,43 @@ class SaleController extends Controller
             $taxAmount = $totalAmount * ($saleData['tax_value'] / 100);
             $finalAmount = $totalAmount + $taxAmount;
 
-            // Create sale
-            $sale = Sale::create([
-                'total_amount' => $totalAmount,
-                'tax_amount' => $taxAmount,
-                'discount_amount' => 0,
-                'final_amount' => $finalAmount,
-                'payment_method' => $saleData['payment_method'],
-                'payment_details' => $saleData['payment_details'] ?? [],
-                'status' => 'completed',
-                'user_id' => auth()->id(),
-                'customer_email' => $saleData['customer_email'] ?? null,
-                'tax_value' => $saleData['tax_value'],
-            ]);
+            // Jika ada draft_id, maka update draft tersebut
+            if (!empty($saleData['draft_id'])) {
+                $sale = Sale::where('id', $saleData['draft_id'])
+                    ->byCompany(Auth::user()->company_id)
+                    ->where('status', 'draft')
+                    ->firstOrFail();
+
+                // Update sale
+                $sale->update([
+                    'total_amount' => $totalAmount,
+                    'tax_amount' => $taxAmount,
+                    'discount_amount' => 0,
+                    'final_amount' => $finalAmount,
+                    'payment_method' => $saleData['payment_method'],
+                    'payment_details' => $saleData['payment_details'] ?? [],
+                    'status' => 'completed',
+                    'customer_email' => $saleData['customer_email'] ?? null,
+                    'tax_value' => $saleData['tax_value'],
+                ]);
+
+                // Hapus item lama dan buat yang baru
+                $sale->items()->delete();
+            } else {
+                // Create new sale
+                $sale = Sale::create([
+                    'total_amount' => $totalAmount,
+                    'tax_amount' => $taxAmount,
+                    'discount_amount' => 0,
+                    'final_amount' => $finalAmount,
+                    'payment_method' => $saleData['payment_method'],
+                    'payment_details' => $saleData['payment_details'] ?? [],
+                    'status' => 'completed',
+                    'user_id' => auth()->id(),
+                    'customer_email' => $saleData['customer_email'] ?? null,
+                    'tax_value' => $saleData['tax_value'],
+                ]);
+            }
 
             // Create sale items
             foreach ($saleData['items'] as $item) {
@@ -93,10 +119,6 @@ class SaleController extends Controller
                     'unit_price' => $item['unit_price'],
                     'subtotal' => $item['quantity'] * $item['unit_price'],
                 ]);
-
-                // Update stock jika perlu (optional)
-                // $product = ProductStore::find($item['product_store_id']);
-                // $product->decrement('stock', $item['quantity']);
             }
 
             DB::commit();
@@ -129,7 +151,8 @@ class SaleController extends Controller
                 'payment_method' => 'nullable|in:cash,debit_credit,qris',
                 'customer_email' => 'nullable|email',
                 'payment_details' => 'nullable|array',
-                'tax_value' => 'required|numeric|min:0|max:100'
+                'tax_value' => 'required|numeric|min:0|max:100',
+                'draft_id' => 'nullable|exists:sales,id' // Tambahkan validasi untuk draft_id
             ]);
 
             // Calculate totals
@@ -141,20 +164,41 @@ class SaleController extends Controller
             $taxAmount = $totalAmount * ($saleData['tax_value'] / 100);
             $finalAmount = $totalAmount + $taxAmount;
 
-            // Create draft sale
-            $sale = Sale::create([
-                'transaction_code' => 'DRAFT-' . Str::upper(Str::random(8)),
-                'total_amount' => $totalAmount,
-                'tax_amount' => $taxAmount,
-                'discount_amount' => 0,
-                'final_amount' => $finalAmount,
-                'payment_method' => $saleData['payment_method'] ?? 'cash',
-                'payment_details' => $saleData['payment_details'] ?? [],
-                'status' => 'draft',
-                'user_id' => auth()->id(),
-                'customer_email' => $saleData['customer_email'] ?? null,
-                'tax_value' => $saleData['tax_value'],
-            ]);
+            // Jika ada draft_id, maka update draft tersebut
+            if (!empty($saleData['draft_id'])) {
+                $sale = Sale::where('id', $saleData['draft_id'])
+                    ->where('status', 'draft')
+                    ->where('user_id', auth()->id())
+                    ->firstOrFail();
+
+                $sale->update([
+                    'total_amount' => $totalAmount,
+                    'tax_amount' => $taxAmount,
+                    'discount_amount' => 0,
+                    'final_amount' => $finalAmount,
+                    'payment_method' => $saleData['payment_method'] ?? 'cash',
+                    'payment_details' => $saleData['payment_details'] ?? [],
+                    'customer_email' => $saleData['customer_email'] ?? null,
+                    'tax_value' => $saleData['tax_value'],
+                ]);
+
+                // Hapus item lama
+                $sale->items()->delete();
+            } else {
+                // Create draft sale
+                $sale = Sale::create([
+                    'total_amount' => $totalAmount,
+                    'tax_amount' => $taxAmount,
+                    'discount_amount' => 0,
+                    'final_amount' => $finalAmount,
+                    'payment_method' => $saleData['payment_method'] ?? 'cash',
+                    'payment_details' => $saleData['payment_details'] ?? [],
+                    'status' => 'draft',
+                    'user_id' => auth()->id(),
+                    'customer_email' => $saleData['customer_email'] ?? null,
+                    'tax_value' => $saleData['tax_value'],
+                ]);
+            }
 
             // Create sale items
             foreach ($saleData['items'] as $item) {
@@ -238,5 +282,92 @@ class SaleController extends Controller
             'success' => true,
             'drafts' => $drafts
         ]);
+    }
+    // Add this method to your SaleController class
+
+    public function sendReceiptByEmail(Request $request)
+    {
+        try {
+            $request->validate([
+                'sale_id' => 'required|exists:sales,id',
+                'customer_email' => 'required|email'
+            ]);
+
+            $sale = Sale::with(['items.productStore', 'user'])
+                ->where('id', $request->sale_id)
+                ->where('user_id', Auth::id())
+                ->where('status', 'completed')
+                ->firstOrFail();
+
+            // Get SMTP configuration for the current company
+            $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->where('menu',"email")->get()->pluck('field_value','field_title');
+            $fromEmail = $smtpConfig['username'] ?? '';
+            $fromName = Auth::user()->name;
+
+            if (!$smtpConfig) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Konfigurasi email belum diatur. Silakan hubungi administrator.'
+                ], 400);
+            }
+
+            
+            // Prepare email data
+            $emailData = [
+                'user' => Auth::user(),
+                'sale' => $sale,
+                'transaction_code' => $sale->transaction_code,
+                'total_amount' => $sale->total_amount,
+                'tax_amount' => $sale->tax_amount,
+                'final_amount' => $sale->final_amount,
+                'payment_method' => $sale->payment_method,
+                'payment_details' => $sale->payment_details,
+                'items' => $sale->items,
+                'created_at' => $sale->created_at->format('d/m/Y H:i:s'),
+                'kasir_name' => Auth::user()->name,
+                'company_name' => Auth::user()->company->name ?? 'Toko'
+            ];
+            
+
+            // Email configuration array
+            $smtpConfigArray = [
+                'host' => $smtpConfig["host"],
+                'port' => $smtpConfig["port"],
+                'username' => $smtpConfig["username"],
+                'password' => $smtpConfig["password"],
+                'encryption' => $smtpConfig["encryption"] ?? 'tls',
+                'name' => Auth::user()->company->name
+            ];
+            // Send email using EmailHelper
+            $emailSent = EmailNotifHelper::sentEmail(
+                            $fromEmail,
+                            $fromName,  
+                            [$request->customer_email], 
+                            "Pelanggan", 
+                            'Struk Pembelian - ' . $sale->transaction_code, // Subject
+                            "email.receipt",
+                            $emailData, 
+                            $smtpConfigArray, 
+                            Auth::user()->company_id, 
+                        );
+
+            if ($emailSent) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Struk berhasil dikirim ke ' . $request->customer_email
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal mengirim email. Periksa konfigurasi SMTP atau coba lagi nanti.'
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
