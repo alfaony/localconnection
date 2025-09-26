@@ -120,7 +120,7 @@ class ImportInternetCustomer extends Command
                 
                 // Process the row
                 if($type == "create")
-                    {
+                {
                     if($data['email'] != null || $data['email'] != "")
                     {
                         $existingCustomer = UserCustomer::where('email', $data['email'])->first();
@@ -140,6 +140,10 @@ class ImportInternetCustomer extends Command
                 }else if($type == "update")
                 {
                     $result = $this->processRowUpdate($data, $company, $rowNumber);
+                }
+                else if($type == "check")
+                {
+                    dd($data);
                 }
                 
                 if ($result['success']) {
