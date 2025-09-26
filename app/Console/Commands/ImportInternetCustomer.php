@@ -36,7 +36,9 @@ class ImportInternetCustomer extends Command
      */
     protected $signature = 'internet-customer:import 
                             {file : Nama file Excel di storage/internet_customer/} 
-                            {slug : Slug perusahaan}';
+                            {slug : Slug perusahaan}
+                            {type : create atau update (default: create, nil = create)}
+                            ';
 
     /**
      * The console command description.
@@ -52,6 +54,8 @@ class ImportInternetCustomer extends Command
     {
         $filename = $this->argument('file');
         $companySlug = $this->argument('slug');
+        $type = $this->argument('type') ?? "create";
+
         
         $filePath = public_path('internet_customer/' . $filename);
         
@@ -113,24 +117,34 @@ class ImportInternetCustomer extends Command
                 // }
                 
                 // Check if email already exists
-                if($data['email'] != null || $data['email'] != "")
-                {
-                    $existingCustomer = UserCustomer::where('email', $data['email'])->first();
-                    if ($existingCustomer) {
-                        $failures[] = [
-                            'row' => $rowNumber,
-                            'email' => $data['email'],
-                            'reason' => 'Email sudah terdaftar'
-                        ];
-                        continue;
-                    }
-                }else
-                {
-                    $data['email'] = null;
-                }
                 
                 // Process the row
-                $result = $this->processRow($data, $company, $rowNumber);
+                if($type == "create")
+                {
+                    if($data['email'] != null || $data['email'] != "")
+                    {
+                        $existingCustomer = UserCustomer::where('email', $data['email'])->first();
+                        if ($existingCustomer) {
+                            $failures[] = [
+                                'row' => $rowNumber,
+                                'email' => $data['email'],
+                                'reason' => 'Email sudah terdaftar'
+                            ];
+                            continue;
+                        }
+                    }else
+                    {
+                        $data['email'] = null;
+                    }
+                    $result = $this->processRow($data, $company, $rowNumber);
+                }else if($type == "update")
+                {
+                    $result = $this->processRowUpdate($data, $company, $rowNumber);
+                }
+                else if($type == "check")
+                {
+                    dd($data);
+                }
                 
                 if ($result['success']) {
                     $successCount++;
@@ -216,10 +230,9 @@ class ImportInternetCustomer extends Command
             }
             
             // Cari paket internet
-            $internetPackage = InternetPackage::where('company_id', $company->id)
-                                             ->where('name', 'like', '%' . $data['package_name'] . '%')
+            $internetPackage = InternetPackage::where('name', 'like', '%' . $data['package_name'] . '%')
                                              ->first();
-            if (!$internetPackage) {
+            if (!$internetPackage || $data['package_name'] == '') {
                 DB::rollBack();
                 return [
                     'success' => false,
@@ -315,6 +328,77 @@ class ImportInternetCustomer extends Command
             
             return ['success' => true];
             
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error($e);
+            return [
+                'success' => false,
+                'reason' => 'Error: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    private function processRowUpdate($data, $company, $rowNumber)
+    {
+        try {
+            DB::beginTransaction();
+            $existingCustomer = UserCustomer::where('email', $data['email'])->first();
+            $existingInternetCustomer = InternetCustomer::where('name', $data['name'])
+                                        ->when($existingCustomer, function ($query) use ($existingCustomer) {
+                                            $query->where('user_customer_id', $existingCustomer->id);
+                                        })
+                                        ->first();
+
+            if (!$existingInternetCustomer && !$existingCustomer) 
+            {
+                DB::rollBack();
+                return [
+                    'success' => false,
+                    'reason' => 'Pelanggan tidak ditemukan: ' . $data['name']
+                ];
+            }else
+            {
+                if(!$existingCustomer)
+                {
+                    DB::rollBack();
+                    return [
+                        'success' => false,
+                        'reason' => 'Pelanggan tidak ditemukan: ' . $data['name']
+                    ];
+                }else
+                {
+                    $existingInternetCustomer = InternetCustomer::where('user_customer_id', $existingCustomer->id)->first();
+                }
+            }
+
+             $internetPackage = InternetPackage::where('name', 'like', '%' . $data['package_name'] . '%')
+                                             ->first();
+            if (!$internetPackage || $data['package_name'] == '') {
+                DB::rollBack();
+                return [
+                    'success' => false,
+                    'reason' => 'Paket internet tidak ditemukan: ' . $data['package_name']
+                ];
+            }
+            
+            // Generate kode pelanggan
+            // dd($internetPackage, $data['package_name']);
+
+            $promoData = $this->checkPromo($internetPackage->id);
+
+            $existingInternetCustomer->update([
+                'internet_package_id' => $internetPackage->id,
+            ]);
+
+            if($existingCustomer && $promoData['has_free_months'])
+            {
+                $existingCustomer->update([
+                    'start_billing_date' => $promoData['start_billing_date'],
+                    'end_billing_date' => $promoData['end_billing_date'],
+                ]);  
+            }
+            DB::commit();
+            return ['success' => true];
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e);

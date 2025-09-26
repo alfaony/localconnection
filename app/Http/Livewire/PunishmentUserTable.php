@@ -18,7 +18,7 @@ class PunishmentUserTable extends Component
     public $perPage = 10;
     protected $paginationTheme = 'bootstrap';
 
-    protected $listeners = ['refreshComponent' => '$refresh'];
+    protected $listeners = ['refreshComponent' => '$refresh', 'delete'];
 
     public function mount()
     {
