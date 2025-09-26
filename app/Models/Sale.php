@@ -23,8 +23,7 @@ class Sale extends Model
             {
                 $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
             }
-
-            
+            $this->genreateTransactionCode();
         });
     }
 

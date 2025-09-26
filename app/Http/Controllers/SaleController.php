@@ -72,7 +72,6 @@ class SaleController extends Controller
 
             // Create sale
             $sale = Sale::create([
-                'transaction_code' => 'TRX-' . Str::upper(Str::random(8)),
                 'total_amount' => $totalAmount,
                 'tax_amount' => $taxAmount,
                 'discount_amount' => 0,

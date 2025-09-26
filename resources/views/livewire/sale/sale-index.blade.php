@@ -1,9 +1,9 @@
 <div>
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4>Sales List</h4>
+        <h4>Daftar Penjualan</h4>
         <div class="d-flex gap-2">
             <div class="input-group" style="width: 300px;">
-                <input type="text" wire:model.live="search" class="form-control" placeholder="Search sales...">
+                <input type="text" wire:model.live="search" class="form-control" placeholder="Cari penjualan...">
                 <span class="input-group-text">
                     <i class="fas fa-search"></i>
                 </span>
@@ -16,21 +16,21 @@
             @if($sales->isEmpty())
                 <div class="text-center py-5">
                     <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">No sales found</p>
+                    <p class="text-muted">Tidak ada penjualan yang ditemukan</p>
                 </div>
             @else
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Transaction Code</th>
-                                <th>Customer Email</th>
-                                <th>Total Amount</th>
-                                <th>Final Amount</th>
+                                <th>Kode Transaksi</th>
+                                <th>Email Pelanggan</th>
+                                <th>Total</th>
+                                <th>Total Akhir</th>
                                 <th>Status</th>
-                                <th>Payment Method</th>
-                                <th>Date</th>
-                                <th>Actions</th>
+                                <th>Metode Pembayaran</th>
+                                <th>Tanggal</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -57,7 +57,7 @@
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <button wire:click="deleteSale('{{ $sale->id }}')" 
-                                                    wire:confirm="Are you sure you want to delete this sale?"
+                                                    wire:confirm="Apakah Anda yakin ingin menghapus penjualan ini?"
                                                     class="btn btn-sm btn-outline-danger">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -72,10 +72,10 @@
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <div>
                         <select wire:model.live="perPage" class="form-select form-select-sm" style="width: auto;">
-                            <option value="5">5 per page</option>
-                            <option value="10">10 per page</option>
-                            <option value="25">25 per page</option>
-                            <option value="50">50 per page</option>
+                            <option value="5">5 per halaman</option>
+                            <option value="10">10 per halaman</option>
+                            <option value="25">25 per halaman</option>
+                            <option value="50">50 per halaman</option>
                         </select>
                     </div>
                     
@@ -86,4 +86,3 @@
             @endif
         </div>
     </div>
-</div>
