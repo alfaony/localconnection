@@ -183,6 +183,7 @@
                                 </div>
                                 <div class="d-flex justify-content-between">
                                     <small class="text-muted">@{{ item.quantity }} x @{{ formatCurrency(item.unit_price) }}</small>
+
                                 </div>
                             </div>
                         </div>
@@ -1034,7 +1035,6 @@ createApp({
                                         </div>
                                         <div class="item-details">
                                             <span>${item.quantity} x ${formatCurrency(item.unit_price)}</span>
-                                            <span>SKU: ${item.product_store.code}</span>
                                         </div>
                                     </div>
                                 `).join('')}
