@@ -102,6 +102,7 @@ class ScheduleEmployeeCheckin extends Command
         {
             // $checkinTimes = $this->generateRandomCheckinTimes($user->start_time, $user->end_time, $user->rest_time);
             $checkinTimes = $this->generateRandomCheckinTimesUser($user);
+            dd($checkinTimes);
             foreach ($checkinTimes as $time) 
             {
                 // Simpan di database lokal
@@ -115,6 +116,7 @@ class ScheduleEmployeeCheckin extends Command
     {
         $firstDivision = $this->findFirstDivision($user);
         
+
         if($statusLeave == "dayoff")
         {
             return EmployeeChecking::create([
