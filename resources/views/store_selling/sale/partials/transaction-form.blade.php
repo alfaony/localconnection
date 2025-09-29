@@ -52,7 +52,7 @@
                                 <tr v-for="(item, index) in cartItems" :key="item.id" class="animate__animated animate__fadeIn">
                                     <td>
                                         <div class="font-weight-bold">@{{ item.name }}</div>
-                                        <small class="text-muted">SKU: @{{ item.code }}</small>
+                                        {{--<small class="text-muted">SKU: @{{ item.code }}</small>--}}
                                     </td>
                                     <td class="text-right">@{{ formatCurrency(item.price) }}</td>
                                     <td>
