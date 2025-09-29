@@ -736,8 +736,8 @@ class AppServiceProvider extends ServiceProvider
                 'sales' =>
                 [
                     'text' => 'Penjualan',
-                    'route' => 'store-selling.index',
-                    'icon' => 'fa fa-shopping-cart',
+                    'route' => 'sales.index',
+                    'icon' => 'fas fa-cart-arrow-down',
                 ],
                 'store_sellings' =>
                 [
