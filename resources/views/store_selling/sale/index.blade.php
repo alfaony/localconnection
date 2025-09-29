@@ -878,7 +878,7 @@ createApp({
             setLoading(true, 'Menghapus draft...');
 
             try {
-                const response = await axios.delete(`/store-selling/delete-draft/${draftId}`);
+                const response = await axios.delete(`/store-selling/deleteDraft/${draftId}`);
                 if (response.data.success) {
                     drafts.value = drafts.value.filter(draft => draft.id !== draftId);
                     if (currentDraftId.value === draftId) {
