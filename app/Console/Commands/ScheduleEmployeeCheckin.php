@@ -57,7 +57,10 @@ class ScheduleEmployeeCheckin extends Command
                 $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
             }else
             {
+                $this->info("User Proses:". $user->name);
                 $this->scheduleCheckinForUser($user, $onLeaveEmails);
+                $this->info("User Selesai:". $user->name);
+
             }
         }
         
