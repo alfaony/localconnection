@@ -248,17 +248,33 @@
 
                     <!-- Harga Jual Disarankan -->
                     <div class="mt-5">
-                        <div class="alert bg-light border">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h5 class="text-primary mb-1">Harga Jual Disarankan</h5>
-                                </div>
-                                <div class="h5 text-success font-weight-bold">
-                                    Rp {{ number_format($laptop->suggested_selling_price,0,',','.') }}
-                                </div>
+                    <div class="alert bg-light border">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="text-primary mb-1">Harga Jual Disarankan (RAW)</h5>
+                            </div>
+                            <div class="h5 text-success font-weight-bold">
+                                Rp {{ number_format($laptop->suggested_selling_price) }}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="text-primary mb-1">Harga Jual Jakarta</h5>
+                            </div>
+                            <div class="h5 text-success font-weight-bold">
+                                Rp {{ number_format($laptop->jakarta_price) }}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="text-primary mb-1">Harga Jual Jambi</h5>
+                            </div>
+                            <div class="h5 text-success font-weight-bold">
+                                Rp {{ number_format($laptop->jambi_price) }}
                             </div>
                         </div>
                     </div>
+                </div>
                     @endcanAccess
                     @endauth
                 </div>
