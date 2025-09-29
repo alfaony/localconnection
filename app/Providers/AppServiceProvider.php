@@ -166,7 +166,8 @@ class AppServiceProvider extends ServiceProvider
                 'pricelists','products','supplier_types','product_suppliers','supplier_categories',
                 'product_categories','supliers','customers','item_requests',
                 'providers','shipping_rates','shipping_calculations',
-                'brand_product_stores','category_product_stores','product_stores'
+                'brand_product_stores','category_product_stores','product_stores','store_sellings',
+                'sales',
             ];
 
             $managementGedungMenu = 
@@ -731,7 +732,19 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Pelanggaran Pegawai',
                     'route' => 'punishment-user.index',
                     'icon' => 'fa fa-user-slash',
-                ]
+                ],
+                'sales' =>
+                [
+                    'text' => 'Penjualan',
+                    'route' => 'store-selling.index',
+                    'icon' => 'fa fa-shopping-cart',
+                ],
+                'store_sellings' =>
+                [
+                    'text' => 'Kasir Toko',
+                    'route' => 'store-selling.index',
+                    'icon' => 'fa fa-shopping-cart',
+                ],
             ];
 
             // foreach ($listMenu as $role) 
