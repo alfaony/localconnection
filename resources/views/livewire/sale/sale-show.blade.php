@@ -1,24 +1,19 @@
 <div>
     @if($sale)
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h4>Sale Details</h4>
+                <h4>Detail Penjualan</h4>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('sales.index') }}">Sales</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('sales.index') }}">Penjualan</a></li>
                         <li class="breadcrumb-item active">{{ $sale->transaction_code ?? $sale->id }}</li>
                     </ol>
                 </nav>
             </div>
             <div class="btn-group">
                 <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to List
+                    <i class="fas fa-arrow-left"></i> Kembali ke Daftar
                 </a>
-                <button wire:click="deleteSale" 
-                        wire:confirm="Are you sure you want to delete this sale?"
-                        class="btn btn-outline-danger">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
             </div>
         </div>
 
@@ -26,16 +21,16 @@
             <div class="col-md-8">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Items</h5>
+                        <h5 class="card-title mb-0">Barang</h5>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th>Product</th>
-                                        <th>Quantity</th>
-                                        <th>Unit Price</th>
+                                        <th>Produk</th>
+                                        <th>Jumlah</th>
+                                        <th>Harga Satuan</th>
                                         <th>Subtotal</th>
                                     </tr>
                                 </thead>
@@ -43,10 +38,10 @@
                                     @foreach($sale->items as $item)
                                         <tr>
                                             <td>
-                                                @if($item->productStore->product)
-                                                    <div class="fw-bold">{{ $item->productStore->product->name }}</div>
+                                                @if($item->productStore)
+                                                    <div class="fw-bold">{{ $item->productStore->name }}</div>
                                                 @else
-                                                    <div class="text-muted">Product not found</div>
+                                                    <div class="text-muted">Produk tidak ditemukan</div>
                                                 @endif
                                             </td>
                                             <td>{{ $item->quantity }}</td>
@@ -64,16 +59,16 @@
             <div class="col-md-4">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Sale Information</h5>
+                        <h5 class="card-title mb-0">Informasi Penjualan</h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Transaction Code:</label>
+                            <label class="form-label fw-bold">Kode Transaksi:</label>
                             <p>{{ $sale->transaction_code ?? 'N/A' }}</p>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Transaction Number:</label>
+                            <label class="form-label fw-bold">Nomor Transaksi:</label>
                             <p>{{ $sale->transaction_number ?? 'N/A' }}</p>
                         </div>
 
@@ -85,51 +80,44 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Customer Email:</label>
+                            <label class="form-label fw-bold">Email Pelanggan:</label>
                             <p>{{ $sale->customer_email ?? 'Guest' }}</p>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Payment Method:</label>
-                            <p>{{ ucfirst($sale->payment_method) }}</p>
+                            <label class="form-label fw-bold">Metode Pembayaran:</label>
+                            <p>{!! $sale->payment_details_html !!}</p>
                         </div>
-
-                        @if($sale->payment_details)
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Payment Details:</label>
-                                <pre class="bg-light p-2 rounded">{{ json_encode($sale->payment_details, JSON_PRETTY_PRINT) }}</pre>
-                            </div>
-                        @endif
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">Amount Summary</h5>
+                        <h5 class="card-title mb-0">Ringkasan Jumlah</h5>
                     </div>
                     <div class="card-body">
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Total Amount:</span>
+                            <span>Total Jumlah:</span>
                             <strong>Rp {{ number_format($sale->total_amount, 2) }}</strong>
                         </div>
                         
                         @if($sale->tax_amount > 0)
                             <div class="d-flex justify-content-between mb-2">
-                                <span>Tax ({{ $sale->tax_value }}%):</span>
+                                <span>Pajak ({{ $sale->tax_value }}%):</span>
                                 <strong>Rp {{ number_format($sale->tax_amount, 2) }}</strong>
                             </div>
                         @endif
 
                         @if($sale->discount_amount > 0)
                             <div class="d-flex justify-content-between mb-2">
-                                <span>Discount:</span>
+                                <span>Diskon:</span>
                                 <strong>-Rp {{ number_format($sale->discount_amount, 2) }}</strong>
                             </div>
                         @endif
 
                         <hr>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="fw-bold">Final Amount:</span>
+                            <span class="fw-bold">Jumlah Akhir:</span>
                             <strong class="fs-5 text-primary">Rp {{ number_format($sale->final_amount, 2) }}</strong>
                         </div>
                     </div>
@@ -144,16 +132,20 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
-                        <label class="form-label">Created At:</label>
+                        <label class="form-label">Dibuat Oleh:</label>
+                        <p>{{ $sale->user->name ?? 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Dibuat Pada:</label>
                         <p>{{ $sale->created_at->format('M d, Y H:i:s') }}</p>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Updated At:</label>
+                        <label class="form-label">Diperbarui Pada:</label>
                         <p>{{ $sale->updated_at->format('M d, Y H:i:s') }}</p>
                     </div>
                     @if($sale->deleted_at)
                     <div class="col-md-4">
-                        <label class="form-label">Deleted At:</label>
+                        <label class="form-label">Dihapus Pada:</label>
                         <p class="text-danger">{{ $sale->deleted_at->format('M d, Y H:i:s') }}</p>
                     </div>
                     @endif
@@ -165,7 +157,8 @@
             <div class="spinner-border" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="mt-2">Loading sale details...</p>
+            <p class="mt-2">Memuatkan detail penjualan...</p>
         </div>
     @endif
 </div>
+

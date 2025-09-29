@@ -3,6 +3,7 @@
     <div class="row">
         <div class="col-md-8">
             <!-- Scanner Section -->
+            @canAccess('searchProduct','store_sellings')
             <div class="card card-primary">
                 <div class="card-header">
                     <h3 class="card-title">
@@ -25,6 +26,7 @@
                     </div>
                 </div>
             </div>
+            @endcanAccess
 
             <!-- Product List -->
             <div class="card card-info">
@@ -134,16 +136,21 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-grid gap-2">
+                        @canAccess('processPayment','store_sellings')
                         <button class="btn btn-primary btn-lg mb-2" 
                                 @click="nextStep"
                                 :disabled="!canGoToStep2">
                             <i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran
                             <kbd class="ml-2">Spasi</kbd>
                         </button>
+                        @endcanAccess
+
+                        @canAccess('saveDraft','store_sellings')
                         <button class="btn btn-info mb-2 mr-1" @click="saveDraft"
                                 :disabled="cartItems.length === 0">
                             <i class="fas fa-save"></i> Simpan Draft
                         </button>
+                        @endcanAccess
                         <button class="btn btn-outline-secondary mb-2" @click="resetTransaction">
                             <i class="fas fa-times"></i> Batalkan
                         </button>

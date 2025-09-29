@@ -56,13 +56,19 @@
                 <i class="fas fa-plus-circle"></i> Transaksi Baru
             </a>
         </li>
+        @canAccess('loadDraft','store_sellings')
+        @canAccess('getDrafts','store_sellings')
         <li class="nav-item" v-for="draft in drafts" :key="draft.id">
             <a class="nav-link" :id="'draft-' + draft.id + '-tab'" data-toggle="tab" 
                :href="'#draft-' + draft.id" role="tab" @click="loadDraft(draft)">
                 <i class="fas fa-file-alt"></i> @{{ draft.transaction_code }}
+                @canAccess('deleteDraft','store_sellings')
                 <button type="button" class="close ml-2" @click.stop="deleteDraft(draft.id)">&times;</button>
+                @endcanAccess
             </a>
         </li>
+        @endcanAccess
+        @endcanAccess
     </ul>
 
     <!-- Tab Content -->
@@ -213,16 +219,24 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    @canAccess('printReceipt','store_sellings')
                     <button class="btn btn-primary" @click="printReceipt" :disabled="isLoading">
                         <i class="fas fa-print"></i> Cetak Struk
                     </button>
+                    @endcanAccess
+
+                    @canAccess('sendReceiptByEmail','store_sellings')
                     <button class="btn btn-success" @click="sendReceiptByEmail" 
                             :disabled="!transactionResult.customer_email || isLoading">
                         <i class="fas fa-envelope"></i> Kirim Email
                     </button>
+                    @endcanAccess
+                    
+                    @canAccess('index','store_sellings')
                     <button class="btn btn-outline-secondary" @click="startNewTransaction">
                         <i class="fas fa-plus"></i> Transaksi Baru
                     </button>
+                    @endcanAccess
                 </div>
             </div>
         </div>
@@ -658,7 +672,7 @@ createApp({
             setLoading(true, 'Mencari produk...');
 
             try {
-                const response = await axios.post('/store-selling/search-product', {
+                const response = await axios.post('/store-selling/searchProduct', {
                     barcode: barcodeInput.value.trim()
                 });
 
@@ -729,7 +743,7 @@ createApp({
                     paymentDetails.value.cash_amount = cashAmount.value;
                 }
 
-                const response = await axios.post('/store-selling/process-payment', {
+                const response = await axios.post('/store-selling/processPayment', {
                     items: items,
                     payment_method: paymentMethod.value,
                     customer_email: customerEmail.value,
@@ -784,7 +798,7 @@ createApp({
                     unit_price: item.price
                 }));
 
-                const response = await axios.post('/store-selling/save-draft', {
+                const response = await axios.post('/store-selling/saveDraft', {
                     items: items,
                     payment_method: paymentMethod.value,
                     customer_email: customerEmail.value,
@@ -823,7 +837,7 @@ createApp({
             setLoading(true, 'Memuat draft...');
             
             try {
-                const response = await axios.get(`/store-selling/load-draft/${draft.id}`);
+                const response = await axios.get(`/store-selling/loadDraft/${draft.id}`);
                 if (response.data.success) {
                     const draftData = response.data.draft;
                     
@@ -1083,7 +1097,7 @@ createApp({
             setLoading(true, 'Mengirim email...');
             
             try {
-                const response = await axios.post('/store-selling/send-receipt-email', {
+                const response = await axios.post('/store-selling/sendReceiptByEmail', {
                     sale_id: transactionResult.value.id,
                     customer_email: transactionResult.value.customer_email
                 });

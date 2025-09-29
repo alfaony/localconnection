@@ -79,6 +79,66 @@ class Sale extends Model
         $nowTransaction = Carbon::now()->format('h-i-s');
         $this->transaction_code = "{$nextNumber}-{$month}-{$year}-{$randomCode}-{$nowTransaction}";
     }
+
+    public function getPaymentMethodHtmlAttribute()
+    {
+        if ($this->payment_method === 'cash') {
+            return '<span class="badge bg-success">Cash Payment</span>';
+        }
+
+        if ($this->payment_method === 'debit_credit') {
+            return '<span class="badge bg-primary">Debit / Kredit</span>';
+        }
+
+        if ($this->payment_method === 'qris') {
+            return '<span class="badge bg-info">QRIS</span>';
+        }
+
+        return '<span class="text-muted">No Details</span>';
+    }
+
+    public function getPaymentDetailsHtmlAttribute()
+    {
+        // Jika metode pembayaran adalah CASH
+        if ($this->payment_method === 'cash') {
+            $amount = isset($this->payment_details['cash_amount']) 
+                        ? number_format($this->payment_details['cash_amount'], 0, ',', '.') 
+                        : '-';
+
+            return '
+                <table class="table table-sm table-bordered">
+                    <tr><th>Metode Pembayaran</th><td>Tunai</td></tr>
+                    <tr><th>Jumlah Uang Tunai</th><td>Rp ' . $amount . '</td></tr>
+                </table>';
+        }
+
+        // Jika metode pembayaran adalah DEBIT/KREDIT
+        if ($this->payment_method === 'debit_credit') {
+            $details = $this->payment_details;
+
+            return '
+                <table class="table table-sm table-bordered">
+                    <tr><th>Metode Pembayaran</th><td>Kartu Debit/Kredit</td></tr>
+                    <tr><th>Nama Bank</th><td>' . (isset($details['bankName']) ? $details['bankName'] : '-') . '</td></tr>
+                    <tr><th>Nomor Kartu</th><td>' . (isset($details['cardNumber']) ? $details['cardNumber'] : '-') . '</td></tr>
+                    <tr><th>Pengesah</th><td>' . (isset($details['cardEdcApprover']) ? $details['cardEdcApprover'] : '-') . '</td></tr>
+                </table>';
+        }
+
+        // Jika metode pembayaran adalah QRIS
+        if ($this->payment_method === 'qris') {
+            $details = $this->payment_details;
+
+            return '
+                <table class="table table-sm table-bordered">
+                    <tr><th>Metode Pembayaran</th><td>QRIS</td></tr>
+                    <tr><th>Nama Bank QRIS</th><td>' . (isset($details['bankName']) ? $details['bankName'] : '-') . '</td></tr>
+                </table>';
+        }
+
+        // Default jika tidak dikenali
+        return '<span class="text-muted">Tidak ada detail</span>';
+    }
     public function user()
     {
         return $this->belongsTo(User::class);
