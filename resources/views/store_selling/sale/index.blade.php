@@ -183,7 +183,6 @@
                                 </div>
                                 <div class="d-flex justify-content-between">
                                     <small class="text-muted">@{{ item.quantity }} x @{{ formatCurrency(item.unit_price) }}</small>
-                                    <small class="text-muted">SKU: @{{ item.product_store.code }}</small>
                                 </div>
                             </div>
                         </div>
