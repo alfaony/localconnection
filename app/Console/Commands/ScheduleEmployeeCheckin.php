@@ -120,7 +120,7 @@ class ScheduleEmployeeCheckin extends Command
         $hasTodayCheckin = EmployeeChecking::where('user_id', $user->id)
             ->whereDate('created_at', Carbon::today())
             ->count();
-        if ($hasTodayCheckin != 10) {
+        if ($hasTodayCheckin != 10 || ($hasTodayCheckin > 8 && $hasTodayCheckin < 11)) {
             if($statusLeave == "dayoff")
             {
                 return EmployeeChecking::create([
