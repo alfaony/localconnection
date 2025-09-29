@@ -218,7 +218,9 @@
                     <div class="item-qty-price">
                         {{ $item->quantity }} x Rp {{ number_format($item->unit_price, 0, ',', '.') }}
                         <br>
+                        {{--
                         <small>SKU: {{ $item->productStore->code }}</small>
+                        --}}
                     </div>
                     <div class="item-subtotal">
                         Rp {{ number_format($item->subtotal, 0, ',', '.') }}
