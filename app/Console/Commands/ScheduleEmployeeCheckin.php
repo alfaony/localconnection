@@ -119,9 +119,8 @@ class ScheduleEmployeeCheckin extends Command
         $firstDivision = $this->findFirstDivision($user);
         $hasTodayCheckin = EmployeeChecking::where('user_id', $user->id)
             ->whereDate('created_at', Carbon::today())
-            ->exists();
-
-        if (!$hasTodayCheckin) {
+            ->count();
+        if ($hasTodayCheckin != 10 || ($hasTodayCheckin > 8 && $hasTodayCheckin < 11)) {
             if($statusLeave == "dayoff")
             {
                 return EmployeeChecking::create([
