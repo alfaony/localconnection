@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Carbon\Carbon;
 
 class AttendanceExport implements FromQuery, WithHeadings, WithMapping
 {
