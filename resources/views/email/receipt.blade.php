@@ -37,20 +37,19 @@
         }
         
         .logo-container {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 24px;
-            background: #f7fafc;
-            border-radius: 16px;
+            width: 100%;
+            height: 100%;
+            /* margin: 0 auto 24px; */
+            /* background: #f7fafc; */
+            /* border-radius: 16px; */
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid #e2e8f0;
+            /* border: 2px solid #e2e8f0; */
         }
         
         .logo-container img {
-            max-width: 80px;
-            max-height: 80px;
+            max-width: 120px;
             object-fit: contain;
         }
         
@@ -400,7 +399,6 @@
             
             <!-- Items -->
             <div class="items-header">Daftar Pembelian</div>
-            
             @foreach($data['items'] as $item)
             <div class="item-row">
                 <div class="item-info">
