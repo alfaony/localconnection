@@ -22,7 +22,9 @@ class SaleController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('store_selling.sale.index', compact('drafts'));
+    $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','store')->get()->pluck('field_value','field_title');
+
+        return view('store_selling.sale.index', compact('drafts','settingCompany'));
     }
 
     public function searchProduct(Request $request)
@@ -300,7 +302,7 @@ class SaleController extends Controller
                 ->firstOrFail();
 
             // Get SMTP configuration for the current company
-            $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->where('menu',"email")->get()->pluck('field_value','field_title');
+            $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
             $fromEmail = $smtpConfig['username'] ?? '';
             $fromName = Auth::user()->name;
 
@@ -325,7 +327,11 @@ class SaleController extends Controller
                 'items' => $sale->items,
                 'created_at' => $sale->created_at->format('d/m/Y H:i:s'),
                 'kasir_name' => Auth::user()->name,
-                'company_name' => Auth::user()->company->name ?? 'Toko'
+                'company_name' => Auth::user()->company->name ?? 'Toko',
+                'store_name' => $smtpConfig['store_name'],
+                'header_store_image' => $smtpConfig['header_store_image'],
+                'footer_store_message' => $smtpConfig['footer_store_message'],
+                'store_address' => $smtpConfig['store_address'],
             ];
             
 

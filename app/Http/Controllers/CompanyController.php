@@ -67,6 +67,7 @@ class CompanyController extends Controller
             $fieldPunishment = ['point_punishment_task_todo' => null, 'point_punishment_weekly_report' => null];
             $fieldWablas = ['server_wablas' => null,'token_wablas' => null, 'webhook_key_wablas' => null];
             $fieldGoogle = ['google_client_id' => null,'google_client_secret' => null, 'google_redirect_uri' => null, 'google_refresh_token' => null, 'google_access_token' => null,'google_expires_at' => null , 'google_token_created_at' => null];
+            $fieldStore = ['default_tax' => null,'header_store_image' => null,'footer_store_message' => null,'store_name'=>null, "store_address" =>null];
              $fieldPunishmentFormat = [
                 'range_start_date' => "21", // Range date
                 'range_end_date' => "20", // Range date
@@ -174,6 +175,16 @@ class CompanyController extends Controller
                 $field = new SettingCompany();
                 $field->user_id = $user->id;
                 $field->menu="punishment_role";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldStore as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="store";
                 $field->field_title = $key;
                 $field->field_value = $value;
                 $field->save();        

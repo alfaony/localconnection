@@ -154,10 +154,29 @@
                     </div>
                     
                     <div class="receipt-preview bg-light p-4 rounded">
+                        <!-- Header dengan Logo -->
                         <div class="text-center mb-3">
-                            <h5><strong>STRUK PENJUALAN</strong></h5>
-                            <p class="mb-1"><strong>@{{ transactionResult.transaction_code }}</strong></p>
-                            <small>@{{ new Date().toLocaleString('id-ID') }}</small>
+                            @if(!empty($settingCompany['header_store_image']))
+                            <div class="receipt-logo mb-3">
+                                <img src="{{ $settingCompany['header_store_image'] }}" 
+                                    alt="{{ $settingCompany['store_name'] ?? 'Store Logo' }}"
+                                    style="max-width: 120px; height: auto; border-radius: 8px;">
+                            </div>
+                            @endif
+                            
+                            <h5><strong>{{ $settingCompany['store_name'] ?? config('app.name') }}</strong></h5>
+                            
+                            @if(!empty($settingCompany['store_address']))
+                            <div class="receipt-address">
+                                <small class="text-muted">{{ $settingCompany['store_address'] }}</small>
+                            </div>
+                            @endif
+                            
+                            <div class="mt-3">
+                                <h6><strong>STRUK PENJUALAN</strong></h6>
+                                <p class="mb-1"><strong>@{{ transactionResult.transaction_code }}</strong></p>
+                                <small>@{{ new Date().toLocaleString('id-ID') }}</small>
+                            </div>
                             <hr>
                         </div>
                         
@@ -174,7 +193,7 @@
                         </div>
                         
                         <div class="receipt-items mb-3">
-                            <div v-for="item in transactionResult.items" :key="item.id" class="receipt-item">
+                            <div v-for="item in transactionResult.items" :key="item.id" class="receipt-item mb-2">
                                 <div class="d-flex justify-content-between">
                                     <div class="item-name">
                                         <strong>@{{ item.product_store.name }}</strong>
@@ -183,7 +202,6 @@
                                 </div>
                                 <div class="d-flex justify-content-between">
                                     <small class="text-muted">@{{ item.quantity }} x @{{ formatCurrency(item.unit_price) }}</small>
-
                                 </div>
                             </div>
                         </div>
@@ -213,9 +231,15 @@
                             </div>
                         </div>
                         
+                        <!-- Footer Message -->
                         <div class="text-center mt-3">
+                            @if(!empty($settingCompany['footer_store_message']))
+                            <div style="font-size: 0.9em;">{!! $settingCompany['footer_store_message'] !!}</div>
+                            @else
                             <small class="text-muted">Terima kasih atas kunjungan Anda</small>
+                            @endif
                         </div>
+                        
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -546,6 +570,43 @@
             font-size: 1.5rem;
             margin-right: 10px;
         }
+    }
+</style>
+<style scoped>
+    .receipt-logo {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .receipt-address {
+        margin-top: 8px;
+        /* padding: 5px 15px; */
+        /* background: #f8f9fa; */
+        border-radius: 5px;
+        display: inline-block;
+    }
+
+    .receipt-preview {
+        max-width: 400px;
+        margin: 0 auto;
+        font-family: 'Courier New', monospace;
+    }
+
+    .receipt-item {
+        border-bottom: 1px dashed #dee2e6;
+        padding-bottom: 8px;
+    }
+
+    .receipt-item:last-child {
+        border-bottom: none;
+    }
+
+    .total-line {
+        font-size: 1.2em;
+        padding-top: 10px;
+        border-top: 2px solid #333;
+        margin-top: 10px;
     }
 </style>
 @endsection
@@ -924,113 +985,450 @@ createApp({
             currentDraftId.value = null;
         };
 
+        // const printReceipt = async () => {
+        //     setLoading(true, 'Menyiapkan struk...');
+            
+        //     try {
+        //         const response = await axios.get(`/store-selling/printReceipt/${transactionResult.value.id}`);
+        //         const printWindow = window.open('', '_blank');
+        //         const receiptContent = `
+        //             <html>
+        //                 <head>
+        //                     <title>Struk ${transactionResult.value.transaction_code}</title>
+        //                     <style>
+        //                         body { 
+        //                             font-family: 'Courier New', monospace; 
+        //                             margin: 20px; 
+        //                             font-size: 12px; 
+        //                             line-height: 1.4;
+        //                         }
+        //                         .header { 
+        //                             text-align: center; 
+        //                             margin-bottom: 20px; 
+        //                             border-bottom: 2px solid #000; 
+        //                             padding-bottom: 10px; 
+        //                         }
+        //                         .info-section {
+        //                             margin-bottom: 15px;
+        //                             border-bottom: 1px dashed #000;
+        //                             padding-bottom: 10px;
+        //                         }
+        //                         .info-row {
+        //                             display: flex;
+        //                             justify-content: space-between;
+        //                             margin-bottom: 3px;
+        //                         }
+        //                         .item { 
+        //                             margin-bottom: 8px; 
+        //                             border-bottom: 1px dotted #ccc;
+        //                             padding-bottom: 5px;
+        //                         }
+        //                         .item-header {
+        //                             display: flex; 
+        //                             justify-content: space-between;
+        //                             font-weight: bold;
+        //                             margin-bottom: 2px;
+        //                         }
+        //                         .item-details {
+        //                             display: flex;
+        //                             justify-content: space-between;
+        //                             font-size: 10px;
+        //                             color: #666;
+        //                         }
+        //                         .totals { 
+        //                             margin-top: 15px;
+        //                             border-top: 1px dashed #000;
+        //                             padding-top: 10px;
+        //                         }
+        //                         .total-row {
+        //                             display: flex;
+        //                             justify-content: space-between;
+        //                             margin-bottom: 3px;
+        //                         }
+        //                         .grand-total { 
+        //                             font-weight: bold; 
+        //                             border-top: 2px solid #000; 
+        //                             padding-top: 5px; 
+        //                             margin-top: 5px; 
+        //                             font-size: 14px;
+        //                         }
+        //                         .payment-info {
+        //                             margin-top: 15px;
+        //                             border-top: 1px dashed #000;
+        //                             padding-top: 10px;
+        //                         }
+        //                         .thank-you { 
+        //                             text-align: center; 
+        //                             margin-top: 20px; 
+        //                             font-style: italic; 
+        //                             font-size: 10px;
+        //                         }
+        //                         @media print {
+        //                             body { margin: 0; font-size: 10px; }
+        //                             .no-print { display: none; }
+        //                         }
+        //                     </style>
+        //                 </head>
+        //                 <body>
+        //                     <div class="header">
+        //                         <h2>STRUK PENJUALAN</h2>
+        //                         <p><strong>${transactionResult.value.transaction_code}</strong></p>
+        //                         <p>${new Date().toLocaleString('id-ID')}</p>
+        //                     </div>
+                            
+        //                     <div class="info-section">
+        //                         <div class="info-row">
+        //                             <span>Kasir:</span>
+        //                             <span>{{ Auth::user()->name }}</span>
+        //                         </div>
+        //                         <div class="info-row">
+        //                             <span>Metode Bayar:</span>
+        //                             <span>${getPaymentMethodLabel(transactionResult.value.payment_method)}</span>
+        //                         </div>
+        //                     </div>
+                            
+        //                     <div class="items-section">
+        //                         ${transactionResult.value.items.map(item => `
+        //                             <div class="item">
+        //                                 <div class="item-header">
+        //                                     <span>${item.product_store.name}</span>
+        //                                     <span>${formatCurrency(item.subtotal)}</span>
+        //                                 </div>
+        //                                 <div class="item-details">
+        //                                     <span>${item.quantity} x ${formatCurrency(item.unit_price)}</span>
+        //                                 </div>
+        //                             </div>
+        //                         `).join('')}
+        //                     </div>
+                            
+        //                     <div class="totals">
+        //                         <div class="total-row">
+        //                             <span>Subtotal:</span>
+        //                             <span>${formatCurrency(transactionResult.value.total_amount)}</span>
+        //                         </div>
+        //                         <div class="total-row">
+        //                             <span>Pajak (${transactionResult.value.tax_value}%):</span>
+        //                             <span>${formatCurrency(transactionResult.value.tax_amount)}</span>
+        //                         </div>
+        //                         <div class="total-row grand-total">
+        //                             <span>TOTAL:</span>
+        //                             <span>${formatCurrency(transactionResult.value.final_amount)}</span>
+        //                         </div>
+        //                     </div>
+                            
+        //                     ${transactionResult.value.payment_method === 'cash' ? `
+        //                         <div class="payment-info">
+        //                             <div class="total-row">
+        //                                 <span>Dibayar:</span>
+        //                                 <span>${formatCurrency(transactionResult.value.payment_details?.cash_amount || cashAmount.value)}</span>
+        //                             </div>
+        //                             <div class="total-row">
+        //                                 <span>Kembalian:</span>
+        //                                 <span>${formatCurrency((transactionResult.value.payment_details?.cash_amount || cashAmount.value) - transactionResult.value.final_amount)}</span>
+        //                             </div>
+        //                         </div>
+        //                     ` : ''}
+                            
+        //                     <div class="thank-you">
+        //                         <p>Terima kasih atas kunjungan Anda</p>
+        //                         <p>Barang yang sudah dibeli tidak dapat dikembalikan</p>
+        //                     </div>
+        //                 </body>
+        //             </html>
+        //         `;
+        //         printWindow.document.write(receiptContent);
+        //         printWindow.document.close();
+        //         printWindow.print();
+        //     } catch (error) {
+        //         // alert('Error printing receipt');
+        //         Log.error('Error printing receipt', error);
+        //         setLoadingResult('Error printing receipt', null, false);
+        //     } finally {
+        //         setLoading(false);
+        //     }
+        // };
         const printReceipt = async () => {
             setLoading(true, 'Menyiapkan struk...');
             
             try {
-                const response = await axios.get(`/store-selling/printReceipt/${transactionResult.value.id}`);
+                // Get settings from PHP (already loaded in blade template)
+                const headerImage = '{{ $settingCompany["header_store_image"] ?? "" }}';
+                const footerMessage = `{!! $settingCompany["footer_store_message"] ?? "Terima kasih atas kunjungan Anda" !!}`;
+                const companyName = '{{ $settingCompany["store_name"] ?? "" }}';
+                const companyAddress = '{{ $settingCompany["store_address"] ?? "" }}';
+                
                 const printWindow = window.open('', '_blank');
                 const receiptContent = `
+                    <!DOCTYPE html>
                     <html>
                         <head>
                             <title>Struk ${transactionResult.value.transaction_code}</title>
+                            <meta charset="UTF-8">
                             <style>
+                                * {
+                                    margin: 0;
+                                    padding: 0;
+                                    box-sizing: border-box;
+                                }
+                                
+                                @page {
+                                    size: 80mm auto;
+                                    margin: 0;
+                                }
+                                
                                 body { 
                                     font-family: 'Courier New', monospace; 
-                                    margin: 20px; 
-                                    font-size: 12px; 
+                                    width: 80mm;
+                                    margin: 0 auto;
+                                    padding: 10mm 5mm;
+                                    font-size: 11px; 
                                     line-height: 1.4;
+                                    color: #000;
                                 }
+                                
+                                /* Header Section */
                                 .header { 
                                     text-align: center; 
-                                    margin-bottom: 20px; 
-                                    border-bottom: 2px solid #000; 
-                                    padding-bottom: 10px; 
-                                }
-                                .info-section {
                                     margin-bottom: 15px;
-                                    border-bottom: 1px dashed #000;
                                     padding-bottom: 10px;
+                                    border-bottom: 2px dashed #000;
                                 }
+                                
+                                .header-image {
+                                    margin: 0 auto 10px;
+                                    max-width: 50mm;
+                                }
+                                
+                                .header-image img {
+                                    width: 100%;
+                                    height: auto;
+                                    display: block;
+                                    border: 2px solid #000;
+                                    padding: 3mm;
+                                    background: #fff;
+                                }
+                                
+                                .company-name {
+                                    font-size: 16px;
+                                    font-weight: bold;
+                                    margin-bottom: 5px;
+                                    text-transform: uppercase;
+                                }
+                                
+                                .receipt-title {
+                                    font-size: 12px;
+                                    font-weight: bold;
+                                    margin-bottom: 8px;
+                                    letter-spacing: 1px;
+                                }
+
+                                .receipt-address {
+                                    margin-top: 8px;
+                                    border-radius: 5px;
+                                    display: inline-block;
+                                }
+                                
+                                .transaction-code {
+                                    font-size: 11px;
+                                    font-weight: bold;
+                                    margin: 5px 0;
+                                }
+                                
+                                .date-time {
+                                    font-size: 10px;
+                                    margin-top: 3px;
+                                }
+                                
+                                /* Info Section */
+                                .info-section {
+                                    margin: 12px 0;
+                                    padding: 8px 0;
+                                    border-top: 1px dashed #000;
+                                    border-bottom: 1px dashed #000;
+                                }
+                                
                                 .info-row {
                                     display: flex;
                                     justify-content: space-between;
                                     margin-bottom: 3px;
+                                    font-size: 10px;
                                 }
+                                
+                                .info-label {
+                                    font-weight: bold;
+                                }
+                                
+                                /* Items Section */
+                                .items-section {
+                                    margin: 12px 0;
+                                }
+                                
+                                .section-title {
+                                    font-weight: bold;
+                                    font-size: 11px;
+                                    margin-bottom: 8px;
+                                    text-align: center;
+                                    text-transform: uppercase;
+                                    border-top: 1px solid #000;
+                                    border-bottom: 1px solid #000;
+                                    padding: 4px 0;
+                                }
+                                
                                 .item { 
-                                    margin-bottom: 8px; 
-                                    border-bottom: 1px dotted #ccc;
-                                    padding-bottom: 5px;
+                                    margin-bottom: 10px;
+                                    padding-bottom: 8px;
+                                    border-bottom: 1px dotted #666;
                                 }
+                                
+                                .item:last-child {
+                                    border-bottom: none;
+                                }
+                                
                                 .item-header {
                                     display: flex; 
                                     justify-content: space-between;
                                     font-weight: bold;
-                                    margin-bottom: 2px;
+                                    margin-bottom: 3px;
+                                    font-size: 11px;
                                 }
+                                
+                                .item-name {
+                                    flex: 1;
+                                    padding-right: 5px;
+                                }
+                                
                                 .item-details {
                                     display: flex;
                                     justify-content: space-between;
-                                    font-size: 10px;
-                                    color: #666;
+                                    font-size: 9px;
+                                    color: #333;
                                 }
+                                
+                                /* Totals Section */
                                 .totals { 
-                                    margin-top: 15px;
-                                    border-top: 1px dashed #000;
-                                    padding-top: 10px;
+                                    margin-top: 12px;
+                                    border-top: 1px solid #000;
+                                    padding-top: 8px;
                                 }
+                                
                                 .total-row {
                                     display: flex;
                                     justify-content: space-between;
-                                    margin-bottom: 3px;
+                                    margin-bottom: 4px;
+                                    font-size: 10px;
                                 }
+                                
                                 .grand-total { 
                                     font-weight: bold; 
                                     border-top: 2px solid #000; 
-                                    padding-top: 5px; 
-                                    margin-top: 5px; 
-                                    font-size: 14px;
+                                    border-bottom: 2px solid #000;
+                                    padding: 6px 0;
+                                    margin: 6px 0;
+                                    font-size: 12px;
                                 }
+                                
+                                /* Payment Section */
                                 .payment-info {
-                                    margin-top: 15px;
+                                    margin: 12px 0;
+                                    padding: 8px 0;
                                     border-top: 1px dashed #000;
+                                    border-bottom: 1px dashed #000;
+                                }
+                                
+                                .payment-method {
+                                    font-weight: bold;
+                                    margin-bottom: 6px;
+                                    font-size: 11px;
+                                }
+                                
+                                /* Footer Section */
+                                .footer-section {
+                                    margin-top: 15px;
                                     padding-top: 10px;
+                                    border-top: 2px dashed #000;
                                 }
-                                .thank-you { 
+                                
+                                .thank-you-title { 
                                     text-align: center; 
-                                    margin-top: 20px; 
-                                    font-style: italic; 
-                                    font-size: 10px;
+                                    font-weight: bold;
+                                    font-size: 12px;
+                                    margin-bottom: 10px;
+                                    text-transform: uppercase;
                                 }
+                                
+                                .footer-message {
+                                    text-align: center;
+                                    font-size: 10px;
+                                    line-height: 1.6;
+                                    margin: 10px 0;
+                                    padding: 8px;
+                                    border: 1px dashed #666;
+                                }
+                                
+                                .footer-note { 
+                                    text-align: center;
+                                    font-size: 9px;
+                                    line-height: 1.5;
+                                    margin-top: 10px;
+                                    font-style: italic;
+                                }
+                                
+                                .footer-note p {
+                                    margin: 3px 0;
+                                }
+                                
+                                /* Print-specific styles */
                                 @media print {
-                                    body { margin: 0; font-size: 10px; }
-                                    .no-print { display: none; }
+                                    body { 
+                                        margin: 0;
+                                        padding: 5mm 3mm;
+                                    }
+                                    .no-print { 
+                                        display: none; 
+                                    }
                                 }
                             </style>
                         </head>
                         <body>
+                            <!-- Header -->
                             <div class="header">
-                                <h2>STRUK PENJUALAN</h2>
-                                <p><strong>${transactionResult.value.transaction_code}</strong></p>
-                                <p>${new Date().toLocaleString('id-ID')}</p>
+                                ${headerImage ? `
+                                    <div class="header-image">
+                                        <img src="${headerImage}" alt="Company Logo">
+                                    </div>
+                                ` : ''}
+                                <div class="company-name">${companyName}</div>
+                                <div class="receipt-title">${companyAddress}</div>
+                                <div class="receipt-title">STRUK PEMBELIAN</div>
+                                <div class="transaction-code">${transactionResult.value.transaction_code}</div>
+                                <div class="date-time">${new Date().toLocaleString('id-ID', {
+                                    day: '2-digit',
+                                    month: 'long',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })}</div>
                             </div>
                             
+                            <!-- Transaction Info -->
                             <div class="info-section">
                                 <div class="info-row">
-                                    <span>Kasir:</span>
+                                    <span class="info-label">Kasir</span>
                                     <span>{{ Auth::user()->name }}</span>
                                 </div>
                                 <div class="info-row">
-                                    <span>Metode Bayar:</span>
+                                    <span class="info-label">Metode Bayar</span>
                                     <span>${getPaymentMethodLabel(transactionResult.value.payment_method)}</span>
                                 </div>
                             </div>
                             
+                            <!-- Items -->
                             <div class="items-section">
+                                <div class="section-title">Detail Pembelian</div>
                                 ${transactionResult.value.items.map(item => `
                                     <div class="item">
                                         <div class="item-header">
-                                            <span>${item.product_store.name}</span>
+                                            <span class="item-name">${item.product_store.name}</span>
                                             <span>${formatCurrency(item.subtotal)}</span>
                                         </div>
                                         <div class="item-details">
@@ -1040,48 +1438,61 @@ createApp({
                                 `).join('')}
                             </div>
                             
+                            <!-- Totals -->
                             <div class="totals">
                                 <div class="total-row">
-                                    <span>Subtotal:</span>
+                                    <span>Subtotal</span>
                                     <span>${formatCurrency(transactionResult.value.total_amount)}</span>
                                 </div>
                                 <div class="total-row">
-                                    <span>Pajak (${transactionResult.value.tax_value}%):</span>
+                                    <span>Pajak (${transactionResult.value.tax_value}%)</span>
                                     <span>${formatCurrency(transactionResult.value.tax_amount)}</span>
                                 </div>
                                 <div class="total-row grand-total">
-                                    <span>TOTAL:</span>
+                                    <span>TOTAL</span>
                                     <span>${formatCurrency(transactionResult.value.final_amount)}</span>
                                 </div>
                             </div>
                             
+                            <!-- Payment Details -->
                             ${transactionResult.value.payment_method === 'cash' ? `
                                 <div class="payment-info">
+                                    <div class="payment-method">PEMBAYARAN TUNAI</div>
                                     <div class="total-row">
-                                        <span>Dibayar:</span>
+                                        <span>Dibayar</span>
                                         <span>${formatCurrency(transactionResult.value.payment_details?.cash_amount || cashAmount.value)}</span>
                                     </div>
                                     <div class="total-row">
-                                        <span>Kembalian:</span>
+                                        <span>Kembalian</span>
                                         <span>${formatCurrency((transactionResult.value.payment_details?.cash_amount || cashAmount.value) - transactionResult.value.final_amount)}</span>
                                     </div>
                                 </div>
                             ` : ''}
                             
-                            <div class="thank-you">
-                                <p>Terima kasih atas kunjungan Anda</p>
-                                <p>Barang yang sudah dibeli tidak dapat dikembalikan</p>
+                            <!-- Footer -->
+                            <div class="footer-section">                                
+                                ${footerMessage ? `
+                                    <div class="footer-message">
+                                        ${footerMessage}
+                                    </div>
+                                ` : ''}
                             </div>
                         </body>
                     </html>
                 `;
+                
                 printWindow.document.write(receiptContent);
                 printWindow.document.close();
-                printWindow.print();
+                
+                // Wait for content to load before printing
+                printWindow.onload = function() {
+                    printWindow.focus();
+                    printWindow.print();
+                };
+                
             } catch (error) {
-                // alert('Error printing receipt');
-                Log.error('Error printing receipt', error);
-                setLoadingResult('Error printing receipt', null, false);
+                console.error('Error printing receipt:', error);
+                setLoadingResult('Error printing receipt', error.message, false);
             } finally {
                 setLoading(false);
             }
