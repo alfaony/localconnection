@@ -101,15 +101,20 @@ class Sale extends Model
     {
         // Jika metode pembayaran adalah CASH
         if ($this->payment_method === 'cash') {
-            $amount = isset($this->payment_details['cash_amount']) 
-                        ? number_format($this->payment_details['cash_amount'], 0, ',', '.') 
-                        : '-';
+            $details = $this->payment_details;
+            $amount = isset($details['cash_amount']) ? number_format($details['cash_amount'], 0, ',', '.') : '-';
 
             return '
-                <table class="table table-sm table-bordered">
-                    <tr><th>Metode Pembayaran</th><td>Tunai</td></tr>
-                    <tr><th>Jumlah Uang Tunai</th><td>Rp ' . $amount . '</td></tr>
-                </table>';
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Metode Pembayaran Tunai</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Jumlah Uang Tunai : Rp ' . $amount . '
+                        </p>
+                    </div>
+                </div>';
         }
 
         // Jika metode pembayaran adalah DEBIT/KREDIT
@@ -117,12 +122,18 @@ class Sale extends Model
             $details = $this->payment_details;
 
             return '
-                <table class="table table-sm table-bordered">
-                    <tr><th>Metode Pembayaran</th><td>Kartu Debit/Kredit</td></tr>
-                    <tr><th>Nama Bank</th><td>' . (isset($details['bankName']) ? $details['bankName'] : '-') . '</td></tr>
-                    <tr><th>Nomor Kartu</th><td>' . (isset($details['cardNumber']) ? $details['cardNumber'] : '-') . '</td></tr>
-                    <tr><th>Pengesah</th><td>' . (isset($details['cardEdcApprover']) ? $details['cardEdcApprover'] : '-') . '</td></tr>
-                </table>';
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Metode Pembayaran Kartu Debit/Kredit</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Nama Bank : ' . (isset($details['bankName']) ? $details['bankName'] : '-') . '<br>
+                            Nomor Kartu : ' . (isset($details['cardNumber']) ? $details['cardNumber'] : '-') . '<br>
+                            Pengesah : ' . (isset($details['cardEdcApprover']) ? $details['cardEdcApprover'] : '-') . '
+                        </p>
+                    </div>
+                </div>';
         }
 
         // Jika metode pembayaran adalah QRIS
@@ -130,10 +141,16 @@ class Sale extends Model
             $details = $this->payment_details;
 
             return '
-                <table class="table table-sm table-bordered">
-                    <tr><th>Metode Pembayaran</th><td>QRIS</td></tr>
-                    <tr><th>Nama Bank QRIS</th><td>' . (isset($details['bankName']) ? $details['bankName'] : '-') . '</td></tr>
-                </table>';
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Metode Pembayaran QRIS</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Nama Bank QRIS : ' . (isset($details['bankName']) ? $details['bankName'] : '-') . '
+                        </p>
+                    </div>
+                </div>';
         }
 
         // Default jika tidak dikenali
