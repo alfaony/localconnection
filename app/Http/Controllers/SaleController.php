@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Helpers\EmailNotifHelper;
 use App\Models\SettingCompany; // Assuming you have this model for SMTP configuration
+use Illuminate\Support\Facades\Storage;
 
 class SaleController extends Controller
 {
@@ -315,6 +316,15 @@ class SaleController extends Controller
 
             
             // Prepare email data
+            $headerImagePath = $smtpConfig['header_store_image'] ?? null;
+            $headerImageUrl = null;
+
+            if ($headerImagePath) {
+                $headerImageUrl = Str::startsWith($headerImagePath, ['http://', 'https://'])
+                    ? $headerImagePath
+                    : Storage::url($headerImagePath);
+            }
+
             $emailData = [
                 'user' => Auth::user(),
                 'sale' => $sale,
@@ -329,8 +339,8 @@ class SaleController extends Controller
                 'kasir_name' => Auth::user()->name,
                 'company_name' => Auth::user()->company->name ?? 'Toko',
                 'store_name' => $smtpConfig['store_name'],
-                'header_store_image' => $smtpConfig['header_store_image'],
-                'header_store_image_url' => url($smtpConfig['header_store_image']),
+                'header_store_image' => $headerImagePath,
+                'header_store_image_url' => $headerImageUrl,
                 'footer_store_message' => $smtpConfig['footer_store_message'],
                 'store_address' => $smtpConfig['store_address'],
             ];
