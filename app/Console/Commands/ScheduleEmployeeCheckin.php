@@ -57,7 +57,10 @@ class ScheduleEmployeeCheckin extends Command
                 $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
             }else
             {
+                $this->info("User Proses:". $user->name);
                 $this->scheduleCheckinForUser($user, $onLeaveEmails);
+                $this->info("User Selesai:". $user->name);
+
             }
         }
         
@@ -102,7 +105,6 @@ class ScheduleEmployeeCheckin extends Command
         {
             // $checkinTimes = $this->generateRandomCheckinTimes($user->start_time, $user->end_time, $user->rest_time);
             $checkinTimes = $this->generateRandomCheckinTimesUser($user);
-            dd($checkinTimes);
             foreach ($checkinTimes as $time) 
             {
                 // Simpan di database lokal
@@ -115,57 +117,60 @@ class ScheduleEmployeeCheckin extends Command
     private function saveLocal($user, $time, $statusLeave = null)
     {
         $firstDivision = $this->findFirstDivision($user);
-        
-
-        if($statusLeave == "dayoff")
-        {
-            return EmployeeChecking::create([
-                'user_id' => $user->id,
-                'division_id' => $firstDivision->id,
-                'scheduled_time' => $time['checkin_time'],
-                'scheduled_timeout' => $time['timeout_time'],
-                'is_dayoff' => true,
-                'is_active' => false,
-                'is_completed' => false,
-            ]);
-        }
-        else if($statusLeave == "sick")
-        {
-            return EmployeeChecking::create([
-                'user_id' => $user->id,
-                'division_id' => $firstDivision->id,
-                'scheduled_time' => $time['checkin_time'],
-                'scheduled_timeout' => $time['timeout_time'],
-                'is_dayoff' => false,
-                'is_active' => false,
-                'is_completed' => false,
-                'is_permission' => true,
-            ]); 
-        }
-        else
-        {
-            if(!$user->manual_checkin) 
+        $hasTodayCheckin = EmployeeChecking::where('user_id', $user->id)
+            ->whereDate('created_at', Carbon::today())
+            ->count();
+        if ($hasTodayCheckin > 5 && $hasTodayCheckin < 11) {
+            if($statusLeave == "dayoff")
             {
                 return EmployeeChecking::create([
                     'user_id' => $user->id,
                     'division_id' => $firstDivision->id,
                     'scheduled_time' => $time['checkin_time'],
                     'scheduled_timeout' => $time['timeout_time'],
-                    'is_active' => true,
+                    'is_dayoff' => true,
+                    'is_active' => false,
                     'is_completed' => false,
                 ]);
-            }else
+            }
+            else if($statusLeave == "sick")
             {
                 return EmployeeChecking::create([
                     'user_id' => $user->id,
                     'division_id' => $firstDivision->id,
                     'scheduled_time' => $time['checkin_time'],
-                    'scheduled_timeout' => null,
-                    'is_active' => true,
+                    'scheduled_timeout' => $time['timeout_time'],
+                    'is_dayoff' => false,
+                    'is_active' => false,
                     'is_completed' => false,
-                ]);
+                    'is_permission' => true,
+                ]); 
             }
-        }
+            else
+            {
+                if(!$user->manual_checkin) 
+                {
+                    return EmployeeChecking::create([
+                        'user_id' => $user->id,
+                        'division_id' => $firstDivision->id,
+                        'scheduled_time' => $time['checkin_time'],
+                        'scheduled_timeout' => $time['timeout_time'],
+                        'is_active' => true,
+                        'is_completed' => false,
+                    ]);
+                }else
+                {
+                    return EmployeeChecking::create([
+                        'user_id' => $user->id,
+                        'division_id' => $firstDivision->id,
+                        'scheduled_time' => $time['checkin_time'],
+                        'scheduled_timeout' => null,
+                        'is_active' => true,
+                        'is_completed' => false,
+                    ]);
+                }
+            }
+        }        
 
     }
 
@@ -189,7 +194,7 @@ class ScheduleEmployeeCheckin extends Command
         $targetCheckins = 10; // Jumlah check-in yang diinginkan
         $duration = config('services.checking_setting.duration_minutes'); // Durasi dari konfigurasi
         $bufferMinutes = 30; // Waktu buffer minimal antar check-in
-        $maxAttempts = 100; // Batas percobaan untuk menghindari loop tak terbatas
+        $maxAttempts = 10; // Batas percobaan untuk menghindari loop tak terbatas
 
         // Konversi waktu mulai, akhir, dan istirahat ke objek Carbon dengan nilai default
         $start = Carbon::createFromTimeString($start_time ?? '08:00');

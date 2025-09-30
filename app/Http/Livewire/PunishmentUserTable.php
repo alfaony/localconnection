@@ -18,7 +18,7 @@ class PunishmentUserTable extends Component
     public $perPage = 10;
     protected $paginationTheme = 'bootstrap';
 
-    protected $listeners = ['refreshComponent' => '$refresh'];
+    protected $listeners = ['refreshComponent' => '$refresh', 'delete'];
 
     public function mount()
     {
@@ -55,7 +55,7 @@ class PunishmentUserTable extends Component
     public function render()
     {
         // Get users by company
-        $companyUsers = User::byCompany(Auth::user())->get();
+        $companyUsers = User::byCompany(Auth::user()->company_id)->get();
         
         $punishments = PunishmentUser::with(['user', 'dailytask'])->byCompany(Auth::user()->company_id)
             ->when($this->selectedUser, function($query) {
