@@ -37,8 +37,8 @@
         }
         
         .logo-container {
-            /* width: 100px; */
-            /* height: 100px; */
+            width: 100px;
+            height: 100px;
             /* margin: 0 auto 24px; */
             background: #f7fafc;
             border-radius: 16px;
