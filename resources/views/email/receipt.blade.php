@@ -39,18 +39,18 @@
         .logo-container {
             width: 100px;
             height: 100px;
-            /* margin: 0 auto 24px; */
+            margin: 0 auto 24px;
             background: #f7fafc;
             border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid #e2e8f0;
+            border: 2px solid #e2e8f0;
         }
         
         .logo-container img {
-            max-width: 120px;
-            /* max-height: 80px; */
+            max-width: 80px;
+            max-height: 80px;
             object-fit: contain;
         }
         
@@ -365,7 +365,7 @@
             @if(isset($data['store_address']) && $data['store_address'])
             <div class="store-address">{{ $data['store_address'] }}</div>
             @endif
-            <div class="header-subtitle">Receipt</div>
+            <div class="header-subtitle">Struk Pembelian</div>
         </div>
         
         <!-- Transaction Header -->
@@ -399,7 +399,7 @@
             </div>
             
             <!-- Items -->
-            <div class="items-header">Items Purchased</div>
+            <div class="items-header">Daftar Pembelian</div>
             
             @foreach($data['items'] as $item)
             <div class="item-row">
@@ -430,7 +430,7 @@
             <!-- Payment Details -->
             @if($data['payment_method'] === 'cash' && isset($data->payment_details['cash_amount']))
             <div class="payment-info">
-                <div class="payment-method-label">Cash Payment</div>
+                <div class="payment-method-label">Pembayaran Tunai</div>
                 <div class="payment-method-value">Tunai</div>
                 <div class="payment-details">
                     <span>Dibayar</span>
