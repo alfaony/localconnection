@@ -25,8 +25,52 @@ class SaleController extends Controller
             ->get();
 
     $settingCompany = SettingCompany::byCompany(Auth::user()->company_id)->where('menu','store')->get()->pluck('field_value','field_title');
+        $data = [
+            'transaction_code' => '10-09-2025-aNtino-11-47-12',
+            'transaction_number' => '10',
+            'total_amount' => '12000000.00',
+            'tax_amount' => '0.00',
+            'tax_value' => 0,
+            'final_amount' => '12000000.00',
+            'payment_method' => 'qris',
+            'payment_details' => [
+                'bankName' => 'BCA',
+                'qrisBank' => null,
+                'cardNumber' => null,
+                'cardEdcApprover' => null,
+            ],
+            'customer_email' => 'alfaony.thrive@gmail.com',
+            'created_at' => '30/09/2025 11:47:12',
+            'kasir_name' => 'testing alfaony 1',
+            'company_name' => 'BOS 1',
+            'store_name' => 'Haniso',
+            'header_store_image' => 'company_storage_file/logo_haniso_header_1759202677.png',
+            'header_store_image_url' => 'https://keloola-bos-management.test/storage/company_storage_file/logo_haniso_header_1759202677.png',
+            'footer_store_message' => '<p><strong>Terima Kasih Sudah Berbelanja </strong></p><p>di Kami, Barang yang sudah dibeli tidak dapat dikembalikan atau ditukar, harap diperiksa seksama</p><p>No Keluhan Pelanggan ke 6285642479990</p><p><br></p>',
+            'store_address' => 'MOJOSARI RT.001 RW.001 KEL.BEKONANG KEC.MOJOLABAN',
 
-        return view('store_selling.sale.index', compact('drafts','settingCompany'));
+            'items' => [
+                [
+                    'product_store_id' => 'ed80206f-3a40-4be8-8b83-e2e13d2af018',
+                    'quantity' => 2,
+                    'unit_price' => '6000000.00',
+                    'subtotal' => '12000000.00',
+                    'product_store' => [
+                        'barcode' => '2025341361821',
+                        'name' => 'coba - update',
+                        'variant' => 'coba - update',
+                        'specification' => 'coba - update',
+                        'dimension' => '600000.00 x 600000.00 x 600000.00',
+                        'weight' => '600000.00',
+                        'selling_price' => 6000000,
+                        'company_id' => 'a290155f-29bf-4d81-9f0f-1821175f2bf1',
+                    ],
+                ],
+            ],
+        ];
+
+        // return view('store_selling.sale.index', compact('drafts','settingCompany'));
+        return view('email.receipt', compact('data','settingCompany'));
     }
 
     public function searchProduct(Request $request)
@@ -352,6 +396,7 @@ class SaleController extends Controller
                 'store_address' => $smtpConfig['store_address'],
             ];
             
+            dd($emailData);
             // Email configuration array
             $smtpConfigArray = [
                 'host' => $smtpConfig["host"],
