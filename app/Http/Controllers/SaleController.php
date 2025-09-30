@@ -330,7 +330,7 @@ class SaleController extends Controller
                 'company_name' => Auth::user()->company->name ?? 'Toko',
                 'store_name' => $smtpConfig['store_name'],
                 'header_store_image' => $smtpConfig['header_store_image'],
-                'header_store_image_url' => env('APP_URL') . '/' . $smtpConfig['header_store_image'],
+                'header_store_image_url' => url($smtpConfig['header_store_image']),
                 'footer_store_message' => $smtpConfig['footer_store_message'],
                 'store_address' => $smtpConfig['store_address'],
             ];
