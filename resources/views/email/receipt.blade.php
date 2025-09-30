@@ -12,455 +12,455 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
-            color: #2d3748;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            color: #1a202c;
+            background: #f8fafc;
+            padding: 40px 20px;
         }
         
-        .email-container {
-            max-width: 650px;
+        .email-wrapper {
+            max-width: 600px;
             margin: 0 auto;
             background: #ffffff;
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 10px 20px rgba(0, 0, 0, 0.05);
         }
         
-        /* Header with Image */
+        /* Minimalist Header */
         .header {
-            position: relative;
+            background: #ffffff;
+            padding: 48px 40px 32px;
             text-align: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 30px 20px;
-            color: white;
+            border-bottom: 1px solid #e2e8f0;
         }
         
-        .header-image {
-            max-width: 180px;
-            height: auto;
-            margin: 0 auto 20px;
-            border-radius: 12px;
-            background: white;
-            padding: 15px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        .logo-container {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            background: #f7fafc;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e2e8f0;
         }
         
-        .header-image img {
-            width: 100%;
-            height: auto;
-            display: block;
+        .logo-container img {
+            max-width: 80px;
+            max-height: 80px;
+            object-fit: contain;
         }
         
-        .company-name {
-            font-size: 32px;
+        .logo-fallback {
+            font-size: 40px;
+            color: #64748b;
+        }
+        
+        .company-title {
+            font-size: 24px;
             font-weight: 700;
+            color: #0f172a;
             margin-bottom: 8px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            letter-spacing: -0.5px;
         }
         
-        .receipt-title {
-            font-size: 16px;
-            font-weight: 500;
-            opacity: 0.95;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
+        .store-address {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 12px;
+            line-height: 1.6;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
-        .transaction-code {
+        .header-subtitle {
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        
+        /* Transaction Badge */
+        .transaction-header {
+            background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+            padding: 32px 40px;
+            text-align: center;
+        }
+        
+        .transaction-id {
             display: inline-block;
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
             padding: 10px 24px;
-            border-radius: 25px;
-            font-size: 15px;
-            font-weight: 600;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: 16px;
+        }
+        
+        .transaction-date {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
         }
         
         /* Content Area */
         .content {
-            padding: 35px 30px;
+            padding: 40px;
         }
         
-        .greeting {
-            text-align: center;
-            font-size: 18px;
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e2e8f0;
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 32px;
         }
         
-        /* Info Section */
-        .info-section {
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-            padding: 24px;
+        .info-card {
+            background: #f8fafc;
+            padding: 16px;
             border-radius: 12px;
-            margin-bottom: 30px;
             border: 1px solid #e2e8f0;
         }
         
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
-        }
-        
-        .info-row:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-        
         .info-label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
             font-weight: 600;
-            color: #4a5568;
-            font-size: 14px;
         }
         
         .info-value {
-            color: #2d3748;
-            font-weight: 500;
-            text-align: right;
+            font-size: 15px;
+            color: #0f172a;
+            font-weight: 600;
         }
         
-        /* Items Section */
-        .items-section {
-            margin: 30px 0;
-        }
-        
-        .section-title {
-            font-size: 20px;
+        /* Items List */
+        .items-header {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
             font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 3px solid #667eea;
+        }
+        
+        .item-row {
+            padding: 20px 0;
+            border-bottom: 1px solid #f1f5f9;
             display: flex;
-            align-items: center;
+            justify-content: space-between;
+            align-items: flex-start;
         }
         
-        .section-title::before {
-            content: "🛍️";
-            margin-right: 10px;
-            font-size: 24px;
+        .item-row:last-child {
+            border-bottom: none;
         }
         
-        .item {
-            background: #f7fafc;
-            padding: 18px;
-            border-radius: 10px;
-            margin-bottom: 12px;
-            border-left: 4px solid #667eea;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .item:hover {
-            transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        .item-info {
+            flex: 1;
         }
         
         .item-name {
-            font-weight: 700;
-            font-size: 16px;
-            color: #2d3748;
-            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 6px;
         }
         
-        .item-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .item-qty-price {
-            color: #718096;
-            font-size: 14px;
+        .item-meta {
+            font-size: 13px;
+            color: #64748b;
             font-weight: 500;
         }
         
-        .item-subtotal {
+        .item-price {
+            font-size: 16px;
             font-weight: 700;
-            color: #667eea;
-            font-size: 17px;
+            color: #0f172a;
+            white-space: nowrap;
+            margin-left: 20px;
         }
         
-        /* Totals Section */
-        .totals-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
+        /* Summary Section */
+        .summary-section {
+            background: #f8fafc;
+            padding: 24px;
             border-radius: 12px;
-            margin: 30px 0;
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            margin-top: 32px;
         }
         
-        .total-row {
+        .summary-row {
             display: flex;
             justify-content: space-between;
             padding: 10px 0;
-            font-size: 15px;
+            font-size: 14px;
         }
         
-        .subtotal-row, .tax-row {
-            opacity: 0.9;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        .summary-row.subtotal {
+            color: #64748b;
+            font-weight: 500;
         }
         
-        .grand-total {
-            border-top: 2px solid rgba(255, 255, 255, 0.5);
-            padding-top: 15px;
-            margin-top: 10px;
-            font-size: 22px;
-            font-weight: 700;
+        .summary-row.tax {
+            color: #64748b;
+            font-weight: 500;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e2e8f0;
         }
         
-        /* Payment Section */
-        .payment-section {
-            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin: 25px 0;
-            border: 2px solid #68d391;
-        }
-        
-        .payment-method {
-            font-weight: 700;
-            color: #22543d;
-            margin-bottom: 12px;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .payment-method::before {
-            content: "💳";
-            margin-right: 8px;
+        .summary-row.total {
             font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            padding-top: 16px;
         }
         
-        .payment-section .total-row {
-            color: #22543d;
+        /* Payment Info */
+        .payment-info {
+            margin-top: 32px;
+            padding: 24px;
+            background: linear-gradient(135deg, #ecfeff 0%, #e0f2fe 100%);
+            border-radius: 12px;
+            border: 1px solid #bae6fd;
+        }
+        
+        .payment-method-label {
+            font-size: 12px;
+            color: #0369a1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        
+        .payment-method-value {
+            font-size: 16px;
+            color: #0c4a6e;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .payment-details {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+            color: #0c4a6e;
             font-weight: 600;
-            border-bottom: 1px solid rgba(34, 84, 61, 0.2);
-        }
-        
-        .payment-section .total-row:last-child {
-            border-bottom: none;
         }
         
         /* Footer */
         .footer {
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-            padding: 30px;
+            background: #f8fafc;
+            padding: 40px;
             text-align: center;
-            border-top: 3px solid #667eea;
-        }
-        
-        .thank-you {
-            font-size: 20px;
-            color: #667eea;
-            font-weight: 700;
-            margin-bottom: 15px;
+            border-top: 1px solid #e2e8f0;
         }
         
         .footer-message {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border: 2px dashed #cbd5e0;
-            color: #4a5568;
-            font-size: 15px;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.8;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .footer-notes {
+            font-size: 13px;
+            color: #64748b;
             line-height: 1.8;
         }
         
-        .footer p {
-            color: #718096;
-            font-size: 14px;
+        .footer-notes p {
             margin: 8px 0;
         }
         
-        .contact-info {
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            font-size: 13px;
-            color: #a0aec0;
-            line-height: 1.6;
+        .divider {
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, #0ea5e9, #6366f1);
+            margin: 24px auto;
+            border-radius: 2px;
         }
         
-        /* Responsive Design */
+        /* Responsive */
         @media (max-width: 600px) {
             body {
-                padding: 10px;
+                padding: 20px 10px;
             }
             
             .content {
-                padding: 25px 20px;
+                padding: 32px 24px;
             }
             
-            .company-name {
-                font-size: 26px;
+            .header {
+                padding: 40px 24px 24px;
             }
             
-            .header-image {
-                max-width: 150px;
+            .transaction-header {
+                padding: 24px;
             }
             
-            .item-details {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .item-row {
                 flex-direction: column;
-                align-items: flex-start;
             }
             
-            .item-subtotal {
+            .item-price {
+                margin-left: 0;
                 margin-top: 8px;
             }
             
-            .info-row {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .info-value {
-                margin-top: 4px;
-                text-align: left;
+            .footer {
+                padding: 32px 24px;
             }
         }
         
-        /* Print Styles */
+        /* Print */
         @media print {
             body {
                 background: white;
                 padding: 0;
             }
             
-            .email-container {
+            .email-wrapper {
                 box-shadow: none;
             }
         }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <!-- Header Section -->
+    <div class="email-wrapper">
+        <!-- Header -->
         <div class="header">
-            @if(isset($data['header_store_image']) && $data['header_store_image'])
-            <div class="header-image">
-                <img src="{{ $data['header_store_image'] }}" alt="{{ $data['store_name'] }} Logo">
+            <div class="logo-container">
+                @if(isset($data['header_store_image']) && $data['header_store_image'])
+                    <img src="{{ $data['header_store_image_url'] }}" alt="{{ $data['store_name'] }}">
+                @else
+                    <div class="logo-fallback">&#x1F3EA;</div>
+                @endif
             </div>
+            <div class="company-title">{{ $data['store_name'] }}</div>
+            @if(isset($data['store_address']) && $data['store_address'])
+            <div class="store-address">{{ $data['store_address'] }}</div>
             @endif
-            
-            <div class="company-name">{{ $data['store_name'] }}</div>
-            <div class="receipt-title">STRUK PEMBELIAN</div>
-            <div class="transaction-code">{{ $data['transaction_code'] }}</div>
+            <div class="header-subtitle">Receipt</div>
         </div>
-
-        <!-- Content Section -->
+        
+        <!-- Transaction Header -->
+        <div class="transaction-header">
+            <div class="transaction-id">{{ $data['transaction_code'] }}</div>
+            <div class="transaction-date">{{ $data['created_at'] }}</div>
+        </div>
+        
+        <!-- Content -->
         <div class="content">
-            <div class="greeting">
-                Terima kasih atas pembelian Anda! 🎉
-            </div>
-
-            <!-- Transaction Info -->
-            <div class="info-section">
-                <div class="info-row">
-                    <span class="info-label">📅 Tanggal & Waktu:</span>
-                    <span class="info-value">{{ $data['created_at'] }}</span>
+            <!-- Info Grid -->
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-label">Kasir</div>
+                    <div class="info-value">{{ $data['kasir_name'] }}</div>
                 </div>
-                <div class="info-row">
-                    <span class="info-label">👤 Kasir:</span>
-                    <span class="info-value">{{ $data['kasir_name'] }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">🔖 Kode Transaksi:</span>
-                    <span class="info-value">{{ $data['transaction_code'] }}</span>
-                </div>
-            </div>
-
-            <!-- Items Section -->
-            <div class="items-section">
-                <div class="section-title">Detail Pembelian</div>
-                @foreach($data['items'] as $item)
-                <div class="item">
-                    <div class="item-name">{{ $item->productStore->name }}</div>
-                    <div class="item-details">
-                        <div class="item-qty-price">
-                            {{ $item->quantity }} × Rp {{ number_format($item->unit_price, 0, ',', '.') }}
-                        </div>
-                        <div class="item-subtotal">
-                            Rp {{ number_format($item->subtotal, 0, ',', '.') }}
-                        </div>
+                <div class="info-card">
+                    <div class="info-label">Metode Pembayaran</div>
+                    <div class="info-value">
+                        @if($data['payment_method'] === 'cash')
+                            Tunai
+                        @elseif($data['payment_method'] === 'debit_credit')
+                            Kartu Debit/Kredit
+                        @elseif($data['payment_method'] === 'qris')
+                            QRIS
+                        @else
+                            {{ $data['payment_method'] }}
+                        @endif
                     </div>
                 </div>
-                @endforeach
             </div>
-
-            <!-- Totals Section -->
-            <div class="totals-section">
-                <div class="total-row subtotal-row">
-                    <span>Subtotal:</span>
+            
+            <!-- Items -->
+            <div class="items-header">Items Purchased</div>
+            
+            @foreach($data['items'] as $item)
+            <div class="item-row">
+                <div class="item-info">
+                    <div class="item-name">{{ $item->productStore->name }}</div>
+                    <div class="item-meta">{{ $item->quantity }} × Rp {{ number_format($item->unit_price, 0, ',', '.') }}</div>
+                </div>
+                <div class="item-price">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</div>
+            </div>
+            @endforeach
+            
+            <!-- Summary -->
+            <div class="summary-section">
+                <div class="summary-row subtotal">
+                    <span>Subtotal</span>
                     <span>Rp {{ number_format($data['total_amount'], 0, ',', '.') }}</span>
                 </div>
-                <div class="total-row tax-row">
-                    <span>Pajak ({{ $data['sale']->tax_value }}%):</span>
+                <div class="summary-row tax">
+                    <span>Pajak ({{ $data['sale']->tax_value }}%)</span>
                     <span>Rp {{ number_format($data['tax_amount'], 0, ',', '.') }}</span>
                 </div>
-                <div class="total-row grand-total">
-                    <span>TOTAL:</span>
+                <div class="summary-row total">
+                    <span>Total</span>
                     <span>Rp {{ number_format($data['final_amount'], 0, ',', '.') }}</span>
                 </div>
             </div>
-
-            <!-- Payment Section -->
-            <div class="payment-section">
-                <div class="payment-method">
-                    Metode Pembayaran: 
-                    @if($data['payment_method'] === 'cash')
-                        Tunai
-                    @elseif($data['payment_method'] === 'debit_credit')
-                        Kartu Debit/Kredit
-                    @elseif($data['payment_method'] === 'qris')
-                        QRIS
-                    @else
-                        {{ $data['payment_method'] }}
-                    @endif
-                </div>
-                
-                @if($data['payment_method'] === 'cash' && isset($data->payment_details['cash_amount']))
-                <div class="total-row">
-                    <span>Dibayar:</span>
+            
+            <!-- Payment Details -->
+            @if($data['payment_method'] === 'cash' && isset($data->payment_details['cash_amount']))
+            <div class="payment-info">
+                <div class="payment-method-label">Cash Payment</div>
+                <div class="payment-method-value">Tunai</div>
+                <div class="payment-details">
+                    <span>Dibayar</span>
                     <span>Rp {{ number_format($data->payment_details['cash_amount'], 0, ',', '.') }}</span>
                 </div>
-                <div class="total-row">
-                    <span>Kembalian:</span>
+                <div class="payment-details">
+                    <span>Kembalian</span>
                     <span>Rp {{ number_format($data->payment_details['cash_amount'] - $data->final_amount, 0, ',', '.') }}</span>
                 </div>
-                @endif
             </div>
+            @endif
         </div>
-
-        <!-- Footer Section -->
+        
+        <!-- Footer -->
         <div class="footer">
-            <div class="thank-you">Terima Kasih! 🙏</div>
-            
             @if(isset($data['footer_store_message']) && $data['footer_store_message'])
             <div class="footer-message">
                 {!! $data['footer_store_message'] !!}
             </div>
             @endif
             
-            <p>📧 Simpan email ini sebagai bukti pembelian Anda.</p>
-            <p>⚠️ Barang yang sudah dibeli tidak dapat dikembalikan kecuali ada kesepakatan khusus.</p>
+            <div class="divider"></div>
             
-            <div class="contact-info">
-                Email ini dikirim secara otomatis dari sistem Point of Sale {{ $data['company_name'] }}.
-                <br>
-                Jika Anda memiliki pertanyaan, silakan hubungi toko kami.
+            <div class="footer-notes">
+                <p>Simpan email ini sebagai bukti pembelian Anda</p>
+                <p>Barang yang sudah dibeli tidak dapat dikembalikan</p>
+                <p style="margin-top: 16px; color: #94a3b8; font-size: 12px;">
+                    Email otomatis dari {{ $data['store_name'] }}<br>
+                    Jika ada pertanyaan, silakan hubungi toko kami
+                </p>
             </div>
         </div>
     </div>
