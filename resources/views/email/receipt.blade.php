@@ -37,7 +37,7 @@
         }
         
          .logo-container {
-            margin: 0 auto 24px;
+            /* margin: 0 auto 24px; */
             display: block;
             text-align: center;
             width: 100%;
