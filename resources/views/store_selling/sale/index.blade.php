@@ -627,7 +627,7 @@ createApp({
         const paymentMethod = ref('cash');
         const cashAmount = ref(0);
         const customerEmail = ref('');
-        const taxValue = ref(0);
+        const taxValue = ref('{{ $settingCompany["default_tax"] ?? "" }}');
         const paymentDetails = ref({
             cardNumber: '',
             bankName: '',
