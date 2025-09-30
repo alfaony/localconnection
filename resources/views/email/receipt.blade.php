@@ -36,22 +36,19 @@
             border-bottom: 1px solid #e2e8f0;
         }
         
-        .logo-container {
-            /* width: 100px; */
-            /* height: 100px; */
+         .logo-container {
             margin: 0 auto 24px;
-            /* background: #f7fafc; */
-            /* border-radius: 16px; */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            /* border: 2px solid #e2e8f0; */
+            display: block;
+            text-align: center;
+            width: 100%;
         }
         
         .logo-container img {
             max-width: 120px;
-            /* max-height: 80px; */
+            height: auto;
             object-fit: contain;
+            display: inline-block;
+            margin: 0 auto;
         }
         
         .logo-fallback {
