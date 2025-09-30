@@ -71,7 +71,7 @@ class EmailNotifHelper
                 return false;
             }
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
 
             // Log
             ErrorLogHelper::log($e);
