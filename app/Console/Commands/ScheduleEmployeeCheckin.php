@@ -120,53 +120,56 @@ class ScheduleEmployeeCheckin extends Command
         $hasTodayCheckin = EmployeeChecking::where('user_id', $user->id)
             ->whereDate('created_at', Carbon::today())
             ->count();
-            if($statusLeave == "dayoff")
+        if ($hasTodayCheckin < 11)
             {
-                return EmployeeChecking::create([
-                    'user_id' => $user->id,
-                    'division_id' => $firstDivision->id,
-                    'scheduled_time' => $time['checkin_time'],
-                    'scheduled_timeout' => $time['timeout_time'],
-                    'is_dayoff' => true,
-                    'is_active' => false,
-                    'is_completed' => false,
-                ]);
-            }
-            else if($statusLeave == "sick")
-            {
-                return EmployeeChecking::create([
-                    'user_id' => $user->id,
-                    'division_id' => $firstDivision->id,
-                    'scheduled_time' => $time['checkin_time'],
-                    'scheduled_timeout' => $time['timeout_time'],
-                    'is_dayoff' => false,
-                    'is_active' => false,
-                    'is_completed' => false,
-                    'is_permission' => true,
-                ]); 
-            }
-            else
-            {
-                if(!$user->manual_checkin) 
+                if($statusLeave == "dayoff")
                 {
                     return EmployeeChecking::create([
                         'user_id' => $user->id,
                         'division_id' => $firstDivision->id,
                         'scheduled_time' => $time['checkin_time'],
                         'scheduled_timeout' => $time['timeout_time'],
-                        'is_active' => true,
+                        'is_dayoff' => true,
+                        'is_active' => false,
                         'is_completed' => false,
                     ]);
-                }else
+                }
+                else if($statusLeave == "sick")
                 {
                     return EmployeeChecking::create([
                         'user_id' => $user->id,
                         'division_id' => $firstDivision->id,
                         'scheduled_time' => $time['checkin_time'],
-                        'scheduled_timeout' => null,
-                        'is_active' => true,
+                        'scheduled_timeout' => $time['timeout_time'],
+                        'is_dayoff' => false,
+                        'is_active' => false,
                         'is_completed' => false,
-                    ]);
+                        'is_permission' => true,
+                    ]); 
+                }
+                else
+                {
+                    if(!$user->manual_checkin) 
+                    {
+                        return EmployeeChecking::create([
+                            'user_id' => $user->id,
+                            'division_id' => $firstDivision->id,
+                            'scheduled_time' => $time['checkin_time'],
+                            'scheduled_timeout' => $time['timeout_time'],
+                            'is_active' => true,
+                            'is_completed' => false,
+                        ]);
+                    }else
+                    {
+                        return EmployeeChecking::create([
+                            'user_id' => $user->id,
+                            'division_id' => $firstDivision->id,
+                            'scheduled_time' => $time['checkin_time'],
+                            'scheduled_timeout' => null,
+                            'is_active' => true,
+                            'is_completed' => false,
+                        ]);
+                    }
                 }
             }
         // }        
