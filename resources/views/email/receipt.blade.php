@@ -400,7 +400,6 @@
             
             <!-- Items -->
             <div class="items-header">Daftar Pembelian</div>
-            {{-- 
             @foreach($data['items'] as $item)
             <div class="item-row">
                 <div class="item-info">
@@ -442,7 +441,6 @@
                 </div>
             </div>
             @endif
-            --}}
         </div>
         
         <!-- Footer -->
