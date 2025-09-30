@@ -74,7 +74,7 @@ class ProductSupplierController extends Controller
                 'store_name' => $request->store_name,
                 'phone_number' => $request->phone_number,
                 'location' => $request->location,
-                'sales_information' => $request->sales_information ?? null,
+                '_information' => $request->sales_information ?? null,
                 'additional_information' => $request->additional_information ?? null,
                 'supplier_type_id' => $request->supplier_type_id
             ]);

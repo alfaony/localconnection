@@ -601,6 +601,81 @@
                         </div>
                     </div>
 
+                    <div class="card">
+                        <div class="card-header" id="judulStore">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseStore" aria-expanded="false" aria-controls="collapseStore">
+                                    Setting Toko
+                                </button>
+                            </h2>
+                        </div>
+
+                        <div id="collapseStore" class="collapse" aria-labelledby="judulStore" data-parent="#accordion">
+                            <div class="card-body">
+                                @error('default_tax')
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ $message }}
+                                </div>
+                                @enderror
+
+                                <div class="form-group">
+                                    <label for="default_tax">Default Pajak</label>
+                                    <input type="number" min="0" name="default_tax" class="form-control" value="{{ old('default_tax', $data['default_tax'] ?? null) }}">
+                                </div>
+
+                                @error('header_store_image')
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ $message }}
+                                </div>
+                                @enderror
+
+                                <div class="form-group">
+                                    <label for="header_store_image">Header Store Image</label>
+                                    @if($data['header_store_image']) 
+                                        <div class="mb-2">
+                                            <a href="{{ Storage::url($data['header_store_image']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
+                                        </div>
+                                    @endif
+                                    <input type="file" name="header_store_image" class="form-control" accept="image/*">
+                                </div>
+
+                                @error('footer_store_message')
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ $message }}
+                                </div>
+                                @enderror
+
+                                <div class="form-group">
+                                    <label for="footer_store_message">Footer Store Message</label>
+                                    <input class="thriveEditor form-control" id="description_payment_term_english" data-ids="payment_term_english" name="footer_store_message" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('footer_store_message', $data['footer_store_message'] ?? null) }}"/>
+                                </div>
+
+                                @error('store_name')
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ $message }}
+                                </div>
+                                @enderror
+
+                                <div class="form-group">
+                                    <label for="store_name">Nama Store</label>
+                                    <input type="text" name="store_name" class="form-control" value="{{ old('store_name', $data['store_name'] ?? null) }}">
+                                </div>
+
+                                @error('store_address')
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ $message }}
+                                </div>
+                                @enderror
+
+                                <div class="form-group">
+                                    <label for="store_address">Alamat Store</label>
+                                    <input type="text" name="store_address" class="form-control" value="{{ old('store_address', $data['store_address'] ?? null) }}">
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
 
@@ -614,6 +689,9 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://unpkg.com/gijgo@1.9.14/js/gijgo.min.js" type="text/javascript"></script>
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const toggle = document.getElementById('status_punihsment_task_doing');
@@ -704,5 +782,6 @@ function formatRupiahFormat(field, fieldHidden) {
 
 @stop
 @section('css')
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link href="https://unpkg.com/gijgo@1.9.14/css/gijgo.min.css" rel="stylesheet" type="text/css" />
 @stop

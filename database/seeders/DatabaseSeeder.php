@@ -102,6 +102,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuOfficeAttendance::class);
         $this->call(PermissionForProductStoreSeeder::class);
         $this->call(PermissionForMenuPunishmentUserSeeder::class);
+        $this->call(PermissionForMenuKasirSeeder::class);
         
     }
 }

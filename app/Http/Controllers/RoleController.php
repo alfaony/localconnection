@@ -133,6 +133,8 @@ class RoleController extends Controller
             'category_product_stores',
             'brand_product_stores',
             'punishment_users',
+            'sales',
+            'store_sellings',
         ];
 
         $checked = array_merge($mainMenus);
@@ -293,6 +295,8 @@ class RoleController extends Controller
                 'category_product_stores',
                 'brand_product_stores',
                 'punishment_users',
+                'sales',
+                'store_sellings',
             ];
         $checked = array_merge($mainMenus);
 
@@ -414,6 +418,8 @@ class RoleController extends Controller
                 'category_product_stores',
                 'brand_product_stores',
                 'punishment_users',
+                'sales',
+                'store_sellings',
             ];
         
         $checked = array_merge($mainMenus);

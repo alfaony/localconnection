@@ -21,7 +21,6 @@ class EmailNotifHelper
         Config::set('mail.mailers.smtp.username', $smtpConfig['username']);
         Config::set('mail.mailers.smtp.password', $smtpConfig['password']);
         Config::set('mail.mailers.smtp.encryption', $smtpConfig['encryption']);
-
         // sent email
         $data = $data;
         $data['company_name'] = $smtpConfig['name'];
@@ -35,9 +34,12 @@ class EmailNotifHelper
                         $message->to($toEmail, $toName);
                     }
                     
-                    foreach ($ccEmails as $key => $ccEmail) {
-                        $ccName = $ccNames[$key] ?? null;
-                        $message->cc($ccEmail, $ccName);
+                    if(count($ccEmails) > 0)
+                    {
+                        foreach ($ccEmails as $key => $ccEmail) {
+                            $ccName = $ccNames[$key] ?? null;
+                            $message->cc($ccEmail, $ccName);
+                        }
                     }
 
                     $message->subject($subject)->from($fromEmail, $fromName);
