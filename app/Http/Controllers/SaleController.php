@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use App\Helpers\EmailNotifHelper;
 use App\Models\SettingCompany; // Assuming you have this model for SMTP configuration
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class SaleController extends Controller
 {
@@ -320,9 +321,15 @@ class SaleController extends Controller
             $headerImageUrl = null;
 
             if ($headerImagePath) {
-                $headerImageUrl = Str::startsWith($headerImagePath, ['http://', 'https://'])
-                    ? $headerImagePath
-                    : Storage::url($headerImagePath);
+                if (Str::startsWith($headerImagePath, ['http://', 'https://'])) {
+                    $headerImageUrl = $headerImagePath;
+                } else {
+                    $headerImageUrl = Storage::url($headerImagePath);
+
+                    if ($headerImageUrl && !Str::startsWith($headerImageUrl, ['http://', 'https://'])) {
+                        $headerImageUrl = URL::to($headerImageUrl);
+                    }
+                }
             }
 
             $emailData = [
@@ -345,7 +352,6 @@ class SaleController extends Controller
                 'store_address' => $smtpConfig['store_address'],
             ];
             
-
             // Email configuration array
             $smtpConfigArray = [
                 'host' => $smtpConfig["host"],
