@@ -79,7 +79,9 @@ class PunishmentUserTable extends Component
     public function delete($id)
     {
         $punishment = PunishmentUser::find($id);
-        if ($punishment) {
+        if ($punishment) 
+        {   
+            $punishment->dailytask()->delete();
             $punishment->delete();
             
             $this->dispatchBrowserEvent('swal:modal', [
