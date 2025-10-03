@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
+use App\Http\Resources\UsedLaptopResource;
 
 use App\Helpers\WebhookHelper;
 
@@ -138,25 +139,27 @@ class UsedLaptopController extends Controller
                 }
             }
 
-            $payload = [
-                'id' => $laptop->id,
-                'is_sold' => $laptop->is_sold,
-                'serial_number' => $laptop->serial_number,
-                'brand' => $laptop->brand,
-                'slug' => $laptop->slug,
-                'name' => $laptop->name,
-                'processor' => $laptop->processor,
-                'ram' => $laptop->ram,
-                'ssd' => $laptop->ssd,
-                'gpu' => $laptop->gpu,
-                'operating_system' => $laptop->operating_system,
-                'notes' => $laptop->notes,
-                'buying_price' => $laptop->purchase_price,
-                'selling_price' => $laptop->suggested_selling_price,
-                'images' => $laptop->media()->get()->map(function ($media) {
-                    return env('APP_URL') . Storage::url($media->file_path);
-                })->toArray(),
-            ];
+            // $payload = [
+            //     'id' => $laptop->id,
+            //     'is_sold' => $laptop->is_sold,
+            //     'serial_number' => $laptop->serial_number,
+            //     'brand' => $laptop->brand,
+            //     'slug' => $laptop->slug,
+            //     'name' => $laptop->name,
+            //     'processor' => $laptop->processor,
+            //     'ram' => $laptop->ram,
+            //     'ssd' => $laptop->ssd,
+            //     'gpu' => $laptop->gpu,
+            //     'operating_system' => $laptop->operating_system,
+            //     'notes' => $laptop->notes,
+            //     'buying_price' => $laptop->purchase_price,
+            //     'selling_price' => $laptop->suggested_selling_price,
+            //     'images' => $laptop->media()->get()->map(function ($media) {
+            //         return env('APP_URL') . Storage::url($media->file_path);
+            //     })->toArray(),
+            // ];
+
+            $payload = (new UsedLaptopResource($laptop))->resolve();
 
             WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'store', $payload);                               
             
@@ -232,25 +235,26 @@ class UsedLaptopController extends Controller
                 'sold_at' => $request->sold_at,
             ]);
             
-            $payload = [
-                'id' => $laptop->id,
-                'is_sold' => $laptop->is_sold,
-                'serial_number' => $laptop->serial_number,
-                'brand' => $laptop->brand,
-                'slug' => $laptop->slug,
-                'name' => $laptop->name,
-                'processor' => $laptop->processor,
-                'ram' => $laptop->ram,
-                'ssd' => $laptop->ssd,
-                'gpu' => $laptop->gpu,
-                'operating_system' => $laptop->operating_system,
-                'notes' => $laptop->notes,
-                'buying_price' => $laptop->purchase_price,
-                'selling_price' => $laptop->suggested_selling_price,
-                'images' => $laptop->media()->get()->map(function ($media) {
-                    return env('APP_URL') . Storage::url($media->file_path);
-                })->toArray(),
-            ];
+            // $payload = [
+            //     'id' => $laptop->id,
+            //     'is_sold' => $laptop->is_sold,
+            //     'serial_number' => $laptop->serial_number,
+            //     'brand' => $laptop->brand,
+            //     'slug' => $laptop->slug,
+            //     'name' => $laptop->name,
+            //     'processor' => $laptop->processor,
+            //     'ram' => $laptop->ram,
+            //     'ssd' => $laptop->ssd,
+            //     'gpu' => $laptop->gpu,
+            //     'operating_system' => $laptop->operating_system,
+            //     'notes' => $laptop->notes,
+            //     'buying_price' => $laptop->purchase_price,
+            //     'selling_price' => $laptop->suggested_selling_price,
+            //     'images' => $laptop->media()->get()->map(function ($media) {
+            //         return env('APP_URL') . Storage::url($media->file_path);
+            //     })->toArray(),
+            // ];
+            $payload = (new UsedLaptopResource($laptop))->resolve();
 
             WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'sold', $payload);    
 
@@ -389,25 +393,27 @@ class UsedLaptopController extends Controller
 
             if($shouldRun)
             {
-                $payload = [
-                    'id' => $laptop->id,
-                    'is_sold' => $laptop->is_sold,
-                    'serial_number' => $laptop->serial_number,
-                    'brand' => $laptop->brand,
-                    'slug' => $laptop->slug,
-                    'name' => $laptop->name,
-                    'processor' => $laptop->processor,
-                    'ram' => $laptop->ram,
-                    'ssd' => $laptop->ssd,
-                    'gpu' => $laptop->gpu,
-                    'operating_system' => $laptop->operating_system,
-                    'notes' => $laptop->notes,
-                    'buying_price' => $laptop->purchase_price,
-                    'selling_price' => $laptop->suggested_selling_price,
-                    'images' => $laptop->media()->get()->map(function ($media) {
-                        return env('APP_URL') . Storage::url($media->file_path);
-                    })->toArray(),
-                ];
+                // $payload = [
+                //     'id' => $laptop->id,
+                //     'is_sold' => $laptop->is_sold,
+                //     'serial_number' => $laptop->serial_number,
+                //     'brand' => $laptop->brand,
+                //     'slug' => $laptop->slug,
+                //     'name' => $laptop->name,
+                //     'processor' => $laptop->processor,
+                //     'ram' => $laptop->ram,
+                //     'ssd' => $laptop->ssd,
+                //     'gpu' => $laptop->gpu,
+                //     'operating_system' => $laptop->operating_system,
+                //     'notes' => $laptop->notes,
+                //     'buying_price' => $laptop->purchase_price,
+                //     'selling_price' => $laptop->suggested_selling_price,
+                //     'images' => $laptop->media()->get()->map(function ($media) {
+                //         return env('APP_URL') . Storage::url($media->file_path);
+                //     })->toArray(),
+                // ];
+
+                $payload = (new UsedLaptopResource($laptop))->resolve();
 
                 WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'update', $payload);                
             }
