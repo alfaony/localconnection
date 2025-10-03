@@ -15,6 +15,7 @@ class ProductSupplier extends Model
         'sales_information', 'additional_information', 
         'store_photo', 'ktp_photo',
         'company_id',
+        'supplier_type_id'
     ];
 
     public function supplierCategories()
@@ -22,11 +23,17 @@ class ProductSupplier extends Model
         return $this->belongsToMany(SupplierCategory::class, 'supplier_category_product_supplier');
     }
 
+    public function supplierType()
+    {
+        return $this->belongsTo(SupplierType::class)->withTrashed();
+    }
+
     public function scopeByCompany($query,$companyId)
     {
-        if($companyId)
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+        if($companyIds)
         {
-            $query->where('company_id', $companyId);
+            $query->whereIn('company_id', $companyIds);
         }
     }
 }

@@ -177,9 +177,7 @@
                                                 <th>Status</th>
                                                 <th>Jumlah Bayar</th>
                                                 <th>Bukti Pembayaran</th>
-                                                @canAccess('as_finance','internet_customers')
                                                 <th>Konfirmasi Pembayaran</th>
-                                                @endcanAccess
                                             </tr>
                                         </thead>
                                         <tbody>

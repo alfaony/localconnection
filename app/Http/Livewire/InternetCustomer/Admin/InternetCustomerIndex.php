@@ -19,6 +19,8 @@ use App\Helpers\InboxHelper;
 use App\Helpers\Access;
 use App\Schemas\ParamSchema;
 
+use Carbon\Carbon;
+
 class InternetCustomerIndex extends Component
 {
     use WithPagination;
@@ -196,6 +198,7 @@ class InternetCustomerIndex extends Component
     public function confirmPayment($customerId)
     {
         $internetPurchase = InternetCustomerPurchase::findOrFail($customerId);
+        $internetCustomers = $internetPurchase->customer->userCustomer;
 
         DB::beginTransaction();
         try {
@@ -203,12 +206,17 @@ class InternetCustomerIndex extends Component
                 'confirmation_finance_at' => now(),
                 'user_finance_id' => Auth::user()->id
             ]);
-    
+
+            $date = Carbon::parse($internetCustomers->start_billing_date);
+            
+            $internetCustomers->update([
+                'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
+                'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
+            ]);
+
             $post =[
                 'is_paid' => true,
             ];
-    
-        
     
             if(!$internetPurchase->customer->installation)
             {
@@ -257,16 +265,21 @@ class InternetCustomerIndex extends Component
     {
         $user = Auth::user();
 
-        $query = InternetCustomer::query()->with([
-            'company',
-            'province',
-            'city',
-            'district',
-            'subdistrict',
-            'internetPackage',
-            'partnershipAgreement',
-            'userCustomer'
-        ]);
+        $columns = [
+            'id', 'name', 'code', 'status','address',
+            'internet_package_id', 'user_customer_id', 'company_id',
+            'ktp_number', 'created_at'
+        ];
+        $query = InternetCustomer::query()
+            ->byCompany($user->company_id) // batasi dataset sesuai akses
+            ->select($columns)
+            // eager load minimal yang dipakai di blade
+            ->with([
+                'installation:id,internet_customer_id,device_serial_number',
+                'userCustomer:id,name,email,phone_number',
+                'company:id,name',
+                'internetPackage:id,name'
+            ]);
 
         // Pencarian data
         if ($this->search) {

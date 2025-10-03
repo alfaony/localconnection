@@ -92,6 +92,7 @@ class RoleController extends Controller
             'warehouses',
             'sensors',
             'racks',
+            "zones",
             'wilayahs',
             'providers','shipping_rates',
             'provinces','cities','districts','subdistricts','postal_codes',
@@ -126,6 +127,15 @@ class RoleController extends Controller
             'internet_customers',
             'promos',
             'webhook_settings',
+            'barcodes',
+            'office_attendances',
+            'supplier_types',
+            'product_stores',
+            'category_product_stores',
+            'brand_product_stores',
+            'punishment_users',
+            'sales',
+            'store_sellings',
         ];
 
         $checked = array_merge($mainMenus);
@@ -280,6 +290,15 @@ class RoleController extends Controller
                 'internet_customers',
                 'promos',
                 'webhook_settings',
+                'barcodes',
+                'office_attendances',
+                'supplier_types',
+                'product_stores',
+                'category_product_stores',
+                'brand_product_stores',
+                'punishment_users',
+                'sales',
+                'store_sellings',
             ];
         $checked = array_merge($mainMenus);
 
@@ -360,6 +379,7 @@ class RoleController extends Controller
                 'warehouses',
                 'sensors',
                 'racks',
+                "zones",
                 'wilayahs',
                 'providers','shipping_rates',
                 'provinces','cities','districts','subdistricts','postal_codes',
@@ -394,6 +414,15 @@ class RoleController extends Controller
                 'internet_customers',
                 'promos',
                 'webhook_settings',
+                'barcodes',
+                'office_attendances',
+                'supplier_types',
+                'product_stores',
+                'category_product_stores',
+                'brand_product_stores',
+                'punishment_users',
+                'sales',
+                'store_sellings',
             ];
         
         $checked = array_merge($mainMenus);

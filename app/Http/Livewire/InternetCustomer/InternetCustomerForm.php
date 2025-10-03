@@ -94,6 +94,7 @@ class InternetCustomerForm extends Component
     public $freeMonthsDetails = null;
     public $paymentStartMonth = null;
     public $start_billing_date = null;
+    public $end_billing_date = null;
 
 
     protected $rules = 
@@ -172,9 +173,9 @@ class InternetCustomerForm extends Component
 
     public function handleSaveSignature()
     {        
-        $this->validate([
-            'signature' => 'required',
-        ]);
+        // $this->validate([
+        //     'signature' => 'required',
+        // ]);
         
         $this->submitForm();
     }
@@ -270,12 +271,12 @@ class InternetCustomerForm extends Component
     {
         $this->validate([
             'name' => 'required|min:3',
-            'email' => 'required|email|unique:user_customers,email',
+            // 'email' => 'required|email|unique:user_customers,email',
             // 'password' => 'required|min:8|confirmed',
-            'phone_number' => 'required|string',
-            'address' => 'required|min:10',
-            'ktp_number' => 'required|digits:16',
-            'ktp_photo' => 'required|image|max:2048',
+            // 'phone_number' => 'required|string',
+            // 'address' => 'required|min:10',
+            // 'ktp_number' => 'required|digits:16',
+            // 'ktp_photo' => 'required|image|max:2048',
         ]);
         
         $this->step++;
@@ -320,7 +321,7 @@ class InternetCustomerForm extends Component
     {
         // dd($this->signature);
         // Simpan file KTP
-        $ktpPath = $this->ktp_photo->store('ktps', 'public');
+        $ktpPath = $this->ktp_photo ? $this->ktp_photo->store('ktps', 'public') : null;
         
         // Simpan bukti pembayaran jika ada
         $paymentProofPath = null;
@@ -330,8 +331,8 @@ class InternetCustomerForm extends Component
         
         DB::beginTransaction();
         try {
-            if (preg_match('/^data:image\/(\w+);base64,/', $this->signature, $type)) 
-                {
+            if ($ktpPath && (preg_match('/^data:image\/(\w+);base64,/', $this->signature, $type))) 
+            {
                 $imageType = $type[1]; // Dapatkan tipe gambar (png, jpeg, dll)
                 $data = substr($this->signature, strpos($this->signature, ',') + 1);
                 $data = base64_decode($data);
@@ -343,9 +344,10 @@ class InternetCustomerForm extends Component
                 
                 $signaturePath = 'signatures/' . uniqid() . '.' . $imageType;
                 Storage::disk('public')->put($signaturePath, $data);
-            } else {
-                throw new \Exception('Invalid image data URL');
-            }
+            } 
+            // else {
+            //     throw new \Exception('Invalid image data URL');
+            // }
             // Simpan data pelanggan
             $internetCustomer = InternetCustomer::create([
                 'company_id' => $this->company_id,
@@ -358,7 +360,7 @@ class InternetCustomerForm extends Component
                 'name' => $this->name,
                 'address' => $this->address,
                 'ktp_number' => $this->ktp_number,
-                'ktp_photo' => Storage::url($ktpPath),
+                'ktp_photo' => $ktpPath ? Storage::url($ktpPath) : null,
                 'is_paid' => false,
                 'status' => ParamSchema::WAITING_PAYMENT_CONFIRMATION,
             ]);
@@ -371,6 +373,8 @@ class InternetCustomerForm extends Component
                 'email' => $this->email,
                 'company_id' => $this->company_id,
                 'role' => Role::where('name',RoleSchema::CUSTOMER_INTERNET)->first()->id,
+                'start_billing_date' => $this->start_billing_date,
+                'end_billing_date' => $this->end_billing_date,
                 // 'password' => Hash::make($this->password),
             ]);
 
@@ -390,7 +394,6 @@ class InternetCustomerForm extends Component
             {
                 if($this->payment_method == 'transfer')
                     $internetCustomerPurchase = InternetCustomerPurchase::create([
-                    'start_billing_date' => $this->start_billing_date,
                     'amount_paid' => $this->selectedPackage->price_nett,
                     'internet_customer_id' => $internetCustomer->id,
                     'payment_method' => $this->payment_method,
@@ -420,7 +423,7 @@ class InternetCustomerForm extends Component
                     ->first();
                     
                     $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar. Silakan periksa detail pendaftaran dan tindak lanjuti.";
-                    $directUrl = route('internet-customer.index');
+                    $directUrl = route('internet-customer.show',$internetCustomer->id);
                     foreach($userFinance as $finance)
                     {
                         $this->sentInbox($finance->id, $from->id, $message, $directUrl);
@@ -559,6 +562,7 @@ class InternetCustomerForm extends Component
         $this->freeMonthsDetails = null;
         $this->paymentStartMonth = null;
         $this->start_billing_date = Carbon::now()->format('Y-m-d');
+        $this->end_billing_date = Carbon::now()->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d');
 
         // Pastikan paket sudah dipilih
         if ($this->internet_package_id) {
@@ -579,10 +583,12 @@ class InternetCustomerForm extends Component
                         // Pendaftaran sebelum register_date: bayar bulan depan
                         $this->paymentStartMonth = now()->addMonth($activePromo->value)->format('F Y');
                         $this->start_billing_date = now()->addMonth($activePromo->value)->firstOfMonth()->format('Y-m-d');
+                        $this->end_billing_date = now()->addMonth($activePromo->value)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d');
                     } else {
                         // Pendaftaran pada/ setelah register_date: bayar 2 bulan dari sekarang
                         $this->paymentStartMonth = now()->addMonths($activePromo->value + 1)->format('F Y');
                         $this->start_billing_date = now()->addMonths($activePromo->value + 1)->firstOfMonth()->format('Y-m-d');
+                        $this->end_billing_date = now()->addMonths($activePromo->value + 1)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d');
                     }
                 }
             }

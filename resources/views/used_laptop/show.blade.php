@@ -205,10 +205,26 @@
                     <div class="alert bg-light border">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h5 class="text-primary mb-1">Harga Jual Disarankan</h5>
+                                <h5 class="text-primary mb-1">Harga Jual Disarankan (RAW)</h5>
                             </div>
                             <div class="h5 text-success font-weight-bold">
                                 Rp {{ number_format($laptop->suggested_selling_price) }}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="text-primary mb-1">Harga Jual Jakarta</h5>
+                            </div>
+                            <div class="h5 text-success font-weight-bold">
+                                Rp {{ number_format($laptop->jakarta_price) }}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="text-primary mb-1">Harga Jual Jambi</h5>
+                            </div>
+                            <div class="h5 text-success font-weight-bold">
+                                Rp {{ number_format($laptop->jambi_price) }}
                             </div>
                         </div>
                     </div>
@@ -328,7 +344,7 @@
                     <div>
                         <h5 class="text-success">Rekomendasi Harga Jual</h5>
                         <div class="h3 text-success font-weight-bold">
-                            Rp {{ number_format($laptop->suggested_selling_price,0,',','.') }}
+                            Rp {{ number_format($laptop->jakarta_price,0,',','.') }}
                         </div>
                         <small class="text-muted">(Harga beli + perbaikan) + 30%</small>
                     </div>

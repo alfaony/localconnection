@@ -25,9 +25,14 @@
                         </span>
                     </div>
                 </div>
+                {{-- Loading indikator saat search --}}
+                <div class="mt-1 text-center" wire:loading.delay wire:target="search">
+                    <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                    <small class="text-muted">Mencari...</small>
+                </div>
             </div>
         </div>
-        
+
         <!-- Filter Status Terjual/Belum Terjual -->
         <div class="card-header bg-light py-2">
             <div class="d-flex align-items-center flex-wrap">
@@ -35,20 +40,28 @@
                 <div class="btn-group btn-group-sm" role="group">
                     <button type="button" 
                             class="btn {{ $statusFilter === '' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                            wire:click="$set('statusFilter', '')">
+                            wire:click="$set('statusFilter', '')"
+                            wire:loading.attr="disabled">
                         Semua
                     </button>
                     <button type="button" 
                             class="btn {{ $statusFilter === 'unsold' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                            wire:click="$set('statusFilter', 'unsold')">
+                            wire:click="$set('statusFilter', 'unsold')"
+                            wire:loading.attr="disabled">
                         <i class="fas fa-times-circle mr-1"></i> Belum Terjual
                     </button>
                     <button type="button" 
                             class="btn {{ $statusFilter === 'sold' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                            wire:click="$set('statusFilter', 'sold')">
+                            wire:click="$set('statusFilter', 'sold')"
+                            wire:loading.attr="disabled">
                         <i class="fas fa-check-circle mr-1"></i> Terjual
                     </button>
                 </div>
+            </div>
+            {{-- Loading indikator saat filter status diubah --}}
+            <div class="mt-2" wire:loading.delay wire:target="statusFilter">
+                <span class="spinner-border spinner-border-sm text-secondary" role="status"></span>
+                <small class="text-muted">Memfilter data...</small>
             </div>
         </div>
         
@@ -71,7 +84,8 @@
                             <th>SSD</th>
                             <th>Serial Number</th>
                             <th>Harga Beli</th>
-                            <th>Harga Jual Disarankan</th>
+                            <th>Harga Jual Jakarta</th>
+                            <th>Harga Jual Jambi</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
@@ -87,7 +101,10 @@
                             <td>{{ $laptop->serial_number }}</td>
                             <td>Rp {{ number_format($laptop->purchase_price,0,',','.') }}</td>
                             <td class="font-weight-bold text-success">
-                                Rp {{ number_format($laptop->suggested_selling_price,0,',','.') }}
+                                Rp {{ number_format($laptop->jakarta_price,0,',','.') }}
+                            </td>
+                            <td class="font-weight-bold text-success">
+                                Rp {{ number_format($laptop->jambi_price,0,',','.') }}
                             </td>
                             <td>
                                 @if($laptop->is_sold)

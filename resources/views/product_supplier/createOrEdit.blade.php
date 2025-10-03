@@ -85,6 +85,19 @@
                             <i class="fas fa-info-circle"></i> Tekan tombol spasi untuk menambahkan kategori baru
                         </small>
                     </div>
+                    <div class="form-group mb-4">
+                        <label for="type" class="form-label fw-bold">Tipe Supplier <span
+                                class="text-danger">*</span></label>
+                        <select name="supplier_type_id" id="type" class="form-control select2" data-placeholder="Pilih tipe"
+                            style="width: 100%;" required>
+                            <option value="">-- Pilih Tipe --</option>
+                            @foreach($types as $type)
+                            <option value="{{ $type->id }}" @if(isset($productSupplier) && $productSupplier->supplier_type_id == $type->id) selected @endif>
+                                {{ $type->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
 
                     <div class="form-group mb-4">
                         <label class="form-label fw-bold">Foto KTP</label>

@@ -20,6 +20,7 @@ use App\Models\DayoffType;
 use App\Models\DayoffQuota;
 
 use App\Helpers\Access;
+use App\Schemas\ParamSchema;
 
 use App\Rules\MatchOldPassword;
 use Carbon\Carbon;
@@ -95,7 +96,9 @@ class UserController extends Controller
         $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
         $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
         // Checkin
-        $user->is_checkin = $request->post('is_checkin', 0); // Default 0 jika tidak dicentang
+        $user->is_shift_attendance = $request->post('is_checkin') ==  ParamSchema::SHIFT ? true : false;
+        $user->is_checkin = $request->post('is_checkin') == ParamSchema::WFH ? true : false; 
+        $user->wfo_check_in = $request->post('is_checkin') == ParamSchema::WFO ? true : false; 
         $user->manual_checkin = $request->post('manual_checkin', 0);
         $user->requires_photo = $request->post('requires_photo', 0);
         $user->requires_location = $request->post('requires_location', 0);
@@ -247,15 +250,18 @@ class UserController extends Controller
         $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
         $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
 
-        // Checkin
-        $user->is_checkin = $request->post('is_checkin', 0); // Default 0 jika tidak dicentang
-        $user->manual_checkin = $request->post('manual_checkin', 0);
-        $user->requires_photo = $request->post('requires_photo', 0);
-        $user->requires_location = $request->post('requires_location', 0);
-        $user->start_time = $request->post('start_time');
-        $user->end_time = $request->post('end_time');
-        $user->rest_time = $request->post('rest_time');
-        $user->end_rest_time = $request->post('end_rest_time');
+        // 
+        $user->is_shift_attendance = $request->post('is_checkin') ==  ParamSchema::SHIFT ? true : false;
+        $user->is_checkin = $request->post('is_checkin') ==  ParamSchema::WFH ? true : false;
+        $user->wfo_check_in = $request->post('is_checkin') ==  ParamSchema::WFO ? true : false;
+
+        $user->manual_checkin = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('manual_checkin', 0) : false;
+        $user->requires_photo = $request->post('is_checkin') ==  ParamSchema::WFH ?$request->post('requires_photo', 0) : false;
+        $user->requires_location = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('requires_location', 0) : false;
+        $user->start_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('start_time') : NULL;
+        $user->end_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('end_time') : NULL;
+        $user->rest_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('rest_time') : NULL;
+        $user->end_rest_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('end_rest_time') : NULL;
 
         if ($request->has('custom_rest_times')) 
         {

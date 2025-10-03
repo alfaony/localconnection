@@ -8,28 +8,35 @@ use Illuminate\Support\Facades\Cache;
 
 class Access
 {
+    /**
+     * Cek apakah user bisa melakukan aksi pada tabel tertentu
+     */
     public static function can($method, $table)
     {
         $user = Auth::user();
         $roleId = $user->role_id;
         $cacheKey = "role_permissions:{$roleId}";
 
-        // Ambil dari cache
+        // Ambil permission dari cache
         $permissions = Cache::get($cacheKey);
 
-        // Jika belum ada di cache, atau permission tidak ditemukan
-        if (!$permissions || !in_array("{$method}:{$table}", $permissions)) {
-            // Ambil langsung dari DB (cek eksistensi)
-            $exists = Role::byId($roleId)
-                ->byPermissionName($method, $table)
+        // Jika tidak ada di cache atau belum punya akses untuk method:table
+        if (!$permissions || !in_array("{$method}:{$table}", $permissions)) 
+            {
+            // Cek apakah role terkait punya permission tersebut
+            $exists = Role::where('id', $roleId)
                 ->where('guard_name', 'web')
+                ->whereNull('deleted_at')
+                ->whereHas('permissions', function ($q) use ($method, $table) {
+                    $q->where('method', $method)->where('table', $table);
+                })
                 ->exists();
 
-            // Jika ada, update ulang cache
+            // Jika role punya akses, update cache
             if ($exists) {
-                $role = Role::with(['permissions'])->find($roleId);
+                $role = Role::with('permissions')->find($roleId);
                 $permissions = $role->permissions
-                    ->map(fn ($perm) => "{$perm->method}:{$perm->table}")
+                    ->map(fn($perm) => "{$perm->method}:{$perm->table}")
                     ->toArray();
 
                 Cache::forever($cacheKey, $permissions);
@@ -38,10 +45,13 @@ class Access
             return $exists;
         }
 
-        // Jika ditemukan di cache
+        // Sudah ada di cache, dan akses valid
         return true;
     }
 
+    /**
+     * Hapus cache permission untuk role tertentu
+     */
     public static function clearCacheForRole($roleId)
     {
         Cache::forget("role_permissions:{$roleId}");

@@ -280,6 +280,7 @@ class UsedLaptopController extends Controller
                 'weight' => 'nullable|numeric|min:0',
                 'name' => 'required|string|max:255',
                 'brand' => 'required|string|max:255',
+                'serial_number' => 'required|string|max:255',
                 'processor' => 'required|string|max:255',
                 'ram' => 'required|string|max:255',
                 'ssd' => 'required|string|max:255',
@@ -297,6 +298,7 @@ class UsedLaptopController extends Controller
             if ($laptop) {
                 $laptop->update([
                     'weight' => $validated['weight'] ?? null,
+                    'serial_number' => $validated['serial_number'],
                     'name' => $validated['name'],
                     'brand' => $validated['brand'],
                     'processor' => $validated['processor'],

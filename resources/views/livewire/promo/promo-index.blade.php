@@ -134,7 +134,6 @@
                                     </td>
                                     <td class="align-middle text-center">
                                         <div class="btn-group btn-group-sm gap-2">
-                                            @if($promo->isAction())
                                             @canAccess('edit','promos')
                                             <a href="{{ route('promo.edit', ['id' => $promo->id]) }}" 
                                                 class="btn btn-info mr-1" 
@@ -142,6 +141,7 @@
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             @endcanAccess
+                                            @if($promo->isAction())
                                             @canAccess('destroy','promos')
                                             <button wire:click="confirmDelete({{ $promo->id }})"
                                                     class="btn btn-danger" 

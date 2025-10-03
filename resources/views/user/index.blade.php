@@ -113,12 +113,15 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 </div>
             </div>
             <div class="form-group mt-2 mb-1">
-                <label for="checkin-settings">Setting Check-In:</label>
-                
+                <label for="is_checkin">Metode Absensi</label>
                 <!-- Check-In Setting -->
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" name="is_checkin" id="is_checkin" value="1" >
-                    <label class="form-check-label" for="is_checkin">Enable Check-In</label>
+                <div class="form-group">
+                    <select name="is_checkin" id="is_checkin" class="form-control">
+                        <option value="">-- Pilih Metode Check-In --</option>
+                        <option value="wfo" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfo' ? 'selected' : '' }}>WFO Check-In</option>
+                        <option value="wfh" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'wfh' ? 'selected' : '' }}>WFH Check-In</option>
+                        <option value="shift" {{ old('is_checkin', @$userEdit->is_checkin ?? '') == 'shift' ? 'selected' : '' }}>Shift Kehadiran</option>
+                    </select>
                 </div>
 
                 <!-- Additional Settings - Visible only if is_checkin is enabled -->
@@ -370,12 +373,15 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                 </div>
             </div>
             <div class="form-group mt-2 mb-1">
-                <label for="checkin-settings">Setting Check-In:</label>
-                
+                <label for="is_checkin">Metode Absensi</label>
                 <!-- Check-In Setting -->
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" name="is_checkin" id="is_checkin" value="1" {{ @$userEdit->is_checkin ? 'checked' : '' }}>
-                    <label class="form-check-label" for="is_checkin">Enable Check-In</label>
+                <div class="form-group">
+                    <select name="is_checkin" id="is_checkin" class="form-control">
+                        <option value="">-- Pilih Metode Check-In --</option>
+                        <option value="wfo" {{ @$userEdit->wfo_check_in ? 'selected' : '' }}>WFO Check-In</option>
+                        <option value="wfh" {{ @$userEdit->is_checkin ? 'selected' : '' }}>WFH / Hybrid Check-In</option>
+                        <option value="shift" {{ @$userEdit->is_shift_attendance ? 'selected' : '' }}>Shift Kehadiran</option>
+                    </select>
                 </div>
 
                 <!-- Additional Settings - Visible only if is_checkin is enabled -->
@@ -721,15 +727,16 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 <script>
     function toggleAdditionalSettings() 
     {
-        const isCheckinChecked = document.getElementById('is_checkin').checked;
-        document.getElementById('additionalSettings').style.display = isCheckinChecked ? 'block' : 'none';
+        const isCheckinValue = document.getElementById('is_checkin').value;
+        const showSettings = isCheckinValue === 'wfh';
+        document.getElementById('additionalSettings').style.display = showSettings ? 'block' : 'none';
 
         // Set required attributes for time fields based on is_checkin state
-        document.getElementById('start_time').required = isCheckinChecked;
-        document.getElementById('end_time').required = isCheckinChecked;
-        document.getElementById('rest_time').required = isCheckinChecked;
+        document.getElementById('start_time').required = showSettings;
+        document.getElementById('end_time').required = showSettings;
+        document.getElementById('rest_time').required = showSettings;
     }
-    // Show/hide additional settings based on "Enable Check-In" checkbox
+    // Show/hide additional settings based on "Metode Check-In" select
     document.getElementById('is_checkin').addEventListener('change', toggleAdditionalSettings);
 
     // Initialize display and required attributes on page load

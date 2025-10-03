@@ -102,6 +102,9 @@ use App\Http\Controllers\MomController;
 use App\Http\Controllers\UsedLaptopController;
 use App\Http\Controllers\MasterCheckItemController;
 use App\Http\Controllers\UsedItemController;
+use App\Http\Controllers\BarcodeAttendanceController;
+use App\Http\Controllers\OfficeAttendanceController;
+use App\Http\Controllers\SaleController;
 
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
@@ -121,6 +124,18 @@ use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
 use App\Http\Livewire\WebhookSettingTable;
+use App\Http\Livewire\ProductSupplierTypeIndex;
+use App\Http\Livewire\ProductStore\ProductStoreIndex;
+use App\Http\Livewire\ProductStore\ProductStoreShow;
+use App\Http\Livewire\ProductStore\ProductStoreForm;
+use App\Http\Livewire\ProductStore\ProductStorePrint;
+use App\Http\Livewire\Sale\SaleIndex;
+use App\Http\Livewire\Sale\SaleShow;
+use App\Http\Livewire\BrandProductStoreIndex;
+use App\Http\Livewire\CategoryProductStoreIndex;
+
+
+use App\Http\Livewire\PunishmentUserTable;
 
 
 
@@ -520,6 +535,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   
   Route::get('item-request/workflow/{id}', [ItemRequestController::class, 'workflow'])->name('item-request.workflow');
   Route::get('item-request/dataTableJson', [ItemRequestController::class, 'dataTableJson'])->name('item-request.datatable');
+  Route::post('item-request/fetchProductSupplier', [ItemRequestController::class, 'fetchProductSupplier'])->name('item-request.fetch-suppliers');
   Route::post('item-request/closed/{id}', [ItemRequestController::class, 'closed'])->name('item-request.closed');
   Route::put('item-request/delivery/{id}', [ItemRequestController::class, 'delivery'])->name('item-request.delivery');
   Route::resource('item-request', ItemRequestController::class);
@@ -579,16 +595,55 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('promo', PromoIndex::class)->name('promo.index');
   Route::get('promo/create', PromoForm::class)->name('promo.create');
   Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
+  
   Route::get('webhook-setting', WebhookSettingTable::class)->name('webhook-setting.index');
-});
+  
+  // Barcode 
+  Route::get('barcode', [BarcodeAttendanceController::class, 'index'])->name('barcode.index');
+  Route::post('barcode/generate', [BarcodeAttendanceController::class, 'generate'])->name('barcode.generate');
+  
+  // Scan Barcode
+  Route::get('office-attendance/export', [OfficeAttendanceController::class, 'export'])->name('office_attendance.export');
+  Route::get('office-attendance', [OfficeAttendanceController::class, 'index'])->name('office-attendance.index');
+  Route::get('office-attendance/scan/{code}', [OfficeAttendanceController::class, 'scan'])->name('office-attendance.scan');
+  
+  // Lengkapi data absen (foto + lokasi)
+  Route::put('office-attendance/complete/{code}', [OfficeAttendanceController::class, 'complete'])->name('office-attendance.complete');
+  
+  Route::get('supplier-type', ProductSupplierTypeIndex::class)->name('supplier-type.index');
 
-  Route::post('api/test', function (\Illuminate\Http\Request $request) {
-      Log::info('test log', $request->all());
-      return true;
-  })->name('api.test')->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+  Route::get('brand-product-store', BrandProductStoreIndex::class)->name('brand-product-store.index');
+  
+  Route::get('category-product-store', CategoryProductStoreIndex::class)->name('category-product-store.index');
+
+  Route::get('product-store/print', ProductStorePrint::class)->name('product-store.print');
+  Route::get('product-store/create', ProductStoreForm::class)->name('product-store.create');
+  Route::get('product-store/edit/{id}', ProductStoreForm::class)->name('product-store.edit');
+  Route::get('product-store/{id}', ProductStoreShow::class)->name('product-store.show');
+  Route::get('product-store', ProductStoreIndex::class)->name('product-store.index');
+  Route::get('product-store/print', ProductStorePrint::class)->name('product-store.print');
+  
+  Route::get('punishment-user', PunishmentUserTable::class)->name('punishment-user.index');
+
+  Route::get('sales', \App\Http\Livewire\Sale\SaleIndex::class)->name('sales.index');
+  Route::get('sales/{id}', \App\Http\Livewire\Sale\SaleShow::class)->name('sales.show');
+  
+  Route::get('store-selling', [SaleController::class, 'index'])->name('store-selling.index');
+  Route::post('store-selling/sendReceiptByEmail', [SaleController::class, 'sendReceiptByEmail'])->name('store-selling.sendReceiptByEmail');
+  Route::post('store-selling/searchProduct', [SaleController::class, 'searchProduct'])->name('store-selling.searchProduct');
+  Route::post('store-selling/processPayment', [SaleController::class, 'processPayment'])->name('store-selling.processPayment');
+  Route::post('store-selling/saveDraft', [SaleController::class, 'saveDraft'])->name('store-selling.saveDraft');
+  Route::get('store-selling/loadDraft/{draft}', [SaleController::class, 'loadDraft'])->name('store-selling.loadDraft');
+  Route::delete('store-selling/deleteDraft/{draft}', [SaleController::class, 'deleteDraft'])->name('store-selling.deleteDraft');
+  Route::get('store-selling/printReceipt/{sale}', [SaleController::class, 'printReceipt'])->name('store-selling.printReceipt');
+  Route::get('store-selling/drafts', [SaleController::class, 'getDrafts'])->name('store-selling.drafts');
+});
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
+  
+// Route::middleware(['auth'])->group(function () {
+// });
 
 Route::get('error/{code?}', function ($code = 500) {
     return view('public_error', [

@@ -28,10 +28,10 @@ class PromoForm extends Component
         if ($id) {
             $promo = Promo::findOrFail($id);
             
-            if(!$promo->isAction())
-            {
-                return redirect()->route('promo.index')->with('error', 'Promo tidak dapat diubah.');
-            }
+            // if(!$promo->isAction())
+            // {
+            //     return redirect()->route('promo.index')->with('error', 'Promo tidak dapat diubah.');
+            // }
 
             $this->promoId = $promo->id;
             $this->name = $promo->name;
