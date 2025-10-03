@@ -159,6 +159,29 @@ class OdsForm extends Component
         $this->latitude = $lat;
         $this->longitude = $lng;
         $this->showMapModal = false;
+        $this->dispatchCoordinateUpdate();
+    }
+
+    public function updatedLatitude($value)
+    {
+        $this->dispatchCoordinateUpdate();
+    }
+
+    public function updatedLongitude($value)
+    {
+        $this->dispatchCoordinateUpdate();
+    }
+
+    protected function dispatchCoordinateUpdate(): void
+    {
+        if (! is_numeric($this->latitude) || ! is_numeric($this->longitude)) {
+            return;
+        }
+
+        $this->dispatchBrowserEvent('ods-map-move-marker', [
+            'lat' => (float) $this->latitude,
+            'lng' => (float) $this->longitude,
+        ]);
     }
     
     public function refreshCsrfToken()
