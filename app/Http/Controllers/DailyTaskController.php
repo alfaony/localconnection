@@ -1630,7 +1630,6 @@ class DailyTaskController extends Controller
         return true;
     }
 
-/*************  ✨ Windsurf Command ⭐  *************/
 /**
  * Sends a message to the specified user through the inbox.
  *
@@ -1639,7 +1638,6 @@ class DailyTaskController extends Controller
  * @param string $directUrl The direct URL associated with the message.
  */
 
-/*******  66d9f38e-a118-40f8-b331-aed97b03193f  *******/
     public function sentInbox($to,$message,$directUrl)
     {
         $inboxHelper = new InboxHelper();
