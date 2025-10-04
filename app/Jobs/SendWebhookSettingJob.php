@@ -47,8 +47,8 @@ class SendWebhookSettingJob implements ShouldQueue
                             'gpu' => $laptop->gpu,
                             'operating_system' => $laptop->operating_system,
                             'notes' => $laptop->notes,
-                            'buying_price' => $laptop->jakarta_price,
-                            'selling_price' => $laptop->suggested_selling_price,
+                            'buying_price' => $laptop->purchase_price,
+                            'selling_price' => $laptop->jakarta_price,
                             'images' => $laptop->media()->get()->map(function ($media) {
                                 return env('APP_URL') . Storage::url($media->file_path);
                             })->toArray(),
@@ -62,7 +62,7 @@ class SendWebhookSettingJob implements ShouldQueue
             }
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
             Log::error($th->getMessage());
         }
     }
