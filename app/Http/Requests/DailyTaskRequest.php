@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class DailyTaskRequest extends FormRequest
 {
@@ -14,43 +13,7 @@ class DailyTaskRequest extends FormRequest
 
     public function rules()
     {
-        $objectiveId   = $this->input('objective');        // uuid objectives.id
-        $projectId     = $this->input('project_id');       // uuid/str daily_task_projects.id
-        // $companyId     = optional($this->user())->company_id; // kalau mau batasi per company
-
         return [
-             'objective' => [
-                'required',
-                'uuid',
-                Rule::exists('objectives', 'id')
-                    // ->when($companyId, fn($q) => $q->where('company_id', $companyId)),
-            ],
-
-            // key_result harus array of uuid yang semuanya punya objective_id = objective
-            'key_result'   => ['required','array','min:1'],
-            'key_result.*' => [
-                'uuid',
-                Rule::exists('objective_key_results', 'id')
-                    // ->where(fn($q) => $q->where('objective_id', $objectiveId))
-            ],
-
-            // daily_task_project yang dipilih (opsional contoh pakai exists + scope company)
-            'project_id' => [
-                'nullable',
-                'uuid',
-                Rule::exists('daily_task_projects', 'id')
-                    // ->when($companyId, fn($q) => $q->where('company_id', $companyId)),
-            ],
-
-            // data_project_id harus benar2 milik project_id di atas
-            'data_project_id' => [
-                'nullable',
-                'uuid',
-                Rule::exists('projects', 'id')
-                    ->where(fn($q) => $q->where('daily_task_project_id', $projectId))
-            ],
-
-            'user_id' => 'required|uuid|exists:users,id',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'assignment_user_id' => 'nullable|uuid|exists:users,id',
