@@ -200,7 +200,7 @@ class AppServiceProvider extends ServiceProvider
             'provinces','cities','districts','subdistricts','postal_codes'
             ];
 
-            $managementSettingMenu = ['setting_companies','roles'];
+            $managementSettingMenu = ['setting_companies','roles','webhook_settings'];
 
 
             $menus = [
@@ -695,6 +695,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Promosi',
                     'route' => 'promo.index',
                     'icon' => 'fa fa-tags',
+                ],
+                'webhook_settings' => 
+                [
+                    'text' => 'Pengaturan Webhook',
+                    'route' => 'webhook-setting.index',
+                    'icon' => 'fa fa-cogs',
                 ],
                 'office_attendances' =>
                 [

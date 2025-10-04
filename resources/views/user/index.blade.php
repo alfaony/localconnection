@@ -42,6 +42,9 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
 
+            <label for="email">Email Gmail:</label>
+            <input type="email" id="email" name="email_gmail" placeholder="Budiman@gmail.com" value="{{ old('email_gmail') ?? @$userEdit->email_gmail }}">
+
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >
 
@@ -290,6 +293,9 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" placeholder="Budiman@gmail.com" value="{{ old('email') ?? @$userEdit->email }}" required>
+
+            <label for="email">Email Gmail:</label>
+            <input type="email" id="email" name="email_gmail" placeholder="Budiman@gmail.com" value="{{ old('email_gmail') ?? @$userEdit->email_gmail }}">
 
             <label for="phone">Phone:</label>
             <input type="text" id="phone" name="phone" placeholder="08568989080" value="{{ old('phone') ?? @$userEdit->phone }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = this.value.replace(/^((0|62)[0-9]*)$/, '$1');" >

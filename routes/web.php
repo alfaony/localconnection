@@ -123,6 +123,7 @@ use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
+use App\Http\Livewire\WebhookSettingTable;
 use App\Http\Livewire\ProductSupplierTypeIndex;
 use App\Http\Livewire\ProductStore\ProductStoreIndex;
 use App\Http\Livewire\ProductStore\ProductStoreShow;
@@ -594,6 +595,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('promo', PromoIndex::class)->name('promo.index');
   Route::get('promo/create', PromoForm::class)->name('promo.create');
   Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
+  
+  Route::get('webhook-setting', WebhookSettingTable::class)->name('webhook-setting.index');
   
   // Barcode 
   Route::get('barcode', [BarcodeAttendanceController::class, 'index'])->name('barcode.index');

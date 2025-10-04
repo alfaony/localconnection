@@ -37,6 +37,21 @@
                                value="{{ old('name', $laptop->name ?? '') }}"
                                placeholder="Contoh: MacBook Pro 2020" required>
                     </div>
+
+                    <div class="form-group">
+                        <label for="weight">Berat (kg) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="weight" name="weight" 
+                               value="{{ old('weight', $laptop->weight ?? '') }}"
+                               placeholder="Contoh: 5" >
+                    </div>
+                    
+
+                    <div class="form-group">
+                        <label for="name">Merk <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="brand" name="brand" 
+                               value="{{ old('brand', $laptop->brand ?? '') }}"
+                               placeholder="Apple" required>
+                    </div>
                     
                     <div class="form-group">
                         <label for="serial_number">Serial Number <span class="text-danger">*</span></label>

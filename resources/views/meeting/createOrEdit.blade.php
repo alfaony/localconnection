@@ -54,9 +54,9 @@
                         <label for="participant">Peserta</label>
                         <select name="participant[]"  multiple="multiple" class="form-control selectMulti2" required>
                             @foreach($users as $user)
-                                  <option value="{{ $user->email }}"
+                                  <option value="{{ $user->email_gmail ? $user->email_gmail : $user->email  }}"
                                     @if(collect($meeting->combined_participants ?? [])->pluck('id')->contains($user->id)) selected @endif>
-                                    {{ $user->name }} - {{ $user->email }}
+                                    {{ $user->name }} - {{ $user->email_gmail ? $user->email_gmail : $user->email }}
                                 </option>
                             @endforeach
 

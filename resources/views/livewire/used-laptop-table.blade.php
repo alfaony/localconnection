@@ -78,6 +78,7 @@
                                     <i class="fas fa-sort float-right mt-1"></i>
                                 @endif
                             </th>
+                            <th>Brand</th>
                             <th>Processor</th>
                             <th>RAM</th>
                             <th>SSD</th>
@@ -93,6 +94,7 @@
                         @forelse($laptops as $laptop)
                         <tr>
                             <td>{{ $laptop->name }}</td>
+                            <td>{{ $laptop->brand }}</td>
                             <td>{{ $laptop->processor }}</td>
                             <td>{{ $laptop->ram }}</td>
                             <td>{{ $laptop->ssd }}</td>
