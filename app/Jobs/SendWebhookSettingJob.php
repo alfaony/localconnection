@@ -62,7 +62,7 @@ class SendWebhookSettingJob implements ShouldQueue
             }
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             Log::error($th->getMessage());
         }
     }
