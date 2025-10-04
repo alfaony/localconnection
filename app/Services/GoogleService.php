@@ -136,6 +136,10 @@ class GoogleService
             foreach ($meeting->combined_participants as $participant) 
             {
                 $attendees[] = ['email' => $participant['email']];
+                if($participant['email_gmail'])
+                {
+                    $attendees[] = ['email' => $participant['email_gmail']];
+                }
             }
 
             // Set description
@@ -183,6 +187,7 @@ class GoogleService
     }
 
 
+
     public function createGoogleMeet($meeting)
     {
         try {
@@ -195,8 +200,11 @@ class GoogleService
             foreach ($meeting->combined_participants as $participant) 
             {
                 $attendees[] = ['email' => $participant['email']];
+                if($participant['email_gmail'])
+                {
+                    $attendees[] = ['email' => $participant['email_gmail']];
+                }
             }
-
             // Tambahkan PIC (hanya satu, dari user_id)
             if ($meeting->user) 
             {

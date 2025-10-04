@@ -108,6 +108,7 @@ class Meeting extends Model
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'email_gmail' => $user->email_gmail,
                 'status' => ParamSchema::INTERNAL,
                 'is_attended' => $user->pivot->is_attended,
                 'join_time' => $user->pivot->join_time
@@ -120,6 +121,7 @@ class Meeting extends Model
             return [
                 'id' => $email,
                 'email' => $email,
+                'email_gmail' => null,
                 'name' => $email . ' (External)',
                 'status' => ParamSchema::EXTERNAL
             ];

@@ -419,7 +419,7 @@ class DailyTaskController extends Controller
 
         } catch (\Throwable $th) 
         {
-            dd($th);
+            // dd($th);
             DB::rollback();
             Log::error($th->getMessage());
 
