@@ -56,6 +56,12 @@
                             wire:loading.attr="disabled">
                         <i class="fas fa-check-circle mr-1"></i> Terjual
                     </button>
+                    <button type="button" 
+                            class="btn {{ $statusFilter === 'inventory' ? 'btn-primary' : 'btn-outline-secondary' }}"
+                            wire:click="$set('statusFilter', 'inventory')"
+                            wire:loading.attr="disabled">
+                        <i class="fas fa-warehouse mr-1"></i> Inventory
+                    </button>
                 </div>
             </div>
             {{-- Loading indikator saat filter status diubah --}}
@@ -105,13 +111,17 @@
                                 Rp {{ number_format($laptop->jambi_price,0,',','.') }}
                             </td>
                             <td>
-                                @if($laptop->is_sold)
+                                @if($laptop->is_sold === 1)
                                     <span class="badge bg-success">
                                         <i class="fas fa-check-circle mr-1"></i> Terjual
                                     </span>
-                                @else
+                                @elseif($laptop->is_sold === 0)
                                     <span class="badge bg-secondary">
                                         <i class="fas fa-clock mr-1"></i> Belum Terjual
+                                    </span>
+                                @else
+                                    <span class="badge bg-danger">
+                                        Inventory
                                     </span>
                                 @endif
                             </td>
