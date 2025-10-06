@@ -91,7 +91,7 @@ class User extends Authenticatable
         'dayoff_active' => 'boolean',
     ];
 
-    protected $appends = ['point_checkin', 'today_percentage', 'point_percentage'];
+    // protected $appends = ['point_checkin', 'today_percentage', 'point_percentage'];
 
     public function role()
     {

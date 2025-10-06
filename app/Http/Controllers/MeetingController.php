@@ -166,7 +166,7 @@ class MeetingController extends Controller
             $externalEmails = [];
 
             foreach ($request->participant as $p) {
-                $findUser = User::select('id')->where('email', $p)->first();
+                $findUser = User::select('id')->where('email', $p)->orWhere('email_gmail', $p)->first();
                 if ($findUser)
                  {
                     $p = $findUser->id;
@@ -310,7 +310,7 @@ class MeetingController extends Controller
 
             foreach ($request->participant as $p) 
             {
-                $findUser = User::select('id')->where('email', $p)->first();
+                $findUser = User::select('id')->where('email', $p)->orWhere('email_gmail', $p)->first();
                 if ($findUser)
                  {
                     $p = $findUser->id;

@@ -102,14 +102,6 @@ class DailyTaskController extends Controller
                     $q->where('name', $userFilter);
                 });
             }
-            // else
-            // {
-            //     $query->where(function($query) 
-            //     {
-            //         $query->where('assignment_user_id',Auth::user()->id)->orWhere('user_id',Auth::user()->id);
-            //     }
-            //     );
-            // }
         }
         
         else
@@ -1637,6 +1629,14 @@ class DailyTaskController extends Controller
         $this->message($newTask->id,'create',' System Recurring Tugas '.$newTask->name,null);
         return true;
     }
+
+/**
+ * Sends a message to the specified user through the inbox.
+ *
+ * @param mixed $to The recipient user ID or array of user IDs.
+ * @param string $message The message content to be sent.
+ * @param string $directUrl The direct URL associated with the message.
+ */
 
     public function sentInbox($to,$message,$directUrl)
     {

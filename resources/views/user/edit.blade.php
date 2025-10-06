@@ -125,6 +125,12 @@
                                         <label for="email">Email:</label>
                                         <p class="form-control-plaintext">{{ old('email') ?? @$userEdit->email }}</p>
                                     </div>
+                                    <div class="form-group">
+                                        <label for="email">Email Gmail:</label>
+                                        <input type="email" name="email_gmail" class="form-control"
+                                            placeholder="Masukkan Email Gmail"
+                                            value="{{ old('email_gmail') ?? @$userEdit->email_gmail }}" />
+                                    </div>
 
                                     <div class="form-group">
                                         <label for="phone">Phone:</label>
