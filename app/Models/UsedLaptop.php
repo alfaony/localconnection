@@ -29,7 +29,6 @@ class UsedLaptop extends Model
     ];
 
     protected $casts = [
-        'is_sold' => 'boolean',
         'sold_at' => 'date',
     ];
 

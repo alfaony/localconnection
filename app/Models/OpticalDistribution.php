@@ -16,6 +16,7 @@ class OpticalDistribution extends Model
         'user_assign_id',
         'name',
         'capacity_mb',
+        'address',
         'latitude',
         'longitude',
         'location_photo',
