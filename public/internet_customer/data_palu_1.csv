@@ -45,14 +45,14 @@ No,Provinsi,Kota/Kabupaten,Kecamatan,Kelurahan,Paket Internet,Harga,Nama Lengkap
 44,Sulawesi Tengah,Palu,Mantikulore,Kawatuna,Office,1.132.200,Kantor Dinas Lingkungan Hidup,08114567743 (Saiful),Osnaosna252@gmail.com,TPA kawatuna
 45,Sulawesi Tengah,Palu,Mantikulore,Lasoani,Personal,283.050,Komang Adi Guna ,082156218588,wisnucandratriyuda09@icloud.com,Jl. Bulu Masomba lrg.Valengapa
 46,Sulawesi Tengah,Palu,Palu Timur,Besusu Barat,Personal,283.050,Latifah Madiana, 085338003034,latifamadianah03@gmail.com,Jl.setia budi Lrg.siswa No.32 A
-47,Sulawesi Tengah,Kab Sigi,Sigi Biromaru,Kalukubula,Personal,283.050,Maratang,081354481777,atankqila@gmail.com,BTN Banua Asri Blok B No. 1 Jl. Karanja Lembah
+47,Sulawesi Tengah,Sigi,Sigi Biromaru,Kalukubula,Personal,283.050,Maratang,081354481777,atankqila@gmail.com,BTN Banua Asri Blok B No. 1 Jl. Karanja Lembah
 48,Sulawesi Tengah,Palu,Mantikulore,Kawatuna,Personal,283.050,Marlina,082337024646 ,linaezqya1981@gmail.com,Jl. vatunonju 2 ( kawatuna )
 49,Sulawesi Tengah,Palu,Palu Timur,Besusu Barat,Personal,283.050,Masniar,082292135457,niarmasniar9@gmail.com,JL. DR. Soeharso No.44 Palu
 50,Sulawesi Tengah,Palu,Mantikulore,Tondo,Personal,283.050,Mika Mangiwa,082189534804,mikamangiwa@gmail.com,Huntap Tondo 2 Blok E1 No. 13
 51,Sulawesi Tengah,Palu,Palu Barat,Kamonji,Personal,283.050,Miskholla Imana Eka,082337272751,ollaalzhea@gmail.com,Jl. jambu no 38
 52,Sulawesi Tengah,Palu,Palu Timur,Besusu Timur,Personal,283.050,Mochamad Iwan Setiawan,081355155583,iwantumpugi@yahoo.com ,Jl. Kihajar dewantoro no.10b lrg. bhakti baru 91
 53,Sulawesi Tengah,Palu,Mantikulore,Talise,Personal,283.050,Mohamad Rizal,085159945608,ijal74lu@gmail.com,Jl. Jabal darusallam huntap 3 tombolotutu
-54,Sulawesi Tengah,Kab. Sigi,Marawola ,Baliase,Personal,283.050,Mohamat Sidik,085241128960,mohamatsidik890@gmail.com,BTN baliase blok P2 no.15
+54,Sulawesi Tengah,Sigi,Marawola ,Baliase,Personal,283.050,Mohamat Sidik,085241128960,mohamatsidik890@gmail.com,BTN baliase blok P2 no.15
 55,Sulawesi Tengah,Palu,Mantikulore,Tondo,Personal,283.050,Muhammad Rico Alfariz,082291517765,ricoku48@gmail.com,Jl. untad 1 blok c no.02 fotocopy salsa dpn kampus
 56,Sulawesi Tengah,Palu,Tatanga,Duyu,Personal,283.050,Mulfiani,082292513083,mulfianivia@gmail.com,Jl. Gawalise no. 205
 57,Sulawesi Tengah,Palu,Mantikulore,Besusu Timur,Personal,283.050,Muziba Ardani,082396162266,lasuasaarifin@gmail.com,Asrama Korem Juanda Blok C no. 4
@@ -63,13 +63,13 @@ No,Provinsi,Kota/Kabupaten,Kecamatan,Kelurahan,Paket Internet,Harga,Nama Lengkap
 62,Sulawesi Tengah,Palu,Palu Timur,Lolu Selatan,Personal,283.050,Nurul Izzah Musyaddiyah,085656967205,nurulizzahmusyaddidah@gmail.com,Jl. Kartini lrng. Pelni No. 15
 63,Sulawesi Tengah,Palu,Palu Selatan,Birobuli Selatan,Personal,283.050,Olhan Poliwa,082296128009,olhanpoliwa2@gmail.com,Jl. Banteng lrg. perpustakaan daerah
 64,Sulawesi Tengah,Palu,Tatanga,Duyu,Personal,283.050,Paud Qurrota A yun,085341002056 (Selvi Muhamad),qurrotaayunpalu@gmail.com,Jl. Sungai Manonda
-65,Sulawesi Tengah,Donggala,Banawa,LOLI SALURAN,Office,1.132.200,Perseroan Terbatas Badan Palu Batu Madu,082291637104 (Abu Bakar Gafir),abubakarbagir@gmail.com,"Jl.Poros Palu Donggala"
+65,Sulawesi Tengah,Donggala,Banawa,Loli Saluran,Office,1.132.200,Perseroan Terbatas Badan Palu Batu Madu,082291637104 (Abu Bakar Gafir),abubakarbagir@gmail.com,"Jl.Poros Palu Donggala"
 66,Sulawesi Tengah,Parigi Mautong,Torue,Tolai,Metro 100Mbps,10.920.260,PT Bali Network Nusantara (Subnet),085342473367 (Wayan),wayan.frangky1197@gmail.com,"Dusun 10 Tirtasari, Kel. Tolai, Kec. Torue"
 67,Jawa Timur,Bondosowo,Grujugan,,VPN 50Mbps,1.323.300,PT Cinet Torayaku Nusantara,081217947057 (Katiman),torayakunet@yahoo.com,"Ds. Sumber Pandan, RT/RW 016/006, Kec. Grujugan"
 68,Sulawesi Tengah,Palu,Palu Selatan,Birobuli Utara,VPN 50Mbps,3.147.500,PT Solusi Tekno Mandiri,085394168474 (Moh. Nuryanto),yantotalk@gmail.com,"Jalan Mutiara I No.1, RT/RW 003/006"
 69,Sulawesi Tengah,Palu,Palu Barat,Lere,Personal,316.350,PT. ANUGERAH PANCA LAKSANA,085813100060 (Nadia),tagihan@anpal.co.id,Matahari Departement Store Palu Grand Mall Jl. Diponegoro
 70,Sulawesi Tengah,Palu,Palu Selatan,Birobuli Utara,Custom,27.750.000,PT. Asuransi Bumi Putera Muda,087878554027,infra@bumida.co.id,Jl. Basuki Rahmat No. 88
-71,Sulawesi Tengah,Donggala,Banawa,LOLI SALURAN,Office,1.354.200,PT. Bosowa Tambang Indonesia,0811440109 (Asrul),asrul.hibbu@bosowa.co.id,Jl. Poros Palu Donggala KM 17 Loli Saluran
+71,Sulawesi Tengah,Donggala,Banawa,Loli Saluran,Office,1.354.200,PT. Bosowa Tambang Indonesia,0811440109 (Asrul),asrul.hibbu@bosowa.co.id,Jl. Poros Palu Donggala KM 17 Loli Saluran
 72,Sulawesi Tengah,Palu,Palu Utara,Taipa,Proffesional,566.100,PT. Global Indonesia Asia Sejahtera,085399957258 (Julia),julia.krisnayati@gias.co.id,"Jl. Trans sulawesi no. 63, Taipa"
 73,Sulawesi Tengah,Palu,Palu Utara,Mamboro,Proffesional,566.100,PT. Jebe Trading Indonesia,082188878456 (Febi Putria),febiputria@gmail.com,Jl. L Gadi Pergudangan Artha Lestari Mamboro
 74,Sulawesi Tengah,Palu,Palu Timur,Lolu Utara,Proffesional,566.100,PT. Sinergi Insani Primalink, 08998920126 (Yosep),marketing@primalink.co,Jl. Tanjung Dako No. 22
