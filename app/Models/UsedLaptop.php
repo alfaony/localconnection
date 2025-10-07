@@ -90,7 +90,7 @@ class UsedLaptop extends Model
     public function getJambiPriceAttribute()
     {
 
-        return $this->suggested_selling_price + $this->jakarta_price + config('services.used_laptop_charge.totebag_charge') + config('services.used_laptop_charge.expedition_charge');
+        return $this->jakarta_price + config('services.used_laptop_charge.expedition_charge');
     }
 
     // 🟢 Status Jual (label helper opsional)
