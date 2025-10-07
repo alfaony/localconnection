@@ -65,9 +65,18 @@
                     
                     <div class="form-group">
                         <label for="serial_number">Serial Number <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="serial_number" name="serial_number" 
-                            value="{{ old('serial_number', $laptop->serial_number ?? '') }}"
-                            placeholder="Masukkan Serial Number" required>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="serial_number" name="serial_number" 
+                                value="{{ old('serial_number', $laptop->serial_number ?? '') }}"
+                                placeholder="Masukkan Serial Number" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="serial-status">
+                                    <i class="fas fa-circle text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <small id="serial-feedback" class="form-text"></small>
+                        <input type="hidden" id="laptop_id" value="{{ $laptop->id ?? '' }}">
                     </div>
 
                     <div class="form-group">
@@ -293,6 +302,7 @@
             </div>
         </div>
         
+        @canAccess('checkSerialNumber', 'used_laptops')
         <div class="card-footer">
            <button type="submit" id="submitBtn" class="btn btn-primary">
                 <i class="fas fa-save mr-1"></i> {{ isset($laptop) ? 'Update Laptop' : 'Simpan Laptop' }}
@@ -301,6 +311,7 @@
                 <i class="fas fa-undo mr-1"></i> Reset Form
             </button>
         </div>
+        @endcanAccess
     </form>
 </div>
 
@@ -371,6 +382,74 @@
             border-left: 4px solid #dc3545;
         }
     </style>
+    <style>
+        .section-header {
+            position: relative;
+        }
+        
+        .icon-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .photo-preview {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            margin: 5px;
+            padding: 5px;
+        }
+        
+        .repair-item {
+            border-left: 4px solid #007bff;
+        }
+        
+        .custom-file-label::after {
+            content: "Pilih";
+        }
+        
+        .total-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #dc3545;
+        }
+        
+        /* Serial Number Validation Styles */
+        #serial-feedback {
+            min-height: 20px;
+            margin-top: 5px;
+        }
+        
+        #serial-status {
+            background-color: #fff;
+            border-left: 0;
+        }
+        
+        .is-valid {
+            border-color: #28a745 !important;
+        }
+        
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+        
+        #serial_number:focus {
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        #serial_number.is-valid:focus {
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        
+        #serial_number.is-invalid:focus {
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+    </style>
 @stop
 
 @section('js')
@@ -382,9 +461,170 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
     <script src="{{ asset('js/thriveEditor.js') }}"></script>
-    @canAccess('mediaDestroy', 'used_items')
+
     <script>
-        let deleteUrl = ''; // Simpan URL target
+        // Serial Number Validation
+        let serialCheckTimeout;
+        let isSerialValid = {{ isset($laptop) ? 'true' : 'false' }}; // Default true saat edit
+        let isCheckingSerial = false;
+        const originalSerialNumber = "{{ $laptop->serial_number ?? '' }}";
+        
+        $('#serial_number').on('input', function() {
+            clearTimeout(serialCheckTimeout);
+            const serialNumber = $(this).val().trim();
+            const laptopId = $('#laptop_id').val();
+            
+            // Reset state
+            $('#serial-status i').removeClass().addClass('fas fa-circle text-muted');
+            $('#serial-feedback').removeClass().html('');
+            $('#serial_number').removeClass('is-valid is-invalid');
+            
+            if (serialNumber.length === 0) {
+                isSerialValid = false;
+                isCheckingSerial = false;
+                return;
+            }
+            
+            // Jika serial number sama dengan original (saat edit), langsung valid
+            if (originalSerialNumber && serialNumber === originalSerialNumber) {
+                isSerialValid = true;
+                isCheckingSerial = false;
+                $('#serial_number').addClass('is-valid');
+                $('#serial-status i').removeClass().addClass('fas fa-check-circle text-success');
+                $('#serial-feedback').removeClass().addClass('text-success').html(
+                    '<i class="fas fa-info-circle mr-1"></i>Serial number tidak berubah'
+                );
+                return;
+            }
+            
+            // Show loading
+            isCheckingSerial = true;
+            $('#serial-status i').removeClass().addClass('fas fa-spinner fa-spin text-primary');
+            $('#serial-feedback').removeClass().addClass('text-muted').html('<i class="fas fa-clock mr-1"></i>Mengecek ketersediaan...');
+            
+            serialCheckTimeout = setTimeout(function() {
+                $.ajax({
+                    url: "{{ route('used-laptop.check-serial') }}",
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        serial_number: serialNumber,
+                        laptop_id: laptopId
+                    },
+                    success: function(response) {
+                        isCheckingSerial = false;
+                        
+                        if (response.exists) {
+                            // Serial number sudah ada
+                            isSerialValid = false;
+                            $('#serial_number').addClass('is-invalid');
+                            $('#serial-status i').removeClass().addClass('fas fa-times-circle text-danger');
+                            $('#serial-feedback').removeClass().addClass('text-danger').html(
+                                '<i class="fas fa-exclamation-triangle mr-1"></i>' +
+                                '<strong>Serial number sudah terdaftar!</strong><br>' +
+                                '<small>Laptop: ' + response.laptop.brand + ' - ' + response.laptop.name + 
+                                ' <a href="/used-laptop/' + response.laptop.slug + '" target="_blank" class="text-primary">Lihat Detail <i class="fas fa-external-link-alt"></i></a></small>'
+                            );
+                            
+                            // Show sweet alert
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Serial Number Sudah Terdaftar',
+                                html: '<p class="mb-2">Serial number <strong>' + serialNumber + '</strong> sudah digunakan untuk:</p>' +
+                                      '<div class="alert alert-warning">' +
+                                      '<strong>' + response.laptop.brand + ' - ' + response.laptop.name + '</strong>' +
+                                      '</div>',
+                                showCancelButton: true,
+                                confirmButtonText: '<i class="fas fa-eye mr-1"></i> Lihat Laptop',
+                                cancelButtonText: 'Tutup',
+                                confirmButtonColor: '#007bff',
+                                cancelButtonColor: '#6c757d',
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.open('/used-laptop/' + response.laptop.slug, '_blank');
+                                }
+                            });
+                        } else {
+                            // Serial number tersedia
+                            isSerialValid = true;
+                            $('#serial_number').removeClass('is-invalid').addClass('is-valid');
+                            $('#serial-status i').removeClass().addClass('fas fa-check-circle text-success');
+                            $('#serial-feedback').removeClass().addClass('text-success').html(
+                                '<i class="fas fa-check mr-1"></i>Serial number tersedia'
+                            );
+                        }
+                    },
+                    error: function() {
+                        isCheckingSerial = false;
+                        isSerialValid = false;
+                        $('#serial-status i').removeClass().addClass('fas fa-exclamation-circle text-warning');
+                        $('#serial-feedback').removeClass().addClass('text-warning').html(
+                            '<i class="fas fa-exclamation-triangle mr-1"></i>Gagal memeriksa serial number. Silakan coba lagi.'
+                        );
+                    }
+                });
+            }, 800); // Debounce 800ms
+        });
+        
+        // Validate on form submit
+        $('#laptop-form').on('submit', function(e) {
+            const serialNumber = $('#serial_number').val().trim();
+            
+            // Cek jika masih dalam proses pengecekan
+            if (isCheckingSerial) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Mohon Tunggu',
+                    text: 'Sedang memvalidasi serial number...',
+                    confirmButtonColor: '#007bff',
+                });
+                return false;
+            }
+            
+            // Jika serial number sama dengan original (saat edit), skip validasi
+            if (originalSerialNumber && serialNumber === originalSerialNumber) {
+                convertCurrencyToNumber();
+                disableSubmitButton();
+                return true; // Allow form submission
+            }
+            
+            // Validasi serial number
+            if (!isSerialValid) {
+                e.preventDefault();
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    text: 'Serial number sudah terdaftar atau tidak valid. Silakan gunakan serial number yang berbeda.',
+                    confirmButtonColor: '#dc3545',
+                });
+                
+                // Scroll to serial number field
+                $('html, body').animate({
+                    scrollTop: $('#serial_number').offset().top - 100
+                }, 500);
+                
+                $('#serial_number').focus();
+                return false;
+            }
+            
+            // Jika semua validasi lolos
+            convertCurrencyToNumber();
+            disableSubmitButton();
+            return true; // Allow form submission
+        });
+        
+        // Function to disable submit button
+        function disableSubmitButton() {
+            const btnSubmit = document.getElementById('submitBtn');
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = `
+                <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                Loading...
+            `;
+        }
+        
         /// Format angka ke format mata uang Indonesia
         function formatCurrency(input) {
             // Hapus karakter selain angka
@@ -501,11 +741,6 @@
             `;
             container.appendChild(item);
             repairCounter++;
-            
-            // Enable all remove buttons
-            document.querySelectorAll('.btn-remove-repair').forEach(btn => {
-                btn.disabled = false;
-            });
         });
         
         // Remove repair item
@@ -541,21 +776,12 @@
             }
         });
         
-        // Konversi format mata uang sebelum submit form
-        document.getElementById('laptop-form').addEventListener('submit', function(e) {
-            convertCurrencyToNumber();
-            const btnSubmit = document.getElementById('submitBtn');
-            btnSubmit.disabled = true;
-            btnSubmit.innerHTML = `
-                <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
-                Loading...
-            `;
-            return true;
-        });
-        
         // Inisialisasi total biaya perbaikan
         calculateTotalRepairCost();
-        
+    </script>
+    
+    @canAccess('mediaDestroy', 'used_items')
+    <script>
         // Setup delete photo modal
         $('#deletePhotoModal').on('show.bs.modal', function (event) {
             const button = $(event.relatedTarget);
@@ -564,7 +790,6 @@
 
             console.log("hore");
             
-
             // Excekcutie
             let url = "{{ route('used-laptop.media.destroy', ':id') }}";
             url = url.replace(':id', mediaId);
