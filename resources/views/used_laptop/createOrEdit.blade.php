@@ -28,9 +28,19 @@
                 </h3>
                 <div class="border-bottom border-primary mt-2"></div>
             </div>
-            
             <div class="row">
                 <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="laptop_type">Tipe Laptop <span class="text-danger">*</span></label>
+                        <select class="form-control" id="laptop_type" name="is_sold" required>
+                            @foreach($laptopType as $key => $value)
+                                <option value="{{ $value }}" 
+                                    {{ isset($laptop) && strval($laptop->is_sold) === strval($value) ? 'selected' : '' }}>
+                                    {{ $key }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label for="name">Nama Laptop <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="name" name="name" 

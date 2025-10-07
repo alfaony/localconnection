@@ -41,7 +41,8 @@ class UsedLaptopController extends Controller
     public function create()
     {
         $checkItems = MasterCheckItem::where('type', 'laptop_type')->byCompany(Auth::user()->company_id)->get();
-        return view('used_laptop.createOrEdit', compact('checkItems'));
+        $laptopType = config('custom.postion_latpop');
+        return view('used_laptop.createOrEdit', compact('checkItems', 'laptopType'));
     }
 
     /**
@@ -72,11 +73,13 @@ class UsedLaptopController extends Controller
                 'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
                 'check_items' => 'nullable|array',
                 'repairs' => 'nullable|array',
+                'is_sold' => 'nullable|string',
             ]);
 
             // dd()
             // Simpan data laptop
             $laptop = new UsedLaptop();
+            $laptop->is_sold = $validated['is_sold'] ?? null;
             $laptop->company_id = Auth::user()->company_id;
             $laptop->brand = $validated['brand'];
             $laptop->user_id = Auth::user()->id;
@@ -201,8 +204,9 @@ class UsedLaptopController extends Controller
     public function edit($slug)
     {
         $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
+        $laptopType = config('custom.postion_latpop');
         $checkItems = MasterCheckItem::where('type','laptop_type')->byCompany(Auth::user()->company_id)->get();
-        return view('used_laptop.createOrEdit', compact('checkItems', 'laptop'));
+        return view('used_laptop.createOrEdit', compact('checkItems', 'laptop','laptopType'));
 
     }
 
@@ -296,11 +300,13 @@ class UsedLaptopController extends Controller
                 'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
                 'check_items' => 'required|array|min:1',
                 'repairs' => 'nullable|array',
+                'is_sold' => 'nullable|string',
             ]);
-            
+
             // Simpan atau update data laptop
             if ($laptop) {
                 $laptop->update([
+                    'is_sold' => $validated['is_sold'],
                     'weight' => $validated['weight'] ?? null,
                     'serial_number' => $validated['serial_number'],
                     'name' => $validated['name'],

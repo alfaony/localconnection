@@ -161,4 +161,9 @@ return
       [
          'free_months' => 'Gratis Bulan',
       ],
+      'postion_latpop' =>
+      [
+         'Dijual' => 0,
+         'Inventory' => null
+      ]
 ];
