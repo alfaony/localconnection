@@ -62,6 +62,9 @@ class CoverageServiceForm extends Component
             $this->district_id = 'other';
             $this->subdistrict_id = 'other';
         }
+        
+        // Reload ODS ketika province berubah
+        $this->loadAvailableOds();
     }
 
     public function updatedCityId($value)
@@ -73,16 +76,22 @@ class CoverageServiceForm extends Component
             $this->district_id = 'other';
             $this->subdistrict_id = 'other';
         }
+        
+        // Reload ODS ketika city berubah
+        $this->loadAvailableOds();
     }
 
     public function updatedDistrictId($value)
     {
         $this->subdistrict_id = null;
-        if($value === 'other') 
-            {
+        if($value === 'other') {
             $this->subdistrict_id = 'other';
         }
+        
+        // Reload ODS ketika district berubah
+        $this->loadAvailableOds();
     }
+    
     public function mount($id = null)
     {
         if ($id) {
@@ -95,18 +104,52 @@ class CoverageServiceForm extends Component
             $this->subdistrict_id = $this->coverageService->subdistrict_id;
             
             $this->ods = $this->coverageService->coverageServiceOds->pluck('optical_distribution_id')->toArray();
-
-            $this->allOds = OpticalDistribution::byCompany(auth()->user()->company_id)
-            ->where(function ($query) {
-                $query->whereDoesntHave('coverageServicesDistribution')
-                    ->orWhereHas('coverageServicesDistribution', function ($q) {
-                        $q->where('coverage_service_id', $this->coverageServiceId);
-                    });
-            })->get();
-        }else
-        {
-            $this->allOds = OpticalDistribution::byCompany(auth()->user()->company_id)->whereDoesntHave('coverageServicesDistribution')->get();
         }
+        
+        $this->loadAvailableOds();
+    }
+
+    /**
+     * Load ODS yang tersedia berdasarkan district yang dipilih
+     */
+    protected function loadAvailableOds()
+    {
+        $query = OpticalDistribution::byCompany(auth()->user()->company_id);
+        
+        // Jika district sudah dipilih dan bukan 'other'
+        if ($this->district_id && $this->district_id !== 'other') {
+            $query->where(function ($q) {
+                // ODS yang belum digunakan sama sekali
+                $q->whereDoesntHave('coverageServicesDistribution')
+                  // ATAU ODS yang sudah digunakan tapi di Coverage Service dengan district yang SAMA
+                  ->orWhereHas('coverageServicesDistribution', function ($subQuery) {
+                      $subQuery->whereHas('coverageService', function ($csQuery) {
+                          $csQuery->where('district_id', $this->district_id);
+                      });
+                  });
+                  
+                // Jika sedang edit, tambahkan ODS yang digunakan di Coverage Service ini
+                if ($this->coverageServiceId) {
+                    $q->orWhereHas('coverageServicesDistribution', function ($subQuery) {
+                        $subQuery->where('coverage_service_id', $this->coverageServiceId);
+                    });
+                }
+            });
+        } else {
+            // Jika district belum dipilih, tampilkan semua ODS yang belum digunakan
+            $query->where(function ($q) {
+                $q->whereDoesntHave('coverageServicesDistribution');
+                
+                // Jika sedang edit, tambahkan ODS yang digunakan di Coverage Service ini
+                if ($this->coverageServiceId) {
+                    $q->orWhereHas('coverageServicesDistribution', function ($subQuery) {
+                        $subQuery->where('coverage_service_id', $this->coverageServiceId);
+                    });
+                }
+            });
+        }
+        
+        $this->allOds = $query->get();
     }
 
     public function save()
