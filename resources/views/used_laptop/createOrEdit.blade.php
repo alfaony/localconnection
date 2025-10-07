@@ -62,7 +62,7 @@
                                value="{{ old('brand', $laptop->brand ?? '') }}"
                                placeholder="Apple" required>
                     </div>
-                    
+                    @canAccess('checkSerialNumber', 'used_laptops')
                     <div class="form-group">
                         <label for="serial_number">Serial Number <span class="text-danger">*</span></label>
                         <div class="input-group">
@@ -78,6 +78,7 @@
                         <small id="serial-feedback" class="form-text"></small>
                         <input type="hidden" id="laptop_id" value="{{ $laptop->id ?? '' }}">
                     </div>
+                    @endcanAccess
 
                     <div class="form-group">
                         <label for="processor">Processor <span class="text-danger">*</span></label>
@@ -462,6 +463,7 @@
     <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
     <script src="{{ asset('js/thriveEditor.js') }}"></script>
 
+    @canAccess('checkSerialNumber', 'used_laptops')
     <script>
         // Serial Number Validation
         let serialCheckTimeout;
@@ -779,6 +781,7 @@
         // Inisialisasi total biaya perbaikan
         calculateTotalRepairCost();
     </script>
+    @endcanAccess
     
     @canAccess('mediaDestroy', 'used_items')
     <script>
