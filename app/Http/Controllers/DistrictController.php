@@ -111,11 +111,11 @@ class DistrictController extends Controller
                 ->get();
         } else {
             $districts = District::where('name', 'like', "%$query%")
-                ->whereHas('city', function ($q) use ($query) {
-                    $q->whereHas('province', function ($p) use ($query) {
-                        $p->where('name', 'like', "%$query%");
-                    });
-                })
+                // ->whereHas('city', function ($q) use ($query) {
+                    // $q->whereHas('province', function ($p) use ($query) {
+                        // $p->where('name', 'like', "%$query%");
+                    // });
+                // })
                 ->limit(10)
                 ->get();
         }
