@@ -155,7 +155,7 @@ class ImportCoverageService extends Command
             
             // Cari kota
             $city = City::where('province_id', $province->id)
-                        ->where('name', 'like', '%' . $data['city'] . '%')
+                        ->where('name', $data['city'])
                         ->first();
             if (!$city) {
                 DB::rollBack();
@@ -167,7 +167,7 @@ class ImportCoverageService extends Command
             
             // Cari kecamatan
             $district = District::where('city_id', $city->id)
-                               ->where('name', 'like', '%' . $data['district'] . '%')
+                               ->where('name', $data['district'])
                                ->first();
             if (!$district) {
                 DB::rollBack();
@@ -179,7 +179,7 @@ class ImportCoverageService extends Command
             
             // Cari kelurahan
             $subdistrict = Subdistrict::where('district_id', $district->id)
-                                     ->where('name', 'like', '%' . $data['subdistrict'] . '%')
+                                     ->where('name', $data['subdistrict'])
                                      ->first();
             if (!$subdistrict) {
                 DB::rollBack();
@@ -276,7 +276,7 @@ class ImportCoverageService extends Command
         
         try {
             // Cari provinsi
-            $province = Province::where('name', 'like', '%' . $data['province'] . '%')->first();
+            $province = Province::where('name', $data['province'])->first();
             if (!$province) {
                 DB::rollBack();
                 return [
@@ -287,7 +287,7 @@ class ImportCoverageService extends Command
             
             // Cari kota
             $city = City::where('province_id', $province->id)
-                        ->where('name', 'like', '%' . $data['city'] . '%')
+                        ->where('name', $data['city'])
                         ->first();
             if (!$city) {
                 DB::rollBack();
@@ -299,7 +299,7 @@ class ImportCoverageService extends Command
             
             // Cari kecamatan
             $district = District::where('city_id', $city->id)
-                               ->where('name', 'like', '%' . $data['district'] . '%')
+                               ->where('name', $data['district'])
                                ->first();
             if (!$district) {
                 DB::rollBack();
@@ -311,7 +311,7 @@ class ImportCoverageService extends Command
             
             // Cari kelurahan
             $subdistrict = Subdistrict::where('district_id', $district->id)
-                                     ->where('name', 'like', '%' . $data['subdistrict'] . '%')
+                                     ->where('name', $data['subdistrict'])
                                      ->first();
             if (!$subdistrict) {
                 DB::rollBack();
