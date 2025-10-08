@@ -52,11 +52,12 @@ class UsedLaptopController extends Controller
      */
     public function store(Request $request)
     {
-        
+
         DB::beginTransaction();
         try {
             // Validasi data utama laptop
             $validated = $request->validate([
+                'rack_id' => 'nullable|exists:racks,id',
                 'weight' => 'nullable|numeric|min:0',
                 'name' => 'required|string|max:255',
                 'brand' => 'required|string|max:255',
@@ -74,9 +75,9 @@ class UsedLaptopController extends Controller
                 'repairs' => 'nullable|array',
             ]);
 
-            // dd()
             // Simpan data laptop
             $laptop = new UsedLaptop();
+            $laptop->rack_id = $validated['rack_id'];
             $laptop->company_id = Auth::user()->company_id;
             $laptop->brand = $validated['brand'];
             $laptop->user_id = Auth::user()->id;
@@ -281,6 +282,7 @@ class UsedLaptopController extends Controller
         try {
             // Validasi data utama laptop
             $validated = $request->validate([
+                'rack_id' => 'nullable|exists:racks,id',
                 'weight' => 'nullable|numeric|min:0',
                 'name' => 'required|string|max:255',
                 'brand' => 'required|string|max:255',
@@ -313,6 +315,12 @@ class UsedLaptopController extends Controller
                     'purchase_price' => $validated['purchase_price'],
                     'notes' => $validated['notes'] ?? null,
                 ]);
+
+                if($validated['rack_id']) 
+                {
+                    $laptop->rack_id = $validated['rack_id'];
+                    $laptop->save();
+                }
             } else {
                 $laptop = UsedLaptop::create([
                     'weight' => $validated['weight'] ?? null,

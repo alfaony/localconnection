@@ -113,6 +113,72 @@
                 </div>
             </div>
             
+            @canAccess('getLocsttion','warehouses')
+            <!-- Section 2: Foto Laptop -->
+            <div class="section-header mb-4 mt-5">
+                <h3 class="text-primary">
+                    <i class="fas fa-map-marked mr-2"></i> Lokasi Barang
+                </h3>
+                <div class="border-bottom border-primary mt-2"></div>
+            </div>
+
+            <div class="row">
+                <!-- Warehouse -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="warehouse_id">Warehouse <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <select class="form-control" id="warehouse_id" name="warehouse_id" required>
+                                <option value="">Pilih Warehouse</option>
+                            </select>
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="warehouse-status">
+                                    <i class="fas fa-circle text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <small id="warehouse-helper" class="form-text text-muted"></small>
+                    </div>
+                </div>
+
+                <!-- Zone -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="zone_id">Zone <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <select class="form-control" id="zone_id" name="zone_id" required disabled>
+                                <option value="">Pilih Zone</option>
+                            </select>
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="zone-status">
+                                    <i class="fas fa-circle text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <small id="zone-helper" class="form-text text-muted"></small>
+                    </div>
+                </div>
+
+                <!-- Rack -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="rack_id">Rack <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <select class="form-control" id="rack_id" name="rack_id" required disabled>
+                                <option value="">Pilih Rack</option>
+                            </select>
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="rack-status">
+                                    <i class="fas fa-circle text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <small id="rack-helper" class="form-text text-muted"></small>
+                    </div>
+                </div>
+            </div>
+            @endcanAccess
+            
             <!-- Section 2: Foto Laptop -->
             <div class="section-header mb-4 mt-5">
                 <h3 class="text-primary">
@@ -324,6 +390,7 @@
 
 @section('css')
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <style>
         .section-header {
             position: relative;
@@ -360,19 +427,145 @@
             background-color: #f8f9fa;
             border-left: 4px solid #dc3545;
         }
+
+        /* ============================================ */
+        /* ✅ SELECT2 CSS YANG BENAR */
+        /* ============================================ */
+        
+        /* Container select2 */
+        .select2-container {
+            width: 100% !important;
+        }
+        
+        /* Single selection box */
+        .select2-container--default .select2-selection--single {
+            height: 38px !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 0.25rem !important;
+            background-color: #fff;
+        }
+        
+        /* Text yang ditampilkan */
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px !important;
+            padding-left: 12px !important;
+            padding-right: 20px !important;
+            color: #495057;
+        }
+        
+        /* Arrow dropdown */
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+            top: 1px !important;
+            right: 1px !important;
+        }
+        
+        /* Dropdown results */
+        .select2-container--default .select2-results__option {
+            padding: 6px 12px;
+        }
+        
+        /* Hover state */
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #007bff !important;
+            color: white;
+        }
+        
+        /* Disabled state */
+        .select2-container--default.select2-container--disabled .select2-selection--single {
+            background-color: #e9ecef !important;
+            cursor: not-allowed !important;
+            border-color: #ced4da !important;
+        }
+        
+        /* Focus state */
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #80bdff !important;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25) !important;
+        }
+        
+        /* Placeholder */
+        .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            color: #6c757d;
+        }
+        
+        /* Dropdown */
+        .select2-dropdown {
+            border: 1px solid #ced4da !important;
+            border-radius: 0.25rem !important;
+        }
+        
+        /* Search box dalam dropdown */
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            padding: 4px 8px;
+        }
     </style>
 @stop
 
 @section('js')
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- ✅ GUNAKAN URUTAN INI -->
     <!-- Select2 JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-    <script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Quill Editor -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <script src="{{ asset('js/thriveEditor.js') }}"></script>
-    @canAccess('mediaDestroy', 'used_items')
+
+    <!-- ✅ Include Warehouse Location Selector -->
+    @canAccess('getLocation','warehouses')
+    <script src="{{ asset('js/warehouseLocation.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            console.log('jQuery version:', $.fn.jquery);
+            console.log('Select2 available:', typeof $.fn.select2 !== 'undefined');
+            
+            const laptopData = {
+                isEditMode: @json(isset($laptop) && $laptop->rack),
+                // ✅ JANGAN set currentRackId untuk exclude
+                currentRackId: null,  // Set null agar tidak di-exclude
+                initialWarehouseId: @json(isset($laptop) && $laptop->rack && $laptop->rack->zone ? $laptop->rack->zone->warehouse_id : null),
+                initialZoneId: @json(isset($laptop) && $laptop->rack ? $laptop->rack->zone_id : null),
+                initialRackId: @json(isset($laptop) && $laptop->rack_id ? $laptop->rack_id : null)
+            };
+            
+            console.log('Laptop data:', laptopData);
+            
+            const locationSelector = new WarehouseLocationSelector({
+                apiUrl: '{{ route("warehouses.get-location") }}',
+                
+                isEditMode: laptopData.isEditMode,
+                currentRackId: null,  // Tidak exclude
+                initialWarehouseId: laptopData.initialWarehouseId,
+                initialZoneId: laptopData.initialZoneId,
+                initialRackId: laptopData.initialRackId,
+                
+                useSelect2: true,  // ✅ DISABLE Select2 dulu
+                showAlerts: true,
+                debug: true
+            });
+            
+            $('#laptop-form').on('submit', function(e) {
+                if (!locationSelector.validate()) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                const values = locationSelector.getValues();
+                console.log('Selected location:', values);
+                
+                return true;
+            });
+        });
+    </script>
+    @endcanAccess
+
+    @canAccess('checkSerialNumber', 'used_laptops')
     <script>
         let deleteUrl = ''; // Simpan URL target
         /// Format angka ke format mata uang Indonesia

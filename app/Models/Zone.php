@@ -42,6 +42,11 @@ class Zone extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    public function racks()
+    {
+        return $this->hasMany(Rack::class);
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
