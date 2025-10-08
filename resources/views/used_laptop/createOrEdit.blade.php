@@ -53,12 +53,23 @@
                                placeholder="Apple" required>
                     </div>
                     
+                     @canAccess('checkSerialNumber', 'used_laptops')
                     <div class="form-group">
                         <label for="serial_number">Serial Number <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="serial_number" name="serial_number" 
-                            value="{{ old('serial_number', $laptop->serial_number ?? '') }}"
-                            placeholder="Masukkan Serial Number" required>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="serial_number" name="serial_number" 
+                                value="{{ old('serial_number', $laptop->serial_number ?? '') }}"
+                                placeholder="Masukkan Serial Number" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="serial-status">
+                                    <i class="fas fa-circle text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <small id="serial-feedback" class="form-text"></small>
+                        <input type="hidden" id="laptop_id" value="{{ $laptop->id ?? '' }}">
                     </div>
+                    @endcanAccess
 
                     <div class="form-group">
                         <label for="processor">Processor <span class="text-danger">*</span></label>
