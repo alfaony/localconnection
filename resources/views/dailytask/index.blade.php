@@ -237,44 +237,44 @@
                         <td class="name-cell">{{ $dailytask->assign->name ?? '' }}</td>
                         <td>
                             @if(!$dailytask->approved)
-                            @canAccess('show','dailytasks')
+                            @if($isShow)
                             <button class="btn btn-info btn-sm show-popup-btn" data-slug-next="{{ $nextTask ? $nextTask->slug : '' }}" id="btn-show-{{ $dailytask->id }}" data-task-id="{{ $dailytask->id }}" data-task-slug="{{ $dailytask->slug }}">
                                 <i class="fa fa-eye"></i>
                             </button>
-                            @endcanAccess
+                            @endif
                             <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
                                 @if(($dailytask->user_id == Auth::user()->id) || (Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER && $dailytask->taskStatus->name == \App\Schemas\ParamSchema::COMPLATE))
-                                @canAccess('edit','dailytasks')
+                                @if($isEdit)
                                 <a href="{{ route('dailytask.edit', $dailytask->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
-                                @endcanAccess
+                                @endif
                                 @csrf
                                 @method('DELETE')
-                                @canAccess('destroy','dailytasks')
+                                @if($isDestroy)
                                 <input type="hidden" name="redirect" value="back">
                                 <button type="button" class="btn btn-danger delete-button btn-sm"><i class="fa fa-trash"></i></button>
-                                @endcanAccess
+                                @endif
                                 @endif
                             </form>
                             @else
-                            @canAccess('show','dailytasks')
+                            @if($isShow)
                             <button class="btn btn-info btn-sm show-popup-btn" data-slug-next="{{ $nextTask ? $nextTask->slug : '' }}" id="btn-show-{{ $dailytask->id }}" data-task-id="{{ $dailytask->id }}" data-task-slug="{{ $dailytask->slug }}">
                                 <i class="fa fa-eye"></i>
                             </button>
-                            @endcanAccess
-                            @canAccess('edit','dailytasks')
-                            @canAccess('approvement','dailytasks')
+                            @endif
+                            @if($isEdit)
+                            @if($isApprovement)
                             <a href="{{ route('dailytask.edit', $dailytask->slug) }}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i></a>
-                            @endcanAccess
-                            @endcanAccess
+                            @endif
+                            @endif
 
                             @if(Auth::user()->role->name == \App\Schemas\RoleSchema::ROOT || Auth::user()->role->name == \App\Schemas\RoleSchema::ADMIN || Auth::user()->role->name == \App\Schemas\RoleSchema::MANAGER)
                             <form action="{{ route('dailytask.destroy', $dailytask->slug) }}" method="POST" style="display:inline-block;">
                                 @csrf
                                 @method('DELETE')
-                                @canAccess('destroy','dailytasks')
+                                @if($isDestroy)
                                 <input type="hidden" name="redirect" value="back">
                                 <button type="button" class="btn btn-danger delete-button btn-sm"><i class="fa fa-trash"></i></button>
-                                @endcanAccess
+                                @endif
                             </form>
                             @endif
                             @endif

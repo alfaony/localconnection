@@ -167,8 +167,14 @@ class DailyTaskController extends Controller
         $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
         $dailyTaskProjects = DailyTaskProject::byCompany(Auth::user()->company_id)->get(); 
 
+        // permission
+        $isShow = Access::can('show','dailytasks');
+        $isEdit = Access::can('edit','dailytasks');
+        $isDestroy = Access::can('destroy','dailytasks');
+        $isApprovement = Access::can('approvement','dailytasks');
+
         // Kembalikan view dengan data
-        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss', 'divisions','dailyTaskProjects'));
+        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss', 'divisions','dailyTaskProjects', 'isShow', 'isEdit', 'isDestroy', 'isApprovement'));
     }
 
     public function create()
