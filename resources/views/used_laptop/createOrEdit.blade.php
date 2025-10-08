@@ -113,7 +113,7 @@
                 </div>
             </div>
             
-            @canAccess('getLocsttion','warehouses')
+            @canAccess('getLocation','warehouses')
             <!-- Section 2: Foto Laptop -->
             <div class="section-header mb-4 mt-5">
                 <h3 class="text-primary">
