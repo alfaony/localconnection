@@ -308,7 +308,7 @@
         </div>
     </div>
     <!-- Form Input Harga Jual (hanya jika belum terjual) -->
-    @if(!$laptop->is_sold)
+    @if(isset($laptop->is_sold) && !$laptop->is_sold)
     <div class="card mt-4">
         <div class="card-header bg-success text-white">
             <h5 class="mb-0">

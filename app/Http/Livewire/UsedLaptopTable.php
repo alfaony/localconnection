@@ -50,7 +50,6 @@ class UsedLaptopTable extends Component
         'purchase_price' => 'required|numeric|min:0',
         'is_sold' => 'boolean',
         'sold_price' => 'nullable|required_if:is_sold,true|numeric|min:0',
-        'sold_at' => 'nullable|required_if:is_sold,true|date',
     ];
 
     public function sortBy($field)
@@ -166,6 +165,9 @@ class UsedLaptopTable extends Component
         })
         ->when($this->statusFilter === 'unsold', function ($query) {
             $query->where('is_sold', 0);
+        })
+        ->when($this->statusFilter === 'inventory', function ($query) {
+            $query->where('is_sold', null);
         })
          ->when(!$this->statusFilter, function ($query) {
             $query->orderBy('is_sold'); // unsold dulu

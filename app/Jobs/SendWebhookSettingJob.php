@@ -29,7 +29,7 @@ class SendWebhookSettingJob implements ShouldQueue
         try {
             foreach ($this->setting->selected_apps as $app) {
                 if ($app === 'used_laptops') {
-                    $products = UsedLaptop::where('company_id', $this->setting->company_id)->get();
+                    $products = UsedLaptop::where('is_sold', 0)->where('company_id', $this->setting->company_id)->whereNotNull('is_sold')->get();
     
                     foreach ($products as $laptop) 
                     {

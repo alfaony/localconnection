@@ -564,6 +564,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
   Route::delete('used-laptop/mediaDestroy/{id}', [UsedLaptopController::class,'mediaDestroy'])->name('used-laptop.media.destroy');
   Route::patch('used-laptop/maskAsSold/{slug}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.mark-as-sold');
+  Route::post('used-laptop/checkSerialNumber', [UsedLaptopController::class, 'checkSerialNumber'])->name('used-laptop.check-serial');
   Route::resource('used-laptop', UsedLaptopController::class);
 
   Route::resource('master-check-item', MasterCheckItemController::class)->only(['index', 'store', 'update', 'destroy']);

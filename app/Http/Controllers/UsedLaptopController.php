@@ -41,7 +41,8 @@ class UsedLaptopController extends Controller
     public function create()
     {
         $checkItems = MasterCheckItem::where('type', 'laptop_type')->byCompany(Auth::user()->company_id)->get();
-        return view('used_laptop.createOrEdit', compact('checkItems'));
+        $laptopType = config('custom.postion_latpop');
+        return view('used_laptop.createOrEdit', compact('checkItems', 'laptopType'));
     }
 
     /**
@@ -61,7 +62,20 @@ class UsedLaptopController extends Controller
                 'weight' => 'nullable|numeric|min:0',
                 'name' => 'required|string|max:255',
                 'brand' => 'required|string|max:255',
-                'serial_number' => 'required|string|max:255',
+                'serial_number' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    function ($attribute, $value, $fail) {
+                        $exists = UsedLaptop::where('serial_number', $value)
+                            ->byCompany(Auth::user()->company_id)
+                            ->exists();
+                        
+                        if ($exists) {
+                            $fail('Serial number sudah terdaftar di sistem.');
+                        }
+                    }
+                ],
                 'processor' => 'required|string|max:255',
                 'ram' => 'required|string|max:255',
                 'ssd' => 'required|string|max:255',
@@ -73,11 +87,13 @@ class UsedLaptopController extends Controller
                 'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
                 'check_items' => 'nullable|array',
                 'repairs' => 'nullable|array',
+                'is_sold' => 'nullable|string',
             ]);
 
             // Simpan data laptop
             $laptop = new UsedLaptop();
             $laptop->rack_id = $validated['rack_id'];
+            $laptop->is_sold = $validated['is_sold'] ?? null;
             $laptop->company_id = Auth::user()->company_id;
             $laptop->brand = $validated['brand'];
             $laptop->user_id = Auth::user()->id;
@@ -202,8 +218,9 @@ class UsedLaptopController extends Controller
     public function edit($slug)
     {
         $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
+        $laptopType = config('custom.postion_latpop');
         $checkItems = MasterCheckItem::where('type','laptop_type')->byCompany(Auth::user()->company_id)->get();
-        return view('used_laptop.createOrEdit', compact('checkItems', 'laptop'));
+        return view('used_laptop.createOrEdit', compact('checkItems', 'laptop','laptopType'));
 
     }
 
@@ -286,7 +303,24 @@ class UsedLaptopController extends Controller
                 'weight' => 'nullable|numeric|min:0',
                 'name' => 'required|string|max:255',
                 'brand' => 'required|string|max:255',
-                'serial_number' => 'required|string|max:255',
+                'serial_number' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    function ($attribute, $value, $fail) use ($laptop) {
+                        $query = UsedLaptop::where('serial_number', $value)
+                            ->where('company_id', Auth::user()->company_id);
+                        
+                        // Exclude current laptop when editing
+                        if ($laptop) {
+                            $query->where('id', '!=', $laptop->id);
+                        }
+                        
+                        if ($query->exists()) {
+                            $fail('Serial number sudah terdaftar di sistem.');
+                        }
+                    }
+                ],
                 'processor' => 'required|string|max:255',
                 'ram' => 'required|string|max:255',
                 'ssd' => 'required|string|max:255',
@@ -298,11 +332,13 @@ class UsedLaptopController extends Controller
                 'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
                 'check_items' => 'required|array|min:1',
                 'repairs' => 'nullable|array',
+                'is_sold' => 'nullable|string',
             ]);
-            
+
             // Simpan atau update data laptop
             if ($laptop) {
                 $laptop->update([
+                    'is_sold' => $validated['is_sold'],
                     'weight' => $validated['weight'] ?? null,
                     'serial_number' => $validated['serial_number'],
                     'name' => $validated['name'],
@@ -457,5 +493,38 @@ class UsedLaptopController extends Controller
         Storage::delete($media->file_path);
         $media->delete();
         return back()->with('success', 'Media berhasil dihapus!');
+    }
+
+    public function checkSerialNumber(Request $request)
+    {
+        $serialNumber = $request->input('serial_number');
+        $laptopId = $request->input('laptop_id'); // ID laptop saat edit
+        
+        $query = UsedLaptop::where('serial_number', $serialNumber)->byCompany(Auth::user()->company_id);
+        
+        // Exclude current laptop when editing
+        if ($laptopId) {
+            $query->where('id', '!=', $laptopId);
+        }
+        
+        $exists = $query->exists();
+        
+        if ($exists) {
+            $laptop = $query->first();
+            return response()->json([
+                'exists' => true,
+                'message' => 'Serial number sudah terdaftar',
+                'laptop' => [
+                    'name' => $laptop->name,
+                    'brand' => $laptop->brand,
+                    'slug' => $laptop->slug,
+                ]
+            ]);
+        }
+        
+        return response()->json([
+            'exists' => false,
+            'message' => 'Serial number tersedia'
+        ]);
     }
 }
