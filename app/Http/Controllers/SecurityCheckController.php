@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 use App\Schemas\ParamSchema;
+use App\Helpers\Access;
 use Carbon\Carbon;
 
 class SecurityCheckController extends Controller
@@ -20,7 +21,13 @@ class SecurityCheckController extends Controller
         $checks = SecurityCheck::byCompany(Auth::user()->company_id)->with('photos')->orderby('created_at','desc')->paginate(10);
         $today = SecurityCheck::byCompany(Auth::user()->company_id)->where('date',Carbon::now()->format('Y-m-d'))->first();
 
-        return view('security_check.index', compact('checks','today'));
+        // permission
+        $isShow = Access::can('show','security_checks');
+        $isDestroy = Access::can('destroy','security_checks');
+
+
+
+        return view('security_check.index', compact('checks','today', 'isShow', 'isDestroy'));
     }
 
     public function create()
