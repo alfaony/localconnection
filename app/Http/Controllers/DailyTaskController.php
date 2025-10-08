@@ -441,8 +441,15 @@ class DailyTaskController extends Controller
             $types = DailyTaskType::get();
             $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
 
+            // Permission
+            $isCustomfieldupdate = Access::can('customfieldupdate', 'daily_task_projects');
+            $isCustomfielddestroy = Access::can('customfielddestroy', 'daily_task_projects');
+            $isCustomfieldstore = Access::can('customfieldstore', 'daily_task_projects');
+
+            $isDeleteMedia = Access::can('deletemedia', 'dailytasks');
+
             DB::commit();
-            return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap','divisions'));
+            return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap','divisions', 'isDeleteMedia'));
 
         } catch (\Exception $e) {
             // dd($e);

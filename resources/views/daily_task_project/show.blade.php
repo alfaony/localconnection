@@ -48,21 +48,21 @@
                             </ul>
                         </span>
                         <span>
-                            @canAccess('customfieldupdate','daily_task_projects')
+                            @if($isCustomfieldupdate)
                             <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editCustomFieldModal{{ $customField->id }}"><i class="fa fa-edit"></i></button>
-                            @endcanAccess
-                            @canAccess('customfielddestroy','daily_task_projects')
+                            @endif
+                            @if($isCustomfielddestroy)
                             <form action="{{ route('customfielddestroy', $customField->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this custom field?')"><i class="fa fa-trash"></i></button>
                             </form>
-                            @endcanAccess
+                            @endif
                         </span>
                     </li>
 
                     <!-- Edit Custom Field Modal -->
-                    @canAccess('customfieldupdate','daily_task_projects')
+                    @if($isCustomfieldupdate)
                     <div class="modal fade" id="editCustomFieldModal{{ $customField->id }}" tabindex="-1" role="dialog" aria-labelledby="editCustomFieldModalLabel{{ $customField->id }}" aria-hidden="true">
                         <div class="modal-dialog" role="document">
                             <form action="{{ route('customfieldupdate', $customField->id) }}" method="POST">
@@ -107,14 +107,14 @@
                             </form>
                         </div>
                     </div>
-                    @endcanAccess
+                    @endif
                 @endforeach
             </ul>
         </div>
     </div>
 </div>
 
-@canAccess('customfieldstore','daily_task_projects')
+@if($isCustomfieldstore)
 <!-- Create Custom Field Modal -->
 <div class="modal fade" id="createCustomFieldModal" tabindex="-1" role="dialog" aria-labelledby="createCustomFieldModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -159,7 +159,7 @@
         </form>
     </div>
 </div>
-@endcanAccess
+@endif
 
 @endsection
 

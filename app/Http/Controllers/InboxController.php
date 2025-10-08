@@ -6,6 +6,7 @@ use App\Models\Inbox;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\InboxHelper;
+use App\Helpers\Access;
 
 class InboxController extends Controller
 {
@@ -31,8 +32,9 @@ class InboxController extends Controller
         {
             $message->update(['is_notif' => false]);
         }
+        $isShow = Access::can('show','inboxes');
 
-        return view('inbox.index', compact('inboxMessages','unreadMessage'));
+        return view('inbox.index', compact('inboxMessages','unreadMessage', 'isShow'));
     }
 
     /**
