@@ -11,9 +11,9 @@
             Tidak ada pesan yang ditemukan.
         </div>
     @else
-        @if($unreadMessage->count() > 0)
+        @if($unreadCount > 0)
             <div class="alert alert-warning" role="alert">
-                Anda memiliki {{ $unreadMessage->count() }} pesan belum dibaca.
+                Anda memiliki {{ $unreadCount }} pesan belum dibaca.
             </div>
         @endif
         <div class="list-group">
