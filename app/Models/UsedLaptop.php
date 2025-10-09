@@ -50,6 +50,11 @@ class UsedLaptop extends Model
     }
 
     // ✅ Relasi
+    public function rack()
+    {
+        return $this->belongsTo(Rack::class)->withTrashed();
+    }
+
     public function checks()
     {
         return $this->hasMany(UsedLaptopCheck::class);

@@ -42,9 +42,10 @@ class Warehouse extends Model
     {
         if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
-            return $query->whereHas('user', function ($query) use ($companyId) 
+            $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+            return $query->whereHas('user', function ($query) use ($companyIds) 
             {
-                $query->where('company_id', $companyId);
+                $query->whereIn('company_id', $companyIds);
             });
         }
     }
