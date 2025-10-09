@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Http;
 use App\Http\Resources\UsedLaptopResource;
 
 use App\Helpers\WebhookHelper;
+use App\Helpers\Access;
 
 class UsedLaptopController extends Controller
 {
@@ -351,8 +352,7 @@ class UsedLaptopController extends Controller
                     'purchase_price' => $validated['purchase_price'],
                     'notes' => $validated['notes'] ?? null,
                 ]);
-
-                if($validated['rack_id']) 
+                if(Access::can('getLocation','warehouses'))
                 {
                     $laptop->rack_id = $validated['rack_id'];
                     $laptop->save();

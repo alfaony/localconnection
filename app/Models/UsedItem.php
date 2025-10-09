@@ -21,6 +21,7 @@ class UsedItem extends Model
         'qr_code_path',
         'company_id',
         'user_id',
+        'rack_id',
     ];
 
     protected $casts = [

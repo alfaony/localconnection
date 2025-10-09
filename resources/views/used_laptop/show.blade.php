@@ -4,7 +4,9 @@
 
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
-        <h1 class="m-0 text-dark">Detail Laptop Bekas</h1>
+        <h1 class="m-0 text-dark">
+            <i class="fas fa-laptop mr-2"></i> Detail Laptop Bekas
+        </h1>
         <div>
             <a href="{{ route('used-laptop.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left mr-1"></i> Kembali
@@ -22,375 +24,823 @@
 
 @section('content')
 @include('components.alert')
-<div class="card">
-    <div class="card-body">
-        <div class="row">
-            <!-- Kolom Kiri: Detail Utama -->
-            <div class="col-md-8">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div class="mr-auto">
-                        <h3 class="text-primary mb-0">{{ $laptop->name }}</h3>
-                        <p class="text-secondary mt-0 mb-0"><strong>Serial Number:</strong> {{ $laptop->serial_number }}</p>
-                        <p class="text-secondary mt-0 mb-0"><strong>Brand:</strong> {{ $laptop->brand }}</p>
+
+<div class="row">
+    <!-- Kolom Kiri: Detail Utama -->
+    <div class="col-lg-8">
+        <!-- Header Card -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h3 class="text-primary mb-2">{{ $laptop->name }}</h3>
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-tag mr-1"></i> 
+                            <strong>Brand:</strong> {{ $laptop->brand }}
+                        </p>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-barcode mr-1"></i> 
+                            <strong>Serial Number:</strong> 
+                            <code class="bg-light px-2 py-1 rounded">{{ $laptop->serial_number }}</code>
+                        </p>
                     </div>
                     <div>
-                        <span class="badge {{ $laptop->is_sold ? 'badge-success' : 'badge-secondary' }} p-2">
+                        <span class="badge badge-{{ $laptop->is_sold == 1 ? 'success' : ($laptop->is_sold == 0 ? 'warning' : 'info') }} badge-pill px-3 py-2" style="font-size: 1rem;">
+                            <i class="fas fa-{{ $laptop->is_sold == 1 ? 'check-circle' : ($laptop->is_sold == 0 ? 'clock' : 'warehouse') }} mr-1"></i>
                             {{ $laptop->sale_status }}
                         </span>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-microchip text-white"></i>
+        <!-- ============================================ -->
+        <!-- LOKASI PENYIMPANAN CARD -->
+        <!-- ============================================ -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-gradient-primary">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-map-marked-alt mr-2"></i> Lokasi Penyimpanan
+                </h5>
+            </div>
+            <div class="card-body">
+                @if($laptop->rack)
+                    <div class="row">
+                        <!-- Warehouse -->
+                        <div class="col-md-4 mb-3">
+                            <div class="location-card bg-primary text-white">
+                                <div class="location-icon">
+                                    <i class="fas fa-warehouse fa-2x"></i>
                                 </div>
-                                <div>
-                                    <label class="text-muted">Processor</label>
-                                    <p class="font-weight-bold">{{ $laptop->processor }}</p>
+                                <div class="location-content">
+                                    <small class="d-block opacity-75 mb-1">Warehouse</small>
+                                    <h5 class="mb-0 font-weight-bold">
+                                        {{ $laptop->rack->zone->warehouse->name }}
+                                    </h5>
+                                    @if($laptop->rack->zone->warehouse->address)
+                                        <small class="d-block opacity-75 mt-1">
+                                            <i class="fas fa-map-marker-alt mr-1"></i>
+                                            {{ Str::limit($laptop->rack->zone->warehouse->address, 30) }}
+                                        </small>
+                                    @endif
                                 </div>
                             </div>
                         </div>
 
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-memory text-white"></i>
+                        <!-- Zone -->
+                        <div class="col-md-4 mb-3">
+                            <div class="location-card bg-info text-white">
+                                <div class="location-icon">
+                                    <i class="fas fa-map-marker-alt fa-2x"></i>
                                 </div>
-                                <div>
-                                    <label class="text-muted">RAM</label>
-                                    <p class="font-weight-bold">{{ $laptop->ram }}</p>
+                                <div class="location-content">
+                                    <small class="d-block opacity-75 mb-1">Zone</small>
+                                    <h5 class="mb-0 font-weight-bold">
+                                        {{ $laptop->rack->zone->name }}
+                                    </h5>
+                                    @if($laptop->rack->zone->code)
+                                        <small class="d-block opacity-75 mt-1">
+                                            <i class="fas fa-code mr-1"></i> {{ $laptop->rack->zone->code }}
+                                        </small>
+                                    @endif
                                 </div>
                             </div>
                         </div>
 
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-hdd text-white"></i>
+                        <!-- Rack -->
+                        <div class="col-md-4 mb-3">
+                            <div class="location-card bg-secondary text-white">
+                                <div class="location-icon">
+                                    <i class="fas fa-th fa-2x"></i>
                                 </div>
-                                <div>
-                                    <label class="text-muted">SSD</label>
-                                    <p class="font-weight-bold">{{ $laptop->ssd }}</p>
+                                <div class="location-content">
+                                    <small class="d-block opacity-75 mb-1">Rack</small>
+                                    <h5 class="mb-0 font-weight-bold">
+                                        {{ $laptop->rack->name }}
+                                    </h5>
+                                    <small class="d-block opacity-75 mt-1">
+                                        <i class="fas fa-code mr-1"></i> {{ $laptop->rack->code }}
+                                        @if($laptop->rack->capacity)
+                                            <span class="ml-2">
+                                                <i class="fas fa-box mr-1"></i> Kapasitas: {{ $laptop->rack->capacity }}
+                                            </span>
+                                        @endif
+                                    </small>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-md-6">
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-gamepad text-white"></i>
-                                </div>
-                                <div>
-                                    <label class="text-muted">GPU</label>
-                                    <p class="font-weight-bold">{{ $laptop->gpu ?? '-' }}</p>
-                                </div>
-                            </div>
+                    <!-- Location Path Visual -->
+                    <div class="alert alert-light border mb-0">
+                        <div class="d-flex align-items-center justify-content-center flex-wrap">
+                            <span class="badge badge-primary px-3 py-2 mr-2 mb-2">
+                                <i class="fas fa-warehouse mr-1"></i>
+                                {{ $laptop->rack->zone->warehouse->name }}
+                            </span>
+                            <i class="fas fa-chevron-right text-muted mr-2 mb-2"></i>
+                            <span class="badge badge-info px-3 py-2 mr-2 mb-2">
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                {{ $laptop->rack->zone->name }}
+                            </span>
+                            <i class="fas fa-chevron-right text-muted mr-2 mb-2"></i>
+                            <span class="badge badge-secondary px-3 py-2 mb-2">
+                                <i class="fas fa-th mr-1"></i>
+                                {{ $laptop->rack->name }} ({{ $laptop->rack->code }})
+                            </span>
                         </div>
-
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-window-restore text-white"></i>
-                                </div>
-                                <div>
-                                    <label class="text-muted">Sistem Operasi</label>
-                                    <p class="font-weight-bold">{{ $laptop->operating_system ?? '-' }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="icon-circle bg-primary mr-3">
-                                    <i class="fas fa-money-bill-wave text-white"></i>
-                                </div>
-                                <div>
-                                    <label class="text-muted">Harga Beli</label>
-                                    <p class="font-weight-bold">Rp {{ number_format($laptop->purchase_price) }}</p>
-                                </div>
+                    </div>
+                @else
+                    <div class="alert alert-warning mb-0">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle fa-2x mr-3"></i>
+                            <div>
+                                <h6 class="mb-1">Lokasi Belum Ditentukan</h6>
+                                <p class="mb-0 small">Laptop ini belum memiliki lokasi penyimpanan. Silakan edit untuk menambahkan lokasi.</p>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                @if($laptop->notes)
-                <div class="mt-4">
-                    <h5 class="text-primary">
-                        <i class="fas fa-sticky-note mr-2"></i> Catatan
-                    </h5>
-                    <div class="alert alert-light border">
-                        <p>{!! $laptop->notes !!}</p>
-                    </div>
-                </div>
                 @endif
+            </div>
+        </div>
 
-                <!-- Kondisi -->
-                <div class="mt-5">
-                    <h5 class="text-primary">
-                        <i class="fas fa-clipboard-check mr-2"></i> Kondisi
-                    </h5>
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th width="60%">Item Pemeriksaan</th>
-                                    <th>Kondisi</th>
-                                    <th>Catatan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($laptop->checks as $check)
-                                @if($check->status)
-                                <tr>
-                                    <td>
-                                        <strong>{{ $check->item->name }}</strong>
-                                        <div class="text-muted small">{{ $check->item->description }}</div>
-                                    </td>
-                                    <td>
-                                        <span class="badge {{ $check->status == 'good' ? 'badge-success' : 'badge-danger' }}">
-                                            {{ $check->status == 'good' ? 'Baik' : 'Rusak' }}
-                                        </span>
-                                    </td>
-                                    <td>{{ $check->notes ?? '-' }}</td>
-                                </tr>
-                                @endif
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Kerusakan dan Perbaikan -->
-                <div class="mt-5">
-                    <h5 class="text-primary">
-                        <i class="fas fa-tools mr-2"></i> Kerusakan dan Perbaikan
-                    </h5>
-                    @if($laptop->repairs->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th width="70%">Deskripsi Kerusakan</th>
-                                    <th>Biaya Perbaikan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($laptop->repairs as $repair)
-                                <tr>
-                                    <td>{{ $repair->repair_item }}</td>
-                                    <td class="text-danger">Rp {{ number_format($repair->cost) }}</td>
-                                </tr>
-                                @endforeach
-                                <tr class="table-warning">
-                                    <td class="text-right font-weight-bold">Total Biaya Perbaikan:</td>
-                                    <td class="font-weight-bold text-danger">Rp {{ number_format($laptop->repairs->sum('cost')) }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    @else
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle mr-2"></i> Tidak ada kerusakan yang dicatat
-                    </div>
-                    @endif
-                </div>
-
-                <!-- Harga Jual Disarankan -->
-                <div class="mt-5">
-                    <div class="alert bg-light border">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="text-primary mb-1">Harga Jual Disarankan (RAW)</h5>
+        <!-- Spesifikasi Laptop -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-gradient-info">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-desktop mr-2"></i> Spesifikasi Laptop
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="spec-item">
+                            <div class="spec-icon bg-primary">
+                                <i class="fas fa-microchip text-white"></i>
                             </div>
-                            <div class="h5 text-success font-weight-bold">
-                                Rp {{ number_format($laptop->suggested_selling_price) }}
+                            <div class="spec-content">
+                                <small class="text-muted d-block">Processor</small>
+                                <strong>{{ $laptop->processor }}</strong>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="text-primary mb-1">Harga Jual Jakarta</h5>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="spec-item">
+                            <div class="spec-icon bg-success">
+                                <i class="fas fa-memory text-white"></i>
                             </div>
-                            <div class="h5 text-success font-weight-bold">
-                                Rp {{ number_format($laptop->jakarta_price) }}
+                            <div class="spec-content">
+                                <small class="text-muted d-block">RAM</small>
+                                <strong>{{ $laptop->ram }}</strong>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="text-primary mb-1">Harga Jual Jambi</h5>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="spec-item">
+                            <div class="spec-icon bg-info">
+                                <i class="fas fa-hdd text-white"></i>
                             </div>
-                            <div class="h5 text-success font-weight-bold">
-                                Rp {{ number_format($laptop->jambi_price) }}
+                            <div class="spec-content">
+                                <small class="text-muted d-block">Storage (SSD)</small>
+                                <strong>{{ $laptop->ssd }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="spec-item">
+                            <div class="spec-icon bg-warning">
+                                <i class="fas fa-gamepad text-white"></i>
+                            </div>
+                            <div class="spec-content">
+                                <small class="text-muted d-block">GPU</small>
+                                <strong>{{ $laptop->gpu ?? '-' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="spec-item">
+                            <div class="spec-icon bg-secondary">
+                                <i class="fas fa-window-restore text-white"></i>
+                            </div>
+                            <div class="spec-content">
+                                <small class="text-muted d-block">Sistem Operasi</small>
+                                <strong>{{ $laptop->operating_system ?? '-' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="spec-item">
+                            <div class="spec-icon bg-dark">
+                                <i class="fas fa-weight text-white"></i>
+                            </div>
+                            <div class="spec-content">
+                                <small class="text-muted d-block">Berat</small>
+                                <strong>{{ $laptop->weight ?? '-' }} kg</strong>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Kolom Kanan: Foto dan QR Code -->
-            <div class="col-md-4">
-                <!-- Foto Laptop -->
-                <div class="mb-5">
-                    <h5 class="text-primary">
-                        <i class="fas fa-camera mr-2"></i> Foto Laptop
-                    </h5>
-                    @if($laptop->media->count() > 0)
-                        <div class="row">
-                            @foreach($laptop->media as $media)
-                            <div class="col-md-6 mb-3">
+        <!-- Informasi Harga -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-gradient-success">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-money-bill-wave mr-2"></i> Informasi Harga
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="price-card border-danger">
+                            <div class="price-icon bg-danger">
+                                <i class="fas fa-shopping-cart text-white"></i>
+                            </div>
+                            <div class="price-content">
+                                <small class="text-muted d-block mb-1">Harga Beli</small>
+                                <h5 class="mb-0 font-weight-bold text-danger">
+                                    Rp {{ number_format($laptop->purchase_price, 0, ',', '.') }}
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <div class="price-card border-success">
+                            <div class="price-icon bg-success">
+                                <i class="fas fa-map-marker-alt text-white"></i>
+                            </div>
+                            <div class="price-content">
+                                <small class="text-muted d-block mb-1">Harga Jakarta</small>
+                                <h5 class="mb-0 font-weight-bold text-success">
+                                    Rp {{ number_format($laptop->jakarta_price, 0, ',', '.') }}
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <div class="price-card border-warning">
+                            <div class="price-icon bg-warning">
+                                <i class="fas fa-map-marker-alt text-white"></i>
+                            </div>
+                            <div class="price-content">
+                                <small class="text-muted d-block mb-1">Harga Jambi</small>
+                                <h5 class="mb-0 font-weight-bold text-warning">
+                                    Rp {{ number_format($laptop->jambi_price, 0, ',', '.') }}
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Raw Price -->
+                <div class="alert alert-light border">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-calculator text-info mr-2"></i>
+                            <strong>Harga Jual Disarankan (RAW)</strong>
+                            <small class="text-muted d-block">Perhitungan: (Harga Beli + Perbaikan) + 30%</small>
+                        </div>
+                        <h5 class="mb-0 text-info font-weight-bold">
+                            Rp {{ number_format($laptop->suggested_selling_price, 0, ',', '.') }}
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Catatan -->
+        @if($laptop->notes)
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-sticky-note text-warning mr-2"></i> Catatan
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="notes-content">
+                    {!! $laptop->notes !!}
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Kondisi -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-gradient-info">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-clipboard-check mr-2"></i> Checklist Kondisi
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="60%">Item Pemeriksaan</th>
+                                <th class="text-center">Kondisi</th>
+                                <th>Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($laptop->checks->where('status', '!=', null) as $check)
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="check-icon bg-{{ $check->status == 'good' ? 'success' : 'danger' }} mr-3">
+                                            <i class="fas fa-{{ $check->status == 'good' ? 'check' : 'times' }} text-white"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ $check->item->name }}</strong>
+                                            <div class="text-muted small">{{ $check->item->description }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge badge-{{ $check->status == 'good' ? 'success' : 'danger' }} px-3 py-2">
+                                        <i class="fas fa-{{ $check->status == 'good' ? 'check-circle' : 'times-circle' }} mr-1"></i>
+                                        {{ $check->status == 'good' ? 'Baik' : 'Rusak' }}
+                                    </span>
+                                </td>
+                                <td>{{ $check->notes ?? '-' }}</td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="3" class="text-center py-4">
+                                    <i class="fas fa-info-circle text-muted fa-2x mb-2"></i>
+                                    <p class="text-muted mb-0">Tidak ada item yang diperiksa</p>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kerusakan dan Perbaikan -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-gradient-warning">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-tools mr-2"></i> Kerusakan dan Perbaikan
+                </h5>
+            </div>
+            <div class="card-body">
+                @if($laptop->repairs->count() > 0)
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="70%">Deskripsi Kerusakan</th>
+                                <th class="text-right">Biaya Perbaikan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($laptop->repairs as $repair)
+                            <tr>
+                                <td>
+                                    <i class="fas fa-wrench text-warning mr-2"></i>
+                                    {{ $repair->repair_item }}
+                                </td>
+                                <td class="text-right">
+                                    <span class="font-weight-bold text-danger">
+                                        Rp {{ number_format($repair->cost, 0, ',', '.') }}
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-light">
+                            <tr>
+                                <td class="text-right font-weight-bold">Total Biaya Perbaikan:</td>
+                                <td class="text-right">
+                                    <span class="h5 font-weight-bold text-danger mb-0">
+                                        Rp {{ number_format($laptop->repairs->sum('cost'), 0, ',', '.') }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                @else
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle mr-2"></i> Tidak ada kerusakan yang dicatat
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Form Input Harga Jual -->
+        @if(isset($laptop->is_sold) && !$laptop->is_sold)
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-gradient-success">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-money-bill-wave mr-2"></i> Input Penjualan Laptop
+                </h5>
+            </div>
+            <div class="card-body">
+                @canAccess('maskAsSold','used_items')
+                <form action="{{ route('used-laptop.mark-as-sold', $laptop->slug) }}" method="POST" id="sale-form">
+                    @csrf
+                    @method('PATCH')
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="sold_price">
+                                    <i class="fas fa-money-bill-wave text-success mr-1"></i>
+                                    Harga Jual (Rp) <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control form-control-lg" id="sold_price" name="sold_price" 
+                                    required onkeyup="formatCurrency(this)"
+                                    placeholder="Masukkan harga jual">
+                                <small class="form-text text-muted">
+                                    Rekomendasi Jakarta: Rp {{ number_format($laptop->jakarta_price, 0, ',', '.') }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="sold_at">
+                                    <i class="fas fa-calendar-alt text-success mr-1"></i>
+                                    Tanggal Penjualan <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" class="form-control form-control-lg" id="sold_at" name="sold_at" 
+                                    value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}"
+                                    required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right mt-3">
+                        <button type="submit" class="btn btn-success btn-lg px-5">
+                            <i class="fas fa-check-circle mr-2"></i> Tandai Sebagai Terjual
+                        </button>
+                    </div>
+                </form>
+                @endcanAccess
+            </div>
+        </div>
+        @endif
+    </div>
+
+    <!-- Kolom Kanan: Foto, QR Code, dan Info Penjualan -->
+    <div class="col-lg-4">
+        <!-- Foto Laptop -->
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-camera text-primary mr-2"></i> Foto Laptop
+                </h5>
+            </div>
+            <div class="card-body">
+                @if($laptop->media->count() > 0)
+                    <div id="carouselPhotos" class="carousel slide mb-3" data-ride="carousel">
+                        <ol class="carousel-indicators">
+                            @foreach($laptop->media as $index => $media)
+                                <li data-target="#carouselPhotos" data-slide-to="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}"></li>
+                            @endforeach
+                        </ol>
+                        <div class="carousel-inner">
+                            @foreach($laptop->media as $index => $media)
+                            <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
                                 <a href="{{ Storage::url($media->file_path) }}" target="_blank">
-                                    <img src="{{ Storage::url($media->file_path) }}" class="img-fluid img-thumbnail">
+                                    <img src="{{ Storage::url($media->file_path) }}" class="d-block w-100 carousel-img" alt="Foto {{ $index + 1 }}">
                                 </a>
                             </div>
                             @endforeach
                         </div>
-                    @else
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle mr-2"></i> Tidak ada foto tersedia
-                        </div>
-                    @endif
-                </div>
-
-                <!-- QR Code -->
-                <div class="mt-5">
-                    <h5 class="text-primary">
-                        <i class="fas fa-qrcode mr-2"></i> QR Code Laptop
-                    </h5>
-                    <div class="card border">
-                        <div class="card-body text-center">
-                            <div id="qrcode" class="mb-3"></div>
-                            <p class="text-muted small mb-0">
-                                Scan untuk melihat detail laptop di perangkat mobile
-                            </p>
-                            <a href="{{ Storage::url($laptop->qr_code_path) }}" download class="btn btn-sm btn-outline-primary mt-2">
-                                <i class="fas fa-download mr-1"></i> Download QR Code
+                        <a class="carousel-control-prev" href="#carouselPhotos" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next" href="#carouselPhotos" role="button" data-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="sr-only">Next</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Thumbnails -->
+                    <div class="row">
+                        @foreach($laptop->media as $index => $media)
+                        <div class="col-4 mb-2">
+                            <a href="{{ Storage::url($media->file_path) }}" target="_blank">
+                                <img src="{{ Storage::url($media->file_path) }}" class="img-thumbnail thumbnail-img">
                             </a>
                         </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-5">
+                        <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Tidak ada foto tersedia</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- QR Code -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-qrcode text-info mr-2"></i> QR Code Laptop
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div id="qrcode" class="mb-3"></div>
+                <p class="text-muted small mb-3">
+                    Scan untuk melihat detail laptop di perangkat mobile
+                </p>
+                <a href="{{ Storage::url($laptop->qr_code_path) }}" download class="btn btn-outline-primary btn-block">
+                    <i class="fas fa-download mr-1"></i> Download QR Code
+                </a>
+            </div>
+        </div>
+
+        <!-- Info Penjualan -->
+        @if($laptop->is_sold == 1)
+        <div class="card shadow-sm mt-4 border-success">
+            <div class="card-header bg-gradient-success">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-check-circle mr-2"></i> Info Penjualan
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="sale-info-item mb-4">
+                    <div class="sale-icon bg-success">
+                        <i class="fas fa-money-bill-wave text-white fa-2x"></i>
+                    </div>
+                    <div class="sale-content">
+                        <small class="text-muted d-block mb-1">Harga Terjual</small>
+                        <h3 class="text-success font-weight-bold mb-0">
+                            Rp {{ number_format($laptop->sold_price, 0, ',', '.') }}
+                        </h3>
+                        @php
+                            $actualProfit = $laptop->sold_price - $laptop->purchase_price;
+                            $actualProfitPercent = $laptop->purchase_price > 0 ? ($actualProfit / $laptop->purchase_price) * 100 : 0;
+                        @endphp
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up mr-1"></i>
+                            Profit Aktual: +{{ number_format($actualProfitPercent, 1) }}%
+                        </small>
                     </div>
                 </div>
-
-                <!-- Info Penjualan -->
-                @if($laptop->is_sold)
-                <div class="mt-5">
-                    <h5 class="text-primary">
-                        <i class="fas fa-check-circle mr-2"></i> Info Penjualan
-                    </h5>
-                    <div class="card border-success">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-money-bill-wave fa-2x text-success mr-3"></i>
-                                <div>
-                                    <div class="font-weight-bold">Harga Terjual</div>
-                                    <div class="h5 text-success font-weight-bold">
-                                        Rp {{ number_format($laptop->sold_price) }}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-calendar-alt fa-2x text-success mr-3"></i>
-                                <div>
-                                    <div class="font-weight-bold">Tanggal Terjual</div>
-                                    <div class="h4">
-                                        {{ $laptop->sold_at->format('d F Y') }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                
+                <div class="sale-info-item">
+                    <div class="sale-icon bg-info">
+                        <i class="fas fa-calendar-alt text-white fa-2x"></i>
                     </div>
+                    <div class="sale-content">
+                        <small class="text-muted d-block mb-1">Tanggal Terjual</small>
+                        <h4 class="font-weight-bold mb-0">
+                            {{ $laptop->sold_at->format('d F Y') }}
+                        </h4>
+                        <small class="text-muted">
+                            {{ $laptop->sold_at->diffForHumans() }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Metadata -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle text-secondary mr-2"></i> Informasi Sistem
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="metadata-item">
+                    <i class="fas fa-user text-muted mr-2"></i>
+                    <span class="text-muted">Dibuat oleh:</span>
+                    <strong>{{ $laptop->user->name ?? '-' }}</strong>
+                </div>
+                <div class="metadata-item">
+                    <i class="fas fa-calendar-plus text-muted mr-2"></i>
+                    <span class="text-muted">Dibuat pada:</span>
+                    <strong>{{ $laptop->created_at->format('d F Y, H:i') }}</strong>
+                </div>
+                @if($laptop->updated_at != $laptop->created_at)
+                <div class="metadata-item">
+                    <i class="fas fa-calendar-check text-muted mr-2"></i>
+                    <span class="text-muted">Terakhir diupdate:</span>
+                    <strong>{{ $laptop->updated_at->format('d F Y, H:i') }}</strong>
                 </div>
                 @endif
             </div>
         </div>
     </div>
-    <!-- Form Input Harga Jual (hanya jika belum terjual) -->
-    @if(isset($laptop->is_sold) && !$laptop->is_sold)
-    <div class="card mt-4">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-money-bill-wave mr-2"></i> Input Penjualan Laptop
-            </h5>
-        </div>
-        <div class="card-body">
-            @canAccess('maskAsSold','used_items')
-            <form action="{{ route('used-laptop.mark-as-sold', $laptop->slug) }}" method="POST" id="sale-form">
-                @csrf
-                @method('PATCH')
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="sold_price">Harga Jual (Rp) <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="sold_price" name="sold_price" 
-                                required onkeyup="formatCurrency(this)"
-                                placeholder="Masukkan harga jual">
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="sold_at">Tanggal Penjualan <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="sold_at" name="sold_at" 
-                                value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}"
-                                required>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center mt-4">
-                    <div>
-                        <h5 class="text-success">Rekomendasi Harga Jual</h5>
-                        <div class="h3 text-success font-weight-bold">
-                            Rp {{ number_format($laptop->jakarta_price,0,',','.') }}
-                        </div>
-                        <small class="text-muted">(Harga beli + perbaikan) + 30%</small>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check-circle mr-1"></i> Tandai Sebagai Terjual
-                    </button>
-                </div>
-            </form>
-            @endcanAccess
-        </div>
-    </div>
-    @endif
 </div>
 @stop
 
 @section('css')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.css" />
 <style>
-    .info-item {
-        padding: 10px 15px;
-        border-radius: 8px;
-        background-color: #f8f9fa;
-        border-left: 3px solid #007bff;
+    /* Location Cards */
+    .location-card {
+        border-radius: 10px;
+        padding: 20px;
+        height: 100%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
     }
-    
-    .icon-circle {
-        width: 40px;
-        height: 40px;
+
+    .location-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .location-icon {
+        margin-bottom: 15px;
+        opacity: 0.9;
+    }
+
+    .location-content h5 {
+        font-size: 1.1rem;
+    }
+
+    .opacity-75 {
+        opacity: 0.75;
+    }
+
+    /* Spec Items */
+    .spec-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        height: 100%;
+        transition: transform 0.2s;
+    }
+
+    .spec-item:hover {
+        transform: translateX(5px);
+        background: #e9ecef;
+    }
+
+    .spec-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    /* Price Cards */
+    .price-card {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        border-radius: 10px;
+        border: 2px solid;
+        background: white;
+        height: 100%;
+        transition: transform 0.2s;
+    }
+
+    .price-card:hover {
+        transform: scale(1.02);
+    }
+
+    .price-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 20px;
+        flex-shrink: 0;
+    }
+
+    .price-icon i {
+        font-size: 1.5rem;
+    }
+
+    /* Check Icon */
+    .check-icon {
+        width: 35px;
+        height: 35px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
     }
-    
+
+    /* Sale Info */
+    .sale-info-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 10px;
+        background: #f8f9fa;
+    }
+
+    .sale-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    /* Carousel */
+    .carousel-img {
+        height: 300px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .thumbnail-img {
+        height: 80px;
+        object-fit: cover;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .thumbnail-img:hover {
+        transform: scale(1.05);
+    }
+
+    /* QR Code */
+    #qrcode {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
     #qrcode canvas {
-        margin: 0 auto;
-        border: 1px solid #eee;
+        border: 1px solid #dee2e6;
         padding: 10px;
         background: white;
+        border-radius: 8px;
     }
-    
-    .img-thumbnail {
-        height: 150px;
-        object-fit: cover;
+
+    /* Metadata */
+    .metadata-item {
+        padding: 10px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .metadata-item:last-child {
+        border-bottom: none;
+    }
+
+    /* Notes Content */
+    .notes-content {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #ffc107;
+    }
+
+    /* Gradient Headers */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    }
+
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    }
+
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%);
+    }
+
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #d39e00 100%);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .location-card,
+        .price-card,
+        .spec-item {
+            margin-bottom: 15px;
+        }
+
+        .carousel-img {
+            height: 200px;
+        }
     }
 </style>
 @stop
@@ -400,37 +850,30 @@
 <script>
     // Format angka ke format mata uang Indonesia
     function formatCurrency(input) {
-        // Hapus karakter selain angka
         let value = input.value.replace(/[^\d]/g, '');
-        
-        // Simpan nilai asli tanpa format
         input.dataset.rawValue = value;
         
-        // Format angka dengan pemisah ribuan
         if (value.length > 0) {
             value = parseInt(value, 10).toLocaleString('id-ID');
         }
         
-        // Set nilai input
         input.value = value;
     }
 
     // Konversi format mata uang ke angka murni sebelum submit
-    document.getElementById('sale-form').addEventListener('submit', function(e) {
-        const soldPrice = document.getElementById('sold_price');
-        if (soldPrice && soldPrice.dataset.rawValue) {
-            soldPrice.value = soldPrice.dataset.rawValue;
-        }
-        return true;
-    });
-</script>
-<script>
+    const saleForm = document.getElementById('sale-form');
+    if (saleForm) {
+        saleForm.addEventListener('submit', function(e) {
+            const soldPrice = document.getElementById('sold_price');
+            if (soldPrice && soldPrice.dataset.rawValue) {
+                soldPrice.value = soldPrice.dataset.rawValue;
+            }
+            return true;
+        });
+    }
+
     // Generate QR Code
     document.addEventListener('DOMContentLoaded', function() {
-        // URL untuk QR code (detail laptop)
-        const url = "{{ route('used-laptop.show', $laptop->id) }}";
-        
-        // Buat QR code
         new QRCode(document.getElementById("qrcode"), {
             text: "{{ route('used-laptop.show-qr', $laptop->slug) }}",
             width: 200,
@@ -440,14 +883,5 @@
             correctLevel: QRCode.CorrectLevel.H
         });
     });
-
-    // Fungsi download QR Code
-    function downloadQRCode() {
-        const link = document.createElement('a');
-        
-        link.download = 'qr-code-laptop-' + "{{ basename(Storage::url($laptop->qr_code_path)) }}";
-        link.href = "{{ Storage::url($laptop->qr_code_path) }}";
-        link.click();
-    }
 </script>
 @stop

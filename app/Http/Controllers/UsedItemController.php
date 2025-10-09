@@ -9,12 +9,13 @@ use App\Models\UsedItemCheck;
 use App\Models\UsedItemRepair;
 use App\Models\ItemCategory;
 
-
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+
+use App\Helpers\Access;
 
 class UsedItemController extends Controller
 {
@@ -49,6 +50,7 @@ class UsedItemController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'rack_id' => 'nullable|exists:racks,id',
             'name' => 'required|string|max:255',
             'serial_number' => 'nullable|string|max:255',
             'purchase_price' => 'required|numeric|min:0',
@@ -165,6 +167,7 @@ class UsedItemController extends Controller
     {
         DB::beginTransaction();
          $validated = $request->validate([
+            'rack_id' => 'nullable|exists:racks,id',
             'name' => 'required|string|max:255',
             'serial_number' => 'nullable|string|max:255',
             'purchase_price' => 'required|numeric|min:0',
@@ -215,6 +218,12 @@ class UsedItemController extends Controller
             
             // Simpan kategori
             $item->categories()->sync($validated['category_ids'] ?? []);
+
+            if(Access::can('getLocation','warehouses'))
+            {
+                $item->rack_id = $validated['rack_id'];
+                $item->save();
+            }
 
             // Simpan foto baru
             if ($request->hasFile('photos')) {
