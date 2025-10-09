@@ -477,7 +477,7 @@
                                                             <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
                                                                 <i class="fa fa-download"></i> Lihat
                                                             </a>
-                                                            @canAccess('deletemedia','dailytasks')
+                                                            @if($isDeleteMedia)
                                                             <form action="{{ route('dailytask.deletemedia', $media->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this file?');">
                                                                 @csrf
                                                                 @method('DELETE')
@@ -485,7 +485,7 @@
                                                                     <i class="fa fa-trash"></i> Delete
                                                                 </button>
                                                             </form>
-                                                            @endcanAccess
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </div>
