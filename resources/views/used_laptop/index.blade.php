@@ -2,10 +2,6 @@
 
 @section('title', 'Manajemen Laptop Bekas')
 
-@section('content_header')
-    <h1>Manajemen Laptop Bekas</h1>
-@stop
-
 @section('content')
 @canAccess('index','used_items')
     <div class="row">
