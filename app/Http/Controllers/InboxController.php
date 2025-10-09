@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Inbox;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use App\Helpers\InboxHelper;
 use App\Helpers\Access;
 
@@ -17,24 +18,24 @@ class InboxController extends Controller
      */
     public function index()
     {
-        // Mengambil semua pesan yang dikirim oleh pengguna yang sedang login
-        $inboxMessages = Inbox::where('user_id_to', Auth::user()->id)
-                            ->orderBy('created_at', 'desc') // Mengurutkan berdasarkan created_at secara menurun
-                            ->paginate(10); // Melakukan paginasi dengan 10 item per halaman
-                            // ->get();
+        $userId = Auth::id();
 
-        $unreadMessage = Inbox::select('id')->where('user_id_to', Auth::user()->id)
-            ->where('is_notif', true) // update all is_notif false
-            ->orderBy('created_at', 'desc') // Mengurutkan berdasarkan created_at secara menurun
-            ->get();
+        // Mass update dengan scope
+        $unreadCount = Inbox::forUser($userId)
+            ->notifications()
+            ->update(['is_notif' => false]);
 
-        foreach ($unreadMessage as $message) 
-        {
-            $message->update(['is_notif' => false]);
-        }
-        $isShow = Access::can('show','inboxes');
+        // Query dengan scope yang sudah didefinisikan
+        $inboxMessages = Inbox::forUser($userId)
+            ->withSender()
+            ->latest()
+            ->paginate(10);
 
-        return view('inbox.index', compact('inboxMessages','unreadMessage', 'isShow'));
+        $isShow = Access::can('show', 'inboxes');
+
+        Cache::forget("inbox_unread_count_{$userId}");
+
+        return view('inbox.index', compact('inboxMessages', 'unreadCount', 'isShow'));
     }
 
     /**
