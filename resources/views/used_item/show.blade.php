@@ -100,6 +100,7 @@
                                 <div class="location-icon">
                                     <i class="fas fa-map-marker-alt fa-2x"></i>
                                 </div>
+
                                 <div class="location-content">
                                     <small class="d-block opacity-75 mb-1">Zone</small>
                                     <h5 class="mb-0 font-weight-bold">
@@ -125,6 +126,7 @@
                                     <h5 class="mb-0 font-weight-bold">
                                         {{ $usedItem->rack->name }}
                                     </h5>
+                                    {{--
                                     <small class="d-block opacity-75 mt-1">
                                         <i class="fas fa-code mr-1"></i> {{ $usedItem->rack->code }}
                                         @if($usedItem->rack->capacity)
@@ -133,6 +135,7 @@
                                             </span>
                                         @endif
                                     </small>
+                                    --}}
                                 </div>
                             </div>
                         </div>
@@ -153,7 +156,7 @@
                             <i class="fas fa-chevron-right text-muted mr-2 mb-2"></i>
                             <span class="badge badge-secondary px-3 py-2 mb-2">
                                 <i class="fas fa-th mr-1"></i>
-                                {{ $usedItem->rack->name }} ({{ $usedItem->rack->code }})
+                                {{ $usedItem->rack->name }}
                             </span>
                         </div>
                     </div>

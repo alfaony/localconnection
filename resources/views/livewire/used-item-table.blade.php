@@ -299,7 +299,7 @@
                                         <div>
                                             <span class="badge badge-secondary">
                                                 <i class="fas fa-th mr-1"></i>
-                                                {{ $item->rack->name }} ({{ $item->rack->code }})
+                                                {{ $item->rack->name }}
                                             </span>
                                         </div>
                                     </div>

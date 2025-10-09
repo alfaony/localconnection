@@ -240,7 +240,7 @@
                                         <div>
                                             <span class="badge badge-secondary">
                                                 <i class="fas fa-th mr-1"></i>
-                                                {{ $laptop->rack->name }} ({{ $laptop->rack->code }})
+                                                {{ $laptop->rack->name }}
                                             </span>
                                         </div>
                                     </div>

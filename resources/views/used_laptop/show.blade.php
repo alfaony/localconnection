@@ -98,11 +98,13 @@
                                     <h5 class="mb-0 font-weight-bold">
                                         {{ $laptop->rack->zone->name }}
                                     </h5>
+                                    {{--
                                     @if($laptop->rack->zone->code)
                                         <small class="d-block opacity-75 mt-1">
                                             <i class="fas fa-code mr-1"></i> {{ $laptop->rack->zone->code }}
                                         </small>
                                     @endif
+                                    --}}
                                 </div>
                             </div>
                         </div>
@@ -118,6 +120,7 @@
                                     <h5 class="mb-0 font-weight-bold">
                                         {{ $laptop->rack->name }}
                                     </h5>
+                                    {{--
                                     <small class="d-block opacity-75 mt-1">
                                         <i class="fas fa-code mr-1"></i> {{ $laptop->rack->code }}
                                         @if($laptop->rack->capacity)
@@ -126,6 +129,7 @@
                                             </span>
                                         @endif
                                     </small>
+                                    --}}
                                 </div>
                             </div>
                         </div>
@@ -146,7 +150,7 @@
                             <i class="fas fa-chevron-right text-muted mr-2 mb-2"></i>
                             <span class="badge badge-secondary px-3 py-2 mb-2">
                                 <i class="fas fa-th mr-1"></i>
-                                {{ $laptop->rack->name }} ({{ $laptop->rack->code }})
+                                {{ $laptop->rack->name }}
                             </span>
                         </div>
                     </div>
