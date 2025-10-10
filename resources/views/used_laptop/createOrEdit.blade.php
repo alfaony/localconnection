@@ -146,9 +146,9 @@
                 <!-- Warehouse -->
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label for="warehouse_id">Warehouse <span class="text-danger">*</span></label>
+                        <label for="warehouse_id">Warehouse</label>
                         <div class="input-group">
-                            <select class="form-control" id="warehouse_id" name="warehouse_id" required>
+                            <select class="form-control" id="warehouse_id" name="warehouse_id" >
                                 <option value="">Pilih Warehouse</option>
                             </select>
                             <div class="input-group-append">
@@ -164,9 +164,9 @@
                 <!-- Zone -->
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label for="zone_id">Zone <span class="text-danger">*</span></label>
+                        <label for="zone_id">Zone</label>
                         <div class="input-group">
-                            <select class="form-control" id="zone_id" name="zone_id" required disabled>
+                            <select class="form-control" id="zone_id" name="zone_id" disabled>
                                 <option value="">Pilih Zone</option>
                             </select>
                             <div class="input-group-append">
@@ -182,9 +182,9 @@
                 <!-- Rack -->
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label for="rack_id">Rack <span class="text-danger">*</span></label>
+                        <label for="rack_id">Rack</label>
                         <div class="input-group">
-                            <select class="form-control" id="rack_id" name="rack_id" required disabled>
+                            <select class="form-control" id="rack_id" name="rack_id" disabled>
                                 <option value="">Pilih Rack</option>
                             </select>
                             <div class="input-group-append">
