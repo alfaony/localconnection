@@ -71,7 +71,9 @@ class WarehouseController extends Controller
     {
         $warehouse_types = WarehouseType::all();
         $warehouses = Warehouse::byCompany(Auth::user()->company_id)->with('warehouseType')->paginate(10);
-        return view('warehouse.index', compact('warehouse', 'warehouse_types','warehouses'));
+        $warehouseEdit = $warehouse;
+
+        return view('warehouse.index', compact('warehouse', 'warehouse_types','warehouses', 'warehouseEdit'));
     }
 
     public function update(Request $request, Warehouse $warehouse)
