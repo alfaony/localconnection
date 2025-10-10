@@ -50,7 +50,9 @@ class UsedItemController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'rack_id' => 'nullable|exists:racks,id',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
+            'zone_id' => 'required_with:warehouse_id|nullable|exists:zones,id',
+            'rack_id' => 'required_with:warehouse_id|nullable|exists:racks,id',
             'name' => 'required|string|max:255',
             'serial_number' => 'nullable|string|max:255',
             'purchase_price' => 'required|numeric|min:0',
@@ -127,6 +129,9 @@ class UsedItemController extends Controller
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:20480',
             'check_items' => 'required|array|min:1',
             'repairs' => 'nullable|array',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
+            'zone_id' => 'required_with:warehouse_id|nullable|exists:zones,id',
+            'rack_id' => 'required_with:warehouse_id|nullable|exists:racks,id',
         ]);
 
         if(!$item) 

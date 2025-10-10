@@ -580,13 +580,13 @@
             });
             
             $('#laptop-form').on('submit', function(e) {
-                if (!locationSelector.validate()) {
-                    e.preventDefault();
-                    return false;
-                }
+                // if (!locationSelector.validate()) {
+                //     e.preventDefault();
+                //     return false;
+                // }
                 
-                const values = locationSelector.getValues();
-                console.log('Selected location:', values);
+                // const values = locationSelector.getValues();
+                // console.log('Selected location:', values);
                 
                 return true;
             });
