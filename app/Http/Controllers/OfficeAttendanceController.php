@@ -91,6 +91,7 @@ class OfficeAttendanceController extends Controller
         ));
     }
     
+
     public function scan($code)
     {
         if(!Auth::user()->wfo_check_in || !Access::can('scan','office_attendances'))
@@ -104,11 +105,6 @@ class OfficeAttendanceController extends Controller
             ->where('user_id', auth()->id())
             ->count();
 
-        if($todayCount >= $timesPerDay)
-        {
-            return redirect()->route('office-attendance.index')->with('error', 'Absensi sudah mencapai batas maksimum hari ini. Silahkan coba lagi besok.');
-        }
-        
         if($todayCount >= $timesPerDay)
         {
             return redirect()->route('office-attendance.index')->with('error', 'Absensi sudah mencapai batas maksimum hari ini. Silahkan coba lagi besok.');
@@ -193,6 +189,11 @@ class OfficeAttendanceController extends Controller
         {
             return redirect()->route('office-attendance.index')->with('error', 'QR code tidak ditemukan atau sudah digunakan.');
         }
+
+        // if($barcode->user_id == auth()->id())
+        // {
+        //     return view('office_attendance.attendance', compact('barcode'))->with('success', 'QR code sedang diverifikasi. Harap tunggu...');
+        // }
 
         $officeAttendance = OfficeAttendance::where('barcode_attendance_id', $barcode->id)->first();
         if($officeAttendance) 

@@ -88,7 +88,7 @@
     <script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
     <script>
-        const companyId = @json(auth()->user()->company_id);
+        const companyId = @json(auth()->user()->id);
 
         host = '{{ config('services.connection_reverb.host')}}';
         key = '{{ config('services.connection_reverb.key')}}';
