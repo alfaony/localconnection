@@ -200,88 +200,90 @@
             @endcanAccess
             
             <!-- Section 2: Foto Laptop -->
-            <div class="section-header mb-4 mt-5">
-                <h3 class="text-primary">
-                    <i class="fas fa-camera mr-2"></i> Foto Laptop
-                </h3>
-                <div class="border-bottom border-primary mt-2"></div>
+<div class="section-header mb-4 mt-5">
+    <h3 class="text-primary">
+        <i class="fas fa-camera mr-2"></i> Foto Laptop
+    </h3>
+    <div class="border-bottom border-primary mt-2"></div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <!-- Upload Area -->
+        <div class="upload-area mb-4">
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="photos" name="photos[]" multiple accept="image/*">
+                <label class="custom-file-label" for="photos">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i>Pilih beberapa foto
+                </label>
             </div>
+            <small class="form-text text-muted mt-2">
+                <i class="fas fa-info-circle mr-1"></i>
+                Upload foto laptop dari berbagai sudut (maks. 5 foto total, format: JPG, PNG, GIF)
+            </small>
+        </div>
 
-            <div class="row">
-                <div class="col-md-12">
-                    <!-- Upload Area -->
-                    <div class="upload-area mb-4">
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" id="photos" name="photos[]" multiple accept="image/*">
-                            <label class="custom-file-label" for="photos">
-                                <i class="fas fa-cloud-upload-alt mr-2"></i>Pilih beberapa foto
-                            </label>
-                        </div>
-                        <small class="form-text text-muted mt-2">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Upload foto laptop dari berbagai sudut (maks. 5 foto, format: JPG, PNG, GIF)
-                        </small>
-                    </div>
-
-                    <!-- Existing Photos (Edit Mode) -->
-                    @if(isset($laptop) && $laptop->media->count() > 0)
-                    <div class="mb-4">
-                        <label class="font-weight-bold mb-3">
-                            <i class="fas fa-images mr-2 text-primary"></i>Foto Saat Ini (Drag untuk mengurutkan)
-                        </label>
-                        <div class="alert alert-info alert-dismissible fade show" role="alert">
-                            <i class="fas fa-hand-paper mr-2"></i>
-                            <strong>Tip:</strong> Seret dan lepas foto untuk mengubah urutan tampilan
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        
-                        <div class="photo-grid existing-photos" id="existing-photos-container">
-                            @foreach($laptop->media->sortBy('order') as $media)
-                            <div class="photo-item" data-media-id="{{ $media->id }}">
-                                <div class="photo-wrapper">
-                                    <div class="drag-handle">
-                                        <i class="fas fa-grip-vertical"></i>
-                                    </div>
-                                    <img src="{{ Storage::url($media->file_path) }}" class="photo-thumbnail" alt="Laptop photo">
-                                    <div class="photo-overlay">
-                                        <div class="photo-actions">
-                                            <button type="button" class="btn btn-sm btn-light btn-zoom" 
-                                                    data-image="{{ Storage::url($media->file_path) }}"
-                                                    title="Lihat Ukuran Penuh">
-                                                <i class="fas fa-search-plus"></i>
-                                            </button>
-                                            @canAccess('mediaDestroy','used_items')
-                                            <button type="button" class="btn btn-sm btn-danger btn-delete-photo" 
-                                                    data-media-id="{{ $media->id }}"
-                                                    title="Hapus Foto">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                            @endcanAccess
-                                        </div>
-                                    </div>
-                                    <div class="photo-badge">
-                                        <i class="fas fa-image mr-1"></i>#{{ $loop->iteration }}
-                                    </div>
+        <!-- ✅ GABUNGAN FOTO LAMA & BARU DALAM SATU CONTAINER -->
+        <div id="all-photos-container">
+            @if(isset($laptop) && $laptop->media->count() > 0)
+            <label class="font-weight-bold mb-3">
+                <i class="fas fa-images mr-2 text-primary"></i>Foto Laptop (Drag untuk mengurutkan)
+            </label>
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-hand-paper mr-2"></i>
+                <strong>Tip:</strong> Seret dan lepas foto untuk mengubah urutan. Foto lama dan baru bisa diurutkan bersama!
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            @else
+            <label class="font-weight-bold mb-3" id="photos-label" style="display: none;">
+                <i class="fas fa-images mr-2 text-primary"></i>Preview Foto (Drag untuk mengurutkan)
+            </label>
+            @endif
+            
+            <!-- ✅ SATU GRID UNTUK SEMUA FOTO -->
+            <div class="photo-grid unified-photos" id="unified-photos-grid">
+                <!-- Existing Photos -->
+                @if(isset($laptop) && $laptop->media->count() > 0)
+                    @foreach($laptop->media->sortBy('order') as $media)
+                    <div class="photo-item existing-photo" data-type="existing" data-media-id="{{ $media->id }}">
+                        <div class="photo-wrapper">
+                            <div class="drag-handle">
+                                <i class="fas fa-grip-vertical"></i>
+                            </div>
+                            <img src="{{ Storage::url($media->file_path) }}" class="photo-thumbnail" alt="Laptop photo">
+                            <div class="photo-overlay">
+                                <div class="photo-actions">
+                                    <button type="button" class="btn btn-sm btn-light btn-zoom" 
+                                            data-image="{{ Storage::url($media->file_path) }}"
+                                            title="Lihat Ukuran Penuh">
+                                        <i class="fas fa-search-plus"></i>
+                                    </button>
+                                    @canAccess('mediaDestroy','used_items')
+                                    <button type="button" class="btn btn-sm btn-danger btn-delete-photo" 
+                                            data-media-id="{{ $media->id }}"
+                                            title="Hapus Foto">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    @endcanAccess
                                 </div>
                             </div>
-                            @endforeach
+                            <div class="photo-badge badge-existing">
+                                <i class="fas fa-check mr-1"></i>#{{ $loop->iteration }}
+                            </div>
                         </div>
-                        <input type="hidden" id="photo-order" name="photo_order">
                     </div>
-                    @endif
-
-                    <!-- New Photos Preview -->
-                    <div id="new-photos-preview" style="display: none;">
-                        <label class="font-weight-bold mb-3">
-                            <i class="fas fa-plus-circle mr-2 text-success"></i>Foto Baru (Drag untuk mengurutkan)
-                        </label>
-                        <div class="photo-grid" id="photo-preview"></div>
-                    </div>
-                </div>
+                    @endforeach
+                @endif
+                <!-- New photos will be appended here by JavaScript -->
             </div>
-            <div class="row mt-3" id="photo-preview"></div>
+            
+            <!-- Hidden inputs untuk menyimpan order -->
+            <input type="hidden" id="photos-order-data" name="photos_order_data">
+        </div>
+    </div>
+</div>
             
             <!-- Section 3: Checklist Kondisi -->
             <div class="section-header mb-4 mt-5">
@@ -795,6 +797,9 @@
         {
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         }
+        .photo-badge.badge-existing {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        }
     </style>
 @stop
 
@@ -812,281 +817,331 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     
-    <script>
-        $(document).ready(function() {
-            // ============================================
-            // DRAG & DROP EXISTING PHOTOS
-            // ============================================
-            const existingPhotosContainer = document.getElementById('existing-photos-container');
+<script>
+    $(document).ready(function() {
+        // ============================================
+        // UNIFIED PHOTO MANAGEMENT (EXISTING + NEW)
+        // ============================================
+        
+        let newPhotosArray = [];
+        let sortableInstance = null;
+        
+        // Initialize Sortable for unified grid
+        function initializeSortable() {
+            const unifiedGrid = document.getElementById('unified-photos-grid');
             
-            if (existingPhotosContainer) {
-                const sortable = new Sortable(existingPhotosContainer, {
+            if (unifiedGrid && !sortableInstance) {
+                sortableInstance = new Sortable(unifiedGrid, {
                     animation: 150,
                     handle: '.drag-handle',
                     ghostClass: 'sortable-ghost',
                     dragClass: 'sortable-drag',
                     onEnd: function(evt) {
-                        updatePhotoOrder();
-                        
-                        // Update badge numbers
-                        $('#existing-photos-container .photo-item').each(function(index) {
-                            $(this).find('.photo-badge').html('<i class="fas fa-image mr-1"></i>#' + (index + 1));
-                        });
-                        
-                        // Show toast notification
+                        updateAllPhotosOrder();
+                        updateBadgeNumbers();
                         showToast('success', 'Urutan foto berhasil diubah');
                     }
                 });
             }
+        }
+        
+        // Initialize sortable on page load (jika ada foto existing)
+        @if(isset($laptop) && $laptop->media->count() > 0)
+        initializeSortable();
+        @endif
+        
+        // ============================================
+        // UPLOAD NEW PHOTOS
+        // ============================================
+        
+        $('#photos').on('change', function(e) {
+            const files = Array.from(this.files);
             
-            // Function to update photo order
-            function updatePhotoOrder() {
-                const order = [];
-                $('#existing-photos-container .photo-item').each(function(index) {
-                    order.push({
-                        id: $(this).data('media-id'),
-                        order: index
-                    });
+            if (files.length === 0) return;
+            
+            // Validate total photos (existing + new)
+            const existingCount = $('.photo-item[data-type="existing"]').length;
+            const currentNewCount = $('.photo-item[data-type="new"]').length;
+            const totalCount = existingCount + currentNewCount + files.length;
+            
+            if (totalCount > 5) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Terlalu Banyak Foto',
+                    html: `<p>Maksimal 5 foto total.</p>
+                           <ul class="text-left">
+                               <li>Foto existing: <strong>${existingCount}</strong></li>
+                               <li>Foto baru sebelumnya: <strong>${currentNewCount}</strong></li>
+                               <li>Foto baru dipilih: <strong>${files.length}</strong></li>
+                               <li>Total: <strong>${totalCount}</strong></li>
+                           </ul>
+                           <p>Anda hanya bisa menambahkan <strong>${5 - existingCount - currentNewCount}</strong> foto lagi.</p>`,
+                    confirmButtonColor: '#dc3545',
                 });
-                $('#photo-order').val(JSON.stringify(order));
-                console.log('Photo order updated:', order);
+                this.value = '';
+                return;
             }
             
-            // ============================================
-            // NEW PHOTOS UPLOAD & PREVIEW
-            // ============================================
-            let newPhotosArray = [];
+            // Show label if hidden
+            $('#photos-label').show();
             
-            $('#photos').on('change', function(e) {
-                const files = Array.from(this.files);
-                const previewContainer = $('#photo-preview');
-                
-                // Validate total photos
-                const existingCount = $('#existing-photos-container .photo-item').length;
-                const totalCount = existingCount + files.length;
-                
-                if (totalCount > 5) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Terlalu Banyak Foto',
-                        text: `Maksimal 5 foto. Anda sudah memiliki ${existingCount} foto. Hanya ${5 - existingCount} foto yang dapat ditambahkan.`,
-                        confirmButtonColor: '#dc3545',
-                    });
-                    this.value = '';
+            // Process each file
+            const startIndex = newPhotosArray.length;
+            
+            files.forEach((file, index) => {
+                if (!file.type.match('image.*')) {
                     return;
                 }
                 
-                // Clear previous preview
-                previewContainer.empty();
-                newPhotosArray = [];
+                const fileIndex = startIndex + index;
+                newPhotosArray.push(file);
                 
-                // Show preview container
-                $('#new-photos-preview').show();
-                
-                files.forEach((file, index) => {
-                    if (!file.type.match('image.*')) {
-                        return;
-                    }
-                    
-                    newPhotosArray.push(file);
-                    
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        const photoItem = $(`
-                            <div class="photo-item" data-index="${index}">
-                                <div class="photo-wrapper">
-                                    <div class="drag-handle">
-                                        <i class="fas fa-grip-vertical"></i>
-                                    </div>
-                                    <img src="${event.target.result}" class="photo-thumbnail" alt="New photo">
-                                    <div class="photo-overlay">
-                                        <div class="photo-actions">
-                                            <button type="button" class="btn btn-sm btn-light btn-zoom" 
-                                                    data-image="${event.target.result}"
-                                                    title="Lihat Ukuran Penuh">
-                                                <i class="fas fa-search-plus"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-danger btn-remove-new-photo" 
-                                                    data-index="${index}"
-                                                    title="Hapus Foto">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="photo-badge badge-new">
-                                        <i class="fas fa-plus mr-1"></i>Baru #${index + 1}
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Create photo item
+                    const photoItem = $(`
+                        <div class="photo-item new-photo" data-type="new" data-file-index="${fileIndex}">
+                            <div class="photo-wrapper">
+                                <div class="drag-handle">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </div>
+                                <img src="${event.target.result}" class="photo-thumbnail" alt="New photo">
+                                <div class="photo-overlay">
+                                    <div class="photo-actions">
+                                        <button type="button" class="btn btn-sm btn-light btn-zoom" 
+                                                data-image="${event.target.result}"
+                                                title="Lihat Ukuran Penuh">
+                                            <i class="fas fa-search-plus"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger btn-remove-new-photo" 
+                                                data-file-index="${fileIndex}"
+                                                title="Hapus Foto">
+                                            <i class="fas fa-times"></i>
+                                        </button>
                                     </div>
                                 </div>
+                                <div class="photo-badge badge-new">
+                                    <i class="fas fa-plus mr-1"></i>Baru
+                                </div>
                             </div>
-                        `);
-                        previewContainer.append(photoItem);
-                    };
-                    reader.readAsDataURL(file);
-                });
-                
-                // Initialize Sortable for new photos
-                setTimeout(() => {
-                    const newPhotosContainer = document.getElementById('photo-preview');
-                    if (newPhotosContainer) {
-                        new Sortable(newPhotosContainer, {
-                            animation: 150,
-                            handle: '.drag-handle',
-                            ghostClass: 'sortable-ghost',
-                            dragClass: 'sortable-drag',
-                            onEnd: function(evt) {
-                                updateNewPhotosOrder();
-                                showToast('success', 'Urutan foto baru berhasil diubah');
-                            }
-                        });
-                    }
-                }, 100);
-            });
-            
-            // Update new photos order
-            function updateNewPhotosOrder() {
-                const newOrder = [];
-                $('#photo-preview .photo-item').each(function(index) {
-                    const originalIndex = $(this).data('index');
-                    newOrder.push(newPhotosArray[originalIndex]);
-                    $(this).find('.photo-badge').html('<i class="fas fa-plus mr-1"></i>Baru #' + (index + 1));
-                });
-                newPhotosArray = newOrder;
-                updateFileInput();
-            }
-            
-            // Update file input with reordered files
-            function updateFileInput() {
-                const dataTransfer = new DataTransfer();
-                newPhotosArray.forEach(file => {
-                    dataTransfer.items.add(file);
-                });
-                document.getElementById('photos').files = dataTransfer.files;
-            }
-            
-            // Remove new photo
-            $(document).on('click', '.btn-remove-new-photo', function() {
-                const index = $(this).data('index');
-                $(this).closest('.photo-item').fadeOut(300, function() {
-                    $(this).remove();
+                        </div>
+                    `);
                     
-                    // Remove from array
-                    newPhotosArray = newPhotosArray.filter((_, i) => i !== index);
+                    // Append to unified grid
+                    $('#unified-photos-grid').append(photoItem);
                     
-                    // Update file input
-                    updateFileInput();
-                    
-                    // Hide container if empty
-                    if (newPhotosArray.length === 0) {
-                        $('#new-photos-preview').hide();
+                    // Initialize sortable if not yet
+                    if (!sortableInstance) {
+                        initializeSortable();
                     }
                     
                     // Update badge numbers
-                    $('#photo-preview .photo-item').each(function(idx) {
-                        $(this).data('index', idx);
-                        $(this).find('.photo-badge').html('<i class="fas fa-plus mr-1"></i>Baru #' + (idx + 1));
-                        $(this).find('.btn-remove-new-photo').data('index', idx);
-                    });
-                });
+                    updateBadgeNumbers();
+                    
+                    // Update order data
+                    updateAllPhotosOrder();
+                };
+                reader.readAsDataURL(file);
             });
             
-            // ============================================
-            // DELETE EXISTING PHOTO
-            // ============================================
-            $(document).on('click', '.btn-delete-photo', function() {
-                const mediaId = $(this).data('media-id');
-                const photoItem = $(this).closest('.photo-item');
+            // Clear file input
+            this.value = '';
+        });
+        
+        // ============================================
+        // REMOVE NEW PHOTO
+        // ============================================
+        
+        $(document).on('click', '.btn-remove-new-photo', function() {
+            const fileIndex = $(this).data('file-index');
+            const photoItem = $(this).closest('.photo-item');
+            
+            photoItem.fadeOut(300, function() {
+                $(this).remove();
                 
-                Swal.fire({
-                    title: 'Hapus Foto?',
-                    text: "Foto yang dihapus tidak dapat dikembalikan!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#dc3545',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: '<i class="fas fa-trash mr-1"></i>Ya, Hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Send AJAX delete request
-                        $.ajax({
-                            url: `/used-laptop/mediaDestroy/${mediaId}`,
-                            method: 'DELETE',
-                            data: {
-                                _token: '{{ csrf_token() }}'
-                            },
-                            success: function(response) {
-                                photoItem.fadeOut(300, function() {
-                                    $(this).remove();
-                                    updatePhotoOrder();
-                                    
-                                    // Update badge numbers
-                                    $('#existing-photos-container .photo-item').each(function(index) {
-                                        $(this).find('.photo-badge').html('<i class="fas fa-image mr-1"></i>#' + (index + 1));
-                                    });
-                                });
-                                
-                                showToast('success', 'Foto berhasil dihapus');
-                            },
-                            error: function(xhr) {
-                                showToast('error', 'Gagal menghapus foto');
-                            }
-                        });
-                    }
-                });
-            });
-            
-            // ============================================
-            // IMAGE ZOOM MODAL
-            // ============================================
-            $(document).on('click', '.btn-zoom', function() {
-                const imageSrc = $(this).data('image');
-                showImageModal(imageSrc);
-            });
-            
-            function showImageModal(imageSrc) {
-                // Create modal if not exists
-                if ($('#imageModal').length === 0) {
-                    $('body').append(`
-                        <div id="imageModal" class="image-modal">
-                            <span class="image-modal-close">&times;</span>
-                            <img class="image-modal-content" id="modalImage">
-                        </div>
-                    `);
+                // Remove from array
+                delete newPhotosArray[fileIndex];
+                
+                // Update file input
+                updateFileInput();
+                
+                // Update badge numbers
+                updateBadgeNumbers();
+                
+                // Update order
+                updateAllPhotosOrder();
+                
+                // Hide label if no photos
+                if ($('.photo-item').length === 0) {
+                    $('#photos-label').hide();
                 }
+            });
+        });
+        
+        // ============================================
+        // DELETE EXISTING PHOTO
+        // ============================================
+        
+        $(document).on('click', '.btn-delete-photo', function() {
+            const mediaId = $(this).data('media-id');
+            const photoItem = $(this).closest('.photo-item');
+            
+            Swal.fire({
+                title: 'Hapus Foto?',
+                text: "Foto yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-trash mr-1"></i>Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/used-laptop/mediaDestroy/${mediaId}`,
+                        method: 'DELETE',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            photoItem.fadeOut(300, function() {
+                                $(this).remove();
+                                updateBadgeNumbers();
+                                updateAllPhotosOrder();
+                                
+                                // Hide label if no photos
+                                if ($('.photo-item').length === 0) {
+                                    $('#photos-label').hide();
+                                }
+                            });
+                            
+                            showToast('success', 'Foto berhasil dihapus');
+                        },
+                        error: function(xhr) {
+                            showToast('error', 'Gagal menghapus foto');
+                        }
+                    });
+                }
+            });
+        });
+        
+        // ============================================
+        // UPDATE FUNCTIONS
+        // ============================================
+        
+        function updateBadgeNumbers() {
+            $('#unified-photos-grid .photo-item').each(function(index) {
+                const badge = $(this).find('.photo-badge');
+                const type = $(this).data('type');
                 
-                $('#modalImage').attr('src', imageSrc);
-                $('#imageModal').fadeIn(300);
+                if (type === 'existing') {
+                    badge.html(`<i class="fas fa-check mr-1"></i>#${index + 1}`);
+                } else {
+                    badge.html(`<i class="fas fa-plus mr-1"></i>Baru #${index + 1}`);
+                }
+            });
+        }
+        
+        function updateAllPhotosOrder() {
+            const orderData = {
+                existing: [],
+                new: []
+            };
+            
+            $('#unified-photos-grid .photo-item').each(function(index) {
+                const type = $(this).data('type');
+                
+                if (type === 'existing') {
+                    orderData.existing.push({
+                        id: $(this).data('media-id'),
+                        order: index
+                    });
+                } else if (type === 'new') {
+                    orderData.new.push({
+                        fileIndex: $(this).data('file-index'),
+                        order: index
+                    });
+                }
+            });
+            
+            $('#photos-order-data').val(JSON.stringify(orderData));
+            console.log('Photos order updated:', orderData);
+        }
+        
+        function updateFileInput() {
+            const dataTransfer = new DataTransfer();
+            
+            // Get order of new photos from DOM
+            const newPhotoItems = $('#unified-photos-grid .photo-item[data-type="new"]');
+            const orderedIndices = [];
+            
+            newPhotoItems.each(function() {
+                orderedIndices.push($(this).data('file-index'));
+            });
+            
+            // Add files in order
+            orderedIndices.forEach(index => {
+                if (newPhotosArray[index]) {
+                    dataTransfer.items.add(newPhotosArray[index]);
+                }
+            });
+            
+            document.getElementById('photos').files = dataTransfer.files;
+        }
+        
+        // ============================================
+        // IMAGE ZOOM MODAL
+        // ============================================
+        
+        $(document).on('click', '.btn-zoom', function() {
+            const imageSrc = $(this).data('image');
+            showImageModal(imageSrc);
+        });
+        
+        function showImageModal(imageSrc) {
+            if ($('#imageModal').length === 0) {
+                $('body').append(`
+                    <div id="imageModal" class="image-modal">
+                        <span class="image-modal-close">&times;</span>
+                        <img class="image-modal-content" id="modalImage">
+                    </div>
+                `);
             }
             
-            $(document).on('click', '#imageModal, .image-modal-close', function(e) {
-                if (e.target.id === 'imageModal' || $(e.target).hasClass('image-modal-close')) {
-                    $('#imageModal').fadeOut(300);
-                }
-            });
-            
-            // ============================================
-            // TOAST NOTIFICATION
-            // ============================================
-            function showToast(type, message) {
-                const Toast = Swal.mixin({
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    didOpen: (toast) => {
-                        toast.addEventListener('mouseenter', Swal.stopTimer)
-                        toast.addEventListener('mouseleave', Swal.resumeTimer)
-                    }
-                });
-                
-                Toast.fire({
-                    icon: type,
-                    title: message
-                });
+            $('#modalImage').attr('src', imageSrc);
+            $('#imageModal').fadeIn(300);
+        }
+        
+        $(document).on('click', '#imageModal, .image-modal-close', function(e) {
+            if (e.target.id === 'imageModal' || $(e.target).hasClass('image-modal-close')) {
+                $('#imageModal').fadeOut(300);
             }
         });
-    </script>
+        
+        // ============================================
+        // TOAST NOTIFICATION
+        // ============================================
+        
+        function showToast(type, message) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+            
+            Toast.fire({
+                icon: type,
+                title: message
+            });
+        }
+    });
+</script>
 
     <!-- ✅ Include Warehouse Location Selector -->
     @canAccess('getLocation','warehouses')

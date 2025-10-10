@@ -505,114 +505,117 @@
                 </h5>
             </div>
             <div class="card-body">
-               @if($laptop->media->count() > 0)
-    <!-- Main Carousel -->
-    <div class="photo-carousel-container mb-4">
-        <div id="carouselPhotos" class="carousel slide" data-ride="false" data-interval="false">
-            <!-- Carousel Indicators (Custom) -->
-            <div class="carousel-indicators-custom">
-                @foreach($laptop->media->sortBy('order') as $index => $media)
-                    <span class="indicator-dot {{ $media->order === 0 ? 'active' : '' }}" 
-                          data-target="#carouselPhotos" 
-                          data-slide-to="{{ $index }}">
-                    </span>
-                @endforeach
-            </div>
-
-            <!-- Carousel Inner -->
-            <div class="carousel-inner rounded-lg shadow-lg">
-                @foreach($laptop->media->sortBy('order') as $index => $media)
-                <div class="carousel-item {{ $media->order === 0 ? 'active' : '' }}">
-                    <div class="carousel-image-wrapper">
-                        <img src="{{ Storage::url($media->file_path) }}" 
-                             class="d-block w-100 carousel-main-img" 
-                             alt="Foto {{ $index + 1 }}"
-                             data-index="{{ $index }}">
-                        
-                        <!-- Photo Badge -->
-                        <div class="photo-number-badge">
-                            <i class="fas fa-camera mr-1"></i>
-                            {{ $media->order + 1 }} / {{ $laptop->media->count() }}
+            @if($laptop->media->count() > 0)
+                <!-- Main Carousel -->
+                <div class="photo-carousel-container mb-4">
+                    <div id="carouselPhotos" class="carousel slide" data-ride="false" data-interval="false">
+                        <!-- Carousel Indicators (Custom) -->
+                        <div class="carousel-indicators-custom">
+                            @foreach($laptop->media->sortBy('order') as $index => $media)
+                                <span class="indicator-dot {{ $loop->first ? 'active' : '' }}" 
+                                    data-target="#carouselPhotos" 
+                                    data-slide-to="{{ $loop->index }}">
+                                </span>
+                            @endforeach
                         </div>
-                        
-                        <!-- Zoom Button -->
-                        <button class="btn-zoom-photo" data-image="{{ Storage::url($media->file_path) }}">
-                            <i class="fas fa-search-plus"></i>
-                        </button>
+
+                        <!-- Carousel Inner -->
+                        <div class="carousel-inner rounded-lg shadow-lg">
+                            @foreach($laptop->media->sortBy('order') as $media)
+                            <div class="carousel-item {{ $loop->first ? 'active' : '' }}">
+                                <div class="carousel-image-wrapper">
+                                    <img src="{{ Storage::url($media->file_path) }}" 
+                                        class="d-block w-100 carousel-main-img" 
+                                        alt="Foto {{ $loop->iteration }}"
+                                        data-index="{{ $loop->index }}"
+                                        data-media-id="{{ $media->id }}"
+                                        data-order="{{ $media->order }}">
+                                    
+                                    <!-- Photo Badge -->
+                                    <div class="photo-number-badge">
+                                        <i class="fas fa-camera mr-1"></i>
+                                        {{ $loop->iteration }} / {{ $laptop->media->count() }}
+                                    </div>
+                                    
+                                    <!-- Zoom Button -->
+                                    <button class="btn-zoom-photo" data-image="{{ Storage::url($media->file_path) }}">
+                                        <i class="fas fa-search-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+
+                        <!-- Carousel Controls -->
+                        <a class="carousel-control-prev" href="#carouselPhotos" role="button" data-slide="prev">
+                            <div class="control-icon">
+                                <i class="fas fa-chevron-left"></i>
+                            </div>
+                            <span class="sr-only">Previous</span>
+                        </a>
+                        <a class="carousel-control-next" href="#carouselPhotos" role="button" data-slide="next">
+                            <div class="control-icon">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                            <span class="sr-only">Next</span>
+                        </a>
                     </div>
                 </div>
-                @endforeach
-            </div>
-
-            <!-- Carousel Controls -->
-            <a class="carousel-control-prev" href="#carouselPhotos" role="button" data-slide="prev">
-                <div class="control-icon">
-                    <i class="fas fa-chevron-left"></i>
-                </div>
-                <span class="sr-only">Previous</span>
-            </a>
-            <a class="carousel-control-next" href="#carouselPhotos" role="button" data-slide="next">
-                <div class="control-icon">
-                    <i class="fas fa-chevron-right"></i>
-                </div>
-                <span class="sr-only">Next</span>
-            </a>
-        </div>
-    </div>
-    
-    <!-- Thumbnails Navigation -->
-    <div class="thumbnails-container">
-        <label class="font-weight-bold mb-3">
-            <i class="fas fa-images mr-2 text-primary"></i>Galeri Foto
-        </label>
-        <div class="thumbnails-grid">
-            @foreach($laptop->media->sortBy('order') as $index => $media)
-            <div class="thumbnail-item {{ $media->order === 0 ? 'active' : '' }}" 
-                 data-target="#carouselPhotos" 
-                 data-slide-to="{{ $index }}">
-                <div class="thumbnail-wrapper">
-                    <img src="{{ Storage::url($media->file_path) }}" 
-                         class="thumbnail-img" 
-                         alt="Thumbnail {{ $index + 1 }}">
-                    <div class="thumbnail-overlay">
-                        <i class="fas fa-eye"></i>
-                    </div>
-                    <div class="thumbnail-badge">
-                        {{ $media->order + 1 }}
+                
+                <!-- Thumbnails Navigation -->
+                <div class="thumbnails-container">
+                    <label class="font-weight-bold mb-3">
+                        <i class="fas fa-images mr-2 text-primary"></i>Galeri Foto
+                    </label>
+                    <div class="thumbnails-grid">
+                        @foreach($laptop->media->sortBy('order') as $media)
+                        <div class="thumbnail-item {{ $loop->first ? 'active' : '' }}" 
+                            data-target="#carouselPhotos" 
+                            data-slide-to="{{ $loop->index }}"
+                            data-media-id="{{ $media->id }}">
+                            <div class="thumbnail-wrapper">
+                                <img src="{{ Storage::url($media->file_path) }}" 
+                                    class="thumbnail-img" 
+                                    alt="Thumbnail {{ $loop->iteration }}">
+                                <div class="thumbnail-overlay">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                                <div class="thumbnail-badge">
+                                    {{ $loop->iteration }}
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
                     </div>
                 </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
 
-    <!-- Lightbox Modal -->
-    <div id="photoLightbox" class="photo-lightbox">
-        <span class="lightbox-close">&times;</span>
-        <div class="lightbox-content">
-            <img id="lightboxImage" src="" alt="Full size photo">
-            <div class="lightbox-caption">
-                <span id="lightboxCounter"></span>
-            </div>
-        </div>
-        <button class="lightbox-nav lightbox-prev">
-            <i class="fas fa-chevron-left"></i>
-        </button>
-        <button class="lightbox-nav lightbox-next">
-            <i class="fas fa-chevron-right"></i>
-        </button>
-    </div>
+                <!-- Lightbox Modal -->
+                <div id="photoLightbox" class="photo-lightbox">
+                    <span class="lightbox-close">&times;</span>
+                    <div class="lightbox-content">
+                        <img id="lightboxImage" src="" alt="Full size photo">
+                        <div class="lightbox-caption">
+                            <span id="lightboxCounter"></span>
+                        </div>
+                    </div>
+                    <button class="lightbox-nav lightbox-prev">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="lightbox-nav lightbox-next">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
 
-@else
-    <!-- Empty State -->
-    <div class="empty-photos-state">
-        <div class="empty-icon">
-            <i class="fas fa-images"></i>
-        </div>
-        <h5 class="text-muted mt-3">Tidak Ada Foto</h5>
-        <p class="text-muted mb-0">Belum ada foto yang diupload untuk laptop ini</p>
-    </div>
-@endif
+            @else
+                <!-- Empty State -->
+                <div class="empty-photos-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <h5 class="text-muted mt-3">Tidak Ada Foto</h5>
+                    <p class="text-muted mb-0">Belum ada foto yang diupload untuk laptop ini</p>
+                </div>
+            @endif
             </div>
         </div>
 

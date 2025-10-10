@@ -188,7 +188,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     @if($laptop->media->first())
-                                        <img src="{{ Storage::url($laptop->media->first()->file_path) }}" 
+                                        <img src="{{ Storage::url($laptop->media->sortBy('order')->first()->file_path) }}" 
                                              alt="{{ $laptop->name }}"
                                              class="img-thumbnail mr-2"
                                              style="width: 50px; height: 50px; object-fit: cover;">

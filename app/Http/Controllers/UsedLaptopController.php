@@ -203,7 +203,11 @@ class UsedLaptopController extends Controller
      */
     public function show($slug)
     {
-        $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
+        $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)
+        ->with(['media' => function($query) {
+            $query->orderBy('order', 'asc');
+        }])
+        ->firstOrFail();
         return view('used_laptop.show', compact('laptop'));
     }
 
@@ -377,30 +381,51 @@ class UsedLaptopController extends Controller
                 ]);
             }
             
-            // Simpan foto baru
-            // ✅ UPDATE ORDER FOTO EXISTING (PENTING!)
-        if ($request->has('photo_order') && !empty($request->photo_order)) {
-            $photoOrder = json_decode($request->photo_order, true);
-            if (is_array($photoOrder)) {
-                foreach ($photoOrder as $item) {
-                    UsedLaptopMedia::where('id', $item['id'])
-                        ->update(['order' => $item['order']]);
+        // ✅ HANDLE ORDER DATA BARU (GABUNGAN EXISTING + NEW)
+        if ($request->has('photos_order_data') && !empty($request->photos_order_data)) {
+            $orderData = json_decode($request->photos_order_data, true);
+            
+            if (is_array($orderData)) {
+                // Update existing photos order
+                if (isset($orderData['existing']) && is_array($orderData['existing'])) {
+                    foreach ($orderData['existing'] as $item) {
+                        UsedLaptopMedia::where('id', $item['id'])
+                            ->update(['order' => $item['order']]);
+                    }
+                }
+                
+                // Save new photos with order
+                if ($request->hasFile('photos') && isset($orderData['new']) && is_array($orderData['new'])) {
+                    $files = $request->file('photos');
+                    
+                    foreach ($orderData['new'] as $newPhotoData) {
+                        $fileIndex = $newPhotoData['fileIndex'];
+                        $order = $newPhotoData['order'];
+                        
+                        if (isset($files[$fileIndex])) {
+                            $path = $files[$fileIndex]->store('used-laptop', 'public');
+                            UsedLaptopMedia::create([
+                                'used_laptop_id' => $laptop->id,
+                                'file_path' => $path,
+                                'order' => $order,
+                            ]);
+                        }
+                    }
                 }
             }
-        }
-        
-        // ✅ SIMPAN FOTO BARU DENGAN ORDER
-        if ($request->hasFile('photos')) {
-            // Get current max order
-            $currentMaxOrder = $laptop->media()->max('order') ?? -1;
-            
-            foreach ($request->file('photos') as $index => $photo) {
-                $path = $photo->store('used-laptop', 'public');
-                UsedLaptopMedia::create([
-                    'used_laptop_id' => $laptop->id,
-                    'file_path' => $path,
-                    'order' => $currentMaxOrder + $index + 1,
-                ]);
+        } else {
+            // Fallback: jika tidak ada order data, simpan foto baru dengan order setelah existing
+            if ($request->hasFile('photos')) {
+                $currentMaxOrder = $laptop->media()->max('order') ?? -1;
+                
+                foreach ($request->file('photos') as $index => $photo) {
+                    $path = $photo->store('used-laptop', 'public');
+                    UsedLaptopMedia::create([
+                        'used_laptop_id' => $laptop->id,
+                        'file_path' => $path,
+                        'order' => $currentMaxOrder + $index + 1,
+                    ]);
+                }
             }
         }
         
