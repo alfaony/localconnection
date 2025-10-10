@@ -41,7 +41,7 @@ class BarcodeAttendanceController extends Controller
     {
         $companyId = auth()->user()->company_id;
 
-        $barcode = BarcodeAttendance::where('company_id', $companyId)
+        $barcode = BarcodeAttendance::where('user_create_id', auth()->user()->id)
             ->where('is_used', false)
             ->where(function ($query) {
                 $query->whereNull('expires_at')
@@ -55,6 +55,7 @@ class BarcodeAttendanceController extends Controller
             $barcode = BarcodeAttendance::create([
                 'id' => Str::uuid(),
                 'company_id' => $companyId,
+                'user_create_id' => auth()->user()->id,
                 'code' => Str::uuid(),
                 'expires_at' => now()->addMinutes(5)
             ]);

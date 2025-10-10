@@ -27,6 +27,7 @@ return new class extends Migration
     {
         Schema::table('barcode_attendances', function (Blueprint $table) {
             $table->dropForeign(['user_create_id']);
+            $table->dropColumn('user_create_id');
         });
     }
 };
