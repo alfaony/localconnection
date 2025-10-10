@@ -226,7 +226,7 @@ class UsedItemController extends Controller
 
             if(Access::can('getLocation','warehouses'))
             {
-                $item->rack_id = $validated['rack_id'];
+                $item->rack_id = $validated['rack_id'] ?? null;
                 $item->save();
             }
 
