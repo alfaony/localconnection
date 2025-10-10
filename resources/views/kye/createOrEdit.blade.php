@@ -38,7 +38,23 @@
                         <input type="text" name="full_name" id="full_name" class="form-control"
                             placeholder="Masukkan nama lengkap" value="{{ @$kye->full_name ?? old('full_name') }}" required>
                     </div>
-    
+
+                    <div class="form-group">
+                        <label for="call_name"><i class="fas fa-phone"></i> Nama Panggilan</label>
+                        <input type="text" name="call_name" id="call_name" class="form-control"
+                            placeholder="Masukan nama panggilan" value="{{ @$kye->call_name ?? old('call_name') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender"><i class="fas fa-transgender"></i> Jenis Kelamin</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gender" id="male" value="male"
+                                {{ @$kye->gender == 'male' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="male">Laki-laki</label>
+                            <input class="form-check-input" type="radio" name="gender" id="female" value="female"
+                                {{ @$kye->gender == 'female' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="female">Perempuan</label>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label for="birth_date"><i class="fas fa-birthday-cake"></i> Tempat & Tanggal Lahir</label>
                         <div class="input-group">
@@ -47,6 +63,12 @@
                             <input type="date" name="birth_date" id="birth_date" class="form-control"
                                 value="{{ @$kye->birth_date ? Carbon\Carbon::parse(@$kye->birth_date)->format('Y-m-d') : old('birth_date') }}" required>
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address"><i class="fas fa-map-marker-alt"></i> Alamat Tempat Domisili</label>
+                        <textarea name="address_domisili" id="address_domisili" rows="3" class="form-control"
+                            placeholder="Masukkan alamat lengkap" required>{{ @$kye->address ?? old('address') }}</textarea>
                     </div>
 
                     <div class="form-group">
@@ -146,6 +168,24 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="ktp_family">
+                            <i class="fas fa-id-card"></i> Foto Scan NPWP
+                        </label>
+                        <input type="file" name="npwp_photo" id="npwp_photo" class="form-control-file"
+                            accept=".jpeg,.jpg,.png" onchange="compressAndPreviewImage();" required>
+                        <div class="d-flex align-items-center mt-2">
+                            <div id="ktp_family_preview">
+                                @if(@$kye->npwp_photo)
+                                <img id="photo-preview" src="{{ asset('storage/' . @$kye->npwp_photo) }}" alt="KTP Orang Tua/Saudara"
+                                    class="img-thumbnail mt-2" width="120">
+                                @else
+                                <img id="photo-preview" src="#" alt="Photo Preview" style="display:none;" class="img-fluid mt-3"/>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
                     <label for="google_maps"><i class="fas fa-map-marker-alt"></i> Shareloc Google Maps Rumah</label>
                         <div class="input-group mb-3">
                             <input type="text" name="google_maps" id="google_maps" class="form-control"
@@ -199,7 +239,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                        <label for="email"><i class="fas fa-envelope"></i> Email Pribadi</label>
                         <input type="email" name="email" id="email" class="form-control" 
                             placeholder="Masukkan email" value="{{ @$kye->email ?? old('email') }}" required
                             oninput="verifyEmail(this.value)">
@@ -241,6 +281,37 @@
                         <label for="account_number"><i class="fas fa-credit-card"></i> No. Rekening</label>
                         <input type="text" name="account_number" id="account_number" class="form-control" 
                             placeholder="Masukkan nomor rekening" value="{{ @$kye->account_number ?? old('account_number') }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status_menikah">Status Menikah</label>
+                        <select name="status_menikah" id="status_menikah" class="form-control" required>
+                            <option value="" selected disabled>Pilih Status Menikah</option>
+                            <option value="Lahir">Lahir</option>
+                            <option value="Meninggal Dunia">Meninggal Dunia</option>
+                            <option value="Meninggal Kandungan">Meninggal Kandungan</option>
+                            <option value="Meninggal Kesehatan">Meninggal Kesehatan</option>
+                            <option value="Meninggal Kecelakaan">Meninggal Kecelakaan</option>
+                            <option value="Meninggal Lainnya">Meninggal Lainnya</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jumlah_anak">Jumlah Anak Ada Berapa</label>
+                        <input type="number" name="jumlah_anak" id="jumlah_anak" class="form-control" 
+                            placeholder="Masukan jumlah anak" value="{{ @$kye->jumlah_anak ?? old('jumlah_anak') }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nama_kerabat">Nama Kerabat (untuk keadaan Darurat) (Orang Tua)</label>
+                        <input type="text" name="nama_kerabat" id="nama_kerabat" class="form-control" 
+                            placeholder="Masukan nama kerabat" value="{{ @$kye->nama_kerabat ?? old('nama_kerabat') }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="no_hp_kerabat">No. Hp Kerabat (untuk keadaan Darurat) (Orang Tua)</label>
+                        <input type="tel" name="no_hp_kerabat" id="no_hp_kerabat" class="form-control" 
+                            placeholder="Masukan nomor hp kerabat" value="{{ @$kye->no_hp_kerabat ?? old('no_hp_kerabat') }}" required>
                     </div>
                 </div>
             </div>
