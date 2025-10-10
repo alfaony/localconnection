@@ -505,48 +505,114 @@
                 </h5>
             </div>
             <div class="card-body">
-                @if($laptop->media->count() > 0)
-                    <div id="carouselPhotos" class="carousel slide mb-3" data-ride="carousel">
-                        <ol class="carousel-indicators">
-                            @foreach($laptop->media as $index => $media)
-                                <li data-target="#carouselPhotos" data-slide-to="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}"></li>
-                            @endforeach
-                        </ol>
-                        <div class="carousel-inner">
-                            @foreach($laptop->media as $index => $media)
-                            <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                                <a href="{{ Storage::url($media->file_path) }}" target="_blank">
-                                    <img src="{{ Storage::url($media->file_path) }}" class="d-block w-100 carousel-img" alt="Foto {{ $index + 1 }}">
-                                </a>
-                            </div>
-                            @endforeach
+               @if($laptop->media->count() > 0)
+    <!-- Main Carousel -->
+    <div class="photo-carousel-container mb-4">
+        <div id="carouselPhotos" class="carousel slide" data-ride="false" data-interval="false">
+            <!-- Carousel Indicators (Custom) -->
+            <div class="carousel-indicators-custom">
+                @foreach($laptop->media->sortBy('order') as $index => $media)
+                    <span class="indicator-dot {{ $media->order === 0 ? 'active' : '' }}" 
+                          data-target="#carouselPhotos" 
+                          data-slide-to="{{ $index }}">
+                    </span>
+                @endforeach
+            </div>
+
+            <!-- Carousel Inner -->
+            <div class="carousel-inner rounded-lg shadow-lg">
+                @foreach($laptop->media->sortBy('order') as $index => $media)
+                <div class="carousel-item {{ $media->order === 0 ? 'active' : '' }}">
+                    <div class="carousel-image-wrapper">
+                        <img src="{{ Storage::url($media->file_path) }}" 
+                             class="d-block w-100 carousel-main-img" 
+                             alt="Foto {{ $index + 1 }}"
+                             data-index="{{ $index }}">
+                        
+                        <!-- Photo Badge -->
+                        <div class="photo-number-badge">
+                            <i class="fas fa-camera mr-1"></i>
+                            {{ $media->order + 1 }} / {{ $laptop->media->count() }}
                         </div>
-                        <a class="carousel-control-prev" href="#carouselPhotos" role="button" data-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="sr-only">Previous</span>
-                        </a>
-                        <a class="carousel-control-next" href="#carouselPhotos" role="button" data-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="sr-only">Next</span>
-                        </a>
+                        
+                        <!-- Zoom Button -->
+                        <button class="btn-zoom-photo" data-image="{{ Storage::url($media->file_path) }}">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
                     </div>
-                    
-                    <!-- Thumbnails -->
-                    <div class="row">
-                        @foreach($laptop->media as $index => $media)
-                        <div class="col-4 mb-2">
-                            <a href="{{ Storage::url($media->file_path) }}" target="_blank">
-                                <img src="{{ Storage::url($media->file_path) }}" class="img-thumbnail thumbnail-img">
-                            </a>
-                        </div>
-                        @endforeach
+                </div>
+                @endforeach
+            </div>
+
+            <!-- Carousel Controls -->
+            <a class="carousel-control-prev" href="#carouselPhotos" role="button" data-slide="prev">
+                <div class="control-icon">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next" href="#carouselPhotos" role="button" data-slide="next">
+                <div class="control-icon">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                <span class="sr-only">Next</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Thumbnails Navigation -->
+    <div class="thumbnails-container">
+        <label class="font-weight-bold mb-3">
+            <i class="fas fa-images mr-2 text-primary"></i>Galeri Foto
+        </label>
+        <div class="thumbnails-grid">
+            @foreach($laptop->media->sortBy('order') as $index => $media)
+            <div class="thumbnail-item {{ $media->order === 0 ? 'active' : '' }}" 
+                 data-target="#carouselPhotos" 
+                 data-slide-to="{{ $index }}">
+                <div class="thumbnail-wrapper">
+                    <img src="{{ Storage::url($media->file_path) }}" 
+                         class="thumbnail-img" 
+                         alt="Thumbnail {{ $index + 1 }}">
+                    <div class="thumbnail-overlay">
+                        <i class="fas fa-eye"></i>
                     </div>
-                @else
-                    <div class="text-center py-5">
-                        <i class="fas fa-image fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Tidak ada foto tersedia</p>
+                    <div class="thumbnail-badge">
+                        {{ $media->order + 1 }}
                     </div>
-                @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="photoLightbox" class="photo-lightbox">
+        <span class="lightbox-close">&times;</span>
+        <div class="lightbox-content">
+            <img id="lightboxImage" src="" alt="Full size photo">
+            <div class="lightbox-caption">
+                <span id="lightboxCounter"></span>
+            </div>
+        </div>
+        <button class="lightbox-nav lightbox-prev">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="lightbox-nav lightbox-next">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+
+@else
+    <!-- Empty State -->
+    <div class="empty-photos-state">
+        <div class="empty-icon">
+            <i class="fas fa-images"></i>
+        </div>
+        <h5 class="text-muted mt-3">Tidak Ada Foto</h5>
+        <p class="text-muted mb-0">Belum ada foto yang diupload untuk laptop ini</p>
+    </div>
+@endif
             </div>
         </div>
 
@@ -586,14 +652,6 @@
                         <h3 class="text-success font-weight-bold mb-0">
                             Rp {{ number_format($laptop->sold_price, 0, ',', '.') }}
                         </h3>
-                        @php
-                            $actualProfit = $laptop->sold_price - $laptop->purchase_price;
-                            $actualProfitPercent = $laptop->purchase_price > 0 ? ($actualProfit / $laptop->purchase_price) * 100 : 0;
-                        @endphp
-                        <small class="text-success">
-                            <i class="fas fa-arrow-up mr-1"></i>
-                            Profit Aktual: +{{ number_format($actualProfitPercent, 1) }}%
-                        </small>
                     </div>
                 </div>
                 
@@ -845,6 +903,382 @@
         .carousel-img {
             height: 200px;
         }
+    }
+</style>
+<style>
+    /* ============================================ */
+    /* PHOTO CAROUSEL STYLES */
+    /* ============================================ */
+    
+    .photo-carousel-container {
+        position: relative;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+    
+    .carousel-inner {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .carousel-image-wrapper {
+        position: relative;
+        background: #000;
+        height: 500px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .carousel-main-img {
+        max-height: 500px;
+        width: auto !important;
+        object-fit: contain;
+        cursor: pointer;
+    }
+    
+    @media (max-width: 768px) {
+        .carousel-image-wrapper {
+            height: 300px;
+        }
+        .carousel-main-img {
+            max-height: 300px;
+        }
+    }
+    
+    /* Photo Number Badge */
+    .photo-number-badge {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: linear-gradient(135deg, rgba(0, 123, 255, 0.95) 0%, rgba(0, 86, 179, 0.95) 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 10;
+    }
+    
+    /* Zoom Button */
+    .btn-zoom-photo {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border: none;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+    }
+    
+    .btn-zoom-photo:hover {
+        background: #007bff;
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    .btn-zoom-photo i {
+        font-size: 18px;
+    }
+    
+    /* Custom Carousel Indicators */
+    .carousel-indicators-custom {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        z-index: 10;
+    }
+    
+    .indicator-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .indicator-dot.active {
+        width: 30px;
+        border-radius: 5px;
+        background: white;
+    }
+    
+    .indicator-dot:hover {
+        background: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Carousel Controls */
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 60px;
+        opacity: 1;
+    }
+    
+    .control-icon {
+        background: rgba(255, 255, 255, 0.9);
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .control-icon i {
+        color: #333;
+        font-size: 20px;
+    }
+    
+    .carousel-control-prev:hover .control-icon,
+    .carousel-control-next:hover .control-icon {
+        background: #007bff;
+        transform: scale(1.1);
+    }
+    
+    .carousel-control-prev:hover .control-icon i,
+    .carousel-control-next:hover .control-icon i {
+        color: white;
+    }
+    
+    /* ============================================ */
+    /* THUMBNAILS STYLES */
+    /* ============================================ */
+    
+    .thumbnails-container {
+        margin-top: 30px;
+    }
+    
+    .thumbnails-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 15px;
+        padding: 10px 0;
+    }
+    
+    @media (max-width: 576px) {
+        .thumbnails-grid {
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+        }
+    }
+    
+    .thumbnail-item {
+        cursor: pointer;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 3px solid transparent;
+    }
+    
+    .thumbnail-item.active {
+        border-color: #007bff;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+    
+    .thumbnail-wrapper {
+        position: relative;
+        padding-bottom: 100%; /* 1:1 Aspect Ratio */
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+    
+    .thumbnail-img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .thumbnail-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 123, 255, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .thumbnail-overlay i {
+        color: white;
+        font-size: 24px;
+    }
+    
+    .thumbnail-item:hover .thumbnail-overlay {
+        opacity: 1;
+    }
+    
+    .thumbnail-item:hover .thumbnail-img {
+        transform: scale(1.1);
+    }
+    
+    .thumbnail-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        z-index: 2;
+    }
+    
+    /* ============================================ */
+    /* LIGHTBOX MODAL STYLES */
+    /* ============================================ */
+    
+    .photo-lightbox {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.95);
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .lightbox-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 90%;
+        max-height: 90%;
+        text-align: center;
+    }
+    
+    #lightboxImage {
+        max-width: 100%;
+        max-height: 85vh;
+        object-fit: contain;
+        animation: zoomIn 0.3s ease;
+    }
+    
+    @keyframes zoomIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    
+    .lightbox-close {
+        position: absolute;
+        top: 25px;
+        right: 40px;
+        color: white;
+        font-size: 45px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10001;
+    }
+    
+    .lightbox-close:hover {
+        color: #ff4444;
+        transform: scale(1.2) rotate(90deg);
+    }
+    
+    .lightbox-caption {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-size: 14px;
+    }
+    
+    .lightbox-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+    
+    .lightbox-nav:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-50%) scale(1.1);
+    }
+    
+    .lightbox-prev {
+        left: 30px;
+    }
+    
+    .lightbox-next {
+        right: 30px;
+    }
+    
+    /* ============================================ */
+    /* EMPTY STATE STYLES */
+    /* ============================================ */
+    
+    .empty-photos-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        border: 2px dashed #dee2e6;
+    }
+    
+    .empty-icon {
+        display: inline-block;
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .empty-icon i {
+        font-size: 60px;
+        color: #adb5bd;
     }
 </style>
 @stop

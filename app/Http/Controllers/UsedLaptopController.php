@@ -127,11 +127,12 @@ class UsedLaptopController extends Controller
             
             // Simpan foto
             if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $photo) {
+                foreach ($request->file('photos') as $index => $photo) {
                     $path = $photo->store('used-laptop', 'public');
                     UsedLaptopMedia::create([
                         'used_laptop_id' => $laptop->id,
                         'file_path' => $path,
+                        'order' => $index, // ✅ Simpan urutan
                     ]);
                 }
             }
@@ -313,8 +314,7 @@ class UsedLaptopController extends Controller
                     'string',
                     'max:255',
                     function ($attribute, $value, $fail) use ($laptop) {
-                        $query = UsedLaptop::where('serial_number', $value)
-                            ->where('company_id', Auth::user()->company_id);
+                        $query = UsedLaptop::where('serial_number', $value)->byCompany(Auth::user()->company_id);
                         
                         // Exclude current laptop when editing
                         if ($laptop) {
@@ -378,30 +378,54 @@ class UsedLaptopController extends Controller
             }
             
             // Simpan foto baru
-            if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $photo) {
-                    $path = $photo->store('used-laptops', 'public');
-                    UsedLaptopMedia::create([
-                        'used_laptop_id' => $laptop->id,
-                        'file_path' => $path,
-                    ]);
+            // ✅ UPDATE ORDER FOTO EXISTING (PENTING!)
+        if ($request->has('photo_order') && !empty($request->photo_order)) {
+            $photoOrder = json_decode($request->photo_order, true);
+            if (is_array($photoOrder)) {
+                foreach ($photoOrder as $item) {
+                    UsedLaptopMedia::where('id', $item['id'])
+                        ->update(['order' => $item['order']]);
                 }
             }
+        }
+        
+        // ✅ SIMPAN FOTO BARU DENGAN ORDER
+        if ($request->hasFile('photos')) {
+            // Get current max order
+            $currentMaxOrder = $laptop->media()->max('order') ?? -1;
             
-            // Update checklist
-            foreach ($request->input('check_items') as $checkItemId => $checkData) {
-                $check = UsedLaptopCheck::updateOrCreate(
-                    [
-                        'used_laptop_id' => $laptop->id,
-                        'master_check_item_id' => $checkItemId,
-                    ],
-                    [
-                        'status' => $checkData['condition'],
-                        'notes' => $checkData['notes'] ?? null,
-                        'checked_at' => now(),
-                    ]
-                );
+            foreach ($request->file('photos') as $index => $photo) {
+                $path = $photo->store('used-laptop', 'public');
+                UsedLaptopMedia::create([
+                    'used_laptop_id' => $laptop->id,
+                    'file_path' => $path,
+                    'order' => $currentMaxOrder + $index + 1,
+                ]);
             }
+        }
+        
+        // ✅ UPDATE CHECKLIST (DENGAN PENGECEKAN NULL)
+        $checkItems = $request->input('check_items', []); // Default empty array jika null
+        
+        if (!empty($checkItems) && is_array($checkItems)) {
+            foreach ($checkItems as $checkItemId => $checkData) {
+                // Hanya proses jika ada data condition
+                if (isset($checkData['condition']) && !empty($checkData['condition'])) {
+                    UsedLaptopCheck::updateOrCreate(
+                        [
+                            'used_laptop_id' => $laptop->id,
+                            'master_check_item_id' => $checkItemId,
+                        ],
+                        [
+                            'status' => $checkData['condition'],
+                            'notes' => $checkData['notes'] ?? null,
+                            'checked_at' => now(),
+                        ]
+                    );
+                }
+            }
+        }
+
             
             // Hapus kerusakan yang tidak ada
             $existingRepairIds = $laptop->repairs->pluck('id')->toArray();
@@ -493,10 +517,21 @@ class UsedLaptopController extends Controller
 
     public function mediaDestroy($id)
     {
-        $media = UsedLaptopMedia::findOrFail($id);
-        Storage::delete($media->file_path);
-        $media->delete();
-        return back()->with('success', 'Media berhasil dihapus!');
+        try {
+            $media = UsedLaptopMedia::findOrFail($id);
+            Storage::delete('public/' . $media->file_path);
+            $media->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Media berhasil dihapus!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus media: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function checkSerialNumber(Request $request)
