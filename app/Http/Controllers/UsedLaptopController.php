@@ -381,54 +381,70 @@ class UsedLaptopController extends Controller
                 ]);
             }
             
-        // ✅ HANDLE ORDER DATA BARU (GABUNGAN EXISTING + NEW)
-        if ($request->has('photos_order_data') && !empty($request->photos_order_data)) {
-            $orderData = json_decode($request->photos_order_data, true);
-            
-            if (is_array($orderData)) {
-                // Update existing photos order
-                if (isset($orderData['existing']) && is_array($orderData['existing'])) {
-                    foreach ($orderData['existing'] as $item) {
-                        UsedLaptopMedia::where('id', $item['id'])
-                            ->update(['order' => $item['order']]);
-                    }
-                }
+            // Simpan foto baru
+            // ✅ HANDLE UNIFIED PHOTOS ORDER (EXISTING + NEW)
+            if ($request->has('photos_order_data') && !empty($request->photos_order_data)) {
+                $orderData = json_decode($request->photos_order_data, true);
                 
-                // Save new photos with order
-                if ($request->hasFile('photos') && isset($orderData['new']) && is_array($orderData['new'])) {
-                    $files = $request->file('photos');
+                \Log::info('=== PHOTOS ORDER DATA ===');
+                \Log::info('Order Data:', $orderData);
+                
+                if (is_array($orderData)) {
+                    // 1. Update existing photos order
+                    if (isset($orderData['existing']) && is_array($orderData['existing'])) {
+                        \Log::info('Updating existing photos order...');
+                        foreach ($orderData['existing'] as $item) {
+                            $updated = UsedLaptopMedia::where('id', $item['id'])
+                                ->update(['order' => $item['order']]);
+                            \Log::info("Updated photo ID {$item['id']} to order {$item['order']}: " . ($updated ? 'success' : 'failed'));
+                        }
+                    }
                     
-                    foreach ($orderData['new'] as $newPhotoData) {
-                        $fileIndex = $newPhotoData['fileIndex'];
-                        $order = $newPhotoData['order'];
+                    // 2. Save new photos with order
+                    if ($request->hasFile('photos') && isset($orderData['new']) && is_array($orderData['new'])) {
+                        \Log::info('Processing new photos...');
                         
-                        if (isset($files[$fileIndex])) {
-                            $path = $files[$fileIndex]->store('used-laptop', 'public');
-                            UsedLaptopMedia::create([
+                        // Create mapping of fileIndex to order
+                        $orderMapping = [];
+                        foreach ($orderData['new'] as $newPhotoData) {
+                            $orderMapping[$newPhotoData['fileIndex']] = $newPhotoData['order'];
+                        }
+                        
+                        \Log::info('Order mapping for new photos:', $orderMapping);
+                        
+                        // Save photos with their order
+                        foreach ($request->file('photos') as $fileIndex => $photo) {
+                            $order = $orderMapping[$fileIndex] ?? 999;
+                            
+                            $path = $photo->store('used-laptop', 'public');
+                            $media = UsedLaptopMedia::create([
                                 'used_laptop_id' => $laptop->id,
                                 'file_path' => $path,
                                 'order' => $order,
                             ]);
+                            
+                            \Log::info("Saved new photo: fileIndex={$fileIndex}, order={$order}, path={$path}, id={$media->id}");
                         }
                     }
                 }
-            }
-        } else {
-            // Fallback: jika tidak ada order data, simpan foto baru dengan order setelah existing
-            if ($request->hasFile('photos')) {
-                $currentMaxOrder = $laptop->media()->max('order') ?? -1;
-                
-                foreach ($request->file('photos') as $index => $photo) {
-                    $path = $photo->store('used-laptop', 'public');
-                    UsedLaptopMedia::create([
-                        'used_laptop_id' => $laptop->id,
-                        'file_path' => $path,
-                        'order' => $currentMaxOrder + $index + 1,
-                    ]);
+            } else {
+                \Log::info('No photos_order_data, using fallback method');
+                // Fallback: save photos with default order
+                if ($request->hasFile('photos')) {
+                    $currentMaxOrder = $laptop->media()->max('order') ?? -1;
+                    
+                    foreach ($request->file('photos') as $index => $photo) {
+                        $path = $photo->store('used-laptop', 'public');
+                        $media = UsedLaptopMedia::create([
+                            'used_laptop_id' => $laptop->id,
+                            'file_path' => $path,
+                            'order' => $currentMaxOrder + $index + 1,
+                        ]);
+                        \Log::info("Saved photo (fallback): index={$index}, order=" . ($currentMaxOrder + $index + 1));
+                    }
                 }
             }
-        }
-        
+
         // ✅ UPDATE CHECKLIST (DENGAN PENGECEKAN NULL)
         $checkItems = $request->input('check_items', []); // Default empty array jika null
         
