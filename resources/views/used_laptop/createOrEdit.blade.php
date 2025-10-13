@@ -223,7 +223,6 @@
                         </small>
                     </div>
 
-                    <!-- Existing Photos (Edit Mode) -->
                     @if(isset($laptop) && $laptop->media->count() > 0)
                     <div class="mb-4">
                         <label class="font-weight-bold mb-3">
@@ -271,6 +270,9 @@
                         <input type="hidden" id="photo-order" name="photo_order">
                     </div>
                     @endif
+
+                    {{-- ✅ PENTING: Hidden input untuk foto baru HARUS di luar kondisi --}}
+                    <input type="hidden" id="new-photo-order" name="new_photo_order">
 
                     <!-- New Photos Preview -->
                     <div id="new-photos-preview" style="display: none;">
@@ -856,13 +858,13 @@
             // NEW PHOTOS UPLOAD & PREVIEW
             // ============================================
             let newPhotosArray = [];
-            
+
             $('#photos').on('change', function(e) {
                 const files = Array.from(this.files);
                 const previewContainer = $('#photo-preview');
                 
                 // Validate total photos
-                const existingCount = $('#existing-photos-container .photo-item').length;
+                const existingCount = $('#existing-photos-container .photo-item').length || 0;
                 const totalCount = existingCount + files.length;
                 
                 if (totalCount > 5) {
@@ -883,12 +885,20 @@
                 // Show preview container
                 $('#new-photos-preview').show();
                 
+                let loadedCount = 0;
+                
                 files.forEach((file, index) => {
                     if (!file.type.match('image.*')) {
+                        loadedCount++;
                         return;
                     }
                     
-                    newPhotosArray.push(file);
+                    // Store file with original index
+                    newPhotosArray.push({
+                        file: file,
+                        originalIndex: index,
+                        currentOrder: index
+                    });
                     
                     const reader = new FileReader();
                     reader.onload = function(event) {
@@ -920,38 +930,64 @@
                             </div>
                         `);
                         previewContainer.append(photoItem);
+                        
+                        loadedCount++;
+                        
+                        // ✅ PENTING: Setelah semua foto selesai dimuat, update order
+                        if (loadedCount === files.length) {
+                            setTimeout(() => {
+                                // Initialize Sortable
+                                const newPhotosContainer = document.getElementById('photo-preview');
+                                if (newPhotosContainer) {
+                                    new Sortable(newPhotosContainer, {
+                                        animation: 150,
+                                        handle: '.drag-handle',
+                                        ghostClass: 'sortable-ghost',
+                                        dragClass: 'sortable-drag',
+                                        onEnd: function(evt) {
+                                            updateNewPhotosOrder();
+                                            showToast('success', 'Urutan foto baru berhasil diubah');
+                                        }
+                                    });
+                                }
+                                
+                                // ✅ KUNCI: Update order pertama kali setelah upload (sebelum drag & drop)
+                                updateNewPhotosOrder();
+                                console.log('Initial photo order set after upload');
+                            }, 150);
+                        }
                     };
                     reader.readAsDataURL(file);
                 });
-                
-                // Initialize Sortable for new photos
-                setTimeout(() => {
-                    const newPhotosContainer = document.getElementById('photo-preview');
-                    if (newPhotosContainer) {
-                        new Sortable(newPhotosContainer, {
-                            animation: 150,
-                            handle: '.drag-handle',
-                            ghostClass: 'sortable-ghost',
-                            dragClass: 'sortable-drag',
-                            onEnd: function(evt) {
-                                updateNewPhotosOrder();
-                                showToast('success', 'Urutan foto baru berhasil diubah');
-                            }
-                        });
-                    }
-                }, 100);
             });
-            
-            // Update new photos order
+
+            // ✅ UPDATE: Function untuk update urutan foto baru
             function updateNewPhotosOrder() {
                 const newOrder = [];
-                $('#photo-preview .photo-item').each(function(index) {
+                const orderMapping = [];
+                
+                $('#photo-preview .photo-item').each(function(displayIndex) {
                     const originalIndex = $(this).data('index');
-                    newOrder.push(newPhotosArray[originalIndex]);
-                    $(this).find('.photo-badge').html('<i class="fas fa-plus mr-1"></i>Baru #' + (index + 1));
+                    
+                    // Find file in array
+                    const photoData = newPhotosArray.find(p => p.originalIndex === originalIndex);
+                    if (photoData) {
+                        photoData.currentOrder = displayIndex;
+                        newOrder.push(photoData);
+                        orderMapping.push(originalIndex); // Store original index in order
+                    }
+                    
+                    // Update badge
+                    $(this).find('.photo-badge').html('<i class="fas fa-plus mr-1"></i>Baru #' + (displayIndex + 1));
                 });
+                
                 newPhotosArray = newOrder;
-                updateFileInput();
+                
+                // ✅ Save order mapping to hidden input
+                $('#new-photo-order').val(JSON.stringify(orderMapping));
+                
+                console.log('New photos order updated:', orderMapping);
+                console.log('Hidden input value:', $('#new-photo-order').val());
             }
             
             // Update file input with reordered files
@@ -964,31 +1000,26 @@
             }
             
             // Remove new photo
+            // Remove new photo
             $(document).on('click', '.btn-remove-new-photo', function() {
                 const index = $(this).data('index');
                 $(this).closest('.photo-item').fadeOut(300, function() {
                     $(this).remove();
                     
                     // Remove from array
-                    newPhotosArray = newPhotosArray.filter((_, i) => i !== index);
-                    
-                    // Update file input
-                    updateFileInput();
+                    newPhotosArray = newPhotosArray.filter(p => p.originalIndex !== index);
                     
                     // Hide container if empty
                     if (newPhotosArray.length === 0) {
                         $('#new-photos-preview').hide();
+                        $('#photos').val(''); // Clear file input
+                        $('#new-photo-order').val(''); // Clear order
+                    } else {
+                        // ✅ Update order after removal
+                        updateNewPhotosOrder();
                     }
-                    
-                    // Update badge numbers
-                    $('#photo-preview .photo-item').each(function(idx) {
-                        $(this).data('index', idx);
-                        $(this).find('.photo-badge').html('<i class="fas fa-plus mr-1"></i>Baru #' + (idx + 1));
-                        $(this).find('.btn-remove-new-photo').data('index', idx);
-                    });
                 });
             });
-            
             // ============================================
             // DELETE EXISTING PHOTO
             // ============================================

@@ -127,14 +127,44 @@ class UsedLaptopController extends Controller
             ]);
             
             // Simpan foto
-            if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $index => $photo) {
-                    $path = $photo->store('used-laptop', 'public');
-                    UsedLaptopMedia::create([
-                        'used_laptop_id' => $laptop->id,
-                        'file_path' => $path,
-                        'order' => $index, // ✅ Simpan urutan
-                    ]);
+             if ($request->hasFile('photos')) 
+            {
+                $photos = $request->file('photos');
+                $photoOrder = [];
+                
+                // ✅ Baca urutan dari hidden input
+                if ($request->has('new_photo_order') && !empty($request->new_photo_order)) {
+                    $photoOrder = json_decode($request->new_photo_order, true);
+                    
+                    \Log::info('Using custom order:', ['order' => $photoOrder]);
+                    
+                    if (!is_array($photoOrder)) {
+                        $photoOrder = array_keys($photos);
+                        \Log::warning('Invalid order format, using default');
+                    }
+                } else {
+                    $photoOrder = array_keys($photos);
+                    \Log::info('Using default order:', ['order' => $photoOrder]);
+                }
+                
+                // ✅ Simpan foto sesuai urutan
+                foreach ($photoOrder as $displayOrder => $originalIndex) {
+                    if (isset($photos[$originalIndex])) {
+                        $photo = $photos[$originalIndex];
+                        $path = $photo->store('used-laptop', 'public');
+                        
+                        UsedLaptopMedia::create([
+                            'used_laptop_id' => $laptop->id,
+                            'file_path' => $path,
+                            'order' => $displayOrder,
+                        ]);
+                        
+                        \Log::info('Photo saved:', [
+                            'original_index' => $originalIndex,
+                            'display_order' => $displayOrder,
+                            'path' => $path
+                        ]);
+                    }
                 }
             }
             
@@ -400,15 +430,41 @@ class UsedLaptopController extends Controller
         
         // ✅ SIMPAN FOTO BARU DENGAN ORDER
         if ($request->hasFile('photos')) {
-            // Get current max order
+            $photos = $request->file('photos');
+            $orderedPhotos = [];
+
+            // Gunakan urutan hasil drag & drop jika tersedia
+            if ($request->filled('new_photo_order')) {
+                $orderMapping = json_decode($request->new_photo_order, true);
+
+                if (is_array($orderMapping)) {
+                    foreach ($orderMapping as $originalIndex) {
+                        if (isset($photos[$originalIndex])) {
+                            $orderedPhotos[] = $photos[$originalIndex];
+                        }
+                    }
+
+                    // Tambahkan foto yang tidak ada di mapping (fallback)
+                    foreach ($photos as $index => $photo) {
+                        if (!in_array($index, $orderMapping, true)) {
+                            $orderedPhotos[] = $photo;
+                        }
+                    }
+                }
+            }
+
+            if (empty($orderedPhotos)) {
+                $orderedPhotos = $photos;
+            }
+
             $currentMaxOrder = $laptop->media()->max('order') ?? -1;
-            
-            foreach ($request->file('photos') as $index => $photo) {
+
+            foreach ($orderedPhotos as $offset => $photo) {
                 $path = $photo->store('used-laptop', 'public');
                 UsedLaptopMedia::create([
                     'used_laptop_id' => $laptop->id,
                     'file_path' => $path,
-                    'order' => $currentMaxOrder + $index + 1,
+                    'order' => $currentMaxOrder + $offset + 1,
                 ]);
             }
         }
