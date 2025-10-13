@@ -49,7 +49,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="weight">Berat (kg) <span class="text-danger">*</span></label>
+                        <label for="weight">Berat (Gram) <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" id="weight" name="weight" 
                                value="{{ old('weight', $laptop->weight ?? '') }}"
                                placeholder="Contoh: 5" >
