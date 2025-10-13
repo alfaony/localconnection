@@ -39,13 +39,15 @@ class KyeController extends Controller
         {
             return redirect()->route('kye.show', Auth::user()->kye->id)->with('error', 'Catatan KYE sudah ada.');
         }
+        $maritalStatus = config('custom.merital_status');
 
-        return view('kye.createOrEdit');
+        return view('kye.createOrEdit', compact('maritalStatus'));
     }
 
     // Store KYE Data
     public function store(KyeRequest $request)
     {
+        dd($request->all());
         $data = $request->validated();
 
         try {
@@ -87,6 +89,12 @@ class KyeController extends Controller
             {
                 $data['house_photo'] = 'house_photos/' . uniqid() . '.' . $request->file('house_photo')->extension();
                 Storage::put('public/' . $data['house_photo'], file_get_contents($request->file('house_photo')->getRealPath()));
+            }
+
+            if ($request->npwp_photo) 
+            {
+                $data['npwp_photo'] = 'npwp_photo/' . uniqid() . '.' . $request->file('npwp_photo')->extension();
+                Storage::put('public/' . $data['npwp_photo'], file_get_contents($request->file('npwp_photo')->getRealPath()));
             }
 
             $data['user_id'] = Auth::user()->id;
@@ -138,11 +146,12 @@ class KyeController extends Controller
     public function edit($id)
     {
         $kye = KYE::findOrFail($id);
+        $maritalStatus = config('custom.merital_status');
         if(!$kye->isEdit())
         {
             return redirect()->route('kye.show',$kye->id)->with('error', 'KYE Tidak dapat di Ubah.');
         }
-        return view('kye.createOrEdit', compact('kye'));
+        return view('kye.createOrEdit', compact('kye', 'maritalStatus'));
     }
     
     /**
@@ -250,7 +259,8 @@ class KyeController extends Controller
 
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil diperbarui.');
         } catch (\Throwable $th) {
-            // dd($th);
+            dd($request->all());
+            dd($th);
             // Log error untuk debugging
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui data KYE.');
         }
