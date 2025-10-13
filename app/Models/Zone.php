@@ -52,7 +52,7 @@ class Zone extends Model
         if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
             $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
-            return $query->whereHas('user', function ($query) use ($companyId) 
+            return $query->whereHas('user', function ($query) use ($companyIds) 
             {
                 $query->whereIn('company_id', $companyIds);
             });
