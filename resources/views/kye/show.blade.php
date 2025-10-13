@@ -67,6 +67,18 @@
                     </div>
                 </div>
                 <p class="mt-3"><strong><i class="fas fa-file-alt"></i> Nomor NPWP:</strong> {{ $kye->npwp_number ?? 'Tidak Ada' }}</p>
+                <div class="mt-3">
+                    <strong><i class="fas fa-file-alt"></i> File NPWP:</strong>
+                    <div class="mt-2">
+                        @if ($kye->npwp_photo)
+                            <a href="{{ Storage::url($kye->npwp_photo) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-download"></i> Unduh File NPWP
+                            </a>
+                        @else
+                            <p class="text-muted"><i class="fas fa-file"></i> Belum ada file.</p>
+                        @endif
+                    </div>
+                </div>
                 <div class="mt-4">
                     <strong><i class="fas fa-map-marker-alt"></i> Lokasi Rumah:</strong>
                     <div class="mt-2">
