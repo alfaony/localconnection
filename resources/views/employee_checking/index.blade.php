@@ -284,14 +284,14 @@
                             @endforelse
                         </tbody>
                     </table>
+                    <!-- Pagination Links -->
+                     @if(count($employeeCheckings) > 0)
+                    <div class="d-flex justify-content-center mt-4">
+                        {{ $employeeCheckings->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+                    </div>
+                    @endif
                 </div>
 
-                <!-- Pagination Links -->
-                 @if(count($employeeCheckings) > 0)
-                <div class="d-flex justify-content-center mt-4">
-                    {{ $employeeCheckings->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-                </div>
-                @endif
             </div>
             @endif
             @if(request('tab') == 'point_checkin')
