@@ -30,7 +30,8 @@ class ProductStore extends Model
         'selling_price',
         'user_create_id',
         'user_modified_id',
-        'company_id'
+        'company_id',
+        'rack_id',
     ];
 
     protected $casts = [
@@ -85,6 +86,11 @@ class ProductStore extends Model
     {
         $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
         return $query->whereIn('company_id', $companyIds);
+    }
+
+    public function rack(): BelongsTo
+    {
+        return $this->belongsTo(Rack::class, 'rack_id')->withTrashed();
     }
 
     public function category(): BelongsTo

@@ -7,6 +7,10 @@ use App\Models\ProductStore;
 use App\Models\CategoryProductStore;
 use App\Models\BrandProductStore;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Warehouse;
+use App\Models\Zone;
+use App\Models\Rack;
+
 
 class ProductStoreForm extends Component
 {
@@ -25,20 +29,32 @@ class ProductStoreForm extends Component
     public $selling_price;
     public $createAgain = false;
 
+    // Location properties
+    public $warehouse_id;
+    public $zone_id;
+    public $rack_id;
+
+    public $categories;
+    public $brands;
+    public $warehouses;
+    public $zones;
+    public $racks;
+    
+    protected $listeners = ['editProduct', 'createProduct'];
+
     public function updatedSellingPriceView($value)
     {
         $this->selling_price = preg_replace('/\D/', '', $value);
     }
-
-    public $categories;
-    public $brands;
-
-    protected $listeners = ['editProduct', 'createProduct'];
+    
 
     public function mount($id = null)
     {
         $this->categories = CategoryProductStore::byCompany(Auth::user()->company_id)->get();
         $this->brands = BrandProductStore::byCompany(Auth::user()->company_id)->get();
+        $this->warehouses = Warehouse::byCompany(Auth::user()->company_id)->get();
+        $this->zones = collect();
+        $this->racks = collect();
         if($id)
         {
             $this->editProduct($id);
@@ -74,6 +90,59 @@ class ProductStoreForm extends Component
         $this->height = $product->height;
         $this->weight = $product->weight;
         $this->selling_price = $product->selling_price;
+
+        if ($product->rack) {
+            $this->warehouse_id = $product->rack->zone->warehouse_id;
+            $this->zone_id = $product->rack->zone_id;
+            $this->rack_id = $product->rack_id;
+
+            $this->zones = Zone::where('warehouse_id', $this->warehouse_id)
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get();
+            $this->racks = Rack::where('zone_id', $this->zone_id)
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get();
+        }else 
+        {
+            $this->zones = collect();
+            $this->racks = collect();
+        }
+    }
+
+     // ============================================
+    // WAREHOUSE CHANGED - Load Zones
+    // ============================================
+    public function updatedWarehouseId($value)
+    {
+        $this->zone_id = null;
+        $this->rack_id = null;
+        $this->zones = collect();
+        $this->racks = collect();
+
+        if ($value) {
+            $this->zones = Zone::where('warehouse_id', $value)
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get();
+        }
+    }
+
+    // ============================================
+    // ZONE CHANGED - Load Racks
+    // ============================================
+    public function updatedZoneId($value)
+    {
+        $this->rack_id = null;
+        $this->racks = collect();
+
+        if ($value && $this->warehouse_id) {
+            $this->racks = Rack::where('zone_id', $value)
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get();
+        }
     }
 
     public function createProduct()
@@ -85,6 +154,9 @@ class ProductStoreForm extends Component
     public function save()
     {
         $validated = $this->validate([
+            'warehouse_id' => 'nullable|exists:warehouses,id',
+            'zone_id' => 'nullable|exists:zones,id',
+            'rack_id' => 'nullable|exists:racks,id',
             'barcode' => 'nullable|string|max:255',
             'category_product_store_id' => 'required|exists:category_product_stores,id',
             'brand_product_store_id' => 'required|exists:brand_product_stores,id',
@@ -128,10 +200,16 @@ class ProductStoreForm extends Component
     private function resetForm()
     {
         $this->reset([
+            'warehouse_id',
+            'zone_id',
+            'rack_id',
             'productId', 'barcode', 'category_product_store_id', 'brand_product_store_id',
             'name', 'variant', 'specification', 'length', 'width', 'height',
             'weight', 'selling_price'
         ]);
+
+        $this->zones = collect();
+        $this->racks = collect();
     }
 
     public function cancel()

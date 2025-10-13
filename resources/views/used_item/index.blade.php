@@ -2,10 +2,6 @@
 
 @section('title', 'Manajemen Barang')
 
-@section('content_header')
-    <h1>Manajemen Barang</h1>
-@stop
-
 @section('content')
 @canAccess('index','used_laptops')
 <div class="row">

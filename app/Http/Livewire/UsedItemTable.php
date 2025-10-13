@@ -6,8 +6,11 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\UsedItem;
 use App\Models\User;
+use App\Models\Warehouse;
+use App\Models\Zone;
 
 use Illuminate\Support\Carbon;
+use App\Helpers\Access;
 
 class UsedItemTable extends Component
 {
@@ -16,6 +19,8 @@ class UsedItemTable extends Component
 
     public $search = '';
     public $statusFilter = '';
+    public $warehouseFilter = '';
+    public $zoneFilter = '';
     public $userFilter = ''; // Tambahkan filter user
     public $startDate = ''; // Tambahkan filter tanggal mulai
     public $endDate = ''; // Tambahkan filter tanggal akhir
@@ -32,6 +37,52 @@ class UsedItemTable extends Component
     // Current laptop for detail view
     public $currentLaptop;
 
+     protected $queryString = [
+        'search' => ['except' => ''],
+        'statusFilter' => ['except' => ''],
+        'warehouseFilter' => ['except' => ''],
+        'zoneFilter' => ['except' => ''],
+        'userFilter' => ['except' => ''],
+        'startDate' => ['except' => ''],
+        'endDate' => ['except' => ''],
+    ];
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingStatusFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingWarehouseFilter()
+    {
+        $this->zoneFilter = ''; // Reset zone when warehouse changes
+        $this->resetPage();
+    }
+
+    public function updatingZoneFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingUserFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingStartDate()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingEndDate()
+    {
+        $this->resetPage();
+    }
+
     public function sortBy($field)
     {
         if ($this->sortField === $field) {
@@ -47,6 +98,18 @@ class UsedItemTable extends Component
     {
         $this->startDate = '';
         $this->endDate = '';
+    }
+
+    public function resetFilters()
+    {
+        $this->search = '';
+        $this->statusFilter = '';
+        $this->warehouseFilter = '';
+        $this->zoneFilter = '';
+        $this->userFilter = '';
+        $this->startDate = '';
+        $this->endDate = '';
+        $this->resetPage();
     }
     
     public function updatedStartDate($value)
@@ -73,6 +136,16 @@ class UsedItemTable extends Component
             ->when($this->statusFilter === 'unsold', function ($query) {
                 $query->where('is_sold', 0);
             })
+            ->when($this->warehouseFilter, function ($query) {
+                $query->whereHas('rack.zone.warehouse', function ($q) {
+                    $q->where('id', $this->warehouseFilter);
+                });
+            })
+            ->when($this->zoneFilter, function ($query) {
+                $query->whereHas('rack.zone', function ($q) {
+                    $q->where('id', $this->zoneFilter);
+                });
+            })
             ->when($this->userFilter, function ($query) { // Filter user
                 $query->where('user_id', $this->userFilter);
             })
@@ -94,9 +167,26 @@ class UsedItemTable extends Component
             ->orderBy('name')
             ->get();
 
+        $warehouses = Warehouse::byCompany(auth()->user()->company_id)->select('id', 'name')->get();
+        
+        $zones = Zone::byCompany(auth()->user()->company_id)->when($this->warehouseFilter, function ($query) {
+            $query->where('warehouse_id', $this->warehouseFilter);
+        })
+        ->select('id', 'name')
+        ->get();
+
+        $isShow = Access::can('show','used_items');
+        $isEdit = Access::can('edit','used_items');
+        $isDestroy = Access::can('destroy','used_items');
+
         return view('livewire.used-item-table', [
             'items' => $items,
             'users' => $users, // Kirim data user ke view
+            'warehouses' => $warehouses,
+            'zones' => $zones,
+            'isShow' => $isShow,
+            'isEdit' => $isEdit,
+            'isDestroy' => $isDestroy
         ]);
     }
 }

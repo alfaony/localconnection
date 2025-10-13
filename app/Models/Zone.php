@@ -42,13 +42,19 @@ class Zone extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    public function racks()
+    {
+        return $this->hasMany(Rack::class);
+    }
+
     public function scopeByCompany($query,$companyId)
     {
         if($companyId && Auth::user()->role->name != RoleSchema::ROOT)
         {
+            $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
             return $query->whereHas('user', function ($query) use ($companyId) 
             {
-                $query->where('company_id', $companyId);
+                $query->whereIn('company_id', $companyIds);
             });
         }
     }

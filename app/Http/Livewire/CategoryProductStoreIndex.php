@@ -53,7 +53,7 @@ class CategoryProductStoreIndex extends Component
     public function store()
     {        
         $this->validate([
-            'name' => 'required|string|max:255|unique:category_product_stores,name,NULL,id,company_id,' . Auth::user()->company_id
+            'name' => 'required|string|max:255|unique:category_product_stores,name,NULL,id,company_id,' . Auth::user()->company_id. ',deleted_at,NULL'
         ]);
 
         CategoryProductStore::create([

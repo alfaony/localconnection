@@ -104,6 +104,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForProductStoreSeeder::class);
         $this->call(PermissionForMenuPunishmentUserSeeder::class);
         $this->call(PermissionForMenuKasirSeeder::class);
-        
+        $this->call(PermissionForGetLocationSeeder::class);
     }
 }

@@ -30,7 +30,7 @@ class UsedLaptopResource extends JsonResource
             'notes' => $this->notes,
             'buying_price' => $this->purchase_price,
             'selling_price' => $this->jakarta_price,
-            'images' => $this->media->map(function ($media) {
+            'images' => $this->media->sortBy('order')->map(function ($media) {
                 return env('APP_URL') . Storage::url($media->file_path);
             })->toArray(),
         ];
