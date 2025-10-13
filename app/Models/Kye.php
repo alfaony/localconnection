@@ -49,6 +49,7 @@ class Kye extends Model
         'marital_status',
         'number_of_children',
         'npwp_photo',
+        'address_domisili',
     ];
 
     protected $casts = [

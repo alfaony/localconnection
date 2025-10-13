@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('call_name')->nullable()->after('full_name');
             $table->enum('gender', ['male', 'female'])->nullable()->after('call_name');
             $table->string('npwp_photo')->nullable()->after('gender');
+            $table->text('address_domisili')->nullable()->after('address');
             $table->string('marital_status')->nullable()->after('npwp_photo');
             $table->integer('number_of_children')->nullable()->after('marital_status');
             
@@ -32,6 +33,7 @@ return new class extends Migration
     {
         Schema::table('kyes', function (Blueprint $table) {
             $table->dropColumn('call_name');
+            $table->dropColumn('address_domisili');
             $table->dropColumn('gender');
             $table->dropColumn('npwp_photo');
             $table->dropColumn('marital_status');

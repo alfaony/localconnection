@@ -47,7 +47,6 @@ class KyeController extends Controller
     // Store KYE Data
     public function store(KyeRequest $request)
     {
-        dd($request->all());
         $data = $request->validated();
 
         try {
@@ -218,6 +217,16 @@ class KyeController extends Controller
                 Storage::put('public/' . $data['ktp_family'], file_get_contents($request->file('ktp_family')->getRealPath()));
             }
 
+            if ($request->npwp_photo) 
+            {
+                if(isset($kye->npwp_photo))
+                {
+                    Storage::delete('public/' . $kye->npwp_photo);   
+                }
+                $data['npwp_photo'] = 'npwp_photo/' . uniqid() . '.' . $request->file('npwp_photo')->extension();
+                Storage::put('public/' . $data['npwp_photo'], file_get_contents($request->file('npwp_photo')->getRealPath()));
+            }
+
             $user = User::findOrFail($kye->user_id);
             // Update data ke database
             $data['approval_status'] = 'pending';
@@ -259,8 +268,8 @@ class KyeController extends Controller
 
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil diperbarui.');
         } catch (\Throwable $th) {
-            dd($request->all());
-            dd($th);
+            // dd($request->all());
+            // dd($th);
             // Log error untuk debugging
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui data KYE.');
         }

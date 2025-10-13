@@ -29,6 +29,7 @@ class KyeRequest extends FormRequest
             'birth_place' => 'required|string|max:255',
             'birth_date' => 'required|date',
             'address' => 'required|string',
+            'address_domisili' => 'nullable|string',
             'number_of_children' => 'nullable|integer|min:0',
             'marital_status' => 'nullable|string|max:255',
             'ktp_number' => 'required|string|max:20',

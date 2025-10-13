@@ -553,7 +553,7 @@
                             <div class="form-group">
                                 <label for="house_photo"><i class="fas fa-home"></i> Foto Rumah Saat Ini</label>
                                 <input type="file" name="house_photo" id="house_photo" class="form-control-file"
-                                    accept=".jpeg,.jpg,.png" onchange="previewImage('house_photo', 'house_photo_preview')" required>
+                                    accept=".jpeg,.jpg,.png" onchange="previewImage('house_photo', 'house_photo_preview')">
                                 <div class="photo-preview-container">
                                     <div id="house_photo_preview" class="photo-preview-box">
                                         @if(@$kye->house_photo)
