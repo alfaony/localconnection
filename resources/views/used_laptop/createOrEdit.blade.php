@@ -219,71 +219,69 @@
                         </div>
                         <small class="form-text text-muted mt-2">
                             <i class="fas fa-info-circle mr-1"></i>
-                            Upload foto laptop dari berbagai sudut (maks. 5 foto total, format: JPG, PNG, GIF)
+                            Upload foto laptop dari berbagai sudut (maks. 5 foto, format: JPG, PNG, GIF)
                         </small>
                     </div>
 
-                    <!-- ✅ UNIFIED CONTAINER untuk EXISTING + NEW -->
-                    <div id="all-photos-container">
-                        @if(isset($laptop) && $laptop->media->count() > 0)
+                    <!-- Existing Photos (Edit Mode) -->
+                    @if(isset($laptop) && $laptop->media->count() > 0)
+                    <div class="mb-4">
                         <label class="font-weight-bold mb-3">
-                            <i class="fas fa-images mr-2 text-primary"></i>Foto Laptop (Drag untuk mengurutkan)
+                            <i class="fas fa-images mr-2 text-primary"></i>Foto Saat Ini (Drag untuk mengurutkan)
                         </label>
                         <div class="alert alert-info alert-dismissible fade show" role="alert">
                             <i class="fas fa-hand-paper mr-2"></i>
-                            <strong>Tip:</strong> Seret dan lepas foto untuk mengubah urutan. Foto lama dan baru bisa diurutkan bersama!
+                            <strong>Tip:</strong> Seret dan lepas foto untuk mengubah urutan tampilan
                             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
-                        @else
-                        <label class="font-weight-bold mb-3" id="photos-label" style="display: none;">
-                            <i class="fas fa-images mr-2 text-primary"></i>Preview Foto (Drag untuk mengurutkan)
-                        </label>
-                        @endif
                         
-                        <!-- ✅ SATU GRID UNTUK SEMUA FOTO -->
-                        <div class="photo-grid unified-photos" id="unified-photos-grid">
-                            <!-- Existing Photos -->
-                            @if(isset($laptop) && $laptop->media->count() > 0)
-                                @foreach($laptop->media->sortBy('order') as $media)
-                                <div class="photo-item existing-photo" data-type="existing" data-media-id="{{ $media->id }}">
-                                    <div class="photo-wrapper">
-                                        <div class="drag-handle">
-                                            <i class="fas fa-grip-vertical"></i>
-                                        </div>
-                                        <img src="{{ Storage::url($media->file_path) }}" class="photo-thumbnail" alt="Laptop photo">
-                                        <div class="photo-overlay">
-                                            <div class="photo-actions">
-                                                <button type="button" class="btn btn-sm btn-light btn-zoom" 
-                                                        data-image="{{ Storage::url($media->file_path) }}"
-                                                        title="Lihat Ukuran Penuh">
-                                                    <i class="fas fa-search-plus"></i>
-                                                </button>
-                                                @canAccess('mediaDestroy','used_items')
-                                                <button type="button" class="btn btn-sm btn-danger btn-delete-photo" 
-                                                        data-media-id="{{ $media->id }}"
-                                                        title="Hapus Foto">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                                @endcanAccess
-                                            </div>
-                                        </div>
-                                        <div class="photo-badge badge-existing">
-                                            <i class="fas fa-check mr-1"></i>#{{ $loop->iteration }}
+                        <div class="photo-grid existing-photos" id="existing-photos-container">
+                            @foreach($laptop->media->sortBy('order') as $media)
+                            <div class="photo-item" data-media-id="{{ $media->id }}">
+                                <div class="photo-wrapper">
+                                    <div class="drag-handle">
+                                        <i class="fas fa-grip-vertical"></i>
+                                    </div>
+                                    <img src="{{ Storage::url($media->file_path) }}" class="photo-thumbnail" alt="Laptop photo">
+                                    <div class="photo-overlay">
+                                        <div class="photo-actions">
+                                            <button type="button" class="btn btn-sm btn-light btn-zoom" 
+                                                    data-image="{{ Storage::url($media->file_path) }}"
+                                                    title="Lihat Ukuran Penuh">
+                                                <i class="fas fa-search-plus"></i>
+                                            </button>
+                                            @canAccess('mediaDestroy','used_items')
+                                            <button type="button" class="btn btn-sm btn-danger btn-delete-photo" 
+                                                    data-media-id="{{ $media->id }}"
+                                                    title="Hapus Foto">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            @endcanAccess
                                         </div>
                                     </div>
+                                    <div class="photo-badge">
+                                        <i class="fas fa-image mr-1"></i>#{{ $loop->iteration }}
+                                    </div>
                                 </div>
-                                @endforeach
-                            @endif
-                            <!-- New photos will be appended here by JavaScript -->
+                            </div>
+                            @endforeach
                         </div>
-                        
-                        <!-- Hidden input untuk menyimpan order -->
-                        <input type="hidden" id="photos-order-data" name="photos_order_data">
+                        <input type="hidden" id="photo-order" name="photo_order">
+                    </div>
+                    @endif
+
+                    <!-- New Photos Preview -->
+                    <div id="new-photos-preview" style="display: none;">
+                        <label class="font-weight-bold mb-3">
+                            <i class="fas fa-plus-circle mr-2 text-success"></i>Foto Baru (Drag untuk mengurutkan)
+                        </label>
+                        <div class="photo-grid" id="photo-preview"></div>
                     </div>
                 </div>
             </div>
+            <div class="row mt-3" id="photo-preview"></div>
             
             <!-- Section 3: Checklist Kondisi -->
             <div class="section-header mb-4 mt-5">
@@ -1446,381 +1444,4 @@
         });
     </script>
     @endcanAccess
-
-    <script>
-$(document).ready(function() {
-    // ============================================
-    // UNIFIED PHOTO MANAGEMENT (EXISTING + NEW)
-    // ============================================
-    
-    let newPhotosArray = [];
-    let sortableInstance = null;
-    
-    // Initialize Sortable for unified grid
-    function initializeSortable() {
-        const unifiedGrid = document.getElementById('unified-photos-grid');
-        
-        if (unifiedGrid && !sortableInstance) {
-            sortableInstance = new Sortable(unifiedGrid, {
-                animation: 150,
-                handle: '.drag-handle',
-                ghostClass: 'sortable-ghost',
-                dragClass: 'sortable-drag',
-                onEnd: function(evt) {
-                    updateAllPhotosOrder();
-                    updateBadgeNumbers();
-                    showToast('success', 'Urutan foto berhasil diubah');
-                }
-            });
-        }
-    }
-    
-    // Initialize sortable on page load (jika ada foto existing)
-    @if(isset($laptop) && $laptop->media->count() > 0)
-    initializeSortable();
-    @endif
-    
-    // ============================================
-    // UPLOAD NEW PHOTOS
-    // ============================================
-    
-    $('#photos').on('change', function(e) {
-        const files = Array.from(this.files);
-        
-        if (files.length === 0) return;
-        
-        // Validate total photos (existing + new)
-        const existingCount = $('.photo-item[data-type="existing"]').length;
-        const currentNewCount = $('.photo-item[data-type="new"]').length;
-        const totalCount = existingCount + currentNewCount + files.length;
-        
-        if (totalCount > 5) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Terlalu Banyak Foto',
-                html: `<p>Maksimal 5 foto total.</p>
-                       <ul class="text-left">
-                           <li>Foto existing: <strong>${existingCount}</strong></li>
-                           <li>Foto baru sebelumnya: <strong>${currentNewCount}</strong></li>
-                           <li>Foto baru dipilih: <strong>${files.length}</strong></li>
-                           <li>Total: <strong>${totalCount}</strong></li>
-                       </ul>
-                       <p>Anda hanya bisa menambahkan <strong>${5 - existingCount - currentNewCount}</strong> foto lagi.</p>`,
-                confirmButtonColor: '#dc3545',
-            });
-            this.value = '';
-            return;
-        }
-        
-        // Show label if hidden
-        $('#photos-label').show();
-        
-        // Process each file
-        files.forEach((file, index) => {
-            if (!file.type.match('image.*')) {
-                return;
-            }
-            
-            const fileIndex = newPhotosArray.length;
-            newPhotosArray.push(file);
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const photoItem = $(`
-                    <div class="photo-item new-photo" data-type="new" data-file-index="${fileIndex}">
-                        <div class="photo-wrapper">
-                            <div class="drag-handle">
-                                <i class="fas fa-grip-vertical"></i>
-                            </div>
-                            <img src="${event.target.result}" class="photo-thumbnail" alt="New photo">
-                            <div class="photo-overlay">
-                                <div class="photo-actions">
-                                    <button type="button" class="btn btn-sm btn-light btn-zoom" 
-                                            data-image="${event.target.result}"
-                                            title="Lihat Ukuran Penuh">
-                                        <i class="fas fa-search-plus"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-danger btn-remove-new-photo" 
-                                            data-file-index="${fileIndex}"
-                                            title="Hapus Foto">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="photo-badge badge-new">
-                                <i class="fas fa-plus mr-1"></i>Baru
-                            </div>
-                        </div>
-                    </div>
-                `);
-                
-                // Append to unified grid
-                $('#unified-photos-grid').append(photoItem);
-                
-                // Initialize sortable if not yet
-                if (!sortableInstance) {
-                    initializeSortable();
-                }
-                
-                // Update badge numbers
-                updateBadgeNumbers();
-                
-                // Update order data
-                updateAllPhotosOrder();
-            };
-            reader.readAsDataURL(file);
-        });
-        
-        // ✅ JANGAN CLEAR FILE INPUT!
-        // this.value = ''; // HAPUS INI!
-    });
-    
-    // ============================================
-    // REMOVE NEW PHOTO
-    // ============================================
-    
-    $(document).on('click', '.btn-remove-new-photo', function() {
-        const fileIndex = $(this).data('file-index');
-        const photoItem = $(this).closest('.photo-item');
-        
-        photoItem.fadeOut(300, function() {
-            $(this).remove();
-            
-            // Remove from array
-            delete newPhotosArray[fileIndex];
-            
-            // Update file input
-            updateFileInput();
-            
-            // Update badge numbers
-            updateBadgeNumbers();
-            
-            // Update order
-            updateAllPhotosOrder();
-            
-            // Hide label if no photos
-            if ($('.photo-item').length === 0) {
-                $('#photos-label').hide();
-            }
-        });
-    });
-    
-    // ============================================
-    // DELETE EXISTING PHOTO
-    // ============================================
-    
-    $(document).on('click', '.btn-delete-photo', function() {
-        const mediaId = $(this).data('media-id');
-        const photoItem = $(this).closest('.photo-item');
-        
-        Swal.fire({
-            title: 'Hapus Foto?',
-            text: "Foto yang dihapus tidak dapat dikembalikan!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fas fa-trash mr-1"></i>Ya, Hapus!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: `/used-laptop/mediaDestroy/${mediaId}`,
-                    method: 'DELETE',
-                    data: {
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        photoItem.fadeOut(300, function() {
-                            $(this).remove();
-                            updateBadgeNumbers();
-                            updateAllPhotosOrder();
-                            
-                            // Hide label if no photos
-                            if ($('.photo-item').length === 0) {
-                                $('#photos-label').hide();
-                            }
-                        });
-                        
-                        showToast('success', 'Foto berhasil dihapus');
-                    },
-                    error: function(xhr) {
-                        showToast('error', 'Gagal menghapus foto');
-                    }
-                });
-            }
-        });
-    });
-    
-    // ============================================
-    // UPDATE FUNCTIONS
-    // ============================================
-    
-    function updateBadgeNumbers() {
-        $('#unified-photos-grid .photo-item').each(function(index) {
-            const badge = $(this).find('.photo-badge');
-            const type = $(this).data('type');
-            
-            if (type === 'existing') {
-                badge.html(`<i class="fas fa-check mr-1"></i>#${index + 1}`);
-            } else {
-                badge.html(`<i class="fas fa-plus mr-1"></i>Baru #${index + 1}`);
-            }
-        });
-    }
-    
-    function updateAllPhotosOrder() {
-        const orderData = {
-            existing: [],
-            new: []
-        };
-        
-        $('#unified-photos-grid .photo-item').each(function(index) {
-            const type = $(this).data('type');
-            
-            if (type === 'existing') {
-                orderData.existing.push({
-                    id: $(this).data('media-id'),
-                    order: index
-                });
-            } else if (type === 'new') {
-                orderData.new.push({
-                    fileIndex: $(this).data('file-index'),
-                    order: index
-                });
-            }
-        });
-        
-        $('#photos-order-data').val(JSON.stringify(orderData));
-        
-        // ✅ Update file input setiap kali order berubah
-        updateFileInput();
-        
-        console.log('Photos order updated:', orderData);
-    }
-    
-    function updateFileInput() {
-        const dataTransfer = new DataTransfer();
-        
-        // Get order of new photos from DOM
-        const newPhotoItems = $('#unified-photos-grid .photo-item[data-type="new"]');
-        
-        console.log('=== UPDATE FILE INPUT ===');
-        console.log('New photo items in DOM:', newPhotoItems.length);
-        console.log('Files in newPhotosArray:', newPhotosArray.filter(f => f !== undefined).length);
-        
-        // Add files based on DOM order
-        newPhotoItems.each(function() {
-            const fileIndex = $(this).data('file-index');
-            const file = newPhotosArray[fileIndex];
-            
-            if (file) {
-                dataTransfer.items.add(file);
-                console.log(`Added file at index ${fileIndex}:`, file.name);
-            } else {
-                console.warn(`File at index ${fileIndex} is undefined!`);
-            }
-        });
-        
-        // Set to input
-        const photosInput = document.getElementById('photos');
-        photosInput.files = dataTransfer.files;
-        
-        console.log('Final files in input:', photosInput.files.length);
-    }
-    
-    // ============================================
-    // IMAGE ZOOM MODAL
-    // ============================================
-    
-    $(document).on('click', '.btn-zoom', function() {
-        const imageSrc = $(this).data('image');
-        showImageModal(imageSrc);
-    });
-    
-    function showImageModal(imageSrc) {
-        if ($('#imageModal').length === 0) {
-            $('body').append(`
-                <div id="imageModal" class="image-modal">
-                    <span class="image-modal-close">&times;</span>
-                    <img class="image-modal-content" id="modalImage">
-                </div>
-            `);
-        }
-        
-        $('#modalImage').attr('src', imageSrc);
-        $('#imageModal').fadeIn(300);
-    }
-    
-    $(document).on('click', '#imageModal, .image-modal-close', function(e) {
-        if (e.target.id === 'imageModal' || $(e.target).hasClass('image-modal-close')) {
-            $('#imageModal').fadeOut(300);
-        }
-    });
-    
-    // ============================================
-    // FORM SUBMIT DEBUG
-    // ============================================
-    
-    $('#laptop-form').on('submit', function(e) {
-        // ✅ CRITICAL: Update file input sekali lagi sebelum submit
-        updateFileInput();
-        
-        // Debug
-        const photosOrderData = $('#photos-order-data').val();
-        const photosInput = document.getElementById('photos');
-        const filesCount = photosInput.files.length;
-        
-        console.log('=== FORM SUBMIT DEBUG ===');
-        console.log('Photos order data:', photosOrderData);
-        console.log('Files in input:', filesCount);
-        console.log('New photos array:', newPhotosArray.filter(f => f !== undefined).length);
-        
-        // List all files
-        if (filesCount > 0) {
-            console.log('Files to upload:');
-            for (let i = 0; i < filesCount; i++) {
-                console.log(`  ${i}: ${photosInput.files[i].name} (${photosInput.files[i].size} bytes)`);
-            }
-        } else {
-            console.warn('⚠️ NO FILES IN INPUT!');
-        }
-        
-        if (photosOrderData) {
-            try {
-                const parsed = JSON.parse(photosOrderData);
-                console.log('Parsed order:', parsed);
-            } catch (e) {
-                console.error('Parse error:', e);
-            }
-        }
-        
-        // Continue with other validations...
-        return true;
-    });
-    
-    // ============================================
-    // TOAST NOTIFICATION
-    // ============================================
-    
-    function showToast(type, message) {
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
-        });
-        
-        Toast.fire({
-            icon: type,
-            title: message
-        });
-    }
-});
-</script>
 @stop
