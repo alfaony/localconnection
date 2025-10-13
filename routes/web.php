@@ -152,6 +152,8 @@ use App\Http\Livewire\PunishmentUserTable;
 Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 
+
+
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -445,6 +447,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::patch('kye/approvement/{kye}', [KyeController::class, 'approvement'])->name('kye.approvement');
   Route::resource('kye', KyeController::class);
   
+
+  Route::get('warehouse/getLocation', [WarehouseController::class, 'getLocation'])->name('warehouses.get-location');
   Route::resource('warehouse', WarehouseController::class);
   Route::resource('sensor', SensorController::class);
   Route::resource('zone', ZoneController::class);

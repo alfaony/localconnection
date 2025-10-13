@@ -11,6 +11,7 @@ class UsedLaptop extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'rack_id',
         'serial_number',
         'weight',
         'name',
@@ -50,6 +51,11 @@ class UsedLaptop extends Model
     }
 
     // ✅ Relasi
+    public function rack()
+    {
+        return $this->belongsTo(Rack::class)->withTrashed();
+    }
+
     public function checks()
     {
         return $this->hasMany(UsedLaptopCheck::class);

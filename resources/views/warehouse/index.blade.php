@@ -2,6 +2,22 @@
 
 @section('title', 'Manajemen Gudang')
 
+@section('content_header')
+    <!-- Link Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .leaflet-popup-content {
+            font-size: 14px;
+        }
+    </style>
+@endsection
+
 @section('content')
 <!-- Notifikasi -->
 @if(Session::has('store'))
@@ -35,21 +51,22 @@
 @canAccess('update','warehouses')
 <div class="card shadow mb-4 mt-3">
     <div class="card-header bg-primary text-white text-center">
-        <h5>{{ isset($warehouse) ? 'Edit Gudang' : 'Tambah Gudang' }}</h5>
+        <h5>{{ isset($warehouseEdit) ? 'Edit Gudang' : 'Tambah Gudang' }}</h5>
     </div>
     <div class="card-body">
-        <form action="{{ isset($warehouse) ? route('warehouse.update', $warehouse->id) : route('warehouse.store') }}"
+        <form action="{{ isset($warehouseEdit) ? route('warehouse.update', $warehouseEdit->id) : route('warehouse.store') }}"
             method="POST">
             @csrf
-            @if(isset($warehouse))
+            @if(isset($warehouseEdit))
             @method('PUT')
             @endif
+            
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group mb-3">
                         <label class="form-label">Nama Gudang:</label>
                         <input type="text" name="name" class="form-control"
-                            value="{{ isset($warehouse) ? $warehouse->name : '' }}" required>
+                            value="{{ isset($warehouseEdit) ? $warehouseEdit->name : '' }}" required>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -58,7 +75,7 @@
                         <select name="warehouse_type_id" class="form-control" required>
                             @foreach ($warehouse_types as $type)
                             <option value="{{ $type->id }}"
-                                {{ isset($warehouse) && $warehouse->warehouse_type_id == $type->id ? 'selected' : '' }}>
+                                {{ isset($warehouseEdit) && $warehouseEdit->warehouse_type_id == $type->id ? 'selected' : '' }}>
                                 {{ $type->name }}
                             </option>
                             @endforeach
@@ -69,40 +86,56 @@
 
             <div class="form-group mb-3">
                 <label class="form-label">Alamat Gudang:</label>
-                <textarea name="location" class="form-control" rows="2"
-                    required>{{ isset($warehouse) ? $warehouse->location : '' }}</textarea>
+                <textarea name="location" id="location" class="form-control" rows="2"
+                    required>{{ isset($warehouseEdit) ? $warehouseEdit->location : '' }}</textarea>
             </div>
 
+            <!-- Tombol Aksi Peta -->
+            <div class="text-center mb-3">
+                <button type="button" id="getLocation" class="btn btn-warning">
+                    <i class="fa fa-location-arrow"></i> Ambil Lokasi Saya
+                </button>
+                {{-- 
+                <button type="button" id="searchAddress" class="btn btn-info">
+                    <i class="fa fa-search"></i> Cari dari Alamat
+                </button>
+                <button type="button" id="setManually" class="btn btn-secondary">
+                    <i class="fa fa-pencil"></i> Set Koordinat Manual
+                </button>
+                --}}
+            </div>
+
+            <!-- Peta Interaktif -->
+            <div class="form-group mb-3">
+                <label class="form-label">
+                    Pilih Lokasi di Peta: 
+                    <small class="text-muted">(Klik peta atau drag marker untuk mengubah lokasi)</small>
+                </label>
+                <div id="map"></div>
+            </div>
+
+            <!-- Koordinat -->
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group mb-3">
                         <label class="form-label">Garis Lintang (Latitude):</label>
-                        <input type="text" name="latitude" id="latitude" class="form-control"
-                            value="{{ isset($warehouse) ? $warehouse->latitude : '' }}" readonly required>
+                        <input type="number" step="any" name="latitude" id="latitude" class="form-control"
+                            value="{{ isset($warehouseEdit) ? $warehouseEdit->latitude : '' }}" required>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group mb-3">
                         <label class="form-label">Garis Bujur (Longitude):</label>
-                        <input type="text" name="longitude" id="longitude" class="form-control"
-                            value="{{ isset($warehouse) ? $warehouse->longitude : '' }}" readonly required>
+                        <input type="number" step="any" name="longitude" id="longitude" class="form-control"
+                            value="{{ isset($warehouseEdit) ? $warehouseEdit->longitude : '' }}" required>
                     </div>
                 </div>
             </div>
 
-            <div class="text-center mb-3">
-                <button type="button" id="getLocation" class="btn btn-warning">📍 Ambil Lokasi</button>
-            </div>
-
-            <div class="form-group text-center" id="map-container"
-                style="{{ isset($warehouse) ? '' : 'display: none;' }}">
-                <iframe id="mapFrame" width="100%" height="200" frameborder="0" class="rounded"
-                    src="{{ isset($warehouse) ? 'https://maps.google.com/maps?q='.$warehouse->latitude.','.$warehouse->longitude.'&output=embed' : '' }}"></iframe>
-            </div>
-
             <div class="text-right">
                 <button type="submit" class="btn btn-primary">
-                    {{ isset($warehouse) ? '💾 Simpan Perubahan' : '➕ Tambah Gudang' }}
+                    <i class="fa fa-save"></i>
+                    {{ isset($warehouseEdit) ? 'Simpan Perubahan' : 'Tambah Gudang' }}
                 </button>
             </div>
         </form>
@@ -115,18 +148,17 @@
 <div class="card shadow">
     <div class="card-header bg-success text-white">
         <div class="row align-items-center">
-            <!-- Bagian Judul -->
             <div class="col-md-9 col-sm-12 text-center text-md-start">
                 <h5 class="mb-0">Daftar Gudang</h5>
             </div>
-
-            <!-- Bagian Form Pencarian -->
             <div class="col-md-3 col-sm-12">
                 <form method="GET" action="{{ route('warehouse.index') }}">
                     <div class="input-group input-group-sm">
                         <input type="text" name="search" class="form-control" placeholder="Search..."
                             value="{{ request('search') }}">
-                        <button class="btn btn-light px-3 btn-sm ml-2" type="submit">🔍 Cari</button>
+                        <button class="btn btn-light px-3 btn-sm ml-2" type="submit">
+                            <i class="fa fa-search"></i> Cari
+                        </button>
                     </div>
                 </form>
             </div>
@@ -151,7 +183,12 @@
                     <td>{{ $warehouse->name }}</td>
                     <td>{{ $warehouse->warehouseType->name }}</td>
                     <td>{{ $warehouse->location }}</td>
-                    <td>{{ $warehouse->latitude }}, {{ $warehouse->longitude }}</td>
+                    <td>
+                        <a href="https://www.openstreetmap.org/?mlat={{ $warehouse->latitude }}&mlon={{ $warehouse->longitude }}&zoom=15" 
+                           target="_blank" class="text-primary">
+                            {{ number_format($warehouse->latitude, 6) }}, {{ number_format($warehouse->longitude, 6) }}
+                        </a>
+                    </td>
                     <td>
                         @canAccess('store','warehouses')
                         <a href="{{ route('warehouse.edit', $warehouse->id) }}" class="btn btn-sm btn-info">
@@ -164,7 +201,9 @@
                             @csrf
                             @method('DELETE')
                             <button onclick="return confirm('Apakah Anda yakin ingin menghapus gudang ini?')"
-                                type="submit" class="btn btn-sm btn-danger">🗑 Hapus</button>
+                                type="submit" class="btn btn-sm btn-danger">
+                                <i class="fa fa-trash"></i> Hapus
+                            </button>
                         </form>
                         @endcanAccess
                     </td>
@@ -178,7 +217,6 @@
         </table>
         <div class="d-flex justify-content-center">
             {{ $warehouses->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-            <!-- Pagination -->
         </div>
     </div>
 </div>
@@ -186,19 +224,94 @@
 @stop
 
 @section('js')
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-document.getElementById("getLocation").addEventListener("click", function() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            document.getElementById("longitude").value = position.coords.longitude;
-            document.getElementById("latitude").value = position.coords.latitude;
-            document.getElementById("map-container").style.display = "block";
-            document.getElementById("mapFrame").src =
-                `https://maps.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}&output=embed`;
+    let map, marker;
+
+    // Inisialisasi koordinat default (Jakarta) atau dari data warehouse
+    let defaultLat = {{ isset($warehouseEdit) && $warehouseEdit->latitude ? $warehouseEdit->latitude : '-6.2088' }};
+    let defaultLng = {{ isset($warehouseEdit) && $warehouseEdit->longitude ? $warehouseEdit->longitude : '106.8456' }};
+
+    // Inisialisasi peta
+    function initMap() {
+        map = L.map('map').setView([defaultLat, defaultLng], 13);
+        
+        // Gunakan OpenStreetMap tiles (gratis)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Tambahkan marker
+        marker = L.marker([defaultLat, defaultLng], {
+            draggable: true
+        }).addTo(map);
+        
+        // Update koordinat saat marker di-drag
+        marker.on('dragend', function(e) {
+            let position = marker.getLatLng();
+            updateCoordinates(position.lat, position.lng);
         });
-    } else {
-        alert("Peramban ini tidak mendukung fitur lokasi.");
+        
+        // Update koordinat saat peta di-klik
+        map.on('click', function(e) {
+            marker.setLatLng(e.latlng);
+            updateCoordinates(e.latlng.lat, e.latlng.lng);
+        });
     }
-});
+
+    // Update input koordinat dan peta
+    function updateCoordinates(lat, lng) {
+        document.getElementById('latitude').value = lat.toFixed(8);
+        document.getElementById('longitude').value = lng.toFixed(8);
+        marker.setLatLng([lat, lng]);
+        map.panTo([lat, lng]);
+    }
+
+    // Tombol: Ambil Lokasi Saya
+    document.getElementById('getLocation').addEventListener('click', function() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    let lat = position.coords.latitude;
+                    let lng = position.coords.longitude;
+                    updateCoordinates(lat, lng);
+                    map.setView([lat, lng], 15);
+                    alert('Lokasi berhasil didapatkan!');
+                },
+                function(error) {
+                    alert('Gagal mendapatkan lokasi: ' + error.message);
+                }
+            );
+        } else {
+            alert('Browser Anda tidak mendukung Geolocation.');
+        }
+    });
+
+
+
+    // Event listener untuk input manual koordinat
+    document.getElementById('latitude').addEventListener('change', function() {
+        let lat = parseFloat(this.value);
+        let lng = parseFloat(document.getElementById('longitude').value);
+        if (!isNaN(lat) && !isNaN(lng)) {
+            marker.setLatLng([lat, lng]);
+            map.setView([lat, lng], 13);
+        }
+    });
+
+    document.getElementById('longitude').addEventListener('change', function() {
+        let lat = parseFloat(document.getElementById('latitude').value);
+        let lng = parseFloat(this.value);
+        if (!isNaN(lat) && !isNaN(lng)) {
+            marker.setLatLng([lat, lng]);
+            map.setView([lat, lng], 13);
+        }
+    });
+
+    // Inisialisasi peta saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', initMap);
 </script>
 @stop
