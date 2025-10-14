@@ -570,14 +570,23 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                     <form method="post" action="{{ route('user.destroy',$a) }}">
                         @csrf
                         @method('delete')
+                        @canAccess('index','kyes')
+                        @canAccess('show','kyes')
+                        @if($a->kye)
+                        <a href="{{ route('kye.show', $a->kye->id) }}" class="btn btn-sm btn-warning mb-1" title="Lihat Detail KYE" data-toggle="tooltip" data-placement="top" style="color: white;">
+                            <i class="fa fa-file"></i>
+                        </a>
+                        @endif
+                        @endcanAccess
+                        @endcanAccess
                         @canAccess('edit_profile_all_user','users')
-                        <a href="{{ route('user.profileEdit', $a->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-user"></i></a>
+                        <a href="{{ route('user.profileEdit', $a->slug) }}" class="btn btn-info btn-sm mb-1"><i class="fa fa-user"></i></a>
                         @endcanAccess
                         @canAccess('edit','users')
-                        <a href="{{ route('user.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
+                        <a href="{{ route('user.edit',$a->slug) }}" class="btn btn-primary btn-sm mb-1"><i class="fa fa-edit"></i></a>
                         @endcanAccess
                         @canAccess('destroy','users')
-                        <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                        <button onclick="return window.confirm('{{ __('Apakah Anda Yakin ? ') }}')" class="btn btn-danger btn-sm mb-1"><i class="fa fa-trash"></i></button>
                         @endcanAccess
                     </form>
                 </td>
