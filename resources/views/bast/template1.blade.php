@@ -43,6 +43,7 @@
     }
 
     .content {
+        padding-top: 30px;
         padding-bottom: 10px;
         padding-left: 20px;
         padding-right: 20px;
