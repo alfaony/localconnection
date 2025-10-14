@@ -4,6 +4,7 @@
 <audio id="notification-message-entry" src="/audio/notification-message-entry.mp3" preload="auto"></audio>
 <audio id="notification-message-high" src="/audio/notification-message-high.mp3" preload="auto"></audio>
 <audio id="notification-message-email" src="/audio/notification-message-email.mp3" preload="auto"></audio>
+<audio id="notification-message-download" src="/audio/notification-message-download.mp3" preload="auto"></audio>
 <script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 <script>
@@ -34,6 +35,7 @@
     notifSoundEntry = document.getElementById('notification-message-entry');
     notifSoundHigh = document.getElementById('notification-message-high');
     notifSoundEmail = document.getElementById('notification-message-email');
+    notifSoundDownload = document.getElementById('notification-message-download');
 
     window.Pusher = Pusher;
 
@@ -64,6 +66,10 @@
         if(e.category == "high") 
         {
             notifSoundHigh?.play();
+        }
+        else if(e.category == "download")
+        {
+            notifSoundDownload?.play();
         }
         else if(e.category == "email")
         {
