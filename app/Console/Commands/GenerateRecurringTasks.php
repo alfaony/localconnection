@@ -25,10 +25,6 @@ class GenerateRecurringTasks extends Command
     {
         $today = Carbon::today();
         $dayCode = strtoupper(substr($today->format('l'), 0, 2)); // e.g. 'MO', 'WE'
-        Log::info('recurring:generate started', [
-            'date' => $today->toDateString(),
-            'day_code' => $dayCode,
-        ]);
 
         DB::beginTransaction();
         try {
@@ -38,25 +34,10 @@ class GenerateRecurringTasks extends Command
                     $q->whereNull('until')->orWhereDate('until', '>=', $today);
                 })
                 ->get();
-            Log::info('Fetched recurring rules for generation', [
-                'count' => $rules->count(),
-            ]);
     
             foreach ($rules as $rule) 
             {
-                Log::info('Evaluating recurring rule', [
-                    'rule_id' => $rule->id,
-                    'frequency' => $rule->frequency,
-                    'by_day' => $rule->by_day,
-                    'by_month_day' => $rule->by_month_day,
-                    'by_month' => $rule->by_month,
-                ]);
-
                 if (!$this->shouldRunToday($rule, $today, $dayCode)) {
-                    Log::info('Skipping rule; not scheduled for today', [
-                        'rule_id' => $rule->id,
-                        'date' => $today->toDateString(),
-                    ]);
                     continue;
                 }
     
@@ -65,13 +46,7 @@ class GenerateRecurringTasks extends Command
                     ->whereDate('start_date', $today)
                     ->exists();
     
-                if ($already) {
-                    Log::info('Skipping rule; daily task already exists for today', [
-                        'rule_id' => $rule->id,
-                        'date' => $today->toDateString(),
-                    ]);
-                    continue;
-                }
+                if ($already) continue;
     
                 // Ambil template task terakhir
                 $template = $rule->dailyTask()
@@ -79,27 +54,14 @@ class GenerateRecurringTasks extends Command
                     ->orderBy('start_date', 'desc')
                     ->first();
     
-                if (!$template) {
-                    Log::warning('Skipping rule; no template task found', [
-                        'rule_id' => $rule->id,
-                    ]);
-                    continue;
-                }
+                if (!$template) continue;
 
                 if ($this->shouldSkipTaskGeneration($template->assignment_user_id, $today)) 
                 {
-                    Log::info('Skipping task generation due to holiday or leave', [
-                        'rule_id' => $rule->id,
-                        'assignment_user_id' => $template->assignment_user_id,
-                        'date' => $today->toDateString(),
-                    ]);
                     return; // Skip bikin task hari ini
                 }
 
                 $todo = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
-                Log::debug('Resolved TODO task status for recurring generation', [
-                    'status_id' => $todo->id,
-                ]);
     
                 $newTask = $template->replicate();
                 $newTask->slug = $this->createUniqueSlug(DailyTask::class, $template->name);
@@ -114,21 +76,12 @@ class GenerateRecurringTasks extends Command
                 $newTask->point = 0; // Assuming default value is 0
                 // Simpan tugas baru
                 $newTask->save();
-                Log::info('Created new daily task from recurring rule', [
-                    'rule_id' => $rule->id,
-                    'daily_task_id' => $newTask->id,
-                    'slug' => $newTask->slug,
-                ]);
                 
                 $keyResults = $template->keyResults;
                 foreach ($keyResults as $keyResult) 
                 {
                     $newTask->keyResults()->attach($keyResult->id);
                 }
-                Log::debug('Attached key results to new daily task', [
-                    'daily_task_id' => $newTask->id,
-                    'key_result_ids' => $keyResults->pluck('id')->toArray(),
-                ]);
     
                 $this->message($newTask,'create',' System Membuat Tugas '.$newTask->name);
                 $this->statusrecord($newTask, $todo);
@@ -141,16 +94,9 @@ class GenerateRecurringTasks extends Command
                         'custom_field_value_id' => $cf->custom_field_value_id,
                     ]);
                 }
-                Log::debug('Copied custom field values to new daily task', [
-                    'daily_task_id' => $newTask->id,
-                    'custom_field_value_ids' => $template->customFieldValues->pluck('id')->toArray(),
-                ]);
     
                 // Key result
                 $newTask->keyResults()->sync($template->keyResults->pluck('id')->toArray());
-                Log::debug('Synchronized key results on new daily task', [
-                    'daily_task_id' => $newTask->id,
-                ]);
     
                 // Media
                 foreach ($template->taskMedia as $media) {
@@ -161,32 +107,17 @@ class GenerateRecurringTasks extends Command
                         'status' => $media->status,
                     ]);
                 }
-                Log::debug('Copied media attachments to new daily task', [
-                    'daily_task_id' => $newTask->id,
-                    'media_count' => $template->taskMedia->count(),
-                ]);
 
 
                 $this->info("Generated task for rule #{$rule->id} on {$today->toDateString()}");
-                Log::info('Completed task generation for rule', [
-                    'rule_id' => $rule->id,
-                    'daily_task_id' => $newTask->id,
-                ]);
 
                 DB::commit();
-                Log::info('Transaction committed for recurring task generation', [
-                    'rule_id' => $rule->id,
-                ]);
             }
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);
-            Log::error('Error generating recurring tasks', [
-                'message' => $th->getMessage(),
-                'trace' => $th->getTraceAsString(),
-            ]);
+            Log::error('Error generating recurring tasks: ' . $th->getMessage());
             DB::rollBack();
-            Log::warning('Transaction rolled back for recurring task generation');
         }
     }
 
@@ -292,11 +223,6 @@ class GenerateRecurringTasks extends Command
         $dailyTaskMessage->message = $message;
         $dailyTaskMessage->file_path = $filePath ?? NULL;
         $dailyTaskMessage->save();
-        Log::debug('Created daily task message', [
-            'daily_task_id' => $dailyTask->id,
-            'user_id' => $dailyTask->user_id,
-            'template' => $template,
-        ]);
 
         return true;
     } 
@@ -307,10 +233,6 @@ class GenerateRecurringTasks extends Command
             'daily_task_id' => $dailyTask->id,
             'task_status_id' => $status->id,
             'date' => now(),
-        ]);
-        Log::debug('Recorded daily task status change', [
-            'daily_task_id' => $dailyTask->id,
-            'task_status_id' => $status->id,
         ]);
 
         return true;
@@ -335,14 +257,7 @@ class GenerateRecurringTasks extends Command
                 $count++;
             }
 
-            $uniqueSlug = "{$baseSlug}-{$count}";
-            Log::debug('Generated unique slug for model', [
-                'model' => $modelClass,
-                'base_slug' => $baseSlug,
-                'unique_slug' => $uniqueSlug,
-            ]);
-
-            return $uniqueSlug;
+            return "{$baseSlug}-{$count}";
     }
 
     protected function shouldSkipTaskGeneration($userId, Carbon $date): bool
@@ -358,13 +273,6 @@ class GenerateRecurringTasks extends Command
             ->whereDate('date_start', '<=', $date)
             ->whereDate('date_end', '>=', $date)
             ->exists();
-
-        Log::info('Evaluated skip condition for task generation', [
-            'user_id' => $userId,
-            'date' => $date->toDateString(),
-            'is_holiday' => $isHoliday,
-            'is_on_leave' => $isOnLeave,
-        ]);
 
         return $isHoliday || $isOnLeave;
     }
