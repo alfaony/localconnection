@@ -53,7 +53,11 @@
     .listen('InboxReceived', (e) => {
         // Menampilkan pesan sementara
         console.log(e);
-        
+        if (e.download_url) 
+        {
+            // Ada download_url = auto-download
+            handleDownloadNotification(e);
+        }
         showToast(`📩 ${e.user_from}: ${e.message}`, e.direct_url);
         getUnreadCount();
         
@@ -100,6 +104,57 @@
             `);
         } else {
             toastr.success(message);
+        }
+    }
+    function handleDownloadNotification(e) {
+        const message = `📩 ${e.user_from}: ${e.message}`;
+        const downloadUrl = e.download_url;
+        
+        console.log('Download notification detected:', downloadUrl);
+        showToast(message, downloadUrl);
+        setTimeout(() => autoDownloadFile(downloadUrl), 2000);
+    }
+
+    function autoDownloadFile(url) 
+    {
+        try {
+            console.log('Auto-downloading file from:', url);
+            
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.style.visibility = 'hidden';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            
+            toastr.success('📥 Download dimulai otomatis...', 'Download', {
+                timeOut: 3000,
+                progressBar: true
+            });
+            
+            setTimeout(() => {
+                try {
+                    document.body.removeChild(iframe);
+                } catch (e) {
+                    console.log('Iframe already removed');
+                }
+            }, 5000);
+            
+            console.log('File download initiated successfully');
+            
+        } catch (error) {
+            console.error('Auto-download failed:', error);
+            toastr.warning(
+                `Download otomatis gagal. <a href="${url}" class="btn btn-sm btn-light ml-2" download>
+                    <i class="fas fa-download"></i> Download Manual
+                </a>`, 
+                'Download', 
+                {
+                    timeOut: 10000,
+                    closeButton: true,
+                    progressBar: true,
+                    escapeHtml: false
+                }
+            );
         }
     }
 </script>

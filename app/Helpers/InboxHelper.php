@@ -5,6 +5,7 @@ namespace App\Helpers;
 use App\Models\Inbox;
 use App\Models\User;
 use App\Events\InboxReceived;
+use Illuminate\Support\Facades\Log;
 
 class InboxHelper
 {
@@ -39,12 +40,22 @@ class InboxHelper
                 broadcast(new InboxReceived($inboxMessage, $category, $downloadUrl))->toOthers();
                 
     
+                Log::info('Inbox message sent', [
+                    'user_id' => $userToId,
+                    'inbox_id' => $inboxMessage->id
+                ]);
+
                 return $inboxMessage;
+
             }
     
             return true;
         } catch (\Throwable $th) {
             //throw $th;
+            // dd($th);
+            Log::error('Failed to send inbox message', [
+                'error' => $th->getMessage()
+            ]);
             return throw $th;
         }
     }

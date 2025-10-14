@@ -24,6 +24,7 @@ use App\Schemas\ParamSchema;
 
 use App\Rules\MatchOldPassword;
 use Carbon\Carbon;
+use App\Jobs\ExportUsersJob;
 class UserController extends Controller
 {
     /**
@@ -474,22 +475,17 @@ class UserController extends Controller
         try {
             // Validate request
             $request->validate([
-                'division_id' => 'nullable|exists:divisions,id',
-                'approval_status' => 'nullable|in:pending,approved,rejected',
-                'gender' => 'nullable|in:male,female',
-                'date_from' => 'nullable|date',
-                'date_to' => 'nullable|date|after_or_equal:date_from',
-                'search' => 'nullable|string|max:255',
+                'email' => 'nullable|string|max:255',
             ]);
+
 
             // Prepare filters
             $filters = $request->only([
-                'search'
-            ]);
+                'email'
+            ]); 
 
             // Dispatch job to queue (QUEUE SAJA - tidak ada sync)
-            ExportUsersJob::dispatch(auth()->user(), $filters)
-                ->onQueue('exports');
+            ExportUsersJob::dispatch(auth()->user(), $filters);
 
             Log::info('Export job dispatched', [
                 'user_id' => auth()->id(),
@@ -502,6 +498,7 @@ class UserController extends Controller
             );
 
         } catch (\Exception $e) {
+            dd($e);
             Log::error('Failed to start export', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id()

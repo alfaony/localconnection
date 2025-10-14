@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Exports\UsersExport;
 use App\Models\User;
+use App\Schemas\RoleSchema;
 use App\Helpers\InboxHelper;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -46,8 +47,8 @@ class ExportUsersJob implements ShouldQueue
             $query = User::with([
                 'kye',
                 'divisions',
-                'userPositions.position',
-                'userSalaries' => function ($q) {
+                'userPosition.position',
+                'salary' => function ($q) {
                     $q->latest();
                 }
             ]);
@@ -86,6 +87,7 @@ class ExportUsersJob implements ShouldQueue
             Log::info('Export job completed successfully');
 
         } catch (\Exception $e) {
+            // dd($e);PO
             Log::error('Export job failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -98,8 +100,8 @@ class ExportUsersJob implements ShouldQueue
 
     protected function applyFilters($query)
     {
-        if (isset($this->filters['search']) && !empty($this->filters['search'])) {
-            $search = $this->filters['search'];
+        if (isset($this->filters['email']) && !empty($this->filters['email'])) {
+            $search = $this->filters['email'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
@@ -120,23 +122,33 @@ class ExportUsersJob implements ShouldQueue
     protected function sendInboxNotification($downloadUrl, $totalUsers)
     {
         try {
+            Log::info("Sending inbox notification");
+
             $inboxHelper = new InboxHelper();
-            $systemUserId = 1;
+            $systemUserId = User::where('id','!=', $this->requestUser->id)->whereHas('role', function ($query) {
+                $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR, RoleSchema::MANAGER]);
+            })->first();
 
             $message = "✅ Export Data User selesai! Total: {$totalUsers} user | File: {$this->fileName}";
 
             // IMPORTANT: 
             // - directUrl = null (no button link)
             // - downloadUrl = DIRECT storage URL (browser can download directly)
-            $inboxHelper->sent(
+            $response = $inboxHelper->sent(
                 userToId: $this->requestUser->id,
-                userFromId: $systemUserId,
+                userFromId: $systemUserId ? $systemUserId->id : null,
                 message: $message,
                 directUrl: null,  // NULL - no button
                 isRead: false,
                 category: 'email',  // Play email sound
                 downloadUrl: $downloadUrl  // Direct storage URL: /storage/exports/file.xlsx
             );
+
+            Log::info('Inbox notification sent', [
+                'response' => $response,
+                'user_id' => $this->requestUser->id,
+                'inboxHelper' => $inboxHelper
+            ]);
 
             Log::info('Inbox notification sent with storage URL', [
                 'user_id' => $this->requestUser->id,
@@ -156,13 +168,15 @@ class ExportUsersJob implements ShouldQueue
     {
         try {
             $inboxHelper = new InboxHelper();
-            $systemUserId = 1;
+            $systemUserId = User::where('id','!=', $this->requestUser->id)->whereHas('role', function ($query) {
+                $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR, RoleSchema::MANAGER]);
+            })->first();
 
             $message = "❌ Export Data User gagal! Error: " . substr($errorMessage, 0, 100);
 
             $inboxHelper->sent(
                 userToId: $this->requestUser->id,
-                userFromId: $systemUserId,
+                userFromId: $systemUserId ? $systemUserId->id : null,
                 message: $message,
                 directUrl: null,
                 isRead: false,

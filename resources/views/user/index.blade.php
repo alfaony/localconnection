@@ -9,6 +9,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 @section('content')
 
 <div class="col-md-12">
+    @include('components.alert')
     @if(Session::get('store'))
     <div class="alert alert-success mt-3">Pengguna Berhasil Ditambahkan</div>
     @endif
@@ -544,8 +545,8 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             </div>
         </form>
 
-        <a href="{{ route('user.KyeExport') }}" class="btn btn-primary">
-            Export Key
+        <a href="{{ route('user.KyeExport',request()->all()) }}" class="btn btn-primary">
+            <i class="fas fa-file-export"></i> Export Key
         </a>
 
         <table class="table table-bordered">
