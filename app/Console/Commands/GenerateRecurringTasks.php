@@ -24,45 +24,63 @@ class GenerateRecurringTasks extends Command
     public function handle()
     {
         $today = Carbon::today();
-        $dayCode = strtoupper(substr($today->format('l'), 0, 2)); // e.g. 'MO', 'WE'
+        $dayCode = strtoupper(substr($today->format('l'), 0, 2));
 
-        DB::beginTransaction();
-        try {
-            $rules = RecurringRule::where('active', true)
-                ->whereDate('start_date', '<=', $today)
-                ->where(function ($q) use ($today) {
-                    $q->whereNull('until')->orWhereDate('until', '>=', $today);
-                })
-                ->get();
-    
-            foreach ($rules as $rule) 
-            {
+        $rules = RecurringRule::where('active', true)
+            ->whereDate('start_date', '<=', $today)
+            ->where(function ($q) use ($today) {
+                $q->whereNull('until')->orWhereDate('until', '>=', $today);
+            })
+            ->get();
+
+        $successCount = 0;
+        $failCount = 0;
+        $skipCount = 0;
+
+        foreach ($rules as $rule) 
+        {
+            // ✅ INDIVIDUAL TRANSACTION per rule
+            DB::beginTransaction();
+            
+            try {
+                // Check if should run today
                 if (!$this->shouldRunToday($rule, $today, $dayCode)) {
-                    continue;
+                    $skipCount++;
+                    continue; // Skip ke rule berikutnya
                 }
-    
+        
                 // Cegah duplikasi
                 $already = DailyTask::where('recurring_rule_id', $rule->id)
                     ->whereDate('start_date', $today)
                     ->exists();
-    
-                if ($already) continue;
-    
+        
+                if ($already) {
+                    $skipCount++;
+                    continue;
+                }
+        
                 // Ambil template task terakhir
                 $template = $rule->dailyTask()
                     ->with(['customFieldValues', 'keyResults', 'media'])
                     ->orderBy('start_date', 'desc')
                     ->first();
-    
-                if (!$template) continue;
-
-                if ($this->shouldSkipTaskGeneration($template->assignment_user_id, $today)) 
-                {
-                    return; // Skip bikin task hari ini
+        
+                if (!$template) {
+                    $skipCount++;
+                    continue;
                 }
 
-                $todo = TaskStatus::where('name',ParamSchema::TODO)->firstOrFail();
-    
+                // Check holiday/leave
+                if ($this->shouldSkipTaskGeneration($template->assignment_user_id, $today)) 
+                {
+                    $this->info("Skipped rule #{$rule->id} - user on holiday/leave");
+                    $skipCount++;
+                    continue;
+                }
+
+                $todo = TaskStatus::where('name', ParamSchema::TODO)->firstOrFail();
+        
+                // Create new task
                 $newTask = $template->replicate();
                 $newTask->slug = $this->createUniqueSlug(DailyTask::class, $template->name);
                 $newTask->start_date = $today;
@@ -73,19 +91,19 @@ class GenerateRecurringTasks extends Command
                 $newTask->submit = NULL;
                 $newTask->status_submit = NULL;
                 $newTask->approved = FALSE;
-                $newTask->point = 0; // Assuming default value is 0
-                // Simpan tugas baru
+                $newTask->point = 0;
                 $newTask->save();
                 
+                // Key results
                 $keyResults = $template->keyResults;
                 foreach ($keyResults as $keyResult) 
                 {
                     $newTask->keyResults()->attach($keyResult->id);
                 }
-    
-                $this->message($newTask,'create',' System Membuat Tugas '.$newTask->name);
+        
+                $this->message($newTask, 'create', ' System Membuat Tugas ' . $newTask->name);
                 $this->statusrecord($newTask, $todo);
-    
+        
                 // Custom field
                 foreach ($template->customFieldValues as $cf) {
                     DailyTaskCustomFieldValue::create([
@@ -94,10 +112,10 @@ class GenerateRecurringTasks extends Command
                         'custom_field_value_id' => $cf->custom_field_value_id,
                     ]);
                 }
-    
-                // Key result
+        
+                // Key result sync
                 $newTask->keyResults()->sync($template->keyResults->pluck('id')->toArray());
-    
+        
                 // Media
                 foreach ($template->taskMedia as $media) {
                     DailyTaskMedia::create([
@@ -108,29 +126,74 @@ class GenerateRecurringTasks extends Command
                     ]);
                 }
 
-
-                $this->info("Generated task for rule #{$rule->id} on {$today->toDateString()}");
-
+                // ✅ Commit HANYA untuk rule ini
                 DB::commit();
+                
+                $successCount++;
+                $this->info("✓ Generated task for rule #{$rule->id} on {$today->toDateString()}");
+
+            } catch (\Throwable $th) {
+                // ✅ Rollback HANYA untuk rule ini
+                DB::rollBack();
+                
+                $failCount++;
+                
+                Log::error("Failed to generate task for rule #{$rule->id}", [
+                    'rule_id' => $rule->id,
+                    'error' => $th->getMessage(),
+                    'trace' => $th->getTraceAsString()
+                ]);
+                
+                $this->error("✗ Failed rule #{$rule->id}: {$th->getMessage()}");
+                
+                // ❌ TIDAK berhenti, lanjut ke rule berikutnya
+                continue;
             }
-        } catch (\Throwable $th) {
-            //throw $th;
-            dd($th);
-            Log::error('Error generating recurring tasks: ' . $th->getMessage());
-            DB::rollBack();
         }
+
+        // Summary
+        $this->info("\n" . str_repeat('=', 50));
+        $this->info("Summary:");
+        $this->info("✓ Success: {$successCount}");
+        $this->info("✗ Failed: {$failCount}");
+        $this->info("⊘ Skipped: {$skipCount}");
+        $this->info("Total rules processed: " . ($successCount + $failCount + $skipCount));
+        $this->info(str_repeat('=', 50));
+
+        return $failCount === 0 ? 0 : 1; // Exit code
     }
 
     private function shouldRunToday($rule, $today, $dayCode)
     {
         return match ($rule->frequency) {
             'DAILY'   => true,
-            'WEEKLY'  => in_array($dayCode, $rule->by_day ?? []),
-            'MONTHLY' => in_array($today->day, $rule->by_month_day ?? []),
-            'YEARLY'  => in_array($today->month, $rule->by_month ?? [])
-                        && in_array($today->day, $rule->by_month_day ?? []),
+            'WEEKLY'  => in_array($dayCode, $this->ensureArray($rule->by_day)),
+            'MONTHLY' => in_array($today->day, $this->ensureArray($rule->by_month_day)),
+            'YEARLY'  => in_array($today->month, $this->ensureArray($rule->by_month))
+                        && in_array($today->day, $this->ensureArray($rule->by_month_day)),
             default   => false,
         };
+    }
+
+    /**
+     * Ensure data is array (decode JSON if needed)
+     */
+    private function ensureArray($data): array
+    {
+        if (is_null($data)) {
+            return [];
+        }
+
+        if (is_array($data)) {
+            return $data;
+        }
+
+        if (is_string($data)) {
+            $decoded = json_decode($data, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
     }
 
     protected function message($dailyTask, $template, $message, $filePath = null)
@@ -192,7 +255,6 @@ class GenerateRecurringTasks extends Command
                 </div>
                 ';
                 break;
-
             case 'reject':
                 $message = 
                 '
@@ -240,35 +302,34 @@ class GenerateRecurringTasks extends Command
 
     protected function createUniqueSlug($modelClass, $title)
     {
-            $baseSlug = Str::slug($title);
-            $slug = $baseSlug;
+        $baseSlug = Str::slug($title);
+        $slug = $baseSlug;
 
-            $existingSlugs = $modelClass::withTrashed()
-                ->where('slug', 'LIKE', "{$baseSlug}%")
-                ->pluck('slug')
-                ->toArray();
+        $existingSlugs = $modelClass::withTrashed()
+            ->where('slug', 'LIKE', "{$baseSlug}%")
+            ->pluck('slug')
+            ->toArray();
 
-            if (!in_array($slug, $existingSlugs)) {
-                return $slug;
-            }
+        if (!in_array($slug, $existingSlugs)) {
+            return $slug;
+        }
 
-            $count = 1;
-            while (in_array("{$baseSlug}-{$count}", $existingSlugs)) {
-                $count++;
-            }
+        $count = 1;
+        while (in_array("{$baseSlug}-{$count}", $existingSlugs)) {
+            $count++;
+        }
 
-            return "{$baseSlug}-{$count}";
+        return "{$baseSlug}-{$count}";
     }
 
     protected function shouldSkipTaskGeneration($userId, Carbon $date): bool
     {
-        // Cek apakah hari ini libur (misal cek di tabel holidays)
         $isHoliday = \App\Models\NationalHoliday::whereDate('date', $date)->exists();
 
-        // Cek apakah user sedang cuti
         $isOnLeave = \App\Models\Dayoff::where('user_id', $userId)
             ->where(function ($query) {
-                $query->whereNotNull('approval_hr_user_id')->orWhereNotNull('approval_finance_user_id');
+                $query->whereNotNull('approval_hr_user_id')
+                      ->orWhereNotNull('approval_finance_user_id');
             })
             ->whereDate('date_start', '<=', $date)
             ->whereDate('date_end', '>=', $date)
