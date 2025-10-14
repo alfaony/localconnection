@@ -544,6 +544,10 @@ $totalUser = $totalUser + 1; // Get the total number of projects
             </div>
         </form>
 
+        <a href="{{ route('user.KyeExport') }}" class="btn btn-primary">
+            Export Key
+        </a>
+
         <table class="table table-bordered">
             <tr>
                 <th>No</th>

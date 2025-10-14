@@ -23,25 +23,9 @@ class ExportUsersJob implements ShouldQueue
     protected $filters;
     protected $fileName;
 
-    /**
-     * The number of seconds the job can run before timing out.
-     *
-     * @var int
-     */
     public $timeout = 600;
-
-    /**
-     * The number of times the job may be attempted.
-     *
-     * @var int
-     */
     public $tries = 3;
 
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
     public function __construct($requestUser, $filters = [])
     {
         $this->requestUser = $requestUser;
@@ -49,11 +33,6 @@ class ExportUsersJob implements ShouldQueue
         $this->fileName = 'users_export_' . Carbon::now()->format('YmdHis') . '.xlsx';
     }
 
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
     public function handle()
     {
         try {
@@ -73,10 +52,7 @@ class ExportUsersJob implements ShouldQueue
                 }
             ]);
 
-            // Apply filters
             $query = $this->applyFilters($query);
-
-            // Get users
             $users = $query->get();
 
             Log::info('Users retrieved for export', [
@@ -86,7 +62,7 @@ class ExportUsersJob implements ShouldQueue
             // Create export
             $export = new UsersExport($users);
 
-            // Store file in exports directory
+            // Store file in exports directory (public disk)
             $path = 'exports/' . $this->fileName;
             Excel::store($export, $path, 'public');
 
@@ -96,10 +72,15 @@ class ExportUsersJob implements ShouldQueue
                 'total_users' => $users->count()
             ]);
 
-            // Generate download URL
-            $downloadUrl = route('users.export.download', ['fileName' => $this->fileName]);
+            // Generate DIRECT storage URL (no controller needed!)
+            // File akan accessible di: http://domain.com/storage/exports/file.xlsx
+            $downloadUrl = Storage::url($path);
 
-            // Send notification via InboxHelper dengan downloadUrl
+            Log::info('Generated storage URL', [
+                'download_url' => $downloadUrl
+            ]);
+
+            // Send notification via InboxHelper dengan download_url
             $this->sendInboxNotification($downloadUrl, $users->count());
 
             Log::info('Export job completed successfully');
@@ -110,49 +91,13 @@ class ExportUsersJob implements ShouldQueue
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // Send error notification
             $this->sendErrorNotification($e->getMessage());
-
             throw $e;
         }
     }
 
-    /**
-     * Apply filters to query
-     */
     protected function applyFilters($query)
     {
-        // Filter by division
-        if (isset($this->filters['division_id']) && !empty($this->filters['division_id'])) {
-            $query->whereHas('divisions', function ($q) {
-                $q->where('division_id', $this->filters['division_id']);
-            });
-        }
-
-        // Filter by approval status
-        if (isset($this->filters['approval_status']) && !empty($this->filters['approval_status'])) {
-            $query->whereHas('kye', function ($q) {
-                $q->where('approval_status', $this->filters['approval_status']);
-            });
-        }
-
-        // Filter by gender
-        if (isset($this->filters['gender']) && !empty($this->filters['gender'])) {
-            $query->whereHas('kye', function ($q) {
-                $q->where('gender', $this->filters['gender']);
-            });
-        }
-
-        // Filter by date range
-        if (isset($this->filters['date_from']) && !empty($this->filters['date_from'])) {
-            $query->whereDate('created_at', '>=', $this->filters['date_from']);
-        }
-
-        if (isset($this->filters['date_to']) && !empty($this->filters['date_to'])) {
-            $query->whereDate('created_at', '<=', $this->filters['date_to']);
-        }
-
-        // Search by name
         if (isset($this->filters['search']) && !empty($this->filters['search'])) {
             $search = $this->filters['search'];
             $query->where(function ($q) use ($search) {
@@ -169,32 +114,31 @@ class ExportUsersJob implements ShouldQueue
     }
 
     /**
-     * Send inbox notification dengan downloadUrl
-     * Menggunakan InboxHelper persis seperti kode user
+     * Send inbox notification dengan download_url
+     * DIRECT STORAGE URL - no controller needed!
      */
     protected function sendInboxNotification($downloadUrl, $totalUsers)
     {
         try {
             $inboxHelper = new InboxHelper();
-
-            // System user ID (sesuaikan dengan ID system user di database)
             $systemUserId = 1;
 
-            // Message untuk notifikasi
             $message = "✅ Export Data User selesai! Total: {$totalUsers} user | File: {$this->fileName}";
 
-            // Send notification dengan downloadUrl
-            // InboxHelper akan broadcast event InboxReceived dengan category 'email'
+            // IMPORTANT: 
+            // - directUrl = null (no button link)
+            // - downloadUrl = DIRECT storage URL (browser can download directly)
             $inboxHelper->sent(
                 userToId: $this->requestUser->id,
                 userFromId: $systemUserId,
                 message: $message,
-                directUrl: $downloadUrl,  // downloadUrl akan dikirim ke frontend
+                directUrl: null,  // NULL - no button
                 isRead: false,
-                category: 'email'  // category 'email' akan play notification-message-email.mp3
+                category: 'email',  // Play email sound
+                downloadUrl: $downloadUrl  // Direct storage URL: /storage/exports/file.xlsx
             );
 
-            Log::info('Inbox notification sent with download URL', [
+            Log::info('Inbox notification sent with storage URL', [
                 'user_id' => $this->requestUser->id,
                 'download_url' => $downloadUrl,
                 'total_users' => $totalUsers
@@ -208,9 +152,6 @@ class ExportUsersJob implements ShouldQueue
         }
     }
 
-    /**
-     * Send error notification via InboxHelper
-     */
     protected function sendErrorNotification($errorMessage)
     {
         try {
@@ -219,14 +160,14 @@ class ExportUsersJob implements ShouldQueue
 
             $message = "❌ Export Data User gagal! Error: " . substr($errorMessage, 0, 100);
 
-            // Send notification dengan category 'high' untuk error
             $inboxHelper->sent(
                 userToId: $this->requestUser->id,
                 userFromId: $systemUserId,
                 message: $message,
                 directUrl: null,
                 isRead: false,
-                category: 'high'  // category 'high' akan play notification-message-high.mp3
+                category: 'high',
+                downloadUrl: null
             );
 
             Log::info('Error notification sent', [
@@ -240,12 +181,6 @@ class ExportUsersJob implements ShouldQueue
         }
     }
 
-    /**
-     * Handle a job failure.
-     *
-     * @param  \Throwable  $exception
-     * @return void
-     */
     public function failed(\Throwable $exception)
     {
         Log::error('Export job failed permanently', [
@@ -253,7 +188,6 @@ class ExportUsersJob implements ShouldQueue
             'error' => $exception->getMessage()
         ]);
 
-        // Send error notification
         $this->sendErrorNotification($exception->getMessage());
     }
 }

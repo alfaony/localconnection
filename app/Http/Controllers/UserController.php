@@ -484,11 +484,6 @@ class UserController extends Controller
 
             // Prepare filters
             $filters = $request->only([
-                'division_id',
-                'approval_status',
-                'gender',
-                'date_from',
-                'date_to',
                 'search'
             ]);
 
