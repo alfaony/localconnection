@@ -59,8 +59,11 @@
         {
             // Ada download_url = auto-download
             handleDownloadNotification(e);
+        }else
+        {
+            showToast(`📩 ${e.user_from}: ${e.message}`, e.direct_url);
         }
-        showToast(`📩 ${e.user_from}: ${e.message}`, e.direct_url);
+        
         getUnreadCount();
         
         if(e.category == "high") 
