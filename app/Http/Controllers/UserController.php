@@ -468,5 +468,54 @@ class UserController extends Controller
             return response()->json(['message' => 'Failed to update FCM ID.'], 500);
         }
     }
+
+    public function KyeExport(Request $request)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'division_id' => 'nullable|exists:divisions,id',
+                'approval_status' => 'nullable|in:pending,approved,rejected',
+                'gender' => 'nullable|in:male,female',
+                'date_from' => 'nullable|date',
+                'date_to' => 'nullable|date|after_or_equal:date_from',
+                'search' => 'nullable|string|max:255',
+            ]);
+
+            // Prepare filters
+            $filters = $request->only([
+                'division_id',
+                'approval_status',
+                'gender',
+                'date_from',
+                'date_to',
+                'search'
+            ]);
+
+            // Dispatch job to queue (QUEUE SAJA - tidak ada sync)
+            ExportUsersJob::dispatch(auth()->user(), $filters)
+                ->onQueue('exports');
+
+            Log::info('Export job dispatched', [
+                'user_id' => auth()->id(),
+                'filters' => $filters
+            ]);
+
+            // Return "Proses" message
+            return redirect()->back()->with('success', 
+                '⏳ Export sedang diproses. Anda akan menerima notifikasi saat selesai.'
+            );
+
+        } catch (\Exception $e) {
+            Log::error('Failed to start export', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+
+            return redirect()->back()->with('error', 
+                'Gagal memulai export: ' . $e->getMessage()
+            );
+        }
+    }
     
 }

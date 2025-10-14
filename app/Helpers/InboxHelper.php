@@ -21,7 +21,7 @@ class InboxHelper
      * @param bool $isRead
      * @return Inbox|bool
      */
-    public function sent($userToId, $userFromId, $message, $directUrl = null, $isRead = false, $category = "entry")
+    public function sent($userToId, $userFromId, $message, $directUrl = null, $isRead = false, $category = "entry", $downloadUrl = null)
     {
         try {
             //code...
@@ -36,7 +36,7 @@ class InboxHelper
                     'is_read' => $isRead,
                     'is_notif' => true,
                 ]);
-                broadcast(new InboxReceived($inboxMessage, $category))->toOthers();
+                broadcast(new InboxReceived($inboxMessage, $category, $downloadUrl))->toOthers();
                 
     
                 return $inboxMessage;
