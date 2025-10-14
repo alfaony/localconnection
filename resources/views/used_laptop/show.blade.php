@@ -244,7 +244,7 @@
                             </div>
                             <div class="spec-content">
                                 <small class="text-muted d-block">Berat</small>
-                                <strong>{{ $laptop->weight ?? '-' }} kg</strong>
+                                <strong>{{ $laptop->weight ?? '-' }} gram</strong>
                             </div>
                         </div>
                     </div>
