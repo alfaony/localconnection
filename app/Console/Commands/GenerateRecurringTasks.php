@@ -39,8 +39,6 @@ class GenerateRecurringTasks extends Command
 
         foreach ($rules as $rule) 
         {
-            // ✅ INDIVIDUAL TRANSACTION per rule
-            DB::beginTransaction();
             
             try {
                 // Check if should run today
@@ -77,6 +75,9 @@ class GenerateRecurringTasks extends Command
                     $skipCount++;
                     continue;
                 }
+
+                // ✅ INDIVIDUAL TRANSACTION per rule
+                DB::beginTransaction();
 
                 $todo = TaskStatus::where('name', ParamSchema::TODO)->firstOrFail();
         
