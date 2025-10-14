@@ -10,7 +10,7 @@
     /* General font size */
     body, html {
         font-family: DejaVu Sans, sans-serif !important; /* ✅ font default dompdf */
-        font-size: 12px;
+        /* font-size: 12px; */
     }
     body,
     html {
@@ -99,7 +99,7 @@
         <div class="card" id="printThis">
             <div class="card-body" id="printItem">
                 <div class="row">
-                    <div class="col-md-12 text-center mt-3">
+                    <div class="col-md-12 text-center mt-5">
                         <h3 style="margin-bottom: 10px;">Berita Acara Serah Terima</h3>
                         <p>No. {{ $bast->number ?? '' }}</p>
                     </div>
