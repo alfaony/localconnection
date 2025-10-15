@@ -20,6 +20,8 @@ class PermissionForKyeSeeder extends Seeder
      */
     public function run()
     {
+        $this->call(ClearPermissionSeeder::class);
+
         $methods = ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy', 'download', 'export', 'approvement','verifyemail','KyeExport'];
 
         // Hanya ROOT dan ADMIN untuk metode tertentu
@@ -50,6 +52,8 @@ class PermissionForKyeSeeder extends Seeder
                 }
             }
         }
+
+        $this->command->info('✅ Izin untuk Kye berhasil ditambahkan.');
     }
 
 }

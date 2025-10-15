@@ -252,7 +252,6 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
   
-  Route::get('user/KyeExport', [UserController::class,'KyeExport'])->name('user.KyeExport');
   Route::get('user/profileEdit/{slug}', [UserController::class,'profileEdit'])->name('user.profileEdit');
   Route::put('user/profileUpdate/{slug}', [UserController::class,'profileUpdate'])->name('user.profileUpdate');
   Route::post('user/updatefcm',[UserController::class,'updatefcm'])->name('user.updatefcm');
@@ -442,6 +441,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
   Route::resource('pass-checking', PassCheckingController::class);
 
+  Route::get('kye/KyeExport', [UserController::class,'KyeExport'])->name('kye.KyeExport');
   Route::post('kye/verifyemail', [KyeController::class, 'verifyemail'])->name('kye.verify.email');
   Route::patch('kye/approvement/{kye}', [KyeController::class, 'approvement'])->name('kye.approvement');
   Route::resource('kye', KyeController::class);

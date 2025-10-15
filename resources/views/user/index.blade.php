@@ -546,7 +546,7 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         </form>
 
         @canAccess('KyeExport','kyes')
-        <a href="{{ route('user.KyeExport',request()->all()) }}" class="btn btn-primary">
+        <a href="{{ route('kye.KyeExport',request()->all()) }}" class="btn btn-primary">
             <i class="fas fa-file-export"></i> Export Key
         </a>
         @endcanAccess
