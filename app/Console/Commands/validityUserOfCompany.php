@@ -120,7 +120,7 @@ class validityUserOfCompany extends Command
 
                 foreach ($users as $user) {
                     // Ambil semua attendance hari ini
-                    if(!$user->isDayoff())
+                    if(!$user->isDayoff() && $user->shouldWorkToday())
                     {
                         $attendances = OfficeAttendance::where('user_id', $user->id)
                             ->whereDate('created_at', Carbon::today())
