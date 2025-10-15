@@ -244,7 +244,7 @@ class UsedLaptopController extends Controller
 
     public function showQr($slug)
     {
-        $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)
+        $laptop = UsedLaptop::where('slug', $slug)
         ->with(['media' => function($query) {
             $query->orderBy('order', 'asc');
         }])
