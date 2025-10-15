@@ -562,7 +562,7 @@ class ItemRequestController extends Controller
             'supplier_type_id' => 'required|exists:supplier_types,id',
         ]);
     
-       $suppliers = ProductSupplier::where('company_id', Auth::user()->company_id)
+       $suppliers = ProductSupplier::byCompany(Auth::user()->company_id)
         ->where('supplier_type_id', $request->supplier_type_id)
         ->whereHas('supplierCategories', function ($query) use ($request) {
             $query->where('supplier_category_id', $request->supplier_category_id);

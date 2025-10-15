@@ -60,6 +60,72 @@
                     </div>
                 </div>
             </div>
+
+            @canAccess('getLocation','warehouses')
+            <!-- Section 2: Foto Laptop -->
+            <div class="section-header mb-4 mt-5">
+                <h3 class="text-primary">
+                    <i class="fas fa-map-marked mr-2"></i> Lokasi Barang
+                </h3>
+                <div class="border-bottom border-primary mt-2"></div>
+            </div>
+
+            <div class="row">
+                <!-- Warehouse -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="warehouse_id">Warehouse</label>
+                        <div class="input-group">
+                            <select class="form-control" id="warehouse_id" name="warehouse_id" >
+                                <option value="">Pilih Warehouse</option>
+                            </select>
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="warehouse-status">
+                                    <i class="fas fa-circle text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <small id="warehouse-helper" class="form-text text-muted"></small>
+                    </div>
+                </div>
+
+                <!-- Zone -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="zone_id">Zone</label>
+                        <div class="input-group">
+                            <select class="form-control" id="zone_id" name="zone_id" disabled>
+                                <option value="">Pilih Zone</option>
+                            </select>
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="zone-status">
+                                    <i class="fas fa-circle text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <small id="zone-helper" class="form-text text-muted"></small>
+                    </div>
+                </div>
+
+                <!-- Rack -->
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="rack_id">Rack</label>
+                        <div class="input-group">
+                            <select class="form-control" id="rack_id" name="rack_id" disabled>
+                                <option value="">Pilih Rack</option>
+                            </select>
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="rack-status">
+                                    <i class="fas fa-circle text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <small id="rack-helper" class="form-text text-muted"></small>
+                    </div>
+                </div>
+            </div>
+            @endcanAccess
             
             <!-- Section 2: Foto Barang -->
             <div class="section-header mb-4 mt-5">
@@ -274,7 +340,7 @@
         
         <div class="card-footer">
             <button type="submit" id="submitBtn" class="btn btn-primary">
-                <i class="fas fa-save mr-1"></i> {{ isset($laptop) ? 'Update Barang' : 'Simpan Barang' }}
+                <i class="fas fa-save mr-1"></i> {{ isset($usedItem) ? 'Update Barang' : 'Simpan Barang' }}
             </button>
             <button type="reset" id="resetForm" class="btn btn-outline-secondary">
                 <i class="fas fa-undo mr-1"></i> Reset Form
@@ -313,6 +379,7 @@
 
 @section('css')
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <style>
         .section-header {
             position: relative;
@@ -389,6 +456,81 @@
             object-fit: cover;
         }
 
+        /* ============================================ */
+        /* ✅ SELECT2 CSS YANG BENAR */
+        /* ============================================ */
+        
+        /* Container select2 */
+        .select2-container {
+            width: 100% !important;
+        }
+        
+        /* Single selection box */
+        .select2-container--default .select2-selection--single {
+            height: 38px !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 0.25rem !important;
+            background-color: #fff;
+        }
+        
+        /* Text yang ditampilkan */
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px !important;
+            padding-left: 12px !important;
+            padding-right: 20px !important;
+            color: #495057;
+        }
+        
+        /* Arrow dropdown */
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+            top: 1px !important;
+            right: 1px !important;
+        }
+        
+        /* Dropdown results */
+        .select2-container--default .select2-results__option {
+            padding: 6px 12px;
+        }
+        
+        /* Hover state */
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #007bff !important;
+            color: white;
+        }
+        
+        /* Disabled state */
+        .select2-container--default.select2-container--disabled .select2-selection--single {
+            background-color: #e9ecef !important;
+            cursor: not-allowed !important;
+            border-color: #ced4da !important;
+        }
+        
+        /* Focus state */
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #80bdff !important;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25) !important;
+        }
+        
+        /* Placeholder */
+        .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            color: #6c757d;
+        }
+        
+        /* Dropdown */
+        .select2-dropdown {
+            border: 1px solid #ced4da !important;
+            border-radius: 0.25rem !important;
+        }
+        
+        /* Search box dalam dropdown */
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            padding: 4px 8px;
+        }
+
     </style>
 @stop
 
@@ -403,6 +545,54 @@
     <script src="{{ asset('js/thriveEditor.js') }}"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+     <!-- ✅ Include Warehouse Location Selector -->
+    @canAccess('getLocation','warehouses')
+    <script src="{{ asset('js/warehouseLocation.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            console.log('jQuery version:', $.fn.jquery);
+            console.log('Select2 available:', typeof $.fn.select2 !== 'undefined');
+            
+            const laptopData = {
+                isEditMode: @json(isset($usedItem) && $usedItem->rack),
+                // ✅ JANGAN set currentRackId untuk exclude
+                currentRackId: null,  // Set null agar tidak di-exclude
+                initialWarehouseId: @json(isset($usedItem) && $usedItem->rack && $usedItem->rack->zone ? $usedItem->rack->zone->warehouse_id : null),
+                initialZoneId: @json(isset($usedItem) && $usedItem->rack ? $usedItem->rack->zone_id : null),
+                initialRackId: @json(isset($usedItem) && $usedItem->rack_id ? $usedItem->rack_id : null)
+            };
+            
+            console.log('Laptop data:', laptopData);
+            
+            const locationSelector = new WarehouseLocationSelector({
+                apiUrl: '{{ route("warehouses.get-location") }}',
+                
+                isEditMode: laptopData.isEditMode,
+                currentRackId: null,  // Tidak exclude
+                initialWarehouseId: laptopData.initialWarehouseId,
+                initialZoneId: laptopData.initialZoneId,
+                initialRackId: laptopData.initialRackId,
+                
+                useSelect2: true,  // ✅ DISABLE Select2 dulu
+                showAlerts: true,
+                debug: true
+            });
+            
+            $('#laptop-form').on('submit', function(e) {
+                // if (!locationSelector.validate()) {
+                //     e.preventDefault();
+                //     return false;
+                // }
+                
+                // const values = locationSelector.getValues();
+                // console.log('Selected location:', values);
+                
+                return true;
+            });
+        });
+    </script>
+    @endcanAccess
     <script>
     $(document).on('change', '.exclusive-checkbox', function () {
         const group = $(this).data('group');

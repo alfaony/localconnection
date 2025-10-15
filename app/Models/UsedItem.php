@@ -21,6 +21,7 @@ class UsedItem extends Model
         'qr_code_path',
         'company_id',
         'user_id',
+        'rack_id',
     ];
 
     protected $casts = [
@@ -46,6 +47,10 @@ class UsedItem extends Model
     }
 
     // ✅ Relasi
+    public function rack()
+    {
+        return $this->belongsTo(Rack::class)->withTrashed();
+    }
     public function checks()
     {
         return $this->hasMany(UsedItemCheck::class);
