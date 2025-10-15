@@ -113,6 +113,14 @@ class UserController extends Controller
             $user->custom_rest_times = $request->custom_rest_times;
         }
         
+        if ($request->post('is_checkin') == ParamSchema::WFO) {
+            $wfoWorkingDays = [];
+            foreach (config('custom.daysOfWeek') as $dayName => $dayValue) {
+                $wfoWorkingDays[$dayValue] = $request->has("wfo_working_days.$dayValue");
+            }
+            $user->wfo_working_days = $wfoWorkingDays;
+        }
+
         $user->save();
         
         if($request->quotas)
@@ -267,6 +275,17 @@ class UserController extends Controller
         if ($request->has('custom_rest_times')) 
         {
             $user->custom_rest_times = $request->custom_rest_times;
+        }
+
+        if ($request->post('is_checkin') == ParamSchema::WFO) {
+            $wfoWorkingDays = [];
+            foreach (config('custom.daysOfWeek') as $dayName => $dayValue) {
+                $wfoWorkingDays[$dayValue] = $request->has("wfo_working_days.$dayValue");
+            }
+            $user->wfo_working_days = $wfoWorkingDays;
+        } else 
+        {
+            $user->wfo_working_days = null;
         }
 
         $dayoffTypes = DayoffType::all();

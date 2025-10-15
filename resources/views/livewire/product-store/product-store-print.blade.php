@@ -34,7 +34,7 @@
                                 <div wire:ignore>
                                     <select multiple class="form-control" id="productSelect">
                                         @foreach($products as $product)
-                                            <option value="{{ $product->id }}">{{ $product->name }} - {{ $product->barcode }}</option>
+                                            <option value="{{ $product->id }}">{{ $product->name }} - {{ $product->variant }} - {{ $product->barcode }}</option>
                                         @endforeach
                                     </select>
                                 </div>

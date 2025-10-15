@@ -180,6 +180,29 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                         @endforeach
                     </div>
                 </div>
+
+                <!-- WFO Working Days Settings -->
+                <div id="wfoSettings" style="display: none;">
+                    <div class="form-group mt-3">
+                        <label class="font-weight-bold">Hari Kerja WFO:</label>
+                        <div class="border p-3 rounded bg-light">
+                            @foreach(config('custom.daysOfWeek') as $dayName => $dayValue)
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    name="wfo_working_days[{{ $dayValue }}]" 
+                                    id="wfo-day-{{ $dayValue }}"
+                                    value="1"
+                                    {{ old("wfo_working_days.$dayValue", @$userEdit->wfo_working_days[$dayValue] ?? false) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="wfo-day-{{ $dayValue }}">
+                                    {{ $dayName }}
+                                </label>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group mt-2 ">
@@ -439,6 +462,28 @@ $totalUser = $totalUser + 1; // Get the total number of projects
                             </div>
                         @endforeach
                     </div>                    
+                </div>
+
+                <div id="wfoSettings" style="display: none;">
+                    <div class="form-group mt-3">
+                        <label class="font-weight-bold">Hari Kerja WFO:</label>
+                        <div class="border p-3 rounded bg-light">
+                            @foreach(config('custom.daysOfWeek') as $dayName => $dayValue)
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    name="wfo_working_days[{{ $dayValue }}]" 
+                                    id="wfo-day-{{ $dayValue }}"
+                                    value="1"
+                                    {{ old("wfo_working_days.$dayValue", @$userEdit->wfo_working_days[$dayValue] ?? false) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="wfo-day-{{ $dayValue }}">
+                                    {{ $dayName }}
+                                </label>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="form-group mt-2 ">
@@ -813,6 +858,31 @@ $totalUser = $totalUser + 1; // Get the total number of projects
         // Update 'salary' input with non-formatted number
         document.getElementById(inputNonFormat).value = parseInt(numStr);
     }
+</script>
+
+<script>
+    function toggleAdditionalSettings() 
+    {
+        const isCheckinValue = document.getElementById('is_checkin').value;
+        const showWfhSettings = isCheckinValue === 'wfh';
+        const showWfoSettings = isCheckinValue === 'wfo';
+        
+        document.getElementById('additionalSettings').style.display = showWfhSettings ? 'block' : 'none';
+        document.getElementById('wfoSettings').style.display = showWfoSettings ? 'block' : 'none';
+
+        // Set required attributes for time fields based on is_checkin state
+        document.getElementById('start_time').required = showWfhSettings;
+        document.getElementById('end_time').required = showWfhSettings;
+        document.getElementById('rest_time').required = showWfhSettings;
+    }
+    
+    // Show/hide additional settings based on "Metode Check-In" select
+    document.getElementById('is_checkin').addEventListener('change', toggleAdditionalSettings);
+
+    // Initialize display and required attributes on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleAdditionalSettings();
+    });
 </script>
 @stop
 
