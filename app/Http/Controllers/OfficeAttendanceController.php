@@ -99,6 +99,11 @@ class OfficeAttendanceController extends Controller
             return redirect()->route('office-attendance.index')->with('error', 'Absensi WFH belum diaktifkan. Silahkan hubungi admin.');
         }
 
+        if(!Auth::user()->shouldWorkToday())
+        {
+            return redirect()->route('office-attendance.index')->with('error', 'Tidak ada jadwal absensi untuk hari ini.');   
+        }
+
         $timesPerDay = config('services.checking_setting.times_per_day');
         $todayCount = OfficeAttendance::byCompany(auth()->user()->company_id)
             ->whereDate('created_at', today())
