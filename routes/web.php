@@ -152,8 +152,6 @@ use App\Http\Livewire\PunishmentUserTable;
 Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 
-Route::get('user/KyeExport', [UserController::class,'KyeExport'])->name('user.KyeExport');
-
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -254,6 +252,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
   
+  Route::get('user/KyeExport', [UserController::class,'KyeExport'])->name('user.KyeExport');
   Route::get('user/profileEdit/{slug}', [UserController::class,'profileEdit'])->name('user.profileEdit');
   Route::put('user/profileUpdate/{slug}', [UserController::class,'profileUpdate'])->name('user.profileUpdate');
   Route::post('user/updatefcm',[UserController::class,'updatefcm'])->name('user.updatefcm');

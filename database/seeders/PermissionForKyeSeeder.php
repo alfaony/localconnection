@@ -20,7 +20,7 @@ class PermissionForKyeSeeder extends Seeder
      */
     public function run()
     {
-        $methods = ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy', 'download', 'export', 'approvement','verifyemail'];
+        $methods = ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy', 'download', 'export', 'approvement','verifyemail','KyeExport'];
 
         // Hanya ROOT dan ADMIN untuk metode tertentu
         $restrictedRoles = [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM];
@@ -40,7 +40,7 @@ class PermissionForKyeSeeder extends Seeder
             // Assign role & permission
             foreach ($roles as $role) {
                 // Hanya ROOT dan ADMIN untuk metode tertentu
-                if (in_array($method, ['index', 'approvement', 'destroy'])) {
+                if (in_array($method, ['index', 'approvement', 'destroy','KyeExport'])) {
                     if (in_array($role->name, $restrictedRoles)) {
                         PermissionRole::firstOrCreate(['role_id' => $role->id, 'permission_id' => $permission->id]);
                     }
