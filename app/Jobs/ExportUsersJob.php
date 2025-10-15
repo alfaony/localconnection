@@ -140,7 +140,7 @@ class ExportUsersJob implements ShouldQueue
                 message: $message,
                 directUrl: null,  // NULL - no button
                 isRead: false,
-                category: 'email',  // Play email sound
+                category: 'download',  // Play email sound
                 downloadUrl: $downloadUrl  // Direct storage URL: /storage/exports/file.xlsx
             );
 
@@ -180,7 +180,7 @@ class ExportUsersJob implements ShouldQueue
                 message: $message,
                 directUrl: null,
                 isRead: false,
-                category: 'high',
+                category: 'download',
                 downloadUrl: null
             );
 

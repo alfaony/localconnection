@@ -498,7 +498,7 @@ class UserController extends Controller
             );
 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             Log::error('Failed to start export', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id()

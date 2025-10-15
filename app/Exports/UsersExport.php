@@ -74,7 +74,6 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             'Nama Kerabat (Orang Tua)',
             'No HP Kerabat (Orang Tua)',
             'Tanggal Masuk Kerja',
-            'Hari Masuk Kerja',
             'Jam Kerja',
             'Status Approval KYE',
         ];
@@ -107,37 +106,36 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         $workingDays = $this->getWorkingDays($user);
         
         // Get working hours with safe code
-        $workingHours = $this->getWorkingHours($user);
+        // $workingHours = $this->getWorkingHours($user);
         
         // Get entry date with safe code
         $entryDate = $this->getEntryDate($user);
 
         return [
             $rowNumber,
-            $kye->full_name ?? 'N/A',
-            $kye->call_name ?? 'N/A',
+            $kye->full_name ?? $kye->name ?? '-',
+            $kye->call_name ?? '-',
             $divisionPosition,
             $gender,
-            $kye->ktp_number ?? 'N/A',
+            $kye->ktp_number ?? $user->id_card ??'-',
             $birthInfo,
-            $kye->npwp_number ?? 'N/A',
-            $kye->address ?? 'N/A',
-            $kye->address_domisili ?? $kye->address ?? 'N/A',
-            $kye->email ?? 'N/A',
-            $user->email ?? 'N/A',
-            $kye->phone_number ?? 'N/A',
-            $kye->imei_number ?? 'N/A',
-            $kye->account_number ?? 'N/A',
-            $kye->bank_name ?? 'N/A',
-            $kye->bank_account_name ?? 'N/A',
+            $kye->npwp_number ?? $user->npwp_number ?? '-',
+            $kye->address ?? $user->address ?? '-',
+            $kye->address_domisili ?? $kye->address ?? '-',
+            $kye->email ?? $user->email_gmail ?? '-',
+            $user->email ?? '-',
+            $kye->phone_number ?? '-',
+            $kye->imei_number ?? '-',
+            $kye->account_number ?? '-',
+            $kye->bank_name ?? '-',
+            $kye->bank_account_name ?? '-',
             $maritalStatus,
             $kye->number_of_children ?? '0',
-            $kye->emergency_contact ?? 'N/A',
-            $kye->emergency_phone ?? 'N/A',
+            $kye->emergency_contact ?? '-',
+            $kye->emergency_phone ?? '-',
             $entryDate,
             $workingDays,
-            $workingHours,
-            $kye ? ucfirst($kye->approval_status ?? 'pending') : 'N/A',
+            $kye ? ucfirst($kye->approval_status ?? 'pending') : '-',
         ];
     }
 
@@ -155,16 +153,13 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         }
 
         // Get positions from UserPosition
-        if ($user->userPositions && $user->userPositions->count() > 0) {
-            foreach ($user->userPositions as $userPosition) {
-                if ($userPosition->position) {
-                    $positions[] = $userPosition->position->name ?? '';
-                }
-            }
+        if ($user->last_position_now && $user->last_position_now->position) 
+        {
+            $positions[] = $user->last_position_now->position->name ?? '';
         }
 
-        $divisionText = !empty($divisions) ? implode(', ', $divisions) : 'N/A';
-        $positionText = !empty($positions) ? implode(', ', $positions) : 'N/A';
+        $divisionText = !empty($divisions) ? implode(', ', $divisions) : '-';
+        $positionText = !empty($positions) ? implode(', ', $positions) : '-';
 
         return "{$divisionText} / {$positionText}";
     }
@@ -175,7 +170,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
     private function getGender($kye): string
     {
         if (!$kye || !isset($kye->gender)) {
-            return 'N/A';
+            return '-';
         }
 
         return $kye->gender === 'male' ? 'Laki-laki' : 'Perempuan';
@@ -187,7 +182,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
     private function getBirthInfo($kye): string
     {
         if (!$kye) {
-            return 'N/A';
+            return '-';
         }
 
         $birthPlace = $kye->birth_place ?? '';
@@ -202,7 +197,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         }
 
         if (empty($birthPlace) && empty($birthDate)) {
-            return 'N/A';
+            return '-';
         }
 
         if (empty($birthPlace)) {
@@ -222,14 +217,14 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
     private function getMaritalStatus($kye): string
     {
         if (!$kye || !isset($kye->marital_status)) {
-            return 'N/A';
+            return '-';
         }
 
         $statuses = [
             'single' => 'Belum Menikah',
             'married' => 'Menikah',
             'divorced' => 'Cerai',
-            'widowed' => 'Janda/Duda',
+            'widow' => 'Janda/Duda',
         ];
 
         return $statuses[$kye->marital_status] ?? ucfirst($kye->marital_status);
@@ -240,19 +235,28 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
      */
     private function getWorkingDays($user): string
     {
-        // Check if user has work schedule in database
-        if (isset($user->work_schedule) && !empty($user->work_schedule)) {
-            return $user->work_schedule;
+        // Check if last_position_now exists
+        if (!isset($user->last_position_now) || is_null($user->last_position_now)) {
+            return '-';
         }
-
-        // Default random: 60% Senin-Jumat, 40% Senin-Sabtu
-        $schedules = [
-            'Senin - Jumat' => 60,
-            'Senin - Sabtu' => 40,
-        ];
-
-        $rand = rand(1, 100);
-        return $rand <= 60 ? 'Senin - Jumat' : 'Senin - Sabtu';
+        
+        // Check if user has letterSubmission with working_hours
+        if (isset($user->last_position_now->letterSubmission)) {
+            $letterSubmission = $user->last_position_now->letterSubmission;
+            
+            // Decode field JSON
+            if (isset($letterSubmission->field) && !empty($letterSubmission->field)) {
+                $fieldData = json_decode($letterSubmission->field, true);
+                
+                // Check if working_hours exists and not empty
+                if (isset($fieldData['working_hours']) && !empty($fieldData['working_hours'])) {
+                    return $fieldData['working_hours'];
+                }
+            }
+        }
+        
+        // Default
+        return '-';
     }
 
     /**
@@ -282,27 +286,28 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
      */
     private function getEntryDate($user): string
     {
-        // Check if user has entry_date
-        if (isset($user->entry_date) && !empty($user->entry_date)) {
-            try {
-                return Carbon::parse($user->entry_date)->format('d-m-Y');
-            } catch (\Exception $e) {
-                // Continue to generate random
+        // Check if last_position_now exists
+        if (!isset($user->first_position) || is_null($user->first_position)) {
+            return '-';
+        }
+        
+        // Check if user has letterSubmission with working_hours
+        if (isset($user->first_position->letterSubmission)) {
+            $letterSubmission = $user->first_position->letterSubmission;
+            
+            // Decode field JSON
+            if (isset($letterSubmission->field) && !empty($letterSubmission->field)) {
+                $fieldData = json_decode($letterSubmission->field, true);
+                
+                // Check if working_hours exists and not empty
+                if (isset($fieldData['start_date']) && !empty($fieldData['start_date'])) {
+                    return $fieldData['start_date'];
+                }
             }
         }
-
-        // Check created_at
-        if (isset($user->created_at)) {
-            try {
-                return Carbon::parse($user->created_at)->format('d-m-Y');
-            } catch (\Exception $e) {
-                // Continue to generate random
-            }
-        }
-
-        // Generate random date in last 2 years
-        $randomDate = Carbon::now()->subDays(rand(1, 730));
-        return $randomDate->format('d-m-Y');
+        
+        // Default
+        return '-';
     }
 
     /**

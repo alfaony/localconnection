@@ -120,7 +120,7 @@
         const downloadUrl = e.download_url;
         
         console.log('Download notification detected:', downloadUrl);
-        showToast(message, downloadUrl);
+        // showToast(message, downloadUrl);
         setTimeout(() => autoDownloadFile(downloadUrl), 2000);
     }
 

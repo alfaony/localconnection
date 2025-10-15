@@ -232,6 +232,11 @@ class User extends Authenticatable
         return $this->hasMany(Dayoff::class);
     }
 
+    public function agreementLetter()
+    {
+        return $this->hasMany(AgreementLetter::class,'user_created_id');
+    }
+
     public function kye()
     {
         return $this->hasOne(Kye::class);
