@@ -230,8 +230,7 @@ class User extends Authenticatable
             return false;
         }
 
-        $today = now()->format('l'); // Get day name: Monday, Tuesday, etc.
-        
+        $today = strtolower(now()->format('l')); // now()->format('l'); // Get day name: Monday, Tuesday, etc.
         return $this->wfo_working_days[$today] ?? false;
     }
 

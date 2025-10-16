@@ -339,7 +339,7 @@
                                     <div class="form-group">
                                         <label for="gender"><i class="fas fa-transgender"></i> Jenis Kelamin</label>
                                         <div class="d-flex gap-3 mt-2">
-                                            <div class="form-check">
+                                            <div class="form-check mr-3">
                                                 <input class="form-check-input" type="radio" name="gender" id="male" value="male"
                                                     {{ @$kye->gender == 'male' ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="male">Laki-laki</label>
@@ -404,7 +404,7 @@
                                         @endif
                                     </div>
                                 </div>
-                                <input type="hidden" name="employee_photo" id="employee_photo">
+                                <input type="hidden" name="employee_photo" id="employee_photo" @if(!@$kye->employee_photo) required @endif>
                             </div>
                         </div>
                     </div>
@@ -438,7 +438,7 @@
                                         @endif
                                     </div>
                                 </div>
-                                <input type="hidden" name="ktp_photo" id="ktp_photo">
+                                <input type="hidden" name="ktp_photo" id="ktp_photo" @if(!@$kye->ktp_photo) required @endif>
                             </div>
 
                             <div class="form-group">
@@ -456,13 +456,13 @@
                                         @endif
                                     </div>
                                 </div>
-                                <input type="hidden" name="selfie_ktp" id="selfie_ktp">
+                                <input type="hidden" name="selfie_ktp" id="selfie_ktp" @if(!@$kye->selfie_ktp) required @endif>
                             </div>
 
                             <div class="form-group">
                                 <label for="ktp_family"><i class="fas fa-id-card"></i> Foto KTP Orang Tua/Saudara</label>
                                 <input type="file" name="ktp_family" id="ktp_family" class="form-control-file"
-                                    accept=".jpeg,.jpg,.png" onchange="previewImage('ktp_family', 'ktp_family_preview')">
+                                    accept=".jpeg,.jpg,.png" onchange="previewImage('ktp_family', 'ktp_family_preview')" @if(!@$kye->ktp_family) required @endif> 
                                 <div class="photo-preview-container">
                                     <div id="ktp_family_preview" class="photo-preview-box">
                                         @if(@$kye->ktp_family)
@@ -553,7 +553,7 @@
                             <div class="form-group">
                                 <label for="house_photo"><i class="fas fa-home"></i> Foto Rumah Saat Ini</label>
                                 <input type="file" name="house_photo" id="house_photo" class="form-control-file"
-                                    accept=".jpeg,.jpg,.png" onchange="previewImage('house_photo', 'house_photo_preview')">
+                                    accept=".jpeg,.jpg,.png" onchange="previewImage('house_photo', 'house_photo_preview')" @if(!@$kye->house_photo) required @endif>
                                 <div class="photo-preview-container">
                                     <div id="house_photo_preview" class="photo-preview-box">
                                         @if(@$kye->house_photo)
@@ -765,7 +765,14 @@ function validateStep(step) {
     });
 
     if (!isValid) {
-        alert('Mohon lengkapi semua field yang wajib diisi!');
+        // const toast = new bootstrap.Toast({
+        //     title: 'Mohon lengkapi',
+        //     message: 'Semua field yang wajib diisi!',
+        //     icon: 'error',
+        //     animation: true,
+        //     autohide: true
+        // });
+        // toast.show();
     }
 
     return isValid;
@@ -995,7 +1002,7 @@ function verifyEmail(email) {
     const currentUserId = document.getElementById('current_user_id').value;
     const emailErrorElement = document.getElementById('email-error');
 
-    return truew
+    return true
 }
 </script>
 @stop

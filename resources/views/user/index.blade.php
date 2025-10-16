@@ -10,15 +10,6 @@ $totalUser = $totalUser + 1; // Get the total number of projects
 
 <div class="col-md-12">
     @include('components.alert')
-    @if(Session::get('store'))
-    <div class="alert alert-success mt-3">Pengguna Berhasil Ditambahkan</div>
-    @endif
-    @if(Session::get('update'))
-    <div class="alert alert-success mt-3">Pengguna Berhasil Diperbarui</div>
-    @endif
-    @if(Session::get('delete'))
-    <div class="alert alert-success mt-3">Pengguna Berhasil Dihapus</div>
-    @endif
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
