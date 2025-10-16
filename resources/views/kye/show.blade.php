@@ -132,7 +132,7 @@
                         <div class="label">
                             <i class="fas fa-venus-mars"></i>Jenis Kelamin
                         </div>
-                        <div class="value">{{ $kye->gender == 'male' ? 'Laki-laki' : 'Perempuan' }}</div>
+                        <div class="value">{{ isset($kye->gender) && $kye->gender == 'male' ? 'Laki-laki' : 'Perempuan' }}</div>
                     </div>
                     <div class="info-row">
                         <div class="label">

@@ -173,7 +173,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             return '-';
         }
 
-        return $kye->gender === 'male' ? 'Laki-laki' : 'Perempuan';
+        return isset($kye->gender) && $kye->gender === 'male' ? 'Laki-laki' : 'Perempuan';
     }
 
     /**
