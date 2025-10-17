@@ -61,9 +61,9 @@
                         @if($kye->approval_status == 'pending')
                             <i class="fas fa-clock"></i> Pending
                         @elseif($kye->approval_status == 'approved')
-                            <i class="fas fa-check-circle"></i> Approved
+                        <i class="fas fa-check-circle"></i> Approved
                         @else
-                            <i class="fas fa-times-circle"></i> Rejected
+                        <i class="fas fa-times-circle"></i> Rejected
                         @endif
                     </span>
                 </div>

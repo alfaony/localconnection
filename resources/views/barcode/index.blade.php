@@ -44,10 +44,10 @@
                     </div>
                     
                     <div class="col-md-4 col-sm-6 mb-3">
-                        <div class="info-box bg-gradient-success">
-                            <span class="info-box-icon"><i class="fas fa-star"></i></span>
+                        <div class="info-box bg-gradient-warning">
+                            <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
                             <div class="info-box-content">
-                                <span class="info-box-text">Poin</span>
+                                <span class="info-box-text">Poin Pengurangan</span>
                                 <span class="info-box-number">{{ auth()->user()->wfoRules->point_checkin_in_day }}</span>
                             </div>
                         </div>

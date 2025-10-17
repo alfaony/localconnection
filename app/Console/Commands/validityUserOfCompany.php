@@ -116,7 +116,9 @@ class validityUserOfCompany extends Command
                 $toleranceMinutes = (int) $setting['tolerance'];
                 $checkinTarget = (int) $setting['checkin_onday'];
 
-                $users = User::where('company_id', $id)->where('wfo_check_in', true)->get();
+                $users = User::where('company_id', $id)->where('wfo_check_in', true)
+                ->get();
+
 
                 foreach ($users as $user) {
                     // Ambil semua attendance hari ini
@@ -134,7 +136,7 @@ class validityUserOfCompany extends Command
                         $checkinTarget = isset($firstCheckin->barcode->userCreate) && $firstCheckin->barcode->userCreate->wfoRules ? $firstCheckin->barcode->userCreate->wfoRules->times_checkin_in_day : $checkinTarget;
                         $point = isset($firstCheckin->barcode->userCreate) && $firstCheckin->barcode->userCreate->wfoRules ? $firstCheckin->barcode->userCreate->wfoRules->point_checkin_in_day : $setting['punishment_point_wfo'];
 
-
+                        
                         if ($firstCheckin) 
                         {
                             $actualCheckin = Carbon::parse($firstCheckin->time);
@@ -173,6 +175,7 @@ class validityUserOfCompany extends Command
         $admin = User::with('role')
             ->whereHas('role', fn ($query) => $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR]))
             ->where('company_id', $user->company_id)
+            ->where('id','!=',$user->id)
             ->first();
 
         $dailyTask = new DailyTask();
