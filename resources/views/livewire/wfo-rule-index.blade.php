@@ -67,7 +67,7 @@
 
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label>Poin Check-in Per Hari <span class="text-danger">*</span></label>
+                            <label>Pelanggaran Poin Check-in Per Hari <span class="text-danger">*</span></label>
                             <input type="number" wire:model="pointCheckinInDay" 
                                     class="form-control @error('pointCheckinInDay') is-invalid @enderror"
                                     placeholder="Contoh: 10"
@@ -109,7 +109,7 @@
                         <th>User</th>
                         <th>Jam Masuk</th>
                         <th>Check-in Per Hari</th>
-                        <th>Poin Per Hari</th>
+                        <th>Pelanggaran Poin Per Hari</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -124,7 +124,7 @@
                                 </span>
                             </td>
                             <td>
-                                <span class="badge badge-success">
+                                <span class="badge badge-danger">
                                     {{ $wfoRule->point_checkin_in_day }} poin
                                 </span>
                             </td>
