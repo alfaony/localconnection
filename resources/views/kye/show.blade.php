@@ -61,11 +61,17 @@
                         @if($kye->approval_status == 'pending')
                             <i class="fas fa-clock"></i> Pending
                         @elseif($kye->approval_status == 'approved')
-                        <i class="fas fa-check-circle"></i> Approved
+                            <i class="fas fa-check-circle"></i> Approved
                         @else
-                        <i class="fas fa-times-circle"></i> Rejected
+                            <i class="fas fa-times-circle"></i> Rejected
                         @endif
                     </span>
+
+                    @if($kye->approval_status == 'rejected')
+                        <p class="text-warning d-block mt-1 b">
+                            {{ $kye->approval_note }}
+                        </p>
+                    @endif
                 </div>
             </div>
         </div>
