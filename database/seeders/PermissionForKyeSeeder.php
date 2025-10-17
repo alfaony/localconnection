@@ -25,7 +25,7 @@ class PermissionForKyeSeeder extends Seeder
         $methods = ['index', 'create', 'store', 'show', 'edit', 'update', 'destroy', 'download', 'export', 'approvement','verifyemail','KyeExport'];
 
         // Hanya ROOT dan ADMIN untuk metode tertentu
-        $restrictedRoles = [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::SYSTEM];
+        $restrictedRoles = [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::FINANCE];
         $roles = Role::all();
 
         foreach ($methods as $method) {
