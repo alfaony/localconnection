@@ -371,8 +371,10 @@ class User extends Authenticatable
             ->whereDate('date_start', '<=', $today)
             ->whereDate('date_end', '>=', $today)
             ->whereNull('rejected_at')
-            ->whereNotNull('approved_hr_at')
-            ->whereNotNull('approved_finance_at')
+            ->where(function ($query) {
+                $query->whereNotNull('approved_hr_at')
+                    ->orWhereNotNull('approved_finance_at');
+            })
             ->exists();
     }
 
