@@ -113,7 +113,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
 
         return [
             $rowNumber,
-            $kye->full_name ?? $kye->name ?? '-',
+            $kye->full_name ?? $user->name ?? '-',
             $kye->call_name ?? '-',
             $divisionPosition,
             $gender,
