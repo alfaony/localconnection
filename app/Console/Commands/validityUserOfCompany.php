@@ -145,7 +145,7 @@ class validityUserOfCompany extends Command
                             $message = $terlambat ? "Terlambat " . $actualCheckin->diffInMinutes($graceTime) . " menit dari jam " . $graceTime->format('H:i') : null;
                         }
 
-                        if (($totalCheckin < $checkinTarget || $terlambat) && $point) 
+                        if (($totalCheckin < $checkinTarget || $terlambat) && $point && $user) 
                         {
                             if(!isset($message) && $totalCheckin < $checkinTarget)
                             {
@@ -162,7 +162,7 @@ class validityUserOfCompany extends Command
 
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
             $this->error($th->getMessage());
             Log::error("Error storing file: " . $th->getMessage());
         }
