@@ -349,7 +349,7 @@
                             </table>
                         </li>
                         <li class="margin">Biaya yang tercantum pada Pasal 3.1 belum termasuk biaya pengiriman produk termasuk jasa handling dan proses kirim ke logistik dengan tambahan biaya Rp {{ isset($agreementLetter->custom_fields['custom_handling_fee_per_product']) ? number_format($agreementLetter->custom_fields['custom_handling_fee_per_product'], 0, ',', '.') : '[**]' }} per produk.</li>
-                        <li class="margin">Biaya yang tercantum pada Pasal 3.1 belum termasuk biaya penyimpanan barang, barang yg dijual dapat dititipkan di gudang studio dengan biaya Rp {{ isset($agreementLetter->custom_fields['custom_warehouse_fee']) ? number_format($agreementLetter->custom_fields['custom_warehouse_fee'], 0, ',', '.') : '[**]' }} untuk tiap ukuran {{ isset($agreementLetter->custom_fields['custom_warehouse_size']) ? e($agreementLetter->custom_fields['custom_warehouse_size']) : '[**]' }} m3.</li>
+                        <li class="margin">Biaya yang tercantum pada Pasal 3.1 belum termasuk biaya penyimpanan barang, barang yang dijual dapat dititipkan di gudang studio dengan biaya Rp {{ isset($agreementLetter->custom_fields['custom_warehouse_fee']) ? number_format($agreementLetter->custom_fields['custom_warehouse_fee'], 0, ',', '.') : '[**]' }} untuk tiap ukuran {{ isset($agreementLetter->custom_fields['custom_warehouse_size']) ? e($agreementLetter->custom_fields['custom_warehouse_size']) : '[**]' }} m3.</li>
                         <li class="margin">Segala hak dan kewajiban pajak serta segala pungutan dan bea apapun, baik yang dikenakan oleh pemerintah pusat maupun oleh pemerintah daerah yang wajib dipenuhi sebagai akibat dari atau sehubungan dengan pembuatan dan pelaksanaan Perjanjian ini menjadi tanggungan dan harus dipenuhi oleh masing-masing Pihak sesuai dengan peraturan perundang-undangan perpajakan yang berlaku di Indonesia berikut dengan perubahan-perubahan dan/atau penambahannya.</li>
                     </ol>
                 </div>
@@ -411,7 +411,7 @@
                                 <li class="margin">Berhak menerima Biaya Sewa dari Pihak Kedua.</li>
                                 <li class="margin">Berhak menggunakan gudang penyimpanan produk milik Pihak Kedua.</li>
                                 <li class="margin">Berhak untuk menolak pergantian jadwal apabila Pihak Kedua menginfokan pergantian jadwal pada h-1 sebelum Unit Sewa digunakan.</li>
-                                <li class="margin">Berhak menolak kondisi produk yg mudah terbakar, mengandung bahan berbahaya dan/atau melanggar hukum apabila produk akan ditempatkan di gudang Pihak Pertama.</li>
+                                <li class="margin">Berhak menolak kondisi produk yang mudah terbakar, mengandung bahan berbahaya dan/atau melanggar hukum apabila produk akan ditempatkan di gudang Pihak Pertama.</li>
                                 <li class="margin">Wajib menyediakan Unit Sewa yang layak untuk dapat digunakan oleh Pihak Kedua.</li>
                                 <li class="margin">Wajib memberikan slot Unit Sewa sesuai jadwal yang telah disepakati Para Pihak.</li>
                                 <li class="margin">Akan memberikan laporan GMV (Gross Merchandise Value) dan laporan live streaming pada akhir bulan setiap bulan berjalan.</li>

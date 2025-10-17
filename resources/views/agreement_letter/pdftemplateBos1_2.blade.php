@@ -665,27 +665,27 @@
                                 <tr>
                                     <td style="width: 100px;">Nama</td>
                                     <td style="width: 20px;">:</td>
-                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_name']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_name']) : '[**]' }}</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_company_name']) : '[**]' }}</td>
                                 </tr>
                                 <tr>
                                     <td>Alamat</td>
                                     <td>:</td>
-                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_address']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_address']) : '[**]' }}</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_address']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_address']) : '[**]' }}</td>
                                 </tr>
                                 <tr>
                                     <td>Telephone</td>
                                     <td>:</td>
-                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_phone']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_phone']) : '[**]' }}</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_phone']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_phone']) : '[**]' }}</td>
                                 </tr>
                                 <tr>
                                     <td>Email</td>
                                     <td>:</td>
-                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_email']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_email']) : '[**]' }}</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_email']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_email']) : '[**]' }}</td>
                                 </tr>
                                 <tr>
                                     <td>Up</td>
                                     <td>:</td>
-                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_attention']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_attention']) : '[**]' }}</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_attention']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_attention']) : '[**]' }}</td>
                                 </tr>
                             </table>
                         </li>
@@ -729,27 +729,27 @@
                                 <tr>
                                     <td style="width: 100px;">Name</td>
                                     <td style="width: 20px;">:</td>
-                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_name']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_name']) : '[**]' }}</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_company_name']) : '[**]' }}</td>
                                 </tr>
                                 <tr>
                                     <td>Address</td>
                                     <td>:</td>
-                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_address']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_address']) : '[**]' }}</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_address']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_address']) : '[**]' }}</td>
                                 </tr>
                                 <tr>
                                     <td>Phone</td>
                                     <td>:</td>
-                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_phone']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_phone']) : '[**]' }}</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_phone']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_phone']) : '[**]' }}</td>
                                 </tr>
                                 <tr>
                                     <td>Email</td>
                                     <td>:</td>
-                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_email']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_email']) : '[**]' }}</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_email']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_email']) : '[**]' }}</td>
                                 </tr>
                                 <tr>
                                     <td>Up</td>
                                     <td>:</td>
-                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_attention']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_attention']) : '[**]' }}</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_attention']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_attention']) : '[**]' }}</td>
                                 </tr>
                             </table>
                         </li>
