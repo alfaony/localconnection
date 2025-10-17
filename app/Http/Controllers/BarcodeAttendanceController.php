@@ -15,7 +15,7 @@ class BarcodeAttendanceController extends Controller
         $companyId = auth()->user()->company_id;
 
         // Hapus QR lama yang belum dipakai (opsional, bisa di-cron juga)
-        BarcodeAttendance::where('company_id', $companyId)
+        BarcodeAttendance::where('user_create_id', auth()->user()->id)
             ->where('is_used', false)
             ->delete();
 
@@ -23,12 +23,13 @@ class BarcodeAttendanceController extends Controller
         $barcode = BarcodeAttendance::create([
             'id' => Str::uuid(),
             'company_id' => $companyId,
+            'user_create_id' => auth()->user()->id,
             'code' => Str::uuid(),
             'expires_at' => now()->addMinutes(5)
         ]);
 
         // Broadcast agar QR baru ditampilkan di layar
-        broadcast(new NewBarcodeGenerated($barcode, $companyId))->toOthers();
+        broadcast(new NewBarcodeGenerated($barcode, auth()->user()->id))->toOthers();
 
         return response()->json([
             'message' => 'QR baru berhasil dibuat',
@@ -40,7 +41,7 @@ class BarcodeAttendanceController extends Controller
     {
         $companyId = auth()->user()->company_id;
 
-        $barcode = BarcodeAttendance::where('company_id', $companyId)
+        $barcode = BarcodeAttendance::where('user_create_id', auth()->user()->id)
             ->where('is_used', false)
             ->where(function ($query) {
                 $query->whereNull('expires_at')
@@ -54,6 +55,7 @@ class BarcodeAttendanceController extends Controller
             $barcode = BarcodeAttendance::create([
                 'id' => Str::uuid(),
                 'company_id' => $companyId,
+                'user_create_id' => auth()->user()->id,
                 'code' => Str::uuid(),
                 'expires_at' => now()->addMinutes(5)
             ]);

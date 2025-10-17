@@ -152,8 +152,6 @@ use App\Http\Livewire\PunishmentUserTable;
 Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 
-
-
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -443,6 +441,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 
   Route::resource('pass-checking', PassCheckingController::class);
 
+  Route::get('kye/KyeExport', [UserController::class,'KyeExport'])->name('kye.KyeExport');
   Route::post('kye/verifyemail', [KyeController::class, 'verifyemail'])->name('kye.verify.email');
   Route::patch('kye/approvement/{kye}', [KyeController::class, 'approvement'])->name('kye.approvement');
   Route::resource('kye', KyeController::class);
@@ -642,6 +641,8 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::delete('store-selling/deleteDraft/{draft}', [SaleController::class, 'deleteDraft'])->name('store-selling.deleteDraft');
   Route::get('store-selling/printReceipt/{sale}', [SaleController::class, 'printReceipt'])->name('store-selling.printReceipt');
   Route::get('store-selling/drafts', [SaleController::class, 'getDrafts'])->name('store-selling.drafts');
+  
+  Route::get('wfo-rule', App\Http\Livewire\WfoRuleIndex::class)->name('wfo-rule.index');
 });
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');

@@ -153,7 +153,7 @@ class AppServiceProvider extends ServiceProvider
             $managementKaryawanMenu = [
                 'kyes',
                 'employees','users','positions','managers','attendances',
-                'shifting_obs','schedule_obs','dayoffs','barcodes','employee_checkings','office_attendances','trainings'
+                'shifting_obs','schedule_obs','dayoffs','wfo_rules','barcodes','employee_checkings','office_attendances','trainings'
             ];
 
             $managementInternetMenu = 
@@ -751,6 +751,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'store-selling.index',
                     'icon' => 'fa fa-shopping-cart',
                 ],
+                'wfo_rules' =>
+                [
+                    'text' => 'Aturan WFO',
+                    'route' => 'wfo-rule.index',
+                    'icon' => 'fa fa-list',
+                ]
             ];
 
             // foreach ($listMenu as $role) 

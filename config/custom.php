@@ -165,5 +165,12 @@ return
       [
          'Dijual' => 0,
          'Inventory' => null
+      ],
+      'merital_status' => 
+      [
+         'single' => 'Lajang',
+         'married' => 'Menikah',
+         'widow' => 'Janda',
+         'divorced' => 'Duda'
       ]
 ];

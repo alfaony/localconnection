@@ -48,7 +48,7 @@ class ProcessScanAttendanceJob implements ShouldQueue
                 $status = true;
 
                 // Buat QR baru jika belum ada
-                $this->generateCode($this->companyId);
+                $this->generateCode($barcode->company_id, $barcode->user_create_id);
             }
             
             broadcast(new BarcodeVerifiedSuccess($this->userId, $status));
@@ -59,16 +59,17 @@ class ProcessScanAttendanceJob implements ShouldQueue
         }
     }
 
-    private function generateCode($companyId) 
+    private function generateCode($companyId, $userId) 
     {
          $barcode = BarcodeAttendance::create([
             'id' => Str::uuid(),
             'company_id' => $companyId,
+            'user_create_id' => $userId,
             'code' => Str::uuid(),
             'expires_at' => now()->addMinutes(5)
         ]);
 
         // Broadcast agar QR baru ditampilkan di layar
-        broadcast(new NewBarcodeGenerated($barcode, $companyId))->toOthers();
+        broadcast(new NewBarcodeGenerated($barcode, $userId))->toOthers();
     }
 }

@@ -137,6 +137,7 @@ class RoleController extends Controller
             'punishment_users',
             'sales',
             'store_sellings',
+            'wfo_rules',
         ];
 
         $checked = array_merge($mainMenus);
@@ -300,6 +301,7 @@ class RoleController extends Controller
                 'punishment_users',
                 'sales',
                 'store_sellings',
+                'wfo_rules',
             ];
         $checked = array_merge($mainMenus);
 
@@ -425,6 +427,7 @@ class RoleController extends Controller
                 'punishment_users',
                 'sales',
                 'store_sellings',
+                'wfo_rules',
             ];
         
         $checked = array_merge($mainMenus);
