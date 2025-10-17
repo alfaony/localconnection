@@ -29,7 +29,7 @@ class MappingAgreementTemplateSeeder extends Seeder
             ['template_agreement' => 'templateBos1_1'], // Kriteria pencarian
             [
                 'template_name' => 'templateBos1',
-                'template_agreement_show' => 'SEWA STUDIO LIVE COMMERCE',
+                'template_agreement_show' => 'Sewa Studio Live Commerce',
                 'is_active' => true,
                 'is_default' => false,
             ]
@@ -39,7 +39,7 @@ class MappingAgreementTemplateSeeder extends Seeder
             ['template_agreement' => 'templateBos1_2'], // Kriteria pencarian
             [
                 'template_name' => 'templateBos1',
-                'template_agreement_show' => 'PENYEWAAN LAPTOP',
+                'template_agreement_show' => 'Penyewaan Laptop',
                 'is_active' => true,
                 'is_default' => false,
             ]

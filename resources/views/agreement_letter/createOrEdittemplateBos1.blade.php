@@ -20,7 +20,7 @@
                         <div class="row">
                             <label for="date" class="col-sm-8 col-form-label text-right">Tanggal:</label>
                             <div class="col-sm-4">
-                                <input type="date" name="date" class="form-control" id="date" value="{{ old('date') ?? @$agreementLetter->date }}" required>
+                                <input type="date" name="date" class="form-control" id="date" value="{{ old('date') ?? @$agreementLetter->date ?? \Carbon\Carbon::now()->format('Y-m-d')}}" required>
                             </div>
                         </div>
                         <div class="row mt-2">
@@ -67,8 +67,7 @@
                         <input type="text" class="form-control" id="customer" value="" placeholder="Pilih Quote" readonly>
                     </div>
                 </div>
-
-                <!-- Form tambahan untuk template templateBos1_1 dan templateBos1_2 -->
+                <!-- Form tambahan untuk template templateBos1_1 -->
                 <div class="templateBos1_1-field" style="display:none;">
                     <hr class="my-4">
                     <h4>Detail Perjanjian</h4>
@@ -82,31 +81,31 @@
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Nama Perusahaan:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="pihak_pertama_nama" value="{{ old('pihak_pertama_nama') ?? @$agreementLetter->pihak_pertama_nama }}">
+                                    <input type="text" class="form-control" name="custom_first_party_company_name" value="{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : (isset($company['name']) ? e($company['name']) : '')  }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Alamat:</label>
                                 <div class="col-sm-9">
-                                    <textarea class="form-control" name="pihak_pertama_alamat" rows="2">{{ old('pihak_pertama_alamat') ?? @$agreementLetter->pihak_pertama_alamat }}</textarea>
+                                    <textarea class="form-control" name="custom_first_party_address" rows="2">{{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : (isset($company['address']) ? e($company['address']) : '')  }}</textarea>
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Diwakili Oleh:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="pihak_pertama_wakil" value="{{ old('pihak_pertama_wakil') ?? @$agreementLetter->pihak_pertama_wakil }}">
+                                    <input type="text" class="form-control" name="custom_first_party_represented_by" value="{{ isset($agreementLetter->custom_fields['custom_first_party_represented_by']) ? e($agreementLetter->custom_fields['custom_first_party_represented_by']) : (isset($company['director']) ? e($company['director']) : '') }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Jabatan:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="pihak_pertama_jabatan" value="{{ old('pihak_pertama_jabatan') ?? @$agreementLetter->pihak_pertama_jabatan }}">
+                                    <input type="text" class="form-control" name="custom_first_party_position" value="{{ isset($agreementLetter->custom_fields['custom_first_party_position']) ? e($agreementLetter->custom_fields['custom_first_party_position']) : 'Director' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Bidang Usaha:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="pihak_pertama_bidang" value="{{ old('pihak_pertama_bidang') ?? @$agreementLetter->pihak_pertama_bidang }}">
+                                    <input type="text" class="form-control" name="custom_first_party_business_field" value="{{ isset($agreementLetter->custom_fields['custom_first_party_business_field']) ? e($agreementLetter->custom_fields['custom_first_party_business_field']) : '' }}">
                                 </div>
                             </div>
                         </div>
@@ -121,46 +120,46 @@
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Tipe:</label>
                                 <div class="col-sm-9">
-                                    <select class="form-control" name="pihak_kedua_tipe" id="pihak_kedua_tipe">
-                                        <option value="perusahaan" {{ (old('pihak_kedua_tipe') ?? @$agreementLetter->pihak_kedua_tipe) == 'perusahaan' ? 'selected' : '' }}>Perusahaan</option>
-                                        <option value="perorangan" {{ (old('pihak_kedua_tipe') ?? @$agreementLetter->pihak_kedua_tipe) == 'perorangan' ? 'selected' : '' }}>Perorangan</option>
+                                    <select class="form-control" name="custom_second_party_type" id="pihak_kedua_tipe">
+                                        <option value="company" {{ (isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'company') ? 'selected' : '' }}>Perusahaan</option>
+                                        <option value="individual" {{ (isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'individual') ? 'selected' : '' }}>Perorangan</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Nama:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="pihak_kedua_nama" value="{{ old('pihak_kedua_nama') ?? @$agreementLetter->pihak_kedua_nama }}">
+                                    <input type="text" class="form-control" name="custom_second_party_name" value="{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Alamat:</label>
                                 <div class="col-sm-9">
-                                    <textarea class="form-control" name="pihak_kedua_alamat" rows="2">{{ old('pihak_kedua_alamat') ?? @$agreementLetter->pihak_kedua_alamat }}</textarea>
+                                    <textarea class="form-control" name="custom_second_party_address" rows="2">{{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '' }}</textarea>
                                 </div>
                             </div>
                             <div class="form-group row perusahaan-field">
                                 <label class="col-sm-3 col-form-label">Diwakili Oleh:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="pihak_kedua_wakil" value="{{ old('pihak_kedua_wakil') ?? @$agreementLetter->pihak_kedua_wakil }}">
+                                    <input type="text" class="form-control" name="custom_second_party_represented_by" value="{{ isset($agreementLetter->custom_fields['custom_second_party_represented_by']) ? e($agreementLetter->custom_fields['custom_second_party_represented_by']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row perusahaan-field">
                                 <label class="col-sm-3 col-form-label">Jabatan:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="pihak_kedua_jabatan" value="{{ old('pihak_kedua_jabatan') ?? @$agreementLetter->pihak_kedua_jabatan }}">
+                                    <input type="text" class="form-control" name="custom_second_party_position" value="{{ isset($agreementLetter->custom_fields['custom_second_party_position']) ? e($agreementLetter->custom_fields['custom_second_party_position']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row perorangan-field" style="display:none;">
                                 <label class="col-sm-3 col-form-label">Nomor Identitas:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="pihak_kedua_nomor_identitas" value="{{ old('pihak_kedua_nomor_identitas') ?? @$agreementLetter->pihak_kedua_nomor_identitas }}">
+                                    <input type="text" class="form-control" name="custom_second_party_identity_number" value="{{ isset($agreementLetter->custom_fields['custom_second_party_identity_number']) ? e($agreementLetter->custom_fields['custom_second_party_identity_number']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Bidang Usaha:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="pihak_kedua_bidang" value="{{ old('pihak_kedua_bidang') ?? @$agreementLetter->pihak_kedua_bidang }}">
+                                    <input type="text" class="form-control" name="custom_second_party_business_field" value="{{ isset($agreementLetter->custom_fields['custom_second_party_business_field']) ? e($agreementLetter->custom_fields['custom_second_party_business_field']) : '' }}">
                                 </div>
                             </div>
                         </div>
@@ -175,67 +174,49 @@
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Hari Live:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="jadwal_hari" placeholder="Senin - Jumat" value="{{ old('jadwal_hari') ?? @$agreementLetter->jadwal_hari }}">
+                                    <input type="text" class="form-control" name="custom_schedule_days" placeholder="Senin - Jumat" value="{{ isset($agreementLetter->custom_fields['custom_schedule_days']) ? e($agreementLetter->custom_fields['custom_schedule_days']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Jam Mulai:</label>
                                 <div class="col-sm-9">
-                                    <input type="time" class="form-control" name="jadwal_jam_mulai" value="{{ old('jadwal_jam_mulai') ?? @$agreementLetter->jadwal_jam_mulai }}">
+                                    <input type="time" class="form-control" name="custom_schedule_start_time" value="{{ isset($agreementLetter->custom_fields['custom_schedule_start_time']) ? e($agreementLetter->custom_fields['custom_schedule_start_time']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Jam Selesai:</label>
                                 <div class="col-sm-9">
-                                    <input type="time" class="form-control" name="jadwal_jam_selesai" value="{{ old('jadwal_jam_selesai') ?? @$agreementLetter->jadwal_jam_selesai }}">
-                                </div>
-                            </div>
-                            <div class="form-group row templateBos1_2-field" style="display:none;">
-                                <label class="col-sm-3 col-form-label">Tipe Biaya:</label>
-                                <div class="col-sm-9">
-                                    <select class="form-control" name="biaya_tipe" id="biaya_tipe">
-                                        <option value="per_jam" {{ (old('biaya_tipe') ?? @$agreementLetter->biaya_tipe) == 'per_jam' ? 'selected' : '' }}>Per Jam</option>
-                                        <option value="per_bulan" {{ (old('biaya_tipe') ?? @$agreementLetter->biaya_tipe) == 'per_bulan' ? 'selected' : '' }}>Per Bulan</option>
-                                    </select>
+                                    <input type="time" class="form-control" name="custom_schedule_end_time" value="{{ isset($agreementLetter->custom_fields['custom_schedule_end_time']) ? e($agreementLetter->custom_fields['custom_schedule_end_time']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Biaya Sewa (Rp):</label>
                                 <div class="col-sm-9">
-                                    <input type="number" class="form-control" name="biaya_sewa" value="{{ old('biaya_sewa') ?? @$agreementLetter->biaya_sewa }}">
+                                    <input type="number" class="form-control" name="custom_rental_fee_amount" value="{{ isset($agreementLetter->custom_fields['custom_rental_fee_amount']) ? e($agreementLetter->custom_fields['custom_rental_fee_amount']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Biaya Sewa (Terbilang):</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="biaya_sewa_terbilang" placeholder="tiga juta Rupiah" value="{{ old('biaya_sewa_terbilang') ?? @$agreementLetter->biaya_sewa_terbilang }}">
+                                    <input type="text" class="form-control" name="custom_rental_fee_words" placeholder="tiga juta Rupiah" value="{{ isset($agreementLetter->custom_fields['custom_rental_fee_words']) ? e($agreementLetter->custom_fields['custom_rental_fee_words']) : '' }}">
                                 </div>
                             </div>
-                            <div class="form-group row templateBos1_2-field" style="display:none;">
-                                <label class="col-sm-3 col-form-label">Skema Pembayaran:</label>
-                                <div class="col-sm-9">
-                                    <select class="form-control" name="skema_pembayaran" id="skema_pembayaran">
-                                        <option value="dp_pelunasan" {{ (old('skema_pembayaran') ?? @$agreementLetter->skema_pembayaran) == 'dp_pelunasan' ? 'selected' : '' }}>DP 50% + Pelunasan 50%</option>
-                                        <option value="penuh" {{ (old('skema_pembayaran') ?? @$agreementLetter->skema_pembayaran) == 'penuh' ? 'selected' : '' }}>Pembayaran Penuh</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group row templateBos1_1-field" style="display:none;">
+                            <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Persentase Komisi (%):</label>
                                 <div class="col-sm-9">
-                                    <input type="number" step="0.01" class="form-control" name="persentase_komisi" value="{{ old('persentase_komisi') ?? @$agreementLetter->persentase_komisi }}">
+                                    <input type="number" step="0.01" class="form-control" name="custom_commission_percentage" value="{{ isset($agreementLetter->custom_fields['custom_commission_percentage']) ? e($agreementLetter->custom_fields['custom_commission_percentage']) : '' }}">
                                 </div>
                             </div>
-                            <div class="form-group row templateBos1_1-field" style="display:none;">
+                            <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Biaya Per Produk (Rp):</label>
                                 <div class="col-sm-9">
-                                    <input type="number" class="form-control" name="biaya_per_produk" value="{{ old('biaya_per_produk') ?? @$agreementLetter->biaya_per_produk }}">
+                                    <input type="number" class="form-control" name="custom_fee_per_product" value="{{ isset($agreementLetter->custom_fields['custom_fee_per_product']) ? e($agreementLetter->custom_fields['custom_fee_per_product']) : '' }}">
                                 </div>
                             </div>
-                            <div class="form-group row templateBos1_1-field" style="display:none;">
+                            <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Tanggal Pembayaran Komisi:</label>
                                 <div class="col-sm-9">
-                                    <input type="number" min="1" max="31" class="form-control" name="tanggal_bayar_komisi" placeholder="1-31" value="{{ old('tanggal_bayar_komisi') ?? @$agreementLetter->tanggal_bayar_komisi }}">
+                                    <input type="number" min="1" max="31" class="form-control" name="custom_commission_payment_date" placeholder="1-31" value="{{ isset($agreementLetter->custom_fields['custom_commission_payment_date']) ? e($agreementLetter->custom_fields['custom_commission_payment_date']) : '' }}">
                                 </div>
                             </div>
                         </div>
@@ -250,13 +231,13 @@
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Tanggal Mulai:</label>
                                 <div class="col-sm-9">
-                                    <input type="date" class="form-control" name="periode_mulai" value="{{ old('periode_mulai') ?? @$agreementLetter->periode_mulai }}">
+                                    <input type="date" class="form-control" name="custom_agreement_start_date" value="{{ isset($agreementLetter->custom_fields['custom_agreement_start_date']) ? e($agreementLetter->custom_fields['custom_agreement_start_date']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Tanggal Selesai:</label>
                                 <div class="col-sm-9">
-                                    <input type="date" class="form-control" name="periode_selesai" value="{{ old('periode_selesai') ?? @$agreementLetter->periode_selesai }}">
+                                    <input type="date" class="form-control" name="custom_agreement_end_date" value="{{ isset($agreementLetter->custom_fields['custom_agreement_end_date']) ? e($agreementLetter->custom_fields['custom_agreement_end_date']) : '' }}">
                                 </div>
                             </div>
                         </div>
@@ -271,25 +252,25 @@
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Nama Pemilik Rekening:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="rekening_nama" value="{{ old('rekening_nama') ?? @$agreementLetter->rekening_nama }}">
+                                    <input type="text" class="form-control" name="custom_account_holder_name" value="{{ isset($agreementLetter->custom_fields['custom_account_holder_name']) ? e($agreementLetter->custom_fields['custom_account_holder_name']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Nama Bank:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="rekening_bank" value="{{ old('rekening_bank') ?? @$agreementLetter->rekening_bank }}">
+                                    <input type="text" class="form-control" name="custom_bank_name" value="{{ isset($agreementLetter->custom_fields['custom_bank_name']) ? e($agreementLetter->custom_fields['custom_bank_name']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Kantor Cabang:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="rekening_cabang" value="{{ old('rekening_cabang') ?? @$agreementLetter->rekening_cabang }}">
+                                    <input type="text" class="form-control" name="custom_branch_office" value="{{ isset($agreementLetter->custom_fields['custom_branch_office']) ? e($agreementLetter->custom_fields['custom_branch_office']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Nomor Rekening:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="rekening_nomor" value="{{ old('rekening_nomor') ?? @$agreementLetter->rekening_nomor }}">
+                                    <input type="text" class="form-control" name="custom_account_number" value="{{ isset($agreementLetter->custom_fields['custom_account_number']) ? e($agreementLetter->custom_fields['custom_account_number']) : '' }}">
                                 </div>
                             </div>
                         </div>
@@ -302,39 +283,39 @@
                         </div>
                         <div class="card-body">
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Biaya Handling (Rp):</label>
+                                <label class="col-sm-3 col-form-label">Biaya Handling per Produk (Rp):</label>
                                 <div class="col-sm-9">
-                                    <input type="number" class="form-control" name="biaya_handling" value="{{ old('biaya_handling') ?? @$agreementLetter->biaya_handling }}">
+                                    <input type="number" class="form-control" name="custom_handling_fee_per_product" value="{{ isset($agreementLetter->custom_fields['custom_handling_fee_per_product']) ? e($agreementLetter->custom_fields['custom_handling_fee_per_product']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Biaya Gudang (Rp):</label>
                                 <div class="col-sm-9">
-                                    <input type="number" class="form-control" name="biaya_gudang" value="{{ old('biaya_gudang') ?? @$agreementLetter->biaya_gudang }}">
+                                    <input type="number" class="form-control" name="custom_warehouse_fee" value="{{ isset($agreementLetter->custom_fields['custom_warehouse_fee']) ? e($agreementLetter->custom_fields['custom_warehouse_fee']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Ukuran Gudang (m3):</label>
+                                <label class="col-sm-3 col-form-label">Ukuran Gudang (m³):</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="ukuran_gudang" value="{{ old('ukuran_gudang') ?? @$agreementLetter->ukuran_gudang }}">
+                                    <input type="text" class="form-control" name="custom_warehouse_size" value="{{ isset($agreementLetter->custom_fields['custom_warehouse_size']) ? e($agreementLetter->custom_fields['custom_warehouse_size']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Biaya Overtime (Rp):</label>
+                                <label class="col-sm-3 col-form-label">Biaya Overtime per Jam (Rp):</label>
                                 <div class="col-sm-9">
-                                    <input type="number" class="form-control" name="biaya_overtime" value="{{ old('biaya_overtime') ?? @$agreementLetter->biaya_overtime }}">
+                                    <input type="number" class="form-control" name="custom_overtime_fee_per_hour" value="{{ isset($agreementLetter->custom_fields['custom_overtime_fee_per_hour']) ? e($agreementLetter->custom_fields['custom_overtime_fee_per_hour']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Denda Keterlambatan (Rp):</label>
                                 <div class="col-sm-9">
-                                    <input type="number" class="form-control" name="denda_keterlambatan" value="{{ old('denda_keterlambatan') ?? @$agreementLetter->denda_keterlambatan }}">
+                                    <input type="number" class="form-control" name="custom_late_payment_penalty" value="{{ isset($agreementLetter->custom_fields['custom_late_payment_penalty']) ? e($agreementLetter->custom_fields['custom_late_payment_penalty']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Persentase Denda (%):</label>
                                 <div class="col-sm-9">
-                                    <input type="number" step="0.01" class="form-control" name="persentase_denda" value="{{ old('persentase_denda') ?? @$agreementLetter->persentase_denda }}">
+                                    <input type="number" step="0.01" class="form-control" name="custom_penalty_percentage" value="{{ isset($agreementLetter->custom_fields['custom_penalty_percentage']) ? e($agreementLetter->custom_fields['custom_penalty_percentage']) : '' }}">
                                 </div>
                             </div>
                         </div>
@@ -350,19 +331,19 @@
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Telepon:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="korespondensi_p1_telepon" value="{{ old('korespondensi_p1_telepon') ?? @$agreementLetter->korespondensi_p1_telepon }}">
+                                    <input type="text" class="form-control" name="custom_first_party_phone" value="{{ isset($agreementLetter->custom_fields['custom_first_party_phone']) ? e($agreementLetter->custom_fields['custom_first_party_phone']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Email:</label>
                                 <div class="col-sm-9">
-                                    <input type="email" class="form-control" name="korespondensi_p1_email" value="{{ old('korespondensi_p1_email') ?? @$agreementLetter->korespondensi_p1_email }}">
+                                    <input type="email" class="form-control" name="custom_first_party_email" value="{{ isset($agreementLetter->custom_fields['custom_first_party_email']) ? e($agreementLetter->custom_fields['custom_first_party_email']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Up:</label>
+                                <label class="col-sm-3 col-form-label">Up (Attention):</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="korespondensi_p1_up" value="{{ old('korespondensi_p1_up') ?? @$agreementLetter->korespondensi_p1_up }}">
+                                    <input type="text" class="form-control" name="custom_first_party_attention" value="{{ isset($agreementLetter->custom_fields['custom_first_party_attention']) ? e($agreementLetter->custom_fields['custom_first_party_attention']) : '' }}">
                                 </div>
                             </div>
 
@@ -372,19 +353,359 @@
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Telepon:</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="korespondensi_p2_telepon" value="{{ old('korespondensi_p2_telepon') ?? @$agreementLetter->korespondensi_p2_telepon }}">
+                                    <input type="text" class="form-control" name="custom_second_party_phone" value="{{ isset($agreementLetter->custom_fields['custom_second_party_phone']) ? e($agreementLetter->custom_fields['custom_second_party_phone']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Email:</label>
                                 <div class="col-sm-9">
-                                    <input type="email" class="form-control" name="korespondensi_p2_email" value="{{ old('korespondensi_p2_email') ?? @$agreementLetter->korespondensi_p2_email }}">
+                                    <input type="email" class="form-control" name="custom_second_party_email" value="{{ isset($agreementLetter->custom_fields['custom_second_party_email']) ? e($agreementLetter->custom_fields['custom_second_party_email']) : '' }}">
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Up:</label>
+                                <label class="col-sm-3 col-form-label">Up (Attention):</label>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" name="korespondensi_p2_up" value="{{ old('korespondensi_p2_up') ?? @$agreementLetter->korespondensi_p2_up }}">
+                                    <input type="text" class="form-control" name="custom_second_party_attention" value="{{ isset($agreementLetter->custom_fields['custom_second_party_attention']) ? e($agreementLetter->custom_fields['custom_second_party_attention']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tanggal Perjanjian -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Tanggal Penandatanganan</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Tanggal Perjanjian:</label>
+                                <div class="col-sm-9">
+                                    <input type="date" class="form-control" name="custom_agreement_signing_date" value="{{ isset($agreementLetter->custom_fields['custom_agreement_signing_date']) ? e($agreementLetter->custom_fields['custom_agreement_signing_date']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="templateBos1_2-field" style="display:none;">
+                    <hr class="my-4">
+                    <h4>Detail Perjanjian Sewa Laptop</h4>
+
+                    <!-- Data Pihak Pertama -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Data Pihak Pertama</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Nama Perusahaan:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_first_party_company_name" value="{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_company_name']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Alamat:</label>
+                                <div class="col-sm-9">
+                                    <textarea class="form-control" name="custom_laptop_first_party_address" rows="2">{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_address']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_address']) : '' }}</textarea>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Diwakili Oleh:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_first_party_represented_by" value="{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_represented_by']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_represented_by']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Jabatan:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_first_party_position" value="{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_position']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_position']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Bidang Usaha:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_first_party_business_field" value="{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_business_field']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_business_field']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Pihak Kedua -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Data Pihak Kedua</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Tipe:</label>
+                                <div class="col-sm-9">
+                                    <select class="form-control" name="custom_laptop_second_party_type" id="laptop_pihak_kedua_tipe">
+                                        <option value="company" {{ (isset($agreementLetter->custom_fields['custom_laptop_second_party_type']) && $agreementLetter->custom_fields['custom_laptop_second_party_type'] == 'company') ? 'selected' : '' }}>Perusahaan</option>
+                                        <option value="individual" {{ (isset($agreementLetter->custom_fields['custom_laptop_second_party_type']) && $agreementLetter->custom_fields['custom_laptop_second_party_type'] == 'individual') ? 'selected' : '' }}>Perorangan</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Nama:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_second_party_name" value="{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_name']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_name']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Alamat:</label>
+                                <div class="col-sm-9">
+                                    <textarea class="form-control" name="custom_laptop_second_party_address" rows="2">{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_address']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_address']) : '' }}</textarea>
+                                </div>
+                            </div>
+                            <div class="form-group row laptop-perusahaan-field">
+                                <label class="col-sm-3 col-form-label">Diwakili Oleh:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_second_party_represented_by" value="{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_represented_by']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_represented_by']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row laptop-perusahaan-field">
+                                <label class="col-sm-3 col-form-label">Jabatan:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_second_party_position" value="{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_position']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_position']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row laptop-perorangan-field" style="display:none;">
+                                <label class="col-sm-3 col-form-label">Nomor Identitas:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_second_party_identity_number" value="{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_identity_number']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_identity_number']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Bidang Usaha:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_second_party_business_field" value="{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_business_field']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_business_field']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Spesifikasi Laptop -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Spesifikasi Unit Laptop</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Spesifikasi Singkat:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_specification" placeholder="e.g., Intel Core i5, 8GB RAM, 256GB SSD" value="{{ isset($agreementLetter->custom_fields['custom_laptop_specification']) ? e($agreementLetter->custom_fields['custom_laptop_specification']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Seri Laptop:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_series" placeholder="e.g., ThinkPad X1 Carbon" value="{{ isset($agreementLetter->custom_fields['custom_laptop_series']) ? e($agreementLetter->custom_fields['custom_laptop_series']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Tahun Keluaran:</label>
+                                <div class="col-sm-9">
+                                    <input type="number" class="form-control" name="custom_laptop_year" placeholder="e.g., 2023" value="{{ isset($agreementLetter->custom_fields['custom_laptop_year']) ? e($agreementLetter->custom_fields['custom_laptop_year']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Jumlah Unit:</label>
+                                <div class="col-sm-9">
+                                    <input type="number" class="form-control" name="custom_laptop_quantity" value="{{ isset($agreementLetter->custom_fields['custom_laptop_quantity']) ? e($agreementLetter->custom_fields['custom_laptop_quantity']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Aksesoris Lengkap:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_accessories" placeholder="e.g., charger, tas, mouse" value="{{ isset($agreementLetter->custom_fields['custom_laptop_accessories']) ? e($agreementLetter->custom_fields['custom_laptop_accessories']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Unit Cadangan (>20 unit):</label>
+                                <div class="col-sm-9">
+                                    <select class="form-control" name="custom_laptop_backup_unit">
+                                        <option value="yes" {{ (isset($agreementLetter->custom_fields['custom_laptop_backup_unit']) && $agreementLetter->custom_fields['custom_laptop_backup_unit'] == 'yes') ? 'selected' : '' }}>Ya, Sediakan 2 Unit Cadangan</option>
+                                        <option value="no" {{ (isset($agreementLetter->custom_fields['custom_laptop_backup_unit']) && $agreementLetter->custom_fields['custom_laptop_backup_unit'] == 'no') ? 'selected' : '' }}>Tidak</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Periode Perjanjian -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-warning">
+                            <h5 class="mb-0">Periode Perjanjian</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Tanggal Mulai:</label>
+                                <div class="col-sm-9">
+                                    <input type="date" class="form-control" name="custom_laptop_agreement_start_date" value="{{ isset($agreementLetter->custom_fields['custom_laptop_agreement_start_date']) ? e($agreementLetter->custom_fields['custom_laptop_agreement_start_date']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Tanggal Selesai:</label>
+                                <div class="col-sm-9">
+                                    <input type="date" class="form-control" name="custom_laptop_agreement_end_date" value="{{ isset($agreementLetter->custom_fields['custom_laptop_agreement_end_date']) ? e($agreementLetter->custom_fields['custom_laptop_agreement_end_date']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Biaya dan Pembayaran -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">Biaya dan Pembayaran</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Biaya Sewa Total (Rp):</label>
+                                <div class="col-sm-9">
+                                    <input type="number" class="form-control" name="custom_laptop_rental_fee_amount" value="{{ isset($agreementLetter->custom_fields['custom_laptop_rental_fee_amount']) ? e($agreementLetter->custom_fields['custom_laptop_rental_fee_amount']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Biaya Sewa (Terbilang):</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_rental_fee_words" placeholder="dua juta lima ratus ribu Rupiah" value="{{ isset($agreementLetter->custom_fields['custom_laptop_rental_fee_words']) ? e($agreementLetter->custom_fields['custom_laptop_rental_fee_words']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Deposit per Unit (Rp):</label>
+                                <div class="col-sm-9">
+                                    <input type="number" class="form-control" name="custom_laptop_deposit_per_unit" placeholder="Default: 150.000" value="{{ isset($agreementLetter->custom_fields['custom_laptop_deposit_per_unit']) ? e($agreementLetter->custom_fields['custom_laptop_deposit_per_unit']) : '150000' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Biaya Instalasi Software (Rp):</label>
+                                <div class="col-sm-9">
+                                    <input type="number" class="form-control" name="custom_laptop_software_installation_fee" value="{{ isset($agreementLetter->custom_fields['custom_laptop_software_installation_fee']) ? e($agreementLetter->custom_fields['custom_laptop_software_installation_fee']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Biaya Pengiriman (Rp):</label>
+                                <div class="col-sm-9">
+                                    <input type="number" class="form-control" name="custom_laptop_delivery_fee" value="{{ isset($agreementLetter->custom_fields['custom_laptop_delivery_fee']) ? e($agreementLetter->custom_fields['custom_laptop_delivery_fee']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Rekening -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0">Data Rekening Pembayaran</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Nama Pemilik Rekening:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_account_holder_name" value="{{ isset($agreementLetter->custom_fields['custom_laptop_account_holder_name']) ? e($agreementLetter->custom_fields['custom_laptop_account_holder_name']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Nama Bank:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_bank_name" value="{{ isset($agreementLetter->custom_fields['custom_laptop_bank_name']) ? e($agreementLetter->custom_fields['custom_laptop_bank_name']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Kantor Cabang:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_branch_office" value="{{ isset($agreementLetter->custom_fields['custom_laptop_branch_office']) ? e($agreementLetter->custom_fields['custom_laptop_branch_office']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Nomor Rekening:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_account_number" value="{{ isset($agreementLetter->custom_fields['custom_laptop_account_number']) ? e($agreementLetter->custom_fields['custom_laptop_account_number']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Denda dan Penalti -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">Denda dan Penalti</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Denda Keterlambatan Pembayaran (Rp):</label>
+                                <div class="col-sm-9">
+                                    <input type="number" class="form-control" name="custom_laptop_late_payment_penalty" value="{{ isset($agreementLetter->custom_fields['custom_laptop_late_payment_penalty']) ? e($agreementLetter->custom_fields['custom_laptop_late_payment_penalty']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Persentase Denda Keterlambatan Pengembalian (%):</label>
+                                <div class="col-sm-9">
+                                    <input type="number" step="0.01" class="form-control" name="custom_laptop_late_return_penalty_percentage" value="{{ isset($agreementLetter->custom_fields['custom_laptop_late_return_penalty_percentage']) ? e($agreementLetter->custom_fields['custom_laptop_late_return_penalty_percentage']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Korespondensi -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Data Korespondensi</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Pihak Pertama</h6>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Telepon:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_first_party_phone" value="{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_phone']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_phone']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Email:</label>
+                                <div class="col-sm-9">
+                                    <input type="email" class="form-control" name="custom_laptop_first_party_email" value="{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_email']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_email']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Up (Attention):</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_first_party_attention" value="{{ isset($agreementLetter->custom_fields['custom_laptop_first_party_attention']) ? e($agreementLetter->custom_fields['custom_laptop_first_party_attention']) : '' }}">
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <h6>Pihak Kedua</h6>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Telepon:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_second_party_phone" value="{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_phone']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_phone']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Email:</label>
+                                <div class="col-sm-9">
+                                    <input type="email" class="form-control" name="custom_laptop_second_party_email" value="{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_email']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_email']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Up (Attention):</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_laptop_second_party_attention" value="{{ isset($agreementLetter->custom_fields['custom_laptop_second_party_attention']) ? e($agreementLetter->custom_fields['custom_laptop_second_party_attention']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tanggal Perjanjian -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Tanggal Penandatanganan</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Tanggal Perjanjian:</label>
+                                <div class="col-sm-9">
+                                    <input type="date" class="form-control" name="custom_laptop_agreement_signing_date" value="{{ isset($agreementLetter->custom_fields['custom_laptop_agreement_signing_date']) ? e($agreementLetter->custom_fields['custom_laptop_agreement_signing_date']) : '' }}">
                                 </div>
                             </div>
                         </div>
@@ -430,6 +751,7 @@
                     </div>
     
                 </div>
+
         
                 <div class="form-group text-right">
                     @if(@$agreementLetter)
@@ -520,12 +842,30 @@
         $('#skema_pembayaran').on('change', function() {
             toggleSkemaPembayaran();
         });
+        $('#laptop_pihak_kedua_tipe').on('change', function() {
+            toggleLaptopPihakKeduaFields();
+        });
 
         // Initial toggle on page load
         toggleTemplateFields();
         togglePihakKeduaFields();
         toggleBiayaFields();
         toggleSkemaPembayaran();
+          // Initial toggle on page load
+        toggleLaptopPihakKeduaFields();
+
+        function toggleLaptopPihakKeduaFields() 
+        {
+            var tipe = $('#laptop_pihak_kedua_tipe').val();
+            
+            if (tipe === 'company') {
+                $('.laptop-perusahaan-field').show();
+                $('.laptop-perorangan-field').hide();
+            } else {
+                $('.laptop-perusahaan-field').hide();
+                $('.laptop-perorangan-field').show();
+            }
+        }
 
         function toggleTemplateFields() {
             var selectedTemplate = $('#template_agreement_id option:selected').data('template');
@@ -552,7 +892,7 @@
         function togglePihakKeduaFields() {
             var tipe = $('#pihak_kedua_tipe').val();
             
-            if (tipe === 'perusahaan') {
+            if (tipe === 'company') {
                 $('.perusahaan-field').show();
                 $('.perorangan-field').hide();
             } else {
