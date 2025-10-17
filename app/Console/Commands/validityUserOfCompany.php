@@ -132,15 +132,15 @@ class validityUserOfCompany extends Command
                         $terlambat = false;
                         $message = null;
                         
-                        $checkinTarget = $firstCheckin->user ? ($firstCheckin->user->wfoRules && $firstCheckin->user->wfoRules->times_checkin_in_day ? $firstCheckin->user->wfoRules->times_checkin_in_day : $checkinTarget) : $checkinTarget;
-                        $point = $firstCheckin->user ? ($firstCheckin->user->wfoRules && $firstCheckin->user->wfoRules->point_checkin_in_day ? $firstCheckin->user->wfoRules->point_checkin_in_day : $setting['punishment_point_wfo']) : $setting['punishment_point_wfo'];
+                        $checkinTarget = isset($firstCheckin->user) && $firstCheckin->user->wfoRules ? $firstCheckin->user->wfoRules->times_checkin_in_day : $checkinTarget;
+                        $point = isset($firstCheckin->user) && $firstCheckin->user->wfoRules ? $firstCheckin->user->wfoRules->point_checkin_in_day : $setting['punishment_point_wfo'];
 
 
                         if ($firstCheckin) 
                         {
                             $actualCheckin = Carbon::parse($firstCheckin->time);
-                            $graceTime = $firstCheckin->user ? ($firstCheckin->user->wfoRules && $firstCheckin->user->wfoRules->entry_time_checkin->addMinutes($toleranceMinutes) ? $firstCheckin->user->wfoRules->entry_time_checkin->addMinutes($toleranceMinutes) : $entryTime->copy()->addMinutes($toleranceMinutes)) : $entryTime->copy()->addMinutes($toleranceMinutes);
-                            $terlambat = $actualCheckin->gt($graceTime);
+                            $graceTime = $firstCheckin->user ? (isset($firstCheckin->user->wfoRules) ? $firstCheckin->user->wfoRules->entry_time_checkin->addMinutes($toleranceMinutes) : $entryTime->copy()->addMinutes($toleranceMinutes)) : $entryTime->copy()->addMinutes($toleranceMinutes);
+                            $terlambat = isset($actualCheckin) && $actualCheckin->gt($graceTime);
 
                             $message = $terlambat ? "Terlambat " . $actualCheckin->diffInMinutes($graceTime) . " menit dari jam " . $graceTime->format('H:i') : null;
                         }
