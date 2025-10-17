@@ -40,10 +40,10 @@ class InboxHelper
                 broadcast(new InboxReceived($inboxMessage, $category, $downloadUrl))->toOthers();
                 
     
-                Log::info('Inbox message sent', [
-                    'user_id' => $userToId,
-                    'inbox_id' => $inboxMessage->id
-                ]);
+                // Log::info('Inbox message sent', [
+                //     'user_id' => $userToId,
+                //     'inbox_id' => $inboxMessage->id
+                // ]);
 
                 return $inboxMessage;
 

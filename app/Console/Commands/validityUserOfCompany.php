@@ -131,15 +131,14 @@ class validityUserOfCompany extends Command
                         $firstCheckin = $attendances->first();
                         $terlambat = false;
                         $message = null;
-                        
-                        $checkinTarget = isset($firstCheckin->user) && $firstCheckin->user->wfoRules ? $firstCheckin->user->wfoRules->times_checkin_in_day : $checkinTarget;
-                        $point = isset($firstCheckin->user) && $firstCheckin->user->wfoRules ? $firstCheckin->user->wfoRules->point_checkin_in_day : $setting['punishment_point_wfo'];
+                        $checkinTarget = isset($firstCheckin->barcode->userCreate) && $firstCheckin->barcode->userCreate->wfoRules ? $firstCheckin->barcode->userCreate->wfoRules->times_checkin_in_day : $checkinTarget;
+                        $point = isset($firstCheckin->barcode->userCreate) && $firstCheckin->barcode->userCreate->wfoRules ? $firstCheckin->barcode->userCreate->wfoRules->point_checkin_in_day : $setting['punishment_point_wfo'];
 
 
                         if ($firstCheckin) 
                         {
                             $actualCheckin = Carbon::parse($firstCheckin->time);
-                            $graceTime = $firstCheckin->user ? (isset($firstCheckin->user->wfoRules) ? $firstCheckin->user->wfoRules->entry_time_checkin->addMinutes($toleranceMinutes) : $entryTime->copy()->addMinutes($toleranceMinutes)) : $entryTime->copy()->addMinutes($toleranceMinutes);
+                            $graceTime = $firstCheckin->barcode->userCreate ? (isset($firstCheckin->barcode->userCreate->wfoRules) ? $firstCheckin->barcode->userCreate->wfoRules->entry_time_checkin->addMinutes($toleranceMinutes) : $entryTime->copy()->addMinutes($toleranceMinutes)) : $entryTime->copy()->addMinutes($toleranceMinutes);
                             $terlambat = isset($actualCheckin) && $actualCheckin->gt($graceTime);
 
                             $message = $terlambat ? "Terlambat " . $actualCheckin->diffInMinutes($graceTime) . " menit dari jam " . $graceTime->format('H:i') : null;
