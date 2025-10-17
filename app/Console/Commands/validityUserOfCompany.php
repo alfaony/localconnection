@@ -163,6 +163,7 @@ class validityUserOfCompany extends Command
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);
+            $this->error($th->getMessage());
             Log::error("Error storing file: " . $th->getMessage());
         }
     }
