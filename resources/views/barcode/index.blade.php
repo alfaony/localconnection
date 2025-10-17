@@ -9,7 +9,57 @@
         <li class="breadcrumb-item active" aria-current="page">Scan Absensi</li>
     </ol>
 </nav>
+
+<!-- WFO Rules Information Card -->
+@if(auth()->user()->wfoRules)
 <div class="row mt-4 justify-content-center">
+    <div class="col-md-8">
+        <div class="card card-info card-outline">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Informasi Aturan WFO Anda
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="info-box bg-gradient-primary">
+                            <span class="info-box-icon"><i class="fas fa-clock"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Jam Masuk</span>
+                                <span class="info-box-number">{{ auth()->user()->wfoRules->entry_time_checkin->format('H:i') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="info-box bg-gradient-info">
+                            <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Minimal Check-in</span>
+                                <span class="info-box-number">{{ auth()->user()->wfoRules->times_checkin_in_day }}x / Hari</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="info-box bg-gradient-warning">
+                            <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Poin Pengurangan</span>
+                                <span class="info-box-number">{{ auth()->user()->wfoRules->point_checkin_in_day }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+<div class="row mt-2 justify-content-center">
     <div class="col-md-8">
         <div class="card card-primary card-outline">
             <div class="card-header">
@@ -83,12 +133,11 @@
 @section('js')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-    <!-- Tambahkan ini di <head> atau sebelum penutup </body> -->
     <audio id="notification-message-entry" src="/audio/notification-message-email.mp3" preload="auto"></audio>
     <script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
     <script>
-        const companyId = @json(auth()->user()->company_id);
+        const companyId = @json(auth()->user()->id);
 
         host = '{{ config('services.connection_reverb.host')}}';
         key = '{{ config('services.connection_reverb.key')}}';
@@ -134,7 +183,6 @@
                     $('#generate-barcode-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menghasilkan...');
                 },
                 success: function(response) {
-                    // Notifikasi akan datang dari event broadcast
                     console.log('Generate request sent');
                 },
                 complete: function() 
@@ -168,6 +216,7 @@
         }, 5000);
     </script>
 @endsection
+
 @section('css')
     <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -200,6 +249,60 @@
             0% { transform: scale(1); }
             50% { transform: scale(1.03); }
             100% { transform: scale(1); }
+        }
+        .info-box {
+            box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+            border-radius: .25rem;
+            display: flex;
+            margin-bottom: 1rem;
+            min-height: 80px;
+            padding: .5rem;
+            position: relative;
+        }
+        .info-box .info-box-icon {
+            border-radius: .25rem;
+            align-items: center;
+            display: flex;
+            font-size: 1.875rem;
+            justify-content: center;
+            text-align: center;
+            width: 70px;
+        }
+        .info-box .info-box-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.8;
+            flex: 1;
+            padding: 0 10px;
+        }
+        .info-box .info-box-number {
+            display: block;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        .info-box .info-box-text,
+        .info-box .progress-description {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .bg-gradient-primary {
+            background: linear-gradient(87deg, #5e72e4 0, #825ee4 100%) !important;
+            color: #fff;
+        }
+        .bg-gradient-warning {
+            background: linear-gradient(87deg, #fb6340 0, #fbb140 100%) !important;
+            color: #fff;
+        }
+        .bg-gradient-info {
+            background: linear-gradient(87deg, #11cdef 0, #1171ef 100%) !important;
+            color: #fff;
+        }
+        .bg-gradient-success {
+            background: linear-gradient(87deg, #2dce89 0, #2dcecc 100%) !important;
+            color: #fff;
         }
     </style>
 @endsection

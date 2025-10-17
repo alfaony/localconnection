@@ -19,11 +19,11 @@ class NewBarcodeGenerated implements ShouldBroadcast
      *
      * @return void
      */
-    public $companyId;
+    public $userId;
     public $barcode;
-    public function __construct($barcode, $companyId)
+    public function __construct($barcode, $userId)
     {
-        $this->companyId = $companyId;
+        $this->userId = $userId;
         $this->barcode = $barcode;
     }
 
@@ -34,7 +34,7 @@ class NewBarcodeGenerated implements ShouldBroadcast
      */
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('office.barcode.' . $this->companyId);
+        return new PrivateChannel('office.barcode.' . $this->userId);
     }
 
     public function broadcastWith(): array

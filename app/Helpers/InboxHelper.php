@@ -5,6 +5,7 @@ namespace App\Helpers;
 use App\Models\Inbox;
 use App\Models\User;
 use App\Events\InboxReceived;
+use Illuminate\Support\Facades\Log;
 
 class InboxHelper
 {
@@ -21,7 +22,7 @@ class InboxHelper
      * @param bool $isRead
      * @return Inbox|bool
      */
-    public function sent($userToId, $userFromId, $message, $directUrl = null, $isRead = false, $category = "entry")
+    public function sent($userToId, $userFromId, $message, $directUrl = null, $isRead = false, $category = "entry", $downloadUrl = null)
     {
         try {
             //code...
@@ -36,15 +37,25 @@ class InboxHelper
                     'is_read' => $isRead,
                     'is_notif' => true,
                 ]);
-                broadcast(new InboxReceived($inboxMessage, $category))->toOthers();
+                broadcast(new InboxReceived($inboxMessage, $category, $downloadUrl))->toOthers();
                 
     
+                // Log::info('Inbox message sent', [
+                //     'user_id' => $userToId,
+                //     'inbox_id' => $inboxMessage->id
+                // ]);
+
                 return $inboxMessage;
+
             }
     
             return true;
         } catch (\Throwable $th) {
             //throw $th;
+            // dd($th);
+            Log::error('Failed to send inbox message', [
+                'error' => $th->getMessage()
+            ]);
             return throw $th;
         }
     }

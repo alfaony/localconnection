@@ -24,6 +24,7 @@ use App\Schemas\ParamSchema;
 
 use App\Rules\MatchOldPassword;
 use Carbon\Carbon;
+use App\Jobs\ExportUsersJob;
 class UserController extends Controller
 {
     /**
@@ -112,6 +113,14 @@ class UserController extends Controller
             $user->custom_rest_times = $request->custom_rest_times;
         }
         
+        if ($request->post('is_checkin') == ParamSchema::WFO) {
+            $wfoWorkingDays = [];
+            foreach (config('custom.daysOfWeek') as $dayName => $dayValue) {
+                $wfoWorkingDays[$dayValue] = $request->has("wfo_working_days.$dayValue");
+            }
+            $user->wfo_working_days = $wfoWorkingDays;
+        }
+
         $user->save();
         
         if($request->quotas)
@@ -266,6 +275,17 @@ class UserController extends Controller
         if ($request->has('custom_rest_times')) 
         {
             $user->custom_rest_times = $request->custom_rest_times;
+        }
+
+        if ($request->post('is_checkin') == ParamSchema::WFO) {
+            $wfoWorkingDays = [];
+            foreach (config('custom.daysOfWeek') as $dayName => $dayValue) {
+                $wfoWorkingDays[$dayValue] = $request->has("wfo_working_days.$dayValue");
+            }
+            $user->wfo_working_days = $wfoWorkingDays;
+        } else 
+        {
+            $user->wfo_working_days = null;
         }
 
         $dayoffTypes = DayoffType::all();
@@ -466,6 +486,46 @@ class UserController extends Controller
             //throw $th;
             Log::error($th);
             return response()->json(['message' => 'Failed to update FCM ID.'], 500);
+        }
+    }
+
+    public function KyeExport(Request $request)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'email' => 'nullable|string|max:255',
+            ]);
+
+
+            // Prepare filters
+            $filters = $request->only([
+                'email'
+            ]); 
+
+            // Dispatch job to queue (QUEUE SAJA - tidak ada sync)
+            ExportUsersJob::dispatch(auth()->user(), $filters);
+
+            Log::info('Export job dispatched', [
+                'user_id' => auth()->id(),
+                'filters' => $filters
+            ]);
+
+            // Return "Proses" message
+            return redirect()->back()->with('success', 
+                '⏳ Export sedang diproses. Anda akan menerima notifikasi saat selesai.'
+            );
+
+        } catch (\Exception $e) {
+            // dd($e);
+            Log::error('Failed to start export', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+
+            return redirect()->back()->with('error', 
+                'Gagal memulai export: ' . $e->getMessage()
+            );
         }
     }
     
