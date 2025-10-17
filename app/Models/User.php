@@ -109,6 +109,11 @@ class User extends Authenticatable
         return $this->hasMany(Attendance::class);
     }
 
+    public function wfoRules()
+    {
+        return $this->hasOne(WfoRule::class, 'user_id', 'id');
+    }
+
     public function taskAssigns()
     {
         return $this->hasMany(TaskAssign::class,'user_assign_id');

@@ -106,11 +106,11 @@ class validityUserOfCompany extends Command
                     return;
                 }
 
-                if ($today->isWeekend()) 
-                {
-                    $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
-                    return;
-                }
+                // if ($today->isWeekend()) 
+                // {
+                //     $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
+                //     return;
+                // }
 
                 $entryTime = Carbon::createFromFormat('H:i', $setting['entry_time']);
                 $toleranceMinutes = (int) $setting['tolerance'];
@@ -129,18 +129,30 @@ class validityUserOfCompany extends Command
     
                         $totalCheckin = $attendances->count();
                         $firstCheckin = $attendances->first();
-    
                         $terlambat = false;
-                        if ($firstCheckin) {
-                            $actualCheckin = Carbon::parse($firstCheckin->created_at);
-                            $graceTime = $entryTime->copy()->addMinutes($toleranceMinutes);
+                        $message = null;
+                        
+                        $checkinTarget = $firstCheckin->user ? ($firstCheckin->user->wfoRules && $firstCheckin->user->wfoRules->times_checkin_in_day ? $firstCheckin->user->wfoRules->times_checkin_in_day : $checkinTarget) : $checkinTarget;
+                        $point = $firstCheckin->user ? ($firstCheckin->user->wfoRules && $firstCheckin->user->wfoRules->point_checkin_in_day ? $firstCheckin->user->wfoRules->point_checkin_in_day : $setting['punishment_point_wfo']) : $setting['punishment_point_wfo'];
+
+
+                        if ($firstCheckin) 
+                        {
+                            $actualCheckin = Carbon::parse($firstCheckin->time);
+                            $graceTime = $firstCheckin->user ? ($firstCheckin->user->wfoRules && $firstCheckin->user->wfoRules->entry_time_checkin->addMinutes($toleranceMinutes) ? $firstCheckin->user->wfoRules->entry_time_checkin->addMinutes($toleranceMinutes) : $entryTime->copy()->addMinutes($toleranceMinutes)) : $entryTime->copy()->addMinutes($toleranceMinutes);
                             $terlambat = $actualCheckin->gt($graceTime);
+
+                            $message = $terlambat ? "Terlambat " . $actualCheckin->diffInMinutes($graceTime) . " menit dari jam " . $graceTime->format('H:i') : null;
                         }
-    
-                        if ($totalCheckin < $checkinTarget || $terlambat) {
+
+                        if (($totalCheckin < $checkinTarget || $terlambat) && $point) 
+                        {
+                            if(!isset($message) && $totalCheckin < $checkinTarget)
+                            {
+                                $message = "Belum memenuhi target check-in check-in per hari ".$totalCheckin." dari ".$checkinTarget;
+                            }
                             // Tambahkan user ke dalam hasil atau lakukan aksi
-                            $this->addPoint($user,"belum memenuhi target check-in atau terlambat", $setting['punishment_point_wfo']);
-                            // Log::info("User {$user->name} belum memenuhi target check-in atau terlambat.");
+                            $this->addPoint($user, $message, $point);
                         }
                     }
                 }
