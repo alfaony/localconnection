@@ -84,7 +84,8 @@ class ImportInternetCustomer extends Command
             
             $rowNumber = 1;
             foreach ($rows as $row) {
-                $rowNumber = $rowNumber + 2; // +2 karena header di row 1 dan array dimulai dari 0
+                // $rowNumber = $rowNumber + 2; // +2 karena header di row 1 dan array dimulai dari 0
+                $rowNumber = trim($row["No"]) ?? null;
                 
                 // Skip empty rows
                 if (empty(array_filter($row))) {
@@ -121,8 +122,7 @@ class ImportInternetCustomer extends Command
                 // Process the row
                 if($type == "create")
                 {
-                    if($data['email'] != null || $data['email'] != "")
-                    {
+                    if (!empty($data['email'])) {
                         $existingCustomer = UserCustomer::where('email', $data['email'])->first();
                         if ($existingCustomer) {
                             $failures[] = [
@@ -132,10 +132,37 @@ class ImportInternetCustomer extends Command
                             ];
                             continue;
                         }
-                    }else
-                    {
+                    } else {
                         $data['email'] = null;
                     }
+
+                    if (!empty($data['phone'])) {
+                        $existingCustomer = UserCustomer::where('phone_number', $data['phone'])->first();
+                        if ($existingCustomer) {
+                            $failures[] = [
+                                'row' => $rowNumber,
+                                'phone' => $data['phone'],
+                                'reason' => 'Nomor telepon sudah terdaftar'
+                            ];
+                            continue;
+                        }
+                    } else {
+                        $data['phone'] = null;
+                    }
+
+                    if (!empty($data['name'])) {
+                        $existingCustomer = UserCustomer::where('name', $data['name'])->first();
+                        if ($existingCustomer) {
+                            $failures[] = [
+                                'row' => $rowNumber,
+                                'name' => $data['name'],
+                                'reason' => 'Nama sudah terdaftar'
+                            ];
+                            continue;
+                        }
+                    }
+
+                    
                     $result = $this->processRow($data, $company, $rowNumber);
                 }else if($type == "update")
                 {
