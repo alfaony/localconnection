@@ -217,7 +217,7 @@
                         </div>
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Tanggal Bergabung di Perusahaan <span class="text-danger">*</span></label>
-                            <input type="date" name="start_date" class="form-control" placeholder="Masukkan tanggal perhitungan gaji" value="{{ isset($fieldData['start_date']) ? $fieldData['start_date'] : '' }}" required>
+                            <input type="date" @if($isCreator) name="start_date" required @else readonly @endif class="form-control" placeholder="Masukkan tanggal perhitungan gaji" value="{{ isset($fieldData['start_date']) ? $fieldData['start_date'] : '' }}" >
                         </div>
                         @if(isset($fieldData['position_new_id']))
                         <!-- Jabatan -->
@@ -856,6 +856,84 @@
                                 <input type="date" name="end_date" class="form-control" value="{{ (isset($fieldData['end_date']) ) ? $fieldData['end_date'] : '' }}">
                                 <span class="text-danger">Kosongkan jika saat ini masih bekerja</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            @if($template == "sk_peringatan_template")
+            <div class="form-row">
+                <div class="col-md-12">
+                    <!-- Preview Surat Peringatan -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-eye"></i> Preview Surat Peringatan</h5>
+                        </div>
+                        <div class="card-body" id="preview_sp">
+                            <div class="text-center mb-4">
+                                <h4><strong>SURAT PERINGATAN</strong></h4>
+                            </div>
+                            
+                            <p>Kepada Yth,<br>
+                            Sdr/i. <span id="preview_nama_user">.............</span><br>
+                            Di tempat</p>
+                            
+                            <p>Dengan hormat,</p>
+                            
+                            <p>Surat peringatan ini kami terbitkan karena Saudara/i <span id="preview_nama_user_2">${currentUserData.name}</span> telah melakukan kelalaian dalam menjalankan tanggung jawab sebagai <span id="preview_jabatan">${currentUserData.last_position_name}</span> di {{ $company['name'] ?? "" }}.</p>
+                            
+                            <p><strong>Adapun kelalaian yang dimaksud antara lain:</strong></p>
+                            <div id="preview_kelalaian" style="min-height: 50px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                                <em class="text-muted">[Kelalaian akan muncul di sini]</em>
+                            </div>
+                            
+                            <p class="mt-3">Hal-hal tersebut berdampak pada hasil kerja tim secara keseluruhan dan tidak sejalan dengan standar kerja yang telah disepakati bersama di perusahaan.</p>
+                            
+                            <p>Oleh karena itu, perusahaan memberikan <strong><span id="preview_jenis_sp">Surat Peringatan Satu (SP1)</span></strong> kepada Saudara/i sebagai bentuk pembinaan agar dapat meningkatkan kedisiplinan dan kualitas kerja ke depannya.</p>
+                            
+                            <p>Demikian surat peringatan ini kami buat agar dapat dijadikan perhatian serius oleh yang bersangkutan. Apabila dalam waktu ke depan tidak ada perbaikan, maka perusahaan berhak mengambil tindakan lanjutan sesuai dengan ketentuan yang berlaku.</p>
+                            
+                            <div class="mt-5">
+                                <p>Jakarta, {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}</p>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Form Input Surat Peringatan -->
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-edit"></i> Form Surat Peringatan</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- 1. Nama Lengkap (dari select user) -->
+                            <div class="col-md-12 mb-3">
+                                <label for="nama_lengkap">Nama Lengkap <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="sp_nama_lengkap" value="{{ $user->name }}" readonly>
+                                <small class="text-muted">Nama diambil dari user yang dipilih</small>
+                            </div>
+    
+                            <!-- 2. Jenis Surat Peringatan -->
+                            <div class="col-md-12 mb-3">
+                                <label for="jenis_sp">Jenis Surat Peringatan <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="type_sp" id="jenis_sp" value="{{ isset($fieldData['type_sp']) ? $fieldData['type_sp'] : '' }}" required>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="jenis_sp">Bagian Dari <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="part_of" id="jenis_sp" value="{{ isset($fieldData['part_of']) ? $fieldData['part_of'] : '' }}" required>
+                            </div>
+    
+                            <!-- 3. Kelalaian/Pelanggaran -->
+                            <div class="col-md-12 mb-3">
+                                <label for="kelalaian">Adapun kelalaian yang dimaksud antara lain: <span class="text-danger">*</span></label>
+                                <small class="text-muted">Tuliskan kelalaian/pelanggaran yang dilakukan. Gunakan tanda bintik (*) atau angka untuk membuat list.</small>
+                                <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" name="job_mistake" value="{{ isset($fieldData['job_mistake']) ? $fieldData['job_mistake'] : '' }}" required />
+                            </div>
+    
+                            <!-- Hidden inputs -->
+                            <input type="hidden" name="position_old_id" value="${currentUserData.last_position_full_id}">
+                            <input type="hidden" name="tanggal_sp" value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
                         </div>
                     </div>
                 </div>

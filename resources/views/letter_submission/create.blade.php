@@ -53,7 +53,7 @@
                             data-last-salary="{{ Auth::user()->lastSalary ? Auth::user()->lastSalary->salary : 0 }}"
                             data-last-salary-formatted="{{ Auth::user()->lastSalary ? 'Rp. '.number_format(Auth::user()->lastSalary->salary,0,',','.') : 'Rp. 0' }}"
                             data-last-salary-id="{{ Auth::user()->lastSalary ? Auth::user()->lastSalary->id : 0 }}"
-                            data-id-card-image="{{ Auth::user()->id_card_image ?? '' }}"
+                            data-id-card-image="{{ Auth::user()->photo_identity ?? '' }}"
                             data-last-position-full-id="{{ Auth::user()->last_position->id ?? '' }}">
                         Pilih User (Kosongkan untuk diri sendiri)
                     </option>
@@ -172,22 +172,44 @@
 
         // Handle form submission
         $('form').on('submit', function(e) {
-            if (signaturePad.isEmpty()) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Tanda Tangan Diperlukan',
-                    text: 'Harap tanda tangan sebelum mengajukan surat!',
-                });
-            } else {
-                var signatureDataUrl = signaturePad.toDataURL();
-                $('#signature_image').val(signatureDataUrl);
+             let selectedUserId = $('#user_id').val();
+    
+            // Hanya validasi signature jika tidak ada user_id
+            if (!selectedUserId || selectedUserId === '') {
+                if (signaturePad.isEmpty()) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Tanda Tangan Diperlukan',
+                        text: 'Harap tanda tangan sebelum mengajukan surat!',
+                    });
+                    return false;
+                } else {
+                    var signatureDataUrl = signaturePad.toDataURL();
+                    $('#signature_image').val(signatureDataUrl);
+                }
             }
         });
 
         // ===== USER SELECTION HANDLER (USING DATA ATTRIBUTES) =====
         $('#user_id').on('change', function() {
             let selectedOption = $(this).find('option:selected');
+            let selectedUserId = $(this).val();
+
+            if (selectedUserId && selectedUserId !== '') {
+                // Jika user dipilih, sembunyikan signature
+                $('.signature-container').parent().hide();
+                $('#clear-signature').hide();
+                
+                // Clear signature if exists
+                if (typeof signaturePad !== 'undefined') {
+                    signaturePad.clear();
+                }
+            } else {
+                // Jika tidak ada user dipilih, tampilkan signature
+                $('.signature-container').parent().show();
+                $('#clear-signature').show();
+            }
             
             // Ambil data dari attributes
             currentUserData = {
@@ -1072,6 +1094,11 @@
                             <div class="col-md-12 mb-3">
                                 <label for="jenis_sp">Jenis Surat Peringatan <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" name="type_sp" id="jenis_sp" value="Surat Peringatan 1 (SP1)" required>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="jenis_sp">Bagian Dari <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="part_of" id="part_of" placeholder="Tim Desain Grafis - Divisi Marketing" required>
                             </div>
 
                             <!-- 3. Kelalaian/Pelanggaran -->

@@ -82,6 +82,11 @@ class LetterSubmission extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     /**
      * Check if submission is approved.
      * 
