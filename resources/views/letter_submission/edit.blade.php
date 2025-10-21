@@ -762,6 +762,106 @@
             </div>
             @endif
 
+            @if($template == "sk_phk_template")
+            <div class="form-row" id="sk_pengantar_kerja_template">
+                <div class="" >
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="col-12 justify-content-center align-items-center">
+                                <h4 class="text-center"><strong>SURAT KETERANGAN KERJA</strong></h4>
+                                <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
+                            </div>
+
+                            <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
+                                <p>Saya yang bertandatangan di bawah ini :</p>
+                            </div>
+
+                            <div class="col-12 mt-2">
+                                <!-- Table to display company and employee information -->
+                                <table class="table table-borderless detail-table">
+                                    <tbody>
+                                        <tr>
+                                            <td>Nama</td>
+                                            <td>: {{ $company['name'] ?? "" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Penanggung Jawab</td>
+                                            <td>: {{ $company['director'] ?? "" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Alamat</td>
+                                            <td>: {{ $company['address'] ?? "" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2">
+                                                Dengan ini menerangkan bahwa :
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Nama</td>
+                                            <td>: {{ $user->name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>No KTP</td>
+                                            <td>: {{ $user->id_card }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Alamat</td>
+                                            <td>: {{ $user->address }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2">
+                                                <p>Bertindak atas nama pribadi, sebagai pekerja / staff yang dipekerjakan, selanjutnya
+                                                    disebut sebagai PIHAK KEDUA.</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="col-12">
+                                <p class="text-justify"> 
+                                    Telah bekerja di perusahaan kami, {{ $company['name'] ?? "" }}, sejak tgl {{ $user->first_position ? \Carbon\Carbon::parse($user->first_position->start_date)->locale('id')->translatedFormat('d F Y') : "" }} 
+                                    s/d {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ $lastestPosition ? $lastestPosition->name : "" }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
+                                </p>
+                            </div>
+                            <!-- Jabatan Terakhir-->
+                            <div class="col-md-12 mb-3">
+                                <label for="salary_date">Nama Lengkap</label>
+                                <input type="text" class="form-control" value="{{ $user->name }}" readonly>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="salary_date">Alamat</label>
+                                <input type="text" class="form-control" value="{{ $user->address }}" readonly>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="salary_date">NIK</label>
+                                <input type="text" class="form-control" value="{{ $user->id_card }}" readonly>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
+                                <select class="form-control" name="position_old_id" id="position_old_id" required>
+                                    <option value="" selected disabled>Pilih </option>
+                                    @foreach($lastPositon as $position)
+                                        <option value="{{ $position->id }}" {{ (isset($fieldData['position_old_id']) && $fieldData['position_old_id'] == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="salary_date">Tanggal Mulai Kerja</label>
+                                <input type="date" name="start_date" class="form-control" value="{{ $user->first_position ? $user->first_position->start_date : '' }}" readonly>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="salary_date">Tanggal Terakhir Kerja</label>
+                                <input type="date" name="end_date" class="form-control" value="{{ (isset($fieldData['end_date']) ) ? $fieldData['end_date'] : '' }}">
+                                <span class="text-danger">Kosongkan jika saat ini masih bekerja</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
         </div>
 
     </div>

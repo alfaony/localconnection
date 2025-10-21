@@ -28,6 +28,7 @@ class LetterSubmission extends Model
     protected $fillable = [
         'letter_type_id',
         'user_id',
+        'created_by',
         'is_approved',
         'field',
     ];
