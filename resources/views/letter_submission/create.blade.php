@@ -306,9 +306,12 @@
 
             // Initialize rich text editor based on template
             if (['sk_magang_template', 'perjanjian_kerja_template', 'sk_management_template', 
-                 'sk_tugas_template', 'sk_kuasa_template'].includes(template)) {
+                 'sk_tugas_template', 'sk_kuasa_template','sk_peringatan_template'].includes(template)) {
                 let editorField = template === 'sk_magang_template' ? 'description_task' : 
                                 template === 'sk_kuasa_template' ? 'description' : 'job_responsibilities';
+                                template === 'sk_peringatan_template' ? 'description' : 'job_mistake';
+                // console.log(editorField, template);
+                
                 generateThriveEditor(editorField);
             }
 
@@ -1068,19 +1071,14 @@
                             <!-- 2. Jenis Surat Peringatan -->
                             <div class="col-md-12 mb-3">
                                 <label for="jenis_sp">Jenis Surat Peringatan <span class="text-danger">*</span></label>
-                                <select class="form-control" name="jenis_sp" id="jenis_sp" required onchange="updatePreviewSP()">
-                                    <option value="" selected disabled>Pilih Jenis Surat Peringatan</option>
-                                    <option value="SP1">Surat Peringatan 1 (SP1)</option>
-                                    <option value="SP2">Surat Peringatan 2 (SP2)</option>
-                                    <option value="SP3">Surat Peringatan 3 (SP3)</option>
-                                </select>
+                                <input type="text" class="form-control" name="type_sp" id="jenis_sp" value="Surat Peringatan 1 (SP1)" required>
                             </div>
 
                             <!-- 3. Kelalaian/Pelanggaran -->
                             <div class="col-md-12 mb-3">
                                 <label for="kelalaian">Adapun kelalaian yang dimaksud antara lain: <span class="text-danger">*</span></label>
-                                <textarea class="form-control" name="kelalaian" id="kelalaian" rows="8" required placeholder="Contoh:&#10;* Hasil desain yang diserahkan kerap mengandung kesalahan penulisan (typo)&#10;* Kurangnya perbaikan pada hasil desain&#10;* Sering terlambat masuk kerja" oninput="updatePreviewKelalaian()"></textarea>
                                 <small class="text-muted">Tuliskan kelalaian/pelanggaran yang dilakukan. Gunakan tanda bintik (*) atau angka untuk membuat list.</small>
+                                <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" name="job_mistake" required />
                             </div>
 
                             <!-- Hidden inputs -->
@@ -1090,6 +1088,42 @@
                     </div>
                 </div>
             `;
+        }
+
+        function updatePreviewSP() 
+        {
+                const jenisSP = document.getElementById('jenis_sp').value;
+                const previewSP = document.getElementById('preview_jenis_sp');
+                const previewNoSurat = document.getElementById('preview_no_surat');
+                
+                const today = new Date();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const year = today.getFullYear();
+                const day = String(today.getDate()).padStart(2, '0');
+                
+                let jenisSPText = '';
+                let noSurat = '';
+                
+                switch(jenisSP) {
+                    case 'SP1':
+                        jenisSPText = 'Surat Peringatan Satu (SP1)';
+                        noSurat = '001/HR/SP1/' + day + '/' + month + '/' + year;
+                        break;
+                    case 'SP2':
+                        jenisSPText = 'Surat Peringatan Dua (SP2)';
+                        noSurat = '001/HR/SP2/' + day + '/' + month + '/' + year;
+                        break;
+                    case 'SP3':
+                        jenisSPText = 'Surat Peringatan Tiga (SP3)';
+                        noSurat = '001/HR/SP3/' + day + '/' + month + '/' + year;
+                        break;
+                    default:
+                        jenisSPText = 'Surat Peringatan ...';
+                        noSurat = '001/HR/SP/...';
+                }
+                
+                previewSP.textContent = jenisSPText;
+                previewNoSurat.textContent = noSurat;
         }
     });
 
