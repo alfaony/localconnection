@@ -1,2 +1,5 @@
 User-agent: *
-Disallow: /storage/
+Disallow: /
+Allow: /used-laptop
+Allow: /used-item
+Allow: /internet-customer
