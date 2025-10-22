@@ -660,7 +660,12 @@ Route::get('error/{code?}', function ($code = 500) {
 })->name('public.error');
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
-Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');;
+Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');
+
+Route::get('/robots.txt', function () {
+    return response("User-agent: *\nDisallow: /storage/", 200)
+        ->header('Content-Type', 'text/plain');
+});
 
 Route::get('/{slug}',[SortUrlController::class,'index'])->name('download.index');
 
