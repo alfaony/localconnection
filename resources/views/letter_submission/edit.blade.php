@@ -271,7 +271,7 @@
                     <!-- Nama PT (Picklist) -->
                     <div class="col-md-12 mb-3">
                         <label for="company_name">Perihal <span class="text-danger">*</span></label>
-                        <input type="text" name="perihal" value="{{ $fieldData['perihal'] ?? '' }}" class="form-control" required>
+                        <input type="text" @if($isCreator) name="perihal" required @else readonly @endif value="{{ $fieldData['perihal'] ?? '' }}" class="form-control">
                     </div>
 
                     <div class="col-md-12 mb-3">
@@ -308,22 +308,22 @@
     
                     <div class="col-md-12 mb-3">
                         <label for="salary_date">Tanggal Perhitungan Gaji</label>
-                        <input type="text" name="salary_date" class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
+                        <input type="text" @if($isCreator) name="salary_date" @else readonly @endif class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
                     </div>
     
                     <div class="col-md-12 mb-3">
                         <label for="working_hours">Jam Kerja</label>
-                        <input type="text" name="working_hours" class="form-control" value="{{ $fieldData['working_hours'] ?? ''  }}" placeholder="Masukkan jam kerja">
+                        <input type="text" @if($isCreator) name="working_hours" @else readonly @endif class="form-control" value="{{ $fieldData['working_hours'] ?? ''  }}" placeholder="Masukkan jam kerja">
                     </div>
     
                     <div class="col-md-12 mb-3">
                         <label for="work_location">Penempatan</label>
-                        <input type="text" name="work_location" class="form-control" value="{{ $fieldData['work_location'] ?? ''  }}" placeholder="Masukkan penempatan kerja">
+                        <input type="text" @if($isCreator) name="work_location" @else readonly @endif class="form-control" value="{{ $fieldData['work_location'] ?? ''  }}" placeholder="Masukkan penempatan kerja">
                     </div>
     
                     <div class="col-md-12 mb-3">
                         <label for="job_responsibilities">Tanggung Jawab Pekerjaan</label>
-                        <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" name="job_responsibilities" value="{{ $fieldData['job_responsibilities'] ?? ''  }}" />
+                        <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" @if($isCreator) name="job_responsibilities" @else readonly @endif value="{{ $fieldData['job_responsibilities'] ?? ''  }}" />
                     </div>
                 </div>
             </div>
@@ -582,7 +582,7 @@
                     <div class="card-body">
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">Tanggal Surat Kuasa</label>
-                            <input type="date" name="date" class="form-control" value="{{ isset($fieldData['date']) ? \Carbon\Carbon::parse($fieldData['date'])->format('Y-m-d') : '' }}"required>
+                            <input type="date" @if($isCreator) name="date"  required @else readonly @endif  class="form-control" value="{{ isset($fieldData['date']) ? \Carbon\Carbon::parse($fieldData['date'])->format('Y-m-d') : '' }}">
                         </div>
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">File Dokumen yang dikuasakan</label>
@@ -722,16 +722,16 @@
                                 <label for="tanggal_lembur">Tanggal Lembur <span class="text-danger">*</span></label>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <input type="date" name="tanggal_lembur_start" id="tanggal_lembur_start"
+                                        <input type="date" @if($isCreator) name="tanggal_lembur_start" required @else readonly @endif id="tanggal_lembur_start"
                                             value="{{ (isset($fieldData['tanggal_lembur_start'])) ? $fieldData['tanggal_lembur_start'] : '' }}"
                                             class="form-control"
-                                            required>
+                                            >
                                     </div>
                                     <div class="col-md-6">
-                                        <input type="date" name="tanggal_lembur_end" id="tanggal_lembur_end"
+                                        <input type="date" @if($isCreator) name="tanggal_lembur_end" required @else readonly @endif id="tanggal_lembur_end"
                                             value="{{ (isset($fieldData['tanggal_lembur_end'])) ? $fieldData['tanggal_lembur_end'] : '' }}"
                                             class="form-control"
-                                            required>
+                                            >
                                     </div>
                                 </div>
                             </div>
@@ -741,18 +741,18 @@
                                 <label>Jam Lembur <span class="text-danger">*</span></label>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <input type="time" name="jam_lembur_start" 
+                                        <input type="time" @if($isCreator) name="jam_lembur_start" required @else readonly @endif 
                                             value="{{ (isset($fieldData['jam_lembur_start'])) ? $fieldData['jam_lembur_start'] : '' }}"
                                             class="form-control"
                                             placeholder="Mulai"
-                                            required>
+                                            >
                                     </div>
                                     <div class="col-md-6">
-                                        <input type="time" name="jam_lembur_end" 
+                                        <input type="time" @if($isCreator) name="jam_lembur_end" required @else readonly @endif
                                             value="{{ (isset($fieldData['jam_lembur_end'])) ? $fieldData['jam_lembur_end'] : '' }}"
                                             class="form-control"
                                             placeholder="Selesai"
-                                            required>
+                                            >
                                     </div>
                                 </div>
                             </div>
@@ -764,97 +764,60 @@
 
             @if($template == "sk_phk_template")
             <div class="form-row" id="sk_pengantar_kerja_template">
-                <div class="" >
-                    <div class="card">
+                <div class="col-md-12">
+                    <div class="card scrollable-div" id="printThis">
                         <div class="card-body">
-                            <div class="col-12 justify-content-center align-items-center">
-                                <h4 class="text-center"><strong>SURAT KETERANGAN KERJA</strong></h4>
-                                <h6 class="text-center"><strong>{{ $company['name'] ?? "" }}</strong></h6>
-                            </div>
-
-                            <div class="col-12 justify-content-center align-items-center mt-4 mb-4">
-                                <p>Saya yang bertandatangan di bawah ini :</p>
-                            </div>
-
-                            <div class="col-12 mt-2">
-                                <!-- Table to display company and employee information -->
-                                <table class="table table-borderless detail-table">
-                                    <tbody>
-                                        <tr>
-                                            <td>Nama</td>
-                                            <td>: {{ $company['name'] ?? "" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Penanggung Jawab</td>
-                                            <td>: {{ $company['director'] ?? "" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Alamat</td>
-                                            <td>: {{ $company['address'] ?? "" }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">
-                                                Dengan ini menerangkan bahwa :
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Nama</td>
-                                            <td>: {{ $user->name }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>No KTP</td>
-                                            <td>: {{ $user->id_card }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Alamat</td>
-                                            <td>: {{ $user->address }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="2">
-                                                <p>Bertindak atas nama pribadi, sebagai pekerja / staff yang dipekerjakan, selanjutnya
-                                                    disebut sebagai PIHAK KEDUA.</p>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div class="text-center mb-4">
+                                <h3><strong>SURAT PEMUTUSAN HUBUNGAN KERJA</strong></h3>
+                                <p><strong>hal: Surat Pemutusan Hubungan Kerja</strong></p>
                             </div>
                             
-                            <div class="col-12">
-                                <p class="text-justify"> 
-                                    Telah bekerja di perusahaan kami, {{ $company['name'] ?? "" }}, sejak tgl {{ $user->first_position ? \Carbon\Carbon::parse($user->first_position->start_date)->locale('id')->translatedFormat('d F Y') : "" }} 
-                                    s/d {{ \Carbon\Carbon::parse($letterSubmission->created_at)->locale('id')->translatedFormat('d F Y') }} dengan posisi sebagai {{ $lastestPosition ? $lastestPosition->name : "" }}. Selama bekerja di perusahaan kami, yang bersangkutan telah bekerja dengan baik sesuai SOP perusahaan dan tidak pernah terlibat dalam tindakan yang dapat merugikan perusahaan.
-                                </p>
-                            </div>
-                            <!-- Jabatan Terakhir-->
+                            <p>Kepada Yth,<br></p>
+                    
+                            <p>Saya yang bertanda tangan di bawah ini :</p>
+                    
+                            <p>Menyatakan dengan sesungguhnya bahwa mulai tanggal {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }} saya mengajukan permohonan untuk mengundurkan diri sebagai karyawan {{ $company['name'] ?? "" }}</p>
+                    
+                            <p>Ucapan terima kasih yang sebesar-besarnya saya sampaikan atas kesempatan yang diberikan untuk bekerja di {{ $company['name'] ?? "" }}</p>
+                    
+                            <p>Melalui surat ini saya memohon maaf kepada segenap manajemen dan karyawan {{ $company['name'] ?? "" }} jika terdapat kesalahan yang saya perbuat selama bekerja. Besar harapan saya {{ $company['name'] ?? "" }} akan terus berkembang dan maju.</p>
+                        </div>
+                    </div>
+                    <div class="card" id="printThis">
+                        <div class="card-body">
                             <div class="col-md-12 mb-3">
                                 <label for="salary_date">Nama Lengkap</label>
-                                <input type="text" class="form-control" value="{{ $user->name }}" readonly>
+                                <input type="text" class="form-control" value="{{ $user->name}}" readonly>
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label for="salary_date">Alamat</label>
-                                <input type="text" class="form-control" value="{{ $user->address }}" readonly>
+                                <input type="text" class="form-control" value="{{ $user->address}}" readonly>
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label for="salary_date">NIK</label>
                                 <input type="text" class="form-control" value="{{ $user->id_card }}" readonly>
                             </div>
+                            @if(isset($user->last_position))
+                            <!-- Jabatan Terakhir-->
                             <div class="col-md-12 mb-3">
                                 <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
-                                <select class="form-control" name="position_old_id" id="position_old_id" required>
+                                <select class="form-control" @if($isCreator) name="position_old_id" required @else readonly @endif id="position_old_id">
                                     <option value="" selected disabled>Pilih </option>
                                     @foreach($lastPositon as $position)
                                         <option value="{{ $position->id }}" {{ (isset($fieldData['position_old_id']) && $fieldData['position_old_id'] == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
+                            @endif
+
                             <div class="col-md-12 mb-3">
-                                <label for="salary_date">Tanggal Mulai Kerja</label>
-                                <input type="date" name="start_date" class="form-control" value="{{ $user->first_position ? $user->first_position->start_date : '' }}" readonly>
+                                <label for="salary_date">Alasan</label>
+                                <input type="text" class="form-control" @if($isCreator) name="custom_reason" required @else readonly @endif value="{{ (isset($fieldData['custom_reason'])) ? $fieldData['custom_reason'] : '' }}">
                             </div>
+                            
                             <div class="col-md-12 mb-3">
-                                <label for="salary_date">Tanggal Terakhir Kerja</label>
-                                <input type="date" name="end_date" class="form-control" value="{{ (isset($fieldData['end_date']) ) ? $fieldData['end_date'] : '' }}">
-                                <span class="text-danger">Kosongkan jika saat ini masih bekerja</span>
+                                <label for="salary_date">Tanggal Terakhir Bekerja <span class="text-danger">*</span></label>
+                                <input type="date" @if($isCreator) name="end_date" required @else readonly @endif class="form-control" value="{{ (isset($fieldData['end_date'])) ? $fieldData['end_date'] : '' }}">
                             </div>
                         </div>
                     </div>
@@ -916,19 +879,19 @@
                             <!-- 2. Jenis Surat Peringatan -->
                             <div class="col-md-12 mb-3">
                                 <label for="jenis_sp">Jenis Surat Peringatan <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="type_sp" id="jenis_sp" value="{{ isset($fieldData['type_sp']) ? $fieldData['type_sp'] : '' }}" required>
+                                <input type="text" class="form-control" @if($isCreator) name="type_sp"  required @else readonly @endif id="jenis_sp" value="{{ isset($fieldData['type_sp']) ? $fieldData['type_sp'] : '' }}">
                             </div>
 
                             <div class="col-md-12 mb-3">
                                 <label for="jenis_sp">Bagian Dari <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="part_of" id="jenis_sp" value="{{ isset($fieldData['part_of']) ? $fieldData['part_of'] : '' }}" required>
+                                <input type="text" class="form-control" @if($isCreator) name="part_of"  required @else readonly @endif id="jenis_sp" value="{{ isset($fieldData['part_of']) ? $fieldData['part_of'] : '' }}">
                             </div>
     
                             <!-- 3. Kelalaian/Pelanggaran -->
                             <div class="col-md-12 mb-3">
                                 <label for="kelalaian">Adapun kelalaian yang dimaksud antara lain: <span class="text-danger">*</span></label>
                                 <small class="text-muted">Tuliskan kelalaian/pelanggaran yang dilakukan. Gunakan tanda bintik (*) atau angka untuk membuat list.</small>
-                                <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" name="job_mistake" value="{{ isset($fieldData['job_mistake']) ? $fieldData['job_mistake'] : '' }}" required />
+                                <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" @if($isCreator) name="job_mistake"  required @else readonly @endif  value="{{ isset($fieldData['job_mistake']) ? $fieldData['job_mistake'] : '' }}" required />
                             </div>
     
                             <!-- Hidden inputs -->

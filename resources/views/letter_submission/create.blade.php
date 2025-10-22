@@ -23,7 +23,7 @@
             <!-- Formulir -->
             <div class="col-md-12 mb-3">
                 <label for="surat">Surat <span class="text-danger">*</span></label>
-                <select class="form-control select2" name="letter_type_id" id="letter_type_id" required>
+                <select class="form-control" name="letter_type_id" id="letter_type_id" required>
                     <option value="" selected disabled>Pilih Surat</option>
                     @foreach($letterTypes as $letterType)
                         <option value="{{ $letterType->id }}" 
@@ -554,8 +554,17 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="col-md-12 mb-3">
+                                <label for="company_name">Perihal <span class="text-danger">*</span></label>
+                                <input type="text" name="perihal" value="{{ $fieldData['perihal'] ?? '' }}" class="form-control" required>
+                            </div>
+                            <div class="col-md-12 mb-3">
                                 <label for="working_hours">Jam Kerja <span class="text-danger">*</span></label>
                                 <input type="text" name="working_hours" class="form-control" placeholder="Masukkan Jam Kerja" required>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label for="salary_date">Tanggal Perhitungan Gaji</label>
+                                <input type="text" name="salary_date" class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
                             </div>
 
                             <div class="col-md-12 mb-3">
