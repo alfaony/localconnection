@@ -236,8 +236,8 @@
         
                         <div class="col-md-12 mb-3">
                             <label for="monthly_salary">Gaji Bulanan</label>
-                            <input type="text" class="form-control" id="amount_show" placeholder="Rp {{ number_format($letterSubmission->salary ?? 0, 0, ',', '.') }}" oninput="formatRupiahFormat(this,'amount')"/>
-                            <input type="hidden" id="amount" name="salary" value="{{ $fieldData['salary'] ?? '' }}">
+                            <input type="text" class="form-control" id="amount_show" @if(!$isCreator) readonly @endif placeholder="Rp {{ number_format($letterSubmission->salary ?? 0, 0, ',', '.') }}" oninput="formatRupiahFormat(this,'amount')"/>
+                            <input type="hidden" id="amount" @if($isCreator) name="salary" @else readonly @endif value="{{ $fieldData['salary'] ?? '' }}">
                         </div>
         
                         <div class="col-md-12 mb-3">
@@ -334,7 +334,7 @@
                 <div class="card-body">
                     <div class="col-md-12 mb-3">
                         <label for="company_name">Perihal <span class="text-danger">*</span></label>
-                        <input type="text" name="perihal" value="{{ $fieldData['perihal'] ?? '' }}" class="form-control" required>
+                        <input type="text" @if($isCreator) name="perihal" required @else readonly @endif value="{{ $fieldData['perihal'] ?? '' }}" class="form-control" required>
                     </div>
                     <!-- Nama PT (Picklist) -->
                     <div class="col-md-12 mb-3">
@@ -352,7 +352,7 @@
                     <!-- Jabatan Terakhir-->
                     <div class="col-md-12 mb-3">
                         <label for="jabatan">Jabatan Terakhir <span class="text-danger">*</span></label>
-                        <select class="form-control" name="position_old_id" id="position_old_id" required>
+                        <select class="form-control" @if($isCreator) name="position_old_id" required @else readonly @endif id="position_old_id">
                             <option value="" selected disabled>Pilih </option>
                             @foreach($lastPositon as $position)
                                 <option value="{{ $position->id }}" {{ (isset($fieldData['position_old_id']) && $fieldData['position_old_id'] == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
@@ -364,7 +364,7 @@
                     <!-- Jabatan Terbaru (Picklist) -->
                     <div class="col-md-12 mb-3">
                         <label for="jabatan">Jabatan Terbaru <span class="text-danger">*</span></label>
-                        <select class="form-control selectOrCreate2" name="position_new_id" id="position_id" required>
+                        <select class="form-control selectOrCreate2" @if($isCreator) name="position_new_id" required @else readonly @endif id="position_id">
                             <option value="" selected disabled>Pilih </option>
                             @foreach($positions as $position)
                                 <option value="{{ $position->id }}" {{ (isset($fieldData['position_new_id']) && $fieldData['position_new_id'] == $position->id) ? 'selected' : '' }} >{{ $position->name }}</option>
@@ -375,23 +375,23 @@
                     <!-- Gaji Bulanan -->
                     <div class="col-md-12 mb-3">
                         <label for="monthly_salary">Gaji Bulanan</label>
-                        <input type="text" class="form-control" id="amount_show" placeholder="Rp {{ number_format($letterSubmission->salary ?? 0, 0, ',', '.') }}" oninput="formatRupiahFormat(this,'amount')"/>
-                        <input type="hidden" id="amount" name="salary" value="{{ $fieldData['salary'] ?? '' }}">
+                        <input type="text" class="form-control" id="amount_show" @if(!$isCreator) readonly @endif placeholder="Rp {{ number_format($letterSubmission->salary ?? 0, 0, ',', '.') }}" oninput="formatRupiahFormat(this,'amount')"/>
+                        <input type="hidden" id="amount" @if($isCreator) name="salary" required @else readonly @endif value="{{ $fieldData['salary'] ?? '' }}">
                     </div>
     
                     <div class="col-md-12 mb-3">
                         <label for="salary_date">Tanggal Perhitungan Gaji</label>
-                        <input type="text" name="salary_date" class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
+                        <input type="text" @if($isCreator) name="salary_date"  required @else readonly @endif class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
                     </div>
     
                     <div class="col-md-12 mb-3">
                         <label for="working_hours">Jam Kerja</label>
-                        <input type="text" name="working_hours" class="form-control" value="{{ $fieldData['working_hours'] ?? ''  }}" placeholder="Masukkan jam kerja">
+                        <input type="text" @if($isCreator) name="working_hours"  required @else readonly @endif class="form-control" value="{{ $fieldData['working_hours'] ?? ''  }}" placeholder="Masukkan jam kerja">
                     </div>
     
                     <div class="col-md-12 mb-3">
                         <label for="work_location">Penempatan</label>
-                        <input type="text" name="work_location" class="form-control" value="{{ $fieldData['work_location'] ?? ''  }}" placeholder="Masukkan penempatan kerja">
+                        <input type="text" @if($isCreator) name="work_location"  required @else readonly @endif class="form-control" value="{{ $fieldData['work_location'] ?? ''  }}" placeholder="Masukkan penempatan kerja">
                     </div>
     
                     <div class="col-md-12 mb-3">

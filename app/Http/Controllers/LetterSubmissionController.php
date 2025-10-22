@@ -206,6 +206,10 @@ class LetterSubmissionController extends Controller
         if ($letterSubmission->created_by) {
             // Jika ada created_by, cek apakah sama dengan user yang login
             $isCreator = ($letterSubmission->created_by == Auth::id());
+        } else 
+        {
+            // Jika tidak ada created_by, cek apakah user_id sama dengan user yang login
+            $isCreator = ($letterSubmission->user_id == Auth::id());
         }
 
         $positions = Position::byCompany($user->company_id)->get();
