@@ -508,7 +508,7 @@ class LetterSubmissionController extends Controller
         {
             $file = $request->file('id_card_image');
             $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
-            $filePath = '`id_cards`/' . $fileName;
+            $filePath = 'id_cards/' . $fileName;
 
             // Simpan file ke storage
             Storage::put($filePath, file_get_contents($file));
