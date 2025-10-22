@@ -781,7 +781,7 @@ class ReportProjectController extends Controller
             }
 
             // Create the final merged PDF path
-            $finalFileName = 'merged_' . str_replace('/', '_', $bast->number_result) . '.pdf';
+            $finalFileName = 'merged_' . str_replace('/', '_', $bast->number_result) . '_' . date('H_i_s') . '.pdf';
             $finalFilePath = 'public/reports/' . $finalFileName;
 
             // Output the final merged PDF to storage
