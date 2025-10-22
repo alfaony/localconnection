@@ -308,22 +308,22 @@
     
                     <div class="col-md-12 mb-3">
                         <label for="salary_date">Tanggal Perhitungan Gaji</label>
-                        <input type="text" @if($isCreator) name="salary_date" @else readonly @endif class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
+                        <input type="text" @if($isCreator) name="salary_date" required @else readonly @endif class="form-control" value="{{ $fieldData['salary_date'] ?? '' }}" placeholder="Masukkan tanggal perhitungan gaji">
                     </div>
     
                     <div class="col-md-12 mb-3">
                         <label for="working_hours">Jam Kerja</label>
-                        <input type="text" @if($isCreator) name="working_hours" @else readonly @endif class="form-control" value="{{ $fieldData['working_hours'] ?? ''  }}" placeholder="Masukkan jam kerja">
+                        <input type="text" @if($isCreator) name="working_hours" required @else readonly @endif class="form-control" value="{{ $fieldData['working_hours'] ?? ''  }}" placeholder="Masukkan jam kerja">
                     </div>
     
                     <div class="col-md-12 mb-3">
                         <label for="work_location">Penempatan</label>
-                        <input type="text" @if($isCreator) name="work_location" @else readonly @endif class="form-control" value="{{ $fieldData['work_location'] ?? ''  }}" placeholder="Masukkan penempatan kerja">
+                        <input type="text" @if($isCreator) name="work_location" required @else readonly @endif class="form-control" value="{{ $fieldData['work_location'] ?? ''  }}" placeholder="Masukkan penempatan kerja">
                     </div>
     
                     <div class="col-md-12 mb-3">
                         <label for="job_responsibilities">Tanggung Jawab Pekerjaan</label>
-                        <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" @if($isCreator) name="job_responsibilities" @else readonly @endif value="{{ $fieldData['job_responsibilities'] ?? ''  }}" />
+                        <input class="thriveEditor form-control" id="description_job_responsibilities" data-ids="job_responsibilities" @if($isCreator) name="job_responsibilities" required @else readonly @endif value="{{ $fieldData['job_responsibilities'] ?? ''  }}" />
                     </div>
                 </div>
             </div>
