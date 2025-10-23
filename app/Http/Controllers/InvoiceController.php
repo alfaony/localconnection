@@ -226,7 +226,7 @@ class InvoiceController extends Controller
             return redirect()->to(route('invoice.show', $invoice->slug))->with('store',true);
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
 
             DB::rollback();
             Log::error($th);
@@ -852,7 +852,7 @@ class InvoiceController extends Controller
     public function mergePdf($invoice, $bastFilePath)
     {
         // Path relatif untuk file gabungan
-        $outputPath = "public/invoices/merged_invoice_{$invoice->number_result}_".date('YmdHis').'_'.Str::random(5).".pdf";
+        $outputPath = "invoices/merged_invoice_{$invoice->number_result}_".date('YmdHis').'_'.Str::random(5).".pdf";
         
         // Hapus file gabungan sebelumnya jika ada
         if ($invoice->file_merge_path && Storage::exists($invoice->file_merge_path)) {
@@ -861,13 +861,13 @@ class InvoiceController extends Controller
         
         // Unduh PDF dari Xero dan simpan sementara
         $tempInvoicePdfPath = sys_get_temp_dir() . "/invoice_temp_{$invoice->id}.pdf";
-        $xeroInvoicePdf = $this->xeroService->getInvoice($invoice->invoice_xero_id); // Dapatkan PDF dari Xero
+        $xeroInvoicePdf = $this->xeroService->getInvoice($invoice->invoice_xero_id);
         file_put_contents($tempInvoicePdfPath, $xeroInvoicePdf);
         
         // Gunakan FPDI untuk menggabungkan file
         $pdf = new \setasign\Fpdi\Fpdi();
         
-        // Tambahkan halaman dari file invoice (PDF dari Xero) terlebih dahulu
+        // Tambahkan halaman dari file invoice (PDF dari Xero)
         $pageCount = $pdf->setSourceFile($tempInvoicePdfPath);
         for ($i = 1; $i <= $pageCount; $i++) {
             $tpl = $pdf->importPage($i);
@@ -876,34 +876,35 @@ class InvoiceController extends Controller
             $pdf->useTemplate($tpl);
         }
 
-        // Tambahkan halaman dari file BAST
+        // Tambahkan halaman dari file BAST (download dari S3 ke temp)
         $tempBastPath = sys_get_temp_dir() . '/temp_bast_' . uniqid() . '.pdf';
-            Storage::copy($bastFilePath, 'temp/temp_bast.pdf');
-            $tempBastContent = Storage::get($bastFilePath);
-            file_put_contents($tempBastPath, $tempBastContent);
+        $bastContent = Storage::get($bastFilePath); // Download dari S3
+        file_put_contents($tempBastPath, $bastContent);
 
-            $pageCount = $pdf->setSourceFile($tempBastPath);
-            for ($i = 1; $i <= $pageCount; $i++) {
-                $tpl = $pdf->importPage($i);
-                $size = $pdf->getTemplateSize($tpl);
-                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                $pdf->useTemplate($tpl);
-            }
-
-            // Hapus temp file
-            unlink($tempBastPath);
-
-        // Simpan hasil gabungan ke storage public
-        if (!Storage::exists(dirname($outputPath))) {
-            Storage::makeDirectory(dirname($outputPath)); // Buat direktori jika belum ada
+        $pageCount = $pdf->setSourceFile($tempBastPath);
+        for ($i = 1; $i <= $pageCount; $i++) {
+            $tpl = $pdf->importPage($i);
+            $size = $pdf->getTemplateSize($tpl);
+            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+            $pdf->useTemplate($tpl);
         }
-        
-        $mergedAbsolutePath = Storage::path($outputPath);
-        $pdf->Output($mergedAbsolutePath, 'F'); // Simpan file gabungan
 
-        // Hapus file sementara setelah selesai
+        // Hapus temp BAST file
+        unlink($tempBastPath);
+
+        // Simpan hasil gabungan ke TEMP dulu, baru upload ke S3
+        $tempMergedPath = sys_get_temp_dir() . '/merged_' . uniqid() . '.pdf';
+        $pdf->Output($tempMergedPath, 'F');
+
+        // Upload ke S3 menggunakan Laravel Storage
+        Storage::put($outputPath, file_get_contents($tempMergedPath));
+
+        // Hapus semua file temporary
         if (file_exists($tempInvoicePdfPath)) {
             unlink($tempInvoicePdfPath);
+        }
+        if (file_exists($tempMergedPath)) {
+            unlink($tempMergedPath);
         }
 
         return $outputPath; // Kembalikan path relatif untuk disimpan di database
