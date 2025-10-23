@@ -324,7 +324,7 @@ class SaleController extends Controller
                 if (Str::startsWith($headerImagePath, ['http://', 'https://'])) {
                     $headerImageUrl = $headerImagePath;
                 } else {
-                    $headerImageUrl = Storage::url($headerImagePath);
+                    $headerImageUrl = s3_asset(true,10,$headerImagePath);
 
                     if ($headerImageUrl && !Str::startsWith($headerImageUrl, ['http://', 'https://'])) {
                         $headerImageUrl = URL::to($headerImageUrl);

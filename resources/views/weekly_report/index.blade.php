@@ -42,7 +42,7 @@
                                 <td>{{ $report->year }}</td>
                                 <td>
                                     @if($report->file)
-                                        <a href="{{ asset('storage/' . $report->file) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                        <a href="{{ s3_asset(true,10, $report->file) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
                                             <i class="fas fa-file-pdf"></i>
                                         </a>
                                     @else

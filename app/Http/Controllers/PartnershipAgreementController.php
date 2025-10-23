@@ -196,7 +196,7 @@ class PartnershipAgreementController extends Controller
             // Store the KTP file
             if ($ktp) 
             {
-                $ktpPath = $ktp->store('ktps', 'public');
+                $ktpPath = $ktp->store('ktps');
             }
     
             // Process and save the signature if it's valid
@@ -299,7 +299,7 @@ class PartnershipAgreementController extends Controller
             // Store the KTP file
             if ($ktp) 
             {
-                $ktpPath = $ktp->store('ktps', 'public');
+                $ktpPath = $ktp->store('ktps');
             }
     
             // Process and save the signature if it's valid

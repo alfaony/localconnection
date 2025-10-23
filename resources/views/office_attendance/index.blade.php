@@ -163,7 +163,7 @@
                                                 <div class="avatar-sm mr-3">
                                                     <div class="avatar-title bg-primary rounded-circle">
                                                         @if($attendance->selfie_path)
-                                                            <img src="{{ asset('storage/' . $attendance->selfie_path) }}" alt="" class="avatar-sm rounded-circle">
+                                                            <img src="{{ s3_asset(true,10, $attendance->selfie_path) }}" alt="" class="avatar-sm rounded-circle">
 
                                                         @endif
                                                     </div>

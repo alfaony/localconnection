@@ -1422,14 +1422,14 @@
     <div class="row mt-5 mb-5">
         <div class="col-5 text-justify">
             @if($agreement->getSignature(1))
-            <img src="{{ Storage::url('public/'.$agreement->getSignature(1)->signature) }}" class="img-thumbnail img-signature">
+            <img src="{{ s3_asset(true,10,'public/'.$agreement->getSignature(1)->signature) }}" class="img-thumbnail img-signature">
             @else
             <div style="min-height: 80px; "></div>
             @endif
         </div>
         <div class="offset-2 col-5 text-justify">
             @if($agreement->getSignature(2))
-                <img src="{{ Storage::url('public/'.$agreement->getSignature(2)->signature) }}" class="img-thumbnail img-signature">
+                <img src="{{ s3_asset(true,10,'public/'.$agreement->getSignature(2)->signature) }}" class="img-thumbnail img-signature">
             @else
                 <div style="min-height: 80px; "></div>
             @endif
@@ -1683,7 +1683,7 @@
                 </strong>
             </p>
             @if ($agreement->getFields('image_topologi'))
-                <img src="{{ Storage::url($agreement->getFields('image_topologi')) }}" class="img-thumbnail" alt="topologi jaringan">
+                <img src="{{ s3_asset(true,10,$agreement->getFields('image_topologi')) }}" class="img-thumbnail" alt="topologi jaringan">
             @endif
         </div>
         <div class="col-6 ps-3 text-center">
@@ -1699,7 +1699,7 @@
                 </strong>
             </p>
             @if ($agreement->getFields('image_topologi'))
-                <img src="{{ Storage::url($agreement->getFields('image_topologi')) }}" class="img-thumbnail" alt="topologi jaringan">
+                <img src="{{ s3_asset(true,10,$agreement->getFields('image_topologi')) }}" class="img-thumbnail" alt="topologi jaringan">
             @endif
         </div>
     </div>
@@ -1717,7 +1717,7 @@
                 </strong>
             </p>
             @if ($agreement->getFields('image_bast'))
-                <img src="{{ Storage::url($agreement->getFields('image_bast')) }}" class="img-thumbnail" alt="topologi jaringan">
+                <img src="{{ s3_asset(true,10,$agreement->getFields('image_bast')) }}" class="img-thumbnail" alt="topologi jaringan">
             @endif
         </div>
         <div class="col-6 ps-3 text-center">
@@ -1733,7 +1733,7 @@
                 </strong>
             </p>
             @if ($agreement->getFields('image_bast'))
-                <img src="{{ Storage::url($agreement->getFields('image_bast')) }}" class="img-thumbnail" alt="topologi jaringan">
+                <img src="{{ s3_asset(true,10,$agreement->getFields('image_bast')) }}" class="img-thumbnail" alt="topologi jaringan">
             @endif
         </div>
     </div>

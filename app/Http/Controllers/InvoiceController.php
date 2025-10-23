@@ -645,12 +645,10 @@ class InvoiceController extends Controller
     public function checkPdfAStatus()
     {
         $filename = session('export_filename_invoice_pdfa');
-        $fileExist = "public/invoices/converted/pdfa-".$filename;
-        // $fileExist "public/invoices/converted";
-
+        $fileExist = "invoices/converted/pdfa-".$filename;
         if ($filename && Storage::exists($fileExist)) {
             // Provide the download URL if file exists
-            $downloadUrl = Storage::url($fileExist);
+            $downloadUrl = s3_asset(true,10,$fileExist);
             return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
         }
 
@@ -852,7 +850,7 @@ class InvoiceController extends Controller
     public function mergePdf($invoice, $bastFilePath)
     {
         // Path relatif untuk file gabungan
-        $outputPath = "public/invoices/merged_invoice_{$invoice->number_result}_".date('YmdHis').'_'.Str::random(5).".pdf";
+        $outputPath = "invoices/merged_invoice_{$invoice->number_result}_".date('YmdHis').'_'.Str::random(5).".pdf";
         
         // Hapus file gabungan sebelumnya jika ada
         if ($invoice->file_merge_path && Storage::exists($invoice->file_merge_path)) {
@@ -861,13 +859,13 @@ class InvoiceController extends Controller
         
         // Unduh PDF dari Xero dan simpan sementara
         $tempInvoicePdfPath = sys_get_temp_dir() . "/invoice_temp_{$invoice->id}.pdf";
-        $xeroInvoicePdf = $this->xeroService->getInvoice($invoice->invoice_xero_id); // Dapatkan PDF dari Xero
+        $xeroInvoicePdf = $this->xeroService->getInvoice($invoice->invoice_xero_id);
         file_put_contents($tempInvoicePdfPath, $xeroInvoicePdf);
         
         // Gunakan FPDI untuk menggabungkan file
         $pdf = new \setasign\Fpdi\Fpdi();
         
-        // Tambahkan halaman dari file invoice (PDF dari Xero) terlebih dahulu
+        // Tambahkan halaman dari file invoice (PDF dari Xero)
         $pageCount = $pdf->setSourceFile($tempInvoicePdfPath);
         for ($i = 1; $i <= $pageCount; $i++) {
             $tpl = $pdf->importPage($i);
@@ -876,8 +874,12 @@ class InvoiceController extends Controller
             $pdf->useTemplate($tpl);
         }
 
-        // Tambahkan halaman dari file BAST
-        $pageCount = $pdf->setSourceFile(Storage::path($bastFilePath));
+        // Tambahkan halaman dari file BAST (download dari S3 ke temp)
+        $tempBastPath = sys_get_temp_dir() . '/temp_bast_' . uniqid() . '.pdf';
+        $bastContent = Storage::get($bastFilePath); // Download dari S3
+        file_put_contents($tempBastPath, $bastContent);
+
+        $pageCount = $pdf->setSourceFile($tempBastPath);
         for ($i = 1; $i <= $pageCount; $i++) {
             $tpl = $pdf->importPage($i);
             $size = $pdf->getTemplateSize($tpl);
@@ -885,16 +887,22 @@ class InvoiceController extends Controller
             $pdf->useTemplate($tpl);
         }
 
-        // Simpan hasil gabungan ke storage public
-        if (!Storage::exists(dirname($outputPath))) {
-            Storage::makeDirectory(dirname($outputPath)); // Buat direktori jika belum ada
-        }
-        $mergedAbsolutePath = Storage::path($outputPath);
-        $pdf->Output($mergedAbsolutePath, 'F'); // Simpan file gabungan
+        // Hapus temp BAST file
+        unlink($tempBastPath);
 
-        // Hapus file sementara setelah selesai
+        // Simpan hasil gabungan ke TEMP dulu, baru upload ke S3
+        $tempMergedPath = sys_get_temp_dir() . '/merged_' . uniqid() . '.pdf';
+        $pdf->Output($tempMergedPath, 'F');
+
+        // Upload ke S3 menggunakan Laravel Storage
+        Storage::put($outputPath, file_get_contents($tempMergedPath));
+
+        // Hapus semua file temporary
         if (file_exists($tempInvoicePdfPath)) {
             unlink($tempInvoicePdfPath);
+        }
+        if (file_exists($tempMergedPath)) {
+            unlink($tempMergedPath);
         }
 
         return $outputPath; // Kembalikan path relatif untuk disimpan di database
@@ -988,7 +996,7 @@ class InvoiceController extends Controller
         $fileName = 'invoices_' . now()->timestamp . '.xlsx';
 
         // Queue the export job
-        Excel::store(new InvoiceExport(), $fileName, 'public', \Maatwebsite\Excel\Excel::XLSX);
+        Excel::store(new InvoiceExport(), $fileName, \Maatwebsite\Excel\Excel::XLSX);
 
         // Return the file name to the frontend
         return response()->json(['file_name' => $fileName]);
@@ -1024,7 +1032,7 @@ class InvoiceController extends Controller
         // Check if the file exists on the public disk
         if ($filename && Storage::exists($filename)) {
             // Provide the download URL if file exists
-            $downloadUrl = Storage::url($filename);
+            $downloadUrl = s3_asset(true,10,$filename);
             return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
         }
     

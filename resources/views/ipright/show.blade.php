@@ -29,7 +29,7 @@
 
                     @if($ipRight->file_path)
                     <div class="mb-3">
-                        <a href="{{ asset('storage/' . $ipRight->file_path) }}" target="_blank" class="btn btn-primary">Lihat Dokumen</a>
+                        <a href="{{ s3_asset(true,10, $ipRight->file_path) }}" target="_blank" class="btn btn-primary">Lihat Dokumen</a>
                     </div>
                     @endif
                 </div>

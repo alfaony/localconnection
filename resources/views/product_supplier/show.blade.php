@@ -144,8 +144,8 @@
                             <div class="mb-4">
                                 <h6 class="text-muted small mb-2">Foto Toko</h6>
                                 @if($supplier->store_photo)
-                                    <a href="{{ Storage::url($supplier->store_photo) }}" data-lightbox="store-photo">
-                                        <img src="{{ Storage::url($supplier->store_photo) }}" 
+                                    <a href="{{ s3_asset(true,10,$supplier->store_photo) }}" data-lightbox="store-photo">
+                                        <img src="{{ s3_asset(true,10,$supplier->store_photo) }}" 
                                              class="img-fluid rounded-3 shadow-sm"
                                              alt="Store Photo">
                                     </a>
@@ -161,8 +161,8 @@
                             <div>
                                 <h6 class="text-muted small mb-2">Foto KTP</h6>
                                 @if($supplier->ktp_photo)
-                                    <a href="{{ Storage::url($supplier->ktp_photo) }}" data-lightbox="ktp-photo">
-                                        <img src="{{ Storage::url($supplier->ktp_photo) }}" 
+                                    <a href="{{ s3_asset(true,10,$supplier->ktp_photo) }}" data-lightbox="ktp-photo">
+                                        <img src="{{ s3_asset(true,10,$supplier->ktp_photo) }}" 
                                              class="img-fluid rounded-3 shadow-sm"
                                              alt="KTP Photo">
                                     </a>

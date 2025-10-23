@@ -69,7 +69,7 @@ class IpRightController extends Controller
         {
             $file = $request->file('file_path');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('parents', $filename, 'public');
+            $file->storeAs('parents', $filename);
             $ipRight->file_path= 'parents/' . $filename;
         }
 
@@ -109,7 +109,7 @@ class IpRightController extends Controller
 
             $file = $request->file('file_path');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('parents', $filename, 'public');
+            $file->storeAs('parents', $filename);
             $ipRight->file_path= 'parents/' . $filename;
         }
 

@@ -93,7 +93,7 @@
                                         <label for="avatar">Foto Saya</label>
                                         @if(@$userEdit->avatar)
                                         <div class="mt-1 mb-2">
-                                            <img src="{{ Storage::url(@$userEdit->avatar) }}" alt="Foto Saya"
+                                            <img src="{{ s3_asset(true,10,@$userEdit->avatar) }}" alt="Foto Saya"
                                                 class="img-fluid"
                                                 style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
                                         </div>
@@ -106,7 +106,7 @@
                                         <label for="id_card_image">Upload KTP</label>
                                         @if(@$userEdit->id_card_image)
                                         <div class="mt-1 mb-2">
-                                            <img src="{{ Storage::url(@$userEdit->id_card_image) }}" alt="Tanda Tangan"
+                                            <img src="{{ s3_asset(true,10,@$userEdit->id_card_image) }}" alt="Tanda Tangan"
                                                 class="img-fluid"
                                                 style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
                                         </div>

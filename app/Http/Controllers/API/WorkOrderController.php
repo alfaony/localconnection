@@ -150,7 +150,7 @@ class WorkOrderController extends BaseController
                 $extension = $file->getClientOriginalExtension();  // Dapatkan ekstensi file
                 $filenameToStore = $filename.'_'.time().'_'.Str::uuid().'.'.$extension;  // Hasilkan nama file yang unik
 
-                $filePath = $file->storeAs('quotes', $filenameToStore, 'public');
+                $filePath = $file->storeAs('quotes', $filenameToStore);
                 $workOrder->quote_file = $filePath;  // Menyimpan path dari file yang disimpan
             }
             
@@ -334,7 +334,7 @@ class WorkOrderController extends BaseController
                 $extension = $file->getClientOriginalExtension();  // Dapatkan ekstensi file
                 $filenameToStore = $filename.'_'.time().'_'.Str::uuid().'.'.$extension;  // Hasilkan nama file yang unik
 
-                $filePath = $file->storeAs('quotes', $filenameToStore, 'public');
+                $filePath = $file->storeAs('quotes', $filenameToStore);
                 $workOrder->quote_file = $filePath;  // Menyimpan path dari file yang disimpan
             }
             

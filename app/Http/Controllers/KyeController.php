@@ -75,25 +75,25 @@ class KyeController extends Controller
             if ($request->ktp_family) 
             {
                 $data['ktp_family'] = 'ktp_family/' . uniqid() . '.' . $request->file('ktp_family')->getClientOriginalExtension();
-                Storage::put('public/' . $data['ktp_family'], file_get_contents($request->file('ktp_family')->getRealPath()));
+                Storage::put($data['ktp_family'], file_get_contents($request->file('ktp_family')->getRealPath()));
             }
 
             if ($request->skck) 
             {
                 $data['skck'] = 'skck_files/' . uniqid() . '.' . $request->file('skck')->extension();
-                Storage::put('public/' . $data['skck'], file_get_contents($request->file('skck')->getRealPath()));
+                Storage::put($data['skck'], file_get_contents($request->file('skck')->getRealPath()));
             }
 
             if ($request->house_photo) 
             {
                 $data['house_photo'] = 'house_photos/' . uniqid() . '.' . $request->file('house_photo')->extension();
-                Storage::put('public/' . $data['house_photo'], file_get_contents($request->file('house_photo')->getRealPath()));
+                Storage::put($data['house_photo'], file_get_contents($request->file('house_photo')->getRealPath()));
             }
 
             if ($request->npwp_photo) 
             {
                 $data['npwp_photo'] = 'npwp_photo/' . uniqid() . '.' . $request->file('npwp_photo')->extension();
-                Storage::put('public/' . $data['npwp_photo'], file_get_contents($request->file('npwp_photo')->getRealPath()));
+                Storage::put($data['npwp_photo'], file_get_contents($request->file('npwp_photo')->getRealPath()));
             }
 
             $data['user_id'] = Auth::user()->id;
@@ -193,7 +193,7 @@ class KyeController extends Controller
             if ($request->house_photo) 
             {
                 $data['house_photo'] = 'house_photos/' . uniqid() . '.' . $request->file('house_photo')->extension();
-                Storage::put('public/' . $data['house_photo'], file_get_contents($request->file('house_photo')->getRealPath()));
+                Storage::put($data['house_photo'], file_get_contents($request->file('house_photo')->getRealPath()));
             }
             
             if ($request->skck) 
@@ -204,7 +204,7 @@ class KyeController extends Controller
                 }
                 
                 $data['skck'] = 'skck_files/' . uniqid() . '.' . $request->file('skck')->extension();
-                Storage::put('public/' . $data['skck'], file_get_contents($request->file('skck')->getRealPath()));
+                Storage::put($data['skck'], file_get_contents($request->file('skck')->getRealPath()));
             }
 
             if ($request->ktp_family) 
@@ -214,7 +214,7 @@ class KyeController extends Controller
                     Storage::delete('public/' . $kye->ktp_family);
                 }
                 $data['ktp_family'] = 'ktp_family/' . uniqid() . '.' . $request->file('ktp_family')->getClientOriginalExtension();
-                Storage::put('public/' . $data['ktp_family'], file_get_contents($request->file('ktp_family')->getRealPath()));
+                Storage::put($data['ktp_family'], file_get_contents($request->file('ktp_family')->getRealPath()));
             }
 
             if ($request->npwp_photo) 
@@ -224,7 +224,7 @@ class KyeController extends Controller
                     Storage::delete('public/' . $kye->npwp_photo);   
                 }
                 $data['npwp_photo'] = 'npwp_photo/' . uniqid() . '.' . $request->file('npwp_photo')->extension();
-                Storage::put('public/' . $data['npwp_photo'], file_get_contents($request->file('npwp_photo')->getRealPath()));
+                Storage::put($data['npwp_photo'], file_get_contents($request->file('npwp_photo')->getRealPath()));
             }
 
             $user = User::findOrFail($kye->user_id);
@@ -341,7 +341,7 @@ class KyeController extends Controller
 
         // Use Storage facade to save the file in the public directory
         $filePath = "$folder/$fileName";
-        Storage::put("public/$filePath", $imageData);
+        Storage::put("$filePath", $imageData);
 
         return $filePath; // Return the file path as is
     }

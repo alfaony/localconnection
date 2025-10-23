@@ -63,7 +63,7 @@ class MeetingController extends Controller
             $data = [];
             
             if ($request->hasFile('attachment')) {
-                $path = $request->file('attachment')->store('meeting-attachments', 'public');
+                $path = $request->file('attachment')->store('meeting-attachments');
                 $data['attachment'] = $path;
                 Log::info('File path: ' . $path);
             }
@@ -157,7 +157,7 @@ class MeetingController extends Controller
     
             if ($request->hasFile('attachment')) 
             {
-                $validated['attachment'] = $request->file('attachment')->store('attachments', 'public');
+                $validated['attachment'] = $request->file('attachment')->store('attachments');
             }
     
             $meeting = Meeting::create($validated);
@@ -299,7 +299,7 @@ class MeetingController extends Controller
 
             if ($request->hasFile('attachment')) 
             {
-                $validated['attachment'] = $request->file('attachment')->store('attachments', 'public');
+                $validated['attachment'] = $request->file('attachment')->store('attachments');
             }
 
             $meeting->update($validated);

@@ -321,7 +321,7 @@ class InternetCustomerForm extends Component
     {
         // dd($this->signature);
         // Simpan file KTP
-        $ktpPath = $this->ktp_photo ? $this->ktp_photo->store('ktps', 'public') : null;
+        $ktpPath = $this->ktp_photo ? $this->ktp_photo->store('ktps') : null;
         
         // Simpan bukti pembayaran jika ada
         $paymentProofPath = null;
@@ -343,7 +343,7 @@ class InternetCustomerForm extends Component
                 }
                 
                 $signaturePath = 'signatures/' . uniqid() . '.' . $imageType;
-                Storage::disk('public')->put($signaturePath, $data);
+                Storage::put($signaturePath, $data);
             } 
             // else {
             //     throw new \Exception('Invalid image data URL');
@@ -360,7 +360,7 @@ class InternetCustomerForm extends Component
                 'name' => $this->name,
                 'address' => $this->address,
                 'ktp_number' => $this->ktp_number,
-                'ktp_photo' => $ktpPath ? Storage::url($ktpPath) : null,
+                'ktp_photo' => $ktpPath ? $ktpPath : null,
                 'is_paid' => false,
                 'status' => ParamSchema::WAITING_PAYMENT_CONFIRMATION,
             ]);
@@ -397,7 +397,7 @@ class InternetCustomerForm extends Component
                     'amount_paid' => $this->selectedPackage->price_nett,
                     'internet_customer_id' => $internetCustomer->id,
                     'payment_method' => $this->payment_method,
-                    'payment_proof' => $paymentProofPath ? Storage::url($paymentProofPath) : null,
+                    'payment_proof' => $paymentProofPath ? s3_asset(true,10,$paymentProofPath) : null,
                 ]);
 
                 $userFinance = User::whereHas('role.permissions', function ($q) 
@@ -436,7 +436,7 @@ class InternetCustomerForm extends Component
             $this->step = 5;
 
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
             DB::rollBack();
             // dd($th);
             session()->flash('error', 'Terjadi kesalahan: Konfirmasikan ke Admin');

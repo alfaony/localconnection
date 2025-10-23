@@ -26,7 +26,7 @@ class ChatMessageController extends Controller
         $data = 
         [
             'status' => $itemRequest->status == "DELIVERED"  || $itemRequest->status == "CLOSED" ? false : true,
-            'message' => $messages
+            'message' => $messages,
         ];
         
         return response()->json($data);
@@ -42,7 +42,7 @@ class ChatMessageController extends Controller
         $path = null;
         if ($request->hasFile('file')) 
         {
-            $path = $request->file('file')->store('chat_uploads', 'public');
+            $path = $request->file('file')->store('chat_uploads');
         }
         
         try {

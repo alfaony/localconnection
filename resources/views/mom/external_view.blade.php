@@ -228,7 +228,7 @@
                                                         <div class="flex-grow-1">
                                                             <div class="fw-medium">{{ "Lampiran" }}</div>
                                                         </div>
-                                                        <a href="{{ Storage::url($task->attachment) }}" class="btn btn-sm btn-outline-primary" download>
+                                                        <a href="{{ s3_asset(true,10,$task->attachment) }}" class="btn btn-sm btn-outline-primary" download>
                                                             <i class="bi bi-download"></i>
                                                         </a>
                                                     </div>

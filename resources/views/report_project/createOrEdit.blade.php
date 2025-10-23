@@ -82,7 +82,7 @@
                     <label>Mohon upload file report :</label>
                     @if(@$reportProject)
                     <div class="mb-2">
-                        <a href="{{ Storage::url('reports/' . $reportProject->report_file) }}" class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                        <a href="{{ s3_asset(true,10,'reports/' . $reportProject->report_file) }}" class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
                     </div>
                     <input type="file" class="form-control" id="customFile" name="report_file" accept=".pdf">
                     
@@ -136,7 +136,7 @@
                                 <input type="file" class="form-control" id="file_" name="file[]" accept=".pdf" >
                                 </td>
                                 <td>
-                                    <a href="{{ Storage::url('reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-download"></i></a>
+                                    <a href="{{ s3_asset(true,10,'reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-download"></i></a>
                                     <button class="btn btn-sm btn-danger btnHapusData" data-id="{{ $a->id }}" title="delete"><i class="fa fa-trash"></i></button>
                                 </td>
                             </tr>

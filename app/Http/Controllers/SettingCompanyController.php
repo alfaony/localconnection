@@ -66,7 +66,7 @@ class SettingCompanyController extends Controller
                         $extension = $file->getClientOriginalExtension();
                         $filenameToStore = $filename . '_' . time() . '.' . $extension;
 
-                        $filePath = $file->storeAs('company', $filenameToStore, 'public');
+                        $filePath = $file->storeAs('company', $filenameToStore);
                         $fieldValue = $filePath;
                     }
                     $setting->user_id = Auth::user()->id;
@@ -81,7 +81,7 @@ class SettingCompanyController extends Controller
                         $extension = $file->getClientOriginalExtension();
                         $filenameToStore = $filename . '_' . time() . '.' . $extension;
 
-                        $filePath = $file->storeAs('company_storage_file', $filenameToStore, 'public');
+                        $filePath = $file->storeAs('company_storage_file', $filenameToStore);
                         $fieldValue = $filePath;
                     }
                     $setting->user_id = Auth::user()->id;

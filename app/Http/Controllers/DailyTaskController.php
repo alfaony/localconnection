@@ -320,7 +320,7 @@ class DailyTaskController extends Controller
                         $extension = $file->getClientOriginalExtension();
                         $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
     
-                        $path = $file->storeAs('media', $fileName, 'public');
+                        $path = $file->storeAs('media', $fileName);
                         $mediaType = $file->getClientMimeType();
     
                         DailyTaskMedia::create([
@@ -835,7 +835,7 @@ class DailyTaskController extends Controller
                     $extension = $file->getClientOriginalExtension();
                     $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
 
-                    $path = $file->storeAs('media', $fileName, 'public');
+                    $path = $file->storeAs('media', $fileName);
                     $mediaType = $file->getClientMimeType();
 
                     DailyTaskMedia::create([
@@ -935,7 +935,7 @@ class DailyTaskController extends Controller
                     $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
         
                     // Store the file with the new name
-                    $path = $file->storeAs('media', $fileName, 'public');
+                    $path = $file->storeAs('media', $fileName);
                     $mediaType = $file->getClientMimeType();
         
                     DailyTaskMedia::create([
@@ -964,7 +964,7 @@ class DailyTaskController extends Controller
         $media = DailyTaskMedia::findOrFail($id);
 
         // Delete the file from storage
-        Storage::disk('public')->delete($media->file_path);
+        Storage::delete($media->file_path);
 
         // Delete the record from the database
         $media->delete();
@@ -1157,7 +1157,7 @@ class DailyTaskController extends Controller
             $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
 
             // Store the file with the new name
-            $path = $file->storeAs('comment', $fileName, 'public');
+            $path = $file->storeAs('comment', $fileName);
         }
 
         $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
