@@ -624,7 +624,7 @@ class BastController extends Controller
             $pdfFiles[] = $additionalLocalPath;
 
             // 2. Tambahkan PDF dari reportedDetails
-            foreach ($reportProject->reportedDetails as $detail) {
+            foreach ($reportProject->reportProjectDetail as $detail) {
                 $remotePath = 'reports/' . $detail->file;
 
                 if ($disk->exists($remotePath)) {
@@ -668,7 +668,7 @@ class BastController extends Controller
             $mergedPdf->Output($localFinalPath, 'F');
 
             // Upload hasil ke S3
-            $remoteFinalPath = 'public/reports/' . $finalFileName;
+            $remoteFinalPath = 'reports/' . $finalFileName;
             $disk->put($remoteFinalPath, file_get_contents($localFinalPath));
 
             // Simpan path ke database
