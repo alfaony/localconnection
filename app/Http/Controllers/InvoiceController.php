@@ -849,63 +849,162 @@ class InvoiceController extends Controller
      */
     public function mergePdf($invoice, $bastFilePath)
     {
-        // Path relatif untuk file gabungan
-        $outputPath = "invoices/merged_invoice_{$invoice->number_result}_".date('YmdHis').'_'.Str::random(5).".pdf";
-        
-        // Hapus file gabungan sebelumnya jika ada
-        if ($invoice->file_merge_path && Storage::exists($invoice->file_merge_path)) {
-            Storage::delete($invoice->file_merge_path);
+        $tempInvoicePdfPath = null;
+        $tempBastPath = null;
+        $tempMergedPath = null;
+
+        try {
+            $outputPath = "invoices/merged_invoice_{$invoice->number_result}_".date('YmdHis').'_'.Str::random(5).".pdf";
+            
+            if ($invoice->file_merge_path && Storage::exists($invoice->file_merge_path)) {
+                Storage::delete($invoice->file_merge_path);
+            }
+            
+            // ===== DOWNLOAD PDF DARI XERO =====
+            $tempInvoicePdfPath = sys_get_temp_dir() . "/invoice_temp_{$invoice->id}_" . uniqid() . ".pdf";
+            $xeroInvoicePdf = $this->xeroService->getInvoice($invoice->invoice_xero_id);
+            
+            if (empty($xeroInvoicePdf)) {
+                throw new \Exception("PDF dari Xero kosong atau tidak valid");
+            }
+            
+            // ===== FIX: EKSTRAK PDF DARI HTTP RESPONSE =====
+            $pdfContent = $this->extractPdfFromResponse($xeroInvoicePdf);
+            
+            if (empty($pdfContent)) {
+                throw new \Exception("Tidak dapat mengekstrak PDF dari response Xero");
+            }
+            
+            file_put_contents($tempInvoicePdfPath, $pdfContent);
+            
+            // VALIDASI
+            if (!file_exists($tempInvoicePdfPath) || filesize($tempInvoicePdfPath) === 0) {
+                throw new \Exception("Gagal menyimpan PDF dari Xero ke temporary file");
+            }
+            
+            $fileHeader = file_get_contents($tempInvoicePdfPath, false, null, 0, 10);
+            if (strpos($fileHeader, '%PDF') === false) {
+                $debugPath = storage_path("logs/debug_xero_pdf_{$invoice->id}.txt");
+                file_put_contents($debugPath, substr($pdfContent, 0, 1000));
+                
+                throw new \Exception("File dari Xero bukan PDF yang valid. Header: " . bin2hex($fileHeader));
+            }
+            
+            // ===== INISIALISASI FPDI =====
+            $pdf = new \setasign\Fpdi\Fpdi();
+            
+            // ===== TAMBAHKAN HALAMAN DARI INVOICE XERO =====
+            $pageCount = $pdf->setSourceFile($tempInvoicePdfPath);
+            for ($i = 1; $i <= $pageCount; $i++) {
+                $tpl = $pdf->importPage($i);
+                $size = $pdf->getTemplateSize($tpl);
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($tpl);
+            }
+
+            // ===== DOWNLOAD FILE BAST DARI S3 =====
+            $tempBastPath = sys_get_temp_dir() . '/temp_bast_' . uniqid() . '.pdf';
+            
+            if (!Storage::exists($bastFilePath)) {
+                throw new \Exception("File BAST tidak ditemukan di S3: {$bastFilePath}");
+            }
+            
+            $bastContent = Storage::get($bastFilePath);
+            
+            if (empty($bastContent)) {
+                throw new \Exception("File BAST kosong");
+            }
+            
+            file_put_contents($tempBastPath, $bastContent);
+            
+            if (!file_exists($tempBastPath) || filesize($tempBastPath) === 0) {
+                throw new \Exception("Gagal menyimpan file BAST ke temporary file");
+            }
+
+            // ===== TAMBAHKAN HALAMAN DARI BAST =====
+            $pageCount = $pdf->setSourceFile($tempBastPath);
+            for ($i = 1; $i <= $pageCount; $i++) {
+                $tpl = $pdf->importPage($i);
+                $size = $pdf->getTemplateSize($tpl);
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($tpl);
+            }
+
+            // ===== SIMPAN HASIL GABUNGAN =====
+            $tempMergedPath = sys_get_temp_dir() . '/merged_' . uniqid() . '.pdf';
+            $pdf->Output($tempMergedPath, 'F');
+            
+            if (!file_exists($tempMergedPath) || filesize($tempMergedPath) === 0) {
+                throw new \Exception("Gagal membuat file PDF gabungan");
+            }
+
+            Storage::put($outputPath, file_get_contents($tempMergedPath));
+            
+            // if (!Storage::exists($outputPath)) {
+            //     throw new \Exception("Gagal upload file gabungan ke S3");
+            // }
+
+            \Log::info("PDF merge berhasil", [
+                'invoice_id' => $invoice->id,
+                'output_path' => $outputPath
+            ]);
+
+            return $outputPath;
+
+        } catch (\Throwable $e) {
+            // dd($e);
+            \Log::error("Error saat merge PDF", [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            throw $e;
+            
+        } finally {
+            $tempFiles = [$tempInvoicePdfPath, $tempBastPath, $tempMergedPath];
+            foreach ($tempFiles as $file) {
+                if ($file && file_exists($file)) {
+                    unlink($file);
+                }
+            }
+        }
+    }
+
+    /**
+     * Ekstrak PDF binary dari HTTP response
+     */
+    private function extractPdfFromResponse($response)
+    {
+        // Cek apakah response mengandung HTTP headers
+        if (strpos($response, "HTTP/") === 0) {
+            // Split headers dan body
+            $parts = explode("\r\n\r\n", $response, 2);
+            
+            if (count($parts) === 2) {
+                // Bagian kedua adalah body (PDF content)
+                return $parts[1];
+            }
+            
+            // Fallback: coba dengan \n\n
+            $parts = explode("\n\n", $response, 2);
+            if (count($parts) === 2) {
+                return $parts[1];
+            }
         }
         
-        // Unduh PDF dari Xero dan simpan sementara
-        $tempInvoicePdfPath = sys_get_temp_dir() . "/invoice_temp_{$invoice->id}.pdf";
-        $xeroInvoicePdf = $this->xeroService->getInvoice($invoice->invoice_xero_id);
-        file_put_contents($tempInvoicePdfPath, $xeroInvoicePdf);
+        // Jika sudah berupa PDF, return as is
+        if (strpos($response, '%PDF') === 0) {
+            return $response;
+        }
         
-        // Gunakan FPDI untuk menggabungkan file
-        $pdf = new \setasign\Fpdi\Fpdi();
+        // Cari posisi %PDF dalam response
+        $pdfStart = strpos($response, '%PDF');
+        if ($pdfStart !== false) {
+            return substr($response, $pdfStart);
+        }
         
-        // Tambahkan halaman dari file invoice (PDF dari Xero)
-        $pageCount = $pdf->setSourceFile($tempInvoicePdfPath);
-        for ($i = 1; $i <= $pageCount; $i++) {
-            $tpl = $pdf->importPage($i);
-            $size = $pdf->getTemplateSize($tpl);
-            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-            $pdf->useTemplate($tpl);
-        }
-
-        // Tambahkan halaman dari file BAST (download dari S3 ke temp)
-        $tempBastPath = sys_get_temp_dir() . '/temp_bast_' . uniqid() . '.pdf';
-        $bastContent = Storage::get($bastFilePath); // Download dari S3
-        file_put_contents($tempBastPath, $bastContent);
-
-        $pageCount = $pdf->setSourceFile($tempBastPath);
-        for ($i = 1; $i <= $pageCount; $i++) {
-            $tpl = $pdf->importPage($i);
-            $size = $pdf->getTemplateSize($tpl);
-            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-            $pdf->useTemplate($tpl);
-        }
-
-        // Hapus temp BAST file
-        unlink($tempBastPath);
-
-        // Simpan hasil gabungan ke TEMP dulu, baru upload ke S3
-        $tempMergedPath = sys_get_temp_dir() . '/merged_' . uniqid() . '.pdf';
-        $pdf->Output($tempMergedPath, 'F');
-
-        // Upload ke S3 menggunakan Laravel Storage
-        Storage::put($outputPath, file_get_contents($tempMergedPath));
-
-        // Hapus semua file temporary
-        if (file_exists($tempInvoicePdfPath)) {
-            unlink($tempInvoicePdfPath);
-        }
-        if (file_exists($tempMergedPath)) {
-            unlink($tempMergedPath);
-        }
-
-        return $outputPath; // Kembalikan path relatif untuk disimpan di database
+        // Jika tidak ditemukan, return original
+        return $response;
     }
 
     /**

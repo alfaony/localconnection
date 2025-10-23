@@ -624,7 +624,7 @@ class BastController extends Controller
             $pdfFiles[] = $additionalLocalPath;
 
             // 2. Tambahkan PDF dari reportedDetails
-            foreach ($reportProject->reportedDetails as $detail) {
+            foreach ($reportProject->reportProjectDetail as $detail) {
                 $remotePath = 'reports/' . $detail->file;
 
                 if ($disk->exists($remotePath)) {
