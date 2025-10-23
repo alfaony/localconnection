@@ -984,7 +984,9 @@
 
                 if (msg.attachment) {
                     const ext = msg.attachment.split('.').pop().toLowerCase();
-                    const url = `/storage//${msg.attachment}`; // Ganti sesuai path file kamu
+                    const url = msg.attachment_url;
+                    console.log(url);
+                    
 
                     if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
                         fileHtml = `

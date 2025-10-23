@@ -19,9 +19,9 @@ if (!function_exists('s3_asset')) {
             return Storage::disk('s3')->temporaryUrl($path, now()->addMinutes($minutes));
         }
 
-        if (!$temporary && !$menutes && $path) 
+        if (!$temporary && !$minutes && $path) 
         {
-            return Storage::disk('s3')->temporaryUrl($path, now()->addMinutes($minutes));
+            return Storage::disk('s3')->url($path);
         }
 
         return Storage::disk('s3')->url($path);

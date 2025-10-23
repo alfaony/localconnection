@@ -26,7 +26,7 @@ class ChatMessageController extends Controller
         $data = 
         [
             'status' => $itemRequest->status == "DELIVERED"  || $itemRequest->status == "CLOSED" ? false : true,
-            'message' => $messages
+            'message' => $messages,
         ];
         
         return response()->json($data);
