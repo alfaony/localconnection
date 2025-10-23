@@ -106,7 +106,7 @@ class OdsForm extends Component
         ];
 
         if ($this->location_photo) {
-            $data['location_photo'] = $this->location_photo->store('ods-photos', 'public');
+            $data['location_photo'] = $this->location_photo->store('ods-photos');
         }
 
         if ($this->isEdit) {
@@ -119,7 +119,7 @@ class OdsForm extends Component
 
             // Simpan foto baru (jika ada)
             if ($this->location_photo) {
-                $data['location_photo'] = $this->location_photo->store('ods-photos', 'public');
+                $data['location_photo'] = $this->location_photo->store('ods-photos');
             } else {
                 $data['location_photo'] = $ods->location_photo; // Tetap pakai foto lama
             }

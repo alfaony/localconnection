@@ -341,7 +341,7 @@ class KyeController extends Controller
 
         // Use Storage facade to save the file in the public directory
         $filePath = "$folder/$fileName";
-        Storage::put("public/$filePath", $imageData);
+        Storage::put("$filePath", $imageData);
 
         return $filePath; // Return the file path as is
     }

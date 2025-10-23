@@ -62,7 +62,7 @@ class ConvertInvoiceToPdfAJob implements ShouldQueue
                 throw new \Exception("Failed to convert to PDF/A: " . $pdfaProcess->getErrorOutput());
             }
 
-            Log::info("File successfully stored at: " . Storage::url($outputPath));
+            Log::info("File successfully stored at: " . s3_asset(true,10,$outputPath));
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);

@@ -163,7 +163,7 @@
                     @if(@$workOrder)
                     @if($workOrder->quote_file) 
                         <div class="mb-2">
-                            <a href="{{ Storage::url($workOrder->quote_file) }}" class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                            <a href="{{ s3_asset(true,10,$workOrder->quote_file) }}" class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
                         </div>
                     @endif
                     <input type="file" name="quote_file" class="form-control-file" id="fileUpload" accept=".pdf">

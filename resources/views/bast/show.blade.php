@@ -54,7 +54,7 @@
                     @if ($bast->file_merge_path)
 
                         <!-- Display the latest merged PDF -->
-                        <iframe src="{{ Storage::url($bast->file_merge_path) }}" 
+                        <iframe src="{{ s3_asset(true,10,$bast->file_merge_path) }}" 
                                 style="width: 100%; height: 900px; border: 1px solid #ccc;" 
                                 frameborder="0">
                         </iframe>

@@ -42,7 +42,7 @@ class ChatMessageController extends Controller
         $path = null;
         if ($request->hasFile('file')) 
         {
-            $path = $request->file('file')->store('chat_uploads', 'public');
+            $path = $request->file('file')->store('chat_uploads');
         }
         
         try {

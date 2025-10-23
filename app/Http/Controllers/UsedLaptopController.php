@@ -151,7 +151,7 @@ class UsedLaptopController extends Controller
                 foreach ($photoOrder as $displayOrder => $originalIndex) {
                     if (isset($photos[$originalIndex])) {
                         $photo = $photos[$originalIndex];
-                        $path = $photo->store('used-laptop', 'public');
+                        $path = $photo->store('used-laptop');
                         
                         UsedLaptopMedia::create([
                             'used_laptop_id' => $laptop->id,
@@ -207,7 +207,7 @@ class UsedLaptopController extends Controller
             //     'buying_price' => $laptop->purchase_price,
             //     'selling_price' => $laptop->suggested_selling_price,
             //     'images' => $laptop->media()->get()->map(function ($media) {
-            //         return env('APP_URL') . Storage::url($media->file_path);
+            //         return env('APP_URL') . s3_asset(true,10,$media->file_path);
             //     })->toArray(),
             // ];
 
@@ -312,7 +312,7 @@ class UsedLaptopController extends Controller
             //     'buying_price' => $laptop->purchase_price,
             //     'selling_price' => $laptop->suggested_selling_price,
             //     'images' => $laptop->media()->get()->map(function ($media) {
-            //         return env('APP_URL') . Storage::url($media->file_path);
+            //         return env('APP_URL') . s3_asset(true,10,$media->file_path);
             //     })->toArray(),
             // ];
             $payload = (new UsedLaptopResource($laptop))->resolve();
@@ -460,7 +460,7 @@ class UsedLaptopController extends Controller
             $currentMaxOrder = $laptop->media()->max('order') ?? -1;
 
             foreach ($orderedPhotos as $offset => $photo) {
-                $path = $photo->store('used-laptop', 'public');
+                $path = $photo->store('used-laptop');
                 UsedLaptopMedia::create([
                     'used_laptop_id' => $laptop->id,
                     'file_path' => $path,
@@ -546,7 +546,7 @@ class UsedLaptopController extends Controller
                 //     'buying_price' => $laptop->purchase_price,
                 //     'selling_price' => $laptop->suggested_selling_price,
                 //     'images' => $laptop->media()->get()->map(function ($media) {
-                //         return env('APP_URL') . Storage::url($media->file_path);
+                //         return env('APP_URL') . s3_asset(true,10,$media->file_path);
                 //     })->toArray(),
                 // ];
 

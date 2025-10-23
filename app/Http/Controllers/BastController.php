@@ -549,8 +549,8 @@ class BastController extends Controller
         $filename = 'bast_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
 
-        ExportBastJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
         $filename = "public/" . $filename;
+        ExportBastJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
         session(['export_filename_bast' => $filename]);
 
         return redirect()->back()->with('export', true);
@@ -560,10 +560,17 @@ class BastController extends Controller
     {
         $filename = session('export_filename_bast');
 
-        if ($filename && Storage::exists($filename)) {
-            // Provide the download URL if file exists
-            $downloadUrl = Storage::url($filename);
-            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        try {
+            //code...
+            if ($filename && Storage::exists($filename)) {
+                // Provide the download URL if file exists
+                $downloadUrl = s3_asset(true,10,$filename);
+                return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Export check failed: ' . $e->getMessage());
+
+            return response()->json(['ready' => false,'filename' => $filename]);
         }
     
         return response()->json(['ready' => false,'filename' => $filename]);

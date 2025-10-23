@@ -587,7 +587,7 @@
                         <div class="col-md-12 mb-3">
                             <label for="salary_date">File Dokumen yang dikuasakan</label>
                             @if(isset($fieldData['file']))
-                                <a href="{{ Storage::url($fieldData['file']) }}" target="_blank"><i class="fa fa-download"></i> File</a>
+                                <a href="{{ s3_asset(true,10,$fieldData['file']) }}" target="_blank"><i class="fa fa-download"></i> File</a>
                             @endif
                             <input type="file" name="file" class="form-control" accept=".pdf">
                         </div>
@@ -774,7 +774,7 @@
                      <label for="ktp">Nomor KTP</label>
                      @if($user->id_card_image)
                      <div class="mt-1 mb-2">
-                         <img src="{{ Storage::url($user->id_card_image) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
+                         <img src="{{ s3_asset(true,10,$user->id_card_image) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
                      </div>
                      @endif
                  </div>
@@ -785,7 +785,7 @@
                      {{--
                      @if (($fieldData['signature_image'] && $letterSubmission->status !== 0) || $letterSubmission->is_approve !== 0)
                          <div class="signature-container mt-2">
-                             <img src="{{ Storage::url($fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid">
+                             <img src="{{ s3_asset(true,10,$fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid">
                          </div>
                      @else
                         <div class="col-md-6 mb-3">
@@ -810,14 +810,14 @@
                         @else
                             <!-- Pending Status -->
                             <div class="signature-container mt-2">
-                                <img src="{{ Storage::url($fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid">
+                                <img src="{{ s3_asset(true,10,$fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid">
                             </div>
                         @endif
                     @elseif(isset($letterSubmission->is_approved) && $letterSubmission->is_approved)
                         <!-- Display Approved and previous signature -->
                         @if(isset($fieldData['signature_image']))
                             <div class="signature-container mt-2">
-                                <img src="{{ Storage::url($fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid">
+                                <img src="{{ s3_asset(true,10,$fieldData['signature_image']) }}" alt="Tanda Tangan" class="img-fluid">
                             </div>
                         @endif
                     @else

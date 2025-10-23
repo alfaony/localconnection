@@ -228,7 +228,7 @@ class TaskAssignController extends Controller
                 // Hapus file lama jika ada        
                 $file = $request->file('photo');
                 $filename = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('task', $filename, 'public');
+                $filePath = $file->storeAs('task', $filename);
                 $taskReport->picture = $filename;
             }
             $taskReport->save();

@@ -128,7 +128,7 @@ class ReportProjectController extends Controller
                 if ($file[$i]) 
                 {
                     $filename = time() . '_' . $file[$i]->getClientOriginalName();
-                    $filePath = $file[$i]->storeAs('reports', $filename, 'public');
+                    $filePath = $file[$i]->storeAs('reports', $filename);
                     $reportProjectDetail->file = $filename;
                 }
 
@@ -252,7 +252,7 @@ class ReportProjectController extends Controller
                     if ($checkFile) 
                     {
                         $filename = time() . '_' . $file[$i]->getClientOriginalName();
-                        $filePath = $file[$i]->storeAs('reports', $filename, 'public');
+                        $filePath = $file[$i]->storeAs('reports', $filename);
                         $reportProjectDetail->file = $filename;
                     }
     
@@ -281,7 +281,7 @@ class ReportProjectController extends Controller
                     if ($checkFile) 
                     {
                         $filename = time() . '_' . $file[$i]->getClientOriginalName();
-                        $filePath = $file[$i]->storeAs('reports', $filename, 'public');
+                        $filePath = $file[$i]->storeAs('reports', $filename);
                         $reportProjectDetail->file = $filename;
                     }
 

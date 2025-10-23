@@ -67,7 +67,7 @@ class TrainingController extends Controller
         {
             $file = $request->file('certification_file');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('certifications', $filename, 'public');
+            $file->storeAs('certifications', $filename);
             $training->certification_file= 'certifications/' . $filename;
         }
 
@@ -120,7 +120,7 @@ class TrainingController extends Controller
         {
             $file = $request->file('certification_file');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('certifications', $filename, 'public');
+            $file->storeAs('certifications', $filename);
             $request->certification_file = 'certifications/' . $filename;
         }
 

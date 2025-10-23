@@ -552,12 +552,12 @@ class ImportInternetCustomer extends Command
         if ($signatureData) {
             $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $signatureData));
             $signaturePath = 'signatures/' . uniqid() . '.png';
-            Storage::disk('public')->put($signaturePath, $imageData);
+            Storage::put($signaturePath, $imageData);
         }
 
         if(isset($step2Data['ktp_photo']))
         {
-            $ktpPath = $step2Data['ktp_photo'] ? $step2Data['ktp_photo']->store('ktps', 'public') : null;   
+            $ktpPath = $step2Data['ktp_photo'] ? $step2Data['ktp_photo']->store('ktps') : null;   
         }else
         {
             $ktpPath = null;

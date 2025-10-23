@@ -293,8 +293,8 @@
                             <div class="row">
                                 @foreach($laptop->media as $media)
                                 <div class="col-md-6 mb-3">
-                                    <a href="{{ Storage::url($media->file_path) }}" target="_blank">
-                                        <img src="{{ Storage::url($media->file_path) }}" class="img-fluid img-thumbnail">
+                                    <a href="{{ s3_asset(true,10,$media->file_path) }}" target="_blank">
+                                        <img src="{{ s3_asset(true,10,$media->file_path) }}" class="img-fluid img-thumbnail">
                                     </a>
                                 </div>
                                 @endforeach
@@ -317,7 +317,7 @@
                                 <p class="text-muted small mb-0">
                                     Scan untuk melihat detail laptop di perangkat mobile
                                 </p>
-                                <a href="{{ Storage::url($laptop->qr_code_path) }}" download class="btn btn-sm btn-outline-primary mt-2">
+                                <a href="{{ s3_asset(true,10,$laptop->qr_code_path) }}" download class="btn btn-sm btn-outline-primary mt-2">
                                     <i class="fas fa-download mr-1"></i> Download QR Code
                                 </a>
                             </div>

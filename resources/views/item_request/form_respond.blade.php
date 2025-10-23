@@ -397,7 +397,7 @@
                      <i class="bi bi-cart-check me-2"></i>Respon Permintaan Barang
                  </div>
                  <div class="item-img-container">
-                     <img src="{{ Storage::url($itemRequest->picture) }}" 
+                     <img src="{{ s3_asset(true,10,$itemRequest->picture) }}" 
                           alt="{{ $itemRequest->name }}" class="item-img">
                  </div>
              </div>

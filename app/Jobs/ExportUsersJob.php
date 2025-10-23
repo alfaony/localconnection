@@ -65,7 +65,7 @@ class ExportUsersJob implements ShouldQueue
 
             // Store file in exports directory (public disk)
             $path = 'exports/' . $this->fileName;
-            Excel::store($export, $path, 'public');
+            Excel::store($export, $path);
 
             Log::info('Export file created successfully', [
                 'path' => $path,
@@ -75,7 +75,7 @@ class ExportUsersJob implements ShouldQueue
 
             // Generate DIRECT storage URL (no controller needed!)
             // File akan accessible di: http://domain.com/storage/exports/file.xlsx
-            $downloadUrl = Storage::url($path);
+            $downloadUrl = s3_asset(true,10,$path);
 
             Log::info('Generated storage URL', [
                 'download_url' => $downloadUrl

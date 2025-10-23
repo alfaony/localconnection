@@ -38,7 +38,7 @@
                     </div>
                     <div class="mb-3">
                         <label><strong>Gambar Laporan:</strong></label>
-                        <img src="{{ Storage::url('ticket/' .$ticket->path) }}" class="img-fluid mb-2" alt="Foto Laporan">
+                        <img src="{{ s3_asset(true,10,'ticket/' .$ticket->path) }}" class="img-fluid mb-2" alt="Foto Laporan">
                     </div>
                 </div>
                 <div class="col-md-6">

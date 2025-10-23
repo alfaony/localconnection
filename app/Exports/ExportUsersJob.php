@@ -88,7 +88,7 @@ class ExportUsersJob implements ShouldQueue
 
             // Store file in exports directory
             $path = 'exports/' . $this->fileName;
-            Excel::store($export, $path, 'public');
+            Excel::store($export, $path);
 
             Log::info('Export file created successfully', [
                 'path' => $path,

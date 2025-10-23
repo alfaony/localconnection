@@ -38,8 +38,8 @@ class ExportInvoiceJob implements ShouldQueue
     {
         $exportFormat = $this->format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
         try {
-            Excel::store(new InvoiceExport($this->filters, $this->company_id), $this->filename, 'public', $exportFormat);
-            Log::info("File successfully stored at: " . Storage::url($this->filename));
+            Excel::store(new InvoiceExport($this->filters, $this->company_id), $this->filename, null, $exportFormat);
+            Log::info("File successfully stored at: " . s3_asset(true,10,$this->filename));
         } catch (\Exception $e) {
             // dd($e);
             Log::error("Error storing file: " . $e->getMessage());

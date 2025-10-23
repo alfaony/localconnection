@@ -118,7 +118,7 @@ class WorkOrderController extends Controller
                 $extension = $file->getClientOriginalExtension();  // Dapatkan ekstensi file
                 $filenameToStore = $filename.'_'.time().'_'.Str::uuid().'.'.$extension;  // Hasilkan nama file yang unik
 
-                $filePath = $file->storeAs('quotes', $filenameToStore, 'public');
+                $filePath = $file->storeAs('quotes', $filenameToStore);
             }
             
             $workOrder->quote_file = $filePath;  // Menyimpan path dari file yang disimpan
@@ -282,7 +282,7 @@ class WorkOrderController extends Controller
                 $extension = $file->getClientOriginalExtension();  // Dapatkan ekstensi file
                 $filenameToStore = $filename.'_'.time().'_'.Str::uuid().'.'.$extension;  // Hasilkan nama file yang unik
 
-                $filePath = $file->storeAs('quotes', $filenameToStore, 'public');
+                $filePath = $file->storeAs('quotes', $filenameToStore);
                 $workOrder->quote_file = $filePath;  // Menyimpan path dari file yang disimpan
             }
             
@@ -541,8 +541,8 @@ class WorkOrderController extends Controller
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
 
 
-        ExportWorkOrderJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
         $filename = "public/" . $filename;
+        ExportWorkOrderJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
         session(['export_filename_workorder' => $filename]);
 
         return redirect()->back()->with('export', true);
@@ -552,10 +552,16 @@ class WorkOrderController extends Controller
     {
         $filename = session('export_filename_workorder');
 
-        if ($filename && Storage::exists($filename)) {
-            // Provide the download URL if file exists
-            $downloadUrl = Storage::url($filename);
-            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        try {
+            if ($filename && Storage::exists($filename)) {  
+                // Provide the download URL if file exists
+                $downloadUrl = s3_asset(true,10,$filename);
+                return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+            }
+        }catch (\Throwable $e) {
+            \Log::error('Export check failed: ' . $e->getMessage());
+
+            return response()->json(['ready' => false,'filename' => $filename]);
         }
     
         return response()->json(['ready' => false,'filename' => $filename]);

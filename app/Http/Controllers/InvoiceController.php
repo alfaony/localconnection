@@ -650,7 +650,7 @@ class InvoiceController extends Controller
 
         if ($filename && Storage::exists($fileExist)) {
             // Provide the download URL if file exists
-            $downloadUrl = Storage::url($fileExist);
+            $downloadUrl = s3_asset(true,10,$fileExist);
             return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
         }
 
@@ -988,7 +988,7 @@ class InvoiceController extends Controller
         $fileName = 'invoices_' . now()->timestamp . '.xlsx';
 
         // Queue the export job
-        Excel::store(new InvoiceExport(), $fileName, 'public', \Maatwebsite\Excel\Excel::XLSX);
+        Excel::store(new InvoiceExport(), $fileName, \Maatwebsite\Excel\Excel::XLSX);
 
         // Return the file name to the frontend
         return response()->json(['file_name' => $fileName]);
@@ -1024,7 +1024,7 @@ class InvoiceController extends Controller
         // Check if the file exists on the public disk
         if ($filename && Storage::exists($filename)) {
             // Provide the download URL if file exists
-            $downloadUrl = Storage::url($filename);
+            $downloadUrl = s3_asset(true,10,$filename);
             return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
         }
     
