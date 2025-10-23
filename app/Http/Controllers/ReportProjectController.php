@@ -456,17 +456,17 @@ class ReportProjectController extends Controller
             array_push($actionButtons,$edit);
         }
 
-        if(Access::can('downloadall','report_projects'))
-        {
-            $edit = 
-            [
-                'name' => 'Download All File',
-                'route' => 'report-project.downloadall',
-                'id' => true,
-            ];
+        // if(Access::can('downloadall','report_projects'))
+        // {
+        //     $edit = 
+        //     [
+        //         'name' => 'Download All File',
+        //         'route' => 'report-project.downloadall',
+        //         'id' => true,
+        //     ];
 
-            array_push($actionButtons,$edit);
-        }
+        //     array_push($actionButtons,$edit);
+        // }
 
         if(Access::can('destroy','report_projects'))
         {
