@@ -610,7 +610,20 @@ class BastController extends Controller
             }
 
             // Kumpulkan file PDF dari S3 dan unduh ke lokal sementara
+            // Inisialisasi list file PDF
             $pdfFiles = [];
+
+            // 1. Tambahkan PDF hasil view sebagai cover (letak paling awal)
+            $today = Carbon::now()->format('d M Y');
+            $company = SettingCompany::byCompany(Auth::user()->company_id)
+                ->get()->pluck('field_value', 'field_title');
+
+            $additionalPdf = Pdf::loadView('bast.' . $bast->template, compact('bast', 'today', 'company'));
+            $additionalLocalPath = $localTemp . '/temp_additional.pdf';
+            file_put_contents($additionalLocalPath, $additionalPdf->output());
+            $pdfFiles[] = $additionalLocalPath;
+
+            // 2. Tambahkan PDF dari reportedDetails
             foreach ($reportProject->reportedDetails as $detail) {
                 $remotePath = 'reports/' . $detail->file;
 
@@ -626,10 +639,10 @@ class BastController extends Controller
             $company = SettingCompany::byCompany(Auth::user()->company_id)
                 ->get()->pluck('field_value', 'field_title');
 
-            $additionalPdf = Pdf::loadView('bast.' . $bast->template, compact('bast', 'today', 'company'));
-            $additionalLocalPath = $localTemp . '/temp_additional.pdf';
-            file_put_contents($additionalLocalPath, $additionalPdf->output());
-            $pdfFiles[] = $additionalLocalPath;
+            // $additionalPdf = Pdf::loadView('bast.' . $bast->template, compact('bast', 'today', 'company'));
+            // $additionalLocalPath = $localTemp . '/temp_additional.pdf';
+            // file_put_contents($additionalLocalPath, $additionalPdf->output());
+            // $pdfFiles[] = $additionalLocalPath;
 
             // Inisialisasi FPDI dan merge semua PDF
             $mergedPdf = new Fpdi();
