@@ -645,9 +645,7 @@ class InvoiceController extends Controller
     public function checkPdfAStatus()
     {
         $filename = session('export_filename_invoice_pdfa');
-        $fileExist = "public/invoices/converted/pdfa-".$filename;
-        // $fileExist "public/invoices/converted";
-
+        $fileExist = "invoices/converted/pdfa-".$filename;
         if ($filename && Storage::exists($fileExist)) {
             // Provide the download URL if file exists
             $downloadUrl = s3_asset(true,10,$fileExist);
