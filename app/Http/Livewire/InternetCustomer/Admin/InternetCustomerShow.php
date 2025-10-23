@@ -129,9 +129,10 @@ class InternetCustomerShow extends Component
     
     public function viewKtpPhoto()
     {
+        $url = s3_asset(true,10,$this->ktpPhotoUrl);
         $this->dispatchBrowserEvent('showImageModal', [
             'title' => 'Foto KTP',
-            'imageUrl' => $this->ktpPhotoUrl
+            'imageUrl' => $url
         ]);
     }
 

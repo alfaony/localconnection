@@ -360,7 +360,7 @@ class InternetCustomerForm extends Component
                 'name' => $this->name,
                 'address' => $this->address,
                 'ktp_number' => $this->ktp_number,
-                'ktp_photo' => $ktpPath ? s3_asset(true,10,$ktpPath) : null,
+                'ktp_photo' => $ktpPath ? $ktpPath : null,
                 'is_paid' => false,
                 'status' => ParamSchema::WAITING_PAYMENT_CONFIRMATION,
             ]);
@@ -436,7 +436,7 @@ class InternetCustomerForm extends Component
             $this->step = 5;
 
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
             DB::rollBack();
             // dd($th);
             session()->flash('error', 'Terjadi kesalahan: Konfirmasikan ke Admin');
