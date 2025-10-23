@@ -139,7 +139,7 @@ class InternetCustomerShow extends Component
     {
         // Convert paths to full URLs
         $fullUrls = array_map(function($path) {
-            return asset('storage/' . $path);
+            return s3_asset(true,10, $path);
         }, $this->installationPhotos);
         
         $this->dispatchBrowserEvent('showGalleryModal', [
