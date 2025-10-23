@@ -877,18 +877,27 @@ class InvoiceController extends Controller
         }
 
         // Tambahkan halaman dari file BAST
-        $pageCount = $pdf->setSourceFile(Storage::path($bastFilePath));
-        for ($i = 1; $i <= $pageCount; $i++) {
-            $tpl = $pdf->importPage($i);
-            $size = $pdf->getTemplateSize($tpl);
-            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-            $pdf->useTemplate($tpl);
-        }
+        $tempBastPath = sys_get_temp_dir() . '/temp_bast_' . uniqid() . '.pdf';
+            Storage::copy($bastFilePath, 'temp/temp_bast.pdf');
+            $tempBastContent = Storage::get($bastFilePath);
+            file_put_contents($tempBastPath, $tempBastContent);
+
+            $pageCount = $pdf->setSourceFile($tempBastPath);
+            for ($i = 1; $i <= $pageCount; $i++) {
+                $tpl = $pdf->importPage($i);
+                $size = $pdf->getTemplateSize($tpl);
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($tpl);
+            }
+
+            // Hapus temp file
+            unlink($tempBastPath);
 
         // Simpan hasil gabungan ke storage public
         if (!Storage::exists(dirname($outputPath))) {
             Storage::makeDirectory(dirname($outputPath)); // Buat direktori jika belum ada
         }
+        
         $mergedAbsolutePath = Storage::path($outputPath);
         $pdf->Output($mergedAbsolutePath, 'F'); // Simpan file gabungan
 
