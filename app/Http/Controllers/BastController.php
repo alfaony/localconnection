@@ -668,7 +668,7 @@ class BastController extends Controller
             $mergedPdf->Output($localFinalPath, 'F');
 
             // Upload hasil ke S3
-            $remoteFinalPath = 'reports/' . $finalFileName;
+            $remoteFinalPath = 'public/reports/' . $finalFileName;
             $disk->put($remoteFinalPath, file_get_contents($localFinalPath));
 
             // Simpan path ke database
