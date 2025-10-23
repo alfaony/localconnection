@@ -555,33 +555,44 @@ class ReportProjectController extends Controller
 
     public function downloadall($slug)
     {
-        // Ambil semua file berdasarkan ID reportProject
-        $reportProject = ReportProject::with('reportProjectDetail')->where('slug',$slug)->firstOrFail();
-        if (!$reportProject) {
-            return redirect()->back()->with('error', 'Report Project not found.');
-        }
-        
-        // Nama file ZIP
-        $zipFileName = 'reports_' . $reportProject->number_result . '.zip';
-        $zipFileName = str_replace('/', '_', $zipFileName);
-        $zipPath = storage_path('app/public/' . $zipFileName);
+        // Ambil project dan relasi detail-nya
+        $reportProject = ReportProject::with('reportProjectDetail')->where('slug', $slug)->firstOrFail();
 
-        // Membuat ZIP
+        // Nama file ZIP
+        $zipFileName = 'reports_' . Str::slug($reportProject->number_result) . '.zip';
+
+        // Temp path lokal untuk simpan zip
+        $localZipPath = storage_path('app/temp/' . $zipFileName);
+
+        // Buat folder temp jika belum ada
+        if (!file_exists(storage_path('app/temp'))) {
+            mkdir(storage_path('app/temp'), 0755, true);
+        }
+
+        // Buat ZIP archive
         $zip = new ZipArchive;
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+        if ($zip->open($localZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+
             foreach ($reportProject->reportProjectDetail->sortBy('order') as $detail) {
-                $filePath = storage_path('app/public/reports/' . $detail->file);
-                if (file_exists($filePath)) {
-                    $zip->addFile($filePath, $detail->file);
+                $remotePath = 'reports/' . $detail->file;
+
+                // Ambil file dari S3 dan simpan ke temp lokal
+                if (Storage::disk('s3')->exists($remotePath)) {
+                    $localFilePath = storage_path('app/temp/' . basename($remotePath));
+                    file_put_contents($localFilePath, Storage::disk('s3')->get($remotePath));
+
+                    // Masukkan ke dalam ZIP (nama file tetap asli)
+                    $zip->addFile($localFilePath, $detail->file);
                 }
             }
+
             $zip->close();
         } else {
-            return redirect()->back()->with('error', 'Failed to create ZIP file.');
+            return redirect()->back()->with('error', 'Gagal membuat file ZIP.');
         }
 
-        // Mengunduh file ZIP
-        return response()->download($zipPath)->deleteFileAfterSend(true);
+        // Download ZIP dan hapus setelah selesai
+        return response()->download($localZipPath)->deleteFileAfterSend(true);
     }
 
 
