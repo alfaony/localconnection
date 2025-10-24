@@ -16,7 +16,6 @@ class InternetCustomerInstallation extends Model
         'technical_user_id',
         'device_serial_number',
         'installed_at',
-        // 'photos',
         'notes',
     ];
 

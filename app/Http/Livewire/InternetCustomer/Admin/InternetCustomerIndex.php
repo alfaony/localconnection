@@ -438,7 +438,7 @@ class InternetCustomerIndex extends Component
             // eager load minimal yang dipakai di blade
             ->with([
                 'installation:id,internet_customer_id,device_serial_number',
-                'installation.photos:id,internet_installation_id,photo,caption', // eager load photos
+                'installation.medias:id,internet_installation_id,photo,caption', // eager load photos
                 'userCustomer:id,name,email,phone_number',
                 'company:id,name',
                 'internetPackage:id,name'
@@ -485,8 +485,8 @@ class InternetCustomerIndex extends Component
 
         // Sorting
         $internetCustomers = $query->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
-
+        ->paginate($this->perPage);
+        
         // Get filter options
         $packages = InternetPackage::byCompany($user->company_id)->orderBy('name')->get();
 
