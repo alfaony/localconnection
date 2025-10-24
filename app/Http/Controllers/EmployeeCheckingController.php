@@ -182,7 +182,7 @@ class EmployeeCheckingController extends Controller
         if ($request->hasFile('photo')) 
         {
             $photoPath = $request->file('photo')->store('checkin_photos');
-            $employeeChecking->photo_path = s3_asset(true,10,$photoPath);
+            $employeeChecking->photo_path = $photoPath;
         }
 
         // Update latitude dan longitude jika ada

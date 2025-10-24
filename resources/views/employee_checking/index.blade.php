@@ -203,7 +203,7 @@
                                                                 <div class="mb-3 text-center">
                                                                     <label class="font-weight-bold"><i class="fa fa-camera"></i> Foto Check-In:</label>
                                                                     <div class="border rounded p-3">
-                                                                        <img src="{{ asset($checking->photo_path) }}" alt="Foto Check-In" class="img-fluid rounded">
+                                                                        <img src="{{ s3_asset(true,10,$checking->photo_path) }}" alt="Foto Check-In" class="img-fluid rounded">
                                                                     </div>
                                                                 </div>
                                                             @endif
