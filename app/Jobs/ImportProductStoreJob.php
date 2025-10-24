@@ -64,12 +64,13 @@ class ImportProductStoreJob implements ShouldQueue
                 $name = $row[2] ?? null;
                 $variant = $row[3] ?? null;
                 $specification = $row[4] ?? null;
-                $length = $row[5] ?? 0;
-                $width = $row[6] ?? 0;
-                $height = $row[7] ?? 0;
-                $weight = $row[8] ?? 0;
+                $length = is_numeric($row[5]) ? $row[5] : null;
+                $width = is_numeric($row[6]) ? $row[6] : null;
+                $height = is_numeric($row[7]) ? $row[7] : null;
+                $weight = is_numeric($row[8]) ? $row[8] : null;
                 $sellingPrice = $row[9] ?? 0;
                 $rackName = $row[10] ?? null;
+
                 // ============================================
 
 
