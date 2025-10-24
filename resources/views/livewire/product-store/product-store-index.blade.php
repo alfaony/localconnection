@@ -11,12 +11,15 @@
                             </h3>
                         </div>
                         <div class="col-md-6 text-right">
+
+                            @canAccess('import','product_stores')
                             <button type="button" 
                                     class="btn btn-success" 
                                     wire:click="toggleImportSection">
                                 <i class="bi bi-upload"></i> 
                                 {{ $showImportSection ? 'Hide Import' : 'Import CSV' }}
                             </button>
+                            @endcanAccess
 
                             @canAccess('create','product_stores')
                             <a href="{{ route('product-store.create') }}" class="btn btn-light btn-sm">
@@ -33,6 +36,7 @@
                     </div>
                 </div>
 
+                @canAccess('import','product_stores')
                 @if($showImportSection)
                 <div class="card-body">
                     <!-- Panduan -->
@@ -54,59 +58,106 @@
                         </button>
                     </div>
                     <!-- Upload Form -->
-                    @if(!$isImporting)
-                    <form wire:submit.prevent="import">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="mb-3">
-                                    <label for="csvFile" class="form-label">Pilih File CSV</label>
-                                    <input type="file" 
-                                        class="form-control @error('csvFile') is-invalid @enderror" 
-                                        wire:model="csvFile" 
-                                        accept=".csv"
-                                        id="csvFileInput"
-                                        key="{{ $isImporting ? 'importing' : 'ready' }}">
-                                    @error('csvFile')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <div class="form-text">Format: CSV, Maksimal 10MB</div>
-                                    
-                                    <div wire:loading wire:target="csvFile" class="mt-2">
-                                        <div class="spinner-border spinner-border-sm text-info" role="status">
-                                            <span class="visually-hidden">Loading...</span>
-                                        </div>
-                                        <small class="text-info ms-2">Loading file...</small>
-                                    </div>
-
-                                    @if($csvFile && !$isImporting)
-                                        <div class="mt-2">
-                                            <div class="alert alert-success py-2">
-                                                <i class="bi bi-check-circle"></i> 
-                                                File selected: <strong>{{ $csvFile->getClientOriginalName() }}</strong>
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label d-block">&nbsp;</label>
-                                <button type="submit" 
-                                        class="btn btn-primary w-100" 
-                                        wire:loading.attr="disabled" 
-                                        wire:target="csvFile, import"
-                                        {{ !$csvFile ? 'disabled' : '' }}>
-                                    <span wire:loading.remove wire:target="import">
-                                        <i class="bi bi-upload"></i> Upload & Import
-                                    </span>
-                                    <span wire:loading wire:target="import">
-                                        <span class="spinner-border spinner-border-sm me-2"></span>
-                                        Processing...
-                                    </span>
-                                </button>
-                            </div>
+<!-- Upload Form -->
+@if(!$isImporting)
+<form wire:submit.prevent="import">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="mb-3">
+                <label for="csvFile" class="form-label">Pilih File CSV</label>
+                <input type="file" 
+                    class="form-control @error('csvFile') is-invalid @enderror" 
+                    wire:model="csvFile" 
+                    accept=".csv"
+                    id="csvFileInput"
+                    {{ $uploadingFile ? 'disabled' : '' }}>
+                @error('csvFile')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+                <div class="form-text">Format: CSV, Maksimal 10MB</div>
+                
+                <!-- Loading saat file sedang diupload dan divalidasi -->
+                @if($uploadingFile && !$isFileReady)
+                <div class="mt-2" wire:poll.500ms="checkFileReady">
+                    <div class="alert alert-info py-2 mb-0 d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2"></div>
+                        <div>
+                            <strong>Mengupload dan memvalidasi file...</strong>
+                            <small class="d-block text-muted">Mohon tunggu, sedang memproses file Anda</small>
                         </div>
-                    </form>
+                    </div>
+                </div>
+                @endif
+
+                <!-- File uploaded and ready -->
+                @if($isFileReady && $csvFile)
+                <div class="mt-2">
+                    <div class="alert alert-success py-2 mb-0 d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill me-2 text-success" style="font-size: 1.2rem;"></i>
+                        <div class="flex-grow-1">
+                            <strong>File siap diimport!</strong>
+                            <small class="d-block">{{ $csvFile->getClientOriginalName() }}</small>
+                        </div>
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-danger" 
+                                wire:click="resetImport"
+                                title="Hapus file">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label d-block">&nbsp;</label>
+            
+            <button type="submit" 
+                    class="btn btn-primary w-100" 
+                    wire:loading.attr="disabled"
+                    wire:target="import"
+                    {{ !$isFileReady || $uploadingFile ? 'disabled' : '' }}>
+                
+                <!-- Loading saat import -->
+                <span wire:loading wire:target="import">
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Memproses import...
+                </span>
+                
+                <!-- Default text -->
+                <span wire:loading.remove wire:target="import">
+                    @if($uploadingFile)
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Menunggu file...
+                    @elseif($isFileReady)
+                        <i class="bi bi-upload"></i> Mulai Import
+                    @else
+                        <i class="bi bi-upload"></i> Upload & Import
                     @endif
+                </span>
+            </button>
+            
+            <!-- Helper text -->
+            <div class="mt-2 text-center">
+                @if($uploadingFile && !$isFileReady)
+                    <small class="text-warning d-flex align-items-center justify-content-center">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        <span>Memvalidasi file...</span>
+                    </small>
+                @elseif($isFileReady)
+                    <small class="text-success">
+                        <i class="bi bi-check-circle-fill"></i> File valid dan siap diimport
+                    </small>
+                @else
+                    <small class="text-muted">
+                        <i class="bi bi-arrow-up"></i> Pilih file CSV terlebih dahulu
+                    </small>
+                @endif
+            </div>
+        </div>
+    </div>
+</form>
+@endif
 
                     <!-- Progress Section -->
                     @if($isImporting && $importProgress)
@@ -204,6 +255,7 @@
                     @endif
                 </div>
                 @endif
+                @endcanAccess
 
                 <!-- Filters Section -->
                 <div class="card-body border-bottom bg-light">
@@ -228,9 +280,9 @@
                                        placeholder="Cari nama, barcode...">
                             </div>
                             <div class="mt-1" wire:loading.delay wire:target="search">
-                                <small class="text-muted">
-                                    <span class="spinner-border spinner-border-sm" role="status"></span>
-                                    Mencari...
+                                <small class="text-muted d-inline-flex align-items-center">
+                                    <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                                    <span>Mencari...</span>
                                 </small>
                             </div>
                         </div>
@@ -549,10 +601,36 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('livewire:load', function () {
-        // Import
-        let progressInterval = null;
+        
+        // File ready notification
+        window.addEventListener('file-ready', event => {
+            console.log('File ready:', event.detail);
+            
+            // Toast notification
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+            });
+            
+            Toast.fire({
+                icon: 'success',
+                title: `File siap!`,
+                text: event.detail.filename
+            });
+        });
 
-        // Import started notification
+        // File input change - reset on new file selection
+        const fileInput = document.getElementById('csvFileInput');
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                console.log('New file selected, waiting for upload...');
+            });
+        }
+
+        // Import started
         window.addEventListener('import-started', event => {
             Swal.fire({
                 icon: 'info',
@@ -563,17 +641,15 @@
             });
         });
 
-        // Start progress check
+        // Import Progress
+        let progressInterval = null;
+
         window.addEventListener('start-progress-check', event => {
-            // Clear existing interval
             if (progressInterval) {
                 clearInterval(progressInterval);
             }
             
-            // Check progress every 1 second
             progressInterval = setInterval(() => {
-                console.log("call");
-                
                 @this.call('checkProgress');
             }, 1000);
         });
@@ -589,7 +665,6 @@
             const progress = event.detail.progress;
             
             // Clear file input
-            const fileInput = document.getElementById('csvFileInput');
             if (fileInput) {
                 fileInput.value = '';
             }
@@ -624,49 +699,18 @@
                 allowOutsideClick: false,
                 width: '600px'
             }).then(() => {
-                // Refresh products
                 @this.call('$refresh');
             });
         });
 
-        // SweetAlert confirm delete
-        window.addEventListener('swal:confirm', event => {
-            Swal.fire({
-                title: event.detail.title,
-                text: event.detail.text,
-                icon: event.detail.type,
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    @this.call('deleteProduct', event.detail.id);
-                }
-            });
-        });
-
-        // SweetAlert success
-        window.addEventListener('swal:success', event => {
-            Swal.fire({
-                icon: 'success',
-                title: event.detail.title,
-                text: event.detail.text,
-                timer: 2000,
-                showConfirmButton: false
-            });
-        });
-
-        // Cleanup on page leave
+        // Cleanup
         window.addEventListener('beforeunload', () => {
             if (progressInterval) {
                 clearInterval(progressInterval);
             }
         });
-        // End Import
 
-        // Handle delete confirmation
+        // Delete confirmation
         window.addEventListener('swal:confirm', function (event) {
             Swal.fire({
                 title: event.detail.title || 'Apakah Anda yakin?',
@@ -684,7 +728,6 @@
             });
         });
 
-        // Handle success message
         Livewire.on('productDeleted', () => {
             Swal.fire({
                 icon: 'success',

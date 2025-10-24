@@ -38,6 +38,8 @@ class ProductStoreIndex extends Component
 
     // Import properties
     public $csvFile;
+    public $isFileReady = false;
+    public $uploadingFile = false;
     public $batchId = null;
     public $importProgress = null;
     public $isImporting = false;
@@ -126,91 +128,144 @@ class ProductStoreIndex extends Component
     }
 
     // FIX: Tambahkan method untuk clear file setelah upload
-    public function updatedCsvFile()
-    {
-        $this->resetValidation('csvFile');
+    // public function updatedCsvFile()
+    // {
+    //     $this->resetValidation('csvFile');
+    // }
+
+public function updatedCsvFile()
+{
+    $this->uploadingFile = true;
+    $this->isFileReady = false;
+    $this->resetValidation('csvFile');
+}
+
+public function checkFileReady()
+{
+    try {
+        if ($this->csvFile && $this->csvFile->exists()) {
+            // Double check file can be read
+            $testRead = $this->csvFile->get();
+            
+            if (!empty($testRead)) {
+                $this->isFileReady = true;
+                $this->uploadingFile = false;
+                
+                $this->dispatchBrowserEvent('file-ready', [
+                    'filename' => $this->csvFile->getClientOriginalName(),
+                    'size' => number_format($this->csvFile->getSize() / 1024, 2) . ' KB'
+                ]);
+                
+                return true;
+            }
+        }
+        
+        return false;
+    } catch (\Exception $e) {
+        Log::error('File check error', ['error' => $e->getMessage()]);
+        return false;
+    }
+}
+
+// public function resetImport()
+// {
+//     $this->reset(['csvFile', 'batchId', 'importProgress', 'isImporting', 'isFileReady', 'uploadingFile']);
+//     $this->resetValidation();
+// }
+
+public function import()
+{
+    // Final check
+    if (!$this->isFileReady || !$this->csvFile) {
+        $this->addError('csvFile', 'File belum siap. Silakan tunggu beberapa saat.');
+        return;
     }
 
-    public function import()
-    {
-        // Validasi dengan mime type yang lebih spesifik
-        $this->validate([
-            'csvFile' => 'required|file|mimes:csv,txt|max:10240',
-        ], [
-            'csvFile.required' => 'File CSV wajib diupload',
-            'csvFile.mimes' => 'File harus berformat CSV',
-            'csvFile.max' => 'Ukuran file maksimal 10MB'
+    // Validasi
+    $this->validate([
+        'csvFile' => 'required|file|max:10240',
+    ], [
+        'csvFile.required' => 'File CSV wajib diupload',
+        'csvFile.max' => 'Ukuran file maksimal 10MB'
+    ]);
+
+    try {
+        // Triple check file exists
+        if (!$this->csvFile->exists()) {
+            $this->addError('csvFile', 'File tidak ditemukan. Silakan upload ulang.');
+            return;
+        }
+
+        // Get file content
+        $fileContent = $this->csvFile->get();
+        
+        if (empty($fileContent)) {
+            $this->addError('csvFile', 'File kosong atau corrupt.');
+            return;
+        }
+        
+        // Parse CSV
+        $csv = Reader::createFromString($fileContent);
+        $csv->setHeaderOffset(null);
+        
+        $csvData = iterator_to_array($csv->getRecords());
+        
+        if (count($csvData) <= 1) {
+            $this->addError('csvFile', 'File CSV kosong atau hanya berisi header');
+            return;
+        }
+
+        // Get accessible company IDs
+        $accessibleCompanyIds = auth()->user()
+            ->accessibleCompanies
+            ->pluck('id')
+            ->push(auth()->user()->company_id)
+            ->unique()
+            ->toArray();
+
+        // Generate batch ID
+        $this->batchId = Str::uuid()->toString();
+        
+        ImportProgress::create([
+            'batch_id' => $this->batchId,
+            'processed' => 0,
+            'total' => count($csvData) - 1,
+            'total_import' => 0,
+            'errors' => [],
+            'status' => 'queued'
         ]);
 
-        try {
-            // Get file content from S3
-            $fileContent = $this->csvFile->get();
-            
-            // Parse CSV using League CSV
-            $csv = Reader::createFromString($fileContent);
-            $csv->setHeaderOffset(null); // No automatic header
-            
-            // Get all records as array
-            $csvData = iterator_to_array($csv->getRecords());
-            
-            // Validasi CSV tidak kosong
-            if (count($csvData) <= 1) {
-                $this->addError('csvFile', 'File CSV kosong atau hanya berisi header');
-                return;
-            }
+        // Dispatch job
+        ImportProductStoreJob::dispatch(
+            $csvData,
+            auth()->id(),
+            auth()->user()->company_id,
+            $this->batchId,
+            $accessibleCompanyIds
+        );
 
-            // Get accessible company IDs
-            $accessibleCompanyIds = auth()->user()
-                ->accessibleCompanies
-                ->pluck('id')
-                ->push(auth()->user()->company_id)
-                ->unique()
-                ->toArray();
+        $this->isImporting = true;
+        $this->isFileReady = false;
+        $this->uploadingFile = false;
+        $this->csvFile = null;
+        
+        $this->dispatchBrowserEvent('import-started', [
+            'total_rows' => count($csvData) - 1
+        ]);
+        
+        $this->dispatchBrowserEvent('start-progress-check');
 
-            // Generate batch ID dan create progress record
-            $this->batchId = Str::uuid()->toString();
-            
-            ImportProgress::create([
-                'batch_id' => $this->batchId,
-                'processed' => 0,
-                'total' => count($csvData) - 1, // exclude header
-                'total_import' => 0,
-                'errors' => [], // array kosong, bukan json_encode
-                'status' => 'queued'
-            ]);
+    } catch (\Exception $e) {
+        Log::error('Import error', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
 
-            // Dispatch job
-            ImportProductStoreJob::dispatch(
-                $csvData,
-                auth()->id(),
-                auth()->user()->company_id,
-                $this->batchId,
-                $accessibleCompanyIds
-            );
-
-            $this->isImporting = true;
-            
-            // Clear file input setelah submit
-            $this->csvFile = null;
-            
-            // Show notification
-            $this->dispatchBrowserEvent('import-started', [
-                'total_rows' => count($csvData) - 1
-            ]);
-            
-            // Start checking progress
-            $this->dispatchBrowserEvent('start-progress-check');
-
-        } catch (\Exception $e) {
-            Log::error('Import upload error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $this->addError('csvFile', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
+        $this->addError('csvFile', 'Terjadi kesalahan: ' . $e->getMessage());
+        $this->isFileReady = false;
+        $this->uploadingFile = false;
     }
-
+}
     public function checkProgress()
     {
         if (!$this->batchId) {

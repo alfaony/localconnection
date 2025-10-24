@@ -24,7 +24,9 @@ class PermissionForProductStoreSeeder extends Seeder
     {
         $roles = Role::whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::PROCUREMENT, RoleSchema::MANAGER, RoleSchema::MANAGER_FINANCE, RoleSchema::FINANCE, RoleSchema::SPRINTER])->get();
         
-        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store',"print"];
+        $this->call(ClearPermissionSeeder::class);
+
+        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store',"print",'import'];
 
         foreach ($methods as $method) 
         {
