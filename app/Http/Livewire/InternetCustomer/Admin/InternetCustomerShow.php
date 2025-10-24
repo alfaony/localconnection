@@ -54,8 +54,10 @@ class InternetCustomerShow extends Component
         $this->ktpPhotoUrl = $this->customer->ktp_photo;
 
         // Get installation photos if exists
-        if ($this->customer->installation && $this->customer->installation->photos) {
-            $this->installationPhotos = json_decode($this->customer->installation->photos, true);
+        if ($this->customer->installation && $this->customer->installation->medias->count() > 0) {
+            $this->installationPhotos = $this->customer->installation->medias
+                ->pluck('photo')
+                ->toArray();
         }
     }
 
@@ -138,14 +140,39 @@ class InternetCustomerShow extends Component
 
     public function viewInstallationPhotos()
     {
-        // Convert paths to full URLs
+        // Cek apakah ada foto instalasi
+        if (empty($this->installationPhotos)) {
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Foto instalasi tidak tersedia'
+            ]);
+            return;
+        }
+
+        // Convert paths to full URLs menggunakan helper s3_asset
+        // Parameter: s3_asset($private = true, $expiresInMinutes = 10, $path)
         $fullUrls = array_map(function($path) {
-            return s3_asset(true,10, $path);
+            return s3_asset(true, 10, $path);
         }, $this->installationPhotos);
-        
+
+        // Filter out empty or invalid URLs
+        $fullUrls = array_filter($fullUrls, function($url) {
+            return !empty($url);
+        });
+
+        // Cek apakah ada URL yang valid
+        if (empty($fullUrls)) {
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Tidak dapat memuat foto instalasi'
+            ]);
+            return;
+        }
+
+        // Dispatch event ke JavaScript untuk menampilkan gallery
         $this->dispatchBrowserEvent('showGalleryModal', [
-            'title' => 'Foto Instalasi',
-            'images' => $fullUrls
+            'title' => 'Foto Instalasi - ' . $this->customer->code,
+            'images' => array_values($fullUrls) // Re-index array untuk JavaScript
         ]);
     }
 
