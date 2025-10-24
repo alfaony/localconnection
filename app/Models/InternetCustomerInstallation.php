@@ -16,7 +16,7 @@ class InternetCustomerInstallation extends Model
         'technical_user_id',
         'device_serial_number',
         'installed_at',
-        'photos',
+        // 'photos',
         'notes',
     ];
 
@@ -29,5 +29,10 @@ class InternetCustomerInstallation extends Model
     public function technicalUser()
     {
         return $this->belongsTo(User::class, 'technical_user_id')->withTrashed();
+    }
+
+    public function medias()
+    {
+        return $this->hasMany(InternetInstallationPhoto::class, 'internet_installation_id', 'id');
     }
 }

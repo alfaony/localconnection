@@ -10,6 +10,7 @@ use App\Models\InternetPackage;
 use App\Models\User;
 use App\Models\InternetCustomerInstallation;
 use App\Models\InternetCustomerPurchase;
+use App\Models\InternetInstallationPhoto;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -42,7 +43,9 @@ class InternetCustomerIndex extends Component
     public $currentInstallationId; 
     public $currentInstallationName;
     public $currentInstallationCode;
-    public $deviceSerialNumber, $photos = [], $installationNotes;
+    public $deviceSerialNumber;
+    public $photos = []; // Array untuk multiple files
+    public $installationNotes;
     public $installationCustomerName, $installationCustomerCode, $installationCustomerId;
     public $installationModal = false;
     public $currentInstallationCustomer;
@@ -68,10 +71,22 @@ class InternetCustomerIndex extends Component
     {
         $customer = InternetCustomer::find($customerId);
         
+        if (!$customer) {
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Customer tidak ditemukan'
+            ]);
+            return;
+        }
+        
+        // Reset photos array
+        $this->photos = [];
+        
         $this->currentInstallationId = $customer->id;
         $this->currentInstallationName = $customer->name;
         $this->currentInstallationCode = $customer->code;
         $this->deviceSerialNumber = $customer->device_serial_number ?? '';
+        $this->installationNotes = '';
         
         $this->dispatchBrowserEvent('open-installation-modal', [
             'customerName' => $customer->name,
@@ -83,52 +98,189 @@ class InternetCustomerIndex extends Component
     }
 
     // Method untuk validasi dan submit
-    public function completeInstallation($serialNumber, $photos, $notes)
+    // Method untuk validasi dan submit
+    public function completeInstallation($serialNumber, $notes)
     {
-        // Validasi tambahan
-        $this->validate([
+        // Update properties dari parameter
+        $this->deviceSerialNumber = $serialNumber;
+        $this->installationNotes = $notes;
+        
+        // DEBUG: Log photos property
+        Log::info('completeInstallation called', [
+            'serialNumber' => $serialNumber,
+            'notes' => $notes,
+            'photos_count' => count($this->photos),
+            'photos_raw' => $this->photos,
+            'currentInstallationId' => $this->currentInstallationId
+        ]);
+        
+        // Cek apakah photos sudah ada
+        if (empty($this->photos)) {
+            Log::warning('Photos empty');
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Foto belum terupload. Silakan coba lagi.'
+            ]);
+            return false;
+        }
+        
+        // Filter hanya yang ada nilai (bukan null)
+        $validPhotos = array_filter($this->photos, function($photo) {
+            return $photo !== null;
+        });
+        
+        Log::info('Valid photos after filter', [
+            'count' => count($validPhotos),
+            'photos' => $validPhotos
+        ]);
+        
+        if (empty($validPhotos)) {
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Tidak ada foto yang valid. Silakan coba lagi.'
+            ]);
+            return false;
+        }
+        
+        // Validasi basic (tanpa validasi file dulu, karena masih string temporary)
+        $validated = $this->validate([
             'currentInstallationId' => 'required|exists:internet_customers,id',
-            'photos' => 'required|array|min:1',
-            'photos.*' => 'image|max:10240' // Max 2MB per file
+            'deviceSerialNumber' => 'required|string|max:255',
+        ], [
+            'deviceSerialNumber.required' => 'Serial Number wajib diisi',
+            'currentInstallationId.required' => 'Customer ID tidak valid',
+            'currentInstallationId.exists' => 'Customer tidak ditemukan',
         ]);
 
+        DB::beginTransaction();
         try {
-            // Upload foto
-            $uploadedPaths = [];
-
-            foreach ($photos as $tmpFilename) {
-                $tmpPath = storage_path('app/livewire-tmp/' . $tmpFilename);
-                $newPath = 'installation-photos/' . uniqid() . '-' . basename($tmpFilename);
-
-                // Pindahkan dari tmp ke public/installation-photos
-                Storage::put(
-                    "public/" . $newPath,
-                    file_get_contents($tmpPath)
-                );
-
-                $uploadedPaths[] = $newPath;
-
-                // Hapus file tmp
-                unlink($tmpPath);
-            }
-
-            // dd($uploadedPaths);
-
-            // Update data
-            $customer = InternetCustomer::find($this->currentInstallationId);
+            // 1. Ambil customer
+            $customer = InternetCustomer::findOrFail($this->currentInstallationId);
+            
+            Log::info('Customer found', ['id' => $customer->id, 'code' => $customer->code]);
+            
+            // 2. Update status customer
             $customer->update([
-                'status' => ParamSchema::INSTALLED 
+                'status' => ParamSchema::INSTALLED,
+                'device_serial_number' => $serialNumber
             ]);
+
+            // 3. Buat record installation
             $customerInstallation = InternetCustomerInstallation::create([
                 'internet_customer_id' => $customer->id,
-                'photos' => json_encode($uploadedPaths),
                 'device_serial_number' => $serialNumber,
                 'notes' => $notes,
                 'installed_at' => now(),
                 'technical_user_id' => Auth::id(),
             ]);
+            
+            Log::info('Installation record created', ['id' => $customerInstallation->id]);
 
-            // Reset form
+            // 4. Upload foto dari Livewire temporary ke S3 dan simpan ke database
+            $photoCount = 0;
+            
+            foreach ($validPhotos as $index => $photo) {
+                Log::info('Processing photo', [
+                    'index' => $index,
+                    'photo_value' => $photo,
+                    'photo_type' => gettype($photo),
+                ]);
+                
+                try {
+                    // Jika masih berupa string (temporary filename dari Livewire)
+                    // Kita perlu mengambil UploadedFile dari Livewire
+                    if (is_string($photo)) {
+                        // Livewire menyimpan temporary file di storage/app/livewire-tmp
+                        $tmpPath = storage_path('app/livewire-tmp/' . $photo);
+                        
+                        if (!file_exists($tmpPath)) {
+                            Log::error('Temporary file not found', ['path' => $tmpPath]);
+                            continue;
+                        }
+                        
+                        // Baca file content
+                        $fileContent = file_get_contents($tmpPath);
+                        
+                        // Extract extension dari filename
+                        $extension = pathinfo($photo, PATHINFO_EXTENSION);
+                        if (empty($extension)) {
+                            $extension = 'png'; // default
+                        }
+                        
+                        // Generate unique filename untuk S3
+                        $filename = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
+                        $s3Path = 'installation-photos/' . $customer->code . '/' . $filename;
+                        
+                        Log::info('Uploading to S3', [
+                            'from' => $tmpPath,
+                            'to' => $s3Path
+                        ]);
+                        
+                        // Upload ke S3
+                        Storage::disk('s3')->put($s3Path, $fileContent, 'public');
+                        
+                        Log::info('Photo uploaded to S3', ['path' => $s3Path]);
+                        
+                        // Simpan record foto ke database
+                        $photoRecord = InternetInstallationPhoto::create([
+                            'internet_installation_id' => $customerInstallation->id,
+                            'photo' => $s3Path,
+                            'caption' => 'Installation Photo ' . ($photoCount + 1),
+                        ]);
+                        
+                        Log::info('Photo record created', ['id' => $photoRecord->id]);
+                        
+                        // Hapus temporary file
+                        @unlink($tmpPath);
+                        
+                        $photoCount++;
+                        
+                    } 
+                    // Jika sudah UploadedFile object
+                    elseif ($photo instanceof \Illuminate\Http\UploadedFile) {
+                        $extension = $photo->getClientOriginalExtension();
+                        $filename = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
+                        
+                        $path = $photo->storeAs(
+                            'installation-photos/' . $customer->code,
+                            $filename,
+                            's3'
+                        );
+                        
+                        Storage::disk('s3')->setVisibility($path, 'public');
+                        
+                        InternetInstallationPhoto::create([
+                            'internet_installation_id' => $customerInstallation->id,
+                            'photo' => $path,
+                            'caption' => 'Installation Photo ' . ($photoCount + 1),
+                        ]);
+                        
+                        $photoCount++;
+                    }
+                    
+                } catch (\Exception $photoError) {
+                    Log::error('Failed to process photo', [
+                        'index' => $index,
+                        'error' => $photoError->getMessage(),
+                        'trace' => $photoError->getTraceAsString()
+                    ]);
+                    continue;
+                }
+            }
+
+            // Validasi minimal ada 1 foto yang berhasil diupload
+            if ($photoCount === 0) {
+                throw new \Exception('Tidak ada foto yang berhasil diupload. Silakan coba lagi.');
+            }
+
+            DB::commit();
+            
+            Log::info('Installation completed successfully', [
+                'customer_id' => $customer->id,
+                'photos_uploaded' => $photoCount
+            ]);
+
+            // Reset form dan properties
             $this->reset([
                 'installationModal',
                 'currentInstallationId',
@@ -139,16 +291,28 @@ class InternetCustomerIndex extends Component
                 'photos'
             ]);
 
+            // Kirim notifikasi success
             $this->dispatchBrowserEvent('show-notification', [
                 'type' => 'success',
-                'message' => 'Instalasi berhasil disimpan'
+                'message' => "Instalasi berhasil disimpan dengan {$photoCount} foto"
             ]);
 
+            return true;
+
         } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Installation failed', [
+                'customer_id' => $this->currentInstallationId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             $this->dispatchBrowserEvent('show-notification', [
                 'type' => 'error',
                 'message' => 'Gagal menyimpan instalasi: ' . $e->getMessage()
             ]);
+            
             return false;
         }
     }
@@ -243,8 +407,6 @@ class InternetCustomerIndex extends Component
     
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Pembayaran Langganan Internet Untuk Kode '.$internetPurchase->customer->code.' Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan']);
         } catch (\Throwable $th) {
-            //throw $th;
-            // dd($th);
             Log::error($th);
             DB::rollBack();
             $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal mengkonfirmasi pembayaran: ' . $th->getMessage()]);
@@ -276,6 +438,7 @@ class InternetCustomerIndex extends Component
             // eager load minimal yang dipakai di blade
             ->with([
                 'installation:id,internet_customer_id,device_serial_number',
+                'installation.photos:id,internet_installation_id,photo,caption', // eager load photos
                 'userCustomer:id,name,email,phone_number',
                 'company:id,name',
                 'internetPackage:id,name'
@@ -290,13 +453,14 @@ class InternetCustomerIndex extends Component
                         $q->where('device_serial_number', 'like', '%' . $this->search . '%');
                     })
                     ->orWhereHas('userCustomer', function ($q) {
-                        $q->where('name', 'like', '%' . $this->search . '%')->orWhere('email', 'like', '%' . $this->search . '%')->orWhere('phone_number', 'like', '%' . $this->search . '%');
+                        $q->where('name', 'like', '%' . $this->search . '%')
+                          ->orWhere('email', 'like', '%' . $this->search . '%')
+                          ->orWhere('phone_number', 'like', '%' . $this->search . '%');
                     })
                     ->orWhereHas('company', function ($q) {
                         $q->where('name', 'like', '%' . $this->search . '%');
                     })
-                    ->orWhere('ktp_number', 'like', '%' . $this->search . '%')
-                    ;
+                    ->orWhere('ktp_number', 'like', '%' . $this->search . '%');
             });
         }
 
@@ -324,7 +488,6 @@ class InternetCustomerIndex extends Component
             ->paginate($this->perPage);
 
         // Get filter options
-
         $packages = InternetPackage::byCompany($user->company_id)->orderBy('name')->get();
 
         return view('livewire.internet-customer.admin.internet-customer-index', [
@@ -346,6 +509,4 @@ class InternetCustomerIndex extends Component
         );
         return true;
     }
-
-    // Tambahkan fungsi lainnya (delete, edit, dll) sesuai kebutuhan
 }
