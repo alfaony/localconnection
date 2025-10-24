@@ -233,7 +233,7 @@ class UsedItemController extends Controller
             // Simpan foto baru
             if ($request->hasFile('photos')) {
                 foreach ($request->file('photos') as $photo) {
-                    $path = $photo->store('used-items', 'public');
+                    $path = $photo->store('used-items');
                     UsedItemMedia::create([
                         'used_item_id' => $item->id,
                         'file_path' => $path,

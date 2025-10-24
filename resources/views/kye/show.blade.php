@@ -31,7 +31,7 @@
         <div class="row align-items-center">
             <div class="col-md-2 text-center">
                 @if ($kye->employee_photo)
-                    <img src="{{ Storage::url($kye->employee_photo) }}" alt="Employee Photo" class="profile-img">
+                    <img src="{{ s3_asset(true,10,$kye->employee_photo) }}" alt="Employee Photo" class="profile-img">
                 @else
                     <div class="profile-img d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.2);">
                         <i class="fas fa-user fa-3x"></i>
@@ -208,7 +208,7 @@
                             <div class="doc-name">Scan NPWP</div>
                             <div class="doc-size">File NPWP - {{ $kye->npwp_number ?? 'No NPWP' }}</div>
                         </div>
-                        <a href="{{ Storage::url($kye->npwp_photo) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ s3_asset(true,10,$kye->npwp_photo) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-download"></i> Unduh
                         </a>
                     </div>
@@ -221,7 +221,7 @@
                             <div class="doc-name">SKCK</div>
                             <div class="doc-size">Surat Keterangan Catatan Kepolisian</div>
                         </div>
-                        <a href="{{ Storage::url($kye->skck) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ s3_asset(true,10,$kye->skck) }}" target="_blank" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-download"></i> Unduh
                         </a>
                     </div>
@@ -252,15 +252,15 @@
                     <div class="image-gallery">
                         @if ($kye->employee_photo)
                         <div class="image-item">
-                            <img src="{{ Storage::url($kye->employee_photo) }}" alt="Foto Karyawan">
+                            <img src="{{ s3_asset(true,10,$kye->employee_photo) }}" alt="Foto Karyawan">
                             <div class="image-label">
                                 <i class="fas fa-user mr-2"></i>Foto Karyawan
                             </div>
                             <div class="image-actions">
-                                <button class="btn btn-view" onclick="openImageModal('{{ Storage::url($kye->employee_photo) }}')">
+                                <button class="btn btn-view" onclick="openImageModal('{{ s3_asset(true,10,$kye->employee_photo) }}')">
                                     <i class="fas fa-eye"></i> Lihat
                                 </button>
-                                <a href="{{ Storage::url($kye->employee_photo) }}" download="Foto_Karyawan_{{ $kye->full_name }}.jpg" class="btn btn-download">
+                                <a href="{{ s3_asset(true,10,$kye->employee_photo) }}" download="Foto_Karyawan_{{ $kye->full_name }}.jpg" class="btn btn-download">
                                     <i class="fas fa-download"></i> Download
                                 </a>
                             </div>
@@ -269,15 +269,15 @@
 
                         @if ($kye->ktp_photo)
                         <div class="image-item">
-                            <img src="{{ Storage::url($kye->ktp_photo) }}" alt="Foto KTP">
+                            <img src="{{ s3_asset(true,10,$kye->ktp_photo) }}" alt="Foto KTP">
                             <div class="image-label">
                                 <i class="fas fa-id-card mr-2"></i>Foto KTP
                             </div>
                             <div class="image-actions">
-                                <button class="btn btn-view" onclick="openImageModal('{{ Storage::url($kye->ktp_photo) }}')">
+                                <button class="btn btn-view" onclick="openImageModal('{{ s3_asset(true,10,$kye->ktp_photo) }}')">
                                     <i class="fas fa-eye"></i> Lihat
                                 </button>
-                                <a href="{{ Storage::url($kye->ktp_photo) }}" download="KTP_{{ $kye->full_name }}.jpg" class="btn btn-download">
+                                <a href="{{ s3_asset(true,10,$kye->ktp_photo) }}" download="KTP_{{ $kye->full_name }}.jpg" class="btn btn-download">
                                     <i class="fas fa-download"></i> Download
                                 </a>
                             </div>
@@ -286,15 +286,15 @@
 
                         @if ($kye->selfie_ktp)
                         <div class="image-item">
-                            <img src="{{ Storage::url($kye->selfie_ktp) }}" alt="Selfie KTP">
+                            <img src="{{ s3_asset(true,10,$kye->selfie_ktp) }}" alt="Selfie KTP">
                             <div class="image-label">
                                 <i class="fas fa-camera mr-2"></i>Selfie dengan KTP
                             </div>
                             <div class="image-actions">
-                                <button class="btn btn-view" onclick="openImageModal('{{ Storage::url($kye->selfie_ktp) }}')">
+                                <button class="btn btn-view" onclick="openImageModal('{{ s3_asset(true,10,$kye->selfie_ktp) }}')">
                                     <i class="fas fa-eye"></i> Lihat
                                 </button>
-                                <a href="{{ Storage::url($kye->selfie_ktp) }}" download="Selfie_KTP_{{ $kye->full_name }}.jpg" class="btn btn-download">
+                                <a href="{{ s3_asset(true,10,$kye->selfie_ktp) }}" download="Selfie_KTP_{{ $kye->full_name }}.jpg" class="btn btn-download">
                                     <i class="fas fa-download"></i> Download
                                 </a>
                             </div>
@@ -303,15 +303,15 @@
 
                         @if ($kye->ktp_family)
                         <div class="image-item">
-                            <img src="{{ Storage::url($kye->ktp_family) }}" alt="KTP Keluarga">
+                            <img src="{{ s3_asset(true,10,$kye->ktp_family) }}" alt="KTP Keluarga">
                             <div class="image-label">
                                 <i class="fas fa-users mr-2"></i>KTP Orang Tua/Saudara
                             </div>
                             <div class="image-actions">
-                                <button class="btn btn-view" onclick="openImageModal('{{ Storage::url($kye->ktp_family) }}')">
+                                <button class="btn btn-view" onclick="openImageModal('{{ s3_asset(true,10,$kye->ktp_family) }}')">
                                     <i class="fas fa-eye"></i> Lihat
                                 </button>
-                                <a href="{{ Storage::url($kye->ktp_family) }}" download="KTP_Keluarga_{{ $kye->full_name }}.jpg" class="btn btn-download">
+                                <a href="{{ s3_asset(true,10,$kye->ktp_family) }}" download="KTP_Keluarga_{{ $kye->full_name }}.jpg" class="btn btn-download">
                                     <i class="fas fa-download"></i> Download
                                 </a>
                             </div>
@@ -320,15 +320,15 @@
 
                         @if ($kye->house_photo)
                         <div class="image-item">
-                            <img src="{{ Storage::url($kye->house_photo) }}" alt="Foto Rumah">
+                            <img src="{{ s3_asset(true,10,$kye->house_photo) }}" alt="Foto Rumah">
                             <div class="image-label">
                                 <i class="fas fa-home mr-2"></i>Foto Rumah
                             </div>
                             <div class="image-actions">
-                                <button class="btn btn-view" onclick="openImageModal('{{ Storage::url($kye->house_photo) }}')">
+                                <button class="btn btn-view" onclick="openImageModal('{{ s3_asset(true,10,$kye->house_photo) }}')">
                                     <i class="fas fa-eye"></i> Lihat
                                 </button>
-                                <a href="{{ Storage::url($kye->house_photo) }}" download="Foto_Rumah_{{ $kye->full_name }}.jpg" class="btn btn-download">
+                                <a href="{{ s3_asset(true,10,$kye->house_photo) }}" download="Foto_Rumah_{{ $kye->full_name }}.jpg" class="btn btn-download">
                                     <i class="fas fa-download"></i> Download
                                 </a>
                             </div>
@@ -573,31 +573,31 @@
         const images = [
             @if($kye->employee_photo)
             {
-                url: '{{ Storage::url($kye->employee_photo) }}',
+                url: '{{ s3_asset(true,10,$kye->employee_photo) }}',
                 name: 'Foto_Karyawan_{{ $kye->full_name }}.jpg'
             },
             @endif
             @if($kye->ktp_photo)
             {
-                url: '{{ Storage::url($kye->ktp_photo) }}',
+                url: '{{ s3_asset(true,10,$kye->ktp_photo) }}',
                 name: 'KTP_{{ $kye->full_name }}.jpg'
             },
             @endif
             @if($kye->selfie_ktp)
             {
-                url: '{{ Storage::url($kye->selfie_ktp) }}',
+                url: '{{ s3_asset(true,10,$kye->selfie_ktp) }}',
                 name: 'Selfie_KTP_{{ $kye->full_name }}.jpg'
             },
             @endif
             @if($kye->ktp_family)
             {
-                url: '{{ Storage::url($kye->ktp_family) }}',
+                url: '{{ s3_asset(true,10,$kye->ktp_family) }}',
                 name: 'KTP_Keluarga_{{ $kye->full_name }}.jpg'
             },
             @endif
             @if($kye->house_photo)
             {
-                url: '{{ Storage::url($kye->house_photo) }}',
+                url: '{{ s3_asset(true,10,$kye->house_photo) }}',
                 name: 'Foto_Rumah_{{ $kye->full_name }}.jpg'
             }
             @endif

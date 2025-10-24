@@ -37,8 +37,8 @@ class ExportQuoteJob implements ShouldQueue
     {
         $exportFormat = $this->format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
         try {
-            Excel::store(new QuotesExport($this->company_id), $this->filename, 'public', $exportFormat);
-            Log::info("File successfully stored at: " . Storage::url($this->filename));
+            $checkk = Excel::store(new QuotesExport($this->company_id), $this->filename, null, $exportFormat);
+            Log::info("File successfully stored at: " . s3_asset(true,10,$this->filename));
         } catch (\Exception $e) {
             // dd($e);
             Log::error("Error storing file: " . $e->getMessage());

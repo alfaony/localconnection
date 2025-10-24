@@ -52,7 +52,7 @@
                     <p>Jakarta, {{ $date ?? "" }}</p>
                     <p>Hormat Saya,</p>
                     @if(isset($fieldData['signature_image'])    )
-                        <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                        <img src="{{ s3_asset(true,10,$fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
                             alt="Signature" style="height:150px">
                     @endif
                     <p><strong>{{ $user->name ?? "" }}</strong></p>

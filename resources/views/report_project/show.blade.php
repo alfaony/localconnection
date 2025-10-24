@@ -80,7 +80,7 @@
                                 <a href="{{ $a->link }}" target="_blank"> Report Link</a>
                             </td>
                             <td>
-                                <a href="{{ Storage::url('reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-download"></i></a>
+                                <a href="{{ s3_asset(true,10,'reports/' . $a->file) }}" class="btn btn-sm btn-primary" download title="{{ $a->file }}"><i class="fa fa-download"></i></a>
                             </td>
                         </tr>
                         @endforeach

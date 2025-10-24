@@ -129,9 +129,10 @@ class InternetCustomerShow extends Component
     
     public function viewKtpPhoto()
     {
+        $url = s3_asset(true,10,$this->ktpPhotoUrl);
         $this->dispatchBrowserEvent('showImageModal', [
             'title' => 'Foto KTP',
-            'imageUrl' => $this->ktpPhotoUrl
+            'imageUrl' => $url
         ]);
     }
 
@@ -139,7 +140,7 @@ class InternetCustomerShow extends Component
     {
         // Convert paths to full URLs
         $fullUrls = array_map(function($path) {
-            return asset('storage/' . $path);
+            return s3_asset(true,10, $path);
         }, $this->installationPhotos);
         
         $this->dispatchBrowserEvent('showGalleryModal', [

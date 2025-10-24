@@ -12,11 +12,11 @@
                             </button>
                         @endcanAccess
                     </div>
-                    <img src="{{ Storage::url($media->file_path) }}"
+                    <img src="{{ s3_asset(true,10,$media->file_path) }}"
                         class="img-fluid rounded w-100 office-media-thumb"
                         style="height: 200px; object-fit: cover; cursor: pointer;"
                         data-index="{{ $loop->index }}"
-                        data-url="{{ Storage::url($media->file_path) }}"
+                        data-url="{{ s3_asset(true,10,$media->file_path) }}"
                         alt="{{ $media->title }}">
                     <small class="text-center d-block text-truncate mt-2">{{ $media->title }}</small>
                 </div>

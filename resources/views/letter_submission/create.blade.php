@@ -95,17 +95,9 @@
             <!-- Upload KTP -->
             <div class="col-md-6 mb-3">
                 <label for="id_card_image">Upload KTP</label>
-                <div id="ktp_preview_container">
-                    @if(Auth::user()->id_card_image)
-                    <div class="mt-1 mb-2">
-                        <img src="{{ Storage::url(Auth::user()->id_card_image) }}" 
-                             alt="KTP" 
-                             class="img-fluid ktp-preview" 
-                             style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
-                    </div>
-                    @else
-                    <input type="file" name="id_card_image" id="id_card_image" class="form-control" accept="image/*" required>
-                    @endif
+                @if(Auth::user()->id_card_image)
+                <div class="mt-1 mb-2">
+                    <img src="{{ s3_asset(true,10,Auth::user()->id_card_image) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
                 </div>
             </div>
 

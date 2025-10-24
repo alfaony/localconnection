@@ -398,7 +398,7 @@
                                     </button>
                                     <div id="employee_photo_preview" class="photo-preview-box">
                                         @if(@$kye->employee_photo)
-                                        <img src="{{ asset('storage/' . @$kye->employee_photo) }}" alt="Employee Photo" class="img-thumbnail" width="100">
+                                        <img src="{{ s3_asset(true,10, @$kye->employee_photo) }}" alt="Employee Photo" class="img-thumbnail" width="100">
                                         @else
                                         <p class="text-muted mb-0"><i class="fas fa-image"></i> Belum ada foto</p>
                                         @endif
@@ -432,7 +432,7 @@
                                     </button>
                                     <div id="ktp_photo_preview" class="photo-preview-box">
                                         @if(@$kye->ktp_photo)
-                                        <img src="{{ asset('storage/' . @$kye->ktp_photo) }}" alt="KTP Photo" class="img-thumbnail" width="100">
+                                        <img src="{{ s3_asset(true,10, @$kye->ktp_photo) }}" alt="KTP Photo" class="img-thumbnail" width="100">
                                         @else
                                         <p class="text-muted mb-0"><i class="fas fa-image"></i> Belum ada foto</p>
                                         @endif
@@ -450,7 +450,7 @@
                                     </button>
                                     <div id="selfie_ktp_preview" class="photo-preview-box">
                                         @if(@$kye->selfie_ktp)
-                                        <img src="{{ asset('storage/' . @$kye->selfie_ktp) }}" alt="Selfie KTP" class="img-thumbnail" width="120">
+                                        <img src="{{ s3_asset(true,10, @$kye->selfie_ktp) }}" alt="Selfie KTP" class="img-thumbnail" width="120">
                                         @else
                                         <p class="text-muted mb-0"><i class="fas fa-image"></i> Belum ada foto</p>
                                         @endif
@@ -466,7 +466,7 @@
                                 <div class="photo-preview-container">
                                     <div id="ktp_family_preview" class="photo-preview-box">
                                         @if(@$kye->ktp_family)
-                                        <img src="{{ asset('storage/' . @$kye->ktp_family) }}" alt="KTP Keluarga" class="img-thumbnail" width="120">
+                                        <img src="{{ s3_asset(true,10, @$kye->ktp_family) }}" alt="KTP Keluarga" class="img-thumbnail" width="120">
                                         @else
                                         <p class="text-muted mb-0"><i class="fas fa-image"></i> Belum ada foto</p>
                                         @endif
@@ -497,7 +497,7 @@
                                 <div class="photo-preview-container">
                                     <div id="npwp_photo_preview" class="photo-preview-box">
                                         @if(@$kye->npwp_photo)
-                                        <img src="{{ asset('storage/' . @$kye->npwp_photo) }}" alt="NPWP" class="img-thumbnail" width="120">
+                                        <img src="{{ s3_asset(true,10, @$kye->npwp_photo) }}" alt="NPWP" class="img-thumbnail" width="120">
                                         @else
                                         <p class="text-muted mb-0"><i class="fas fa-image"></i> Belum ada foto</p>
                                         @endif
@@ -557,7 +557,7 @@
                                 <div class="photo-preview-container">
                                     <div id="house_photo_preview" class="photo-preview-box">
                                         @if(@$kye->house_photo)
-                                        <img src="{{ asset('storage/' . @$kye->house_photo) }}" alt="Foto Rumah" class="img-thumbnail" width="120">
+                                        <img src="{{ s3_asset(true,10, @$kye->house_photo) }}" alt="Foto Rumah" class="img-thumbnail" width="120">
                                         @else
                                         <p class="text-muted mb-0"><i class="fas fa-image"></i> Belum ada foto</p>
                                         @endif

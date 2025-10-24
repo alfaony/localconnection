@@ -410,8 +410,8 @@
                         <div class="carousel-inner">
                             @foreach($usedItem->media as $index => $media)
                             <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                                <a href="{{ Storage::url($media->file_path) }}" target="_blank">
-                                    <img src="{{ Storage::url($media->file_path) }}" class="d-block w-100 carousel-img" alt="Foto {{ $index + 1 }}">
+                                <a href="{{ s3_asset(true,10,$media->file_path) }}" target="_blank">
+                                    <img src="{{ s3_asset(true,10,$media->file_path) }}" class="d-block w-100 carousel-img" alt="Foto {{ $index + 1 }}">
                                 </a>
                             </div>
                             @endforeach
@@ -430,8 +430,8 @@
                     <div class="row">
                         @foreach($usedItem->media as $index => $media)
                         <div class="col-4 mb-2">
-                            <a href="{{ Storage::url($media->file_path) }}" target="_blank">
-                                <img src="{{ Storage::url($media->file_path) }}" class="img-thumbnail thumbnail-img">
+                            <a href="{{ s3_asset(true,10,$media->file_path) }}" target="_blank">
+                                <img src="{{ s3_asset(true,10,$media->file_path) }}" class="img-thumbnail thumbnail-img">
                             </a>
                         </div>
                         @endforeach
@@ -457,7 +457,7 @@
                 <p class="text-muted small mb-3">
                     Scan untuk melihat detail barang di perangkat mobile
                 </p>
-                <a href="{{ Storage::url($usedItem->qr_code_path) }}" download class="btn btn-outline-primary btn-block">
+                <a href="{{ s3_asset(true,10,$usedItem->qr_code_path) }}" download class="btn btn-outline-primary btn-block">
                     <i class="fas fa-download mr-1"></i> Download QR Code
                 </a>
             </div>

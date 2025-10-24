@@ -158,7 +158,7 @@
                         <div class="text-center mb-3">
                             @if(!empty($settingCompany['header_store_image']))
                             <div class="receipt-logo mb-3">
-                                <img src="{{ Storage::url($settingCompany['header_store_image']) }}" 
+                                <img src="{{ s3_asset(true,10,$settingCompany['header_store_image']) }}" 
                                     alt="{{ $settingCompany['store_name'] ?? 'Store Logo' }}"
                                     style="max-width: 120px; height: auto; border-radius: 8px;">
                             </div>

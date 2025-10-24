@@ -52,7 +52,7 @@ class WorkflowService
                         'name' => $vendor->productSupplier ? $vendor->productSupplier->store_name : '-',
                         'location' => $vendor->productSupplier ? $vendor->productSupplier->location : '-',
                         'phone_number' => $vendor->productSupplier ? $vendor->productSupplier->phone_number : '-',
-                        'foto' => $vendor->productSupplier ? $vendor->productSupplier->store_photo ? Storage::url($vendor->productSupplier->store_photo) : NULL : NULL,
+                        'foto' => $vendor->productSupplier ? $vendor->productSupplier->store_photo ? s3_asset(true,10,$vendor->productSupplier->store_photo) : NULL : NULL,
                         'message' => $vendor->response_message ?? '',
                         'response_time' => $vendor->responded_at ?? null,
                         'price_offered' => $vendor->price_offered,

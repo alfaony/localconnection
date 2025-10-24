@@ -34,7 +34,7 @@
                     <p>
                         <strong>Sertifikasi File:</strong>
                         @if($training->certification_file)
-                            <a href="{{ asset('storage/'.$training->certification_file) }}" target="_blank">View File</a>
+                            <a href="{{ s3_asset(true, 10, $training->certification_file) }}" target="_blank">View File</a>
                         @else
                             No file uploaded.
                         @endif

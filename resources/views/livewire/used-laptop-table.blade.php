@@ -188,7 +188,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     @if($laptop->media->first())
-                                        <img src="{{ Storage::url($laptop->media->sortBy('order')->first()->file_path) }}" 
+                                        <img src="{{ s3_asset(true,10,$laptop->media->sortBy('order')->first()->file_path) }}" 
                                              alt="{{ $laptop->name }}"
                                              class="img-thumbnail mr-2"
                                              style="width: 50px; height: 50px; object-fit: cover;">
@@ -294,7 +294,7 @@
                             <td class="text-center">
                                 <div class="btn-group" role="group">
                                     @if($laptop->qr_code_path)
-                                    <a href="{{ Storage::url($laptop->qr_code_path) }}" 
+                                    <a href="{{ s3_asset(true,10,$laptop->qr_code_path) }}" 
                                        download 
                                        class="btn btn-sm btn-outline-primary mb-1 mr-1"
                                        title="Download QR Code">

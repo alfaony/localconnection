@@ -31,7 +31,7 @@
             <div class="card-body text-center p-4">
                 <!-- Profile Image -->
                 <div class="avatar-wrapper mb-4">
-                    <img src="{{ Auth::user()->avatar ? Storage::url(Auth::user()->avatar) : 'https://placehold.co/600x400?text=Your%20Avatar' }}" class="rounded-circle shadow-sm" alt="User Image"
+                    <img src="{{ Auth::user()->avatar ? s3_asset(true,10,Auth::user()->avatar) : 'https://placehold.co/600x400?text=Your%20Avatar' }}" class="rounded-circle shadow-sm" alt="User Image"
                         style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #fff">
                 </div>
 
