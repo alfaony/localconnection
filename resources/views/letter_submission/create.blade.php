@@ -23,7 +23,7 @@
             <!-- Formulir -->
             <div class="col-md-12 mb-3">
                 <label for="surat">Surat <span class="text-danger">*</span></label>
-                <select class="form-control" name="letter_type_id" id="letter_type_id" required>
+                <select class="form-control select2" name="letter_type_id" id="letter_type_id" required>
                     <option value="" selected disabled>Pilih Surat</option>
                     @foreach($letterTypes as $letterType)
                         <option value="{{ $letterType->id }}" 
@@ -99,6 +99,7 @@
                 <div class="mt-1 mb-2">
                     <img src="{{ s3_asset(true,10,Auth::user()->id_card_image) }}" alt="Tanda Tangan" class="img-fluid" style="max-width: 200px; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;">
                 </div>
+                @endif
             </div>
 
             <!-- Tanda Tangan -->
