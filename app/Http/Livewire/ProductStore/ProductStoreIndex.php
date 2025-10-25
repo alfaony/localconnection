@@ -323,7 +323,6 @@ public function import()
                 'height',
                 'weight',
                 'selling_price',
-                'rack'
             ];
             
             fputcsv($file, $columns);
@@ -340,7 +339,6 @@ public function import()
                 '5',
                 '2.5',
                 '15000000',
-                'A-01'
             ]);
             
             fputcsv($file, [
@@ -354,7 +352,6 @@ public function import()
                 '5',
                 '0.15',
                 '1500000',
-                'B-12'
             ]);
             
             fclose($file);
