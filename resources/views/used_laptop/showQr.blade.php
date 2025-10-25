@@ -317,7 +317,10 @@
                                 <p class="text-muted small mb-0">
                                     Scan untuk melihat detail laptop di perangkat mobile
                                 </p>
-                                <a href="{{ s3_asset(true,10,$laptop->qr_code_path) }}" download class="btn btn-sm btn-outline-primary mt-2">
+                                <!-- <a href="{{ s3_asset(true,10,$laptop->qr_code_path) }}" download class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="fas fa-download mr-1"></i> Download QR Code
+                                </a> -->
+                                <a href="javascript:void(0);" class="btn btn-outline-primary btn-block btn-download-qrcode">
                                     <i class="fas fa-download mr-1"></i> Download QR Code
                                 </a>
                             </div>
@@ -382,6 +385,22 @@
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });
+    });
+
+    document.querySelector('.btn-download-qrcode').addEventListener('click', function () {
+        const qrCanvas = document.querySelector('#qrcode canvas');
+        if (!qrCanvas) {
+            alert('QR Code belum tersedia.');
+            return;
+        }
+
+        const imageData = qrCanvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.href = imageData;
+        downloadLink.download = "qr-code-{{ $laptop->slug }}.png";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
     });
 </script>
 </body>
