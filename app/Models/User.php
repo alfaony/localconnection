@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-
+use Illuminate\Support\Facades\Storage;
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
 
@@ -237,6 +237,15 @@ class User extends Authenticatable
 
         $today = strtolower(now()->format('l')); // now()->format('l'); // Get day name: Monday, Tuesday, etc.
         return $this->wfo_working_days[$today] ?? false;
+    }
+
+    public function getPhotoIdentityAttribute($value)
+    {
+        if($this->id_card_image)
+        {
+            return Storage::url($this->id_card_image);
+        }
+        return null;
     }
 
     /**

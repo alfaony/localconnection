@@ -53,8 +53,6 @@ class ProductStore extends Model
             }
 
             $model->barcode = self::generateBarcode();
-            $model->user_create_id = auth()->id();
-            $model->company_id = auth()->user()->company_id;
             $model->dimension = $model->length . ' x ' . $model->width . ' x ' . $model->height;
         });
 
