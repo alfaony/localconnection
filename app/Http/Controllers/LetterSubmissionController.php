@@ -124,7 +124,7 @@ class LetterSubmissionController extends Controller
             }
             
             // Jika ada file yang diupload
-            if ($request->hasFile('file') && !$request->user_id) {
+            if ($request->hasFile('file')) {
                 $file = $request->file('file');
                 $fileName = $file->getClientOriginalName();
                 $filePath = 'public/files/' . $fileName;
