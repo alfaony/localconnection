@@ -886,7 +886,7 @@
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
-        .main-content { background: radial-gradient(circle at center, rgba(219, 39, 41, 1) 0%, rgba(219, 39, 41, 0) 100%);}
+        .main-content { background: radial-gradient(circle at center, rgba(219, 39, 41, 0.6) 0%, rgba(219, 39, 41, 0) 80%);}
         /* Optimasi untuk touch devices */
         * {
             -webkit-tap-highlight-color: rgba(0,0,0,0);

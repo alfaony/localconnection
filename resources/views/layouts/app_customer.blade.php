@@ -97,7 +97,7 @@
 
     <!-- Footer dengan background merah -->
     <footer class="footer">
-        <div class="container text-center">
+        <div class="container text-center mt-3 pt-3">
             <p class="mb-1">&copy; {{ date('Y') }} @yield('title').</p>
             <small>Fast and reliable internet connection</small>
         </div>
