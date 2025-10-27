@@ -28,7 +28,7 @@ class MergeBastPdfJob implements ShouldQueue
     
     public $tries = 3;
     public $maxExceptions = 3;
-    public $timeout = 300;
+    public $timeout = 600;
     public $backoff = [60, 300, 600];
 
     /**
