@@ -1,7 +1,7 @@
 @section('title', $settingCompany['name'])
-<div class="mt-2">
+<div class="mt-5 mb-5 gradient">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
+        <div class="col-lg-8">
             <div class="card shadow">
                 <div class="card-body p-5">
                     <!-- Progress Bar -->
@@ -668,12 +668,225 @@
 </div>
 @endif
 
+@push('scripts')
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script>
+        document.addEventListener('livewire:load', function () {
+            console.log('livewire loaded');
+
+            document.getElementById('save-signature')?.addEventListener('click', function() {
+                if (signaturePad && !signaturePad.isEmpty()) {
+                    const signatureData = signaturePad.toDataURL();
+                                                console.log("save 2");
+                    @this.call('saveSignature', signatureData);
+                } else {
+                    alert('Harap berikan tanda tangan Anda');
+                }
+            });
+            
+            // Event untuk tombol Gambar Ulang
+            document.getElementById('re-sign')?.addEventListener('click', function() {
+                // Reset canvas
+                console.log('Reset canvas');
+                
+                signaturePad.clear();
+                
+                // Tampilkan canvas container, sembunyikan preview
+                document.getElementById('signature-canvas-container').classList.remove('d-none');
+                document.getElementById('signature-preview-container').classList.add('d-none');
+                
+                // Reset signature di Livewire
+                console.log("reset 1");
+                
+                @this.set('signature', null);
+            });
+            
+            // Event ketika signature berhasil disimpan
+            Livewire.on('signature-saved', () => {
+                // Sembunyikan canvas, tampilkan preview
+                document.getElementById('signature-canvas-container').classList.add('d-none');
+                document.getElementById('signature-preview-container').classList.remove('d-none');
+                
+                // Update preview image
+                const previewImage = document.getElementById('signature-preview-image');
+                if (previewImage && @this.signature) {
+                    previewImage.src = @this.signature;
+                }
+            });
+            
+            function showSuccessAlert(message) 
+            {
+                Swal.fire({
+                    title: 'Pendaftaran Berhasil!',
+                    html: message,
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    customClass: {
+                        popup: 'animated bounceIn'
+                    }
+                });
+            }
+
+            function initSelect2() {
+                // SINGLE SELECT
+                $('.select2-single').each(function () {
+                    const select = $(this);
+                    const prop = select.attr('id');
+
+                    select.select2({
+                        placeholder: "-- Pilih --",
+                        allowClear: true,
+                        width: '100%',
+                        dropdownParent: $('.card-body')
+                    });
+
+                    select.off('change').on('change', function (e) {
+                        const value = $(this).val();
+                        if (@this[prop] != value) {
+                            console.log(`Update Livewire ${prop} to:`, value);
+                            @this.set(prop, value);
+                        }
+                    });
+                });
+            }
+            
+            let signaturePad = null;
+    
+                function initSignaturePad() 
+                {
+                    const canvas = document.getElementById('signature-canvas');
+                    if (!canvas) return null;
+                    
+                    // Hapus instance sebelumnya jika ada
+                    if (signaturePad) {
+                        signaturePad.off();
+                        window.removeEventListener('resize', handleResize);
+                        document.getElementById('clear-signature')?.removeEventListener('click', handleClear);
+                    }
+                    
+                    // Fungsi untuk resize canvas
+                    function handleResize() {
+                        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                        const container = canvas.parentElement;
+                        
+                        canvas.width = container.offsetWidth * ratio;
+                        canvas.height = container.offsetHeight * ratio;
+                        canvas.style.width = container.offsetWidth + 'px';
+                        canvas.style.height = container.offsetHeight + 'px';
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.scale(ratio, ratio);
+                        
+                        if (signaturePad) {
+                            signaturePad.clear();
+                            // Jika ada signature yang disimpan, tampilkan kembali
+                            if (@this.signature) {
+                                signaturePad.fromDataURL(@this.signature);
+                            }
+                        }
+                    }
+                    
+                    // Fungsi untuk clear signature
+                    function handleClear() {
+                        signaturePad.clear();
+                         console.log("reset 2");
+                        @this.call('saveSignature', null);
+                    }
+                    
+                    // Inisialisasi ukuran pertama kali
+                    handleResize();
+                    
+                    // Buat signature pad
+                    signaturePad = new SignaturePad(canvas, {
+                        backgroundColor: 'rgb(255, 255, 255)',
+                        penColor: 'rgb(0, 0, 0)',
+                        minWidth: 1,
+                        maxWidth: 3,
+                        throttle: 16
+                    });
+                    
+                    // Handle clear button
+                    document.getElementById('clear-signature')?.addEventListener('click', handleClear);
+                    
+                    // Handle window resize
+                    window.addEventListener('resize', handleResize);
+                    
+                    // Auto-save signature saat selesai menggambar
+                    canvas.addEventListener('mouseup', saveSignature);
+                    canvas.addEventListener('touchend', saveSignature);
+                    
+                    return signaturePad;
+                }
+                
+                // Fungsi untuk menyimpan signature
+                function saveSignature() 
+                {
+                    if (signaturePad && !signaturePad.isEmpty()) {
+                        const signatureData = signaturePad.toDataURL();
+                        @this.call('saveSignature', signatureData);
+                    }
+                }
+                
+                // Inisialisasi pertama kali
+                signaturePad = initSignaturePad();
+
+                initSelect2();
+            Livewire.hook('message.processed', (message, component) => 
+            {
+                console.log("Livewire processed:", message);
+                initSelect2();
+
+                $('.select2-single').each(function () {
+                    const id = $(this).attr('id');
+                    if (@this[id] !== undefined) {
+                        $(this).val(@this[id]).trigger('change');
+                    }
+                });
+
+                if (component.get('step') === 4) 
+                {
+                     document.getElementById('save-signature')?.addEventListener('click', function() 
+                     {
+                        if (signaturePad && !signaturePad.isEmpty()) {
+                            const signatureData = signaturePad.toDataURL();
+
+                            console.log("save 1");
+                            
+                            @this.call('saveSignature', signatureData);
+                        } else {
+                            alert('Harap berikan tanda tangan Anda');
+                        }
+                    });
+
+                    // ❗ Tambahkan ulang binding untuk tombol Re-sign
+                    document.getElementById('re-sign')?.addEventListener('click', function () {
+                        signaturePad.clear();
+                        document.getElementById('signature-canvas-container').classList.remove('d-none');
+                        document.getElementById('signature-preview-container').classList.add('d-none');
+                         console.log("reset 3");
+                        // @this.set('signature', null);
+                        @this.call('saveSignature', null);
+                    });
+
+                    setTimeout(() => {
+                        signaturePad = initSignaturePad();
+                        if (component.get('signature') && signaturePad) {
+                            signaturePad.fromDataURL(component.get('signature'));
+                        }
+                    }, 50);
+            }
+            });
+        });
+    </script>
+@endpush
+
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
-            .main-content {
-                background: radial-gradient(#DB2328, #ffff);  
-            }
+        .main-content { background: radial-gradient(circle at center, rgba(219, 39, 41, 1) 0%, rgba(219, 39, 41, 0) 100%);}
         /* Optimasi untuk touch devices */
         * {
             -webkit-tap-highlight-color: rgba(0,0,0,0);
@@ -1426,219 +1639,4 @@
         }
         
     </style>
-@endpush
-
-@push('scripts')
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-    <script>
-        document.addEventListener('livewire:load', function () {
-            console.log('livewire loaded');
-
-            document.getElementById('save-signature')?.addEventListener('click', function() {
-                if (signaturePad && !signaturePad.isEmpty()) {
-                    const signatureData = signaturePad.toDataURL();
-                                                console.log("save 2");
-                    @this.call('saveSignature', signatureData);
-                } else {
-                    alert('Harap berikan tanda tangan Anda');
-                }
-            });
-            
-            // Event untuk tombol Gambar Ulang
-            document.getElementById('re-sign')?.addEventListener('click', function() {
-                // Reset canvas
-                console.log('Reset canvas');
-                
-                signaturePad.clear();
-                
-                // Tampilkan canvas container, sembunyikan preview
-                document.getElementById('signature-canvas-container').classList.remove('d-none');
-                document.getElementById('signature-preview-container').classList.add('d-none');
-                
-                // Reset signature di Livewire
-                console.log("reset 1");
-                
-                @this.set('signature', null);
-            });
-            
-            // Event ketika signature berhasil disimpan
-            Livewire.on('signature-saved', () => {
-                // Sembunyikan canvas, tampilkan preview
-                document.getElementById('signature-canvas-container').classList.add('d-none');
-                document.getElementById('signature-preview-container').classList.remove('d-none');
-                
-                // Update preview image
-                const previewImage = document.getElementById('signature-preview-image');
-                if (previewImage && @this.signature) {
-                    previewImage.src = @this.signature;
-                }
-            });
-            
-            function showSuccessAlert(message) 
-            {
-                Swal.fire({
-                    title: 'Pendaftaran Berhasil!',
-                    html: message,
-                    icon: 'success',
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#3085d6',
-                    customClass: {
-                        popup: 'animated bounceIn'
-                    }
-                });
-            }
-
-            function initSelect2() {
-                // SINGLE SELECT
-                $('.select2-single').each(function () {
-                    const select = $(this);
-                    const prop = select.attr('id');
-
-                    select.select2({
-                        placeholder: "-- Pilih --",
-                        allowClear: true,
-                        width: '100%',
-                        dropdownParent: $('.card-body')
-                    });
-
-                    select.off('change').on('change', function (e) {
-                        const value = $(this).val();
-                        if (@this[prop] != value) {
-                            console.log(`Update Livewire ${prop} to:`, value);
-                            @this.set(prop, value);
-                        }
-                    });
-                });
-            }
-            
-            let signaturePad = null;
-    
-                function initSignaturePad() 
-                {
-                    const canvas = document.getElementById('signature-canvas');
-                    if (!canvas) return null;
-                    
-                    // Hapus instance sebelumnya jika ada
-                    if (signaturePad) {
-                        signaturePad.off();
-                        window.removeEventListener('resize', handleResize);
-                        document.getElementById('clear-signature')?.removeEventListener('click', handleClear);
-                    }
-                    
-                    // Fungsi untuk resize canvas
-                    function handleResize() {
-                        const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                        const container = canvas.parentElement;
-                        
-                        canvas.width = container.offsetWidth * ratio;
-                        canvas.height = container.offsetHeight * ratio;
-                        canvas.style.width = container.offsetWidth + 'px';
-                        canvas.style.height = container.offsetHeight + 'px';
-                        
-                        const ctx = canvas.getContext('2d');
-                        ctx.scale(ratio, ratio);
-                        
-                        if (signaturePad) {
-                            signaturePad.clear();
-                            // Jika ada signature yang disimpan, tampilkan kembali
-                            if (@this.signature) {
-                                signaturePad.fromDataURL(@this.signature);
-                            }
-                        }
-                    }
-                    
-                    // Fungsi untuk clear signature
-                    function handleClear() {
-                        signaturePad.clear();
-                         console.log("reset 2");
-                        @this.call('saveSignature', null);
-                    }
-                    
-                    // Inisialisasi ukuran pertama kali
-                    handleResize();
-                    
-                    // Buat signature pad
-                    signaturePad = new SignaturePad(canvas, {
-                        backgroundColor: 'rgb(255, 255, 255)',
-                        penColor: 'rgb(0, 0, 0)',
-                        minWidth: 1,
-                        maxWidth: 3,
-                        throttle: 16
-                    });
-                    
-                    // Handle clear button
-                    document.getElementById('clear-signature')?.addEventListener('click', handleClear);
-                    
-                    // Handle window resize
-                    window.addEventListener('resize', handleResize);
-                    
-                    // Auto-save signature saat selesai menggambar
-                    canvas.addEventListener('mouseup', saveSignature);
-                    canvas.addEventListener('touchend', saveSignature);
-                    
-                    return signaturePad;
-                }
-                
-                // Fungsi untuk menyimpan signature
-                function saveSignature() 
-                {
-                    if (signaturePad && !signaturePad.isEmpty()) {
-                        const signatureData = signaturePad.toDataURL();
-                        @this.call('saveSignature', signatureData);
-                    }
-                }
-                
-                // Inisialisasi pertama kali
-                signaturePad = initSignaturePad();
-
-                initSelect2();
-            Livewire.hook('message.processed', (message, component) => 
-            {
-                console.log("Livewire processed:", message);
-                initSelect2();
-
-                $('.select2-single').each(function () {
-                    const id = $(this).attr('id');
-                    if (@this[id] !== undefined) {
-                        $(this).val(@this[id]).trigger('change');
-                    }
-                });
-
-                if (component.get('step') === 4) 
-                {
-                     document.getElementById('save-signature')?.addEventListener('click', function() 
-                     {
-                        if (signaturePad && !signaturePad.isEmpty()) {
-                            const signatureData = signaturePad.toDataURL();
-
-                            console.log("save 1");
-                            
-                            @this.call('saveSignature', signatureData);
-                        } else {
-                            alert('Harap berikan tanda tangan Anda');
-                        }
-                    });
-
-                    // ❗ Tambahkan ulang binding untuk tombol Re-sign
-                    document.getElementById('re-sign')?.addEventListener('click', function () {
-                        signaturePad.clear();
-                        document.getElementById('signature-canvas-container').classList.remove('d-none');
-                        document.getElementById('signature-preview-container').classList.add('d-none');
-                         console.log("reset 3");
-                        // @this.set('signature', null);
-                        @this.call('saveSignature', null);
-                    });
-
-                    setTimeout(() => {
-                        signaturePad = initSignaturePad();
-                        if (component.get('signature') && signaturePad) {
-                            signaturePad.fromDataURL(component.get('signature'));
-                        }
-                    }, 50);
-            }
-            });
-        });
-    </script>
 @endpush
