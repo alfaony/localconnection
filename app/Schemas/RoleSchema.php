@@ -25,4 +25,5 @@ class RoleSchema
     const MANAGER_FINANCE = "Manager Finance";
     const TECKNICIAN_INTERNET = "Teknisi Internet";
     const CUSTOMER_INTERNET = "Internet Customer";
+    const SYSTEM_BOS = "Sistem";
 }

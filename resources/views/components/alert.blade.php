@@ -6,6 +6,12 @@
 </div>
 @endif
 
+@if(Session::has('storeWithMessage'))
+<div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    <strong>Berhasil!</strong> {{ Session::get('storeWithMessage') }}
+</div>
+@endif
+
 @if(Session::has('update'))
 <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
     <strong>Berhasil!</strong> Data berhasil diperbarui.

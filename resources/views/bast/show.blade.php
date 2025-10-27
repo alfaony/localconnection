@@ -6,7 +6,7 @@
 <div class="row">
     <div class="col-md-12">
         @if(Session::get('update'))
-        <div class="alert alert-success mt-3">File Berhasil Diperbarui</div>
+        <div class="alert alert-success mt-3">{{ Session::get('update') }}</div>
         @endif
         @if(Session::get('successEmail'))
         <div class="alert alert-success mt-3">Email Berhasil Dikirim</div>

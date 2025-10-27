@@ -31,6 +31,8 @@ use App\Schemas\RoleSchema;
 use PDF;
 use setasign\Fpdi\Fpdi;
 use App\Mail\SendBastEmail;
+use App\Jobs\MergeBastPdfJob;
+
 class ReportProjectController extends Controller
 {
     /**
@@ -307,7 +309,17 @@ class ReportProjectController extends Controller
 
             if($reportProject->project->bast)
             {
-                $mergedFilePath = $this->mergePdfFiles($reportProject->project->bast, $reportProject);
+                // $mergedFilePath = $this->mergePdfFiles($reportProject->project->bast, $reportProject);
+                // MergeBastPdfJob::dispatch($reportProject->project->bast->id, Auth::user()->company_id)->delay(now()->addSeconds(5));
+                MergeBastPdfJob::dispatch(
+                    $reportProject->project->bast->id,
+                    $reportProject->id,
+                    Auth::user()->company_id,
+                    Auth::user()->id,
+                    User::where('id','!=', Auth::user()->id)->byCompany(Auth::user()->company_id)->whereHas('role', function ($query) {
+                            $query->whereIn('name', [RoleSchema::SYSTEM_BOS,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR, RoleSchema::HR]);
+                        })->first()->id
+                );
             }
 
             DB::commit();
