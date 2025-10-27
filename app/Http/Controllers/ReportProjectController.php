@@ -327,7 +327,7 @@ class ReportProjectController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
             DB::rollback();
-            dd($th);
+            // dd($th);
             return redirect()->to(route('report-project.index'))->with('update', false);
         }
     }
