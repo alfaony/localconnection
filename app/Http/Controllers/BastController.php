@@ -15,11 +15,14 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\BastExport;
 use App\Jobs\ExportBastJob;
+use App\Jobs\MergeBastPdfJob;
 
 use App\Helpers\Access;
 use App\Helpers\InboxHelper;
+use App\Helpers\EmailNotifHelper;
 
 use App\Models\Bast;
+use App\Models\User;
 use App\Models\Project;
 use App\Models\WorkOrder;
 use App\Models\SettingCompany;
@@ -29,7 +32,7 @@ use PDF;
 use setasign\Fpdi\Fpdi;
 use App\Mail\SendBastEmail;
 use Carbon\Carbon;
-use App\Helpers\EmailNotifHelper;
+use App\Schemas\RoleSchema;
 
 class BastController extends Controller
 {
@@ -129,11 +132,25 @@ class BastController extends Controller
     
             if($bast->project->reportProject)
             {
-                $mergedFilePath = $this->mergePdfFiles($bast, $bast->project->reportProject);
+                // $mergedFilePath = $this->mergePdfFiles($bast, $bast->project->reportProject);
+                MergeBastPdfJob::dispatch(
+                    $bast->id, 
+                    $bast->project->reportProject->id,
+                    Auth::user()->company_id,
+                    Auth::user()->id,
+                    User::where('id','!=', Auth::user()->id)->byCompany(Auth::user()->company_id)->whereHas('role', function ($query) {
+                            $query->whereIn('name', [RoleSchema::SYSTEM_BOS,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR, RoleSchema::HR]);
+                        })->first()->id
+                );
+                    
+                Log::info("MergeBastPdfJob dispatched", [
+                    'bast_id' => $bast->id,
+                    'company_id' => Auth::user()->company_id
+                ]);
             }
 
             DB::commit();
-            return redirect()->to(route('bast.show',$bast->slug))->with('store', true);
+            return redirect()->to(route('bast.show',$bast->slug))->with('update', "Bast Berhasil Dibuat PDF Merge Sedang Di Proses");
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);
@@ -288,14 +305,23 @@ class BastController extends Controller
             $this->updateBudget($project->work_order_id, $request->input('project'));
             if($bast->project->reportProject)
             {
-                $mergedFilePath = $this->mergePdfFiles($bast, $bast->project->reportProject);
+                // $mergedFilePath = $this->mergePdfFiles($bast, $bast->project->reportProject);
+                MergeBastPdfJob::dispatch(
+                    $bast->id, 
+                    $bast->project->reportProject->id,
+                    Auth::user()->company_id,
+                    Auth::user()->id,
+                    User::where('id','!=', Auth::user()->id)->byCompany(Auth::user()->company_id)->whereHas('role', function ($query) {
+                            $query->whereIn('name', [RoleSchema::SYSTEM_BOS,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR, RoleSchema::HR]);
+                        })->first()->id
+                );
             }
             
             DB::commit();
-            return redirect()->to(route('bast.show',$bast->slug))->with('update', true);
+            return redirect()->to(route('bast.show',$bast->slug))->with('update', "BAST berhasil diupdate, Merge Sedang Di proses");
         } catch (\Throwable $th) {
             //throw $th;
-            // dd($th);
+            dd($th);
             DB::rollBack();
             Log::error($th->getMessage());
             return redirect()->back()->with('update',false);
