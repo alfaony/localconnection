@@ -195,7 +195,7 @@ class InternetCustomerForm extends Component
         $this->company_id = $companyId->id;
         $this->company_name = $companyId->name;
         $this->company_slug = $companyId->slug;
-        $this->provinces = Province::all();
+        $this->provinces = Province::whereHas('provinceCoverages')->get();
         $this->internetPackages = InternetPackage::all();
     }
 
@@ -204,10 +204,10 @@ class InternetCustomerForm extends Component
         return view('livewire.internet-customer.internet-customer-form', [
             'settingCompany' => SettingCompany::byCompany($this->company_id)->where('menu','bank')->orWhere('menu','profile')->get()->pluck('field_value','field_title'),
             'agreement' => new PartnershipAgreement(),
-            'provinces' => Province::all(),
-            'cities' => $this->province_id ? City::where('province_id', $this->province_id)->get() : [],
-            'districts' => $this->city_id ? District::where('city_id', $this->city_id)->get() : [],
-            'subdistricts' => $this->district_id ? Subdistrict::where('district_id', $this->district_id)->get() : [],
+            'provinces' => Province::whereHas('provinceCoverages')->get(),
+            'cities' => $this->province_id ? City::where('province_id', $this->province_id)->whereHas('cityCoverages')->get() : [],
+            'districts' => $this->city_id ? District::where('city_id', $this->city_id)->whereHas('districtCoverages')->get() : [],
+            'subdistricts' => $this->district_id ? Subdistrict::where('district_id', $this->district_id)->whereHas('subdistrictCoverages')->get() : [],
             'internetPackages' => InternetPackage::where('company_id',$this->company_id)->where('is_active', true)->get(),
         ])->extends('layouts.app_customer');
     }

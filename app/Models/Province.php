@@ -26,4 +26,9 @@ class Province extends Model
     {
         return $this->belongsTo(City::class, 'default_city_id');
     }
+
+    public function provinceCoverages()
+    {
+        return $this->hasMany(CoverageService::class, 'province_id');
+    }
 }

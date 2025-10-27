@@ -79,7 +79,7 @@
         <div class="container">
             <a class="navbar-brand" href="/">
                 <div class="header-logo">
-                    <img src="{{ asset('logo/logo hikarinet 2.png') }}" alt="Company Logo">
+                    <img src="{{ asset('logo/logo hikarinet 2.svg') }}" alt="Company Logo">
                 </div>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
