@@ -1,5 +1,5 @@
 @section('title', $settingCompany['name'])
-<div class="py-5">
+<div class="mt-2">
     <div class="row justify-content-center">
         <div class="col-lg-10">
             @include('components.alert')
@@ -9,7 +9,7 @@
                     <div class="mb-5">
                         <div class="d-flex justify-content-between mb-3">
                             @foreach(['Alamat', 'Data Pribadi', 'Pembayaran', 'Persetujuan', 'Konfirmasi'] as $index => $title)
-                                <div class="text-center {{ $step > $index + 1 ? 'text-success' : ($step == $index + 1 ? 'fw-bold text-primary' : 'text-muted') }}">
+                                <div class="step-item {{ $step === $index + 1 ? 'active' : ($step > $index + 1 ? 'completed' : '') }}">
                                     <small>Step {{ $index + 1 }}</small><br>
                                     {{ $title }}
                                 </div>
@@ -114,7 +114,7 @@
                                     wire:click="nextStep"
                                     wire:loading.attr="disabled"
                                     wire:target="nextStep"
-                                    class="btn btn-primary px-4"
+                                    class="btn-primary-red"
                                 >
                                     <span wire:loading.remove wire:target="nextStep">
                                         Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
@@ -671,53 +671,283 @@
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
-         .select2-container--default .select2-selection--single,
-        .select2-container--default .select2-selection--multiple {
-            border: 1px solid #ced4da;
+        /* Clean white background untuk content */
+        .main-content {
+            background: radial-gradient(#DB2328, #ffff);  
+        }
+        .registration-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+
+        /* Progress Steps - minimal dan clean */
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 35px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .step-item {
+            flex: 1;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .step-item.active {
+            color: #DB2328;
+            font-weight: 600;
+        }
+
+        .step-item.completed {
+            color: #666;
+        }
+
+        .step-number {
+            font-size: 11px;
+            display: block;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .step-title {
+            font-size: 13px;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: #2c3e50;
+        }
+
+        /* Form Elements - minimal clean style */
+        .form-label {
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid #ddd;
             border-radius: 4px;
-            min-height: 38px;
-            padding: 6px 12px;
+            padding: 10px 14px;
+            font-size: 14px;
+            transition: border-color 0.2s;
         }
-        
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 36px;
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #DB2328;
+            box-shadow: 0 0 0 2px rgba(219, 35, 40, 0.1);
+            outline: none;
         }
-        
-        .select2-container--default .select2-selection--multiple .select2-selection__choice {
-            background-color: #007bff;
-            border-color: #006fe6;
+
+        /* Buttons - hanya tombol utama yang merah */
+        .btn-primary-red {
+            background-color: #DB2328;
+            border: none;
             color: white;
-            padding: 0 8px;
+            padding: 10px 35px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        
-        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-            color: rgba(255,255,255,0.7);
-            margin-right: 5px;
-        }
-        
-        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+
+        .btn-primary-red:hover {
+            background-color: #c01f24;
             color: white;
         }
-        
-        .select2-container--default.select2-container--focus .select2-selection--multiple {
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-        }
-    </style>
-    <style>
-        .form-check.card {
-            cursor: pointer;
+
+        .btn-secondary-gray {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #666;
+            padding: 10px 30px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 14px;
             transition: all 0.2s;
         }
-        .form-check.card:hover {
-            border-color: #0d6efd;
-        }
-        .form-check-input:checked + .form-check-label {
-            color: #0d6efd;
-        }
-        .terms-content h4 {
-            font-weight: 600;
+
+        .btn-secondary-gray:hover {
+            background-color: #e8e8e8;
+            border-color: #ccc;
             color: #333;
+        }
+
+        /* Alert Badges */
+        .alert-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .alert-badge.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .alert-badge.danger {
+            background-color: #DB2328;
+            color: #ffff;
+        }
+
+        /* Payment Method Cards */
+        .payment-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .payment-card:hover {
+            border-color: #DB2328;
+            box-shadow: 0 2px 8px rgba(219, 35, 40, 0.15);
+        }
+
+        .payment-card.selected {
+            border-color: #DB2328;
+            background-color: #fff5f5;
+        }
+
+        .payment-card .form-check-input {
+            cursor: pointer;
+        }
+
+        /* Confirmation Cards */
+        .confirm-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .confirm-section h5 {
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #DB2328;
+            display: inline-block;
+        }
+
+        .confirm-section table {
+            font-size: 14px;
+        }
+
+        .confirm-section table td {
+            padding: 6px 0;
+        }
+
+        /* Signature Pad */
+        .signature-wrapper {
+            border: 2px dashed #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            background: #fafafa;
+            margin-top: 10px;
+        }
+
+        #signature-canvas {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: crosshair;
+            display: block;
+            width: 100%;
+        }
+
+        .signature-preview {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+
+        /* Agreement Text */
+        .agreement-box {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 20px;
+            background: #fafafa;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Select2 Styling */
+        .select2-container--default .select2-selection--single {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            height: 42px;
+            padding: 6px 12px;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 28px;
+            color: #495057;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #DB2328;
+            box-shadow: 0 0 0 2px rgba(219, 35, 40, 0.1);
+        }
+
+        /* Info Alert */
+        .info-alert {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 14px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .info-alert i {
+            color: #856404;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .registration-card {
+                padding: 25px 20px;
+            }
+
+            .progress-steps {
+                flex-wrap: wrap;
+            }
+
+            .step-item {
+                flex: 0 0 50%;
+                margin-bottom: 12px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
         }
     </style>
     <style>
