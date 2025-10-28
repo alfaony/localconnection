@@ -4,6 +4,7 @@
 <div class="container mt-3">
     <div class="card">
         <div class="card-body">
+            @include('components.alert')
             @if(@$agreementLetter)
             <form method="post" action="{{ route('agreement-letter.update',$agreementLetter) }}">
                 @method('put')
@@ -55,7 +56,7 @@
                     <label for="quote" class="col-sm-2 col-form-label">Pilih No. Quote:</label>
                     <div class="col-sm-5">
                         <input type="hidden" name="quote_id" value="{{ old('quote') ?? @$agreementLetter->quote_id }}">
-                        <select class="form-control select2" name="quote" id="quote">
+                        <select class="form-control select2" name="quote" id="quote" required>
                            
                         </select>
                     </div>
@@ -712,6 +713,310 @@
                     </div>
                 </div>
                 
+                <!-- Form tambahan untuk template templateBos1_3 -->
+                <div class="templateBos1_3-field" style="display:none;">
+                    <hr class="my-4">
+                    <h4>Detail Perjanjian Kerjasama N8N</h4>
+
+                    <!-- Data Pihak Pertama -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Data Pihak Pertama</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Nama Perusahaan:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_first_party_company_name" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : (isset($company['name']) ? e($company['name']) : '') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Alamat Perusahaan:</label>
+                                <div class="col-sm-9">
+                                    <textarea class="form-control" name="custom_first_party_address" rows="2">{{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : (isset($company['address']) ? e($company['address']) : '') }}</textarea>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Diwakili Oleh:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_first_party_represented_by" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_first_party_represented_by']) ? e($agreementLetter->custom_fields['custom_first_party_represented_by']) : (isset($company['director']) ? e($company['director']) : '') }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Jabatan:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_first_party_position" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_first_party_position']) ? e($agreementLetter->custom_fields['custom_first_party_position']) : 'Director' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Telepon:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_first_party_telephone" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_first_party_telephone']) ? e($agreementLetter->custom_fields['custom_first_party_telephone']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Email:</label>
+                                <div class="col-sm-9">
+                                    <input type="email" class="form-control" name="custom_first_party_email" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_first_party_email']) ? e($agreementLetter->custom_fields['custom_first_party_email']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Up (Person in Charge):</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_first_party_up" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_first_party_up']) ? e($agreementLetter->custom_fields['custom_first_party_up']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Pihak Kedua -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Data Pihak Kedua</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Tipe Pihak Kedua:</label>
+                                <div class="col-sm-9">
+                                    <select class="form-control" name="custom_second_party_type" id="n8n_pihak_kedua_tipe">
+                                        <option value="company" {{ (isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'company') ? 'selected' : '' }}>Perusahaan</option>
+                                        <option value="individual" {{ (isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'individual') ? 'selected' : '' }}>Perorangan</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Nama:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_second_party_name" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Alamat:</label>
+                                <div class="col-sm-9">
+                                    <textarea class="form-control" name="custom_second_party_address" rows="2">{{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '' }}</textarea>
+                                </div>
+                            </div>
+                            <div class="form-group row n8n-perusahaan-field">
+                                <label class="col-sm-3 col-form-label">Diwakili Oleh:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_second_party_represented_by" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_second_party_represented_by']) ? e($agreementLetter->custom_fields['custom_second_party_represented_by']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row n8n-perusahaan-field">
+                                <label class="col-sm-3 col-form-label">Jabatan:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_second_party_position" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_second_party_position']) ? e($agreementLetter->custom_fields['custom_second_party_position']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Telepon:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_second_party_telephone" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_second_party_telephone']) ? e($agreementLetter->custom_fields['custom_second_party_telephone']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Email:</label>
+                                <div class="col-sm-9">
+                                    <input type="email" class="form-control" name="custom_second_party_email" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_second_party_email']) ? e($agreementLetter->custom_fields['custom_second_party_email']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Up (Person in Charge):</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_second_party_up" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_second_party_up']) ? e($agreementLetter->custom_fields['custom_second_party_up']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Kerjasama -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Detail Kerjasama</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Jangka Waktu (Bulan):</label>
+                                <div class="col-sm-9">
+                                    <input type="number" class="form-control" name="custom_cooperation_duration_months" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_cooperation_duration_months']) ? e($agreementLetter->custom_fields['custom_cooperation_duration_months']) : '3' }}" min="1">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Tanggal Mulai:</label>
+                                <div class="col-sm-9">
+                                    <input type="date" class="form-control" name="custom_cooperation_start_date" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? e($agreementLetter->custom_fields['custom_cooperation_start_date']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Tanggal Berakhir:</label>
+                                <div class="col-sm-9">
+                                    <input type="date" class="form-control" name="custom_cooperation_end_date" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_cooperation_end_date']) ? e($agreementLetter->custom_fields['custom_cooperation_end_date']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Persentase Komisi (%):</label>
+                                <div class="col-sm-9">
+                                    <input type="number" class="form-control" name="custom_commission_percentage" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_commission_percentage']) ? e($agreementLetter->custom_fields['custom_commission_percentage']) : '20' }}" min="0" max="100" step="0.1">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Durasi Pembayaran (Hari Kerja):</label>
+                                <div class="col-sm-9">
+                                    <input type="number" class="form-control" name="custom_payment_duration_days" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_payment_duration_days']) ? e($agreementLetter->custom_fields['custom_payment_duration_days']) : '7' }}" min="1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Partner -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">Informasi Partner (Lampiran)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Nama Partner:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_partner_name" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_partner_name']) ? e($agreementLetter->custom_fields['custom_partner_name']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Email Partner:</label>
+                                <div class="col-sm-9">
+                                    <input type="email" class="form-control" name="custom_partner_email" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_partner_email']) ? e($agreementLetter->custom_fields['custom_partner_email']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Nomor Telepon Partner:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_partner_phone" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_partner_phone']) ? e($agreementLetter->custom_fields['custom_partner_phone']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Kode Referral:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_referral_code" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_referral_code']) ? e($agreementLetter->custom_fields['custom_referral_code']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Bank / E-Wallet:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_bank_ewallet_name" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_bank_ewallet_name']) ? e($agreementLetter->custom_fields['custom_bank_ewallet_name']) : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Nomor Rekening:</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="custom_account_number" 
+                                        value="{{ isset($agreementLetter->custom_fields['custom_account_number']) ? e($agreementLetter->custom_fields['custom_account_number']) : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Data Partner List (LAMPIRAN 4) -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Lampiran 4 - Daftar Partner & Periode Kerja Sama</h5>
+                            <button type="button" class="btn btn-sm btn-light" id="addPartnerRow">
+                                <i class="fa fa-plus"></i> Tambah Partner
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="partnerListTable">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th width="5%">No</th>
+                                            <th width="25%">Nama Partner</th>
+                                            <th width="25%">Lokasi</th>
+                                            <th width="25%">Periode</th>
+                                            <th width="15%">Status</th>
+                                            <th width="5%">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="partnerListBody">
+                                        @php
+                                            $partnerList = isset($agreementLetter->custom_fields['custom_partner_list']) 
+                                                ? json_decode($agreementLetter->custom_fields['custom_partner_list'], true) 
+                                                : [];
+                                            
+                                            // Jika kosong, tambahkan 3 baris default
+                                            if(empty($partnerList)) {
+                                                $partnerList = [
+                                                    ['name' => '', 'location' => '', 'period' => '', 'status' => 'Aktif'],
+                                                ];
+                                            }
+                                        @endphp
+                                        
+                                        @foreach($partnerList as $index => $partner)
+                                        <tr class="partner-row">
+                                            <td class="text-center row-number">{{ $index + 1 }}</td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" 
+                                                    name="custom_partner_list[{{ $index }}][name]" 
+                                                    value="{{ $partner['name'] ?? '' }}" 
+                                                    placeholder="Nama Partner">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" 
+                                                    name="custom_partner_list[{{ $index }}][location]" 
+                                                    value="{{ $partner['location'] ?? '' }}" 
+                                                    placeholder="Lokasi">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" 
+                                                    name="custom_partner_list[{{ $index }}][period]" 
+                                                    value="{{ $partner['period'] ?? '' }}" 
+                                                    placeholder="Contoh: Jan 2024 - Des 2024">
+                                            </td>
+                                            <td>
+                                                <select class="form-control form-control-sm" name="custom_partner_list[{{ $index }}][status]">
+                                                    <option value="Aktif" {{ (isset($partner['status']) && $partner['status'] == 'Aktif') ? 'selected' : '' }}>Aktif</option>
+                                                    <option value="Tidak Aktif" {{ (isset($partner['status']) && $partner['status'] == 'Tidak Aktif') ? 'selected' : '' }}>Tidak Aktif</option>
+                                                    <option value="Selesai" {{ (isset($partner['status']) && $partner['status'] == 'Selesai') ? 'selected' : '' }}>Selesai</option>
+                                                </select>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-danger remove-partner-row" title="Hapus">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fa fa-info-circle"></i> Klik tombol "Tambah Partner" untuk menambah baris baru. 
+                                Minimal 1 baris harus diisi.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="row template-specific-fields">
 
                     <!-- English -->
@@ -845,6 +1150,10 @@
         $('#laptop_pihak_kedua_tipe').on('change', function() {
             toggleLaptopPihakKeduaFields();
         });
+        // Event listener untuk perubahan tipe pihak kedua
+        $('#n8n_pihak_kedua_tipe').on('change', function() {
+            toggleN8nPihakKeduaFields();
+        })
 
         // Initial toggle on page load
         toggleTemplateFields();
@@ -853,6 +1162,7 @@
         toggleSkemaPembayaran();
           // Initial toggle on page load
         toggleLaptopPihakKeduaFields();
+        toggleN8nPihakKeduaFields();
 
         function toggleLaptopPihakKeduaFields() 
         {
@@ -869,22 +1179,16 @@
 
         function toggleTemplateFields() {
             var selectedTemplate = $('#template_agreement_id option:selected').data('template');
-            
-            if (selectedTemplate === 'templateBos1_1' || selectedTemplate === 'templateBos1_2') {
-                $('.template-specific-fields').hide();
-                
-                // Show/hide fields based on template type
-                if (selectedTemplate === 'templateBos1_1') {
-                    $('.templateBos1_1-field').show();
-                    $('.templateBos1_2-field').hide();
-                } else if (selectedTemplate === 'templateBos1_2') {
-                    $('.templateBos1_1-field').hide();
-                    $('.templateBos1_2-field').show();
-                }
-            } else 
-            {
-                $('.templateBos1_1-field').hide();
-                $('.templateBos1_2-field').hide();
+
+            $('.templateBos1_1-field, .templateBos1_2-field, .templateBos1_3-field, .template-specific-fields').hide();
+
+            if (selectedTemplate === 'templateBos1_1') {
+                $('.templateBos1_1-field').show();
+            } else if (selectedTemplate === 'templateBos1_2') {
+                $('.templateBos1_2-field').show();
+            } else if (selectedTemplate === 'templateBos1_3') {
+                $('.templateBos1_3-field').show();
+            } else {
                 $('.template-specific-fields').show();
             }
         }
@@ -901,6 +1205,16 @@
             }
         }
 
+        function toggleN8nPihakKeduaFields() {
+            var tipe = $('#n8n_pihak_kedua_tipe').val();
+            
+            if (tipe === 'company') {
+                $('.n8n-perusahaan-field').show();
+            } else {
+                $('.n8n-perusahaan-field').hide();
+            }
+        }
+
         function toggleBiayaFields() {
             // Can be used for additional logic if needed
         }
@@ -908,6 +1222,99 @@
         function toggleSkemaPembayaran() {
             // Can be used for additional logic if needed
         }
+    });
+</script>
+<script>
+    $(document).ready(function() {
+        let rowIndex = {{ count($partnerList) }};
+
+        // Fungsi untuk update nomor urut
+        function updateRowNumbers() {
+            $('#partnerListBody tr').each(function(index) {
+                $(this).find('.row-number').text(index + 1);
+                
+                // Update name attributes
+                $(this).find('input, select').each(function() {
+                    let name = $(this).attr('name');
+                    if(name) {
+                        let newName = name.replace(/\[\d+\]/, '[' + index + ']');
+                        $(this).attr('name', newName);
+                    }
+                });
+            });
+        }
+
+        // Tambah baris baru
+        $('#addPartnerRow').click(function() {
+            let newRow = `
+                <tr class="partner-row">
+                    <td class="text-center row-number">${rowIndex + 1}</td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm" 
+                            name="custom_partner_list[${rowIndex}][name]" 
+                            placeholder="Nama Partner">
+                    </td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm" 
+                            name="custom_partner_list[${rowIndex}][location]" 
+                            placeholder="Lokasi">
+                    </td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm" 
+                            name="custom_partner_list[${rowIndex}][period]" 
+                            placeholder="Contoh: Jan 2024 - Des 2024">
+                    </td>
+                    <td>
+                        <select class="form-control form-control-sm" name="custom_partner_list[${rowIndex}][status]">
+                            <option value="Aktif" selected>Aktif</option>
+                            <option value="Tidak Aktif">Tidak Aktif</option>
+                            <option value="Selesai">Selesai</option>
+                        </select>
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-danger remove-partner-row" title="Hapus">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            
+            $('#partnerListBody').append(newRow);
+            rowIndex++;
+            updateRowNumbers();
+        });
+
+        // Hapus baris
+        $(document).on('click', '.remove-partner-row', function() {
+            let rowCount = $('#partnerListBody tr').length;
+            
+            if(rowCount > 1) {
+                $(this).closest('tr').remove();
+                updateRowNumbers();
+                rowIndex--;
+            } else {
+                alert('Minimal harus ada 1 baris partner!');
+            }
+        });
+
+        // Toggle show/hide untuk field perusahaan pada pihak kedua
+        function toggleSecondPartyFields() {
+            let type = $('#n8n_pihak_kedua_tipe').val();
+            if(type === 'individual') {
+                $('.n8n-perusahaan-field').hide();
+                $('.n8n-perusahaan-field input').prop('required', false);
+            } else {
+                $('.n8n-perusahaan-field').show();
+            }
+        }
+
+        // Jalankan saat page load
+        toggleSecondPartyFields();
+
+        // Jalankan saat dropdown berubah
+        $('#n8n_pihak_kedua_tipe').change(function() {
+            toggleSecondPartyFields();
+        });
     });
 </script>
 @stop
@@ -944,6 +1351,21 @@
     }
     .card-header h5 {
         margin: 0;
+    }
+</style>
+<style>
+    #partnerListTable input.form-control-sm,
+    #partnerListTable select.form-control-sm {
+        font-size: 0.875rem;
+    }
+    
+    .partner-row:hover {
+        background-color: #f8f9fa;
+    }
+    
+    #partnerListTable thead th {
+        background-color: #e9ecef;
+        font-weight: 600;
     }
 </style>
 @stop
