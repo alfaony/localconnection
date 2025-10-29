@@ -116,7 +116,7 @@
                         
                         @if($temp_photo && !$location_photo)
                             <div class="mt-2">
-                                <img src="{{ asset('storage/' . $temp_photo) }}" alt="Current Photo" class="img-thumbnail" style="max-height: 150px;">
+                                <img src="{{ s3_asset(true,10, $temp_photo) }}" alt="Current Photo" class="img-thumbnail" style="max-height: 150px;">
                             </div>
                         @endif
                     </div>

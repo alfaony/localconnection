@@ -28,6 +28,7 @@ class LetterSubmission extends Model
     protected $fillable = [
         'letter_type_id',
         'user_id',
+        'created_by',
         'is_approved',
         'field',
     ];
@@ -79,6 +80,11 @@ class LetterSubmission extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /**

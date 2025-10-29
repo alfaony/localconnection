@@ -6,7 +6,7 @@
 <div class="row">
     <div class="col-md-12">
         @if(Session::get('update'))
-        <div class="alert alert-success mt-3">File Berhasil Diperbarui</div>
+        <div class="alert alert-success mt-3">{{ Session::get('update') }}</div>
         @endif
         @if(Session::get('successEmail'))
         <div class="alert alert-success mt-3">Email Berhasil Dikirim</div>
@@ -54,7 +54,7 @@
                     @if ($bast->file_merge_path)
 
                         <!-- Display the latest merged PDF -->
-                        <iframe src="{{ Storage::url($bast->file_merge_path) }}" 
+                        <iframe src="{{ s3_asset(true,10,$bast->file_merge_path) }}" 
                                 style="width: 100%; height: 900px; border: 1px solid #ccc;" 
                                 frameborder="0">
                         </iframe>

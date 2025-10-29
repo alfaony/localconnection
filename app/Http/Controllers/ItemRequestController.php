@@ -79,7 +79,7 @@ class ItemRequestController extends Controller
 
         if ($request->hasFile('picture')) 
         {
-            $validated['picture'] = $request->file('picture')->store('item_pictures', 'public');
+            $validated['picture'] = $request->file('picture')->store('item_pictures');
         }
 
         // $validated['assigned_pic_id'] = $userCandidate->id;
@@ -192,7 +192,7 @@ class ItemRequestController extends Controller
             if ($itemRequest->picture) {
                 Storage::delete($itemRequest->picture);
             }
-            $validated['picture'] = $request->file('picture')->store('item_pictures', 'public');
+            $validated['picture'] = $request->file('picture')->store('item_pictures');
         }
 
         // dispatch(new ProcessItemRequestCreated($itemRequest->id));
@@ -340,11 +340,11 @@ class ItemRequestController extends Controller
        DB::beginTransaction();
        try {
         if ($request->hasFile('airwillbill_photo')) {
-            $airwillbillPath = $request->file('airwillbill_photo')->store('airwillbill', 'public');
+            $airwillbillPath = $request->file('airwillbill_photo')->store('airwillbill');
         } else {
             $airwillbillPath = null;
         }
-        $deliveryPhotoPath = $request->hasFile('delivery_photo') ? $request->file('delivery_photo')->store('delivery_photo', 'public') : null;
+        $deliveryPhotoPath = $request->hasFile('delivery_photo') ? $request->file('delivery_photo')->store('delivery_photo') : null;
 
         if(!$itemRequest->delivery)
         {

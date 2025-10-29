@@ -175,6 +175,7 @@ class ProductStoreForm extends Component
         
         if ($this->productId) {
             $product = ProductStore::find($this->productId);
+            $data['user_modified_id'] = auth()->id();
             $product->update($data);
         } else {
             $data['user_create_id'] = auth()->id();

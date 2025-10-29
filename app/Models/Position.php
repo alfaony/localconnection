@@ -40,7 +40,8 @@ class Position extends Model
      */
     public function scopeByCompany($query, $companyId)
     {
-        return $query->where('company_id', $companyId);
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+        return $query->whereIn('company_id', $companyIds);
     }
 
     /**

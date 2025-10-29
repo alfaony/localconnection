@@ -102,7 +102,7 @@
                     @if($mode === 'edit' && $report->file)
                         <div class="form-group">
                             <label>File Sebelumnya:</label><br>
-                            <a href="{{ asset('storage/' . $report->file) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                            <a href="{{ s3_asset(true,10, $report->file) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-file-pdf mr-1"></i>Lihat File
                             </a>
                         </div>

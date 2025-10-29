@@ -243,11 +243,11 @@
                                     <div class="drag-handle">
                                         <i class="fas fa-grip-vertical"></i>
                                     </div>
-                                    <img src="{{ Storage::url($media->file_path) }}" class="photo-thumbnail" alt="Laptop photo">
+                                    <img src="{{ s3_asset(true,10,$media->file_path) }}" class="photo-thumbnail" alt="Laptop photo">
                                     <div class="photo-overlay">
                                         <div class="photo-actions">
                                             <button type="button" class="btn btn-sm btn-light btn-zoom" 
-                                                    data-image="{{ Storage::url($media->file_path) }}"
+                                                    data-image="{{ s3_asset(true,10,$media->file_path) }}"
                                                     title="Lihat Ukuran Penuh">
                                                 <i class="fas fa-search-plus"></i>
                                             </button>

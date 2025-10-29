@@ -150,7 +150,7 @@
                     <div class="row">
                         @foreach($usedItem->media as $media)
                         <div class="col-md-2 mb-3 photo-wrapper position-relative">
-                            <img src="{{ Storage::url($media->file_path) }}" class="img-thumbnail photo-preview w-100" style="object-fit: cover;">
+                            <img src="{{ s3_asset(true,10,$media->file_path) }}" class="img-thumbnail photo-preview w-100" style="object-fit: cover;">
                             <button type="button" class="btn btn-danger btn-sm" 
                                     style="position: absolute; top: 4px; right: 4px; border-radius: 50%; padding: 2px 6px;"
                                     data-toggle="modal" data-target="#deletePhotoModal" 

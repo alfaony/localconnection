@@ -52,7 +52,7 @@
                         <td>{{ $letter->responsibleUser->name ?? '-' }}</td>
                         <td>
                             @if($letter->document_path)
-                                <a href="{{ asset('storage/' . $letter->document_path) }}" target="_blank">📄</a>
+                                <a href="{{ s3_asset(true,10, $letter->document_path) }}" target="_blank">📄</a>
                             @else
                                 <span class="text-muted">-</span>
                             @endif

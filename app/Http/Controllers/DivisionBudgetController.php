@@ -75,7 +75,7 @@ class DivisionBudgetController extends Controller
 
                 if($fileName)
                 {
-                    $path = $file->storeAs('file', $fileName, 'public');
+                    $path = $file->storeAs('file', $fileName);
                     $files[] = $path;
                 }
             }
@@ -141,7 +141,7 @@ class DivisionBudgetController extends Controller
                 // Validation File
                 if($fileName)
                 {
-                    $path = $file->storeAs('file', $fileName, 'public');
+                    $path = $file->storeAs('file', $fileName);
                     $files[] = $path;
                 }
             }

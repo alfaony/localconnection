@@ -231,8 +231,8 @@
                                         @if($purchase->bon_photo)
                                         <div class="col-md-6 mt-5">
                                             <label for="">Bukti Tagihan</label>
-                                            <img src="{{ Storage::url($purchase->bon_photo) }}" class="img-thumbnail" max-width="70%" alt="bon photo">
-                                            <a href="{{ Storage::url($purchase->bon_photo) }}" download class="btn btn-sm btn-outline-primary ml-2 mt-2">
+                                            <img src="{{ s3_asset(true,10,$purchase->bon_photo) }}" class="img-thumbnail" max-width="70%" alt="bon photo">
+                                            <a href="{{ s3_asset(true,10,$purchase->bon_photo) }}" download class="btn btn-sm btn-outline-primary ml-2 mt-2">
                                                 <i class="fas fa-download"></i> Unduh
                                             </a>
                                         </div>
@@ -240,8 +240,8 @@
                                         <div class="col-md-6 mt-5">
                                         @if($purchase->payment)
                                             <label for="">Bukti Pembayaran</label>
-                                            <img src="{{ Storage::url($purchase->payment->proof_image) }}" class="img-thumbnail" max-width="70%" alt="Bukti Transfer">
-                                            <a href="{{ Storage::url($purchase->payment->proof_image) }}" download class="btn btn-sm btn-outline-primary ml-2 mt-2">
+                                            <img src="{{ s3_asset(true,10,$purchase->payment->proof_image) }}" class="img-thumbnail" max-width="70%" alt="Bukti Transfer">
+                                            <a href="{{ s3_asset(true,10,$purchase->payment->proof_image) }}" download class="btn btn-sm btn-outline-primary ml-2 mt-2">
                                                 <i class="fas fa-download"></i> Unduh
                                             </a>
                                         @else
@@ -336,10 +336,10 @@
                                                 <div class="mb-2">
                                                     <i class="fas fa-file-pdf mr-2"></i>
                                                     <strong>Air Way Bill Photo: </strong>
-                                                    <a href="{{ Storage::url($itemRequest->delivery->airwillbill_photo) }}" target="_blank">
+                                                    <a href="{{ s3_asset(true,10,$itemRequest->delivery->airwillbill_photo) }}" target="_blank">
                                                         Lihat
                                                     </a>
-                                                    <img src="{{ Storage::url($itemRequest->delivery->airwillbill_photo) }}" class="img-thumbnail mt-2" max-width="50%" alt="Air Way Bill Photo">
+                                                    <img src="{{ s3_asset(true,10,$itemRequest->delivery->airwillbill_photo) }}" class="img-thumbnail mt-2" max-width="50%" alt="Air Way Bill Photo">
                                                 </div>
                                             </div>
                                         </div>
@@ -362,12 +362,12 @@
                                             </div>
                                             <div class="col-md-6">
                                                 @if($itemRequest->delivery->delivery_photo)
-                                                <a href="{{ Storage::url($itemRequest->delivery->delivery_photo) }}" 
+                                                <a href="{{ s3_asset(true,10,$itemRequest->delivery->delivery_photo) }}" 
                                                 class="btn btn-sm btn-success"
                                                 target="_blank">
                                                     <i class="fas fa-file-pdf"></i> Bukti Pengiriman
                                                 </a>
-                                                <img src="{{ Storage::url($itemRequest->delivery->delivery_photo) }}" class="img-thumbnail mt-2" max-width="50%" alt="Air Way Bill Photo">
+                                                <img src="{{ s3_asset(true,10,$itemRequest->delivery->delivery_photo) }}" class="img-thumbnail mt-2" max-width="50%" alt="Air Way Bill Photo">
                                                 @endif
                                             </div>
                                         </div>

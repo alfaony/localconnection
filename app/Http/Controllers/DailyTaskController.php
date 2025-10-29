@@ -167,8 +167,14 @@ class DailyTaskController extends Controller
         $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
         $dailyTaskProjects = DailyTaskProject::byCompany(Auth::user()->company_id)->get(); 
 
+        // permission
+        $isShow = Access::can('show','dailytasks');
+        $isEdit = Access::can('edit','dailytasks');
+        $isDestroy = Access::can('destroy','dailytasks');
+        $isApprovement = Access::can('approvement','dailytasks');
+
         // Kembalikan view dengan data
-        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss', 'divisions','dailyTaskProjects'));
+        return view('dailytask.index', compact('dailyTasks', 'taskTimeFrame', 'users', 'taskStatuss', 'divisions','dailyTaskProjects', 'isShow', 'isEdit', 'isDestroy', 'isApprovement'));
     }
 
     public function create()
@@ -314,7 +320,7 @@ class DailyTaskController extends Controller
                         $extension = $file->getClientOriginalExtension();
                         $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
     
-                        $path = $file->storeAs('media', $fileName, 'public');
+                        $path = $file->storeAs('media', $fileName);
                         $mediaType = $file->getClientMimeType();
     
                         DailyTaskMedia::create([
@@ -435,8 +441,15 @@ class DailyTaskController extends Controller
             $types = DailyTaskType::get();
             $categories = DailyTaskCategory::byCompany(Auth::user()->company_id)->get();
 
+            // Permission
+            $isCustomfieldupdate = Access::can('customfieldupdate', 'daily_task_projects');
+            $isCustomfielddestroy = Access::can('customfielddestroy', 'daily_task_projects');
+            $isCustomfieldstore = Access::can('customfieldstore', 'daily_task_projects');
+
+            $isDeleteMedia = Access::can('deletemedia', 'dailytasks');
+
             DB::commit();
-            return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap','divisions'));
+            return view('dailytask.show', compact('dailytask', 'users', 'types', 'categories', 'subTasks', 'showProject', 'doing', 'approvement', 'daysMap','divisions', 'isDeleteMedia'));
 
         } catch (\Exception $e) {
             // dd($e);
@@ -822,7 +835,7 @@ class DailyTaskController extends Controller
                     $extension = $file->getClientOriginalExtension();
                     $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
 
-                    $path = $file->storeAs('media', $fileName, 'public');
+                    $path = $file->storeAs('media', $fileName);
                     $mediaType = $file->getClientMimeType();
 
                     DailyTaskMedia::create([
@@ -922,7 +935,7 @@ class DailyTaskController extends Controller
                     $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
         
                     // Store the file with the new name
-                    $path = $file->storeAs('media', $fileName, 'public');
+                    $path = $file->storeAs('media', $fileName);
                     $mediaType = $file->getClientMimeType();
         
                     DailyTaskMedia::create([
@@ -951,7 +964,7 @@ class DailyTaskController extends Controller
         $media = DailyTaskMedia::findOrFail($id);
 
         // Delete the file from storage
-        Storage::disk('public')->delete($media->file_path);
+        Storage::delete($media->file_path);
 
         // Delete the record from the database
         $media->delete();
@@ -1144,7 +1157,7 @@ class DailyTaskController extends Controller
             $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
 
             // Store the file with the new name
-            $path = $file->storeAs('comment', $fileName, 'public');
+            $path = $file->storeAs('comment', $fileName);
         }
 
         $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);

@@ -33,9 +33,9 @@ class CustomerRequest extends FormRequest
             // dd($customer);
             return [
                 'name' => 'required|string|max:255',
-                'director' => 'required|string|max:255',
-                'pic' => 'required|string|max:255',
-                'assignor' => 'required|string|max:255',
+                'director' => 'nullable|string|max:255',
+                'pic' => 'nullable|string|max:255',
+                'assignor' => 'nullable|string|max:255',
                 'address' => 'required|string',
                 'city' => 'nullable|string',
                 'industry' => 'nullable|string',
@@ -46,9 +46,9 @@ class CustomerRequest extends FormRequest
         {
             return [
                 'name' => 'required|string|max:255',
-                'director' => 'required|string|max:255',
-                'pic' => 'required|string|max:255',
-                'assignor' => 'required|string|max:255',
+                'director' => 'nullable|string|max:255',
+                'pic' => 'nullable|string|max:255',
+                'assignor' => 'nullable|string|max:255',
                 'address' => 'required|string',
                 'phone' => 'required|regex:/^[0-9]{10,15}$/',
                 'email' => ['required','email',new UniqueCustomer('store')],

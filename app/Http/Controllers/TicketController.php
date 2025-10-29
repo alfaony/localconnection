@@ -43,7 +43,7 @@ class TicketController extends Controller
             // Hapus file lama jika ada        
             $file = $request->file('path');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('ticket', $filename, 'public');
+            $filePath = $file->storeAs('ticket', $filename);
             $ticket->path = $filename;
         }
         $ticket->save();

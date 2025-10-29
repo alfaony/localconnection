@@ -380,7 +380,7 @@ class DailyTaskController extends Controller
                         $extension = $file->getClientOriginalExtension();
                         $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
     
-                        $path = $file->storeAs('media', $fileName, 'public');
+                        $path = $file->storeAs('media', $fileName);
                         $mediaType = $file->getClientMimeType();
     
                         DailyTaskMedia::create([
@@ -810,7 +810,7 @@ class DailyTaskController extends Controller
                     $extension = $file->getClientOriginalExtension();
                     $fileName = $originalName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
 
-                    $path = $file->storeAs('media', $fileName, 'public');
+                    $path = $file->storeAs('media', $fileName);
                     $mediaType = $file->getClientMimeType();
 
                     DailyTaskMedia::create([

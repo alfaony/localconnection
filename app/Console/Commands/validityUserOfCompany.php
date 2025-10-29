@@ -106,21 +106,23 @@ class validityUserOfCompany extends Command
                     return;
                 }
 
-                if ($today->isWeekend()) 
-                {
-                    $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
-                    return;
-                }
+                // if ($today->isWeekend()) 
+                // {
+                //     $this->info("Hari ini adalah akhir pekan. Tidak ada jadwal check-in.");
+                //     return;
+                // }
 
                 $entryTime = Carbon::createFromFormat('H:i', $setting['entry_time']);
                 $toleranceMinutes = (int) $setting['tolerance'];
                 $checkinTarget = (int) $setting['checkin_onday'];
 
-                $users = User::where('company_id', $id)->where('wfo_check_in', true)->get();
+                $users = User::where('company_id', $id)->where('wfo_check_in', true)
+                ->get();
+
 
                 foreach ($users as $user) {
                     // Ambil semua attendance hari ini
-                    if(!$user->isDayoff())
+                    if(!$user->isDayoff() && $user->shouldWorkToday())
                     {
                         $attendances = OfficeAttendance::where('user_id', $user->id)
                             ->whereDate('created_at', Carbon::today())
@@ -129,18 +131,29 @@ class validityUserOfCompany extends Command
     
                         $totalCheckin = $attendances->count();
                         $firstCheckin = $attendances->first();
-    
                         $terlambat = false;
-                        if ($firstCheckin) {
-                            $actualCheckin = Carbon::parse($firstCheckin->created_at);
-                            $graceTime = $entryTime->copy()->addMinutes($toleranceMinutes);
-                            $terlambat = $actualCheckin->gt($graceTime);
+                        $message = null;
+                        $checkinTarget = isset($firstCheckin->barcode->userCreate) && $firstCheckin->barcode->userCreate->wfoRules ? $firstCheckin->barcode->userCreate->wfoRules->times_checkin_in_day : $checkinTarget;
+                        $point = isset($firstCheckin->barcode->userCreate) && $firstCheckin->barcode->userCreate->wfoRules ? $firstCheckin->barcode->userCreate->wfoRules->point_checkin_in_day : $setting['punishment_point_wfo'];
+
+                        
+                        if ($firstCheckin) 
+                        {
+                            $actualCheckin = Carbon::parse($firstCheckin->time);
+                            $graceTime = $firstCheckin->barcode->userCreate ? (isset($firstCheckin->barcode->userCreate->wfoRules) ? $firstCheckin->barcode->userCreate->wfoRules->entry_time_checkin->addMinutes($toleranceMinutes) : $entryTime->copy()->addMinutes($toleranceMinutes)) : $entryTime->copy()->addMinutes($toleranceMinutes);
+                            $terlambat = isset($actualCheckin) && $actualCheckin->gt($graceTime);
+
+                            $message = $terlambat ? "Terlambat " . $actualCheckin->diffInMinutes($graceTime) . " menit dari jam " . $graceTime->format('H:i') : null;
                         }
-    
-                        if ($totalCheckin < $checkinTarget || $terlambat) {
+
+                        if (($totalCheckin < $checkinTarget || $terlambat) && $point && $user) 
+                        {
+                            if(!isset($message) && $totalCheckin < $checkinTarget)
+                            {
+                                $message = "Belum memenuhi target check-in check-in per hari ".$totalCheckin." dari ".$checkinTarget;
+                            }
                             // Tambahkan user ke dalam hasil atau lakukan aksi
-                            $this->addPoint($user,"belum memenuhi target check-in atau terlambat", $setting['punishment_point_wfo']);
-                            // Log::info("User {$user->name} belum memenuhi target check-in atau terlambat.");
+                            $this->addPoint($user, $message, $point);
                         }
                     }
                 }
@@ -151,6 +164,7 @@ class validityUserOfCompany extends Command
         } catch (\Throwable $th) {
             //throw $th;
             // dd($th);
+            $this->error($th->getMessage());
             Log::error("Error storing file: " . $th->getMessage());
         }
     }
@@ -161,6 +175,7 @@ class validityUserOfCompany extends Command
         $admin = User::with('role')
             ->whereHas('role', fn ($query) => $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR]))
             ->where('company_id', $user->company_id)
+            ->where('id','!=',$user->id)
             ->first();
 
         $dailyTask = new DailyTask();

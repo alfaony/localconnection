@@ -17,6 +17,7 @@ class BarcodeAttendance extends Model
     protected $fillable = [
         'id',
         'company_id',
+        'user_create_id',
         'code',
         'is_used',
         'expires_at'
@@ -30,5 +31,10 @@ class BarcodeAttendance extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function userCreate()
+    {
+        return $this->belongsTo(User::class, 'user_create_id');
     }
 }

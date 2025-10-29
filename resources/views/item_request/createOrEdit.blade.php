@@ -113,7 +113,7 @@
                     <label for="picture">Foto Pendukung (opsional)</label>
                     @if (!empty($itemRequest?->picture))
                         <div class="mb-2">
-                            <img src="{{ asset('storage/' . $itemRequest->picture) }}" class="img-thumbnail"
+                            <img src="{{ s3_asset(true,10, $itemRequest->picture) }}" class="img-thumbnail"
                                 style="max-width: 250px;">
                         </div>
                     @endif

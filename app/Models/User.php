@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-
+use Illuminate\Support\Facades\Storage;
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
 
@@ -89,6 +89,7 @@ class User extends Authenticatable
         'custom_rest_times' => 'array', // This will automatically decode JSON into an array   
         'ip_addresses' => 'array',   
         'dayoff_active' => 'boolean',
+        'wfo_working_days' => 'array',  // ← Tambahkan ini
     ];
 
     // protected $appends = ['point_checkin', 'today_percentage', 'point_percentage'];
@@ -106,6 +107,11 @@ class User extends Authenticatable
     public function attendances()
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    public function wfoRules()
+    {
+        return $this->hasOne(WfoRule::class, 'user_id', 'id');
     }
 
     public function taskAssigns()
@@ -222,6 +228,40 @@ class User extends Authenticatable
     {
         return json_decode($this->failure, true) ?? [];
     }
+
+    public function shouldWorkToday()
+    {
+        if (!$this->wfo_check_in || is_null($this->wfo_working_days)) {
+            return false;
+        }
+
+        $today = strtolower(now()->format('l')); // now()->format('l'); // Get day name: Monday, Tuesday, etc.
+        return $this->wfo_working_days[$today] ?? false;
+    }
+
+    public function getPhotoIdentityAttribute($value)
+    {
+        if($this->id_card_image)
+        {
+            return Storage::url($this->id_card_image);
+        }
+        return null;
+    }
+
+    /**
+     * Check if user should work on a specific date
+     */
+    public function shouldWorkOnDate($date)
+    {
+        if (!$this->wfo_check_in || is_null($this->wfo_working_days)) {
+            return false;
+        }
+
+        $dayName = \Carbon\Carbon::parse($date)->format('l');
+        
+        return $this->wfo_working_days[$dayName] ?? false;
+    }
+
     public function salary()
     {
         return $this->hasMany(UserSalary::class);
@@ -230,6 +270,11 @@ class User extends Authenticatable
     public function dayoffs()
     {
         return $this->hasMany(Dayoff::class);
+    }
+
+    public function agreementLetter()
+    {
+        return $this->hasMany(AgreementLetter::class,'user_created_id');
     }
 
     public function kye()
@@ -335,8 +380,10 @@ class User extends Authenticatable
             ->whereDate('date_start', '<=', $today)
             ->whereDate('date_end', '>=', $today)
             ->whereNull('rejected_at')
-            ->whereNotNull('approved_hr_at')
-            ->whereNotNull('approved_finance_at')
+            ->where(function ($query) {
+                $query->whereNotNull('approved_hr_at')
+                    ->orWhereNotNull('approved_finance_at');
+            })
             ->exists();
     }
 

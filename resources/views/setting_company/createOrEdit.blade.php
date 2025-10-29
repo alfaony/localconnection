@@ -149,7 +149,7 @@
                                     <label for="file_nib">Upload File NIB</label>
                                     @if($data['nib_file']) 
                                         <div class="mb-2">
-                                            <a href="{{ Storage::url($data['nib_file']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <a href="{{ s3_asset(true,10,$data['nib_file']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
                                         </div>
                                     @endif
                                     <input type="file" name="nib_file" class="form-control-file" accept=".pdf" >
@@ -162,7 +162,7 @@
                                     <label for="file_akta">Upload File Akta</label>
                                     @if($data['acta_file']) 
                                         <div class="mb-2">
-                                            <a href="{{ Storage::url($data['acta_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <a href="{{ s3_asset(true,10,$data['acta_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
                                         </div>
                                     @endif
                                     <input type="file" name="acta_file" class="form-control-file" accept=".pdf" >
@@ -175,7 +175,7 @@
                                     <label for="file_npwp">Upload File NPWP</label>
                                     @if($data['npwp_file']) 
                                         <div class="mb-2">
-                                            <a href="{{ Storage::url($data['npwp_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <a href="{{ s3_asset(true,10,$data['npwp_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
                                         </div>
                                     @endif
                                     <input type="file" name="npwp_file" class="form-control-file" accept=".pdf" >
@@ -260,7 +260,7 @@
                                     <label for="header">Upload Header</label>
                                     @if(isset($data['header']) && file_exists(public_path('storage/' . $data['header']))) 
                                         <div class="mb-2">
-                                            <a href="{{ Storage::url($data['header']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Header</a>
+                                            <a href="{{ s3_asset(true,10,$data['header']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Header</a>
                                         </div>
                                     @endif
                                     <input type="file" name="header" class="form-control-file" accept="image/*">
@@ -272,7 +272,7 @@
                                     <label for="footer">Upload Footer</label>
                                     @if(isset($data['footer']) && file_exists(public_path('storage/' . $data['footer']))) 
                                         <div class="mb-2">
-                                            <a href="{{ Storage::url($data['footer']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Footer</a>
+                                            <a href="{{ s3_asset(true,10,$data['footer']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Footer</a>
                                         </div>
                                     @endif
                                     <input type="file" name="footer" class="form-control-file" accept="image/*">
@@ -633,7 +633,7 @@
                                     <label for="header_store_image">Header Store Image</label>
                                     @if($data['header_store_image']) 
                                         <div class="mb-2">
-                                            <a href="{{ Storage::url($data['header_store_image']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <a href="{{ s3_asset(true,10,$data['header_store_image']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
                                         </div>
                                     @endif
                                     <input type="file" name="header_store_image" class="form-control" accept="image/*">

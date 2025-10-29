@@ -50,7 +50,7 @@ class SendWebhookSettingJob implements ShouldQueue
                             'buying_price' => $laptop->purchase_price,
                             'selling_price' => $laptop->jakarta_price,
                             'images' => $laptop->media()->get()->map(function ($media) {
-                                return env('APP_URL') . Storage::url($media->file_path);
+                                return env('APP_URL') . s3_asset(true,10,$media->file_path);
                             })->toArray(),
                         ];
     

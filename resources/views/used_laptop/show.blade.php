@@ -524,7 +524,7 @@
                             @foreach($laptop->media->sortBy('order') as $media)
                             <div class="carousel-item {{ $loop->first ? 'active' : '' }}">
                                 <div class="carousel-image-wrapper">
-                                    <img src="{{ Storage::url($media->file_path) }}" 
+                                    <img src="{{ s3_asset(true,10,$media->file_path) }}" 
                                         class="d-block w-100 carousel-main-img" 
                                         alt="Foto {{ $loop->iteration }}"
                                         data-index="{{ $loop->index }}"
@@ -538,7 +538,7 @@
                                     </div>
                                     
                                     <!-- Zoom Button -->
-                                    <button class="btn-zoom-photo" data-image="{{ Storage::url($media->file_path) }}">
+                                    <button class="btn-zoom-photo" data-image="{{ s3_asset(true,10,$media->file_path) }}">
                                         <i class="fas fa-search-plus"></i>
                                     </button>
                                 </div>
@@ -574,7 +574,7 @@
                             data-slide-to="{{ $loop->index }}"
                             data-media-id="{{ $media->id }}">
                             <div class="thumbnail-wrapper">
-                                <img src="{{ Storage::url($media->file_path) }}" 
+                                <img src="{{ s3_asset(true,10,$media->file_path) }}" 
                                     class="thumbnail-img" 
                                     alt="Thumbnail {{ $loop->iteration }}">
                                 <div class="thumbnail-overlay">
@@ -631,7 +631,10 @@
                 <p class="text-muted small mb-3">
                     Scan untuk melihat detail laptop di perangkat mobile
                 </p>
-                <a href="{{ Storage::url($laptop->qr_code_path) }}" download class="btn btn-outline-primary btn-block">
+                <!-- <a href="{{ s3_asset(true,10,$laptop->qr_code_path) }}" download class="btn btn-outline-primary btn-block">
+                    <i class="fas fa-download mr-1"></i> Download QR Code
+                </a> -->
+                <a href="javascript:void(0);" class="btn btn-outline-primary btn-block btn-download-qrcode">
                     <i class="fas fa-download mr-1"></i> Download QR Code
                 </a>
             </div>
@@ -1323,6 +1326,22 @@
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });
+    });
+
+    document.querySelector('.btn-download-qrcode').addEventListener('click', function () {
+        const qrCanvas = document.querySelector('#qrcode canvas');
+        if (!qrCanvas) {
+            alert('QR Code belum tersedia.');
+            return;
+        }
+
+        const imageData = qrCanvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.href = imageData;
+        downloadLink.download = "qr-code-{{ $laptop->slug }}.png";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
     });
 </script>
 @stop

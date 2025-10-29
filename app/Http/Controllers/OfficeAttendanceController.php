@@ -77,7 +77,9 @@ class OfficeAttendanceController extends Controller
             ->whereNotNull('location_long')
             ->count();
 
+        // Permission
         
+
         
         return view('office_attendance.index', compact(
             'officeAttendance', 
@@ -89,11 +91,17 @@ class OfficeAttendanceController extends Controller
         ));
     }
     
+
     public function scan($code)
     {
         if(!Auth::user()->wfo_check_in || !Access::can('scan','office_attendances'))
         {
             return redirect()->route('office-attendance.index')->with('error', 'Absensi WFH belum diaktifkan. Silahkan hubungi admin.');
+        }
+        
+        if(!Auth::user()->shouldWorkToday())
+        {
+            return redirect()->route('office-attendance.index')->with('error', 'Tidak ada jadwal absensi untuk hari ini.');   
         }
 
         $timesPerDay = config('services.checking_setting.times_per_day');
@@ -102,11 +110,6 @@ class OfficeAttendanceController extends Controller
             ->where('user_id', auth()->id())
             ->count();
 
-        if($todayCount >= $timesPerDay)
-        {
-            return redirect()->route('office-attendance.index')->with('error', 'Absensi sudah mencapai batas maksimum hari ini. Silahkan coba lagi besok.');
-        }
-        
         if($todayCount >= $timesPerDay)
         {
             return redirect()->route('office-attendance.index')->with('error', 'Absensi sudah mencapai batas maksimum hari ini. Silahkan coba lagi besok.');
@@ -192,6 +195,11 @@ class OfficeAttendanceController extends Controller
             return redirect()->route('office-attendance.index')->with('error', 'QR code tidak ditemukan atau sudah digunakan.');
         }
 
+        // if($barcode->user_id == auth()->id())
+        // {
+        //     return view('office_attendance.attendance', compact('barcode'))->with('success', 'QR code sedang diverifikasi. Harap tunggu...');
+        // }
+
         $officeAttendance = OfficeAttendance::where('barcode_attendance_id', $barcode->id)->first();
         if($officeAttendance) 
         {
@@ -208,7 +216,7 @@ class OfficeAttendanceController extends Controller
 
         // Use Storage facade to save the file in the public directory
         $filePath = "$folder/$fileName";
-        Storage::put("public/$filePath", $imageData);
+        Storage::put("$filePath", $imageData);
 
         return $filePath; // Return the file path as is
     }

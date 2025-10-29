@@ -101,6 +101,28 @@ class LetterTypeSeeder extends Seeder
             ]
         );
 
+        $skSp = LetterType::updateOrCreate(
+            ['name' => 'Surat Peringatan'], 
+            [
+                'template' => 'sk_peringatan_template',
+                'is_required' => false,
+                'is_duplicate' => true,
+                'auto_approve' => false,
+                'is_ending' => false,
+            ]
+        );
+
+        $skPhk = LetterType::updateOrCreate(
+            ['name' => 'Surat Pemutusan Hubungan Kerja'], 
+            [
+                'template' => 'sk_phk_template',
+                'is_required' => false,
+                'is_duplicate' => true,
+                'auto_approve' => false,
+                'is_ending' => true,
+            ]
+        );
+
         // Revisi
 
         // Update head_letter_types_id for all types except 'Surat Keterangan Magang'

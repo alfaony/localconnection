@@ -30,7 +30,7 @@
                     <div class="row">
                         <div class="col-md-4 mb-4">
                             <div class="card img-hover-zoom">
-                                <img src="{{ $itemRequest->picture ? Storage::url($itemRequest->picture) : asset('logo/logo-thrive.png') }}" class="card-img-top"
+                                <img src="{{ $itemRequest->picture ? s3_asset(true,10,$itemRequest->picture) : asset('logo/logo-thrive.png') }}" class="card-img-top"
                                     alt="Item Image" style="height: 200px; object-fit: cover;">
                             </div>
                         </div>
@@ -984,7 +984,9 @@
 
                 if (msg.attachment) {
                     const ext = msg.attachment.split('.').pop().toLowerCase();
-                    const url = `/storage//${msg.attachment}`; // Ganti sesuai path file kamu
+                    const url = msg.attachment_url;
+                    console.log(url);
+                    
 
                     if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
                         fileHtml = `

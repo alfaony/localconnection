@@ -69,7 +69,7 @@ $user = $letterSubmission->user;
 <div class="col-12 text-center mt-3">
     <!-- Download Button -->
     @if(isset($fieldData['file']))
-    <a href="{{ Storage::url($fieldData['file']) }}" class="btn btn-primary mb-3" target="_blank"><i
+    <a href="{{ s3_asset(true,10,$fieldData['file']) }}" class="btn btn-primary mb-3" target="_blank"><i
             class="fa fa-download"></i> File Yang Dikuasakan</a>
     @endif
     <button type="button" id="downloadQuote" class="btn btn-success mb-3">

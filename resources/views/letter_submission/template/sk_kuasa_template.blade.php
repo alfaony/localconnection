@@ -113,7 +113,7 @@
                 <div class="row">
                      <div class="col-6 text-center">
                         @if($letterSubmission->status !== 0)
-                        <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                        <img src="{{ s3_asset(true,10,$fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
                             alt="Signature" style="height:150px">
                         @else
                         <div style="height: 150px;"></div> <!-- Empty space if no signature -->
@@ -140,7 +140,7 @@
 <div class="col-12 text-center mt-3">
     <!-- Download Button -->
     @if(isset($fieldData['file']))
-        <a href="{{ Storage::url($fieldData['file']) }}" class="btn btn-primary mb-3" target="_blank"><i class="fa fa-download"></i> File Yang Dikuasakan</a>
+        <a href="{{ s3_asset(true,10,$fieldData['file']) }}" class="btn btn-primary mb-3" target="_blank"><i class="fa fa-download"></i> File Yang Dikuasakan</a>
     @endif
     <button type="button" id="downloadQuote" class="btn btn-success mb-3">
         <i class="fa fa-file-pdf"></i> {{ __('Download') }}
