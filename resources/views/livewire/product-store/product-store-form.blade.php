@@ -21,7 +21,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="barcode" class="font-weight-bold">
-                                    <i class="fas fa-barcode mr-1"></i> Kode Barang
+                                    <i class="fas fa-barcode mr-1"></i> Barcode
                                 </label>
                                 <div class="input-group">
                                     <input type="text" wire:model="barcode" id="barcode" class="form-control bg-light" readonly>
@@ -36,11 +36,39 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
+                                <label for="barcode" class="font-weight-bold">
+                                    <i class="fas fa-barcode mr-1"></i> Kode Barang
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" wire:model="code" id="code" class="form-control bg-light">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">
+                                            Kode Barang
+                                        </span>
+                                    </div>
+                                </div>
+                                @error('barcode') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
                                 <label for="name" class="font-weight-bold">
                                     <i class="fas fa-tag mr-1"></i> Nama Produk <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" wire:model="name" id="name" class="form-control" placeholder="Masukan nama produk">
                                 @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="variant" class="font-weight-bold">
+                                    <i class="fas fa-layer-group mr-1"></i> Varian
+                                </label>
+                                <input type="text" wire:model="variant" id="variant" class="form-control" placeholder="Masukan varian produk">
+                                @error('variant') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                         </div>
                     </div>
@@ -77,15 +105,6 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="variant" class="font-weight-bold">
-                                    <i class="fas fa-layer-group mr-1"></i> Varian
-                                </label>
-                                <input type="text" wire:model="variant" id="variant" class="form-control" placeholder="Masukan varian produk">
-                                @error('variant') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="selling_price" class="font-weight-bold">
@@ -313,32 +332,161 @@
                         </div>
                     </div>
 
-                    <!-- Footer Buttons -->
-                    <div class="card-footer bg-light mt-4 px-0">
-                        <div class="d-flex justify-content-between">
-                            <button type="button" class="btn btn-secondary" wire:click="cancel">
-                                <i class="fas fa-times mr-1"></i> Batal
-                            </button>
-                            <div>
-                                <button type="submit" class="btn btn-primary mr-2" wire:click="$set('createAgain', false)">
-                                    <i class="fas fa-save mr-1"></i> Simpan
-                                </button>
-                                <button type="submit" class="btn btn-success" wire:click="$set('createAgain', true)">
-                                    <i class="fas fa-plus-circle mr-1"></i> Simpan & Buat Lagi
-                                </button>
+                    <!-- Section 4: Media / Foto Produk -->
+                    <div class="section-header mb-3 mt-4">
+                        <h5 class="text-primary">
+                            <i class="fas fa-images mr-2"></i> Foto Produk
+                        </h5>
+                        <hr>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <!-- Upload Area -->
+                            <div class="form-group">
+                                <label class="font-weight-bold">
+                                    <i class="fas fa-cloud-upload-alt mr-1"></i> Upload Foto
+                                </label>
+                                <div class="custom-file">
+                                    <input type="file" 
+                                        wire:model="photo" 
+                                        class="custom-file-input" 
+                                        id="photoUpload" 
+                                        accept="image/*">
+                                    <label class="custom-file-label" for="photoUpload">
+                                        Pilih foto (max 5MB)
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> Foto akan langsung ditambahkan setelah dipilih. Anda bisa upload foto lagi untuk menambah lebih banyak.
+                                </small>
+                                @error('photo') 
+                                    <span class="text-danger small d-block">{{ $message }}</span> 
+                                @enderror
+                            </div>
+
+                            <!-- Loading Indicator -->
+                            <div wire:loading wire:target="photo" class="alert alert-info">
+                                <i class="fas fa-spinner fa-spin mr-2"></i> Mengupload foto...
+                            </div>
+
+                            <!-- All Photos (Sortable) -->
+                            @if(!empty($allPhotos))
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div>
+                                        <h6 class="font-weight-bold text-primary mb-0">
+                                            <i class="fas fa-images mr-1"></i> Foto Produk ({{ count($allPhotos) }})
+                                        </h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-arrows-alt mr-1"></i> Drag untuk mengurutkan, foto pertama akan jadi foto utama
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="row sortable-photos" id="photosContainer">
+                                    @foreach($allPhotos as $index => $photo)
+                                    <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-3 sortable-photo-item" data-photo-id="{{ $photo['id'] }}">
+                                        <div class="card shadow-sm h-100 {{ $photo['is_saved'] ? 'border-success' : 'border-warning' }}">
+                                            <div class="position-relative">
+                                                <img src="{{ s3_asset(true,10,$photo['file_path']) }}" 
+                                                    class="card-img-top" 
+                                                    style="height: 200px; object-fit: cover; cursor: move;" 
+                                                    alt="Photo {{ $index + 1 }}">
+                                                
+                                                <!-- Status Badge -->
+                                                @if($index === 0)
+                                                    <div class="badge badge-primary position-absolute" style="top: 8px; left: 8px;">
+                                                        <i class="fas fa-star mr-1"></i> Utama
+                                                    </div>
+                                                @else
+                                                    <div class="badge badge-secondary position-absolute" style="top: 8px; left: 8px;">
+                                                        #{{ $index + 1 }}
+                                                    </div>
+                                                @endif
+
+                                                @if(!$photo['is_saved'])
+                                                    <div class="badge badge-warning position-absolute" style="top: 8px; right: 40px;">
+                                                        <i class="fas fa-clock mr-1"></i> Baru
+                                                    </div>
+                                                @endif
+
+                                                <!-- Delete Button -->
+                                                <button type="button" 
+                                                        wire:click="deletePhoto('{{ $photo['id'] }}')" 
+                                                        class="btn btn-danger btn-sm position-absolute" 
+                                                        style="top: 8px; right: 8px;" 
+                                                        title="Hapus"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="deletePhoto">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+
+                                                <!-- Drag Handle -->
+                                                <div class="badge badge-dark position-absolute" style="bottom: 8px; right: 8px;">
+                                                    <i class="fas fa-grip-vertical"></i>
+                                                </div>
+                                            </div>
+                                            <div class="card-body p-2">
+                                                <!-- Caption Input -->
+                                                <div class="form-group mb-1">
+                                                    <input type="text" 
+                                                        wire:model.defer="photoCaptions.{{ $photo['id'] }}" 
+                                                        class="form-control form-control-sm" 
+                                                        placeholder="Caption foto (opsional)"
+                                                        maxlength="255">
+                                                </div>
+                                                @if(isset($photo['original_name']))
+                                                <small class="text-muted d-block text-truncate" title="{{ $photo['original_name'] }}">
+                                                    <i class="fas fa-file-image mr-1"></i>{{ $photo['original_name'] }}
+                                                </small>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Empty State -->
+                            @if(empty($allPhotos))
+                            <div class="alert alert-light border text-center py-5">
+                                <i class="fas fa-images fa-4x text-muted mb-3"></i>
+                                <h5 class="text-muted">Belum ada foto produk</h5>
+                                <p class="mb-0 text-muted">Upload foto untuk menampilkan produk Anda dengan lebih menarik</p>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+
+                                        <!-- Footer Buttons -->
+                                        <div class="card-footer bg-light mt-4 px-0">
+                                            <div class="d-flex justify-content-between">
+                                                <button type="button" class="btn btn-secondary" wire:click="cancel">
+                                                    <i class="fas fa-times mr-1"></i> Batal
+                                                </button>
+                                                <div>
+                                                    <button type="submit" class="btn btn-primary mr-2" wire:click="$set('createAgain', false)">
+                                                        <i class="fas fa-save mr-1"></i> Simpan
+                                                    </button>
+                                                    <button type="submit" class="btn btn-success" wire:click="$set('createAgain', true)">
+                                                        <i class="fas fa-plus-circle mr-1"></i> Simpan & Buat Lagi
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 @section('css')
 <!-- Select2 CSS -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css" rel="stylesheet" />
+
 
 <style>
     /* Section Headers */
@@ -504,6 +652,9 @@
 <!-- IMask for Price -->
 <script src="https://cdn.jsdelivr.net/npm/imask"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+
 <script>
     const SELECT2_EVENT_NS = '.select2Livewire';
 
@@ -619,6 +770,37 @@
     }
 
     // ============================================
+    // SORTABLE PHOTOS
+    // ============================================
+    let photoSortable = null;
+
+    function initPhotoSortable() {
+        const container = document.getElementById('photosContainer');
+        
+        if (container && !photoSortable) {
+            photoSortable = Sortable.create(container, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                handle: '.sortable-photo-item',
+                onEnd: function (evt) {
+                    const orderedIds = Array.from(container.querySelectorAll('.sortable-photo-item'))
+                        .map(item => item.dataset.photoId);
+                    
+                    @this.call('updatePhotoOrder', orderedIds);
+                }
+            });
+        }
+    }
+
+    function destroyPhotoSortable() {
+        if (photoSortable) {
+            photoSortable.destroy();
+            photoSortable = null;
+        }
+    }
+
+    // ============================================
     // PRICE MASK (IMask)
     // ============================================
     let priceMask = null;
@@ -657,6 +839,14 @@
         }
     }
 
+     window.addEventListener('photo-uploaded', event => {
+        // Show success message
+        if (event.detail.message) {
+            // You can use your notification system here
+            console.log(event.detail.message);
+        }
+    });
+
     // ============================================
     // DOCUMENT READY & LIVEWIRE HOOKS
     // ============================================
@@ -664,6 +854,7 @@
         initAllSelect2();
         initPriceMask();
         updateSelect2Values();
+        initPhotoSortable();
     });
 
     Livewire.hook('message.processed', () => {
@@ -674,6 +865,12 @@
         if (priceHidden && priceMask && priceHidden.value && priceMask.value !== priceHidden.value) {
             priceMask.value = priceHidden.value;
         }
+
+        // Reinitialize sortable
+        destroyPhotoSortable();
+        setTimeout(() => {
+            initPhotoSortable();
+        }, 100);
     });
 
     // ============================================
@@ -685,10 +882,16 @@
         if (priceMask) {
             priceMask.value = '';
         }
+
+        destroyPhotoSortable();
     });
 
     Livewire.on('productUpdated', () => {
         updateSelect2Values();
+        destroyPhotoSortable();
+        setTimeout(() => {
+            initPhotoSortable();
+        }, 100);
     });
 </script>
 @endsection
