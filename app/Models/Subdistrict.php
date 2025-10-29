@@ -40,4 +40,9 @@ class Subdistrict extends Model
     {
         return $this->hasOne(District::class, 'default_subdistrict_id', 'id');
     }
+
+    public function subdistrictCoverages()
+    {
+        return $this->hasMany(CoverageService::class, 'subdistrict_id');
+    }
 }
