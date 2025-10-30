@@ -174,43 +174,130 @@ class ProductStoreForm extends Component
      * SOLUSI BARU: Upload langsung ke folder permanent
      * Tidak ada temp folder, tidak ada copy/move
      */
+    /**
+     * ROBUST PHOTO UPLOAD with retry logic and validation
+     */
     public function updatedPhoto()
     {
+        // Validate first
         // $this->validate([
-        //     'photo' => 'required|image|max:5120',
+        //     'photo' => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:5120',
+        // ], [
+        //     'photo.required' => 'Foto harus dipilih',
+        //     'photo.image' => 'File harus berupa gambar',
+        //     'photo.mimes' => 'Format foto harus: jpeg, jpg, png, gif, atau webp',
+        //     'photo.max' => 'Ukuran foto maksimal 5MB'
         // ]);
 
-        try {
-            // Generate filename langsung untuk permanent storage
-            $fileName = time() . '_' . uniqid() . '.' . $this->photo->getClientOriginalExtension();
-            
-            // Upload LANGSUNG ke folder permanent (bukan temp)
-            $filePath = $this->photo->storeAs('product-store-media', $fileName, 's3');
-            
-            // Get URL
-            $url = Storage::disk('s3')->url($filePath);
+        // PENTING: Deklarasi variabel di awal
+        $maxRetries = 5;
+        $retryDelay = 1; // seconds
+        $uploaded = false;
+        $filePath = null;
+        
+        // Generate filename SEKALI di awal, jangan di-reset
+        $fileName = time() . '_' . uniqid() . '.' . $this->photo->getClientOriginalExtension();
 
-            // Add to pending photos (belum masuk database)
-            $tempId = 'pending_' . uniqid();
-            $this->pendingPhotos[] = [
-                'id' => $tempId,
-                'file_path' => $filePath,
-                'caption' => null,
-                'order' => count($this->photos) + count($this->pendingPhotos),
-                'url' => $url,
-                'is_saved' => false,
-                'original_name' => $this->photo->getClientOriginalName()
-            ];
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                \Log::info("Photo upload attempt {$attempt}/{$maxRetries} - File: {$fileName}");
 
-            $this->photoCaptions[$tempId] = '';
-            $this->photo = null;
+                // Upload to S3 with timeout
+                $filePath = $this->photo->storeAs(
+                    'product-store-media', 
+                    $fileName, 
+                    's3',
+                    'public'
+                );
 
-            \Log::info("Photo uploaded directly to permanent storage: {$filePath}");
-            $this->dispatchBrowserEvent('photo-uploaded', ['message' => 'Foto berhasil ditambahkan']);
-            
-        } catch (\Exception $e) {
-            $this->addError('photo', 'Gagal mengupload foto: ' . $e->getMessage());
-            \Log::error('Photo upload error: ' . $e->getMessage());
+                // Verify upload was successful by checking if file exists
+                if (!Storage::disk('s3')->exists($filePath)) {
+                    throw new \Exception('File uploaded but not found in S3');
+                }
+
+                // Verify file size matches
+                $s3Size = Storage::disk('s3')->size($filePath);
+                $localSize = $this->photo->getSize();
+                
+                if (abs($s3Size - $localSize) > 100) { // Allow 100 bytes difference
+                    throw new \Exception("File size mismatch. Local: {$localSize}, S3: {$s3Size}");
+                }
+
+                $uploaded = true;
+                \Log::info("Photo uploaded successfully: {$filePath}");
+                break;
+
+            } catch (\Exception $e) {
+                \Log::warning("Photo upload attempt {$attempt} failed: " . $e->getMessage());
+                
+                // Clean up failed upload if file exists
+                if ($filePath && Storage::disk('s3')->exists($filePath)) {
+                    try {
+                        Storage::disk('s3')->delete($filePath);
+                        \Log::info("Cleaned up failed upload: {$filePath}");
+                    } catch (\Exception $cleanupError) {
+                        \Log::error("Failed to cleanup: " . $cleanupError->getMessage());
+                    }
+                }
+
+                // If this is not the last attempt, wait before retry
+                if ($attempt < $maxRetries) {
+                    sleep($retryDelay);
+                    $retryDelay *= 2; // Exponential backoff
+                } else {
+                    // All retries failed
+                    $this->addError('photo', 'Gagal mengupload foto setelah ' . $maxRetries . ' percobaan. Silakan coba lagi.');
+                    \Log::error('Photo upload failed after ' . $maxRetries . ' attempts: ' . $e->getMessage());
+                    return;
+                }
+            }
+        }
+
+        // If upload successful, add to pending photos
+        if ($uploaded && $filePath) {
+            try {
+                // Get URL with error handling
+                $url = Storage::disk('s3')->url($filePath);
+
+                // Add to pending photos
+                $tempId = 'pending_' . uniqid();
+                $this->pendingPhotos[] = [
+                    'id' => $tempId,
+                    'file_path' => $filePath,
+                    'caption' => null,
+                    'order' => count($this->photos) + count($this->pendingPhotos),
+                    'url' => $url,
+                    'is_saved' => false,
+                    'original_name' => $this->photo->getClientOriginalName()
+                ];
+
+                $this->photoCaptions[$tempId] = '';
+                
+                // Clear the file input
+                $this->photo = null;
+
+                // Dispatch success event
+                $this->dispatchBrowserEvent('photo-uploaded', [
+                    'message' => 'Foto berhasil ditambahkan',
+                    'type' => 'success'
+                ]);
+
+                // Reset validation errors
+                $this->resetErrorBag('photo');
+                
+            } catch (\Exception $e) {
+                \Log::error('Failed to process uploaded photo: ' . $e->getMessage());
+                $this->addError('photo', 'Foto terupload tetapi gagal diproses. Silakan coba lagi.');
+                
+                // Cleanup
+                if ($filePath) {
+                    try {
+                        Storage::disk('s3')->delete($filePath);
+                    } catch (\Exception $cleanupError) {
+                        \Log::error('Cleanup error: ' . $cleanupError->getMessage());
+                    }
+                }
+            }
         }
     }
 
