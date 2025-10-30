@@ -30,4 +30,9 @@ class City extends Model
     {
         return $this->belongsTo(District::class, 'default_district_id');
     }
+    
+    public function cityCoverages()
+    {
+        return $this->hasMany(CoverageService::class, 'city_id');
+    }
 }
