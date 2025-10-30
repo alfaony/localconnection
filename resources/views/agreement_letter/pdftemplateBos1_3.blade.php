@@ -49,30 +49,42 @@
             <!-- Para Pihak -->
             <div class="row">
                 <div class="col-5 text-justify">
-                    <p style="margin-bottom: 20px;">
-                        <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, suatu perseroan terbatas yang didirikan dan berdiri secara sah berdasarkan hukum Indonesia yang berkedudukan di {{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : '[**]' }}, dalam hal ini diwakili oleh <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_represented_by']) ? e($agreementLetter->custom_fields['custom_first_party_represented_by']) : '[**]' }}</strong> dalam kapasitasnya sebagai {{ isset($agreementLetter->custom_fields['custom_first_party_position']) ? e($agreementLetter->custom_fields['custom_first_party_position']) : '[**]' }}, oleh karena itu sah bertindak untuk dan atas nama <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, (untuk selanjutnya disebut sebagai <strong>"Pihak Pertama"</strong>);
-                    </p>
+                    <ol>
+                        <li>
+                            <p style="margin-bottom: 20px;">
+                                <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, suatu perseroan terbatas yang didirikan dan berdiri secara sah berdasarkan hukum Indonesia yang berkedudukan di {{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : '[**]' }}, dalam hal ini diwakili oleh <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_represented_by']) ? e($agreementLetter->custom_fields['custom_first_party_represented_by']) : '[**]' }}</strong> dalam kapasitasnya sebagai {{ isset($agreementLetter->custom_fields['custom_first_party_position']) ? e($agreementLetter->custom_fields['custom_first_party_position']) : '[**]' }}, oleh karena itu sah bertindak untuk dan atas nama <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, (untuk selanjutnya disebut sebagai <strong>"Pihak Pertama"</strong>);
+                            </p>
+                        </li>
+                        <li>
+                            <p style="margin-bottom: 20px;">
+                                <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, a limited liability company legally established and standing under Indonesian law domiciled in {{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : '[**]' }}, in this case represented by <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_represented_by']) ? e($agreementLetter->custom_fields['custom_first_party_represented_by']) : '[**]' }}</strong> its capacity as {{ isset($agreementLetter->custom_fields['custom_first_party_position']) ? e($agreementLetter->custom_fields['custom_first_party_position']) : '[**]' }}, therefore acting for and on behalf of <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, (hereinafter referred to as the <strong>"First Party"</strong>);
+                            </p>
+                        </li>
+                    </ol>
 
-                    <p style="margin-bottom: 20px;">
-                        @if(isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'company')
-                            <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, suatu perseroan terbatas yang didirikan dan berdiri secara sah berdasarkan hukum Indonesia yang beralamat di {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, dalam hal ini diwakili oleh {{ isset($agreementLetter->custom_fields['custom_second_party_represented_by']) ? e($agreementLetter->custom_fields['custom_second_party_represented_by']) : '[**]' }} sebagai <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_position']) ? e($agreementLetter->custom_fields['custom_second_party_position']) : '[**]' }}</strong>, secara sah bertindak untuk dan atas nama {{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}, (untuk selanjutnya disebut sebagai <strong>"Pihak kedua"</strong>).
-                        @else
-                            <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, individu yang beralamat di {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, bertindak untuk dan atas nama diri sendiri, (untuk selanjutnya disebut sebagai <strong>"Pihak kedua"</strong>).
-                        @endif
-                    </p>
                 </div>
                 <div class="offset-2 col-5 text-justify">
-                    <p style="margin-bottom: 20px;">
-                        <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, a limited liability company legally established and standing under Indonesian law domiciled in {{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : '[**]' }}, in this case represented by <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_represented_by']) ? e($agreementLetter->custom_fields['custom_first_party_represented_by']) : '[**]' }}</strong> its capacity as {{ isset($agreementLetter->custom_fields['custom_first_party_position']) ? e($agreementLetter->custom_fields['custom_first_party_position']) : '[**]' }}, therefore acting for and on behalf of <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, (hereinafter referred to as the <strong>"First Party"</strong>);
-                    </p>
+                    <ol>
+                        <li>
+                            <p style="margin-bottom: 20px;">
+                                @if(isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'company')
+                                    <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, suatu perseroan terbatas yang didirikan dan berdiri secara sah berdasarkan hukum Indonesia yang beralamat di {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, dalam hal ini diwakili oleh {{ isset($agreementLetter->custom_fields['custom_second_party_represented_by']) ? e($agreementLetter->custom_fields['custom_second_party_represented_by']) : '[**]' }} sebagai <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_position']) ? e($agreementLetter->custom_fields['custom_second_party_position']) : '[**]' }}</strong>, secara sah bertindak untuk dan atas nama {{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}, (untuk selanjutnya disebut sebagai <strong>"Pihak kedua"</strong>).
+                                @else
+                                    <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, individu yang beralamat di {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, bertindak untuk dan atas nama diri sendiri, (untuk selanjutnya disebut sebagai <strong>"Pihak kedua"</strong>).
+                                @endif
+                            </p>
+                        </li>
+                        <li>
+                            <p style="margin-bottom: 20px;">
+                                @if(isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'company')
+                                    <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, a limited liability company legally established and standing under Indonesian law domiciled in {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, in this case represented by {{ isset($agreementLetter->custom_fields['custom_second_party_represented_by']) ? e($agreementLetter->custom_fields['custom_second_party_represented_by']) : '[**]' }} its capacity as <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_position']) ? e($agreementLetter->custom_fields['custom_second_party_position']) : '[**]' }}</strong>, therefore acting for and on behalf of <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, (hereinafter referred to as the <strong>"Second Party"</strong>).
+                                @else
+                                    <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, an individual domiciled in {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, acting for and on behalf of himself/herself, (hereinafter referred to as the <strong>"Second Party"</strong>).
+                                @endif
+                            </p>
+                        </li>
+                    </ol>
 
-                    <p style="margin-bottom: 20px;">
-                        @if(isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'company')
-                            <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, a limited liability company legally established and standing under Indonesian law domiciled in {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, in this case represented by {{ isset($agreementLetter->custom_fields['custom_second_party_represented_by']) ? e($agreementLetter->custom_fields['custom_second_party_represented_by']) : '[**]' }} its capacity as <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_position']) ? e($agreementLetter->custom_fields['custom_second_party_position']) : '[**]' }}</strong>, therefore acting for and on behalf of <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, (hereinafter referred to as the <strong>"Second Party"</strong>).
-                        @else
-                            <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, an individual domiciled in {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, acting for and on behalf of himself/herself, (hereinafter referred to as the <strong>"Second Party"</strong>).
-                        @endif
-                    </p>
                 </div>
             </div>
 
@@ -299,28 +311,44 @@
                 <div class="col-5 text-justify">
                     <h6><strong>PASAL 5</strong></h6>
                     <h6><strong>HAK KEKAYAAN INTELEKTUAL</strong></h6>
-                    <p>
-                        Segala hak kekayaan intelektual atas merek, logo, desain, materi pelatihan, serta konten promosi yang disediakan oleh Pihak Pertama tetap menjadi milik Pihak Pertama.
-                    </p>
-                    <p>
-                        Pihak Kedua hanya berhak menggunakan materi dan merek tersebut untuk tujuan edukasi, promosi, dan kegiatan yang telah disetujui bersama.
-                    </p>
-                    <p>
-                        Pihak Kedua dilarang menggandakan, menjual, atau memodifikasi materi tanpa izin tertulis dari Pihak Pertama.
-                    </p>
+                    <ol>
+                        <li>
+                            <p>
+                                Segala hak kekayaan intelektual atas merek, logo, desain, materi pelatihan, serta konten promosi yang disediakan oleh Pihak Pertama tetap menjadi milik Pihak Pertama.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Pihak Kedua hanya berhak menggunakan materi dan merek tersebut untuk tujuan edukasi, promosi, dan kegiatan yang telah disetujui bersama.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Pihak Kedua dilarang menggandakan, menjual, atau memodifikasi materi tanpa izin tertulis dari Pihak Pertama.
+                            </p>
+                        </li>
+                    </ol>
                 </div>
                 <div class="offset-2 col-5 text-justify">
                     <h6><strong>ARTICLE 5</strong></h6>
                     <h6><strong>INTELLECTUAL PROPERTY RIGHTS</strong></h6>
-                    <p>
-                        All intellectual property rights related to trademarks, logos, designs, training materials, and promotional content provided by the First Party remain the exclusive property of the First Party.
-                    </p>
-                    <p>
-                        The Second Party is granted the right to use such materials and trademarks solely for educational, promotional, and jointly approved activities.
-                    </p>
-                    <p>
-                        The Second Party is prohibited from reproducing, selling, or modifying the materials without prior written consent from the First Party.
-                    </p>
+                    <ol>
+                        <li>
+                            <p>
+                                All intellectual property rights related to trademarks, logos, designs, training materials, and promotional content provided by the First Party remain the exclusive property of the First Party.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                The Second Party is granted the right to use such materials and trademarks solely for educational, promotional, and jointly approved activities.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                The Second Party is prohibited from reproducing, selling, or modifying the materials without prior written consent from the First Party.
+                            </p>
+                        </li>
+                    </ol>
                 </div>
             </div>
 
@@ -329,22 +357,34 @@
                 <div class="col-5 text-justify">
                     <h6><strong>PASAL 6</strong></h6>
                     <h6><strong>KERAHASIAAN</strong></h6>
-                    <p>
-                        Kedua belah pihak wajib menjaga kerahasiaan semua informasi, data pelanggan, strategi, maupun materi internal yang diperoleh selama kerja sama ini berlangsung.
-                    </p>
-                    <p>
-                        Pelanggaran terhadap pasal ini dapat mengakibatkan penghentian kerja sama dan/atau tuntutan hukum sesuai peraturan yang berlaku.
-                    </p>
+                    <ol>
+                        <li>
+                            <p>
+                                Kedua belah pihak wajib menjaga kerahasiaan semua informasi, data pelanggan, strategi, maupun materi internal yang diperoleh selama kerja sama ini berlangsung.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Pelanggaran terhadap pasal ini dapat mengakibatkan penghentian kerja sama dan/atau tuntutan hukum sesuai peraturan yang berlaku.
+                            </p>
+                        </li>
+                    </ol>
                 </div>
                 <div class="offset-2 col-5 text-justify">
                     <h6><strong>ARTICLE 6</strong></h6>
                     <h6><strong>CONFIDENTIALITY</strong></h6>
-                    <p>
-                        Both parties shall maintain the confidentiality of all information, customer data, strategies, and internal materials obtained during the cooperation.
-                    </p>
-                    <p>
-                        Any breach of this clause may result in termination of the cooperation and/or legal action as permitted by applicable law.
-                    </p>
+                    <ol>
+                        <li>
+                            <p>
+                                Both parties shall maintain the confidentiality of all information, customer data, strategies, and internal materials obtained during the cooperation.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Any breach of this clause may result in termination of the cooperation and/or legal action as permitted by applicable law.
+                            </p>
+                        </li>
+                    </ol>
                 </div>
             </div>
 
@@ -472,22 +512,81 @@
                     <p>
                         Setiap pemberitahuan dan komunikasi yang dibuat berdasarkan Perjanjian ini harus dibuat secara tertulis dan memberitahukan kepada masing-masing Pihak dengan surat elektronik (email) atau surat tertulis ke alamat sebagai berikut:
                     </p>
+                    <ol>
+                        <li>
+                            <p>Pihak Pertama:</p>
+                            <table style="margin-left: 20px;">
+                                <tr>
+                                    <td style="width: 100px;">Nama</td>
+                                    <td style="width: 20px;">:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Alamat</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Telepon</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_first_party_telephone']) ? e($agreementLetter->custom_fields['custom_first_party_telephone']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Email</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_first_party_email']) ? e($agreementLetter->custom_fields['custom_first_party_email']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Up</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_first_party_up']) ? e($agreementLetter->custom_fields['custom_first_party_up']) : '[**]' }}</td>
+                                </tr>
+                            </table>
+                        </li>
 
-                    <p><strong>1. Pihak Pertama:</strong></p>
-                    <p class="noMargin">A. Nama: {{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</p>
-                    <p class="noMargin">B. Alamat: {{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : '[**]' }}</p>
-                    <p class="noMargin">C. Telephone: {{ isset($agreementLetter->custom_fields['custom_first_party_telephone']) ? e($agreementLetter->custom_fields['custom_first_party_telephone']) : '[**]' }}</p>
-                    <p class="noMargin">D. Email: {{ isset($agreementLetter->custom_fields['custom_first_party_email']) ? e($agreementLetter->custom_fields['custom_first_party_email']) : '[**]' }}</p>
-                    <p class="margin">E. Up: {{ isset($agreementLetter->custom_fields['custom_first_party_up']) ? e($agreementLetter->custom_fields['custom_first_party_up']) : '[**]' }}</p>
+                        <li>
+                            <p>Pihak Kedua:</p>
+                            <table style="margin-left: 20px;">
+                                <tr>
+                                    <td style="width: 100px;">Nama</td>
+                                    <td style="width: 20px;">:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Alamat</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Telepon</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_second_party_telephone']) ? e($agreementLetter->custom_fields['custom_second_party_telephone']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Email</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_second_party_email']) ? e($agreementLetter->custom_fields['custom_second_party_email']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Up</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_second_party_up']) ? e($agreementLetter->custom_fields['custom_second_party_up']) : '[**]' }}</td>
+                                </tr>
+                            </table>
+                            <p>Atau kepada alamat lain atau nomor lain sebagaimana diberitahukan dari waktu ke waktu oleh masing-masing Pihak kepada Pihak lainnya dengan cara sebagaimana disebutkan di atas.</p>
+                        </li>
+                        <li>
+                            <p>
+                                Perubahan alamat atau kontak harus diberitahukan secara tertulis.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Surat elektronik (email) dianggap sah dan memiliki kekuatan hukum yang sama dengan surat tertulis.
+                            </p>
+                        </li>
+                    </ol>
 
-                    <p><strong>2. Pihak Kedua:</strong></p>
-                    <p class="noMargin">A. Nama: {{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</p>
-                    <p class="noMargin">B. Alamat: {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}</p>
-                    <p class="noMargin">C. Telephone: {{ isset($agreementLetter->custom_fields['custom_second_party_telephone']) ? e($agreementLetter->custom_fields['custom_second_party_telephone']) : '[**]' }}</p>
-                    <p class="noMargin">D. Email: {{ isset($agreementLetter->custom_fields['custom_second_party_email']) ? e($agreementLetter->custom_fields['custom_second_party_email']) : '[**]' }}</p>
-                    <p class="margin">E. Up: {{ isset($agreementLetter->custom_fields['custom_second_party_up']) ? e($agreementLetter->custom_fields['custom_second_party_up']) : '[**]' }}</p>
-
-                    <p>Atau kepada alamat lain atau nomor lain sebagaimana diberitahukan dari waktu ke waktu oleh masing-masing Pihak kepada Pihak lainnya dengan cara sebagaimana disebutkan di atas.</p>
                 </div>
                 <div class="offset-2 col-5 text-justify">
                     <h6><strong>ARTICLE 10</strong></h6>
@@ -496,21 +595,80 @@
                         Any notice and communication made under this Agreement must be made in writing and notified to each Party via electronic mail (email) or written letter at the following address:
                     </p>
 
-                    <p><strong>1. First Party:</strong></p>
-                    <p class="noMargin">A. Name: {{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</p>
-                    <p class="noMargin">B. Address: {{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : '[**]' }}</p>
-                    <p class="noMargin">C. Telephone: {{ isset($agreementLetter->custom_fields['custom_first_party_telephone']) ? e($agreementLetter->custom_fields['custom_first_party_telephone']) : '[**]' }}</p>
-                    <p class="noMargin">D. Email: {{ isset($agreementLetter->custom_fields['custom_first_party_email']) ? e($agreementLetter->custom_fields['custom_first_party_email']) : '[**]' }}</p>
-                    <p class="margin">E. Up: {{ isset($agreementLetter->custom_fields['custom_first_party_up']) ? e($agreementLetter->custom_fields['custom_first_party_up']) : '[**]' }}</p>
+                    <ol>
+                        <li>
+                            <p>Pihak Pertama:</p>
+                            <table style="margin-left: 20px;">
+                                <tr>
+                                    <td style="width: 100px;">Name</td>
+                                    <td style="width: 20px;">:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><Address></Address></td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Telephone</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_first_party_telephone']) ? e($agreementLetter->custom_fields['custom_first_party_telephone']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Email</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_first_party_email']) ? e($agreementLetter->custom_fields['custom_first_party_email']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Up</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_first_party_up']) ? e($agreementLetter->custom_fields['custom_first_party_up']) : '[**]' }}</td>
+                                </tr>
+                            </table>
+                        </li>
 
-                    <p><strong>2. Second Party:</strong></p>
-                    <p class="noMargin">A. Name: {{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</p>
-                    <p class="noMargin">B. Address: {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}</p>
-                    <p class="noMargin">C. Telephone: {{ isset($agreementLetter->custom_fields['custom_second_party_telephone']) ? e($agreementLetter->custom_fields['custom_second_party_telephone']) : '[**]' }}</p>
-                    <p class="noMargin">D. Email: {{ isset($agreementLetter->custom_fields['custom_second_party_email']) ? e($agreementLetter->custom_fields['custom_second_party_email']) : '[**]' }}</p>
-                    <p class="margin">E. Up: {{ isset($agreementLetter->custom_fields['custom_second_party_up']) ? e($agreementLetter->custom_fields['custom_second_party_up']) : '[**]' }}</p>
-
-                    <p>Or to another address or other number as notified from time to time by each Party to the other Party in the manner as stated above.</p>
+                        <li>
+                            <p>Pihak Kedua:</p>
+                            <table style="margin-left: 20px;">
+                                <tr>
+                                    <td style="width: 100px;">Name</td>
+                                    <td style="width: 20px;">:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>address</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Telephone</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_second_party_telephone']) ? e($agreementLetter->custom_fields['custom_second_party_telephone']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Email</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_second_party_email']) ? e($agreementLetter->custom_fields['custom_second_party_email']) : '[**]' }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Up</td>
+                                    <td>:</td>
+                                    <td>{{ isset($agreementLetter->custom_fields['custom_second_party_up']) ? e($agreementLetter->custom_fields['custom_second_party_up']) : '[**]' }}</td>
+                                </tr>
+                            </table>
+                            <p>Or to another address or other number as notified from time to time by each Party to the other Party in the manner as stated above.</p>
+                        </li>
+                        <li>
+                            <p>
+                                Any change of address or contact details must be notified in writing.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Electronic mail (email) shall be deemed valid and legally binding equivalent to a written letter.
+                            </p>
+                        </li>
+                    </ol>
                 </div>
             </div>
 
@@ -562,7 +720,7 @@
             <div class="row mt-4">
                 <div class="col-5 text-justify">
                     <h6><strong>PASAL 13</strong></h6>
-                    <h6><strong>LAMPIRAN-LAMPIRAN</strong></h6>
+                    <h6><strong>LAMPIRAN - LAMPIRAN</strong></h6>
                     <p>Lampiran-lampiran yang menjadi bagian tidak terpisahkan dari perjanjian ini meliputi:</p>
                     <ol>
                         <li>Lampiran 1 - Struktur Komisi & Benefit Partner</li>
@@ -609,18 +767,6 @@
             </div>
 
              <!-- PENUTUP -->
-            <div class="row mt-4">
-                <div class="col-5 text-justify">
-                    <p>
-                        Demikian perjanjian ini dibuat dan ditandatangani pada hari dan tanggal sebagaimana tersebut diatas, dibuat rangkap 2 (dua) masing-masing bermeterai cukup serta memiliki kekuatan hukum yang mengikat.
-                    </p>
-                </div>
-                <div class="offset-2 col-5 text-justify">
-                    <p>
-                        Thus this agreement is made and signed on the day and date as stated above, made in 2 (two) copies, each with stamped duty and having the same legal binding.
-                    </p>
-                </div>
-            </div>
             <div class="row mt-4">
                 <div class="col-5 text-justify">
                     <p>
@@ -701,44 +847,51 @@
             <!-- LAMPIRAN 1 -->
             <div class="row mt-4">
                 <div class="col-5 text-justify">
-                    <h6><strong>LAMPIRAN 1 - STRUKTUR KOMISI & BENEFIT PARTNER</strong></h6>
+                    <h6>
+                        <strong>
+                            LAMPIRAN - LAMPIRAN
+                        </strong>
+                    </h6>
+                </div>
+                <div class="offset-2 col-5 text-justify">
+                    <h6>
+                        <strong>
+                            APPENDICES
+                        </strong>
+                    </h6>
+                </div>
+
+                <div class="col-5 text-justify">
+                    <h6><strong>
+                        LAMPIRAN 1
+                    </strong></h6>
+                    <h6><strong>STRUKTUR KOMISI & BENEFIT PARTNER</strong></h6>
                     <ul>
                         <li>Komisi: {{ isset($agreementLetter->custom_fields['custom_commission_percentage']) ? $agreementLetter->custom_fields['custom_commission_percentage'] : '20' }}% dari setiap pembelian akun n8n berbayar.</li>
                         <li>Ambang penarikan: {{ isset($agreementLetter->custom_fields['custom_minimum_withdrawal_amount']) ? 'Rp' . number_format($agreementLetter->custom_fields['custom_minimum_withdrawal_amount'], 0, ',', '.') : 'Rp500.000' }}.</li>
                         <li>Benefit tambahan: Akun n8n Pro gratis senilai Rp85.000/bulan.</li>
                     </ul>
-
-                    <h6 class="mt-3"><strong>LAMPIRAN 3 - FORMULIR AKTIVASI PARTNER</strong></h6>
-                    <p class="noMargin">Nama Partner: {{ isset($agreementLetter->custom_fields['custom_partner_name']) ? e($agreementLetter->custom_fields['custom_partner_name']) : '_____' }}</p>
-                    <p class="noMargin">Email: {{ isset($agreementLetter->custom_fields['custom_partner_email']) ? e($agreementLetter->custom_fields['custom_partner_email']) : '_____' }}</p>
-                    <p class="noMargin">Nomor Telepon: {{ isset($agreementLetter->custom_fields['custom_partner_phone']) ? e($agreementLetter->custom_fields['custom_partner_phone']) : '_____' }}</p>
-                    <p class="noMargin">Tanggal Mulai: {{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '_____' }}</p>
-                    <p class="noMargin">Kode Referral: {{ isset($agreementLetter->custom_fields['custom_referral_code']) ? e($agreementLetter->custom_fields['custom_referral_code']) : '_____' }}</p>
-                    <p class="noMargin">Bank / E-Wallet: {{ isset($agreementLetter->custom_fields['custom_bank_ewallet_name']) ? e($agreementLetter->custom_fields['custom_bank_ewallet_name']) : '_____' }}</p>
-                    <p class="margin">Nomor Rekening: {{ isset($agreementLetter->custom_fields['custom_account_number']) ? e($agreementLetter->custom_fields['custom_account_number']) : '_____' }}</p>
                 </div>
                 <div class="offset-2 col-5 text-justify">
-                    <h6><strong>APPENDIX 1 - COMMISSION STRUCTURE & PARTNER BENEFITS</strong></h6>
+                    <h6><strong>
+                        APPENDIX 1
+                    </strong></h6>
+                    <h6><strong>COMMISSION STRUCTURE & PARTNER BENEFITS</strong></h6>
                     <ul>
                         <li>Commission: {{ isset($agreementLetter->custom_fields['custom_commission_percentage']) ? $agreementLetter->custom_fields['custom_commission_percentage'] : '20' }}% for every paid n8n account purchase.</li>
                         <li>Withdrawal threshold: {{ isset($agreementLetter->custom_fields['custom_minimum_withdrawal_amount']) ? 'IDR ' . number_format($agreementLetter->custom_fields['custom_minimum_withdrawal_amount'], 0, ',', '.') : 'IDR 500,000' }}.</li>
                         <li>Additional benefit: Free n8n Pro account worth IDR 85,000/month.</li>
                     </ul>
-
-                    <h6 class="mt-3"><strong>APPENDIX 3 - PARTNER ACTIVATION FORM</strong></h6>
-                    <p class="noMargin">Partner Name: {{ isset($agreementLetter->custom_fields['custom_partner_name']) ? e($agreementLetter->custom_fields['custom_partner_name']) : '_____' }}</p>
-                    <p class="noMargin">Email: {{ isset($agreementLetter->custom_fields['custom_partner_email']) ? e($agreementLetter->custom_fields['custom_partner_email']) : '_____' }}</p>
-                    <p class="noMargin">Phone: {{ isset($agreementLetter->custom_fields['custom_partner_phone']) ? e($agreementLetter->custom_fields['custom_partner_phone']) : '_____' }}</p>
-                    <p class="noMargin">Start Date: {{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '_____' }}</p>
-                    <p class="noMargin">Referral Code: {{ isset($agreementLetter->custom_fields['custom_referral_code']) ? e($agreementLetter->custom_fields['custom_referral_code']) : '_____' }}</p>
-                    <p class="noMargin">Bank / E-Wallet: {{ isset($agreementLetter->custom_fields['custom_bank_ewallet_name']) ? e($agreementLetter->custom_fields['custom_bank_ewallet_name']) : '_____' }}</p>
-                    <p class="margin">Account Number: {{ isset($agreementLetter->custom_fields['custom_account_number']) ? e($agreementLetter->custom_fields['custom_account_number']) : '_____' }}</p>
                 </div>
-            </div>
-            <!-- LAMPIRAN 2 - PANDUAN PARTNER EDUKASI N8N -->
-            <div class="row mt-4">
+
+                <!-- LAMPIRAN 2 - PANDUAN PARTNER EDUKASI N8N -->
                 <div class="col-5 text-justify">
-                    <h6><strong>LAMPIRAN 2 - PANDUAN PARTNER EDUKASI N8N</strong></h6>
+                    <h6>
+                        <strong>
+                            LAMPIRAN 2
+                        </strong>
+                    </h6>
+                    <h6><strong>PANDUAN PARTNER EDUKASI N8N</strong></h6>
                     <p><strong>Partner wajib:</strong></p>
                     <ul>
                         <li>Mengarahkan peserta untuk mendaftar melalui link/kode afiliasi.</li>
@@ -747,7 +900,12 @@
                     </ul>
                 </div>
                 <div class="offset-2 col-5 text-justify">
-                    <h6><strong>APPENDIX 2 - N8N EDUCATION PARTNER GUIDELINES</strong></h6>
+                    <h6>
+                        <strong>
+                            APPENDIX 2
+                        </strong>
+                    </h6>
+                    <h6><strong>N8N EDUCATION PARTNER GUIDELINES</strong></h6>
                     <p><strong>Partner must:</strong></p>
                     <ul>
                         <li>Direct participants to register via the provided affiliate link/code.</li>
@@ -757,7 +915,90 @@
                 </div>
             </div>
 
-            <!-- LAMPIRAN 4 - DAFTAR PARTNER & PERIODE KERJA SAMA -->
+                         <!-- LAMPIRAN 3 -->
+            <div class="row mt-4">
+                <div class="col-5 text-justify">
+                    <h6 class="mt-3"><strong>LAMPIRAN 3 - FORMULIR AKTIVASI PARTNER</strong></h6>
+                    <table style="margin-left: 20px;">
+                        <tr>
+                            <td style="width: 100%;">Nama Partner</td>
+                            <td style="width: 20px;">:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_partner_name']) ? e($agreementLetter->custom_fields['custom_partner_name']) : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Email</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_partner_email']) ? e($agreementLetter->custom_fields['custom_partner_email']) : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Nomor Telepon</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_partner_phone']) ? e($agreementLetter->custom_fields['custom_partner_phone']) : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Tanggal Mulai</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Kode Referral</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_referral_code']) ? e($agreementLetter->custom_fields['custom_referral_code']) : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Bank / E-Wallet</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_bank_ewallet_name']) ? e($agreementLetter->custom_fields['custom_bank_ewallet_name']) : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Nomor Rekening</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_account_number']) ? e($agreementLetter->custom_fields['custom_account_number']) : '_____' }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="offset-2 col-5 text-justify">
+                    <h6 class="mt-3"><strong>APPENDIX 3 - PARTNER ACTIVATION FORM</strong></h6>
+                    <table style="margin-left: 20px;">
+                        <tr>
+                            <td style="width: 100%;">Partner Name</td>
+                            <td style="width: 20px;">:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_partner_name']) ? e($agreementLetter->custom_fields['custom_partner_name']) : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Email</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_partner_email']) ? e($agreementLetter->custom_fields['custom_partner_email']) : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Phone</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_partner_phone']) ? e($agreementLetter->custom_fields['custom_partner_phone']) : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Start Date</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Referral Code</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_referral_code']) ? e($agreementLetter->custom_fields['custom_referral_code']) : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Bank / E-Wallet</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_bank_ewallet_name']) ? e($agreementLetter->custom_fields['custom_bank_ewallet_name']) : '_____' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Account Number</td>
+                            <td>:</td>
+                            <td>{{ isset($agreementLetter->custom_fields['custom_account_number']) ? e($agreementLetter->custom_fields['custom_account_number']) : '_____' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
             <!-- LAMPIRAN 4 - DAFTAR PARTNER & PERIODE KERJA SAMA (Updated) -->
             <div class="row mt-4">
                 <div class="col-5 text-justify">
