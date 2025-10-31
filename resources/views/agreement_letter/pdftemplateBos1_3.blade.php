@@ -602,7 +602,7 @@
 
                     <ol>
                         <li>
-                            <p>Pihak Pertama:</p>
+                            <p>First Party :</p>
                             <table style="margin-left: 20px;">
                                 <tr>
                                     <td style="width: 100px;">Name</td>
@@ -610,7 +610,7 @@
                                     <td>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</td>
                                 </tr>
                                 <tr>
-                                    <td><Address></Address></td>
+                                    <td>Address</td>
                                     <td>:</td>
                                     <td>{{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : '[**]' }}</td>
                                 </tr>
@@ -633,7 +633,7 @@
                         </li>
 
                         <li>
-                            <p>Pihak Kedua:</p>
+                            <p>Second Party :</p>
                             <table style="margin-left: 20px;">
                                 <tr>
                                     <td style="width: 100px;">Name</td>
@@ -641,7 +641,7 @@
                                     <td>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</td>
                                 </tr>
                                 <tr>
-                                    <td>address</td>
+                                    <td>Address</td>
                                     <td>:</td>
                                     <td>{{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}</td>
                                 </tr>
