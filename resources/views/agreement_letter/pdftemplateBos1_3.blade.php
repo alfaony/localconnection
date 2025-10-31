@@ -116,39 +116,44 @@
 
             <div class="row">
                 <div class="col-5 text-justify">
-                    <p>
-                        Bahwa <strong>PT Gema Teknologi Cahaya Gemilang</strong> ("Pihak Pertama") adalah perusahaan yang bergerak di Bidang Teknologi Informasi dan Penyedia Solusi Otomasi Digital n8n di Indonesia.
-                    </p>
+                    <ol>
+                        <li>
+                            <p>
+                                Bahwa <strong>PT Gema Teknologi Cahaya Gemilang</strong> ("Pihak Pertama") adalah perusahaan yang bergerak di Bidang Teknologi Informasi dan Penyedia Solusi Otomasi Digital n8n di Indonesia.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Bahwa <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '______' }}</strong> ("Pihak Kedua") adalah 
+                                @if(isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'individual')
+                                    individu
+                                @else
+                                    entitas
+                                @endif
+                                yang memiliki kompetensi dalam memberikan pelatihan, workshop, atau edukasi terkait penggunaan Otomasi Digital dan Sistem n8n.
+                            </p>
+                        </li>
+                    </ol>
                 </div>
                 <div class="offset-2 col-5 text-justify">
-                    <p>
-                        That <strong>PT Gema Teknologi Cahaya Gemilang</strong> ("First Party") is a company engaged in Information Technology and a provider of n8n Digital Automation Solutions in Indonesia.
-                    </p>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-5 text-justify">
-                    <p>
-                        Bahwa <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '______' }}</strong> ("Pihak Kedua") adalah 
-                        @if(isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'individual')
-                            individu
-                        @else
-                            entitas
-                        @endif
-                        yang memiliki kompetensi dalam memberikan pelatihan, workshop, atau edukasi terkait penggunaan Otomasi Digital dan Sistem n8n.
-                    </p>
-                </div>
-                <div class="offset-2 col-5 text-justify">
-                    <p>
-                        That <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '______' }}</strong> ("Second Party") is an 
-                        @if(isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'individual')
-                            individual
-                        @else
-                            entity
-                        @endif
-                        competent in providing Training, Workshops, or Educational Sessions related to Digital Automation and n8n Systems.
-                    </p>
+                    <ol>
+                        <li>
+                            <p>
+                                That <strong>PT Gema Teknologi Cahaya Gemilang</strong> ("First Party") is a company engaged in Information Technology and a provider of n8n Digital Automation Solutions in Indonesia.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                That <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '______' }}</strong> ("Second Party") is an 
+                                @if(isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'individual')
+                                    individual
+                                @else
+                                    entity
+                                @endif
+                                competent in providing Training, Workshops, or Educational Sessions related to Digital Automation and n8n Systems.
+                            </p>
+                        </li>
+                    </ol>
                 </div>
             </div>
 
