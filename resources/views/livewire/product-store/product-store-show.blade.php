@@ -133,7 +133,7 @@
                                                 <label class="font-weight-bold text-primary">
                                                     <i class="fas fa-tag mr-1"></i> Nama Produk
                                                 </label>
-                                                <p class="info-value">{{ $product->name }}</p>
+                                                <p class="info-value">{{ $product->name }} {{ $product->code ? ' (' . $product->code . ')' : '' }} </p> 
                                             </div>
                                         </div>
                                         <div class="col-md-6">

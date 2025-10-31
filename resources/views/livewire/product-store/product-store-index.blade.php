@@ -452,9 +452,9 @@
                                             </div>
                                             <div>
                                                 <div class="font-weight-bold">{{ $product->name }}</div>
-                                                @if($product->specification)
+                                                @if($product->specification || $product->code)
                                                     <small class="text-muted">
-                                                        {{ Str::limit($product->specification, 30) }}
+                                                        {{ Str::limit($product->specification, 30) }}  {{ $product->code }}
                                                     </small>
                                                 @endif
                                             </div>

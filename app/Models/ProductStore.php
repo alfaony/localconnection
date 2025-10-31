@@ -78,6 +78,7 @@ class ProductStore extends Model
                     ->orWhere('variant', 'like', '%' . $value . '%')
                     ->orWhere('specification', 'like', '%' . $value . '%')
                     ->orWhere('barcode', 'like', '%' . $value . '%')
+                    ->orWhere('code', 'like', '%' . $value . '%')
                     ;
     }
 
