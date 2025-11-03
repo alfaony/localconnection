@@ -130,75 +130,8 @@
                         @error('specification') <span class="text-danger small">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Section 2: Dimensi dan Berat -->
-                    <div class="section-header mb-3 mt-4">
-                        <h5 class="text-primary">
-                            <i class="fas fa-ruler-combined mr-2"></i> Dimensi dan Berat
-                        </h5>
-                        <hr>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="length" class="font-weight-bold">
-                                    <i class="fas fa-arrows-alt-h mr-1"></i> Panjang
-                                </label>
-                                <div class="input-group">
-                                    <input type="number" step="0.01" wire:model="length" id="length" class="form-control" placeholder="0.00" min="0">
-                                    <div class="input-group-append">
-                                        <span class="input-group-text">cm</span>
-                                    </div>
-                                </div>
-                                @error('length') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="width" class="font-weight-bold">
-                                    <i class="fas fa-arrows-alt-v mr-1"></i> Lebar
-                                </label>
-                                <div class="input-group">
-                                    <input type="number" step="0.01" wire:model="width" id="width" class="form-control" placeholder="0.00" min="0">
-                                    <div class="input-group-append">
-                                        <span class="input-group-text">cm</span>
-                                    </div>
-                                </div>
-                                @error('width') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="height" class="font-weight-bold">
-                                    <i class="fas fa-arrows-alt mr-1"></i> Tinggi
-                                </label>
-                                <div class="input-group">
-                                    <input type="number" step="0.01" wire:model="height" id="height" class="form-control" placeholder="0.00" min="0">
-                                    <div class="input-group-append">
-                                        <span class="input-group-text">cm</span>
-                                    </div>
-                                </div>
-                                @error('height') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="weight" class="font-weight-bold">
-                                    <i class="fas fa-weight mr-1"></i> Berat
-                                </label>
-                                <div class="input-group">
-                                    <input type="number" step="0.01" wire:model="weight" id="weight" class="form-control" placeholder="0.00" min="0">
-                                    <div class="input-group-append">
-                                        <span class="input-group-text">g</span>
-                                    </div>
-                                </div>
-                                @error('weight') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- ============================================ -->
-                    <!-- SECTION 3: LOKASI PENYIMPANAN WITH SELECT2 -->
+                    <!-- SECTION 2: LOKASI PENYIMPANAN WITH SELECT2 -->
                     <!-- ============================================ -->
                     <div class="section-header mb-3 mt-4">
                         <h5 class="text-primary">
@@ -331,6 +264,73 @@
                         </div>
                     </div>
                     @endif
+
+                    <!-- Section 3: Dimensi dan Berat -->
+                    <div class="section-header mb-3 mt-4">
+                        <h5 class="text-primary">
+                            <i class="fas fa-ruler-combined mr-2"></i> Dimensi dan Berat
+                        </h5>
+                        <hr>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="length" class="font-weight-bold">
+                                    <i class="fas fa-arrows-alt-h mr-1"></i> Panjang
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" wire:model="length" id="length" class="form-control" placeholder="0.00" min="0">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">cm</span>
+                                    </div>
+                                </div>
+                                @error('length') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="width" class="font-weight-bold">
+                                    <i class="fas fa-arrows-alt-v mr-1"></i> Lebar
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" wire:model="width" id="width" class="form-control" placeholder="0.00" min="0">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">cm</span>
+                                    </div>
+                                </div>
+                                @error('width') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="height" class="font-weight-bold">
+                                    <i class="fas fa-arrows-alt mr-1"></i> Tinggi
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" wire:model="height" id="height" class="form-control" placeholder="0.00" min="0">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">cm</span>
+                                    </div>
+                                </div>
+                                @error('height') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="weight" class="font-weight-bold">
+                                    <i class="fas fa-weight mr-1"></i> Berat
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" wire:model="weight" id="weight" class="form-control" placeholder="0.00" min="0">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">g</span>
+                                    </div>
+                                </div>
+                                @error('weight') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Section 4: Media / Foto Produk -->
                     <div class="section-header mb-3 mt-4">
