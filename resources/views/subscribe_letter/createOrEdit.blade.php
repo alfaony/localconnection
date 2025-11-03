@@ -68,7 +68,7 @@
                 >
                 @if(isset($letter) && $letter->document_path)
                     <p class="mt-2">
-                        <a href="{{ asset('storage/' . $letter->document_path) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                        <a href="{{ s3_asset(true,10, $letter->document_path) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
                             📄 Lihat Dokumen Saat Ini
                         </a>
                     </p>

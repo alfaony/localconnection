@@ -24,7 +24,7 @@ class PermissionForMenuUsedLaptop extends Seeder
     {
         $roles = Role::whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::PROCUREMENT, RoleSchema::MANAGER, RoleSchema::MANAGER_FINANCE, RoleSchema::FINANCE])->get();
         
-        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'maskAsSold','mediaDestroy'];
+        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'maskAsSold','mediaDestroy','checkSerialNumber'];
 
         foreach ($methods as $method) 
         {

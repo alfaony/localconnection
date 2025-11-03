@@ -66,7 +66,7 @@
 
             <label class="mt-3">Lampiran File</label>
             @if(@$suplier->file)
-            <a href="{{ Storage::url('suplier/' . $suplier->file) }}" class="btn btn-sm btn-primary" download title="{{ $suplier->file }}"><i class="fa fa-file-pdf"></i></a>
+            <a href="{{ s3_asset(true,10,'suplier/' . $suplier->file) }}" class="btn btn-sm btn-primary" download title="{{ $suplier->file }}"><i class="fa fa-file-pdf"></i></a>
             @endif
             <input type="file" name="file" class="form-control" placeholder="File" name="" id="">
             

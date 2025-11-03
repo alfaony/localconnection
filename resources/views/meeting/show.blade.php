@@ -153,7 +153,7 @@
                                         <div class="text-muted small">Lampiran</div>
                                         <div>
                                             <i class="fas fa-paperclip mr-1"></i>
-                                            <a href="{{ url('storage/' . $meeting->attachment) }}" target="_blank">Lampiran</a>
+                                            <a href="{{ s3_asset(true,10,$meeting->attachment) }}" target="_blank">Lampiran</a>
                                             
                                         </div>
                                     </div>

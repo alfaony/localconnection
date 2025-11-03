@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="{{ public_path('vendor/adminlte/plugins/bootstrap/css/bootstrap.min.css') }}">
     <style>
     /* General font size */
+    body, html {
+        font-family: DejaVu Sans, sans-serif !important; /* ✅ font default dompdf */
+        /* font-size: 12px; */
+    }
     body,
     html {
         font-size: 12px;
@@ -39,6 +43,7 @@
     }
 
     .content {
+        padding-top: 30px;
         padding-bottom: 10px;
         padding-left: 20px;
         padding-right: 20px;
@@ -78,6 +83,22 @@
         top: 0cm;
         height: 6cm;
     }
+
+    /* // ✅ 1. Increase Body Margin */
+    body {
+        margin-top: 7cm !important; // Lebih besar dari header (6cm) + buffer 1cm
+    }
+
+    /* // ✅ 2. Explicit Title Section Margin */
+    .title-section {
+        margin-top: 30px !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* // ✅ 3. Increase Content Padding */
+    .content {
+        padding-top: 40px !important; // Dari 30px ke 40px
+    }
     </style>
 </head>
 
@@ -95,7 +116,7 @@
         <div class="card" id="printThis">
             <div class="card-body" id="printItem">
                 <div class="row">
-                    <div class="col-md-12 text-center">
+                    <div class="col-md-12 title-section text-center">
                         <h3 style="margin-bottom: 10px;">Berita Acara Serah Terima</h3>
                         <p>No. {{ $bast->number ?? '' }}</p>
                     </div>

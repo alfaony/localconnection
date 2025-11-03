@@ -11,8 +11,11 @@ class UsedLaptop extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'rack_id',
         'serial_number',
+        'weight',
         'name',
+        'brand',
         'processor',
         'ram',
         'ssd',
@@ -27,7 +30,6 @@ class UsedLaptop extends Model
     ];
 
     protected $casts = [
-        'is_sold' => 'boolean',
         'sold_at' => 'date',
     ];
 
@@ -49,6 +51,11 @@ class UsedLaptop extends Model
     }
 
     // ✅ Relasi
+    public function rack()
+    {
+        return $this->belongsTo(Rack::class)->withTrashed();
+    }
+
     public function checks()
     {
         return $this->hasMany(UsedLaptopCheck::class);
@@ -77,6 +84,18 @@ class UsedLaptop extends Model
         $repairCost = $this->repairs->sum('cost');
         $base = $this->purchase_price + $repairCost;
         return round($base * 1.3);
+    }
+
+    public function getJakartaPriceAttribute()
+    {
+
+        return $this->suggested_selling_price + config('services.used_laptop_charge.totebag_charge') + config('services.used_laptop_charge.totebag_cover_charge');
+    }
+
+    public function getJambiPriceAttribute()
+    {
+
+        return $this->jakarta_price + config('services.used_laptop_charge.expedition_charge');
     }
 
     // 🟢 Status Jual (label helper opsional)

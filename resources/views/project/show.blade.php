@@ -180,7 +180,7 @@
             <label for="fileUpload">Mohon Upload Quote yang sudah di tanda-tangani:</label>
             @if($workOrder->quote_file)
                 <div class="mb-2">
-                    <a href="{{ Storage::url($workOrder->quote_file) }}" class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                    <a href="{{ s3_asset(true,10,$workOrder->quote_file) }}" class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
                 </div>
             @endif
         </div>

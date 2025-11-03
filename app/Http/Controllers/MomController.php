@@ -706,7 +706,7 @@ class MomController extends Controller
                 $attachment = null;
                 if($request->hasFile('attachment'))
                 {
-                    $attachment = $request->file('attachment')->store('mom/report/task/external', 'public');
+                    $attachment = $request->file('attachment')->store('mom/report/task/external');
                 }
 
                 $dailyTask->update([

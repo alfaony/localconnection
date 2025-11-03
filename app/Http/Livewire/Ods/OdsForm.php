@@ -106,7 +106,7 @@ class OdsForm extends Component
         ];
 
         if ($this->location_photo) {
-            $data['location_photo'] = $this->location_photo->store('ods-photos', 'public');
+            $data['location_photo'] = $this->location_photo->store('ods-photos');
         }
 
         if ($this->isEdit) {
@@ -119,7 +119,7 @@ class OdsForm extends Component
 
             // Simpan foto baru (jika ada)
             if ($this->location_photo) {
-                $data['location_photo'] = $this->location_photo->store('ods-photos', 'public');
+                $data['location_photo'] = $this->location_photo->store('ods-photos');
             } else {
                 $data['location_photo'] = $ods->location_photo; // Tetap pakai foto lama
             }
@@ -127,12 +127,12 @@ class OdsForm extends Component
             $ods->update($data);
             $ods->pops()->sync($this->selectedPop);
 
-            session()->flash('message', 'ODS berhasil diperbarui!');
+            session()->flash('success', 'ODS berhasil diperbarui!');
         } else {
             $ods = OpticalDistribution::create($data);
             $ods->pops()->attach($this->selectedPop);
             
-            session()->flash('message', 'ODS berhasil ditambahkan!');
+            session()->flash('success', 'ODS berhasil ditambahkan!');
         }
 
         return redirect()->route('optical-distribution.index');
@@ -159,6 +159,29 @@ class OdsForm extends Component
         $this->latitude = $lat;
         $this->longitude = $lng;
         $this->showMapModal = false;
+        $this->dispatchCoordinateUpdate();
+    }
+
+    public function updatedLatitude($value)
+    {
+        $this->dispatchCoordinateUpdate();
+    }
+
+    public function updatedLongitude($value)
+    {
+        $this->dispatchCoordinateUpdate();
+    }
+
+    protected function dispatchCoordinateUpdate(): void
+    {
+        if (! is_numeric($this->latitude) || ! is_numeric($this->longitude)) {
+            return;
+        }
+
+        $this->dispatchBrowserEvent('ods-map-move-marker', [
+            'lat' => (float) $this->latitude,
+            'lng' => (float) $this->longitude,
+        ]);
     }
     
     public function refreshCsrfToken()

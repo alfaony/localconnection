@@ -53,7 +53,7 @@ class OfficeMediaController extends Controller
             ];
     
             if ($request->type === 'image' && $request->hasFile('file')) {
-                $path = $request->file('file')->store('media/images', 'public');
+                $path = $request->file('file')->store('media/images');
                 $data['file_path'] = $path;
             }
     

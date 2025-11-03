@@ -21,7 +21,7 @@ class PermissionForMenuLetterSubmission extends Seeder
     public function run()
     {   
 
-        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2', 'approvement'];
+        $methods = ['index','create', 'show', 'edit', 'update', 'destroy', 'store', 'select2', 'approvement','created_for'];
        
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $admin = Role::where('name',RoleSchema::ADMIN)->first();
@@ -49,7 +49,15 @@ class PermissionForMenuLetterSubmission extends Seeder
                 PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
-            }else
+            }
+            else if($method == "created_for")
+            {
+                PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $director->id, 'permission_id' => $permission->id]);
+                PermissionRole::create(['role_id' => $manager->id, 'permission_id' => $permission->id]);
+            }
+            else
             {
                 PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $admin->id, 'permission_id' => $permission->id]);
@@ -58,7 +66,8 @@ class PermissionForMenuLetterSubmission extends Seeder
                 PermissionRole::create(['role_id' => $staff->id, 'permission_id' => $permission->id]);
                 PermissionRole::create(['role_id' => $pm->id, 'permission_id' => $permission->id]);
             }
-
         }
+
+        $this->call(ClearPermissionSeeder::class);
     }
 }

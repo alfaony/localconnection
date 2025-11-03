@@ -100,5 +100,12 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuUsedComputer::class);
         $this->call(PermissionForMenuInternetSeeder::class);
         $this->call(PermissionForMenuRouterSeeder::class);
+        $this->call(PermissionForMenuWebhookSettingSeeder::class);
+        $this->call(PermissionForMenuOfficeAttendance::class);
+        $this->call(PermissionForProductStoreSeeder::class);
+        $this->call(PermissionForMenuPunishmentUserSeeder::class);
+        $this->call(PermissionForMenuKasirSeeder::class);
+        $this->call(PermissionForGetLocationSeeder::class);
+        $this->call(PermissionForMenuWfoRuleSeeder::class);
     }
 }

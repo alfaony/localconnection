@@ -607,9 +607,9 @@ class QuoteController extends Controller
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
 
         // Queue the export and store the job file name in session
+        $filename = "public/" . $filename;
         ExportQuoteJob::dispatch($filename, $exportFormat, Auth::user()->company_id);
 
-        $filename = "public/" . $filename;
         session(['export_filename_quote' => $filename]);
         $filename = session('export_filename_quote');
 
@@ -620,13 +620,19 @@ class QuoteController extends Controller
     {
         $filename = session('export_filename_quote');
 
-        if ($filename && Storage::exists($filename)) {
-            // Provide the download URL if file exists
-            $downloadUrl = Storage::url($filename);
-            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        try {
+            if ($filename && Storage::disk('s3')->exists($filename)) {
+                // dd($filename);
+                $downloadUrl = s3_asset(true, 10, $filename);
+                return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Export check failed: ' . $e->getMessage());
+
+            return response()->json(['ready' => false,'filename' => $filename]);
         }
-    
-        return response()->json(['ready' => false,'filename' => $filename]);
+
+        return response()->json(['ready' => false, 'filename' => $filename]);
     }
 
     public function clearsession()

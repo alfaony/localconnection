@@ -161,4 +161,16 @@ return
       [
          'free_months' => 'Gratis Bulan',
       ],
+      'postion_latpop' =>
+      [
+         'Dijual' => 0,
+         'Inventory' => null
+      ],
+      'merital_status' => 
+      [
+         'single' => 'Lajang',
+         'married' => 'Menikah',
+         'widow' => 'Janda',
+         'divorced' => 'Duda'
+      ]
 ];

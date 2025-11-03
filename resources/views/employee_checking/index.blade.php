@@ -203,7 +203,7 @@
                                                                 <div class="mb-3 text-center">
                                                                     <label class="font-weight-bold"><i class="fa fa-camera"></i> Foto Check-In:</label>
                                                                     <div class="border rounded p-3">
-                                                                        <img src="{{ asset($checking->photo_path) }}" alt="Foto Check-In" class="img-fluid rounded">
+                                                                        <img src="{{ s3_asset(true,10,$checking->photo_path) }}" alt="Foto Check-In" class="img-fluid rounded">
                                                                     </div>
                                                                 </div>
                                                             @endif
@@ -284,14 +284,14 @@
                             @endforelse
                         </tbody>
                     </table>
+                    <!-- Pagination Links -->
+                     @if(count($employeeCheckings) > 0)
+                    <div class="d-flex justify-content-center mt-4">
+                        {{ $employeeCheckings->withQueryString()->links('vendor.pagination.bootstrap-4') }}
+                    </div>
+                    @endif
                 </div>
 
-                <!-- Pagination Links -->
-                 @if(count($employeeCheckings) > 0)
-                <div class="d-flex justify-content-center mt-4">
-                    {{ $employeeCheckings->withQueryString()->links('vendor.pagination.bootstrap-4') }}
-                </div>
-                @endif
             </div>
             @endif
             @if(request('tab') == 'point_checkin')

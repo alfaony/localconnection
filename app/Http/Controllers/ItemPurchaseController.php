@@ -153,7 +153,7 @@ class ItemPurchaseController extends Controller
         try {
             $itemPurchase = ItemPurchase::where('id', $id)->firstOrFail();
     
-            $path = $request->file('proof_image')->store('bukti_transfer', 'public');
+            $path = $request->file('proof_image')->store('bukti_transfer');
     
             Payment::create([
                 'company_id' => auth()->user()->company_id,

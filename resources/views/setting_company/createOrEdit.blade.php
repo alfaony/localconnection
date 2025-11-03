@@ -149,7 +149,7 @@
                                     <label for="file_nib">Upload File NIB</label>
                                     @if($data['nib_file']) 
                                         <div class="mb-2">
-                                            <a href="{{ Storage::url($data['nib_file']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <a href="{{ s3_asset(true,10,$data['nib_file']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
                                         </div>
                                     @endif
                                     <input type="file" name="nib_file" class="form-control-file" accept=".pdf" >
@@ -162,7 +162,7 @@
                                     <label for="file_akta">Upload File Akta</label>
                                     @if($data['acta_file']) 
                                         <div class="mb-2">
-                                            <a href="{{ Storage::url($data['acta_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <a href="{{ s3_asset(true,10,$data['acta_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
                                         </div>
                                     @endif
                                     <input type="file" name="acta_file" class="form-control-file" accept=".pdf" >
@@ -175,7 +175,7 @@
                                     <label for="file_npwp">Upload File NPWP</label>
                                     @if($data['npwp_file']) 
                                         <div class="mb-2">
-                                            <a href="{{ Storage::url($data['npwp_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
+                                            <a href="{{ s3_asset(true,10,$data['npwp_file']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-file-pdf"></i> Download</a>
                                         </div>
                                     @endif
                                     <input type="file" name="npwp_file" class="form-control-file" accept=".pdf" >
@@ -260,7 +260,7 @@
                                     <label for="header">Upload Header</label>
                                     @if(isset($data['header']) && file_exists(public_path('storage/' . $data['header']))) 
                                         <div class="mb-2">
-                                            <a href="{{ Storage::url($data['header']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Header</a>
+                                            <a href="{{ s3_asset(true,10,$data['header']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Header</a>
                                         </div>
                                     @endif
                                     <input type="file" name="header" class="form-control-file" accept="image/*">
@@ -272,7 +272,7 @@
                                     <label for="footer">Upload Footer</label>
                                     @if(isset($data['footer']) && file_exists(public_path('storage/' . $data['footer']))) 
                                         <div class="mb-2">
-                                            <a href="{{ Storage::url($data['footer']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Footer</a>
+                                            <a href="{{ s3_asset(true,10,$data['footer']) }}"  class="btn btn-sm btn-primary" download><i class="fa fa-download"></i> Footer</a>
                                         </div>
                                     @endif
                                     <input type="file" name="footer" class="form-control-file" accept="image/*">
@@ -506,56 +506,172 @@
                     </div>
 
                     <div class="card">
-                        <div class="card-header" id="headingMikrotik">
+                        <div class="card-header" id="headingWFO">
                             <h2 class="mb-0">
-                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseMikrotik" aria-expanded="false" aria-controls="collapseMikrotik">
-                                    Mikrotik Credential
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseWFO" aria-expanded="false" aria-controls="collapseWFO">
+                                    Punishment WFO & WFH RULES
                                 </button>
                             </h2>
                         </div>
-                        <div id="collapseMikrotik" class="collapse" aria-labelledby="headingMikrotik" data-parent="#accordion">
+                        <div id="collapseWFO" class="collapse" aria-labelledby="headingWFO" data-parent="#accordion">
                             <div class="card-body">
-                                <div class="form-group">
-                                    <label for="mikrotik_host">Mikrotik Host</label>
-                                    <input type="text" name="mikrotik_host" class="form-control" value="{{ old('mikrotik_host', isset($data['mikrotik_host']) ? $data['mikrotik_host'] : '') }}">
-                                    @error('mikrotik_host')
-                                    <span class="text-danger text-sm">{{ $message }}</span>
-                                    @enderror
+                                <div class="card">
+                                    <div class="card-header">
+                                        WFH Rules
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="punishment_point_wfh">Poin Sanksi WFH</label>
+                                            <input type="number" name="punishment_point_wfh" class="form-control" value="{{ old('punishment_point_wfh', $data['punishment_point_wfh'] ?? 10) }}">
+                                            @error('punishment_point_wfh')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="range_start_date">Rentang Tanggal Mulai</label>
+                                            <input type="number" name="range_start_date" class="form-control" value="{{ old('range_start_date', $data['range_start_date'] ?? 21) }}">
+                                            @error('range_start_date')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="range_end_date">Rentang Tanggal Akhir</label>
+                                            <input type="number" name="range_end_date" class="form-control" value="{{ old('range_end_date', $data['range_end_date'] ?? 20) }}">
+                                            @error('range_end_date')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="presence_checkin">Presensi Check-in</label>
+                                            <input type="number" name="presence_checkin" class="form-control" value="{{ old('presence_checkin', $data['presence_checkin'] ?? 70) }}">
+                                            @error('presence_checkin')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="overdue_task">Tugas Keterlambatan</label>
+                                            <input type="number" name="overdue_task" class="form-control" value="{{ old('overdue_task', $data['overdue_task'] ?? 50) }}">
+                                            @error('overdue_task')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
                                 </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                         WFO Rules
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label for="punishment_point_wfo">Poin Sanksi WFO</label>
+                                            <input type="number" name="punishment_point_wfo" class="form-control" value="{{ old('punishment_point_wfo', $data['punishment_point_wfo'] ?? 0) }}">
+                                            @error('punishment_point_wfo')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="entry_time">Waktu Masuk</label>
+                                            <input type="time" name="entry_time" class="form-control timepicker" value="{{ old('entry_time', $data['entry_time'] ?? '08:00') }}">
+                                            @error('entry_time')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="tolerance">Basis Toleransi (menit)</label>
+                                            <input type="number" name="tolerance" class="form-control" value="{{ old('tolerance', $data['tolerance'] ?? 20) }}">
+                                            @error('tolerance')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+        
+                                        <div class="form-group">
+                                            <label for="checkin_onday">Standar Check-in Setiap Hari</label>
+                                            <input type="number" name="checkin_onday" class="form-control" value="{{ old('checkin_onday', $data['checkin_onday'] ?? 4) }}">
+                                            @error('checkin_onday')
+                                            <span class="text-danger text-sm">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header" id="judulStore">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseStore" aria-expanded="false" aria-controls="collapseStore">
+                                    Setting Toko
+                                </button>
+                            </h2>
+                        </div>
+
+                        <div id="collapseStore" class="collapse" aria-labelledby="judulStore" data-parent="#accordion">
+                            <div class="card-body">
+                                @error('default_tax')
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ $message }}
+                                </div>
+                                @enderror
 
                                 <div class="form-group">
-                                    <label for="mikrotik_port">Mikrotik Port</label>
-                                    <input type="text" name="mikrotik_port" class="form-control" value="{{ old('mikrotik_port', isset($data['mikrotik_port']) ? $data['mikrotik_port'] : '8728') }}">
-                                    @error('mikrotik_port')
-                                    <span class="text-danger text-sm">{{ $message }}</span>
-                                    @enderror
+                                    <label for="default_tax">Default Pajak</label>
+                                    <input type="number" min="0" name="default_tax" class="form-control" value="{{ old('default_tax', $data['default_tax'] ?? null) }}">
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="mikrotik_username">Mikrotik Username</label>
-                                    <input type="text" name="mikrotik_username" class="form-control" value="{{ old('mikrotik_username', isset($data['mikrotik_username']) ? $data['mikrotik_username'] : '') }}">
-                                    @error('mikrotik_username')
-                                    <span class="text-danger text-sm">{{ $message }}</span>
-                                    @enderror
+                                @error('header_store_image')
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ $message }}
                                 </div>
+                                @enderror
 
                                 <div class="form-group">
-                                    <label for="mikrotik_password">Mikrotik Password</label>
-                                    <input type="text" name="mikrotik_password" class="form-control" value="{{ old('mikrotik_password', isset($data['mikrotik_password']) ? $data['mikrotik_password'] : '') }}">
-                                    @error('mikrotik_password')
-                                    <span class="text-danger text-sm">{{ $message }}</span>
-                                    @enderror
+                                    <label for="header_store_image">Header Store Image</label>
+                                    @if($data['header_store_image']) 
+                                        <div class="mb-2">
+                                            <a href="{{ s3_asset(true,10,$data['header_store_image']) }}"  class="btn btn-sm btn-primary"  download><i class="fa fa-file-pdf"></i> Download</a>
+                                        </div>
+                                    @endif
+                                    <input type="file" name="header_store_image" class="form-control" accept="image/*">
                                 </div>
+
+                                @error('footer_store_message')
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ $message }}
+                                </div>
+                                @enderror
+
                                 <div class="form-group">
-                                    <label for="mikrotik_ssl">Mikrotik SSL</label>
-                                    <select name="mikrotik_ssl" class="form-control">
-                                        <option value="true" {{ old('mikrotik_ssl', isset($data['mikrotik_ssl']) ? $data['mikrotik_ssl'] : '') == 'true' ? 'selected' : '' }}>True</option>
-                                        <option value="false" {{ old('mikrotik_ssl', isset($data['mikrotik_ssl']) ? $data['mikrotik_ssl'] : '') == 'false' ? 'selected' : '' }}>False</option>
-                                    </select>
-                                    @error('mikrotik_ssl')
-                                    <span class="text-danger text-sm">{{ $message }}</span>
-                                    @enderror
+                                    <label for="footer_store_message">Footer Store Message</label>
+                                    <input class="thriveEditor form-control" id="description_payment_term_english" data-ids="payment_term_english" name="footer_store_message" rows="3" placeholder="yang akan dicetak di perjanjian" value="{{ old('footer_store_message', $data['footer_store_message'] ?? null) }}"/>
                                 </div>
+
+                                @error('store_name')
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ $message }}
+                                </div>
+                                @enderror
+
+                                <div class="form-group">
+                                    <label for="store_name">Nama Store</label>
+                                    <input type="text" name="store_name" class="form-control" value="{{ old('store_name', $data['store_name'] ?? null) }}">
+                                </div>
+
+                                @error('store_address')
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-2"></i> {{ $message }}
+                                </div>
+                                @enderror
+
+                                <div class="form-group">
+                                    <label for="store_address">Alamat Store</label>
+                                    <input type="text" name="store_address" class="form-control" value="{{ old('store_address', $data['store_address'] ?? null) }}">
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -573,6 +689,9 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://unpkg.com/gijgo@1.9.14/js/gijgo.min.js" type="text/javascript"></script>
+<script src="https://cdn.quilljs.com/1.0.0/quill.js"></script>
+<script src="{{ asset('js/thriveEditor.js') }}"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const toggle = document.getElementById('status_punihsment_task_doing');
@@ -663,5 +782,6 @@ function formatRupiahFormat(field, fieldHidden) {
 
 @stop
 @section('css')
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link href="https://unpkg.com/gijgo@1.9.14/css/gijgo.min.css" rel="stylesheet" type="text/css" />
 @stop

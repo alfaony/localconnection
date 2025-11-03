@@ -181,8 +181,8 @@ class EmployeeCheckingController extends Controller
         // Simpan foto jika ada
         if ($request->hasFile('photo')) 
         {
-            $photoPath = $request->file('photo')->store('checkin_photos', 'public');
-            $employeeChecking->photo_path = Storage::url($photoPath);
+            $photoPath = $request->file('photo')->store('checkin_photos');
+            $employeeChecking->photo_path = $photoPath;
         }
 
         // Update latitude dan longitude jika ada
@@ -359,7 +359,7 @@ class EmployeeCheckingController extends Controller
 
         if ($filename && Storage::exists($filename)) {
             // Provide the download URL if file exists
-            $downloadUrl = Storage::url($filename);
+            $downloadUrl = s3_asset(true,10,$filename);
             return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
         }
     

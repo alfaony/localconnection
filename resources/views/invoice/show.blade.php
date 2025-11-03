@@ -133,11 +133,13 @@
                     @endcanAccess
                     @endcanAccess
                 </div>
+                @if($invoice->file_merge_path)
                 <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
                     <div class="card-body">
-                        <iframe src="{{ Storage::url($invoice->file_merge_path) }}" width="100%" height="500px" frameborder="0"></iframe>
+                        <iframe src="{{ s3_asset(true,10,$invoice->file_merge_path) }}" width="100%" height="500px" frameborder="0"></iframe>
                     </div>
                 </div>
+                @endif
             </div>
 
             <!-- BAST Section -->
@@ -214,7 +216,7 @@
                                         <td>{{ $detail->name }}</td>
                                         <td>{{ $detail->link }}</td>
                                         <td>
-                                            <a href="{{ Storage::url('reports/' . $detail->file) }}" class="btn btn-sm btn-primary" download><i class="fa fa-download"></i></a>
+                                            <a href="{{ s3_asset(true,10,'reports/' . $detail->file) }}" class="btn btn-sm btn-primary" download><i class="fa fa-download"></i></a>
                                         </td>
                                     </tr>
                                     @endforeach

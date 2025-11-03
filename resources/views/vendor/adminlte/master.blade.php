@@ -8,6 +8,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="msvalidate.01" content="6FA32E6D960BD2EB492056E4B651CE2E" />
 
     {{-- Custom Meta Tags --}}
     @yield('meta_tags')

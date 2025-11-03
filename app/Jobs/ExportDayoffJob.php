@@ -71,7 +71,7 @@ class ExportDayoffJob implements ShouldQueue
             $recapData = $this->generateRecap($this->company_id, $this->user, $this->hrApprovement, $this->financeApprovement, $this->start_date, $this->end_date);
 
             $exportFormat = $this->exportFormat === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
-            Excel::store(new DayoffMultiSheetExport($data, $recapData), 'public/exports/' . $this->fileName);
+            Excel::store(new DayoffMultiSheetExport($data, $recapData),$this->fileName);
         } catch (\Throwable $th) {
             // throw $th;
             // dd($th);

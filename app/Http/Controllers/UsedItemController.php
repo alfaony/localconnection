@@ -9,12 +9,13 @@ use App\Models\UsedItemCheck;
 use App\Models\UsedItemRepair;
 use App\Models\ItemCategory;
 
-
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+
+use App\Helpers\Access;
 
 class UsedItemController extends Controller
 {
@@ -49,6 +50,9 @@ class UsedItemController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'warehouse_id' => 'nullable|exists:warehouses,id',
+            'zone_id' => 'required_with:warehouse_id|nullable|exists:zones,id',
+            'rack_id' => 'required_with:warehouse_id|nullable|exists:racks,id',
             'name' => 'required|string|max:255',
             'serial_number' => 'nullable|string|max:255',
             'purchase_price' => 'required|numeric|min:0',
@@ -125,6 +129,9 @@ class UsedItemController extends Controller
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:20480',
             'check_items' => 'required|array|min:1',
             'repairs' => 'nullable|array',
+            'warehouse_id' => 'nullable|exists:warehouses,id',
+            'zone_id' => 'required_with:warehouse_id|nullable|exists:zones,id',
+            'rack_id' => 'required_with:warehouse_id|nullable|exists:racks,id',
         ]);
 
         if(!$item) 
@@ -165,6 +172,7 @@ class UsedItemController extends Controller
     {
         DB::beginTransaction();
          $validated = $request->validate([
+            'rack_id' => 'nullable|exists:racks,id',
             'name' => 'required|string|max:255',
             'serial_number' => 'nullable|string|max:255',
             'purchase_price' => 'required|numeric|min:0',
@@ -216,10 +224,16 @@ class UsedItemController extends Controller
             // Simpan kategori
             $item->categories()->sync($validated['category_ids'] ?? []);
 
+            if(Access::can('getLocation','warehouses'))
+            {
+                $item->rack_id = $validated['rack_id'] ?? null;
+                $item->save();
+            }
+
             // Simpan foto baru
             if ($request->hasFile('photos')) {
                 foreach ($request->file('photos') as $photo) {
-                    $path = $photo->store('used-items', 'public');
+                    $path = $photo->store('used-items');
                     UsedItemMedia::create([
                         'used_item_id' => $item->id,
                         'file_path' => $path,

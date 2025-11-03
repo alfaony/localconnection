@@ -20,9 +20,11 @@ use App\Models\DayoffType;
 use App\Models\DayoffQuota;
 
 use App\Helpers\Access;
+use App\Schemas\ParamSchema;
 
 use App\Rules\MatchOldPassword;
 use Carbon\Carbon;
+use App\Jobs\ExportUsersJob;
 class UserController extends Controller
 {
     /**
@@ -85,6 +87,7 @@ class UserController extends Controller
         $user = new User();
         $user->name = $request->post('name');
         $user->email = $request->post('email');
+        $user->email_gmail = $request->post('email_gmail');
         $user->phone = $request->post('phone');
         $user->role_id = $request->post('role') ?? Auth::user()->role_id;
         $user->company_id = $request->post('company') ?? Auth::user()->company_id;
@@ -94,7 +97,9 @@ class UserController extends Controller
         $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
         $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
         // Checkin
-        $user->is_checkin = $request->post('is_checkin', 0); // Default 0 jika tidak dicentang
+        $user->is_shift_attendance = $request->post('is_checkin') ==  ParamSchema::SHIFT ? true : false;
+        $user->is_checkin = $request->post('is_checkin') == ParamSchema::WFH ? true : false; 
+        $user->wfo_check_in = $request->post('is_checkin') == ParamSchema::WFO ? true : false; 
         $user->manual_checkin = $request->post('manual_checkin', 0);
         $user->requires_photo = $request->post('requires_photo', 0);
         $user->requires_location = $request->post('requires_location', 0);
@@ -108,6 +113,14 @@ class UserController extends Controller
             $user->custom_rest_times = $request->custom_rest_times;
         }
         
+        if ($request->post('is_checkin') == ParamSchema::WFO) {
+            $wfoWorkingDays = [];
+            foreach (config('custom.daysOfWeek') as $dayName => $dayValue) {
+                $wfoWorkingDays[$dayValue] = $request->has("wfo_working_days.$dayValue");
+            }
+            $user->wfo_working_days = $wfoWorkingDays;
+        }
+
         $user->save();
         
         if($request->quotas)
@@ -215,6 +228,7 @@ class UserController extends Controller
     {        
         $user->name = $request->post('name');
         $user->email = $request->post('email');
+        $user->email_gmail = $request->post('email_gmail');
         $user->phone = $request->post('phone');
         $user->role_id = $request->post('role') ?? $user->role_id;
         $user->approvement_user_id = $request->post('approvement_user_id') ?? NULL;
@@ -245,19 +259,33 @@ class UserController extends Controller
         $user->use_ip_restriction = $request->post('use_ip_restriction', 0);
         $user->ip_addresses = $request->has('ip_addresses') ? $request->ip_addresses : NULL;
 
-        // Checkin
-        $user->is_checkin = $request->post('is_checkin', 0); // Default 0 jika tidak dicentang
-        $user->manual_checkin = $request->post('manual_checkin', 0);
-        $user->requires_photo = $request->post('requires_photo', 0);
-        $user->requires_location = $request->post('requires_location', 0);
-        $user->start_time = $request->post('start_time');
-        $user->end_time = $request->post('end_time');
-        $user->rest_time = $request->post('rest_time');
-        $user->end_rest_time = $request->post('end_rest_time');
+        // 
+        $user->is_shift_attendance = $request->post('is_checkin') ==  ParamSchema::SHIFT ? true : false;
+        $user->is_checkin = $request->post('is_checkin') ==  ParamSchema::WFH ? true : false;
+        $user->wfo_check_in = $request->post('is_checkin') ==  ParamSchema::WFO ? true : false;
+
+        $user->manual_checkin = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('manual_checkin', 0) : false;
+        $user->requires_photo = $request->post('is_checkin') ==  ParamSchema::WFH ?$request->post('requires_photo', 0) : false;
+        $user->requires_location = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('requires_location', 0) : false;
+        $user->start_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('start_time') : NULL;
+        $user->end_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('end_time') : NULL;
+        $user->rest_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('rest_time') : NULL;
+        $user->end_rest_time = $request->post('is_checkin') ==  ParamSchema::WFH ? $request->post('end_rest_time') : NULL;
 
         if ($request->has('custom_rest_times')) 
         {
             $user->custom_rest_times = $request->custom_rest_times;
+        }
+
+        if ($request->post('is_checkin') == ParamSchema::WFO) {
+            $wfoWorkingDays = [];
+            foreach (config('custom.daysOfWeek') as $dayName => $dayValue) {
+                $wfoWorkingDays[$dayValue] = $request->has("wfo_working_days.$dayValue");
+            }
+            $user->wfo_working_days = $wfoWorkingDays;
+        } else 
+        {
+            $user->wfo_working_days = null;
         }
 
         $dayoffTypes = DayoffType::all();
@@ -342,6 +370,7 @@ class UserController extends Controller
         $user->address = $request->post('address');
         $user->id_card = $request->post('id_card');
         $user->npwp_number = $request->post('npwp_number');
+        $user->email_gmail = $request->post('email_gmail');
 
         if ($request->hasFile('id_card_image')) 
         {
@@ -457,6 +486,46 @@ class UserController extends Controller
             //throw $th;
             Log::error($th);
             return response()->json(['message' => 'Failed to update FCM ID.'], 500);
+        }
+    }
+
+    public function KyeExport(Request $request)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'email' => 'nullable|string|max:255',
+            ]);
+
+
+            // Prepare filters
+            $filters = $request->only([
+                'email'
+            ]); 
+
+            // Dispatch job to queue (QUEUE SAJA - tidak ada sync)
+            ExportUsersJob::dispatch(auth()->user(), $filters);
+
+            Log::info('Export job dispatched', [
+                'user_id' => auth()->id(),
+                'filters' => $filters
+            ]);
+
+            // Return "Proses" message
+            return redirect()->back()->with('success', 
+                '⏳ Export sedang diproses. Anda akan menerima notifikasi saat selesai.'
+            );
+
+        } catch (\Exception $e) {
+            // dd($e);
+            Log::error('Failed to start export', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+
+            return redirect()->back()->with('error', 
+                'Gagal memulai export: ' . $e->getMessage()
+            );
         }
     }
     

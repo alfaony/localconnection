@@ -24,7 +24,12 @@ class ScheduleObController extends Controller
     public function index()
     {
         $schedules = ScheduleOb::byCompany(Auth::user()->company_id)->with('user', 'shiftingOb')->get();
-        $users = User::byCompany(Auth::user()->company_id)->byRole(RoleSchema::OB)->get();        
+        $users = User::byCompany(Auth::user()->company_id)
+            ->where(function ($query) {
+                $query->byRole(RoleSchema::OB)
+                    ->orWhere('is_shift_attendance', true);
+            })
+            ->get();
         $shifts = ShiftingOb::byCompany(Auth::user()->company_id)->get();
         $deleteAccess = Access::can('destroy', 'schedule_obs');
 

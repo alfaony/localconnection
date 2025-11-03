@@ -185,26 +185,23 @@ class InternetCustomerShow extends Component
 
     public function viewKtpPhoto()
     {
-        if ($this->ktpPhotoUrl) {
-            $this->dispatchBrowserEvent('showImageModal', [
-                'title' => 'Foto KTP',
-                'imageUrl' => $this->ktpPhotoUrl
-            ]);
-        }
+        $this->dispatchBrowserEvent('showImageModal', [
+            'title' => 'Foto KTP',
+            'imageUrl' => s3_asset(true,10, $this->ktpPhotoUrl)
+        ]);
     }
 
     public function viewInstallationPhotos()
     {
-        if (!empty($this->installationPhotos)) {
-            $fullUrls = array_map(function($path) {
-                return Storage::url($path);
-            }, $this->installationPhotos);
-            
-            $this->dispatchBrowserEvent('showGalleryModal', [
-                'title' => 'Foto Instalasi',
-                'images' => $fullUrls
-            ]);
-        }
+        // Convert paths to full URLs
+        $fullUrls = array_map(function($path) {
+            return s3_asset(true,10, $path);
+        }, $this->installationPhotos);
+        
+        $this->dispatchBrowserEvent('showGalleryModal', [
+            'title' => 'Foto Instalasi',
+            'images' => $fullUrls
+        ]);
     }
 
     public function render()

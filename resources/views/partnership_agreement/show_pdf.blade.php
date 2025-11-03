@@ -149,7 +149,7 @@
                                 <!-- Displaying the KTP Image -->
                                 <td>
                                     @if($signature->image_ktp)
-                                        <img src="{{ Storage::url($signature->image_ktp) }}" alt="KTP Image" width="250" class="img-thumbnail">
+                                        <img src="{{ s3_asset(true,10,$signature->image_ktp) }}" alt="KTP Image" width="250" class="img-thumbnail">
                                     @else
                                         <span>No KTP Image</span>
                                     @endif
@@ -158,7 +158,7 @@
                                 <!-- Displaying the Signature Image -->
                                 <td>
                                     @if($signature->signature)
-                                        <img src="{{ Storage::url($signature->signature) }}" alt="Signature Image" width="250" class="img-thumbnail">
+                                        <img src="{{ s3_asset(true,10,$signature->signature) }}" alt="Signature Image" width="250" class="img-thumbnail">
                                     @else
                                         <span>No Signature Image</span>
                                     @endif

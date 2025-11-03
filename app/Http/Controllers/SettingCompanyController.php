@@ -52,21 +52,36 @@ class SettingCompanyController extends Controller
         DB::beginTransaction();
         try {
             $settings = SettingCompany::byCompany(Auth::user()->company_id)->get();
+            $arrayExsist = ['header_store_image'];
 
             foreach ($settings as $setting) 
             {
                 $title = $setting->field_title;
-                if ($request->has($title)) 
+                if ($request->has($title) && !in_array($title, $arrayExsist)) 
                 {
                     $fieldValue = $request->input($title);
-
                     if ($request->hasFile($title)) {
                         $file = $request->file($title);
                         $filename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
                         $extension = $file->getClientOriginalExtension();
                         $filenameToStore = $filename . '_' . time() . '.' . $extension;
 
-                        $filePath = $file->storeAs('company', $filenameToStore, 'public');
+                        $filePath = $file->storeAs('company', $filenameToStore);
+                        $fieldValue = $filePath;
+                    }
+                    $setting->user_id = Auth::user()->id;
+                    $setting->update(['field_value' => $fieldValue]);
+                }
+                if ($request->has($title) && in_array($title, $arrayExsist)) 
+                {
+                    $fieldValue = $request->input($title);
+                    if ($request->hasFile($title)) {
+                        $file = $request->file($title);
+                        $filename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                        $extension = $file->getClientOriginalExtension();
+                        $filenameToStore = $filename . '_' . time() . '.' . $extension;
+
+                        $filePath = $file->storeAs('company_storage_file', $filenameToStore);
                         $fieldValue = $filePath;
                     }
                     $setting->user_id = Auth::user()->id;

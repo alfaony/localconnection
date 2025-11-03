@@ -39,7 +39,7 @@ class CheckinNotificationV2 extends Command
         $id = $this->option('id');
         $checkin = EmployeeChecking::find($id);
 
-        if($checkin)
+        if($checkin && $checkin->user->is_checkin)
         {
             $scheduleTime = Carbon::parse($checkin->scheduled_time)->format('H:i');
             $scheduleTimeout = Carbon::parse($checkin->scheduled_timeout)->format('H:i');

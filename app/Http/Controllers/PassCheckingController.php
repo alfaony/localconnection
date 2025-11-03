@@ -76,7 +76,7 @@ class PassCheckingController extends Controller
         if ($request->hasFile('pictures')) {
             foreach ($request->file('pictures') as $file) {
                 $filePath = $file->store('public/pictures');
-                $pictures[] = Storage::url($filePath);
+                $pictures[] = s3_asset(true,10,$filePath);
             }
         }
 
@@ -117,7 +117,7 @@ class PassCheckingController extends Controller
         if ($request->hasFile('pictures')) {
             foreach ($request->file('pictures') as $file) {
                 $filePath = $file->store('public/pictures'); // Store the file
-                $pictures[] = Storage::url($filePath); // Add the URL to the pictures array
+                $pictures[] = s3_asset(true,10,$filePath); // Add the URL to the pictures array
             }
         }
         
@@ -128,11 +128,11 @@ class PassCheckingController extends Controller
     
             if (isset($pictures[$key])) {
                 // Delete the old image
-                Storage::delete(str_replace(Storage::url(''), '', $pictures[$key]));
+                Storage::delete(str_replace(s3_asset(true,10,''), '', $pictures[$key]));
     
                 // Save the new image
                 $newImage = $request->file('image')->store('public/pictures');
-                $pictures[$key] = Storage::url($newImage);
+                $pictures[$key] = s3_asset(true,10,$newImage);
             }
     
             $passChecking->pictures = $pictures;
@@ -145,7 +145,7 @@ class PassCheckingController extends Controller
                 foreach ($deletePictures as $removeIndex) {
                     if (isset($pictures[$removeIndex])) {
                         // Convert URL to storage path
-                        $relativePath = str_replace(asset('storage'), 'public', $pictures[$removeIndex]);
+                        $relativePath = str_replace(asset('storage'), $pictures[$removeIndex]);
         
                         // Delete the file from storage if it exists
                         if (Storage::exists($relativePath)) {

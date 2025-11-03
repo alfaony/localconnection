@@ -43,7 +43,13 @@ class Kye extends Model
         'bank_name',
         'account_number',
         'approval_status',
-        'approval_note'
+        'approval_note',
+        'call_name',
+        'gender',
+        'marital_status',
+        'number_of_children',
+        'npwp_photo',
+        'address_domisili',
     ];
 
     protected $casts = [

@@ -144,6 +144,7 @@ class AppServiceProvider extends ServiceProvider
             $managementSettingMenuArray = Array();
 
             $managementUmumMenu = [
+                'punishment_users',
                 'meetings','moms','dashboard_weekly_reports','weekly_reports','flowcharts',
                 'ask_bos','decisions','partnership_agreements','national_holidays',
                 'letter_submissions','companies'
@@ -152,7 +153,7 @@ class AppServiceProvider extends ServiceProvider
             $managementKaryawanMenu = [
                 'kyes',
                 'employees','users','positions','managers','attendances',
-                'shifting_obs','schedule_obs','dayoffs','employee_checkings','trainings'
+                'shifting_obs','schedule_obs','dayoffs','wfo_rules','barcodes','employee_checkings','office_attendances','trainings'
             ];
 
             $managementInternetMenu = 
@@ -162,9 +163,11 @@ class AppServiceProvider extends ServiceProvider
             ];
 
             $managementTokoOnlineMenu = [
-                'pricelists','products','product_suppliers','supplier_categories',
+                'pricelists','products','supplier_types','product_suppliers','supplier_categories',
                 'product_categories','supliers','customers','item_requests',
-                'providers','shipping_rates','shipping_calculations'
+                'providers','shipping_rates','shipping_calculations',
+                'brand_product_stores','category_product_stores','product_stores','store_sellings',
+                'sales',
             ];
 
             $managementGedungMenu = 
@@ -197,7 +200,7 @@ class AppServiceProvider extends ServiceProvider
             'provinces','cities','districts','subdistricts','postal_codes'
             ];
 
-            $managementSettingMenu = ['setting_companies','roles'];
+            $managementSettingMenu = ['setting_companies','roles','webhook_settings'];
 
 
             $menus = [
@@ -411,13 +414,13 @@ class AppServiceProvider extends ServiceProvider
                     'icon' => 'fa fa-check',
                 ],
                 'shifting_obs' => [
-                    'text' => 'Shifting OB',
+                    'text' => 'Shifting',
                     'route' => 'shifting-ob.index',
                     'icon' => 'fa fa-calendar',
                 ],
                 'schedule_obs' => 
                 [
-                    'text' => 'Schedule OB',
+                    'text' => 'Jadwal',
                     'route' => 'schedule-ob.index',
                     'icon' => 'fa fa-clock',
                 ],
@@ -609,6 +612,12 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'item-request.index',
                     'icon' => 'fa fa-shopping-cart',
                 ],
+                'supplier_types' => 
+                [
+                    'text' => 'Jenis Supplier',
+                    'route' => 'supplier-type.index',
+                    'icon' => 'fa fa-list',
+                ],
                 'list_sprinter' =>
                 [
                     'text' => 'List Sprinter',
@@ -693,6 +702,67 @@ class AppServiceProvider extends ServiceProvider
                     'route' => 'router.index',
                     'icon' => 'fa fa-wifi',
                 ],
+                'webhook_settings' => 
+                [
+                    'text' => 'Pengaturan Webhook',
+                    'route' => 'webhook-setting.index',
+                    'icon' => 'fa fa-cogs',
+                ],
+                'office_attendances' =>
+                [
+                    'text' => 'Absensi WFO',
+                    'route' => 'office-attendance.index',
+                    'icon' => 'fa fa-user-check',
+                ],
+                'barcodes' => 
+                [
+                    'text' => 'WFO Absensi QR',
+                    'route' => 'barcode.index',
+                    'icon' => 'fa fa-qrcode',
+                ],
+
+                'brand_product_stores' =>
+                [
+                    'text' => 'Merk Toko',
+                    'route' => 'brand-product-store.index',
+                    'icon' => 'fa fa-tags',
+                ],
+                'category_product_stores' =>
+                [
+                    'text' => 'Kategori Toko',
+                    'route' => 'category-product-store.index',
+                    'icon' => 'fa fa-list',
+                ],
+                'product_stores' =>
+                [
+                    'text' => 'Produk Toko',
+                    'route' => 'product-store.index',
+                    'icon' => 'fa fa-boxes',
+                ],
+                'punishment_users' =>
+                [
+                    'text' => 'Pelanggaran Pegawai',
+                    'route' => 'punishment-user.index',
+                    'icon' => 'fa fa-user-slash',
+                ],
+                'sales' =>
+                [
+                    'text' => 'Penjualan',
+                    'route' => 'sales.index',
+                    'icon' => 'fas fa-cart-arrow-down',
+                ],
+                'store_sellings' =>
+                [
+                    'text' => 'Kasir Toko',
+                    'route' => 'store-selling.index',
+                    'icon' => 'fa fa-shopping-cart',
+                ],
+                'wfo_rules' =>
+                [
+                    'text' => 'Aturan WFO',
+                    'route' => 'wfo-rule.index',
+                    'icon' => 'fa fa-list',
+                ]
             ];
 
             // foreach ($listMenu as $role) 

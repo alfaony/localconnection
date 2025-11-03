@@ -24,7 +24,7 @@
                     @foreach($photos as $photo)
                     <div class="col-md-4 col-sm-6 mb-4">
                         <div class="card">
-                            <img src="{{ Storage::url($photo->path) }}" class="card-img-top" alt="Foto Cctv">
+                            <img src="{{ s3_asset(true,10,$photo->path) }}" class="card-img-top" alt="Foto Cctv">
                             <div class="card-body">
                                 <p class="card-text">{{ $photo->description ?? 'No description available' }}</p>
                             </div>

@@ -10,6 +10,11 @@ use App\Http\Controllers\API\QuoteController;
 use App\Http\Controllers\API\WorkOrderController;
 use App\Http\Controllers\API\AgreementLetterController;
 use App\Http\Controllers\MikrotikController;
+use App\Http\Controllers\API\DailyTaskController;
+use App\Http\Controllers\API\ObjectiveController;
+use App\Http\Controllers\API\DailyTaskProjectController;
+use App\Http\Controllers\API\UsedLaptopController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -49,3 +54,13 @@ Route::group(['middleware' => ['auth:api']], function()
     Route::post('cut', [MikrotikController::class, 'cut']);
     Route::post('restore', [MikrotikController::class, 'restore']);
 });
+    Route::resource('dailytask', DailyTaskController::class);
+    Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
+    Route::put('dailytask/report/{slug}', [DailyTaskController::class, 'report']);
+
+    Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
+
+    Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
+    // Route::post('dailytask/{slug}/approve', [DailyTaskController::class, 'approvement']);
+    // Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);
+    Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');

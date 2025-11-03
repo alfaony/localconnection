@@ -85,7 +85,7 @@
                                 </td>
                                 <td>
                                     <form action="{{ route('division-budget.destroy', $divisionBudget->slug) }}" method="POST" style="display:inline-block;">
-                                        <a target="_blank" href="{{ Storage::url($file) }}" class="btn btn-sm btn-primary">
+                                        <a target="_blank" href="{{ s3_asset(true,10,$file) }}" class="btn btn-sm btn-primary">
                                             <i class="fa fa-eye"></i> Lihat
                                         </a>
                                         <input type="hidden" name="action" value="removeFile">

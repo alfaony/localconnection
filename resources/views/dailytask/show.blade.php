@@ -285,7 +285,7 @@
                                                     <i class="fa fa-ellipsis-v"></i>
                                                 </button>
                                                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ $media->id }}">
-                                                    <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                                    <a class="dropdown-item" href="{{ s3_asset(true,10, $media->file_path) }}" target="_blank">
                                                         <i class="fa fa-download"></i> Lihat
                                                     </a>
                                                     @canAccess('deletemedia','dailytasks')
@@ -474,10 +474,10 @@
                                                             <i class="fa fa-ellipsis-v"></i>
                                                         </button>
                                                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ $media->id }}">
-                                                            <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                                            <a class="dropdown-item" href="{{ s3_asset(true,10, $media->file_path) }}" target="_blank">
                                                                 <i class="fa fa-download"></i> Lihat
                                                             </a>
-                                                            @canAccess('deletemedia','dailytasks')
+                                                            @if($isDeleteMedia)
                                                             <form action="{{ route('dailytask.deletemedia', $media->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this file?');">
                                                                 @csrf
                                                                 @method('DELETE')
@@ -485,7 +485,7 @@
                                                                     <i class="fa fa-trash"></i> Delete
                                                                 </button>
                                                             </form>
-                                                            @endcanAccess
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </div>
@@ -575,7 +575,7 @@
                                                     <i class="fa fa-ellipsis-v"></i>
                                                 </button>
                                                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ $media->id }}">
-                                                    <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                                    <a class="dropdown-item" href="{{ s3_asset(true,10, $media->file_path) }}" target="_blank">
                                                         <i class="fa fa-download"></i> Lihat
                                                     </a>
                                                 </div>
@@ -793,7 +793,7 @@
                                             <small class="text-muted">Posted on: {{ $comment->created_at->format('d-m-Y') }}</small>
                                             @if($comment->file_path)
                                                 <div class="mt-2">
-                                                    <a href="{{ asset('storage/' . $comment->file_path) }}" target="_blank" class="btn btn-primary btn-sm">
+                                                    <a href="{{ s3_asset(true,10, $comment->file_path) }}" target="_blank" class="btn btn-primary btn-sm">
                                                         <i class="fa fa-download"></i> Lihat File
                                                     </a>
                                                 </div>

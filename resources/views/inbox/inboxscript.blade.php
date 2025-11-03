@@ -4,6 +4,7 @@
 <audio id="notification-message-entry" src="/audio/notification-message-entry.mp3" preload="auto"></audio>
 <audio id="notification-message-high" src="/audio/notification-message-high.mp3" preload="auto"></audio>
 <audio id="notification-message-email" src="/audio/notification-message-email.mp3" preload="auto"></audio>
+<audio id="notification-message-download" src="/audio/notification-message-download.mp3" preload="auto"></audio>
 <script src="https://cdn.jsdelivr.net/npm/pusher-js@7.2.0/dist/web/pusher.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo/dist/echo.iife.js"></script>
 <script>
@@ -34,6 +35,7 @@
     notifSoundEntry = document.getElementById('notification-message-entry');
     notifSoundHigh = document.getElementById('notification-message-high');
     notifSoundEmail = document.getElementById('notification-message-email');
+    notifSoundDownload = document.getElementById('notification-message-download');
 
     window.Pusher = Pusher;
 
@@ -53,13 +55,24 @@
     .listen('InboxReceived', (e) => {
         // Menampilkan pesan sementara
         console.log(e);
+        if (e.download_url) 
+        {
+            // Ada download_url = auto-download
+            handleDownloadNotification(e);
+        }else
+        {
+            showToast(`📩 ${e.user_from}: ${e.message}`, e.direct_url);
+        }
         
-        showToast(`📩 ${e.user_from}: ${e.message}`, e.direct_url);
         getUnreadCount();
         
         if(e.category == "high") 
         {
             notifSoundHigh?.play();
+        }
+        else if(e.category == "download")
+        {
+            notifSoundDownload?.play();
         }
         else if(e.category == "email")
         {
@@ -100,6 +113,57 @@
             `);
         } else {
             toastr.success(message);
+        }
+    }
+    function handleDownloadNotification(e) {
+        const message = `📩 ${e.user_from}: ${e.message}`;
+        const downloadUrl = e.download_url;
+        
+        console.log('Download notification detected:', downloadUrl);
+        // showToast(message, downloadUrl);
+        setTimeout(() => autoDownloadFile(downloadUrl), 2000);
+    }
+
+    function autoDownloadFile(url) 
+    {
+        try {
+            console.log('Auto-downloading file from:', url);
+            
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.style.visibility = 'hidden';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            
+            toastr.success('📥 Download dimulai otomatis...', 'Download', {
+                timeOut: 3000,
+                progressBar: true
+            });
+            
+            setTimeout(() => {
+                try {
+                    document.body.removeChild(iframe);
+                } catch (e) {
+                    console.log('Iframe already removed');
+                }
+            }, 5000);
+            
+            console.log('File download initiated successfully');
+            
+        } catch (error) {
+            console.error('Auto-download failed:', error);
+            toastr.warning(
+                `Download otomatis gagal. <a href="${url}" class="btn btn-sm btn-light ml-2" download>
+                    <i class="fas fa-download"></i> Download Manual
+                </a>`, 
+                'Download', 
+                {
+                    timeOut: 10000,
+                    closeButton: true,
+                    progressBar: true,
+                    escapeHtml: false
+                }
+            );
         }
     }
 </script>

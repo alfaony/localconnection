@@ -570,10 +570,11 @@ class DayoffController extends Controller
     {
         $filename = 'laporan_cuti_' . time() . '.' . ($format === 'csv' ? 'csv' : 'xlsx');
         $exportFormat = $format === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
+        $filename = "public/exports/" . $filename;
         
         ExportDayoffJob::dispatch($request->all(), $filename, Auth::user()->company_id, Auth::user(), Access::can('hrApprovement', 'dayoffs'), Access::can('financeApprovement', 'dayoffs'), $exportFormat, $request->start_date, $request->end_date);
 
-        session(['export_filename_dayoff' => 'public/exports/' . $filename]);
+        session(['export_filename_dayoff' => $filename]);
 
         return redirect()->back()->with('export', true);
     }
@@ -582,11 +583,17 @@ class DayoffController extends Controller
     {
         $filename = session('export_filename_dayoff');
 
-        if ($filename && Storage::exists($filename)) {
-            return response()->json([
-                'ready' => true,
-                'download_url' => Storage::url($filename),
-            ]);
+        try {
+            if ($filename && Storage::exists($filename)) {
+                return response()->json([
+                    'ready' => true,
+                    'download_url' => s3_asset(true,10,$filename),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Export check failed: ' . $e->getMessage());
+
+            return response()->json(['ready' => false,'filename' => $filename]);
         }
 
         return response()->json([

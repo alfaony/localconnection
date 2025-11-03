@@ -13,11 +13,13 @@ class InboxReceived implements ShouldBroadcast
 
     public $inbox;
     public $category;
+    public $downloadUrl;
 
-    public function __construct(Inbox $inbox, $category)
+    public function __construct(Inbox $inbox, $category, $downloadUrl = null)
     {
         $this->inbox = $inbox;
         $this->category = $category;
+        $this->downloadUrl = $downloadUrl;
     }
 
     public function broadcastOn(): PrivateChannel
@@ -33,7 +35,8 @@ class InboxReceived implements ShouldBroadcast
             'direct_url' => $url,
             'user_from' => optional($this->inbox->userFrom)->name ?? 'System',
             'inbox_id' => $this->inbox->id,
-            'category' => $this->category
+            'category' => $this->category,
+            'download_url' => $this->downloadUrl
         ];
     }
 }

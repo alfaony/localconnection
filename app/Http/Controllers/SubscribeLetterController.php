@@ -43,7 +43,7 @@ class SubscribeLetterController extends Controller
     
         $filePath = null;
         if ($request->hasFile('document_path')) {
-            $filePath = $request->file('document_path')->store('subscribe_letter', 'public');
+            $filePath = $request->file('document_path')->store('subscribe_letter');
         }
 
         SubscribeLetter::create([
@@ -85,7 +85,7 @@ class SubscribeLetterController extends Controller
         $filePath = $letter->document_path ?? null;
         if ($request->hasFile('document_path')) 
         {
-            $filePath = $request->file('document_path')->store('subscribe_letter', 'public');
+            $filePath = $request->file('document_path')->store('subscribe_letter');
         }
 
         $letter->update([

@@ -65,7 +65,7 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         @if($ods->location_photo)
-                                        <img src="{{ asset('storage/' . $ods->location_photo) }}" 
+                                        <img src="{{ s3_asset(true,10, $ods->location_photo) }}" 
                                                 alt="ODS Photo" 
                                                 class="rounded-circle me-2" 
                                                 width="30" 

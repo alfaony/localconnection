@@ -199,7 +199,7 @@
                                           <i class="fa fa-ellipsis-v"></i>
                                       </button>
                                       <div class="dropdown-menu">
-                                          <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                          <a class="dropdown-item" href="{{ s3_asset(true,10, $media->file_path) }}" target="_blank">
                                               <i class="fa fa-download"></i> Lihat
                                           </a>
                                       </div>
@@ -302,7 +302,7 @@
                                                             <i class="fa fa-ellipsis-v"></i>
                                                         </button>
                                                         <div class="dropdown-menu">
-                                                            <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                                            <a class="dropdown-item" href="{{ s3_asset(true,10, $media->file_path) }}" target="_blank">
                                                                 <i class="fa fa-download"></i> Lihat
                                                             </a>
                                                         </div>
@@ -415,7 +415,7 @@
                                                             <i class="fa fa-ellipsis-v"></i>
                                                         </button>
                                                         <div class="dropdown-menu">
-                                                            <a class="dropdown-item" href="{{ asset('storage/' . $media->file_path) }}" target="_blank">
+                                                            <a class="dropdown-item" href="{{ s3_asset(true,10, $media->file_path) }}" target="_blank">
                                                                 <i class="fa fa-download"></i> Lihat
                                                             </a>
                                                         </div>

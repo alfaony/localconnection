@@ -173,9 +173,9 @@ class InternetCustomerForm extends Component
 
     public function handleSaveSignature()
     {        
-        $this->validate([
-            'signature' => 'required',
-        ]);
+        // $this->validate([
+        //     'signature' => 'required',
+        // ]);
         
         $this->submitForm();
     }
@@ -195,7 +195,7 @@ class InternetCustomerForm extends Component
         $this->company_id = $companyId->id;
         $this->company_name = $companyId->name;
         $this->company_slug = $companyId->slug;
-        $this->provinces = Province::all();
+        $this->provinces = Province::whereHas('provinceCoverages')->get();
         $this->internetPackages = InternetPackage::all();
     }
 
@@ -204,10 +204,10 @@ class InternetCustomerForm extends Component
         return view('livewire.internet-customer.internet-customer-form', [
             'settingCompany' => SettingCompany::byCompany($this->company_id)->where('menu','bank')->orWhere('menu','profile')->get()->pluck('field_value','field_title'),
             'agreement' => new PartnershipAgreement(),
-            'provinces' => Province::all(),
-            'cities' => $this->province_id ? City::where('province_id', $this->province_id)->get() : [],
-            'districts' => $this->city_id ? District::where('city_id', $this->city_id)->get() : [],
-            'subdistricts' => $this->district_id ? Subdistrict::where('district_id', $this->district_id)->get() : [],
+            'provinces' => Province::whereHas('provinceCoverages')->get(),
+            'cities' => $this->province_id ? City::where('province_id', $this->province_id)->whereHas('cityCoverages')->get() : [],
+            'districts' => $this->city_id ? District::where('city_id', $this->city_id)->whereHas('districtCoverages')->get() : [],
+            'subdistricts' => $this->district_id ? Subdistrict::where('district_id', $this->district_id)->whereHas('subdistrictCoverages')->get() : [],
             'internetPackages' => InternetPackage::where('company_id',$this->company_id)->where('is_active', true)->get(),
         ])->extends('layouts.app_customer');
     }
@@ -271,12 +271,12 @@ class InternetCustomerForm extends Component
     {
         $this->validate([
             'name' => 'required|min:3',
-            'email' => 'required|email|unique:user_customers,email',
+            // 'email' => 'required|email|unique:user_customers,email',
             // 'password' => 'required|min:8|confirmed',
-            'phone_number' => 'required|string',
-            'address' => 'required|min:10',
-            'ktp_number' => 'required|digits:16',
-            'ktp_photo' => 'required|image|max:2048',
+            // 'phone_number' => 'required|string',
+            // 'address' => 'required|min:10',
+            // 'ktp_number' => 'required|digits:16',
+            // 'ktp_photo' => 'required|image|max:2048',
         ]);
         
         $this->step++;
@@ -321,7 +321,7 @@ class InternetCustomerForm extends Component
     {
         // dd($this->signature);
         // Simpan file KTP
-        $ktpPath = $this->ktp_photo->store('ktps', 'public');
+        $ktpPath = $this->ktp_photo ? $this->ktp_photo->store('ktps') : null;
         
         // Simpan bukti pembayaran jika ada
         $paymentProofPath = null;
@@ -331,8 +331,8 @@ class InternetCustomerForm extends Component
         
         DB::beginTransaction();
         try {
-            if (preg_match('/^data:image\/(\w+);base64,/', $this->signature, $type)) 
-                {
+            if ($ktpPath && (preg_match('/^data:image\/(\w+);base64,/', $this->signature, $type))) 
+            {
                 $imageType = $type[1]; // Dapatkan tipe gambar (png, jpeg, dll)
                 $data = substr($this->signature, strpos($this->signature, ',') + 1);
                 $data = base64_decode($data);
@@ -343,10 +343,11 @@ class InternetCustomerForm extends Component
                 }
                 
                 $signaturePath = 'signatures/' . uniqid() . '.' . $imageType;
-                Storage::disk('public')->put($signaturePath, $data);
-            } else {
-                throw new \Exception('Invalid image data URL');
-            }
+                Storage::put($signaturePath, $data);
+            } 
+            // else {
+            //     throw new \Exception('Invalid image data URL');
+            // }
             // Simpan data pelanggan
             $internetCustomer = InternetCustomer::create([
                 'company_id' => $this->company_id,
@@ -359,7 +360,7 @@ class InternetCustomerForm extends Component
                 'name' => $this->name,
                 'address' => $this->address,
                 'ktp_number' => $this->ktp_number,
-                'ktp_photo' => Storage::url($ktpPath),
+                'ktp_photo' => $ktpPath ? $ktpPath : null,
                 'is_paid' => false,
                 'status' => ParamSchema::WAITING_PAYMENT_CONFIRMATION,
             ]);
@@ -397,7 +398,7 @@ class InternetCustomerForm extends Component
                     'amount_paid' => $this->selectedPackage->price_nett,
                     'internet_customer_id' => $internetCustomer->id,
                     'payment_method' => $this->payment_method,
-                    'payment_proof' => $paymentProofPath ? Storage::url($paymentProofPath) : null,
+                    'payment_proof' => $paymentProofPath ? s3_asset(true,10,$paymentProofPath) : null,
                 ]);
 
                 $userFinance = User::whereHas('role.permissions', function ($q) 
@@ -436,7 +437,7 @@ class InternetCustomerForm extends Component
             $this->step = 5;
 
         } catch (\Throwable $th) {
-            //throw $th;
+            // throw $th;
             DB::rollBack();
             // dd($th);
             session()->flash('error', 'Terjadi kesalahan: Konfirmasikan ke Admin');

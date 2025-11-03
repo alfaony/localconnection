@@ -10,7 +10,7 @@ class SupplierCategoryController extends Controller
 {
     public function index()
     {
-        $categories = SupplierCategory::latest()->paginate(10);
+        $categories = SupplierCategory::byCompany(Auth::user()->company_id)->paginate(10);
         return view('supplier_category.index', compact('categories'));
     }
 

@@ -30,7 +30,7 @@
                 @if($dayoff->file)
                     <dt class="col-sm-3">Lampiran</dt>
                     <dd class="col-sm-9">
-                        <a href="{{ Storage::url($dayoff->file) }}" target="_blank">
+                        <a href="{{ s3_asset(true,10,$dayoff->file) }}" target="_blank">
                             Lihat File
                         </a>
                     </dd>

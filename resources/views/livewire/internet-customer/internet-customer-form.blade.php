@@ -1,22 +1,22 @@
 @section('title', $settingCompany['name'])
-<div class="py-5">
+<div class="mt-5 mb-5 gradient">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
-            @include('components.alert')
+        <div class="col-lg-8">
             <div class="card shadow">
                 <div class="card-body p-5">
                     <!-- Progress Bar -->
                     <div class="mb-5">
-                        <div class="d-flex justify-content-between mb-3">
+                        @include('components.alert')
+                        <div class="progress-steps">
                             @foreach(['Alamat', 'Data Pribadi', 'Pembayaran', 'Persetujuan', 'Konfirmasi'] as $index => $title)
-                                <div class="text-center {{ $step > $index + 1 ? 'text-success' : ($step == $index + 1 ? 'fw-bold text-primary' : 'text-muted') }}">
-                                    <small>Step {{ $index + 1 }}</small><br>
-                                    {{ $title }}
+                                <div class="step-item {{ $step === $index + 1 ? 'active' : ($step > $index + 1 ? 'completed' : '') }}">
+                                    <span class="step-number">Step {{ $index + 1 }}</span>
+                                    <span class="step-title">{{ $title }}</span>
                                 </div>
                             @endforeach
                         </div>
                         <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ ($step - 1) * 25 }}%" aria-valuenow="{{ ($step - 1) * 25 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar" role="progressbar" style="width: {{ ($step - 1) * 25 }}%" aria-valuenow="{{ ($step - 1) * 25 }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                     </div>
 
@@ -24,7 +24,7 @@
                     <div>
                         @if($step === 1)
                             <!-- STEP 1: ALAMAT & PAKET -->
-                            <h2 class="mb-4">Data Alamat & Paket</h2>
+                            <h3 class="section-title">Data Alamat & Paket</h3>
                             
                             <div class="row g-3">
                                 <!-- Province -->
@@ -92,9 +92,9 @@
                              <div class="mt-3">
                                 @if ($province_id && $city_id && $district_id && $subdistrict_id)
                                     @if ($isAvailableArea)
-                                        <span class="badge bg-success">Layanan tersedia</span>
+                                        <span class="alert-badge success">✓ Layanan tersedia di area Anda</span>
                                     @else
-                                        <span class="badge bg-danger">Layanan belum tersedia di area ini</span>
+                                        <span class="alert-badge danger">✗ Layanan belum tersedia di area ini</span>
                                     @endif
                                 @endif
                             </div>
@@ -114,7 +114,7 @@
                                     wire:click="nextStep"
                                     wire:loading.attr="disabled"
                                     wire:target="nextStep"
-                                    class="btn btn-primary px-4"
+                                    class="btn-primary-red"
                                 >
                                     <span wire:loading.remove wire:target="nextStep">
                                         Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
@@ -129,7 +129,7 @@
 
                         @if($step === 2)
                             <!-- STEP 2: DATA PRIBADI -->
-                            <h2 class="mb-4">Data Pribadi</h2>
+                            <h3 class="section-title">Data Pribadi</h3>
                             
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -196,7 +196,7 @@
                                             </div>
                                         </div>
                                         @error('ktp_photo') <small class="text-danger d-block mt-2">{{ $message }}</small> @enderror
-                                        <div wire:loading wire:target="ktp_photo" class="text-primary mt-2">
+                                        <div wire:loading wire:target="ktp_photo" class="alert-success mt-2">
                                             <i class="fas fa-spinner fa-spin me-1"></i> Sedang mengunggah file...
                                         </div>
                                     </div>
@@ -214,7 +214,7 @@
                                     wire:click="nextStep"
                                     wire:loading.attr="disabled"
                                     wire:target="nextStep"
-                                    class="btn btn-primary px-4"
+                                    class="btn-primary-red"
                                 >
                                     <span wire:loading.remove wire:target="nextStep">
                                         Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
@@ -230,10 +230,10 @@
                         @if($step === 3)
                             <!-- STEP 3: PEMBAYARAN -->
                             <div class="bg-white p-4 rounded-lg shadow-sm">
-                                <h2 class="mb-4 fw-bold text-primary border-bottom pb-3">Pembayaran</h2>
+                                <h3 class="section-title">Pembayaran</h3>
                                 
                                  @if($hasFreeMonthsPromo)
-                                    <div class="alert alert-success border-start-4 border-success d-flex align-items-center mb-4">
+                                    <div class="alert-badge success border-start-4 border-success d-flex align-items-center mb-4">
                                         <i class="fas fa-gift fa-2x me-3"></i>
                                         <div>
                                             <h4 class="alert-heading mb-1">Promo Free Months Aktif!</h4>
@@ -446,7 +446,7 @@
                                         </div>
                                     @endif
                                 @else
-                                    <div class="alert alert-info border-start-4 border-info d-flex align-items-center mb-4">
+                                    <div class="border-start-4 border-info d-flex align-items-center mb-4">
                                         <i class="fas fa-info-circle fa-2x me-3"></i>
                                         <div>
                                             <h4 class="alert-heading mb-1">Pembayaran Tidak Diperlukan Sekarang</h4>
@@ -467,7 +467,7 @@
                                         wire:click="nextStep"
                                         wire:loading.attr="disabled"
                                         wire:target="nextStep"
-                                        class="btn btn-primary px-4 py-2 fw-semibold"
+                                        class="btn-primary-red px-4 py-2 fw-semibold"
                                     >
                                         <span wire:loading.remove wire:target="nextStep">
                                             Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
@@ -483,7 +483,7 @@
 
                         @if($step === 4)
                             <!-- STEP 4: PERSETUJUAN & TANDA TANGAN (BARU) -->
-                            <h2 class="mb-4">Persetujuan dan Tanda Tangan</h2>
+                            <h3 class="section-title">Persetujuan dan Tanda Tangan</h3>
 
                             <div class="card mb-4">
                                 <div class="card-body">
@@ -596,7 +596,7 @@
                                     wire:click="nextStep"
                                     wire:loading.attr="disabled"
                                     wire:target="nextStep"
-                                    class="btn btn-primary px-4"
+                                    class="btn-primary-red px-4"
                                 >
                                     <span wire:loading.remove wire:target="nextStep">
                                         Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
@@ -635,7 +635,7 @@
                                 <!-- Tombol untuk menuju laman detail pelanggan -->
                                 <div class="mt-4">
                                     <a href="{{ route('internet-customer.customer.show', $code) }}" 
-                                    class="btn btn-primary">
+                                    class="btn-primary-red">
                                         Lihat Detail Pelanggan
                                     </a>
                                 </div>
@@ -667,72 +667,6 @@
     </div>
 </div>
 @endif
-
-@push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <style>
-         .select2-container--default .select2-selection--single,
-        .select2-container--default .select2-selection--multiple {
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            min-height: 38px;
-            padding: 6px 12px;
-        }
-        
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 36px;
-        }
-        
-        .select2-container--default .select2-selection--multiple .select2-selection__choice {
-            background-color: #007bff;
-            border-color: #006fe6;
-            color: white;
-            padding: 0 8px;
-        }
-        
-        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-            color: rgba(255,255,255,0.7);
-            margin-right: 5px;
-        }
-        
-        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
-            color: white;
-        }
-        
-        .select2-container--default.select2-container--focus .select2-selection--multiple {
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-        }
-    </style>
-    <style>
-        .form-check.card {
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .form-check.card:hover {
-            border-color: #0d6efd;
-        }
-        .form-check-input:checked + .form-check-label {
-            color: #0d6efd;
-        }
-        .terms-content h4 {
-            font-weight: 600;
-            color: #333;
-        }
-    </style>
-    <style>
-        #signature-canvas-container, #signature-preview-container {
-            transition: all 0.3s ease;
-        }
-
-        #signature-preview-container {
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 20px;
-            background-color: #f8f9fa;
-        }
-    </style>
-@endpush
 
 @push('scripts')
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -947,4 +881,762 @@
             });
         });
     </script>
+@endpush
+
+@push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .main-content { background: radial-gradient(circle at center, rgba(219, 39, 41, 0.6) 0%, rgba(219, 39, 41, 0) 80%);}
+        /* Optimasi untuk touch devices */
+        * {
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+            -webkit-touch-callout: none;
+        }
+
+        /* Clean white background untuk content */
+        .registration-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            margin: 0 auto;
+            max-width: 1000px;
+        }
+
+        /* Progress Steps - minimal dan clean */
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 35px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .step-item {
+            flex: 1 1 auto;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            min-width: 80px;
+            white-space: nowrap;
+        }
+
+        .step-item.active {
+            color: #DB2328;
+            font-weight: 600;
+        }
+
+        .step-item.completed {
+            color: #666;
+        }
+
+        .step-number {
+            font-size: 11px;
+            display: block;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .step-title {
+            font-size: 13px;
+        }
+
+        /* Section Title */
+        .section-title {
+            /* font-size: 20px; */
+            font-weight: 400;
+            /* margin-bottom: 25px; */
+            /* color: #2c3e50; */
+        }
+
+        /* Form Elements - minimal clean style */
+        .form-label {
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px 14px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #DB2328;
+            box-shadow: 0 0 0 2px rgba(219, 35, 40, 0.1);
+            outline: none;
+        }
+
+        /* Buttons - hanya tombol utama yang merah */
+        .btn-primary-red {
+            background-color: #DB2328;
+            border: none;
+            color: white;
+            padding: 10px 35px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary-red:hover {
+            background-color: #c01f24;
+            color: white;
+        }
+
+        .btn-secondary-gray {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #666;
+            padding: 10px 30px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary-gray:hover {
+            background-color: #e8e8e8;
+            border-color: #ccc;
+            color: #333;
+        }
+
+        /* Alert Badges */
+        .alert-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .alert-badge.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .alert-badge.danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .text-success
+        {
+            color: #155724;
+        }
+
+        .text-primary
+        {
+            color: #721c24;
+        }
+
+        /* Payment Method Cards */
+        .payment-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .payment-card:hover {
+            border-color: #DB2328;
+            box-shadow: 0 2px 8px rgba(219, 35, 40, 0.15);
+        }
+
+        .payment-card.selected {
+            border-color: #DB2328;
+            background-color: #fff5f5;
+        }
+
+        .payment-card .form-check-input {
+            cursor: pointer;
+        }
+
+        /* Confirmation Cards */
+        .confirm-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .confirm-section h5 {
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #DB2328;
+            display: inline-block;
+        }
+
+        .confirm-section table {
+            font-size: 14px;
+        }
+
+        .confirm-section table td {
+            padding: 6px 0;
+        }
+
+        /* Signature Pad */
+        .signature-wrapper {
+            border: 2px dashed #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            background: #fafafa;
+            margin-top: 10px;
+        }
+
+        #signature-canvas {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: crosshair;
+            display: block;
+            width: 100%;
+        }
+
+        .signature-preview {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+
+        /* Agreement Text */
+        .agreement-box {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 20px;
+            background: #fafafa;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Select2 Styling */
+        .select2-container--default .select2-selection--single {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            height: 42px;
+            padding: 6px 12px;
+        }
+
+        /* === 1. Warna teks hasil pilihan (tampil di input Select2) === */
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #DB2328 !important;          /* teks merah */
+            font-weight: 500;
+        }
+
+        /* === 2. Warna item yang sedang dipilih di dropdown list === */
+        .select2-container--default .select2-results__option[aria-selected="true"] {
+            background-color: #fff5f5 !important; /* merah muda lembut */
+            color: #DB2328 !important;            /* teks merah */
+            font-weight: 600;
+        }
+
+        /* === 3. Warna item yang sedang di-hover atau difokuskan === */
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #DB2328 !important;
+            color: #fff !important;
+        }
+
+        /* === 4. Hilangkan warna biru bawaan di border dan caret === */
+        .select2-container--default .select2-selection--single:focus,
+        .select2-container--default.select2-container--focus .select2-selection--single,
+        .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: #DB2328 !important;
+            box-shadow: 0 0 0 2px rgba(219, 35, 40, 0.15) !important;
+            outline: none !important;
+        }
+
+        /* === 5. Warna caret (panah kecil di kanan) === */
+        .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-color: #DB2328 transparent transparent transparent !important;
+        }
+
+        /* === 6. Warna background Select2 saat sudah dipilih === */
+        .select2-container--default .select2-selection--single {
+            background-color: #fff !important;
+            border: 1px solid #DB2328 !important;
+            border-radius: 4px;
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* === 7. Hover state biar tetap konsisten === */
+        .select2-container--default .select2-selection--single:hover {
+            border-color: #c01f24 !important;
+        }
+        
+
+        
+
+        /* Info Alert */
+        .info-alert {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 14px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .info-alert i {
+            color: #856404;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            /* Card padding lebih kecil di mobile */
+            .registration-card {
+                padding: 20px 15px;
+                margin: 10px;
+            }
+
+            /* Progress steps - compact untuk mobile */
+            .progress-steps {
+                flex-wrap: nowrap;
+                gap: 5px;
+                margin-bottom: 25px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; /* Firefox */
+                -ms-overflow-style: none; /* IE/Edge */
+            }
+
+            .progress-steps::-webkit-scrollbar {
+                display: none; /* Chrome/Safari */
+            }
+
+            .step-item {
+                flex: 0 0 auto;
+                min-width: 70px;
+                font-size: 10px;
+                padding: 0 5px;
+            }
+
+            .step-number {
+                font-size: 9px;
+                margin-bottom: 3px;
+            }
+
+            .step-title {
+                font-size: 10px;
+                line-height: 1.2;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: normal;
+                max-width: 70px;
+                margin: 0 auto;
+            }
+
+            /* Sembunyikan beberapa step title, hanya tampilkan yang aktif dan terdekat */
+            .step-item:not(.active):not(.completed) .step-title {
+                display: none;
+            }
+
+            /* Title lebih kecil */
+            .section-title {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            /* Form elements lebih compact */
+            .form-label {
+                font-size: 13px;
+                margin-bottom: 5px;
+            }
+
+            .form-control,
+            .form-select {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+
+            /* Buttons full width atau stack */
+            .btn-primary-red,
+            .btn-secondary-gray {
+                font-size: 14px;
+                padding: 10px 25px;
+                width: 100%;
+            }
+
+            /* Button group responsive */
+            .d-flex.justify-content-between {
+                flex-direction: column-reverse;
+                gap: 10px;
+            }
+
+            .d-flex.justify-content-between .btn-primary-red,
+            .d-flex.justify-content-between .btn-secondary-gray {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .d-flex.justify-content-end {
+                justify-content: stretch !important;
+            }
+
+            .d-flex.justify-content-end .btn-primary-red {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Payment cards full width */
+            .payment-card {
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+
+            .payment-card .form-check-label {
+                font-size: 13px;
+            }
+
+            .payment-card img {
+                max-width: 60px !important;
+            }
+
+            /* Confirmation tables - stack vertically */
+            .confirm-section {
+                padding: 15px;
+                margin-bottom: 12px;
+            }
+
+            .confirm-section h5 {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+
+            .confirm-section table {
+                font-size: 12px;
+            }
+
+            .confirm-section table td {
+                display: block;
+                padding: 3px 0 !important;
+                width: 100% !important;
+            }
+
+            .confirm-section table td:first-child {
+                font-weight: 600;
+                padding-bottom: 2px !important;
+                border-bottom: none;
+            }
+
+            .confirm-section table td:last-child {
+                padding-bottom: 10px !important;
+                color: #666;
+            }
+
+            .confirm-section table tr {
+                display: block;
+                margin-bottom: 10px;
+                border-bottom: 1px solid #f0f0f0;
+                padding-bottom: 5px;
+            }
+
+            /* Alert badges */
+            .alert-badge {
+                font-size: 12px;
+                padding: 6px 12px;
+                display: block;
+                text-align: center;
+                margin-top: 8px;
+            }
+
+            /* Agreement box */
+            .agreement-box {
+                max-height: 250px;
+                padding: 15px;
+                font-size: 13px;
+                line-height: 1.5;
+            }
+
+            /* Signature canvas */
+            #signature-canvas {
+                height: 150px !important;
+            }
+
+            .signature-wrapper {
+                padding: 12px;
+            }
+
+            .signature-wrapper .d-flex {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .signature-wrapper .btn-primary-red,
+            .signature-wrapper .btn-secondary-gray {
+                width: 100%;
+            }
+
+            /* Info alert */
+            .info-alert {
+                padding: 12px;
+                font-size: 12px;
+            }
+
+            /* Row spacing */
+            .row.g-3 {
+                row-gap: 15px !important;
+            }
+
+            /* Checkbox styling */
+            .form-check {
+                margin-bottom: 15px;
+            }
+
+            .form-check-input {
+                margin-top: 0.15em;
+            }
+
+            .form-check-label {
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
+            /* File input styling */
+            input[type="file"] {
+                font-size: 13px;
+                padding: 8px 10px;
+            }
+
+            /* Textarea */
+            textarea.form-control {
+                min-height: 80px;
+            }
+        }
+
+        /* Extra small devices (phones in portrait, less than 576px) */
+        @media (max-width: 576px) {
+            .registration-card {
+                padding: 15px 10px;
+                border-radius: 8px;
+            }
+
+            .section-title {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+
+            .progress-steps {
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+            }
+
+            .step-item {
+                min-width: 60px;
+            }
+
+            .step-title {
+                max-width: 60px;
+            }
+
+            /* Form elements */
+            .form-control,
+            .form-select {
+                font-size: 14px;
+                padding: 9px 10px;
+            }
+
+            .form-label {
+                font-size: 12px;
+            }
+
+            /* Buttons */
+            .btn-primary-red,
+            .btn-secondary-gray {
+                font-size: 13px;
+                padding: 9px 20px;
+            }
+
+            /* Make all payment cards full width */
+            .col-md-6 {
+                padding-left: 0;
+                padding-right: 0;
+            }
+
+            /* Adjust select2 dropdown for small screens */
+            .select2-container--default .select2-selection--single {
+                height: 40px;
+                padding: 5px 10px;
+            }
+
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                font-size: 13px;
+                line-height: 28px;
+            }
+
+            /* Confirmation section more compact */
+            .confirm-section {
+                padding: 12px;
+            }
+
+            .confirm-section h5 {
+                font-size: 13px;
+            }
+
+            .confirm-section table {
+                font-size: 11px;
+            }
+        }
+
+        /* Landscape mode optimization */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .registration-card {
+                padding: 15px;
+            }
+
+            .section-title {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+
+            .progress-steps {
+                margin-bottom: 20px;
+            }
+
+            #signature-canvas {
+                height: 120px !important;
+            }
+
+            .agreement-box {
+                max-height: 180px;
+            }
+        }
+
+        .progress-bar {
+            background: #DB2328;
+        }
+
+        .select2-container--default .select2-selection--single {
+            border-color: #DB2328;
+        }
+
+            .select2-results__option,
+            .select2-results__option--selectable,
+            .select2-results__option--selected,
+            .select2-results__option--highlighted {
+                padding: 6px 12px;
+            }
+
+            .select2-results__option--selectable:hover,
+            .select2-results__option--highlighted {
+                background-color: #DB2328 !important;
+                color: white;
+            }
+
+            .select2-results__option--selected {
+                background-color: #e9ecef !important;
+                font-weight: bold;
+            }
+            .select2-search--dropdown .select2-search__field {
+                border-color: #ced4da;
+            }
+            .alert-badge 
+            {
+                display: inline-block;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-size: 13px;
+                font-weight: 500;
+                margin-top: 10px;
+            }
+
+            .alert-badge.success {
+                background-color: #d4edda;
+                color: #155724;
+            }
+
+            .alert-badge.danger {
+                background-color: #f8d7da;
+                color: #721c24;
+            }
+
+            /* === 1. Hilangkan outline biru global di semua elemen === */
+            *:focus {
+                outline: none !important;
+                box-shadow: none !important;
+            }
+
+            /* === 2. Ganti efek fokus semua input, select, textarea, button jadi merah === */
+            input:focus,
+            textarea:focus,
+            select:focus,
+            button:focus {
+                border-color: #DB2328 !important;
+                box-shadow: 0 0 0 2px rgba(219, 35, 40, 0.15) !important;
+                outline: none !important;
+                transition: all 0.2s ease-in-out;
+            }
+
+            /* === 3. Untuk elemen dengan role focusable (div editable, select2, dsb) === */
+            [tabindex]:focus,
+            div[contenteditable="true"]:focus {
+                border-color: #DB2328 !important;
+                box-shadow: 0 0 0 2px rgba(219, 35, 40, 0.15) !important;
+            }
+
+            /* === 4. Tambahan khusus Select2 biar tetap nyatu sama gaya global === */
+            .select2-container--default .select2-selection--single:focus,
+            .select2-container--default.select2-container--focus .select2-selection--single,
+            .select2-container--default.select2-container--open .select2-selection--single {
+                border-color: #DB2328 !important;
+                box-shadow: 0 0 0 2px rgba(219, 35, 40, 0.15) !important;
+                outline: none !important;
+            }
+
+            /* === 5. Hover state opsional biar smooth === */
+            input:hover,
+            textarea:hover,
+            select:hover,
+            button:hover,
+            .select2-container--default .select2-selection--single:hover {
+                border-color: #DB2328 !important;
+            }
+
+            /* === 6. Untuk button agar glow-nya juga merah saat fokus === */
+            button:focus-visible {
+                box-shadow: 0 0 0 3px rgba(219, 35, 40, 0.25) !important;
+            }
+
+            /* === 7. Khusus div wrapper yang dapat fokus (misal card aktif) === */
+            div:focus {
+                outline: none !important;
+                border-color: #DB2328 !important;
+                box-shadow: 0 0 0 2px rgba(219, 35, 40, 0.15) !important;
+            }
+    </style>
+    <style>
+        #signature-canvas-container, #signature-preview-container {
+            transition: all 0.3s ease;
+        }
+
+        #signature-preview-container {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        
+    </style>
 @endpush

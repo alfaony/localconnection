@@ -38,7 +38,7 @@
             <dt class="col-sm-3">Dokumen</dt>
             <dd class="col-sm-9">
                 @if($letter->document_path)
-                    <a href="{{ asset('storage/' . $letter->document_path) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                    <a href="{{ s3_asset(true,10, $letter->document_path) }}" target="_blank" class="btn btn-outline-secondary btn-sm">
                         📄 Lihat Dokumen
                     </a>
                 @else

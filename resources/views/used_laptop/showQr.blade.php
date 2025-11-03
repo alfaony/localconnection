@@ -73,8 +73,11 @@
                 <!-- Kolom Kiri: Detail Utama -->
                 <div class="col-md-8">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h3 class="text-primary">{{ $laptop->name }}</h3>
-                        <p class="text-muted">Serial Number: {{ $laptop->serial_number }}</p>           
+                    <div class="mr-auto">
+                        <h3 class="text-primary mb-0">{{ $laptop->name }}</h3>
+                        <p class="text-secondary mt-0 mb-0"><strong>Serial Number:</strong> {{ $laptop->serial_number }}</p>
+                        <p class="text-secondary mt-0 mb-0"><strong>Brand:</strong> {{ $laptop->brand }}</p>
+                    </div>          
                         <div>
                             <span class="badge {{ $laptop->is_sold ? 'badge-success' : 'badge-secondary' }} p-2">
                                 {{ $laptop->is_sold ? 'Terjual' : 'Belum Terjual' }}
@@ -248,17 +251,33 @@
 
                     <!-- Harga Jual Disarankan -->
                     <div class="mt-5">
-                        <div class="alert bg-light border">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h5 class="text-primary mb-1">Harga Jual Disarankan</h5>
-                                </div>
-                                <div class="h5 text-success font-weight-bold">
-                                    Rp {{ number_format($laptop->suggested_selling_price,0,',','.') }}
-                                </div>
+                    <div class="alert bg-light border">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="text-primary mb-1">Harga Jual Disarankan (RAW)</h5>
+                            </div>
+                            <div class="h5 text-success font-weight-bold">
+                                Rp {{ number_format($laptop->suggested_selling_price) }}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="text-primary mb-1">Harga Jual Jakarta</h5>
+                            </div>
+                            <div class="h5 text-success font-weight-bold">
+                                Rp {{ number_format($laptop->jakarta_price) }}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="text-primary mb-1">Harga Jual Jambi</h5>
+                            </div>
+                            <div class="h5 text-success font-weight-bold">
+                                Rp {{ number_format($laptop->jambi_price) }}
                             </div>
                         </div>
                     </div>
+                </div>
                     @endcanAccess
                     @endauth
                 </div>
@@ -274,8 +293,8 @@
                             <div class="row">
                                 @foreach($laptop->media as $media)
                                 <div class="col-md-6 mb-3">
-                                    <a href="{{ Storage::url($media->file_path) }}" target="_blank">
-                                        <img src="{{ Storage::url($media->file_path) }}" class="img-fluid img-thumbnail">
+                                    <a href="{{ s3_asset(true,10,$media->file_path) }}" target="_blank">
+                                        <img src="{{ s3_asset(true,10,$media->file_path) }}" class="img-fluid img-thumbnail">
                                     </a>
                                 </div>
                                 @endforeach
@@ -298,7 +317,10 @@
                                 <p class="text-muted small mb-0">
                                     Scan untuk melihat detail laptop di perangkat mobile
                                 </p>
-                                <a href="{{ Storage::url($laptop->qr_code_path) }}" download class="btn btn-sm btn-outline-primary mt-2">
+                                <!-- <a href="{{ s3_asset(true,10,$laptop->qr_code_path) }}" download class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="fas fa-download mr-1"></i> Download QR Code
+                                </a> -->
+                                <a href="javascript:void(0);" class="btn btn-outline-primary btn-block btn-download-qrcode">
                                     <i class="fas fa-download mr-1"></i> Download QR Code
                                 </a>
                             </div>
@@ -363,6 +385,22 @@
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });
+    });
+
+    document.querySelector('.btn-download-qrcode').addEventListener('click', function () {
+        const qrCanvas = document.querySelector('#qrcode canvas');
+        if (!qrCanvas) {
+            alert('QR Code belum tersedia.');
+            return;
+        }
+
+        const imageData = qrCanvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.href = imageData;
+        downloadLink.download = "qr-code-{{ $laptop->slug }}.png";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
     });
 </script>
 </body>

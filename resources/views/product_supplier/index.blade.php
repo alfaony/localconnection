@@ -52,7 +52,7 @@
                 <thead class="table-light">
                     <tr>
                         <th class="py-3">Pemilik</th>
-                        <th class="py-3">Nama Toko</th>
+                        <th class="py-3">Nama</th>
                         <th class="py-3">Telepon</th>
                         <th class="py-3">Kategori</th>
                         <th class="py-3 text-end">Tindakan</th>
@@ -64,7 +64,7 @@
                             <td class="align-middle">
                                 {{ $supplier->owner_name }}
                             </td>
-                            <td class="align-middle">{{ $supplier->store_name }}</td>
+                            <td class="align-middle">{{ $supplier->store_name }} {{ $supplier->supplierType ? '('.$supplier->supplierType->name.')' : '' }}</td>
                             <td class="align-middle">
                                 {{ $supplier->phone_number }}
                             </td>

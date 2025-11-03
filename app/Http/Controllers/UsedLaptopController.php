@@ -7,12 +7,18 @@ use App\Models\MasterCheckItem;
 use App\Models\UsedLaptopMedia;
 use App\Models\UsedLaptopCheck;
 use App\Models\UsedLaptopRepair;
+use App\Models\WebhookSetting;
 
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
+use App\Http\Resources\UsedLaptopResource;
+
+use App\Helpers\WebhookHelper;
+use App\Helpers\Access;
 
 class UsedLaptopController extends Controller
 {
@@ -21,6 +27,8 @@ class UsedLaptopController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    protected $appName = 'used_laptops';
+
     public function index()
     {
         return view('used_laptop.index');
@@ -34,7 +42,8 @@ class UsedLaptopController extends Controller
     public function create()
     {
         $checkItems = MasterCheckItem::where('type', 'laptop_type')->byCompany(Auth::user()->company_id)->get();
-        return view('used_laptop.createOrEdit', compact('checkItems'));
+        $laptopType = config('custom.postion_latpop');
+        return view('used_laptop.createOrEdit', compact('checkItems', 'laptopType'));
     }
 
     /**
@@ -45,12 +54,31 @@ class UsedLaptopController extends Controller
      */
     public function store(Request $request)
     {
+
         DB::beginTransaction();
         try {
             // Validasi data utama laptop
             $validated = $request->validate([
+                'warehouse_id' => 'nullable|exists:warehouses,id',
+                'zone_id' => 'required_with:warehouse_id|nullable|exists:zones,id',
+                'rack_id' => 'required_with:warehouse_id|nullable|exists:racks,id',
+                'weight' => 'nullable|numeric|min:0',
                 'name' => 'required|string|max:255',
-                'serial_number' => 'required|string|max:255',
+                'brand' => 'required|string|max:255',
+                'serial_number' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    function ($attribute, $value, $fail) {
+                        $exists = UsedLaptop::where('serial_number', $value)
+                            ->byCompany(Auth::user()->company_id)
+                            ->exists();
+                        
+                        if ($exists) {
+                            $fail('Serial number sudah terdaftar di sistem.');
+                        }
+                    }
+                ],
                 'processor' => 'required|string|max:255',
                 'ram' => 'required|string|max:255',
                 'ssd' => 'required|string|max:255',
@@ -62,11 +90,16 @@ class UsedLaptopController extends Controller
                 'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
                 'check_items' => 'nullable|array',
                 'repairs' => 'nullable|array',
+                'is_sold' => 'nullable|string',
             ]);
 
             // Simpan data laptop
             $laptop = new UsedLaptop();
+            $laptop->weight = $validated['weight'] ?? null;
+            $laptop->rack_id = $validated['rack_id'] ?? null;
+            $laptop->is_sold = $validated['is_sold'] ?? null;
             $laptop->company_id = Auth::user()->company_id;
+            $laptop->brand = $validated['brand'];
             $laptop->user_id = Auth::user()->id;
             $laptop->name = $validated['name'];
             $laptop->serial_number = $validated['serial_number'];
@@ -94,13 +127,44 @@ class UsedLaptopController extends Controller
             ]);
             
             // Simpan foto
-            if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $photo) {
-                    $path = $photo->store('used-laptop', 'public');
-                    UsedLaptopMedia::create([
-                        'used_laptop_id' => $laptop->id,
-                        'file_path' => $path,
-                    ]);
+             if ($request->hasFile('photos')) 
+            {
+                $photos = $request->file('photos');
+                $photoOrder = [];
+                
+                // ✅ Baca urutan dari hidden input
+                if ($request->has('new_photo_order') && !empty($request->new_photo_order)) {
+                    $photoOrder = json_decode($request->new_photo_order, true);
+                    
+                    \Log::info('Using custom order:', ['order' => $photoOrder]);
+                    
+                    if (!is_array($photoOrder)) {
+                        $photoOrder = array_keys($photos);
+                        \Log::warning('Invalid order format, using default');
+                    }
+                } else {
+                    $photoOrder = array_keys($photos);
+                    \Log::info('Using default order:', ['order' => $photoOrder]);
+                }
+                
+                // ✅ Simpan foto sesuai urutan
+                foreach ($photoOrder as $displayOrder => $originalIndex) {
+                    if (isset($photos[$originalIndex])) {
+                        $photo = $photos[$originalIndex];
+                        $path = $photo->store('used-laptop');
+                        
+                        UsedLaptopMedia::create([
+                            'used_laptop_id' => $laptop->id,
+                            'file_path' => $path,
+                            'order' => $displayOrder,
+                        ]);
+                        
+                        \Log::info('Photo saved:', [
+                            'original_index' => $originalIndex,
+                            'display_order' => $displayOrder,
+                            'path' => $path
+                        ]);
+                    }
                 }
             }
             
@@ -126,6 +190,30 @@ class UsedLaptopController extends Controller
                     ]);
                 }
             }
+
+            // $payload = [
+            //     'id' => $laptop->id,
+            //     'is_sold' => $laptop->is_sold,
+            //     'serial_number' => $laptop->serial_number,
+            //     'brand' => $laptop->brand,
+            //     'slug' => $laptop->slug,
+            //     'name' => $laptop->name,
+            //     'processor' => $laptop->processor,
+            //     'ram' => $laptop->ram,
+            //     'ssd' => $laptop->ssd,
+            //     'gpu' => $laptop->gpu,
+            //     'operating_system' => $laptop->operating_system,
+            //     'notes' => $laptop->notes,
+            //     'buying_price' => $laptop->purchase_price,
+            //     'selling_price' => $laptop->suggested_selling_price,
+            //     'images' => $laptop->media()->get()->map(function ($media) {
+            //         return env('APP_URL') . s3_asset(true,10,$media->file_path);
+            //     })->toArray(),
+            // ];
+
+            $payload = (new UsedLaptopResource($laptop))->resolve();
+
+            WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'store', $payload);                               
             
             DB::commit();
             
@@ -146,13 +234,21 @@ class UsedLaptopController extends Controller
      */
     public function show($slug)
     {
-        $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
+        $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)
+        ->with(['media' => function($query) {
+            $query->orderBy('order', 'asc');
+        }])
+        ->firstOrFail();
         return view('used_laptop.show', compact('laptop'));
     }
 
     public function showQr($slug)
     {
-        $laptop = UsedLaptop::where('slug', $slug)->firstOrFail();
+        $laptop = UsedLaptop::where('slug', $slug)
+        ->with(['media' => function($query) {
+            $query->orderBy('order', 'asc');
+        }])
+        ->firstOrFail();
         return view('used_laptop.showQr', compact('laptop'));
     }
 
@@ -165,8 +261,9 @@ class UsedLaptopController extends Controller
     public function edit($slug)
     {
         $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
+        $laptopType = config('custom.postion_latpop');
         $checkItems = MasterCheckItem::where('type','laptop_type')->byCompany(Auth::user()->company_id)->get();
-        return view('used_laptop.createOrEdit', compact('checkItems', 'laptop'));
+        return view('used_laptop.createOrEdit', compact('checkItems', 'laptop','laptopType'));
 
     }
 
@@ -180,18 +277,6 @@ class UsedLaptopController extends Controller
      public function update(Request $request, $slug)
     {
         $laptop = UsedLaptop::where('slug', $slug)->byCompany(Auth::user()->company_id)->firstOrFail();
-        // $url = route('used-laptop.show-qr', $laptop->slug);
-
-        // $qrPng = QrCode::format('png')->size(300)->generate($url);
-
-        // // Simpan ke disk
-        // $filename = 'qr_laptop_' . $laptop->slug.'_'.$laptop->serial_number.'.png';
-        // Storage::put('public/qrcodes/' . $filename, $qrPng);
-
-        // // Simpan path untuk view
-        // $laptop->update([
-        //     'qr_code_path' => 'qrcodes/' . $filename,
-        // ]);
 
         if(!$laptop) 
         {
@@ -211,6 +296,29 @@ class UsedLaptopController extends Controller
                 'sold_at' => $request->sold_at,
             ]);
             
+            // $payload = [
+            //     'id' => $laptop->id,
+            //     'is_sold' => $laptop->is_sold,
+            //     'serial_number' => $laptop->serial_number,
+            //     'brand' => $laptop->brand,
+            //     'slug' => $laptop->slug,
+            //     'name' => $laptop->name,
+            //     'processor' => $laptop->processor,
+            //     'ram' => $laptop->ram,
+            //     'ssd' => $laptop->ssd,
+            //     'gpu' => $laptop->gpu,
+            //     'operating_system' => $laptop->operating_system,
+            //     'notes' => $laptop->notes,
+            //     'buying_price' => $laptop->purchase_price,
+            //     'selling_price' => $laptop->suggested_selling_price,
+            //     'images' => $laptop->media()->get()->map(function ($media) {
+            //         return env('APP_URL') . s3_asset(true,10,$media->file_path);
+            //     })->toArray(),
+            // ];
+            $payload = (new UsedLaptopResource($laptop))->resolve();
+
+            WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'sold', $payload);    
+
             DB::commit();
             return redirect()->route('used-laptop.show', $laptop->slug)->with('success', 'Laptop berhasil ditandai sebagai terjual!');
         } catch (\Exception $e) {
@@ -234,8 +342,29 @@ class UsedLaptopController extends Controller
         try {
             // Validasi data utama laptop
             $validated = $request->validate([
+                'warehouse_id' => 'nullable|exists:warehouses,id',
+                'zone_id' => 'required_with:warehouse_id|nullable|exists:zones,id',
+                'rack_id' => 'required_with:warehouse_id|nullable|exists:racks,id',
+                'weight' => 'nullable|numeric|min:0',
                 'name' => 'required|string|max:255',
-                'serial_number' => 'required|string|max:255',
+                'brand' => 'required|string|max:255',
+                'serial_number' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    function ($attribute, $value, $fail) use ($laptop) {
+                        $query = UsedLaptop::where('serial_number', $value)->byCompany(Auth::user()->company_id);
+                        
+                        // Exclude current laptop when editing
+                        if ($laptop) {
+                            $query->where('id', '!=', $laptop->id);
+                        }
+                        
+                        if ($query->exists()) {
+                            $fail('Serial number sudah terdaftar di sistem.');
+                        }
+                    }
+                ],
                 'processor' => 'required|string|max:255',
                 'ram' => 'required|string|max:255',
                 'ssd' => 'required|string|max:255',
@@ -247,13 +376,17 @@ class UsedLaptopController extends Controller
                 'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240',
                 'check_items' => 'required|array|min:1',
                 'repairs' => 'nullable|array',
+                'is_sold' => 'nullable|string',
             ]);
-            
+
             // Simpan atau update data laptop
             if ($laptop) {
                 $laptop->update([
+                    'is_sold' => $validated['is_sold'],
+                    'weight' => $validated['weight'] ?? null,
                     'serial_number' => $validated['serial_number'],
                     'name' => $validated['name'],
+                    'brand' => $validated['brand'],
                     'processor' => $validated['processor'],
                     'ram' => $validated['ram'],
                     'ssd' => $validated['ssd'],
@@ -262,9 +395,16 @@ class UsedLaptopController extends Controller
                     'purchase_price' => $validated['purchase_price'],
                     'notes' => $validated['notes'] ?? null,
                 ]);
+                if(Access::can('getLocation','warehouses'))
+                {
+                    $laptop->rack_id = $validated['rack_id'] ?? null;
+                    $laptop->save();
+                }
             } else {
                 $laptop = UsedLaptop::create([
+                    'weight' => $validated['weight'] ?? null,
                     'name' => $validated['name'],
+                    'brand' => $validated['brand'],
                     'processor' => $validated['processor'],
                     'ram' => $validated['ram'],
                     'ssd' => $validated['ssd'],
@@ -277,30 +417,80 @@ class UsedLaptopController extends Controller
             }
             
             // Simpan foto baru
-            if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $photo) {
-                    $path = $photo->store('used-laptops', 'public');
-                    UsedLaptopMedia::create([
-                        'used_laptop_id' => $laptop->id,
-                        'file_path' => $path,
-                    ]);
+            // ✅ UPDATE ORDER FOTO EXISTING (PENTING!)
+        if ($request->has('photo_order') && !empty($request->photo_order)) {
+            $photoOrder = json_decode($request->photo_order, true);
+            if (is_array($photoOrder)) {
+                foreach ($photoOrder as $item) {
+                    UsedLaptopMedia::where('id', $item['id'])
+                        ->update(['order' => $item['order']]);
                 }
             }
-            
-            // Update checklist
-            foreach ($request->input('check_items') as $checkItemId => $checkData) {
-                $check = UsedLaptopCheck::updateOrCreate(
-                    [
-                        'used_laptop_id' => $laptop->id,
-                        'master_check_item_id' => $checkItemId,
-                    ],
-                    [
-                        'status' => $checkData['condition'],
-                        'notes' => $checkData['notes'] ?? null,
-                        'checked_at' => now(),
-                    ]
-                );
+        }
+        
+        // ✅ SIMPAN FOTO BARU DENGAN ORDER
+        if ($request->hasFile('photos')) {
+            $photos = $request->file('photos');
+            $orderedPhotos = [];
+
+            // Gunakan urutan hasil drag & drop jika tersedia
+            if ($request->filled('new_photo_order')) {
+                $orderMapping = json_decode($request->new_photo_order, true);
+
+                if (is_array($orderMapping)) {
+                    foreach ($orderMapping as $originalIndex) {
+                        if (isset($photos[$originalIndex])) {
+                            $orderedPhotos[] = $photos[$originalIndex];
+                        }
+                    }
+
+                    // Tambahkan foto yang tidak ada di mapping (fallback)
+                    foreach ($photos as $index => $photo) {
+                        if (!in_array($index, $orderMapping, true)) {
+                            $orderedPhotos[] = $photo;
+                        }
+                    }
+                }
             }
+
+            if (empty($orderedPhotos)) {
+                $orderedPhotos = $photos;
+            }
+
+            $currentMaxOrder = $laptop->media()->max('order') ?? -1;
+
+            foreach ($orderedPhotos as $offset => $photo) {
+                $path = $photo->store('used-laptop');
+                UsedLaptopMedia::create([
+                    'used_laptop_id' => $laptop->id,
+                    'file_path' => $path,
+                    'order' => $currentMaxOrder + $offset + 1,
+                ]);
+            }
+        }
+        
+        // ✅ UPDATE CHECKLIST (DENGAN PENGECEKAN NULL)
+        $checkItems = $request->input('check_items', []); // Default empty array jika null
+        
+        if (!empty($checkItems) && is_array($checkItems)) {
+            foreach ($checkItems as $checkItemId => $checkData) {
+                // Hanya proses jika ada data condition
+                if (isset($checkData['condition']) && !empty($checkData['condition'])) {
+                    UsedLaptopCheck::updateOrCreate(
+                        [
+                            'used_laptop_id' => $laptop->id,
+                            'master_check_item_id' => $checkItemId,
+                        ],
+                        [
+                            'status' => $checkData['condition'],
+                            'notes' => $checkData['notes'] ?? null,
+                            'checked_at' => now(),
+                        ]
+                    );
+                }
+            }
+        }
+
             
             // Hapus kerusakan yang tidak ada
             $existingRepairIds = $laptop->repairs->pluck('id')->toArray();
@@ -329,6 +519,42 @@ class UsedLaptopController extends Controller
                 UsedLaptopRepair::destroy($repairsToDelete);
             }
             
+            $shouldRun = WebhookSetting::byCompany(Auth::user()->company_id)
+            ->hasApp($this->appName)
+            ->exists();
+
+             $setting = WebhookSetting::byCompany(Auth::user()->company_id)
+            ->hasApp($this->appName)
+            ->first();
+
+
+            if($shouldRun)
+            {
+                // $payload = [
+                //     'id' => $laptop->id,
+                //     'is_sold' => $laptop->is_sold,
+                //     'serial_number' => $laptop->serial_number,
+                //     'brand' => $laptop->brand,
+                //     'slug' => $laptop->slug,
+                //     'name' => $laptop->name,
+                //     'processor' => $laptop->processor,
+                //     'ram' => $laptop->ram,
+                //     'ssd' => $laptop->ssd,
+                //     'gpu' => $laptop->gpu,
+                //     'operating_system' => $laptop->operating_system,
+                //     'notes' => $laptop->notes,
+                //     'buying_price' => $laptop->purchase_price,
+                //     'selling_price' => $laptop->suggested_selling_price,
+                //     'images' => $laptop->media()->get()->map(function ($media) {
+                //         return env('APP_URL') . s3_asset(true,10,$media->file_path);
+                //     })->toArray(),
+                // ];
+
+                $payload = (new UsedLaptopResource($laptop))->resolve();
+
+                WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'update', $payload);                
+            }
+
             DB::commit();
             
             return redirect()->route('used-laptop.index')
@@ -344,15 +570,65 @@ class UsedLaptopController extends Controller
     public function destroy($slug)
     {
         $laptop = UsedLaptop::where('slug', $slug)->firstOrFail();
+        $payload = [
+            'id' => $laptop->id,
+        ];
         $laptop->delete();
+
+
+        WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'delete', $payload);  
         return redirect()->route('used-laptop.index')->with('success', 'Laptop berhasil dihapus!');
     }
 
     public function mediaDestroy($id)
     {
-        $media = UsedLaptopMedia::findOrFail($id);
-        Storage::delete($media->file_path);
-        $media->delete();
-        return back()->with('success', 'Media berhasil dihapus!');
+        try {
+            $media = UsedLaptopMedia::findOrFail($id);
+            Storage::delete('public/' . $media->file_path);
+            $media->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Media berhasil dihapus!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus media: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function checkSerialNumber(Request $request)
+    {
+        $serialNumber = $request->input('serial_number');
+        $laptopId = $request->input('laptop_id'); // ID laptop saat edit
+        
+        $query = UsedLaptop::where('serial_number', $serialNumber)->byCompany(Auth::user()->company_id);
+        
+        // Exclude current laptop when editing
+        if ($laptopId) {
+            $query->where('id', '!=', $laptopId);
+        }
+        
+        $exists = $query->exists();
+        
+        if ($exists) {
+            $laptop = $query->first();
+            return response()->json([
+                'exists' => true,
+                'message' => 'Serial number sudah terdaftar',
+                'laptop' => [
+                    'name' => $laptop->name,
+                    'brand' => $laptop->brand,
+                    'slug' => $laptop->slug,
+                ]
+            ]);
+        }
+        
+        return response()->json([
+            'exists' => false,
+            'message' => 'Serial number tersedia'
+        ]);
     }
 }

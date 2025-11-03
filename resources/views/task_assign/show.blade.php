@@ -41,7 +41,7 @@
                         <!-- Menampilkan laporan yang sudah ada -->
                         <div>
                             <p><strong>Catatan:</strong> {!! $taskAssign->taskReport->note !!}</p>
-                            <img src="{{ Storage::url('task/' .$taskAssign->taskReport->picture) }}" class="img-fluid mb-2" alt="Foto Laporan">
+                            <img src="{{ s3_asset(true,10,'task/' .$taskAssign->taskReport->picture) }}" class="img-fluid mb-2" alt="Foto Laporan">
                         </div>
                     @else
                     @canAccess('report','task_assigns')

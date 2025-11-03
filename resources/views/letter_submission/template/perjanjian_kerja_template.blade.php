@@ -180,7 +180,7 @@
                     <div class="col-6 text-center">
                         <p><strong>PIHAK KEDUA</strong></p>
                         @if($letterSubmission->status !== 0)
-                        <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                        <img src="{{ s3_asset(true,10,$fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
                             alt="Signature" style="height:150px">
                         @else
                         <div style="height: 150px;"></div> <!-- Empty space if no signature -->
@@ -270,7 +270,7 @@
                 </div>
                 <div class="col text-center">
                     @if($letterSubmission->status !== 0)
-                    <img src="{{ Storage::url($fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
+                    <img src="{{ s3_asset(true,10,$fieldData['signature_image'] ?? '' ) }}" class="img-fluid"
                         alt="Signature" style="height:150px">
                     @else
                     <div style="height: 150px;"></div> <!-- Empty space if no signature -->
@@ -287,7 +287,7 @@
                             Foto KTP
                         </th>
                         <td>
-                            <img src="{{ Storage::url($letterSubmission->user->id_card_image) }}" alt="Foto KTP" class="img-fluid" style="max-width: 150px;">
+                            <img src="{{ s3_asset(true,10,$letterSubmission->user->id_card_image) }}" alt="Foto KTP" class="img-fluid" style="max-width: 150px;">
                         </td>
                         </td>
                     </tr>

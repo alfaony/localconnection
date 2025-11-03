@@ -31,6 +31,8 @@ use App\Schemas\RoleSchema;
 use PDF;
 use setasign\Fpdi\Fpdi;
 use App\Mail\SendBastEmail;
+use App\Jobs\MergeBastPdfJob;
+
 class ReportProjectController extends Controller
 {
     /**
@@ -128,7 +130,7 @@ class ReportProjectController extends Controller
                 if ($file[$i]) 
                 {
                     $filename = time() . '_' . $file[$i]->getClientOriginalName();
-                    $filePath = $file[$i]->storeAs('reports', $filename, 'public');
+                    $filePath = $file[$i]->storeAs('reports', $filename);
                     $reportProjectDetail->file = $filename;
                 }
 
@@ -252,7 +254,7 @@ class ReportProjectController extends Controller
                     if ($checkFile) 
                     {
                         $filename = time() . '_' . $file[$i]->getClientOriginalName();
-                        $filePath = $file[$i]->storeAs('reports', $filename, 'public');
+                        $filePath = $file[$i]->storeAs('reports', $filename);
                         $reportProjectDetail->file = $filename;
                     }
     
@@ -281,7 +283,7 @@ class ReportProjectController extends Controller
                     if ($checkFile) 
                     {
                         $filename = time() . '_' . $file[$i]->getClientOriginalName();
-                        $filePath = $file[$i]->storeAs('reports', $filename, 'public');
+                        $filePath = $file[$i]->storeAs('reports', $filename);
                         $reportProjectDetail->file = $filename;
                     }
 
@@ -307,7 +309,17 @@ class ReportProjectController extends Controller
 
             if($reportProject->project->bast)
             {
-                $mergedFilePath = $this->mergePdfFiles($reportProject->project->bast, $reportProject);
+                // $mergedFilePath = $this->mergePdfFiles($reportProject->project->bast, $reportProject);
+                // MergeBastPdfJob::dispatch($reportProject->project->bast->id, Auth::user()->company_id)->delay(now()->addSeconds(5));
+                MergeBastPdfJob::dispatch(
+                    $reportProject->project->bast->id,
+                    $reportProject->id,
+                    Auth::user()->company_id,
+                    Auth::user()->id,
+                    User::where('id','!=', Auth::user()->id)->byCompany(Auth::user()->company_id)->whereHas('role', function ($query) {
+                            $query->whereIn('name', [RoleSchema::SYSTEM_BOS,RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR, RoleSchema::HR]);
+                        })->first()->id
+                );
             }
 
             DB::commit();
@@ -456,17 +468,17 @@ class ReportProjectController extends Controller
             array_push($actionButtons,$edit);
         }
 
-        if(Access::can('downloadall','report_projects'))
-        {
-            $edit = 
-            [
-                'name' => 'Download All File',
-                'route' => 'report-project.downloadall',
-                'id' => true,
-            ];
+        // if(Access::can('downloadall','report_projects'))
+        // {
+        //     $edit = 
+        //     [
+        //         'name' => 'Download All File',
+        //         'route' => 'report-project.downloadall',
+        //         'id' => true,
+        //     ];
 
-            array_push($actionButtons,$edit);
-        }
+        //     array_push($actionButtons,$edit);
+        // }
 
         if(Access::can('destroy','report_projects'))
         {
@@ -555,33 +567,44 @@ class ReportProjectController extends Controller
 
     public function downloadall($slug)
     {
-        // Ambil semua file berdasarkan ID reportProject
-        $reportProject = ReportProject::with('reportProjectDetail')->where('slug',$slug)->firstOrFail();
-        if (!$reportProject) {
-            return redirect()->back()->with('error', 'Report Project not found.');
-        }
-        
-        // Nama file ZIP
-        $zipFileName = 'reports_' . $reportProject->number_result . '.zip';
-        $zipFileName = str_replace('/', '_', $zipFileName);
-        $zipPath = storage_path('app/public/' . $zipFileName);
+        // Ambil project dan relasi detail-nya
+        $reportProject = ReportProject::with('reportProjectDetail')->where('slug', $slug)->firstOrFail();
 
-        // Membuat ZIP
+        // Nama file ZIP
+        $zipFileName = 'reports_' . Str::slug($reportProject->number_result) . '.zip';
+
+        // Temp path lokal untuk simpan zip
+        $localZipPath = storage_path('app/temp/' . $zipFileName);
+
+        // Buat folder temp jika belum ada
+        if (!file_exists(storage_path('app/temp'))) {
+            mkdir(storage_path('app/temp'), 0755, true);
+        }
+
+        // Buat ZIP archive
         $zip = new ZipArchive;
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+        if ($zip->open($localZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+
             foreach ($reportProject->reportProjectDetail->sortBy('order') as $detail) {
-                $filePath = storage_path('app/public/reports/' . $detail->file);
-                if (file_exists($filePath)) {
-                    $zip->addFile($filePath, $detail->file);
+                $remotePath = 'reports/' . $detail->file;
+
+                // Ambil file dari S3 dan simpan ke temp lokal
+                if (Storage::disk('s3')->exists($remotePath)) {
+                    $localFilePath = storage_path('app/temp/' . basename($remotePath));
+                    file_put_contents($localFilePath, Storage::disk('s3')->get($remotePath));
+
+                    // Masukkan ke dalam ZIP (nama file tetap asli)
+                    $zip->addFile($localFilePath, $detail->file);
                 }
             }
+
             $zip->close();
         } else {
-            return redirect()->back()->with('error', 'Failed to create ZIP file.');
+            return redirect()->back()->with('error', 'Gagal membuat file ZIP.');
         }
 
-        // Mengunduh file ZIP
-        return response()->download($zipPath)->deleteFileAfterSend(true);
+        // Download ZIP dan hapus setelah selesai
+        return response()->download($localZipPath)->deleteFileAfterSend(true);
     }
 
 
@@ -712,60 +735,57 @@ class ReportProjectController extends Controller
     private function mergePdfFiles($bast, $reportProject)
     {
         try {
-            // Check if a file already exists and delete it before updating
-            if (!empty($bast->file_merge_path) && Storage::exists($bast->file_merge_path)) 
-            {
-                Storage::delete($bast->file_merge_path);
+            $disk = Storage::disk('s3'); // or config('filesystems.default')
+            $localTemp = storage_path('app/temp_merge'); // local temp folder
+
+            if (!file_exists($localTemp)) {
+                mkdir($localTemp, 0755, true);
             }
-            
-            // Initialize an array to store PDF file paths
+
+            // Hapus file lama di S3 jika ada
+            if (!empty($bast->file_merge_path) && $disk->exists($bast->file_merge_path)) {
+                $disk->delete($bast->file_merge_path);
+            }
+
+            // Kumpulkan file PDF dari S3 dan unduh ke lokal sementara
+            // Inisialisasi list file PDF
             $pdfFiles = [];
 
-            // Collect only PDF files from reportProjectDetail
-            foreach ($reportProject->reportedDetails as $detail) 
-            {
-                $filePath = storage_path('app/public/reports/' . $detail->file);
-                $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+            // 1. Tambahkan PDF hasil view sebagai cover (letak paling awal)
+            $today = Carbon::now()->format('d M Y');
+            $company = SettingCompany::byCompany(Auth::user()->company_id)
+                ->get()->pluck('field_value', 'field_title');
 
-                if (file_exists($filePath) && strtolower($fileExtension) === 'pdf') {
-                    $pdfFiles[] = $filePath;
+            $additionalPdf = Pdf::loadView('bast.' . $bast->template, compact('bast', 'today', 'company'));
+            $additionalLocalPath = $localTemp . '/temp_additional.pdf';
+            file_put_contents($additionalLocalPath, $additionalPdf->output());
+            $pdfFiles[] = $additionalLocalPath;
+
+            // 2. Tambahkan PDF dari reportedDetails
+            foreach ($reportProject->reportedDetails as $detail) {
+                $remotePath = 'reports/' . $detail->file;
+
+                if ($disk->exists($remotePath)) {
+                    $localPath = $localTemp . '/' . basename($remotePath);
+                    file_put_contents($localPath, $disk->get($remotePath));
+                    $pdfFiles[] = $localPath;
                 }
             }
-            // Generate a new PDF from the 'bast.pdf_download' view
+
+            // Tambahkan PDF hasil template view (dari DomPDF)
             $today = Carbon::now()->format('d M Y');
-            $company = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+            $company = SettingCompany::byCompany(Auth::user()->company_id)
+                ->get()->pluck('field_value', 'field_title');
 
-            $additionalPdf = PDF::loadView('bast.'.$bast->template, compact('bast', 'today','company'));
+            // $additionalPdf = Pdf::loadView('bast.' . $bast->template, compact('bast', 'today', 'company'));
+            // $additionalLocalPath = $localTemp . '/temp_additional.pdf';
+            // file_put_contents($additionalLocalPath, $additionalPdf->output());
+            // $pdfFiles[] = $additionalLocalPath;
 
-            // Convert generated PDF to a string
-            $additionalPdfContent = $additionalPdf->output();
-
-            // Save the additional PDF as a temporary file
-            $tempFilePath = 'public/temp_additional.pdf';
-            Storage::put($tempFilePath, $additionalPdfContent);
-
-            // Initialize FPDI to merge PDFs
+            // Inisialisasi FPDI dan merge semua PDF
             $mergedPdf = new Fpdi();
 
-            // Add the additional PDF first
-            $additionalPdfPath = Storage::path($tempFilePath);
-            if (file_exists($additionalPdfPath)) {
-                $pageCount = $mergedPdf->setSourceFile($additionalPdfPath);
-
-                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                    $templateId = $mergedPdf->importPage($pageNo);
-                    $size = $mergedPdf->getTemplateSize($templateId);
-
-                    $mergedPdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                    $mergedPdf->useTemplate($templateId);
-                }
-            } else {
-                throw new \Exception('Temporary additional PDF file not found.');
-            }
-
-            // Merge the collected PDF files
-            foreach ($pdfFiles as $pdfFile) 
-            {
+            foreach ($pdfFiles as $pdfFile) {
                 try {
                     $pageCount = $mergedPdf->setSourceFile($pdfFile);
                     for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
@@ -775,28 +795,36 @@ class ReportProjectController extends Controller
                         $mergedPdf->useTemplate($templateId);
                     }
                 } catch (\Exception $e) {
-                    \Log::error("Error processing file {$pdfFile}: " . $e->getMessage());
-                    continue; // Skip this file
+                    \Log::error("Gagal proses file {$pdfFile}: " . $e->getMessage());
+                    continue;
                 }
             }
 
-            // Create the final merged PDF path
-            $finalFileName = 'merged_' . str_replace('/', '_', $bast->number_result) . '.pdf';
-            $finalFilePath = 'public/reports/' . $finalFileName;
+            // Simpan hasil merge ke local temporary
+            $finalFileName = 'merged_' . str_replace('/', '_', $bast->number_result) . '_' . date('His') . '.pdf';
+            $localFinalPath = $localTemp . '/' . $finalFileName;
+            $mergedPdf->Output($localFinalPath, 'F');
 
-            // Output the final merged PDF to storage
-            $finalPdfContent = $mergedPdf->Output('', 'S');
-            Storage::put($finalFilePath, $finalPdfContent);
+            // Upload hasil ke S3
+            $remoteFinalPath = 'reports/' . $finalFileName;
+            $disk->put($remoteFinalPath, file_get_contents($localFinalPath));
 
-            // Delete temporary files
-            Storage::delete($tempFilePath);
-            
-            $bast->file_merge_path = $finalFilePath;
+            // Simpan path ke database
+            $bast->file_merge_path = $remoteFinalPath;
             $bast->save();
 
+            // Bersihkan file sementara
+            foreach ($pdfFiles as $tempFile) 
+            {
+                if (file_exists($tempFile)) unlink($tempFile);
+            }
+            if (file_exists($localFinalPath)) unlink($localFinalPath);
+
             return true;
+
         } catch (\Exception $e) {
-            \Log::error('Error in merging PDF files: ' . $e->getMessage());
+            // dd($e);
+            \Log::error('Error merging PDF files: ' . $e->getMessage());
             return false;
         }
     }

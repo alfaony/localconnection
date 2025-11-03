@@ -2,10 +2,16 @@
 
 namespace App\Http\Livewire;
 
+use Illuminate\Support\Carbon;
+
 use Livewire\Component;
 use Livewire\WithPagination;
+
 use App\Models\UsedLaptop;
-use Illuminate\Support\Carbon;
+use App\Models\Warehouse;
+use App\Models\Zone;
+
+use App\Helpers\Access;
 
 class UsedLaptopTable extends Component
 {
@@ -13,6 +19,9 @@ class UsedLaptopTable extends Component
     protected $paginationTheme = 'bootstrap'; // ⬅️ INI YANG PENTING
 
     public $search = '';
+    public $statusFilter = '';
+    public $warehouseFilter = '';
+    public $zoneFilter = '';
     public $sortField = 'name';
     public $sortDirection = 'asc';
     public $perPage = 10;
@@ -30,7 +39,6 @@ class UsedLaptopTable extends Component
     public $is_sold = false;
     public $sold_price;
     public $sold_at;
-    public $statusFilter = '';
 
     
     // Modal states
@@ -50,8 +58,25 @@ class UsedLaptopTable extends Component
         'purchase_price' => 'required|numeric|min:0',
         'is_sold' => 'boolean',
         'sold_price' => 'nullable|required_if:is_sold,true|numeric|min:0',
-        'sold_at' => 'nullable|required_if:is_sold,true|date',
     ];
+
+     protected $queryString = [
+        'search' => ['except' => ''],
+        'statusFilter' => ['except' => ''],
+        'warehouseFilter' => ['except' => ''],
+        'zoneFilter' => ['except' => ''],
+    ];
+
+    public function updatingWarehouseFilter()
+    {
+        $this->zoneFilter = ''; // Reset zone when warehouse changes
+        $this->resetPage();
+    }
+
+    public function updatingZoneFilter()
+    {
+        $this->resetPage();
+    }
 
     public function sortBy($field)
     {
@@ -146,6 +171,15 @@ class UsedLaptopTable extends Component
         ]);
     }
 
+    public function resetFilters()
+    {
+        $this->search = '';
+        $this->statusFilter = '';
+        $this->warehouseFilter = '';
+        $this->zoneFilter = '';
+        $this->resetPage();
+    }
+
     public function render()
     {
         
@@ -167,14 +201,44 @@ class UsedLaptopTable extends Component
         ->when($this->statusFilter === 'unsold', function ($query) {
             $query->where('is_sold', 0);
         })
+        ->when($this->statusFilter === 'inventory', function ($query) {
+            $query->where('is_sold', null);
+        })
          ->when(!$this->statusFilter, function ($query) {
             $query->orderBy('is_sold'); // unsold dulu
+        })
+        ->when($this->warehouseFilter, function ($query) {
+            $query->whereHas('rack.zone.warehouse', function ($q) {
+                $q->where('id', $this->warehouseFilter);
+            });
+        })
+        ->when($this->zoneFilter, function ($query) {
+            $query->whereHas('rack.zone', function ($q) {
+                $q->where('id', $this->zoneFilter);
+            });
         })
         ->orderBy('created_at', 'desc') // terbaru di atas
         ->paginate($this->perPage);
 
+        $warehouses = Warehouse::byCompany(auth()->user()->company_id)->select('id', 'name')->get();
+        
+        $zones = Zone::byCompany(auth()->user()->company_id)->when($this->warehouseFilter, function ($query) {
+            $query->where('warehouse_id', $this->warehouseFilter);
+        })
+        ->select('id', 'name')
+        ->get();
+
+        $isShow = Access::can('show','used_laptops');
+        $isEdit = Access::can('edit','used_laptops');
+        $isDestroy = Access::can('destroy','used_laptops');
+
         return view('livewire.used-laptop-table', [
             'laptops' => $laptops,
+            'warehouses' => $warehouses,
+            'zones' => $zones,
+            'isShow' => $isShow,
+            'isEdit' => $isEdit,
+            'isDestroy' => $isDestroy
         ]);
     }
 }

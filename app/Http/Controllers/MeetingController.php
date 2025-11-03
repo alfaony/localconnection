@@ -63,7 +63,7 @@ class MeetingController extends Controller
             $data = [];
             
             if ($request->hasFile('attachment')) {
-                $path = $request->file('attachment')->store('meeting-attachments', 'public');
+                $path = $request->file('attachment')->store('meeting-attachments');
                 $data['attachment'] = $path;
                 Log::info('File path: ' . $path);
             }
@@ -157,7 +157,7 @@ class MeetingController extends Controller
     
             if ($request->hasFile('attachment')) 
             {
-                $validated['attachment'] = $request->file('attachment')->store('attachments', 'public');
+                $validated['attachment'] = $request->file('attachment')->store('attachments');
             }
     
             $meeting = Meeting::create($validated);
@@ -166,7 +166,7 @@ class MeetingController extends Controller
             $externalEmails = [];
 
             foreach ($request->participant as $p) {
-                $findUser = User::select('id')->where('email', $p)->first();
+                $findUser = User::select('id')->where('email', $p)->orWhere('email_gmail', $p)->first();
                 if ($findUser)
                  {
                     $p = $findUser->id;
@@ -299,7 +299,7 @@ class MeetingController extends Controller
 
             if ($request->hasFile('attachment')) 
             {
-                $validated['attachment'] = $request->file('attachment')->store('attachments', 'public');
+                $validated['attachment'] = $request->file('attachment')->store('attachments');
             }
 
             $meeting->update($validated);
@@ -310,7 +310,7 @@ class MeetingController extends Controller
 
             foreach ($request->participant as $p) 
             {
-                $findUser = User::select('id')->where('email', $p)->first();
+                $findUser = User::select('id')->where('email', $p)->orWhere('email_gmail', $p)->first();
                 if ($findUser)
                  {
                     $p = $findUser->id;
@@ -577,7 +577,14 @@ class MeetingController extends Controller
         $meeting = Meeting::where('slug', $slug)->where('public_token', $token)->firstOrFail();
 
         if (!$meeting->public_token_generated_at || Carbon::parse($meeting->public_token_generated_at)->addHours(8)->isPast()) {
-            $this->redirectToPublicError('Token telah kadaluarsa.');
+            $start = Carbon::parse("{$meeting->start_date} {$meeting->start_time}");
+            $end = Carbon::parse("{$meeting->end_date} {$meeting->end_time}");
+            if (now()->lessThanOrEqualTo($start) || now()->between($start, $end)) 
+            {
+                $meeting->public_token_generated_at = now();
+            } else {
+                $this->redirectToPublicError('Token telah kadaluarsa.');
+            }
         }
 
         $end = Carbon::parse("{$meeting->end_date} {$meeting->end_time}");
