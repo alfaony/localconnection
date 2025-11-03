@@ -15,7 +15,14 @@ class ProductStorePrint extends Component
     public $height = 95;
     public $paperSize = 'A4';
     public $barcodePreviews = [];
-    public $copies = 1;
+    
+    // ✅ Copy per produk dengan array
+    public $productCopies = [];
+    
+    // ✅ Custom paper size
+    public $customPaperWidth = 210;  // mm (default A4 width)
+    public $customPaperHeight = 297; // mm (default A4 height)
+    public $useCustomSize = false;
 
     protected $listeners = ['updatePreview', 'printBarcodes'];
 
@@ -25,42 +32,43 @@ class ProductStorePrint extends Component
         $this->updatePreview();
     }
 
-    public function updated()
+    public function updated($propertyName)
     {
-        $this->updatePreview();
+        // Update preview when custom size changes
+        if (in_array($propertyName, ['customPaperWidth', 'customPaperHeight', 'useCustomSize', 'paperSize'])) {
+            $this->updatePreview();
+        }
     }
 
     public function updatePreview()
     {
         $this->barcodePreviews = [];
 
-        $widthCode = (int) $this->width /80;
-        $heightCode = (int) $this->height /40;
-        $code = (int) $this->width /5;
+        $widthCode = (int) $this->width / 80;
+        $heightCode = (int) $this->height / 40;
+        $code = (int) $this->width / 5;
         
         foreach ($this->selectedProducts as $productId) {
             $product = ProductStore::find($productId);
             if ($product) {
+                // ✅ Set default copy jika belum ada
+                if (!isset($this->productCopies[$productId])) {
+                    $this->productCopies[$productId] = 1;
+                }
+
                 if ($this->barcodeType === 'QRCODE') {
-                    // kecil, biar gampang di-scale via CSS
                     $barcodeSvg = DNS2D::getBarcodeSVG($product->barcode, 'QRCODE', $widthCode, $heightCode);
                 } else {
-                    // DNS1D::setStorePath(null); // Optional, reset cache path
-                    // ob_clean(); // Optional: flush output buffer, jaga-jaga
-
                     $barcodeType = $this->barcodeType === 'CODE128' ? 'C128' : 'C39';
                     $barcodeSvg = DNS1D::getBarcodeSVG($product->barcode, $barcodeType, 1, $code);
 
-                    // Step 1: Hapus semua <text> bawaan (prevent duplikat)
+                    // Hapus semua <text> bawaan
                     $barcodeSvg = preg_replace('/<text.*?<\/text>/', '', $barcodeSvg);
 
-                    // Step 2: Sisipkan text baru sebelum tag penutup </svg>
+                    // Sisipkan text baru
                     $barcodeText = '<text x="' . ($this->barcodeType === 'CODE128' ? '61.5' : '120') . '" text-anchor="middle" y="44.2" id="code" fill="black" font-size="12px">' . $product->barcode . '</text>';
                     $barcodeSvg = str_replace('</svg>', $barcodeText . '</svg>', $barcodeSvg);
                 }
-
-                // Inject properti preserveAspectRatio ke SVG supaya scalable
-                // $barcodeSvg = str_replace('<svg', '<svg preserveAspectRatio="xMidYMid meet"', $barcodeSvg);
                 
                 $this->barcodePreviews[] = [
                     'id' => $product->id,
@@ -69,21 +77,36 @@ class ProductStorePrint extends Component
                     'variant' => $product->variant,
                     'barcode' => $product->barcode,
                     'price' => $product->selling_price,
-                    'svg' => $barcodeSvg
+                    'svg' => $barcodeSvg,
+                    // ✅ Tambahkan copies per produk
+                    'copies' => $this->productCopies[$productId] ?? 1
                 ];
             }
         }
     }
 
+    // ✅ Method untuk update copy individual
+    public function updateProductCopy($productId, $copies)
+    {
+        $this->productCopies[$productId] = max(1, min(100, (int)$copies));
+        $this->updatePreview();
+    }
+
     public function printBarcodes()
     {
-        $this->dispatchBrowserEvent('print-barcodes', ['paperSize' => $this->paperSize]);
+        $paperConfig = [
+            'paperSize' => $this->paperSize,
+            'useCustomSize' => $this->useCustomSize,
+            'customWidth' => $this->customPaperWidth,
+            'customHeight' => $this->customPaperHeight
+        ];
+        
+        $this->dispatchBrowserEvent('print-barcodes', $paperConfig);
     }
 
     public function render()
     {
         return view('livewire.product-store.product-store-print')
-            ->extends('adminlte::page')
-            ;
+            ->extends('adminlte::page');
     }
 }
