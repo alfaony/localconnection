@@ -144,307 +144,272 @@ class InternetCustomerIndex extends Component
     }
 
     // Method untuk validasi dan submit
-    public function completeInstallation($serialNumber, $photos, $notes, $routerId, $username, $password, $override_pool_id, $local_address)
-    {
-        Validator::make([
-            'currentInstallationId' => $this->currentInstallationId,
-            'serialNumber' => $serialNumber,
-            'photos' => $photos,
-            'routerId' => $routerId,
-            'username' => $username,
-            'password' => $password,
-            'override_pool_id' => $override_pool_id,
-            'local_address' => $local_address
-        ], [
-            'override_pool_id' => 'nullable|exists:address_pools,id',
-            'currentInstallationId' => 'required|exists:internet_customers,id',
-            'photos' => 'required|array|min:1',
-            'photos.*' => 'required|string',
-            'routerId' => 'required|exists:routers,id',
-            'username' => 'required',
-            'password' => 'required',
-            'local_address' => 'nullable|ip',
-        ])->validate();
+    // public function completeInstallation($serialNumber, $photos, $notes, $routerId, $username, $password, $override_pool_id, $local_address)
+    // {
+        // Validator::make([
+        //     'currentInstallationId' => $this->currentInstallationId,
+        //     'serialNumber' => $serialNumber,
+        //     'photos' => $photos,
+        //     'routerId' => $routerId,
+        //     'username' => $username,
+        //     'password' => $password,
+        //     'override_pool_id' => $override_pool_id,
+        //     'local_address' => $local_address
+        // ], [
+        //     'override_pool_id' => 'nullable|exists:address_pools,id',
+        //     'currentInstallationId' => 'required|exists:internet_customers,id',
+        //     'photos' => 'required|array|min:1',
+        //     'photos.*' => 'required|string',
+        //     'routerId' => 'required|exists:routers,id',
+        //     'username' => 'required',
+        //     'password' => 'required',
+        //     'local_address' => 'nullable|ip',
+        // ])->validate();
 
-        if (!$customer) {
-            $this->dispatchBrowserEvent('show-notification', [
-                'type' => 'error',
-                'message' => 'Customer tidak ditemukan'
-            ]);
-            return;
-        }
+        // if (!$customer) {
+        //     $this->dispatchBrowserEvent('show-notification', [
+        //         'type' => 'error',
+        //         'message' => 'Customer tidak ditemukan'
+        //     ]);
+        //     return;
+        // }
         
-        // Reset photos array
-        $this->photos = [];
+        // // Reset photos array
+        // $this->photos = [];
         
-        $this->currentInstallationId = $customer->id;
-        $this->currentInstallationName = $customer->name;
-        $this->currentInstallationCode = $customer->code;
-        $this->deviceSerialNumber = $customer->device_serial_number ?? '';
-        $this->installationNotes = '';
+        // $this->currentInstallationId = $customer->id;
+        // $this->currentInstallationName = $customer->name;
+        // $this->currentInstallationCode = $customer->code;
+        // $this->deviceSerialNumber = $customer->device_serial_number ?? '';
+        // $this->installationNotes = '';
         
-        $this->dispatchBrowserEvent('open-installation-modal', [
-            'customerName' => $customer->name,
-            'customerCode' => $customer->code,
-            'serialNumber' => $customer->device_serial_number ?? ''
+    //     $this->dispatchBrowserEvent('open-installation-modal', [
+    //         'customerName' => $customer->name,
+    //         'customerCode' => $customer->code,
+    //         'serialNumber' => $customer->device_serial_number ?? ''
+    //     ]);
+        
+    //     $this->installationModal = true;
+    // }
+
+    // Method untuk validasi dan submit
+    public function completeInstallation($serialNumber, $notes, $routerId, $username, $password, $override_pool_id, $local_address)
+    {
+        // Update properties dari parameter
+        $this->deviceSerialNumber = $serialNumber;
+        $this->installationNotes = $notes;
+        
+        // DEBUG: Log photos property
+        Log::info('completeInstallation called', [
+            'serialNumber' => $serialNumber,
+            'notes' => $notes,
+            'photos_count' => count($this->photos),
+            'photos_raw' => $this->photos,
+            'currentInstallationId' => $this->currentInstallationId
         ]);
         
-        $this->installationModal = true;
-    }
-
-    // Method untuk validasi dan submit
-    // Method untuk validasi dan submit
-    // public function completeInstallation($serialNumber, $notes)
-    // {
-    //     // Update properties dari parameter
-    //     $this->deviceSerialNumber = $serialNumber;
-    //     $this->installationNotes = $notes;
+        // Cek apakah photos sudah ada
+        if (empty($this->photos)) {
+            Log::warning('Photos empty');
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Foto belum terupload. Silakan coba lagi.'
+            ]);
+            return false;
+        }
         
-    //     // DEBUG: Log photos property
-    //     Log::info('completeInstallation called', [
-    //         'serialNumber' => $serialNumber,
-    //         'notes' => $notes,
-    //         'photos_count' => count($this->photos),
-    //         'photos_raw' => $this->photos,
-    //         'currentInstallationId' => $this->currentInstallationId
-    //     ]);
+        // Filter hanya yang ada nilai (bukan null)
+        $validPhotos = array_filter($this->photos, function($photo) {
+            return $photo !== null;
+        });
         
-    //     // Cek apakah photos sudah ada
-    //     if (empty($this->photos)) {
-    //         Log::warning('Photos empty');
-    //         $this->dispatchBrowserEvent('show-notification', [
-    //             'type' => 'error',
-    //             'message' => 'Foto belum terupload. Silakan coba lagi.'
-    //         ]);
-    //         return false;
-    //     }
+        Log::info('Valid photos after filter', [
+            'count' => count($validPhotos),
+            'photos' => $validPhotos
+        ]);
         
-    //     // Filter hanya yang ada nilai (bukan null)
-    //     $validPhotos = array_filter($this->photos, function($photo) {
-    //         return $photo !== null;
-    //     });
+        if (empty($validPhotos)) {
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Tidak ada foto yang valid. Silakan coba lagi.'
+            ]);
+            return false;
+        }
         
-    //     Log::info('Valid photos after filter', [
-    //         'count' => count($validPhotos),
-    //         'photos' => $validPhotos
-    //     ]);
-        
-    //     if (empty($validPhotos)) {
-    //         $this->dispatchBrowserEvent('show-notification', [
-    //             'type' => 'error',
-    //             'message' => 'Tidak ada foto yang valid. Silakan coba lagi.'
-    //         ]);
-    //         return false;
-    //     }
-        
-    //     // Validasi basic (tanpa validasi file dulu, karena masih string temporary)
-    //     $validated = $this->validate([
-    //         'currentInstallationId' => 'required|exists:internet_customers,id',
-    //         'deviceSerialNumber' => 'required|string|max:255',
-    //     ], [
-    //         'deviceSerialNumber.required' => 'Serial Number wajib diisi',
-    //         'currentInstallationId.required' => 'Customer ID tidak valid',
-    //         'currentInstallationId.exists' => 'Customer tidak ditemukan',
-    //     ]);
+        // Validasi basic (tanpa validasi file dulu, karena masih string temporary)
+        $validated = $this->validate([
+            'currentInstallationId' => 'required|exists:internet_customers,id',
+            'deviceSerialNumber' => 'required|string|max:255',
+        ], [
+            'deviceSerialNumber.required' => 'Serial Number wajib diisi',
+            'currentInstallationId.required' => 'Customer ID tidak valid',
+            'currentInstallationId.exists' => 'Customer tidak ditemukan',
+        ]);
 
-    //     DB::beginTransaction();
-    //     try {
-    //         // Upload foto
-    //         $uploadedPaths = [];
-
-    //         foreach ($photos as $tmpFilename) {
-    //             $tmpPath = storage_path('app/livewire-tmp/' . $tmpFilename);
-    //             $newPath = 'installation-photos/' . uniqid() . '-' . basename($tmpFilename);
-
-    //             // Pindahkan dari tmp ke public/installation-photos
-    //             Storage::put(
-    //                 "public/" . $newPath,
-    //                 file_get_contents($tmpPath)
-    //             );
-
-    //             $uploadedPaths[] = $newPath;
-
-    //             // Hapus file tmp
-    //             unlink($tmpPath);
-    //         }
+        DB::beginTransaction();
+        try {
+            // 1. Ambil customer
+            $customer = InternetCustomer::findOrFail($this->currentInstallationId);
             
-    //         // Update data
-    //         $customer = InternetCustomer::find($this->currentInstallationId);
-    //         $customer->update([
-    //             'status' => ParamSchema::INSTALLED, 
-    //             'local_address' => $local_address,
-    //             'router_id' => $routerId,
-    //             'username' => $username,
-    //             'pass_hash' => $password,
-    //             'override_pool_id'  => $override_pool_id ?: null,
-    //         ]);
-
-    //         dispatch(new \App\Jobs\ProvisionCustomerJob($customer->id));
-
-    //         // 1. Ambil customer
-    //         $customer = InternetCustomer::findOrFail($this->currentInstallationId);
+            Log::info('Customer found', ['id' => $customer->id, 'code' => $customer->code]);
             
-    //         Log::info('Customer found', ['id' => $customer->id, 'code' => $customer->code]);
-            
-    //         // 2. Update status customer
-    //         $customer->update([
-    //             'status' => ParamSchema::INSTALLED,
-    //             'device_serial_number' => $serialNumber
-    //         ]);
+            // 2. Update status customer
+            $customer->update([
+                'status' => ParamSchema::INSTALLED,
+                'device_serial_number' => $serialNumber
+            ]);
 
-    //         // 3. Buat record installation
-    //         $customerInstallation = InternetCustomerInstallation::create([
-    //             'internet_customer_id' => $customer->id,
-    //             'device_serial_number' => $serialNumber,
-    //             'notes' => $notes,
-    //             'installed_at' => now(),
-    //             'technical_user_id' => Auth::id(),
-    //         ]);
+            // 3. Buat record installation
+            $customerInstallation = InternetCustomerInstallation::create([
+                'internet_customer_id' => $customer->id,
+                'device_serial_number' => $serialNumber,
+                'notes' => $notes,
+                'installed_at' => now(),
+                'technical_user_id' => Auth::id(),
+            ]);
             
-    //         $this->activate($customer->id, $password);
-    //         Log::info('Installation record created', ['id' => $customerInstallation->id]);
+            Log::info('Installation record created', ['id' => $customerInstallation->id]);
 
-    //         // 4. Upload foto dari Livewire temporary ke S3 dan simpan ke database
-    //         $photoCount = 0;
+            // 4. Upload foto dari Livewire temporary ke S3 dan simpan ke database
+            $photoCount = 0;
             
-    //         foreach ($validPhotos as $index => $photo) {
-    //             Log::info('Processing photo', [
-    //                 'index' => $index,
-    //                 'photo_value' => $photo,
-    //                 'photo_type' => gettype($photo),
-    //             ]);
+            foreach ($validPhotos as $index => $photo) {
+                Log::info('Processing photo', [
+                    'index' => $index,
+                    'photo_value' => $photo,
+                    'photo_type' => gettype($photo),
+                ]);
                 
-    //             try {
-    //                 // Jika masih berupa string (temporary filename dari Livewire)
-    //                 // Kita perlu mengambil UploadedFile dari Livewire
-    //                 if (is_string($photo)) {
-    //                     // Livewire menyimpan temporary file di storage/app/livewire-tmp
-    //                     $tmpPath = storage_path('app/livewire-tmp/' . $photo);
+                try {
+                    // Jika masih berupa string (temporary filename dari Livewire)
+                    // Kita perlu mengambil UploadedFile dari Livewire
+                    if (is_string($photo)) {
+                        // Livewire menyimpan temporary file di storage/app/livewire-tmp
+                        $tmpPath = storage_path('app/livewire-tmp/' . $photo);
                         
-    //                     if (!file_exists($tmpPath)) {
-    //                         Log::error('Temporary file not found', ['path' => $tmpPath]);
-    //                         continue;
-    //                     }
+                        if (!file_exists($tmpPath)) {
+                            Log::error('Temporary file not found', ['path' => $tmpPath]);
+                            continue;
+                        }
                         
-    //                     // Baca file content
-    //                     $fileContent = file_get_contents($tmpPath);
+                        // Baca file content
+                        $fileContent = file_get_contents($tmpPath);
                         
-    //                     // Extract extension dari filename
-    //                     $extension = pathinfo($photo, PATHINFO_EXTENSION);
-    //                     if (empty($extension)) {
-    //                         $extension = 'png'; // default
-    //                     }
+                        // Extract extension dari filename
+                        $extension = pathinfo($photo, PATHINFO_EXTENSION);
+                        if (empty($extension)) {
+                            $extension = 'png'; // default
+                        }
                         
-    //                     // Generate unique filename untuk S3
-    //                     $filename = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
-    //                     $s3Path = 'installation-photos/' . $customer->code . '/' . $filename;
+                        // Generate unique filename untuk S3
+                        $filename = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
+                        $s3Path = 'installation-photos/' . $customer->code . '/' . $filename;
                         
-    //                     Log::info('Uploading to S3', [
-    //                         'from' => $tmpPath,
-    //                         'to' => $s3Path
-    //                     ]);
+                        Log::info('Uploading to S3', [
+                            'from' => $tmpPath,
+                            'to' => $s3Path
+                        ]);
                         
-    //                     // Upload ke S3
-    //                     Storage::disk('s3')->put($s3Path, $fileContent, 'public');
+                        // Upload ke S3
+                        Storage::disk('s3')->put($s3Path, $fileContent, 'public');
                         
-    //                     Log::info('Photo uploaded to S3', ['path' => $s3Path]);
+                        Log::info('Photo uploaded to S3', ['path' => $s3Path]);
                         
-    //                     // Simpan record foto ke database
-    //                     $photoRecord = InternetInstallationPhoto::create([
-    //                         'internet_installation_id' => $customerInstallation->id,
-    //                         'photo' => $s3Path,
-    //                         'caption' => 'Installation Photo ' . ($photoCount + 1),
-    //                     ]);
+                        // Simpan record foto ke database
+                        $photoRecord = InternetInstallationPhoto::create([
+                            'internet_installation_id' => $customerInstallation->id,
+                            'photo' => $s3Path,
+                            'caption' => 'Installation Photo ' . ($photoCount + 1),
+                        ]);
                         
-    //                     Log::info('Photo record created', ['id' => $photoRecord->id]);
+                        Log::info('Photo record created', ['id' => $photoRecord->id]);
                         
-    //                     // Hapus temporary file
-    //                     @unlink($tmpPath);
+                        // Hapus temporary file
+                        @unlink($tmpPath);
                         
-    //                     $photoCount++;
+                        $photoCount++;
                         
-    //                 } 
-    //                 // Jika sudah UploadedFile object
-    //                 elseif ($photo instanceof \Illuminate\Http\UploadedFile) {
-    //                     $extension = $photo->getClientOriginalExtension();
-    //                     $filename = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
+                    } 
+                    // Jika sudah UploadedFile object
+                    elseif ($photo instanceof \Illuminate\Http\UploadedFile) {
+                        $extension = $photo->getClientOriginalExtension();
+                        $filename = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
                         
-    //                     $path = $photo->storeAs(
-    //                         'installation-photos/' . $customer->code,
-    //                         $filename,
-    //                         's3'
-    //                     );
+                        $path = $photo->storeAs(
+                            'installation-photos/' . $customer->code,
+                            $filename,
+                            's3'
+                        );
                         
-    //                     Storage::disk('s3')->setVisibility($path, 'public');
+                        Storage::disk('s3')->setVisibility($path, 'public');
                         
-    //                     InternetInstallationPhoto::create([
-    //                         'internet_installation_id' => $customerInstallation->id,
-    //                         'photo' => $path,
-    //                         'caption' => 'Installation Photo ' . ($photoCount + 1),
-    //                     ]);
+                        InternetInstallationPhoto::create([
+                            'internet_installation_id' => $customerInstallation->id,
+                            'photo' => $path,
+                            'caption' => 'Installation Photo ' . ($photoCount + 1),
+                        ]);
                         
-    //                     $photoCount++;
-    //                 }
+                        $photoCount++;
+                    }
                     
-    //             } catch (\Exception $photoError) {
-    //                 Log::error('Failed to process photo', [
-    //                     'index' => $index,
-    //                     'error' => $photoError->getMessage(),
-    //                     'trace' => $photoError->getTraceAsString()
-    //                 ]);
-    //                 continue;
-    //             }
-    //         }
+                } catch (\Exception $photoError) {
+                    Log::error('Failed to process photo', [
+                        'index' => $index,
+                        'error' => $photoError->getMessage(),
+                        'trace' => $photoError->getTraceAsString()
+                    ]);
+                    continue;
+                }
+            }
 
-    //         // Validasi minimal ada 1 foto yang berhasil diupload
-    //         if ($photoCount === 0) {
-    //             throw new \Exception('Tidak ada foto yang berhasil diupload. Silakan coba lagi.');
-    //         }
+            // Validasi minimal ada 1 foto yang berhasil diupload
+            if ($photoCount === 0) {
+                throw new \Exception('Tidak ada foto yang berhasil diupload. Silakan coba lagi.');
+            }
 
-    //         DB::commit();
+            DB::commit();
             
-    //         Log::info('Installation completed successfully', [
-    //             'customer_id' => $customer->id,
-    //             'photos_uploaded' => $photoCount
-    //         ]);
+            Log::info('Installation completed successfully', [
+                'customer_id' => $customer->id,
+                'photos_uploaded' => $photoCount
+            ]);
 
-    //         // Reset form dan properties
-    //         $this->reset([
-    //             'installationModal',
-    //             'currentInstallationId',
-    //             'currentInstallationName',
-    //             'currentInstallationCode',
-    //             'deviceSerialNumber',
-    //             'installationNotes',
-    //             'photos'
-    //         ]);
+            // Reset form dan properties
+            $this->reset([
+                'installationModal',
+                'currentInstallationId',
+                'currentInstallationName',
+                'currentInstallationCode',
+                'deviceSerialNumber',
+                'installationNotes',
+                'photos'
+            ]);
 
-    //         // Kirim notifikasi success
-    //         $this->dispatchBrowserEvent('show-notification', [
-    //             'type' => 'success',
-    //             'message' => "Instalasi berhasil disimpan dengan {$photoCount} foto"
-    //         ]);
+            // Kirim notifikasi success
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'success',
+                'message' => "Instalasi berhasil disimpan dengan {$photoCount} foto"
+            ]);
 
-    //         return true;
+            return true;
 
-    //     } catch (\Exception $e) {
-    //         // dd($e);
-    //         DB::rollBack();
+        } catch (\Exception $e) {
+            DB::rollBack();
             
-    //         Log::error('Installation failed', [
-    //             'customer_id' => $this->currentInstallationId,
-    //             'error' => $e->getMessage(),
-    //             'trace' => $e->getTraceAsString()
-    //         ]);
+            Log::error('Installation failed', [
+                'customer_id' => $this->currentInstallationId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
-    //         $this->dispatchBrowserEvent('show-notification', [
-    //             'type' => 'error',
-    //             'message' => 'Gagal menyimpan instalasi: ' . $e->getMessage()
-    //         ]);
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Gagal menyimpan instalasi: ' . $e->getMessage()
+            ]);
             
-    //         return false;
-    //     }
-    // }
+            return false;
+        }
+    }
         
 
     // Search
