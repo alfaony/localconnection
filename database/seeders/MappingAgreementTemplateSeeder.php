@@ -45,6 +45,16 @@ class MappingAgreementTemplateSeeder extends Seeder
             ]
         );
 
+        TemplateAgreement::firstOrCreate(
+            ['template_agreement' => 'templateBos1_3'], // Kriteria pencarian
+            [
+                'template_name' => 'templateBos1',
+                'template_agreement_show' => 'Perjanjian N8N',
+                'is_active' => true,
+                'is_default' => false,
+            ]
+        );
+
         // Bost 3
         TemplateAgreement::firstOrCreate(
             ['template_agreement' => 'templateBos3_1'], // Kriteria pencarian

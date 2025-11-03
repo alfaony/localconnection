@@ -166,16 +166,16 @@ class InternetCustomerForm extends Component
         $this->signature = $signatureData;
         $this->validate([
             'signature' => 'required',
-            // 'agreeTerms' => 'accepted'
+            'agreeTerms' => 'accepted'
         ]);
         $this->step++; // Lanjut ke step 5
     }
 
     public function handleSaveSignature()
     {        
-        // $this->validate([
-        //     'signature' => 'required',
-        // ]);
+        $this->validate([
+            'signature' => 'required',
+        ]);
         
         $this->submitForm();
     }
@@ -273,10 +273,10 @@ class InternetCustomerForm extends Component
             'name' => 'required|min:3',
             // 'email' => 'required|email|unique:user_customers,email',
             // 'password' => 'required|min:8|confirmed',
-            // 'phone_number' => 'required|string',
-            // 'address' => 'required|min:10',
-            // 'ktp_number' => 'required|digits:16',
-            // 'ktp_photo' => 'required|image|max:2048',
+            'phone_number' => 'required|string',
+            'address' => 'required|min:10',
+            'ktp_number' => 'required|digits:16',
+            'ktp_photo' => 'required|image|max:2048',
         ]);
         
         $this->step++;
@@ -302,19 +302,19 @@ class InternetCustomerForm extends Component
         $this->step++;
     }
 
-    // private function validateStep4()
-    // {
-    //     $this->dispatchBrowserEvent('save-signature');
+    private function validateStep4()
+    {
+        $this->dispatchBrowserEvent('save-signature');
 
-    //     $this->validate([
-    //         'signature' => 'required',
-    //     ]);
+        $this->validate([
+            'signature' => 'required',
+        ]);
         
-    //     // Simpan signature
+        // Simpan signature
         
-    //     // Lanjutkan ke step berikutnya setelah signature disimpan
-    //     $this->step++;
-    // }
+        // Lanjutkan ke step berikutnya setelah signature disimpan
+        $this->step++;
+    }
     
 
     private function submitForm()

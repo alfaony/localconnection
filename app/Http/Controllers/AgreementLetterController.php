@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 use App\Http\Requests\AgreementLetterRequest;
 
 use Carbon\Carbon;
@@ -49,42 +52,68 @@ class AgreementLetterController extends Controller
      */
     public function store(AgreementLetterRequest $request)
     {
+        //code...
         $customFieldData = collect($request->all())
         ->filter(fn($value, $key) => strpos($key, 'custom_') === 0)
         ->toArray();
 
-        $agreementLetter = new AgreementLetter();
-        $nomorAgreementLetter = $this->agreementLetterNumber();
+        if (isset($customFieldData['custom_partner_list']) && is_array($customFieldData['custom_partner_list'])) {
+            $partnerList = $customFieldData['custom_partner_list'];
+            
+            // Filter baris yang kosong (semua field kosong)
+            $partnerList = array_filter($partnerList, function($partner) {
+                return !empty($partner['name']) || 
+                    !empty($partner['location']) || 
+                    !empty($partner['period']);
+            });
+            
+            // Reset array index agar berurutan dari 0
+            $partnerList = array_values($partnerList);
+            
+            // Convert ke JSON string (karena akan disimpan di jsonb)
+            $customFieldData['custom_partner_list'] = json_encode($partnerList);
+        }
 
-        $agreementLetter->date = $request->input('date');
-        $agreementLetter->agreement_letter_number = $nomorAgreementLetter['number'];
-        $agreementLetter->number_result = $nomorAgreementLetter['result'];
-        $agreementLetter->quote_id = $request->input('quote');
-        $agreementLetter->payment_term = $request->input('payment_term');
-        $agreementLetter->period_term = $request->input('period_term');
-        $agreementLetter->other_term = $request->input('other_term');
-        
-        $agreementLetter->payment_term_english = $request->input('payment_term_english');
-        $agreementLetter->period_term_english = $request->input('period_term_english');
-        $agreementLetter->other_term_english = $request->input('other_term_english');
-
-        $agreementLetter->rent_address = $request->input('rent_address');
-        $agreementLetter->rent_start_duration = $request->input('rent_start_duration');
-        $agreementLetter->rent_end_duration = $request->input('rent_end_duration');
-
-        $agreementLetter->commission_name = $request->input('commission_name');
-        $agreementLetter->commission_phone = $request->input('commission_phone');
-        $agreementLetter->commission_address = $request->input('commission_address');
-
-        $agreementLetter->user_created_id = Auth::user()->id;
-        $agreementLetter->user_updated_id = Auth::user()->id;
-        $agreementLetter->template_agreement_id = $request->input('template_agreement_id');
-        
-        $agreementLetter->custom_fields = $customFieldData;
-
-        $agreementLetter->save();
-
-        return redirect()->to(route('agreement-letter.download.pdf',$agreementLetter->slug))->with('store', true);
+        try {
+    
+            $agreementLetter = new AgreementLetter();
+            $nomorAgreementLetter = $this->agreementLetterNumber();
+    
+            $agreementLetter->date = $request->input('date');
+            $agreementLetter->agreement_letter_number = $nomorAgreementLetter['number'];
+            $agreementLetter->number_result = $nomorAgreementLetter['result'];
+            $agreementLetter->quote_id = $request->input('quote');
+            $agreementLetter->payment_term = $request->input('payment_term');
+            $agreementLetter->period_term = $request->input('period_term');
+            $agreementLetter->other_term = $request->input('other_term');
+            
+            $agreementLetter->payment_term_english = $request->input('payment_term_english');
+            $agreementLetter->period_term_english = $request->input('period_term_english');
+            $agreementLetter->other_term_english = $request->input('other_term_english');
+    
+            $agreementLetter->rent_address = $request->input('rent_address');
+            $agreementLetter->rent_start_duration = $request->input('rent_start_duration');
+            $agreementLetter->rent_end_duration = $request->input('rent_end_duration');
+    
+            $agreementLetter->commission_name = $request->input('commission_name');
+            $agreementLetter->commission_phone = $request->input('commission_phone');
+            $agreementLetter->commission_address = $request->input('commission_address');
+    
+            $agreementLetter->user_created_id = Auth::user()->id;
+            $agreementLetter->user_updated_id = Auth::user()->id;
+            $agreementLetter->template_agreement_id = $request->input('template_agreement_id');
+            
+            $agreementLetter->custom_fields = $customFieldData;
+    
+            $agreementLetter->save();
+    
+            return redirect()->to(route('agreement-letter.download.pdf',$agreementLetter->slug))->with('store', true);
+        } catch (\Throwable $th) {
+            //throw $th;
+            // dd($th);
+            Log::error($th);
+            return redirect()->to(route('agreement-letter.download.pdf',$agreementLetter->slug))->with('store', false);
+        }
     }
 
     /**
@@ -173,32 +202,56 @@ class AgreementLetterController extends Controller
         ->filter(fn($value, $key) => strpos($key, 'custom_') === 0)
         ->toArray();
 
-        $agreementLetter = AgreementLetter::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
-        $agreementLetter->date = $request->input('date');
-        $agreementLetter->quote_id = $request->input('quote');
-        $agreementLetter->payment_term = $request->input('payment_term');
-        $agreementLetter->period_term = $request->input('period_term');
-        $agreementLetter->other_term = $request->input('other_term');
-        $agreementLetter->payment_term_english = $request->input('payment_term_english');
-        $agreementLetter->period_term_english = $request->input('period_term_english');
-        $agreementLetter->other_term_english = $request->input('other_term_english');
+        if (isset($customFieldData['custom_partner_list']) && is_array($customFieldData['custom_partner_list'])) {
+            $partnerList = $customFieldData['custom_partner_list'];
+            
+            // Filter baris yang kosong
+            $partnerList = array_filter($partnerList, function($partner) {
+                return !empty($partner['name']) || 
+                    !empty($partner['location']) || 
+                    !empty($partner['period']);
+            });
+            
+            // Reset array index
+            $partnerList = array_values($partnerList);
+            
+            // Convert ke JSON string
+            $customFieldData['custom_partner_list'] = json_encode($partnerList);
+        }
 
-        $agreementLetter->rent_address = $request->input('rent_address');
-        $agreementLetter->rent_start_duration = $request->input('rent_start_duration');
-        $agreementLetter->rent_end_duration = $request->input('rent_end_duration');
-
-        $agreementLetter->commission_name = $request->input('commission_name');
-        $agreementLetter->commission_phone = $request->input('commission_phone');
-        $agreementLetter->commission_address = $request->input('commission_address');
-        $agreementLetter->template_agreement_id = $request->input('template_agreement_id');
-
-        $agreementLetter->custom_fields = $customFieldData;
-        
-        $agreementLetter->user_updated_id = Auth::user()->id;
-
-        $agreementLetter->save();
-
-        return redirect()->to(route('agreement-letter.download.pdf',$agreementLetter->slug))->with('store', true);
+        try {
+            //code...
+            $agreementLetter = AgreementLetter::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
+            $agreementLetter->date = $request->input('date');
+            $agreementLetter->quote_id = $request->input('quote');
+            $agreementLetter->payment_term = $request->input('payment_term');
+            $agreementLetter->period_term = $request->input('period_term');
+            $agreementLetter->other_term = $request->input('other_term');
+            $agreementLetter->payment_term_english = $request->input('payment_term_english');
+            $agreementLetter->period_term_english = $request->input('period_term_english');
+            $agreementLetter->other_term_english = $request->input('other_term_english');
+    
+            $agreementLetter->rent_address = $request->input('rent_address');
+            $agreementLetter->rent_start_duration = $request->input('rent_start_duration');
+            $agreementLetter->rent_end_duration = $request->input('rent_end_duration');
+    
+            $agreementLetter->commission_name = $request->input('commission_name');
+            $agreementLetter->commission_phone = $request->input('commission_phone');
+            $agreementLetter->commission_address = $request->input('commission_address');
+            $agreementLetter->template_agreement_id = $request->input('template_agreement_id');
+    
+            $agreementLetter->custom_fields = $customFieldData;
+            
+            $agreementLetter->user_updated_id = Auth::user()->id;
+    
+            $agreementLetter->save();
+    
+            return redirect()->to(route('agreement-letter.download.pdf',$agreementLetter->slug))->with('store', true);
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th->getMessage());
+            return redirect()->to(route('agreement-letter.download.pdf',$agreementLetter->slug))->with('store', false);
+        }
     }
 
     /**

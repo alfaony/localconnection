@@ -58,106 +58,106 @@
                         </button>
                     </div>
                     <!-- Upload Form -->
-<!-- Upload Form -->
-@if(!$isImporting)
-<form wire:submit.prevent="import">
-    <div class="row">
-        <div class="col-md-8">
-            <div class="mb-3">
-                <label for="csvFile" class="form-label">Pilih File CSV</label>
-                <input type="file" 
-                    class="form-control @error('csvFile') is-invalid @enderror" 
-                    wire:model="csvFile" 
-                    accept=".csv"
-                    id="csvFileInput"
-                    {{ $uploadingFile ? 'disabled' : '' }}>
-                @error('csvFile')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-                <div class="form-text">Format: CSV, Maksimal 10MB</div>
-                
-                <!-- Loading saat file sedang diupload dan divalidasi -->
-                @if($uploadingFile && !$isFileReady)
-                <div class="mt-2" wire:poll.500ms="checkFileReady">
-                    <div class="alert alert-info py-2 mb-0 d-flex align-items-center">
-                        <div class="spinner-border spinner-border-sm me-2"></div>
-                        <div>
-                            <strong>Mengupload dan memvalidasi file...</strong>
-                            <small class="d-block text-muted">Mohon tunggu, sedang memproses file Anda</small>
-                        </div>
-                    </div>
-                </div>
-                @endif
+                    <!-- Upload Form -->
+                    @if(!$isImporting)
+                    <form wire:submit.prevent="import">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="csvFile" class="form-label">Pilih File CSV</label>
+                                    <input type="file" 
+                                        class="form-control @error('csvFile') is-invalid @enderror" 
+                                        wire:model="csvFile" 
+                                        accept=".csv"
+                                        id="csvFileInput"
+                                        {{ $uploadingFile ? 'disabled' : '' }}>
+                                    @error('csvFile')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-text">Format: CSV, Maksimal 10MB</div>
+                                    
+                                    <!-- Loading saat file sedang diupload dan divalidasi -->
+                                    @if($uploadingFile && !$isFileReady)
+                                    <div class="mt-2" wire:poll.500ms="checkFileReady">
+                                        <div class="alert alert-info py-2 mb-0 d-flex align-items-center">
+                                            <div class="spinner-border spinner-border-sm me-2"></div>
+                                            <div>
+                                                <strong>Mengupload dan memvalidasi file...</strong>
+                                                <small class="d-block text-muted">Mohon tunggu, sedang memproses file Anda</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
 
-                <!-- File uploaded and ready -->
-                @if($isFileReady && $csvFile)
-                <div class="mt-2">
-                    <div class="alert alert-success py-2 mb-0 d-flex align-items-center">
-                        <i class="bi bi-check-circle-fill me-2 text-success" style="font-size: 1.2rem;"></i>
-                        <div class="flex-grow-1">
-                            <strong>File siap diimport!</strong>
-                            <small class="d-block">{{ $csvFile->getClientOriginalName() }}</small>
+                                    <!-- File uploaded and ready -->
+                                    @if($isFileReady && $csvFile)
+                                    <div class="mt-2">
+                                        <div class="alert alert-success py-2 mb-0 d-flex align-items-center">
+                                            <i class="bi bi-check-circle-fill me-2 text-success" style="font-size: 1.2rem;"></i>
+                                            <div class="flex-grow-1">
+                                                <strong>File siap diimport!</strong>
+                                                <small class="d-block">{{ $csvFile->getClientOriginalName() }}</small>
+                                            </div>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-danger" 
+                                                    wire:click="resetImport"
+                                                    title="Hapus file">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label d-block">&nbsp;</label>
+                                
+                                <button type="submit" 
+                                        class="btn btn-primary w-100" 
+                                        wire:loading.attr="disabled"
+                                        wire:target="import"
+                                        {{ !$isFileReady || $uploadingFile ? 'disabled' : '' }}>
+                                    
+                                    <!-- Loading saat import -->
+                                    <span wire:loading wire:target="import">
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                        Memproses import...
+                                    </span>
+                                    
+                                    <!-- Default text -->
+                                    <span wire:loading.remove wire:target="import">
+                                        @if($uploadingFile)
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            Menunggu file...
+                                        @elseif($isFileReady)
+                                            <i class="bi bi-upload"></i> Mulai Import
+                                        @else
+                                            <i class="bi bi-upload"></i> Upload & Import
+                                        @endif
+                                    </span>
+                                </button>
+                                
+                                <!-- Helper text -->
+                                <div class="mt-2 text-center">
+                                    @if($uploadingFile && !$isFileReady)
+                                        <small class="text-warning d-flex align-items-center justify-content-center">
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            <span>Memvalidasi file...</span>
+                                        </small>
+                                    @elseif($isFileReady)
+                                        <small class="text-success">
+                                            <i class="bi bi-check-circle-fill"></i> File valid dan siap diimport
+                                        </small>
+                                    @else
+                                        <small class="text-muted">
+                                            <i class="bi bi-arrow-up"></i> Pilih file CSV terlebih dahulu
+                                        </small>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                        <button type="button" 
-                                class="btn btn-sm btn-outline-danger" 
-                                wire:click="resetImport"
-                                title="Hapus file">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-                </div>
-                @endif
-            </div>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label d-block">&nbsp;</label>
-            
-            <button type="submit" 
-                    class="btn btn-primary w-100" 
-                    wire:loading.attr="disabled"
-                    wire:target="import"
-                    {{ !$isFileReady || $uploadingFile ? 'disabled' : '' }}>
-                
-                <!-- Loading saat import -->
-                <span wire:loading wire:target="import">
-                    <span class="spinner-border spinner-border-sm me-2"></span>
-                    Memproses import...
-                </span>
-                
-                <!-- Default text -->
-                <span wire:loading.remove wire:target="import">
-                    @if($uploadingFile)
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        Menunggu file...
-                    @elseif($isFileReady)
-                        <i class="bi bi-upload"></i> Mulai Import
-                    @else
-                        <i class="bi bi-upload"></i> Upload & Import
+                    </form>
                     @endif
-                </span>
-            </button>
-            
-            <!-- Helper text -->
-            <div class="mt-2 text-center">
-                @if($uploadingFile && !$isFileReady)
-                    <small class="text-warning d-flex align-items-center justify-content-center">
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        <span>Memvalidasi file...</span>
-                    </small>
-                @elseif($isFileReady)
-                    <small class="text-success">
-                        <i class="bi bi-check-circle-fill"></i> File valid dan siap diimport
-                    </small>
-                @else
-                    <small class="text-muted">
-                        <i class="bi bi-arrow-up"></i> Pilih file CSV terlebih dahulu
-                    </small>
-                @endif
-            </div>
-        </div>
-    </div>
-</form>
-@endif
 
                     <!-- Progress Section -->
                     @if($isImporting && $importProgress)
@@ -452,9 +452,9 @@
                                             </div>
                                             <div>
                                                 <div class="font-weight-bold">{{ $product->name }}</div>
-                                                @if($product->specification)
+                                                @if($product->specification || $product->code)
                                                     <small class="text-muted">
-                                                        {{ Str::limit($product->specification, 30) }}
+                                                        {{ Str::limit($product->specification, 30) }}  {{ $product->code }}
                                                     </small>
                                                 @endif
                                             </div>

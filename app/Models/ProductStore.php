@@ -17,6 +17,7 @@ class ProductStore extends Model
 
     protected $fillable = [
         'barcode',
+        'code',
         'category_product_store_id',
         'brand_product_store_id',
         'name',
@@ -77,6 +78,7 @@ class ProductStore extends Model
                     ->orWhere('variant', 'like', '%' . $value . '%')
                     ->orWhere('specification', 'like', '%' . $value . '%')
                     ->orWhere('barcode', 'like', '%' . $value . '%')
+                    ->orWhere('code', 'like', '%' . $value . '%')
                     ;
     }
 
@@ -115,4 +117,14 @@ class ProductStore extends Model
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
+
+    public function media()
+    {
+        return $this->hasMany(ProductStoreMedia::class, 'product_store_id')->orderBy('order');
+    }
+
+    public function primaryMedia()
+    {
+        return $this->hasOne(ProductStoreMedia::class, 'product_store_id')->orderBy('order')->limit(1);
+}
 }
