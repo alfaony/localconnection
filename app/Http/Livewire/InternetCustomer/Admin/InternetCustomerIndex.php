@@ -198,6 +198,11 @@ class InternetCustomerIndex extends Component
         // Update properties dari parameter
         $this->deviceSerialNumber = $serialNumber;
         $this->installationNotes = $notes;
+        $this->router_id = $routerId;
+        $this->username = $username;
+        $this->password = $password;
+        $this->override_pool_id = $override_pool_id;
+        $this->local_address = $local_address;
         
         // DEBUG: Log photos property
         Log::info('completeInstallation called', [
@@ -240,6 +245,11 @@ class InternetCustomerIndex extends Component
         $validated = $this->validate([
             'currentInstallationId' => 'required|exists:internet_customers,id',
             'deviceSerialNumber' => 'required|string|max:255',
+            'currentInstallationId' => 'required|exists:internet_customers,id',
+            'router_id' => 'required|exists:routers,id',
+            'username' => 'required',
+            'password' => 'required',
+            'local_address' => 'nullable|ip',
         ], [
             'deviceSerialNumber.required' => 'Serial Number wajib diisi',
             'currentInstallationId.required' => 'Customer ID tidak valid',
@@ -256,8 +266,14 @@ class InternetCustomerIndex extends Component
             // 2. Update status customer
             $customer->update([
                 'status' => ParamSchema::INSTALLED,
-                'device_serial_number' => $serialNumber
+                'local_address' => $local_address,
+                'router_id' => $routerId,
+                'username' => $username,
+                'pass_hash' => $password,
+                'override_pool_id'  => $override_pool_id ?: null,
             ]);
+            
+            dispatch(new \App\Jobs\ProvisionCustomerJob($customer->id));
 
             // 3. Buat record installation
             $customerInstallation = InternetCustomerInstallation::create([
@@ -267,6 +283,8 @@ class InternetCustomerIndex extends Component
                 'installed_at' => now(),
                 'technical_user_id' => Auth::id(),
             ]);
+
+            $this->activate($customer->id, $password);
             
             Log::info('Installation record created', ['id' => $customerInstallation->id]);
 

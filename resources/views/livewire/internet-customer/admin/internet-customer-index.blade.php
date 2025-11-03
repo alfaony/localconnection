@@ -524,7 +524,12 @@
             const serialNumber = document.getElementById('modalSerialNumber').value;
             const notes = document.getElementById('modalNotes').value;
             const files = document.getElementById('modalPhotos').files;
-            
+            const routerId = document.getElementById('routerSelectMirror').value;
+            const username = document.getElementById('modalUsername').value;
+            const password = document.getElementById('modalPassword').value;
+            const override_pool_id = document.getElementById('selectPool').value;
+            const local_address = document.getElementById('local_address').value;
+        
             // Validasi
             if (!serialNumber) {
                 Swal.fire({
@@ -543,113 +548,168 @@
                 });
                 return;
             }
-            
-            // Konfirmasi
-            const result = await Swal.fire({
-                icon: 'question',
-                title: 'Konfirmasi',
-                text: 'Anda yakin ingin menyelesaikan instalasi ini?',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, Selesaikan',
-                cancelButtonText: 'Batal'
-            });
-            
-            if (!result.isConfirmed) {
+
+            if (routerId === '') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: 'Router harus dipilih'
+                });
                 return;
             }
             
-            // Disable button dan tampilkan progress
-            const submitBtn = document.getElementById('submitInstallation');
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            
-            try {
-                // STEP 1: Upload semua files ke Livewire property DULU
-                const uploadPromises = [];
-                
-                for (let i = 0; i < files.length; i++) {
-                    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading ${i + 1}/${files.length}...`;
-                    
-                    // Buat promise untuk setiap upload dan tunggu sampai selesai
-                    const uploadPromise = new Promise((resolve, reject) => {
-                        @this.upload(`photos.${i}`, files[i], 
-                            // onFinish callback
-                            (uploadedName) => {
-                                console.log(`File ${i} uploaded successfully:`, uploadedName);
-                                resolve(uploadedName);
-                            },
-                            // onError callback  
-                            (error) => {
-                                console.error(`File ${i} upload failed:`, error);
-                                reject(error);
-                            },
-                            // onProgress callback
-                            (event) => {
-                                console.log(`File ${i} progress:`, event.detail.progress);
-                            }
-                        );
-                    });
-                    
-                    uploadPromises.push(uploadPromise);
-                }
-                
-                // Tunggu SEMUA upload selesai
-                await Promise.all(uploadPromises);
-                
-                console.log('All files uploaded, photos property:', @this.photos);
-                
-                // STEP 2: Setelah SEMUA file terupload, baru panggil completeInstallation
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan data...';
-                
-                // Tunggu sebentar untuk memastikan Livewire property sudah ter-update
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                const success = await @this.call('completeInstallation', serialNumber, notes);
-                
-                console.log('completeInstallation result:', success);
-                
-                if (success !== false) {
-                    // Tutup modal
-                    installationModal.hide();
-                    
-                    // Reset form
-                    document.getElementById('modalSerialNumber').value = '';
-                    document.getElementById('modalNotes').value = '';
-                    document.getElementById('modalPhotos').value = '';
-                    document.getElementById('photoPreview').innerHTML = '';
-                }
-                
-            } catch (error) {
-                console.error('Installation error:', error);
-                
+            if (!username) {
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Gagal menyimpan instalasi: ' + (error.message || error)
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: 'Username harus diisi'
+                });
+                return;
+            }
+            
+            if (!password) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: 'Password harus diisi'
+                });
+                return;
+            }
+            
+                
+                // Validasi
+                if (!serialNumber) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Perhatian',
+                        text: 'Serial number harus diisi'
+                    });
+                    return;
+                }
+                
+                if (files.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Perhatian',
+                        text: 'Minimal upload 1 foto instalasi'
+                    });
+                    return;
+                }
+                
+                // Konfirmasi
+                const result = await Swal.fire({
+                    icon: 'question',
+                    title: 'Konfirmasi',
+                    text: 'Anda yakin ingin menyelesaikan instalasi ini?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Selesaikan',
+                    cancelButtonText: 'Batal'
                 });
                 
-            } finally {
-                // Restore button
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
-            }
+                if (!result.isConfirmed) {
+                    return;
+                }
+                
+                // Disable button dan tampilkan progress
+                const submitBtn = document.getElementById('submitInstallation');
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                
+                try {
+                    // STEP 1: Upload semua files ke Livewire property DULU
+                    const uploadPromises = [];
+                    
+                    for (let i = 0; i < files.length; i++) {
+                        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading ${i + 1}/${files.length}...`;
+                        
+                        // Buat promise untuk setiap upload dan tunggu sampai selesai
+                        const uploadPromise = new Promise((resolve, reject) => {
+                            @this.upload(`photos.${i}`, files[i], 
+                                // onFinish callback
+                                (uploadedName) => {
+                                    console.log(`File ${i} uploaded successfully:`, uploadedName);
+                                    resolve(uploadedName);
+                                },
+                                // onError callback  
+                                (error) => {
+                                    console.error(`File ${i} upload failed:`, error);
+                                    reject(error);
+                                },
+                                // onProgress callback
+                                (event) => {
+                                    console.log(`File ${i} progress:`, event.detail.progress);
+                                }
+                            );
+                        });
+                        
+                        uploadPromises.push(uploadPromise);
+                    }
+                    
+                    // Tunggu SEMUA upload selesai
+                    await Promise.all(uploadPromises);
+                    
+                    console.log('All files uploaded, photos property:', @this.photos);
+                    
+                    // STEP 2: Setelah SEMUA file terupload, baru panggil completeInstallation
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan data...';
+                    
+                    // Tunggu sebentar untuk memastikan Livewire property sudah ter-update
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    const success = await @this.call('completeInstallation',
+                        serialNumber,
+                        notes,
+                        routerId,
+                        username,
+                        password,
+                        override_pool_id,
+                        local_address
+                    );
+                    
+                    console.log('completeInstallation result:', success);
+                    
+                    if (success !== false) {
+                        // Tutup modal
+                        installationModal.hide();
+                        
+                        // Reset form
+                        document.getElementById('modalSerialNumber').value = '';
+                        document.getElementById('modalNotes').value = '';
+                        document.getElementById('modalPhotos').value = '';
+                        document.getElementById('photoPreview').innerHTML = '';
+                    }
+                    
+                } catch (error) {
+                    console.error('Installation error:', error);
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal menyimpan instalasi: ' + (error.message || error)
+                    });
+                    
+                } finally {
+                    // Restore button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                }
+            });
         });
-    });
 
-    // Notifikasi
-    window.addEventListener('show-notification', (event) => {
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
+        // Notifikasi
+        window.addEventListener('show-notification', (event) => {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            
+            Toast.fire({
+                icon: event.detail.type,
+                title: event.detail.message
+            });
         });
-        
-        Toast.fire({
-            icon: event.detail.type,
-            title: event.detail.message
-        });
-    });
 </script>
 @endpush
