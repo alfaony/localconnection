@@ -204,7 +204,77 @@
                                         <tbody>
                                             @foreach($purchases as $purchase)
                                             <tr>
-                                                <td>{{ \Carbon\Carbon::parse($purchase->created_at)->format('F Y') }}</td>
+                                                <td>
+                                                    @if($purchase->period_start && $purchase->period_end)
+                                                        {{ $purchase->period_start->format('d M Y') }} - {{ $purchase->period_end->format('d M Y') }}
+                                                        <br>
+                                                        <small class="text-muted">({{ $purchase->payment_months }} bulan)</small>
+                                                    @else
+                                                        {{ \Carbon\Carbon::parse($purchase->created_at)->format('F Y') }}
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($purchase->payment_method == 'xendit')
+                                                        <span class="badge badge-success">
+                                                            <i class="fas fa-credit-card mr-1"></i>Xendit
+                                                        </span>
+                                                    @elseif($purchase->payment_method == 'manual_transfer')
+                                                        <span class="badge badge-info">
+                                                            <i class="fas fa-university mr-1"></i>Transfer Manual
+                                                        </span>
+                                                    @else
+                                                        {{ ucfirst($purchase->payment_method ?? '-') }}
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($purchase->isConfirmed())
+                                                        <span class="badge badge-success">
+                                                            <i class="fas fa-check-circle mr-1"></i>Lunas
+                                                        </span>
+                                                    @else
+                                                        <span class="badge badge-danger">
+                                                            <i class="fas fa-times-circle mr-1"></i>Belum Lunas
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <strong>Rp {{ number_format($purchase->amount_paid, 0, ',', '.') }}</strong>
+                                                    @if($purchase->discount_amount > 0)
+                                                        <br>
+                                                        <small class="text-success">
+                                                            (Diskon: Rp {{ number_format($purchase->discount_amount, 0, ',', '.') }})
+                                                        </small>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($purchase->payment_proof || $purchase->xendit_invoice_id)
+                                                        <button wire:click="viewPaymentProof('{{ $purchase->id }}')" class="btn btn-sm btn-info">
+                                                            <i class="fas fa-eye mr-1"></i>Lihat
+                                                        </button>
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if(!$purchase->isConfirmed())
+                                                        <button class="btn btn-sm btn-success" wire:click="showPaymentModal({{ $purchase->id }})">
+                                                            <i class="fas fa-money-bill-wave mr-1"></i>Bayar Sekarang
+                                                        </button>
+                                                    @else
+                                                        <span class="text-success">
+                                                            <i class="fas fa-check-circle mr-1"></i>
+                                                            {{ $purchase->confirmation_finance_at->format('d M Y') }}
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                        {{-- 
+                                        <tbody>
+                                            @foreach($purchases as $purchase)
+                                            <tr>
+                                                <td>{{ $purchase->id }}{{ \Carbon\Carbon::parse($purchase->created_at)->format('F Y') }}</td>
                                                 <td>{{ ucfirst($purchase->payment_method ?? '-') }}</td>
                                                 <td>
                                                     @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
@@ -243,6 +313,7 @@
                                             </tr>
                                             @endforeach
                                         </tbody>
+                                        --}}
                                     </table>
                                 </div>
                                 <div class="card-footer">
@@ -346,97 +417,314 @@
 </div>
 
 <!-- Payment Modal -->
-<!-- Payment Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="paymentModalLabel">Konfirmasi Pembayaran</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="paymentModalLabel">
+                    <i class="fas fa-money-bill-wave mr-2"></i>Konfirmasi Pembayaran
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body">
-                <!-- Detail Tagihan -->
-                <div class="payment-detail bg-light p-3 rounded mb-3">
-                    <h6 class="fw-bold mb-3">Detail Tagihan</h6>
-                    <div class="row mb-2">
-                        <div class="col-sm-5">Paket Internet:</div>
-                        <div class="col-sm-7"><strong id="modal-package">-</strong></div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-sm-5">Harga Bulanan:</div>
-                        <div class="col-sm-7" id="modal-monthly-price">-</div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-5">Total Pembayaran:</div>
-                        <div class="col-sm-7"><strong id="modal-total">-</strong></div>
-                    </div>
-                </div>
+                <div class="row">
+                    <!-- Left Column - Payment Options -->
+                    <div class="col-md-5">
+                        <!-- Period Selection -->
+                        <div class="mb-4">
+                            <h6 class="font-weight-bold mb-3">
+                                <i class="fas fa-calendar-alt mr-2"></i>Pilih Periode Pembayaran
+                            </h6>
 
-                <!-- Metode Pembayaran -->
-                <div class="mb-3">
-                    <h6 class="fw-bold">Metode Pembayaran</h6>
-                    <p class="mb-0" id="modal-method">-</p>
-                </div>
-
-                <!-- Informasi Bank -->
-                <div class="bank-info bg-info bg-opacity-10 p-3 rounded mb-3">
-                    <h6 class="fw-bold mb-3">Informasi Transfer</h6>
-                    <div class="row mb-2">
-                        <div class="col-sm-5">Bank:</div>
-                        <div class="col-sm-7"><strong id="modal-bank">-</strong></div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-sm-5">Nomor Rekening:</div>
-                        <div class="col-sm-7"><strong id="modal-account">-</strong></div>
-                    </div>
-                    <div class="row mb-2">
-                        <div class="col-sm-5">Atas Nama:</div>
-                        <div class="col-sm-7"><strong id="modal-account-name">-</strong></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-5">Jumlah:</div>
-                        <div class="col-sm-7"><strong class="text-success" id="modal-amount">-</strong></div>
-                    </div>
-                </div>
-
-                <!-- Form Upload Bukti Pembayaran -->
-                <form id="payment-proof-form">
-                    <div>
-                        <h6 class="fw-bold mb-3">Upload Bukti Pembayaran</h6>
-                        
-                        <!-- File Upload Area -->
-                        <div class="file-upload-area mb-3">
-                            <div id="payment-drop-area" class="border-dashed border-2 border-gray-300 rounded p-5 text-center"
-                                 style="cursor: pointer;">
-                                <div class="mb-2">
-                                    <i class="fas fa-cloud-upload-alt fa-2x text-muted"></i>
-                                </div>
-                                <p class="mb-1">Klik untuk upload atau drag & drop</p>
-                                <p class="text-muted small">PNG, JPG, GIF (Maks. 2MB)</p>
-                                <input id="payment_proof" 
-                                       type="file" 
-                                       class="d-none"
-                                       accept="image/*">
+                            <!-- Info Alert -->
+                            <div class="alert alert-info py-2 px-3 mb-3">
+                                <small>
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Periode aktif berakhir: <strong id="current-period-end">-</strong>
+                                    <br>
+                                    <span id="next-period-preview">Pembayaran untuk periode: <strong>-</strong></span>
+                                </small>
                             </div>
-                            
-                            <!-- Preview Area -->
-                            <div id="payment-preview" class="mt-3"></div>
+
+                            <!-- Custom Month Input -->
+                            <div class="custom-months-input mb-3">
+                                <label class="font-weight-bold mb-2">
+                                    <i class="fas fa-keyboard mr-1"></i>
+                                    Jumlah Bulan (1-24)
+                                </label>
+                                <div class="input-group">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="decreaseMonths()">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" 
+                                           class="form-control text-center font-weight-bold" 
+                                           id="custom-months-input" 
+                                           min="1" 
+                                           max="24" 
+                                           value="1"
+                                           wire:model.lazy="payment_months"
+                                           onchange="updateCustomMonths(this.value)">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="increaseMonths()">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">Bulan</span>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Minimal 1 bulan, maksimal 24 bulan</small>
+                            </div>
+
+                            <!-- Quick Selection Buttons -->
+                            <div class="quick-selection mb-3" id="discount-quick-selection" style="display: none;">
+                                <label class="font-weight-bold mb-2">
+                                    <i class="fas fa-bolt mr-1"></i>
+                                    Pilihan Cepat (Dengan Diskon)
+                                </label>
+                                <div class="row">
+                                    <!-- Will be populated by JavaScript based on discount tiers -->
+                                </div>
+                            </div>
+
+                            <!-- Popular Choices -->
+                            <div class="quick-selection mb-3">
+                                <label class="font-weight-bold mb-2">
+                                    <i class="fas fa-star mr-1"></i>
+                                    Pilihan Populer
+                                </label>
+                                <div class="row">
+                                    <div class="col-6 mb-2">
+                                        <button type="button" class="btn btn-outline-primary btn-block" onclick="updateCustomMonths(1)">
+                                            1 Bulan
+                                        </button>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <button type="button" class="btn btn-outline-primary btn-block" onclick="updateCustomMonths(3)">
+                                            3 Bulan
+                                        </button>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <button type="button" class="btn btn-outline-primary btn-block" onclick="updateCustomMonths(6)">
+                                            6 Bulan
+                                        </button>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <button type="button" class="btn btn-outline-primary btn-block" onclick="updateCustomMonths(12)">
+                                            12 Bulan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment Summary -->
+                        <div class="payment-summary bg-light p-3 rounded border">
+                            <h6 class="font-weight-bold mb-3">
+                                <i class="fas fa-file-invoice mr-2"></i>Ringkasan Pembayaran
+                            </h6>
+                            <div class="summary-row">
+                                <span>Paket Internet:</span>
+                                <span id="summary-package">-</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Periode:</span>
+                                <span id="summary-period">1 Bulan</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Harga per Bulan:</span>
+                                <span id="summary-monthly">Rp 0</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span id="summary-subtotal">Rp 0</span>
+                            </div>
+                            <div class="summary-row discount-row" id="discount-row" style="display: none;">
+                                <span class="text-success">
+                                    <i class="fas fa-tag mr-1"></i>
+                                    Diskon <span id="summary-discount-percent">(0%)</span>:
+                                </span>
+                                <span class="text-success font-weight-bold">
+                                    - <span id="summary-discount">Rp 0</span>
+                                </span>
+                            </div>
+                            <hr class="my-2">
+                            <div class="summary-row summary-total">
+                                <span class="font-weight-bold">Total Pembayaran:</span>
+                                <span class="font-weight-bold text-success h5 mb-0" id="summary-total">Rp 0</span>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Periode: <span id="summary-period-detail">-</span>
+                            </small>
                         </div>
                     </div>
-                    
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-1"></i>Kirim Bukti Pembayaran
-                        </button>
+
+                    <!-- Right Column - Payment Method -->
+                    <div class="col-md-7">
+                        <!-- Payment Method Selection -->
+                        <div class="mb-4" id="payment-method-selection">
+                            <h6 class="font-weight-bold mb-3">
+                                <i class="fas fa-wallet mr-2"></i>Pilih Metode Pembayaran
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <div class="card payment-method-card" onclick="selectPaymentMethod('manual')" id="manual-card">
+                                        <div class="card-body text-center py-4">
+                                            <i class="fas fa-university fa-3x text-primary mb-2"></i>
+                                            <h6 class="mb-1">Transfer Bank Manual</h6>
+                                            <small class="text-muted">Upload bukti transfer</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2" id="xendit-method-wrapper" style="display: none;">
+                                    <div class="card payment-method-card" onclick="selectPaymentMethod('xendit')" id="xendit-card">
+                                        <div class="card-body text-center py-4">
+                                            <i class="fas fa-credit-card fa-3x text-success mb-2"></i>
+                                            <h6 class="mb-1">Pembayaran Digital</h6>
+                                            <small class="text-muted">VA, E-Wallet, Credit Card</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Manual Transfer Section -->
+                        <div id="manual-payment-section">
+                            <!-- Bank Info -->
+                            <div class="bank-info bg-info bg-opacity-10 p-3 rounded mb-3 border border-info">
+                                <h6 class="font-weight-bold mb-3">
+                                    <i class="fas fa-info-circle mr-2"></i>Informasi Transfer Bank
+                                </h6>
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr>
+                                        <td width="35%">Bank</td>
+                                        <td width="5%">:</td>
+                                        <td><strong id="modal-bank">-</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Nomor Rekening</td>
+                                        <td>:</td>
+                                        <td>
+                                            <strong id="modal-account" class="text-primary">-</strong>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary ml-2" onclick="copyAccountNumber()" title="Salin nomor rekening">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Atas Nama</td>
+                                        <td>:</td>
+                                        <td><strong id="modal-account-name">-</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Jumlah Transfer</td>
+                                        <td>:</td>
+                                        <td>
+                                            <strong class="text-success h6 mb-0" id="modal-amount">Rp 0</strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div class="alert alert-warning mt-3 mb-0">
+                                    <small>
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        Transfer sesuai <strong>nominal yang tertera</strong> untuk mempermudah verifikasi
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Upload Form -->
+                            <form id="payment-proof-form">
+                                <div>
+                                    <h6 class="font-weight-bold mb-3">
+                                        <i class="fas fa-upload mr-2"></i>Upload Bukti Pembayaran
+                                    </h6>
+                                    
+                                    <div class="file-upload-area mb-3">
+                                        <div id="payment-drop-area" 
+                                             class="border border-2 border-dashed rounded p-4 text-center"
+                                             style="cursor: pointer; border-color: #ddd;">
+                                            <div class="mb-2">
+                                                <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                                            </div>
+                                            <p class="mb-1 font-weight-bold">Klik untuk upload atau drag & drop</p>
+                                            <p class="text-muted small mb-0">PNG, JPG, GIF (Maksimal 2MB)</p>
+                                            <input id="payment_proof" 
+                                                   type="file" 
+                                                   class="d-none"
+                                                   accept="image/*"
+                                                   wire:model="payment_proof">
+                                        </div>
+                                        <div id="payment-preview" class="mt-3"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="modal-footer border-top pt-3">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                        <i class="fas fa-times mr-1"></i>Batal
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane mr-1"></i>Kirim Bukti Pembayaran
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Xendit Payment Section -->
+                        <div id="xendit-payment-section" style="display: none;">
+                            <div class="text-center p-4">
+                                <i class="fas fa-credit-card fa-4x text-success mb-3"></i>
+                                <h5 class="mb-3">Pembayaran Digital via Xendit</h5>
+                                <p class="text-muted mb-4">
+                                    Anda akan diarahkan ke halaman pembayaran Xendit untuk menyelesaikan transaksi
+                                </p>
+                                <div class="mb-4">
+                                    <small class="text-muted d-block mb-2">Metode pembayaran yang tersedia:</small>
+                                    <div class="d-flex justify-content-center flex-wrap">
+                                        <span class="badge badge-info m-1 p-2">
+                                            <i class="fas fa-university mr-1"></i>Virtual Account
+                                        </span>
+                                        <span class="badge badge-info m-1 p-2">
+                                            <i class="fas fa-wallet mr-1"></i>E-Wallet
+                                        </span>
+                                        <span class="badge badge-info m-1 p-2">
+                                            <i class="fas fa-credit-card mr-1"></i>Credit Card
+                                        </span>
+                                        <span class="badge badge-info m-1 p-2">
+                                            <i class="fas fa-qrcode mr-1"></i>QRIS
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" 
+                                        class="btn btn-success btn-lg px-5" 
+                                        onclick="initiateXenditPayment()"
+                                        id="xendit-pay-button">
+                                    <i class="fas fa-arrow-right mr-2"></i>Lanjutkan ke Pembayaran
+                                </button>
+                                
+                                <div id="xendit-loading" class="mt-3" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                                    <p class="mt-2 text-muted">Membuat invoice pembayaran...</p>
+                                </div>
+
+                                <div class="mt-4">
+                                    <small class="text-muted">
+                                        <i class="fas fa-shield-alt mr-1"></i>
+                                        Pembayaran dilindungi dan diproses oleh Xendit
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 @if($customer->partnershipAgreement)
 <script>
     function prinsts() 
@@ -463,479 +751,707 @@
     });
 </script>
 @endif
+
 <script>
-    document.addEventListener('livewire:load', function() {
-        // Format angka ke Rupiah
-        const formatRupiah = (number) => {
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(number);
-        };
+document.addEventListener('livewire:load', function() {
+    // Global variables
+    let paymentModal = null;
+    let currentPurchaseId = null;
+    let currentPaymentMethod = 'manual';
+    let selectedMonths = 1;
+    let xenditActive = false;
+    let monthlyPrice = 0;
+    let packageName = '';
+    let discountEnabled = false;
+    let discountTiers = [];
+    let minMonths = 1;
+    let maxMonths = 24;
+    let currentBillingEnd = '';
+    let nextPeriodStart = '';
 
-        // Variabel untuk menyimpan data modal
-        let paymentModal = null;
-        let currentPurchaseId = null;
+    // Format Rupiah
+    const formatRupiah = (number) => {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0
+        }).format(number);
+    };
 
-        // Event untuk menampilkan modal pembayaran
-        window.addEventListener('show-payment-modal', function(event) {
-            // Simpan data untuk penggunaan nanti
-            currentPurchaseId = event.detail.purchaseId || null;
-            
-            // Isi data ke dalam modal
-            document.getElementById('modal-package').textContent = event.detail.packageName;
-            document.getElementById('modal-monthly-price').textContent = formatRupiah(event.detail.amount);
-            document.getElementById('modal-total').textContent = formatRupiah(event.detail.amount);
-            document.getElementById('modal-method').textContent = event.detail.method;
-            document.getElementById('modal-bank').textContent = event.detail.bank;
-            document.getElementById('modal-account').textContent = event.detail.account;
-            document.getElementById('modal-account-name').textContent = event.detail.accountName;
-            document.getElementById('modal-amount').textContent = formatRupiah(event.detail.amount);
-            
-            // Tampilkan modal
-            paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
-            paymentModal.show();
-        });
-
-        // Event untuk menyembunyikan modal pembayaran
-        window.addEventListener('hide-payment-modal', function() {
-            if (paymentModal) {
-                paymentModal.hide();
-            }
-            
-            // Reset form
-            document.getElementById('payment-proof-form').reset();
-            document.getElementById('payment-preview').innerHTML = '';
-        });
-
-        // Handle form submission
-        document.getElementById('payment-proof-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Dapatkan file yang diupload
-            const fileInput = document.getElementById('payment_proof');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                alert('Silakan pilih file bukti pembayaran');
-                return;
-            }
-            
-            // Kirim ke Livewire
-            @this.upload('payment_proof', file, function() {
-                // Set purchase_id jika diperlukan
-                if (currentPurchaseId) {
-                    @this.set('purchase_id', currentPurchaseId);
-                }
-                
-                // Panggil method submit
-                @this.call('submitPaymentProof');
-            });
-        });
-
-        // Handle file preview
-        document.getElementById('payment_proof').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const preview = document.getElementById('payment-preview');
-            
-            if (file) {
-                if (file.type.match('image.*')) {
-                    const reader = new FileReader();
-                    
-                    reader.onload = function(e) {
-                        preview.innerHTML = `
-                            <div class="text-center">
-                                <img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;">
-                                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="clearFileInput()">
-                                    <i class="fas fa-times me-1"></i>Hapus
-                                </button>
-                            </div>
-                        `;
-                    };
-                    
-                    reader.readAsDataURL(file);
-                } else {
-                    preview.innerHTML = `
-                        <div class="alert alert-warning">
-                            File harus berupa gambar (JPG, PNG, GIF)
-                        </div>
-                    `;
-                    document.getElementById('payment_proof').value = '';
-                }
-            } else {
-                preview.innerHTML = '';
-            }
-        });
-
-        // Fungsi untuk menghapus file input
-        window.clearFileInput = function() {
-            document.getElementById('payment_proof').value = '';
-            document.getElementById('payment-preview').innerHTML = '';
-        };
-
-        // Handle drag and drop
-        const dropArea = document.getElementById('payment-drop-area');
-        if (dropArea) {
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropArea.addEventListener(eventName, preventDefaults, false);
-            });
-            
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropArea.addEventListener(eventName, highlight, false);
-            });
-            
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropArea.addEventListener(eventName, unhighlight, false);
-            });
-            
-            function highlight() {
-                dropArea.classList.add('highlight');
-            }
-            
-            function unhighlight() {
-                dropArea.classList.remove('highlight');
-            }
-            
-            dropArea.addEventListener('drop', handleDrop, false);
-            
-            function handleDrop(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                
-                if (files.length) {
-                    document.getElementById('payment_proof').files = files;
-                    const event = new Event('change', { bubbles: true });
-                    document.getElementById('payment_proof').dispatchEvent(event);
-                }
-            }
+    // Get discount percentage for given months
+    function getDiscountPercentage(months) {
+        if (!discountEnabled || discountTiers.length === 0) {
+            return 0;
         }
-    });
-</script>
-<script>
-    document.addEventListener('livewire:load', function () {  
-        function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
 
-        if (files.length) {
-            const fileInput = document.getElementById('payment_proof');
-
-            // Buat DataTransfer baru dan isi file-nya
-            const dataTransfer = new DataTransfer();
-            for (let i = 0; i < files.length; i++) {
-                dataTransfer.items.add(files[i]);
+        let applicableDiscount = 0;
+        discountTiers.forEach(tier => {
+            if (months >= tier.months) {
+                applicableDiscount = tier.discount;
             }
+        });
 
-            // Set file ke input
-            fileInput.files = dataTransfer.files;
+        return applicableDiscount;
+    }
 
-            // Penting: Trigger event agar Livewire tahu file sudah dipilih
-            fileInput.dispatchEvent(new Event('input', { bubbles: true }));
-            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    // Calculate payment
+    function calculatePayment(months) {
+        const subtotal = monthlyPrice * months;
+        const discountPercent = getDiscountPercentage(months);
+        const discountAmount = subtotal * (discountPercent / 100);
+        const total = subtotal - discountAmount;
+
+        return {
+            months: months,
+            subtotal: subtotal,
+            discountPercent: discountPercent,
+            discountAmount: discountAmount,
+            total: total
+        };
+    }
+
+    // Calculate period dates
+    function calculatePeriodDates(months) {
+        // Simple calculation for display
+        // Backend will calculate the exact dates
+        if (months === 1) {
+            return `1 bulan ke depan`;
+        } else if (months < 12) {
+            return `${months} bulan ke depan`;
+        } else {
+            const years = Math.floor(months / 12);
+            const remainingMonths = months % 12;
+            if (remainingMonths === 0) {
+                return `${years} tahun`;
+            } else {
+                return `${years} tahun ${remainingMonths} bulan`;
+            }
         }
     }
 
-        window.addEventListener('show-payment-modal', () => {
+    // Update summary display
+    function updateSummary() {
+        const calc = calculatePayment(selectedMonths);
 
-        // Format angka ke Rupiah
-        const formatRupiah = (number) => {
-            return new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(number);
-        };
+        document.getElementById('summary-package').textContent = packageName;
+        document.getElementById('summary-period').textContent = selectedMonths + ' Bulan';
+        document.getElementById('summary-monthly').textContent = formatRupiah(monthlyPrice);
+        document.getElementById('summary-subtotal').textContent = formatRupiah(calc.subtotal);
+        document.getElementById('summary-total').textContent = formatRupiah(calc.total);
+        document.getElementById('modal-amount').textContent = formatRupiah(calc.total);
         
-        // Isi data ke dalam modal
-        document.getElementById('modal-package').textContent = event.detail.packageName;
-        document.getElementById('modal-monthly-price').textContent = formatRupiah(event.detail.amount);
-        document.getElementById('modal-total').textContent = formatRupiah(event.detail.amount);
-        document.getElementById('modal-method').textContent = event.detail.method;
+        // Update period detail
+        document.getElementById('summary-period-detail').textContent = calculatePeriodDates(selectedMonths);
+        document.getElementById('next-period-preview').innerHTML = `Pembayaran untuk periode: <strong>${calculatePeriodDates(selectedMonths)}</strong>`;
+
+        // Show/hide discount row
+        const discountRow = document.getElementById('discount-row');
+        if (calc.discountPercent > 0) {
+            discountRow.style.display = 'flex';
+            document.getElementById('summary-discount-percent').textContent = `(${calc.discountPercent}%)`;
+            document.getElementById('summary-discount').textContent = formatRupiah(calc.discountAmount);
+        } else {
+            discountRow.style.display = 'none';
+        }
+
+        // Sync with Livewire
+        @this.set('payment_months', selectedMonths);
+    }
+
+    // Update custom months from input or buttons
+    window.updateCustomMonths = function(months) {
+        months = parseInt(months);
+        
+        // Validate range
+        if (months < minMonths) months = minMonths;
+        if (months > maxMonths) months = maxMonths;
+        
+        selectedMonths = months;
+        
+        // Update input value
+        const input = document.getElementById('custom-months-input');
+        if (input) {
+            input.value = months;
+        }
+        
+        updateSummary();
+    };
+
+    // Increase months
+    window.increaseMonths = function() {
+        const currentValue = parseInt(document.getElementById('custom-months-input').value);
+        updateCustomMonths(currentValue + 1);
+    };
+
+    // Decrease months
+    window.decreaseMonths = function() {
+        const currentValue = parseInt(document.getElementById('custom-months-input').value);
+        updateCustomMonths(currentValue - 1);
+    };
+
+    // Select payment method
+    window.selectPaymentMethod = function(method) {
+        currentPaymentMethod = method;
+        
+        const manualCard = document.getElementById('manual-card');
+        const xenditCard = document.getElementById('xendit-card');
+        
+        if (method === 'manual') {
+            manualCard.classList.add('border-primary', 'bg-light');
+            manualCard.style.borderWidth = '3px';
+            if (xenditCard) {
+                xenditCard.classList.remove('border-success', 'bg-light');
+                xenditCard.style.borderWidth = '1px';
+            }
+            
+            document.getElementById('manual-payment-section').style.display = 'block';
+            document.getElementById('xendit-payment-section').style.display = 'none';
+        } else {
+            if (xenditCard) {
+                xenditCard.classList.add('border-success', 'bg-light');
+                xenditCard.style.borderWidth = '3px';
+            }
+            manualCard.classList.remove('border-primary', 'bg-light');
+            manualCard.style.borderWidth = '1px';
+            
+            document.getElementById('manual-payment-section').style.display = 'none';
+            document.getElementById('xendit-payment-section').style.display = 'block';
+        }
+    };
+
+    // Show payment modal
+    window.addEventListener('show-payment-modal', function(event) {
+        currentPurchaseId = event.detail.purchaseId || null;
+        xenditActive = event.detail.xenditActive || false;
+        monthlyPrice = event.detail.monthlyPrice || 0;
+        packageName = event.detail.packageName || '-';
+        discountEnabled = event.detail.discountEnabled || false;
+        discountTiers = event.detail.discountTiers || [];
+        minMonths = event.detail.minMonths || 1;
+        maxMonths = event.detail.maxMonths || 24;
+        currentBillingEnd = event.detail.currentBillingEnd || '-';
+        nextPeriodStart = event.detail.nextPeriodStart || '-';
+        
+        // Update bank info
         document.getElementById('modal-bank').textContent = event.detail.bank;
         document.getElementById('modal-account').textContent = event.detail.account;
         document.getElementById('modal-account-name').textContent = event.detail.accountName;
-        document.getElementById('modal-amount').textContent = formatRupiah(event.detail.amount);
+        document.getElementById('current-period-end').textContent = currentBillingEnd;
         
-        // Tampilkan modal
-        const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
-        paymentModal.show();
-        
-        });
-    
-    // Event untuk menyembunyikan modal
-    window.addEventListener('hide-payment-modal', () => {
-        var paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
-        paymentModal.hide();
-    });
-    
-    // Drag and drop functionality
-    const dropArea = document.querySelector('.file-upload-area .border-dashed');
-    if (dropArea) 
-        {
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-        
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
+        // Update month input limits
+        const monthInput = document.getElementById('custom-months-input');
+        if (monthInput) {
+            monthInput.min = minMonths;
+            monthInput.max = maxMonths;
         }
         
+        // Show/hide discount quick selection
+        const discountQuickSelection = document.getElementById('discount-quick-selection');
+        if (discountEnabled && discountTiers.length > 0) {
+            discountQuickSelection.style.display = 'block';
+            
+            // Build discount buttons
+            let buttonsHtml = '';
+            discountTiers.forEach(tier => {
+                buttonsHtml += `
+                    <div class="col-6 mb-2">
+                        <button type="button" class="btn btn-outline-success btn-block" onclick="updateCustomMonths(${tier.months})">
+                            ${tier.months} Bulan
+                            <br>
+                            <small>${tier.label}</small>
+                        </button>
+                    </div>
+                `;
+            });
+            discountQuickSelection.querySelector('.row').innerHTML = buttonsHtml;
+        } else {
+            discountQuickSelection.style.display = 'none';
+        }
+        
+        // Show/hide Xendit option
+        if (xenditActive) {
+            document.getElementById('xendit-method-wrapper').style.display = 'block';
+        } else {
+            document.getElementById('xendit-method-wrapper').style.display = 'none';
+        }
+        
+        // Reset selections
+        selectedMonths = 1;
+        updateCustomMonths(1);
+        selectPaymentMethod('manual');
+        
+        // Show modal
+        paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        paymentModal.show();
+    });
+
+    // Hide payment modal
+    window.addEventListener('hide-payment-modal', function() {
+        if (paymentModal) {
+            paymentModal.hide();
+        }
+        resetPaymentForm();
+    });
+
+    // Listen to Livewire payment calculated event
+    window.addEventListener('payment-calculated', function(event) {
+        const calc = event.detail.calculation;
+        
+        // Update summary from Livewire calculation
+        document.getElementById('summary-monthly').textContent = formatRupiah(calc.monthly_price);
+        document.getElementById('summary-subtotal').textContent = formatRupiah(calc.subtotal);
+        document.getElementById('summary-total').textContent = formatRupiah(calc.total);
+        document.getElementById('modal-amount').textContent = formatRupiah(calc.total);
+        
+        const discountRow = document.getElementById('discount-row');
+        if (calc.discount_percentage > 0) {
+            discountRow.style.display = 'flex';
+            document.getElementById('summary-discount-percent').textContent = `(${calc.discount_percentage}%)`;
+            document.getElementById('summary-discount').textContent = formatRupiah(calc.discount_amount);
+        } else {
+            discountRow.style.display = 'none';
+        }
+    });
+
+    // Initiate Xendit payment
+    window.initiateXenditPayment = function() {
+        const button = document.getElementById('xendit-pay-button');
+        const loadingDiv = document.getElementById('xendit-loading');
+        
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+        loadingDiv.style.display = 'block';
+        
+        @this.call('payWithXendit')
+            .then(() => {
+                console.log('Redirecting to Xendit...');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Lanjutkan ke Pembayaran';
+                loadingDiv.style.display = 'none';
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+            });
+    };
+
+    // Copy account number
+    window.copyAccountNumber = function() {
+        const accountNumber = document.getElementById('modal-account').textContent;
+        navigator.clipboard.writeText(accountNumber).then(function() {
+            // Show toast notification
+            const toast = document.createElement('div');
+            toast.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 250px;';
+            toast.innerHTML = `
+                <i class="fas fa-check-circle mr-2"></i>Nomor rekening berhasil disalin!
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        });
+    };
+
+    // Reset payment form
+    function resetPaymentForm() {
+        document.getElementById('payment-proof-form').reset();
+        document.getElementById('payment-preview').innerHTML = '';
+        currentPurchaseId = null;
+        currentPaymentMethod = 'manual';
+        selectedMonths = 1;
+    }
+
+    // Handle form submission
+    document.getElementById('payment-proof-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('payment_proof');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            alert('Silakan pilih file bukti pembayaran');
+            return;
+        }
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengirim...';
+        
+        @this.upload('payment_proof', file, 
+            (uploadedFilename) => {
+                @this.set('purchase_id', currentPurchaseId);
+                @this.call('submitPaymentProof').then(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                });
+            },
+            (error) => {
+                alert('Gagal mengupload file: ' + error);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            },
+            (event) => {
+                let progress = Math.round((event.detail.progress || 0));
+                submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Uploading ${progress}%`;
+            }
+        );
+    });
+
+    // File preview
+    document.getElementById('payment_proof').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('payment-preview');
+        
+        if (file) {
+            if (file.type.match('image.*')) {
+                if (file.size > 2 * 1024 * 1024) {
+                    preview.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Ukuran file terlalu besar! Maksimal 2MB.
+                        </div>
+                    `;
+                    this.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <img src="${e.target.result}" class="img-fluid rounded" style="max-height: 300px;">
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="clearFileInput()">
+                                        <i class="fas fa-times mr-1"></i>Hapus File
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        File harus berupa gambar (JPG, PNG, GIF)
+                    </div>
+                `;
+                this.value = '';
+            }
+        } else {
+            preview.innerHTML = '';
+        }
+    });
+
+    // Clear file input
+    window.clearFileInput = function() {
+        document.getElementById('payment_proof').value = '';
+        document.getElementById('payment-preview').innerHTML = '';
+    };
+
+    // Drag and drop
+    const dropArea = document.getElementById('payment-drop-area');
+    if (dropArea) {
+        dropArea.addEventListener('click', function() {
+            document.getElementById('payment_proof').click();
+        });
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+        
         ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
+            dropArea.addEventListener(eventName, function() {
+                this.classList.add('border-primary', 'bg-light');
+            }, false);
         });
         
         ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
+            dropArea.addEventListener(eventName, function() {
+                this.classList.remove('border-primary', 'bg-light');
+            }, false);
         });
         
-        function highlight() {
-            dropArea.classList.add('bg-light');
-        }
-        
-        function unhighlight() {
-            dropArea.classList.remove('bg-light');
-        }
-        
-        dropArea.addEventListener('drop', handleDrop, false);
-        
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            
+        dropArea.addEventListener('drop', function(e) {
+            const files = e.dataTransfer.files;
             if (files.length) {
-                document.getElementById('payment_proof').files = files;
-                // Trigger Livewire file upload
+                const fileInput = document.getElementById('payment_proof');
+                fileInput.files = files;
                 const event = new Event('change', { bubbles: true });
-                document.getElementById('payment_proof').dispatchEvent(event);
+                fileInput.dispatchEvent(event);
             }
-        }
+        }, false);
     }
-        window.addEventListener('showImageModal', function(event) {
-            console.log("showImageModal");
-            
-            const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
-            
-            // Set modal title and content
-            document.getElementById('modalTitle').innerText = event.detail.title;
-            document.getElementById('modalContent').innerHTML = `
-                <img src="${event.detail.imageUrl}" class="img-fluid" alt="${event.detail.title}">
-            `;
-            
-            // Show modal
-            modal.show();
+
+    // Handle keyboard input on custom months
+    const monthsInput = document.getElementById('custom-months-input');
+    if (monthsInput) {
+        monthsInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                updateCustomMonths(this.value);
+            }
         });
 
-        // Gallery modal handler
-        window.addEventListener('showGalleryModal', function(event) {
-            const modal = new bootstrap.Modal(document.getElementById('galleryModal'));
-            const carouselInner = document.getElementById('carouselInner');
-            
-            // Set title
-            document.getElementById('galleryModalTitle').innerText = event.detail.title;
-            
-            // Clear previous items
-            carouselInner.innerHTML = '';
-            
-            // Add new items
-            event.detail.images.forEach((image, index) => {
-                const item = document.createElement('div');
-                item.className = `carousel-item ${index === 0 ? 'active' : ''}`;
-                item.innerHTML = `
-                    <div class="text-center">
-                        <img src="${image}" class="d-block w-100" style="max-height: 70vh; object-fit: contain;">
-                        <div class="mt-2">Foto ${index + 1}/${event.detail.images.length}</div>
-                    </div>
-                `;
-                carouselInner.appendChild(item);
-            });
-            
-            // Initialize carousel
-            const carousel = new bootstrap.Carousel(document.getElementById('carouselGallery'));
-            modal.show();
+        // Prevent non-numeric input
+        monthsInput.addEventListener('keypress', function(e) {
+            if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+                e.preventDefault();
+            }
         });
+    }
+
+    // Image modals
+    window.addEventListener('showImageModal', function(event) {
+        const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+        document.getElementById('modalTitle').innerText = event.detail.title;
+        document.getElementById('modalContent').innerHTML = `
+            <img src="${event.detail.imageUrl}" class="img-fluid" alt="${event.detail.title}">
+        `;
+        modal.show();
     });
+
+    window.addEventListener('showGalleryModal', function(event) {
+        const modal = new bootstrap.Modal(document.getElementById('galleryModal'));
+        const carouselInner = document.getElementById('carouselInner');
+        
+        document.getElementById('galleryModalTitle').innerText = event.detail.title;
+        carouselInner.innerHTML = '';
+        
+        event.detail.images.forEach((image, index) => {
+            const item = document.createElement('div');
+            item.className = `carousel-item ${index === 0 ? 'active' : ''}`;
+            item.innerHTML = `
+                <div class="text-center">
+                    <img src="${image}" class="d-block w-100" style="max-height: 70vh; object-fit: contain;">
+                    <div class="mt-2">Foto ${index + 1}/${event.detail.images.length}</div>
+                </div>
+            `;
+            carouselInner.appendChild(item);
+        });
+        
+        modal.show();
+    });
+});
 </script>
 @endpush
+
+
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
 <style>
-    .img-signature
-    {
-        background-color: transparent !important; 
-        border: 0px solid #dee2e6 !important;
-        box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.0) !important;       
-        max-height: 100px !important; 
-    }
-    .signature-container {
-        width: fit-content;
-    }
-    .signature-canvas {
-        /* width: 100%; */
-        /* height: 200px; */
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        background-color: white;
-        touch-action: none;
-    }
-    .custom-file-label::after {
-        content: "Browse";
-    }
-    #ktpPreviewImg {
-        max-height: 200px;
-    }
-</style>
-<style>
-   .small-text 
-    {
-        text-align: justify;
-        font-size: 0.79rem;
-    }
+/* Custom Months Input */
+.custom-months-input .form-control {
+    font-size: 20px;
+    height: 50px;
+}
 
-    .text-ads a, 
-    .text-ads li, 
-    .text-ads p, 
-    .text-ads div, 
-    .text-ads span, 
-    .text-ads h1, 
-    .text-ads h2, 
-    .text-ads h3, 
-    .text-ads h4, 
-    .text-ads h5, 
-    .text-ads h6 
-    {
-        font-size: 0.92rem;
-    }
-    .small-header
-    {
-        font-size: 1rem;
-        font-weight: bold;
-    }
-    @media print {
-        #printItem {
-            margin-left: 50px;
-            margin-right: 50px;
-        }
-    }
+.custom-months-input .btn {
+    height: 50px;
+    width: 50px;
+}
 
-    body {
-        font-family: Arial;
-        /* font-size : 12px; */
-        /* padding: 20px; */
-        /* background-color: #f4f4f4; */
-    }
+.custom-months-input .input-group-text {
+    height: 50px;
+}
 
-    .container {
-        /* background-color: #fff; */
-        padding: 10px;
-        border-radius: 5px;
-    }
+/* Quick Selection Buttons */
+.quick-selection .btn {
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
 
-    .select2-selection__rendered {
-        line-height: 31px !important;
-    }
+.quick-selection .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
 
-    .select2-container .select2-selection--single {
-        height: 35px !important;
-    }
+.quick-selection .btn-outline-primary:hover {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
 
-    .select2-selection__arrow {
-        height: 34px !important;
-    }
+.quick-selection .btn-outline-success:hover {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
 
-    hr {
-        border: 1px solid black;
-        border-radius: 5px;
-    }
+/* Payment Summary */
+.payment-summary {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6 !important;
+}
 
-    .select2-selection__rendered {
-        line-height: 31px !important;
-    }
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #dee2e6;
+}
 
-    .select2-container .select2-selection--single {
-        height: 35px !important;
-    }
+.summary-row:last-child {
+    border-bottom: none;
+}
 
-    .select2-selection__arrow {
-        height: 34px !important;
-    }
+.summary-total {
+    padding-top: 15px;
+    font-size: 18px;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    margin: 0 -15px -15px -15px;
+    padding: 15px 15px 15px 15px;
+    border-radius: 0 0 5px 5px;
+}
 
-    /* li */
-    .margin {
-        margin-bottom: 15px;
-    }
+.discount-row {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    margin: 0 -15px;
+    padding: 10px 15px !important;
+    border-bottom: none !important;
+}
 
-    .noMargin {
-        margin-bottom: 0px;
-    }
+/* Payment Method Cards */
+.payment-method-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid #ddd;
+    height: 100%;
+}
 
-    .scrollable {
-        width: 100%;
-        height: 650px;
-        overflow: auto;
-        border: 1px solid #ccc;
-    }
-</style>
-<style>
-    .info-box {
-        border-radius: 5px;
-        margin-bottom: 15px;
-        box-shadow: 0 0 1px rgba(0,0,0,0.1);
-    }
-    .info-box-content {
-        padding: 10px 15px;
-    }
-    .info-box-text {
-        font-size: 14px;
-        color: #6c757d;
-    }
-    .info-box-number {
-        font-size: 20px;
-        font-weight: 600;
-    }
-    .card-header {
-        border-bottom: 1px solid rgba(0,0,0,.125);
-    }
-    .modal.show {
-        background: rgba(0,0,0,0.5);
-        display: block;
-        overflow: auto;
-    }
+.payment-method-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
 
-    /* Add to your styles */
-    .carousel-item {
-        transition: transform 0.6s ease-in-out;
-    }
+.payment-method-card.border-primary {
+    border-color: #007bff !important;
+    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+}
 
-    .carousel-control-prev, .carousel-control-next {
-        width: 5%;
-        background: rgba(0,0,0,0.3);
-    }
+.payment-method-card.border-success {
+    border-color: #28a745 !important;
+    background: linear-gradient(135deg, #f1f8f4 0%, #d4edda 100%);
+}
 
-    .carousel-control-prev-icon, .carousel-control-next-icon {
-        width: 2rem;
-        height: 2rem;
-    }
-</style>
-<style>
+/* Bank Info */
+.bank-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+}
+
+.bank-info table td {
+    padding: 8px 0;
+}
+
+/* Drop Area */
 .border-dashed {
     border-style: dashed !important;
 }
-#payment-drop-area:hover {
-    border-color: #0d6efd !important;
-    background-color: #f8f9fa;
+
+#payment-drop-area {
+    transition: all 0.3s ease;
 }
-#payment-drop-area.highlight {
-    border-color: #0d6efd !important;
-    background-color: rgba(13, 110, 253, 0.1);
+
+#payment-drop-area:hover {
+    border-color: #007bff !important;
+    background-color: #f8f9fa !important;
+}
+
+#payment-drop-area.border-primary {
+    border-color: #007bff !important;
+    background-color: rgba(0, 123, 255, 0.05) !important;
+}
+
+/* Modal */
+.modal-xl {
+    max-width: 1200px;
+}
+
+.modal-body {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Alert Info */
+.alert-info {
+    background-color: #e7f3ff;
+    border-color: #b8daff;
+    color: #004085;
+}
+
+/* Badges */
+.badge {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* Input number - hide spinner */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-xl {
+        max-width: 95%;
+    }
+    
+    .custom-months-input .form-control {
+        font-size: 16px;
+        height: 45px;
+    }
+    
+    .custom-months-input .btn {
+        height: 45px;
+        width: 45px;
+    }
+    
+    .quick-selection .btn {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Toast notification positioning */
+.position-fixed {
+    position: fixed !important;
+}
+
+/* Loading Animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fa-spinner {
+    animation: spin 1s linear infinite;
 }
 </style>
 @endpush
