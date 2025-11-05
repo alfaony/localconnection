@@ -300,7 +300,7 @@ class InternetCustomerShow extends Component
 
     public function submitPaymentProof()
     {
-        $this->validate();
+        // $this->validate();
 
         try {
             $purchase = InternetCustomerPurchase::findOrFail($this->purchase_id);
@@ -309,7 +309,7 @@ class InternetCustomerShow extends Component
             if($internetCustomer->status == ParamSchema::SUSPENDED) {
                 dispatch(new ProvisionCustomerJob($internetCustomer->id));
             }
-            
+
             $internetCustomer->update([
                 'status' => ParamSchema::WAITING_PAYMENT_CONFIRMATION
             ]);
@@ -318,7 +318,7 @@ class InternetCustomerShow extends Component
             $periodStart = $internetCustomer->userCustomer->start_billing_date 
                 ? Carbon::parse($internetCustomer->userCustomer->start_billing_date)
                 : now();
-            
+
             $periodEnd = $periodStart->copy()->addMonths($this->payment_months)->subDay();
             
             // Store the file
@@ -328,7 +328,7 @@ class InternetCustomerShow extends Component
             $purchase->update([
                 'payment_proof' => $path,
                 'payment_method' => 'transfer',
-                'payment_date' => now(),
+                // 'payment_date' => now(),
                 'payment_months' => $this->payment_months,
                 'period_start' => $periodStart,
                 'period_end' => $periodEnd,
@@ -345,6 +345,7 @@ class InternetCustomerShow extends Component
             
             return redirect()->back()->with('success', 'Bukti pembayaran berhasil dikirim dan sedang menunggu konfirmasi.');            
         } catch (\Exception $e) {
+            dd($e);
             Log::error('Error submitting payment proof', [
                 'error' => $e->getMessage()
             ]);

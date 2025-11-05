@@ -200,7 +200,7 @@ class XenditService
             ];
 
         } catch (\Xendit\XenditSdkException $e) {
-            dd($e);
+            // dd($e);
             Log::error('Xendit SDK exception', [
                 'company_id' => $this->companyId,
                 'purchase_id' => $purchase->id,
