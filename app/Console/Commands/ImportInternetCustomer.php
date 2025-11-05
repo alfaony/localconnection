@@ -25,6 +25,7 @@ use App\Models\PartnershipAgreementType;
 use App\Models\User;
 use App\Models\AgreementSignature;
 use App\Helpers\InboxHelper;
+use App\Models\InternetCustomerPurchase;
 use Illuminate\Support\Facades\Log;
 
 class ImportInternetCustomer extends Command
@@ -345,10 +346,10 @@ class ImportInternetCustomer extends Command
             } else 
             {
                 // Simpan data pembayaran jika tidak ada promo
-                $this->processPayment($internetCustomer, $data, $paymentProofPath);
+                $this->processPayment($internetCustomer, $internetPackage);
                 
                 // Kirim notifikasi ke finance
-                $this->sendFinanceNotifications($internetCustomer);
+                // $this->sendFinanceNotifications($internetCustomer);c
             }
             
             DB::commit();
@@ -363,6 +364,15 @@ class ImportInternetCustomer extends Command
                 'reason' => 'Error: ' . $e->getMessage()
             ];
         }
+    }
+
+    private function processPayment($internetCustomer, $internetPackage)
+    {
+        $internetCustomerPurchase = InternetCustomerPurchase::create([
+            'amount_paid' => $internetPackage->price_nett,
+            'internet_customer_id' => $internetCustomer->id,
+            'payment_method' => "transfer",
+        ]);
     }
 
     private function processRowUpdate($data, $company, $rowNumber)
