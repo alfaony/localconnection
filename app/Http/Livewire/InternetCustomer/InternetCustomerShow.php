@@ -385,7 +385,7 @@ class InternetCustomerShow extends Component
     public function viewPaymentProof($purchaseId)
     {
         $purchase = InternetCustomerPurchase::find($purchaseId);
-        $this->paymentProofUrl = $purchase->payment_proof ? Storage::url($purchase->payment_proof) : null;
+        $this->paymentProofUrl = $purchase->payment_proof ? s3_asset(true,10,$purchase->payment_proof) : null;
         
         if ($this->paymentProofUrl) {
             $this->dispatchBrowserEvent('showImageModal', [

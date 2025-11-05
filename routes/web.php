@@ -110,6 +110,7 @@ use App\Http\Controllers\MikrotikProfileController;
 use App\Http\Controllers\BarcodeAttendanceController;
 use App\Http\Controllers\OfficeAttendanceController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\XenditController;
 
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
@@ -159,6 +160,7 @@ use App\Http\Livewire\PunishmentUserTable;
 |
 */
 Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
+Route::post('xendit/webhook', [XenditController::class, 'handle']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);

@@ -56,6 +56,11 @@ class InternetCustomerPurchase extends Model
         return $this->belongsTo(User::class, 'user_finance_id');
     }
 
+    public function coupons()
+    {
+        return $this->hasMany(InternetPurchaseCoupon::class,'internet_purchase_id');
+    }
+
     /**
      * Get discount percentage based on payment months
      * Bisa disesuaikan dengan kebutuhan bisnis
@@ -151,6 +156,11 @@ class InternetCustomerPurchase extends Model
         return '-';
     }
 
+
+    public function isWaiting()
+    {
+        return $this->payment_method && (!$this->confirmation_finance_at || !$this->xendit_paid_at);
+    }
     /**
      * Check if payment is confirmed
      */

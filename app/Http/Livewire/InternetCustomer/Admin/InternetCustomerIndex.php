@@ -14,7 +14,7 @@ use App\Models\InternetCustomerPurchase;
 use App\Models\JobsProvisioning;
 use App\Models\Router;
 
-use App\Jobs\ProvisionCustomerJob;
+use App\Jobs\ProvisionCustomerJob, GenerateInternetPurchaseCouponJob;
 
 use App\Models\InternetInstallationPhoto;
 
@@ -498,7 +498,8 @@ class InternetCustomerIndex extends Component
             $post =[
                 'is_paid' => true,
             ];
-    
+            
+            
             if(!$internetPurchase->customer->installation)
             {
                 $post['status'] = ParamSchema::PROCESS_INSTALLATION;
@@ -521,7 +522,9 @@ class InternetCustomerIndex extends Component
             {
                 $post['status'] = ParamSchema::REACTIVATED;
             }
-    
+
+            GenerateInternetPurchaseCouponJob::dispatch($internetPurchase->customer->id, $internetPurchase->id, $internetPurchase->payment_months);
+
             $internetPurchase->customer->update($post);
             DB::commit();
     

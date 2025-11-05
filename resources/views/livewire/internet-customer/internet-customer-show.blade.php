@@ -81,6 +81,22 @@
                                             {{ $customer->province->name ?? '-' }}
                                         </td>
                                     </tr>
+                                      @if($customer->coupons->count() > 0)
+                                        <tr>
+                                            <td colspan="6">
+                                                <div class="alert alert-success mb-0">
+                                                    <strong><i class="fas fa-ticket-alt mr-2"></i>Kupon Tersedia: {{ $customer->coupons->count() }}</strong>
+                                                    <div class="mt-2">
+                                                        @foreach($customer->coupons as $coupon)
+                                                            <span class="badge badge-lg badge-primary mr-1 mb-1">
+                                                                {{ $coupon->name }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @endif
                                      <tr>
                                         <th>Tanggal Pembayaran Selanjutnya</th>
                                         <td>
@@ -205,6 +221,7 @@
                                             @foreach($purchases as $purchase)
                                             <tr>
                                                 <td>
+                                                    {{ $purchase->id}}
                                                     @if($purchase->period_start && $purchase->period_end)
                                                         {{ $purchase->period_start->format('d M Y') }} - {{ $purchase->period_end->format('d M Y') }}
                                                         <br>
@@ -326,6 +343,7 @@
                     </div>
                 </div>
                 @endif
+                
 
                 @if($agreementFields)
                 <div class="row mt-4">

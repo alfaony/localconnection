@@ -60,6 +60,11 @@ class InternetCustomer extends Model
     ];
 
     // ✅ RELATIONS
+    public function coupons()
+    {
+        return $this->hasMany(InternetPurchaseCoupon::class,'internet_customer_id');
+    }
+
     public function userCustomer()
     {
         return $this->belongsTo(UserCustomer::class);

@@ -166,7 +166,7 @@ class XenditService
 
             // Create invoice request
             $createInvoiceRequest = new CreateInvoiceRequest([
-                'external_id' => 'PURCHASE-' . $purchase->id . '-' . time(),
+                'external_id' => $purchase->id.'_internetCustomer',
                 'amount' => $totalAmount, // Total after discount
                 'description' => $description,
                 'invoice_duration' => 86400 * 3, // 3 days (72 hours)
@@ -200,7 +200,7 @@ class XenditService
             ];
 
         } catch (\Xendit\XenditSdkException $e) {
-            // dd($e);
+            dd($e);
             Log::error('Xendit SDK exception', [
                 'company_id' => $this->companyId,
                 'purchase_id' => $purchase->id,

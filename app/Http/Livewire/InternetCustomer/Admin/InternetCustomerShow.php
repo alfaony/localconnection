@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
-use App\Jobs\ProvisionCustomerJob;
+use App\Jobs\ProvisionCustomerJob, GenerateInternetPurchaseCouponJob;
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,6 +17,7 @@ use App\Models\InternetCustomerPurchase;
 use App\Schemas\ParamSchema;
 use App\Helpers\InboxHelper;
 use Carbon\Carbon;
+
 
 class InternetCustomerShow extends Component
 {
@@ -237,7 +238,6 @@ class InternetCustomerShow extends Component
                 'is_paid' => true,
             ];
     
-        
     
             if(!$internetPurchase->customer->installation)
             {
@@ -261,7 +261,9 @@ class InternetCustomerShow extends Component
             {
                 $post['status'] = ParamSchema::REACTIVATED;
             }
-    
+            
+            GenerateInternetPurchaseCouponJob::dispatch($internetPurchase->customer->id, $internetPurchase->id, $internetPurchase->payment_months);
+
             $internetPurchase->customer->update($post);
             DB::commit();
     
