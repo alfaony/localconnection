@@ -46,9 +46,9 @@ class GenerateInternetPurchaseCouponJob implements ShouldQueue, ShouldBeUnique
      */
     protected function generateCouponCode(): string
     {
-        $characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        do {
-            $code = substr(str_shuffle(str_repeat($characters, 5)), 0, 5);
+        $characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789abcdefghijklmnopqrstuvwxyz';
+    do {
+            $code = substr(str_shuffle(str_repeat($characters, 15)), 0, 15);
         } while (InternetPurchaseCoupon::where('name', $code)->exists());
 
         return $code;

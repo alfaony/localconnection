@@ -172,8 +172,14 @@ class XenditService
                 'invoice_duration' => 86400 * 3, // 3 days (72 hours)
                 'customer' => $customerObject,
                 'customer_notification_preference' => $notificationPreference,
-                'success_redirect_url' => route('internet-customer.customer.show', $customer->code),
-                'failure_redirect_url' => route('internet-customer.customer.show', $customer->code),
+                'success_redirect_url' => route('internet-customer.customer.show', [
+                    'code' => $customer->code,
+                    'status' => 'success'
+                ]),
+                'failure_redirect_url' => route('internet-customer.customer.show', [
+                    'code' => $customer->code,
+                    'status' => 'failed'
+                ]),
                 'currency' => 'IDR',
                 'items' => $items,
             ]);

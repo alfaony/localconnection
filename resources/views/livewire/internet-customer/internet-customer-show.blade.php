@@ -2,6 +2,12 @@
 
 <div class="row mb-4">
     @include('components.alert')
+    @if ($statusMessage)
+    <div class="alert alert-{{ $statusMessage['type'] }} alert-dismissible fade show" role="alert">
+        {!! $statusMessage['text'] !!}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
     <div class="col-md-12">
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
@@ -221,7 +227,6 @@
                                             @foreach($purchases as $purchase)
                                             <tr>
                                                 <td>
-                                                    {{ $purchase->id}}
                                                     @if($purchase->period_start && $purchase->period_end)
                                                         {{ $purchase->period_start->format('d M Y') }} - {{ $purchase->period_end->format('d M Y') }}
                                                         <br>
@@ -264,7 +269,7 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if($purchase->payment_proof || $purchase->xendit_invoice_id)
+                                                    @if($purchase->payment_proof)
                                                         <button wire:click="viewPaymentProof('{{ $purchase->id }}')" class="btn btn-sm btn-info">
                                                             <i class="fas fa-eye mr-1"></i>Lihat
                                                         </button>

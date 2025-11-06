@@ -28,6 +28,7 @@ class InternetCustomerShow extends Component
     public $ktpPhotoUrl;
     public $installationPhotos = [];
     public $code;
+    public $statusMessage;
 
     public $payment_proof;
     public $purchase_id;
@@ -71,6 +72,19 @@ class InternetCustomerShow extends Component
             'purchases',
             'installation'
         ])->where('code', $code)->first();
+
+         $status = request()->query('status'); // ambil dari query string
+        if ($status === 'success') {
+            $this->statusMessage = [
+                'type' => 'success',
+                'text' => '🎉 Pembayaran berhasil! Terima kasih sudah menggunakan layanan kami.'
+            ];
+        } elseif ($status === 'failed') {
+            $this->statusMessage = [
+                'type' => 'danger',
+                'text' => '⚠️ Transaksi gagal diproses. Silakan coba lagi atau hubungi admin.'
+            ];
+        }
 
         if(!$this->customer) 
         {

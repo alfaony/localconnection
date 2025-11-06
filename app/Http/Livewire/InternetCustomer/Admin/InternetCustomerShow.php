@@ -117,7 +117,7 @@ class InternetCustomerShow extends Component
             if ($this->customer->userCustomer) {
                 $this->customer->userCustomer->update([
                     'name' => $this->name,
-                    'email' => $this->email,
+                    'email' => $this->email ? $this->email : null,
                     'phone_number' => $this->phone_number,
                     'start_billing_date' => $this->start_billing_date,
                     'end_billing_date' => $this->end_billing_date,
