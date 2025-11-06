@@ -14,7 +14,8 @@ use App\Models\InternetCustomerPurchase;
 use App\Models\JobsProvisioning;
 use App\Models\Router;
 
-use App\Jobs\ProvisionCustomerJob, GenerateInternetPurchaseCouponJob;
+use App\Jobs\ProvisionCustomerJob;
+use App\Jobs\GenerateInternetPurchaseCouponJob;
 
 use App\Models\InternetInstallationPhoto;
 

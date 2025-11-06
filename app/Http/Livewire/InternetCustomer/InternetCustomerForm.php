@@ -21,7 +21,6 @@ use App\Models\PartnershipAgreementType;
 use App\Models\AgreementSignature;
 use App\Models\InternetCustomerPurchase;
 
-
 use App\Schemas\RoleSchema;
 use App\Schemas\ParamSchema;
 use Illuminate\Support\Facades\Storage;
@@ -30,6 +29,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Helpers\InboxHelper;
+use App\Services\XenditService;
+use Illuminate\Support\Facades\Log;
 
 class InternetCustomerForm extends Component
 {
@@ -39,11 +40,7 @@ class InternetCustomerForm extends Component
     
     // Step 1: Alamat & Paket
     public $provinces;
-    // public $cities;
-    // public $districts;
-    // public $subdistricts;
     public $internetPackages;
-
     public $province_id;
     public $city_id;
     public $district_id;
@@ -62,52 +59,88 @@ class InternetCustomerForm extends Component
     public $address;
     public $ktp_number;
     public $ktp_photo;
+    public $ktp_photo_path; // Tambahan: simpan path sementara
     public $terms = false;
     public $agreement;
     
-    // Step 3: Pembayaran
+    // Step 3: Tanda Tangan
+    public $signature;
+    public $signaturePreview;
+    public $agreeTerms = false;
+    
+    // Step 4: Pembayaran
+    public $payment_months = 1;
+    public $payment_method = null;
+    public $payment_proof;
+    public $payment_proof_path; // Tambahan: simpan path sementara
+    public $selectedPackage;
     public $nama_bank;
     public $holder_name;
     public $account_number;
     public $branch_office;
-    public $payment_method;
-    public $payment_proof;
-    public $selectedPackage;
-    public $selectedBankId;
-    public $bankAccounts = [];
-    public $code;
-
-    // Step 4 
-    public $signature;
-    public $signaturePreview; // Tambahkan untuk preview
-    public $agreeTerms = false;
+    
+    // Perhitungan
+    public $monthlyPrice = 0;
+    public $subtotal = 0;
+    public $discountPercentage = 0;
+    public $discountAmount = 0;
+    public $totalAmount = 0;
     
     // Data Tambahan
     public $device_serial_number;
-    public $company_id = null; // Sesuaikan dengan company user
-    public $company_name = null; // Sesuaikan dengan company user
-    public $company_slug = null; // Sesuaikan dengan company user
+    public $company_id = null;
+    public $company_name = null;
+    public $company_slug = null;
     public $internet_customer_id = null;
+    public $purchase_id = null;
+    public $code;
 
-    // Di dalam class InternetCustomerForm
+    // Promo
     public $hasFreeMonthsPromo = false;
     public $freeMonthsDetails = null;
     public $paymentStartMonth = null;
     public $start_billing_date = null;
     public $end_billing_date = null;
 
+    // Xendit
+    public $xenditActive = false;
 
-    protected $rules = 
-    [
+    protected $rules = [
         'signature' => 'nullable|string',
     ];
 
     protected $listeners = [
         'coverageChecked',
-        'saveSignatureStep4' => 'handleSaveSignature' // Tambahkan listener baru
+        'saveSignatureStep3' => 'handleSaveSignature'
     ];
 
-    
+    // FIX 1: Handle file upload completion
+    public function updatedKtpPhoto($value)
+    {
+        // Validasi segera setelah upload
+        $this->validateOnly('ktp_photo', [
+            'ktp_photo' => 'required|image|max:2048',
+        ]);
+        
+        // Simpan sementara untuk menghindari validasi ulang
+        if ($value) {
+            $this->ktp_photo_path = $value->store('temp');
+        }
+    }
+
+    public function updatedPaymentProof($value)
+    {
+        // Validasi segera setelah upload
+        $this->validateOnly('payment_proof', [
+            'payment_proof' => 'required|image|max:2048',
+        ]);
+        
+        // Simpan sementara
+        if ($value) {
+            $this->payment_proof_path = $value->store('temp');
+        }
+    }
+
     public function updatedProvinceId($value)
     {
         $this->city_id = null;
@@ -135,56 +168,62 @@ class InternetCustomerForm extends Component
     public function updatedDistrictId($value)
     {
         $this->subdistrict_id = null;
-        if($value === 'other') 
-            {
+        if($value === 'other') {
             $this->subdistrict_id = 'other';
         }
     }
 
     public function updatedSubdistrictId($value)
     {
-        if($value)
-        {
+        if($value) {
             $this->subdistrict_id = $value;
-            $this->isAvailableArea = CoverageService::where('province_id', $this->province_id)->where('city_id', $this->city_id)->where('district_id', $this->district_id)->where('subdistrict_id', $this->subdistrict_id)->first() ? true : false;
+            $this->isAvailableArea = CoverageService::where('province_id', $this->province_id)
+                ->where('city_id', $this->city_id)
+                ->where('district_id', $this->district_id)
+                ->where('subdistrict_id', $this->subdistrict_id)
+                ->exists();
         }
     }
 
+    public function updatedPaymentMonths($value)
+    {
+        $this->payment_months = max(1, min(24, (int)$value));
+        $this->calculatePayment();
+    }
+
+    // FIX 2: Method untuk save signature dari JavaScript
     public function saveSignature($signatureData)
     {
-        if($signatureData) 
-            {
-            $this->dispatchBrowserEvent('signature-saved'); // Panggil event JS
+        if($signatureData) {
+            $this->signature = $signatureData;
+            $this->dispatchBrowserEvent('signature-saved', ['success' => true]);
         }
-        $this->signature = $signatureData;
         $this->generateAgreementPreviewJson();
     }
 
-        // Method untuk handle setelah signature disimpan
-    public function saveSignatureAndProceed($signatureData)
+    // FIX 2: Method untuk clear signature
+    public function clearSignature()
     {
-        $this->signature = $signatureData;
-        $this->validate([
-            'signature' => 'required',
-            'agreeTerms' => 'accepted'
-        ]);
-        $this->step++; // Lanjut ke step 5
+        $this->signature = null;
+        $this->dispatchBrowserEvent('signature-cleared');
     }
 
     public function handleSaveSignature()
     {        
         $this->validate([
             'signature' => 'required',
+        ], [
+            'signature.required' => 'Tanda tangan wajib diisi. Silakan berikan tanda tangan Anda.'
         ]);
         
-        $this->submitForm();
+        $this->step++;
     }
+
     public function mount($companyId)
     {
-        $companyId = Company::where('slug', $companyId)->first();
+        $company = Company::where('slug', $companyId)->first();
 
-        if(!$companyId) 
-            {
+        if(!$company) {
             return redirect()->route('public.error', ['code' => 403])->with([
                 'title' => 'Akses Ditolak',
                 'message' => 'Terdapat Kesalahan pada Form Pendaftaran, Silahkan Hubungi Admin',
@@ -192,17 +231,35 @@ class InternetCustomerForm extends Component
             ]);
         }
 
-        $this->company_id = $companyId->id;
-        $this->company_name = $companyId->name;
-        $this->company_slug = $companyId->slug;
+        $this->company_id = $company->id;
+        $this->company_name = $company->name;
+        $this->company_slug = $company->slug;
         $this->provinces = Province::whereHas('provinceCoverages')->get();
-        $this->internetPackages = InternetPackage::all();
+        $this->internetPackages = InternetPackage::where('company_id', $this->company_id)
+            ->where('is_active', true)
+            ->get();
+
+        // Check Xendit status
+        try {
+            $xenditService = new XenditService($this->company_id);
+            $this->xenditActive = $xenditService->isActive();
+        } catch (\Exception $e) {
+            $this->xenditActive = false;
+            Log::warning('Xendit not configured for company', [
+                'company_id' => $this->company_id,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     public function render()
     {
         return view('livewire.internet-customer.internet-customer-form', [
-            'settingCompany' => SettingCompany::byCompany($this->company_id)->where('menu','bank')->orWhere('menu','profile')->get()->pluck('field_value','field_title'),
+            'settingCompany' => SettingCompany::byCompany($this->company_id)
+                ->where('menu','bank')
+                ->orWhere('menu','profile')
+                ->get()
+                ->pluck('field_value','field_title'),
             'agreement' => new PartnershipAgreement(),
             'provinces' => Province::whereHas('provinceCoverages')->get(),
             'cities' => $this->province_id ? City::where('province_id', $this->province_id)->whereHas('cityCoverages')->get() : [],
@@ -212,7 +269,37 @@ class InternetCustomerForm extends Component
         ])->extends('layouts.app_customer');
     }
 
-    // Step Navigation
+    protected function calculatePayment()
+    {
+        if (!$this->selectedPackage) return;
+
+        $this->monthlyPrice = $this->selectedPackage->price_nett;
+        
+        $calculation = InternetCustomerPurchase::calculateTotal(
+            $this->monthlyPrice,
+            $this->payment_months
+        );
+
+        $this->subtotal = $calculation['subtotal'];
+        $this->discountPercentage = $calculation['discount_percentage'];
+        $this->discountAmount = $calculation['discount_amount'];
+        $this->totalAmount = $calculation['total'];
+    }
+
+    protected function calculateSubscriptionPeriod($months)
+    {
+        $startDate = $this->start_billing_date 
+            ? Carbon::parse($this->start_billing_date)
+            : now()->startOfDay();
+
+        $endDate = $startDate->copy()->addMonths($months)->subDay();
+
+        return [
+            'start' => $startDate,
+            'end' => $endDate
+        ];
+    }
+
     public function nextStep()
     {
         $this->generateAgreementPreviewJson();
@@ -220,27 +307,21 @@ class InternetCustomerForm extends Component
         if ($this->step === 1) {
             $this->validateStep1();
             $this->checkCoverage();
-            
-            // Cek promo setelah validasi step 1
         } elseif ($this->step === 2) {
             $this->validateStep2();
             $this->checkPromo();
         } elseif ($this->step === 3) {
-            $this->validateStep3();
-        } elseif ($this->step === 4) {
             $this->handleSaveSignature();
-        } elseif ($this->step === 5) {  
-            $this->submitForm();
+        } elseif ($this->step === 4) {
+            $this->validateStep4();
         }
     }
-
 
     public function prevStep()
     {
         $this->step--;
     }
 
-    // Step 1 Validation and Logic
     private function validateStep1()
     {
         $this->validate([
@@ -266,89 +347,118 @@ class InternetCustomerForm extends Component
         }
     }
 
-    // Step 2 Validation
     private function validateStep2()
     {
-        $this->validate([
+        // FIX 1: Validasi yang lebih robust untuk file upload
+        $rules = [
             'name' => 'required|min:3',
-            // 'email' => 'required|email|unique:user_customers,email',
-            // 'password' => 'required|min:8|confirmed',
+            'email' => [
+                'required',
+                'email',
+                'unique:user_customers,email',
+            ],
             'phone_number' => 'required|string',
             'address' => 'required|min:10',
-            'ktp_number' => 'required|digits:16',
-            'ktp_photo' => 'required|image|max:2048',
+            'ktp_number' => [
+                'required',
+                'digits:16',
+            ],
+        ];
+
+        // Cek apakah file sudah di-upload sebelumnya
+        if ($this->ktp_photo_path) {
+            // File sudah ada di temp, skip validasi
+            $rules['ktp_photo'] = 'nullable';
+        } else {
+            // Validasi file baru
+            $rules['ktp_photo'] = 'required|image|max:2048';
+        }
+
+        $this->validate($rules, [
+            'email.unique' => 'Email ini sudah terdaftar. Silakan gunakan email lain atau hubungi admin jika ini adalah akun Anda.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'ktp_number.digits' => 'Nomor KTP harus 16 digit.',
+            'ktp_number.required' => 'Nomor KTP wajib diisi.',
+            'ktp_photo.required' => 'Foto KTP wajib diupload.',
+            'ktp_photo.image' => 'File KTP harus berupa gambar.',
+            'ktp_photo.max' => 'Ukuran file KTP maksimal 2MB.',
         ]);
         
         $this->step++;
         $this->selectedPackage = InternetPackage::find($this->internet_package_id);
-    }
-
-    // Step 3 Validation and Submission
-    private function validateStep3()
-    {
-        if (!$this->hasFreeMonthsPromo) 
-        {
-            $this->validate([
-                'payment_method' => 'required|in:transfer,qris,e-wallet',
-                'payment_proof' => 'required_if:payment_method,transfer|image|max:2048',
-                'nama_bank' => 'required_if:payment_method,transfer',
-                'holder_name' => 'required_if:payment_method,transfer',
-                'account_number' => 'required_if:payment_method,transfer',
-                'branch_office' => 'required_if:payment_method,transfer',
-            ]);
-        }
-
-        $this->generateAgreementPreviewJson();
-        $this->step++;
+        $this->calculatePayment();
     }
 
     private function validateStep4()
     {
-        $this->dispatchBrowserEvent('save-signature');
+        if (!$this->hasFreeMonthsPromo) {
+            $rules = [
+                'payment_method' => 'required|in:manual_transfer,xendit',
+                'payment_months' => 'required|integer|min:1|max:24',
+            ];
 
-        $this->validate([
-            'signature' => 'required',
-        ]);
-        
-        // Simpan signature
-        
-        // Lanjutkan ke step berikutnya setelah signature disimpan
-        $this->step++;
+            if ($this->payment_method === 'manual_transfer') {
+                // FIX 1: Cek apakah sudah ada path tersimpan
+                if ($this->payment_proof_path) {
+                    $rules['payment_proof'] = 'nullable';
+                } else {
+                    $rules['payment_proof'] = 'required|image|max:2048';
+                }
+                
+                $rules['nama_bank'] = 'required';
+                $rules['holder_name'] = 'required';
+                $rules['account_number'] = 'required';
+                $rules['branch_office'] = 'required';
+            }
+
+            $this->validate($rules);
+        }
+
+        $this->submitForm();
     }
-    
 
     private function submitForm()
     {
-        // dd($this->signature);
-        // Simpan file KTP
-        $ktpPath = $this->ktp_photo ? $this->ktp_photo->store('ktps') : null;
+        // FIX 1: Gunakan path yang sudah disimpan atau upload baru
+        $ktpPath = null;
+        if ($this->ktp_photo_path) {
+            // Pindahkan dari temp ke ktps
+            $ktpPath = str_replace('temp/', 'ktps/', $this->ktp_photo_path);
+            Storage::move($this->ktp_photo_path, $ktpPath);
+        } elseif ($this->ktp_photo) {
+            $ktpPath = $this->ktp_photo->store('ktps');
+        }
         
-        // Simpan bukti pembayaran jika ada
         $paymentProofPath = null;
-        if ($this->payment_method === 'transfer' && $this->payment_proof) {
-            $paymentProofPath = $this->payment_proof->store('public/payment_proofs');
+        if ($this->payment_method === 'manual_transfer') {
+            if ($this->payment_proof_path) {
+                // Pindahkan dari temp ke payment_proofs
+                $paymentProofPath = str_replace('temp/', 'payment_proofs/', $this->payment_proof_path);
+                Storage::move($this->payment_proof_path, $paymentProofPath);
+            } elseif ($this->payment_proof) {
+                $paymentProofPath = $this->payment_proof->store('payment_proofs');
+            }
         }
         
         DB::beginTransaction();
         try {
-            if ($ktpPath && (preg_match('/^data:image\/(\w+);base64,/', $this->signature, $type))) 
-            {
-                $imageType = $type[1]; // Dapatkan tipe gambar (png, jpeg, dll)
+            // Save signature
+            $signaturePath = null;
+            if ($this->signature && (preg_match('/^data:image\/(\w+);base64,/', $this->signature, $type))) {
+                $imageType = $type[1];
                 $data = substr($this->signature, strpos($this->signature, ',') + 1);
                 $data = base64_decode($data);
                 
-                // Validasi decode berhasil
                 if ($data === false) {
                     throw new \Exception('Base64 decode failed');
                 }
                 
                 $signaturePath = 'signatures/' . uniqid() . '.' . $imageType;
                 Storage::put($signaturePath, $data);
-            } 
-            // else {
-            //     throw new \Exception('Invalid image data URL');
-            // }
-            // Simpan data pelanggan
+            }
+
+            // Create internet customer
             $internetCustomer = InternetCustomer::create([
                 'company_id' => $this->company_id,
                 'province_id' => $this->province_id,
@@ -360,12 +470,14 @@ class InternetCustomerForm extends Component
                 'name' => $this->name,
                 'address' => $this->address,
                 'ktp_number' => $this->ktp_number,
-                'ktp_photo' => $ktpPath ? $ktpPath : null,
+                'ktp_photo' => $ktpPath,
                 'is_paid' => false,
-                'status' => ParamSchema::WAITING_PAYMENT_CONFIRMATION,
+                'status' => $this->hasFreeMonthsPromo 
+                    ? ParamSchema::PROCESS_INSTALLATION 
+                    : ParamSchema::WAITING_PAYMENT_CONFIRMATION,
             ]);
             
-            $agreement = $this->createPartnershipAgreement($ktpPath);
+            $agreement = $this->createPartnershipAgreement($ktpPath, $signaturePath);
         
             $userCustomer = UserCustomer::create([
                 'start_billing_date' => $this->start_billing_date,
@@ -376,78 +488,124 @@ class InternetCustomerForm extends Component
                 'role' => Role::where('name',RoleSchema::CUSTOMER_INTERNET)->first()->id,
                 'start_billing_date' => $this->start_billing_date,
                 'end_billing_date' => $this->end_billing_date,
-                // 'password' => Hash::make($this->password),
             ]);
-
 
             $internetCustomer->update([
                 'partnership_agreement_id' => $agreement->id,
                 'user_customer_id' => $userCustomer->id
             ]);
 
-            if($this->freeMonthsDetails && $this->freeMonthsDetails->type === ParamSchema::PROMO_FREE_MONTH)
-            {
+            // Handle payment based on promo
+            if($this->freeMonthsDetails && $this->freeMonthsDetails->type === ParamSchema::PROMO_FREE_MONTH) {
                 $internetCustomer->update([
                     'promo_id' => $this->freeMonthsDetails->id
                 ]);
                 $this->installation($internetCustomer);
-            }else
-            {
-                if($this->payment_method == 'transfer')
-                    $internetCustomerPurchase = InternetCustomerPurchase::create([
-                    'amount_paid' => $this->selectedPackage->price_nett,
+            } else {
+                // Create purchase record
+                $subscriptionPeriod = $this->calculateSubscriptionPeriod($this->payment_months);
+                
+                $internetCustomerPurchase = InternetCustomerPurchase::create([
                     'internet_customer_id' => $internetCustomer->id,
+                    'amount_paid' => $this->totalAmount,
+                    'payment_months' => $this->payment_months,
+                    'period_start' => $subscriptionPeriod['start'],
+                    'period_end' => $subscriptionPeriod['end'],
+                    'total_before_discount' => $this->subtotal,
+                    'discount_amount' => $this->discountAmount,
                     'payment_method' => $this->payment_method,
-                    'payment_proof' => $paymentProofPath ? s3_asset(true,10,$paymentProofPath) : null,
+                    'payment_proof' => $paymentProofPath,
+                    'generate_coupons' => true,
                 ]);
 
-                $userFinance = User::whereHas('role.permissions', function ($q) 
-                {
-                    $q->where('method', 'as_finance')
-                    ->where('table', 'internet_customers');
-                })
-                ->where(function ($q) use ($internetCustomer) {
-                    $q->where('company_id', $internetCustomer->company_id)
-                    ->orWhereHas('accessibleCompanies', function ($sub) use ($internetCustomer) {
-                        $sub->where('companies.id', $internetCustomer->company_id);
-                    });
-                })->get();
+                $this->purchase_id = $internetCustomerPurchase->id;
 
-                if($userFinance)
-                {
-                    $from = User::where('company_id', $internetCustomer->company_id)
-                    ->where(function ($query) {
-                        $query->whereHas('role', function ($q)  {
-                            $q->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]);
-                        });
-                    })
-                    ->first();
-                    
-                    $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar. Silakan periksa detail pendaftaran dan tindak lanjuti.";
-                    $directUrl = route('internet-customer.show',$internetCustomer->id);
-                    foreach($userFinance as $finance)
-                    {
-                        $this->sentInbox($finance->id, $from->id, $message, $directUrl);
-                    }   
+                // Handle Xendit payment
+                if ($this->payment_method === 'xendit') {
+                    $this->processXenditPayment($internetCustomerPurchase, $internetCustomer);
+                } else {
+                    // Manual transfer - notify finance
+                    $this->notifyFinanceTeam($internetCustomer);
                 }
             }
 
             $this->internet_customer_id = $internetCustomer->id;
+            
+            // Clean up temp files
+            if ($this->ktp_photo_path && Storage::exists($this->ktp_photo_path)) {
+                Storage::delete($this->ktp_photo_path);
+            }
+            if ($this->payment_proof_path && Storage::exists($this->payment_proof_path)) {
+                Storage::delete($this->payment_proof_path);
+            }
+            
             DB::commit();
             $this->step = 5;
 
         } catch (\Throwable $th) {
-            // throw $th;
             DB::rollBack();
-            // dd($th);
-            session()->flash('error', 'Terjadi kesalahan: Konfirmasikan ke Admin');
+            Log::error('Registration form submission failed', [
+                'error' => $th->getMessage(),
+                'trace' => $th->getTraceAsString()
+            ]);
+            session()->flash('error', 'Terjadi kesalahan: ' . $th->getMessage());
             $this->step = 1;
+        }
+    }
+
+    protected function processXenditPayment($purchase, $customer)
+    {
+        try {
+            $xenditService = new XenditService($customer->company_id);
+
+            if (!$xenditService->isActive()) {
+                throw new \Exception('Pembayaran Xendit tidak tersedia untuk saat ini.');
+            }
+
+            $subscriptionPeriod = $this->calculateSubscriptionPeriod($this->payment_months);
+
+            $result = $xenditService->createInvoice($purchase, $customer, [
+                'payment_months' => $this->payment_months,
+                'total_amount' => $this->totalAmount,
+                'discount_amount' => $this->discountAmount,
+                'subscription_period' => $subscriptionPeriod
+            ]);
+
+            if ($result['success']) {
+                $invoice = $result['invoice'];
+
+                $purchase->update([
+                    'xendit_raw_response' => json_encode($invoice),
+                ]);
+
+                Log::info('Xendit invoice created successfully', [
+                    'invoice_id' => $invoice['id'],
+                    'purchase_id' => $purchase->id,
+                    'customer_code' => $customer->code
+                ]);
+
+                // Redirect to Xendit payment page
+                $this->dispatchBrowserEvent('redirect-to-xendit', [
+                    'url' => $invoice['invoice_url']
+                ]);
+
+            } else {
+                throw new \Exception('Gagal membuat invoice pembayaran: ' . $result['message']);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Xendit payment processing failed', [
+                'error' => $e->getMessage(),
+                'purchase_id' => $purchase->id
+            ]);
+            
+            session()->flash('warning', 'Pembayaran digital tidak tersedia. Silakan gunakan transfer manual.');
         }
     }
 
     private function code()
     {
-        $prefix = 'PLG'; // Ganti sesuai kebutuhan
+        $prefix = 'PLG';
         do {
             $randomCode = $prefix . '-' . strtoupper(Str::random(8));
             $exists = InternetCustomer::withTrashed()
@@ -459,7 +617,7 @@ class InternetCustomerForm extends Component
         return $randomCode;
     }
 
-     private function generateAgreementPreviewJson()
+    private function generateAgreementPreviewJson()
     {
         $this->agreement = new PartnershipAgreement();
         $this->agreement->fields = json_encode([
@@ -470,7 +628,7 @@ class InternetCustomerForm extends Component
             'email' => $this->email,
             'nama_bank' => $this->nama_bank,
             'holder_name' => $this->holder_name,
-            'account_number' => $this->account_number, // kalau belum ada
+            'account_number' => $this->account_number,
             'branch_office' => $this->branch_office,
             'alamat_pemasangan' => $this->address,
             'jangka_waktu' => '-',
@@ -479,7 +637,7 @@ class InternetCustomerForm extends Component
         ]);
     }
 
-    private function createPartnershipAgreement($ktpPath)
+    private function createPartnershipAgreement($ktpPath, $signaturePath = null)
     {
         try {
             $letter_number = PartnershipAgreement::where('company_id',$this->company_id)->withTrashed()->max('letter_number') + 1;
@@ -495,25 +653,18 @@ class InternetCustomerForm extends Component
                 'email' => $this->email,
                 'nama_bank' => $this->nama_bank,
                 'holder_name' => $this->holder_name,
-                'account_number' => $this->account_number, // kalau belum ada
+                'account_number' => $this->account_number,
                 'branch_office' => $this->branch_office,
                 'alamat_pemasangan' => $this->address,
                 'jangka_waktu' => '-',
                 'nama_paket' => $this->selectedPackage->name ?? '',
                 'detail_paket' => $this->selectedPackage->description ?? '',
             ]);
+            
             $admin = User::with('role')
                     ->whereHas('role', fn ($query) => $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR]))
                     ->where('company_id', $this->company_id)
                     ->first();
-    
-            $signaturePath = null;
-            if ($this->signature) 
-                {
-                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $this->signature));
-                $signaturePath = 'signatures/' . uniqid() . '.png';
-                file_put_contents(storage_path('app/public/' . $signaturePath), $imageData);
-            }
 
             $data['partnership_agreement_type_id'] = $type->id;
             $data['status'] = ParamSchema::SIGNATURE;
@@ -527,14 +678,12 @@ class InternetCustomerForm extends Component
     
             $partnershipAgreement = PartnershipAgreement::create($data);
     
-            // Proceed to store the rest of the data (e.g., save the KTP path, signature path, etc.)
-            // Example: save the data in the database
-            $agreement = new AgreementSignature();
-            $agreement->partnership_agreement_id = $partnershipAgreement->id;
-            $agreement->signature = $signaturePath;
-            $agreement->image_ktp = $ktpPath ?? null;
-            $agreement->order = $partnershipAgreement->getNextSignatureNumber();
-            $agreement->save();
+            $agreementSignature = new AgreementSignature();
+            $agreementSignature->partnership_agreement_id = $partnershipAgreement->id;
+            $agreementSignature->signature = $signaturePath;
+            $agreementSignature->image_ktp = $ktpPath;
+            $agreementSignature->order = $partnershipAgreement->getNextSignatureNumber();
+            $agreementSignature->save();
 
             $partnershipAgreement->status = ParamSchema::ONREVIEW;
             $partnershipAgreement->save();
@@ -545,15 +694,39 @@ class InternetCustomerForm extends Component
         }
     }
 
+    protected function notifyFinanceTeam($internetCustomer)
+    {
+        $userFinance = User::whereHas('role.permissions', function ($q) {
+            $q->where('method', 'as_finance')
+              ->where('table', 'internet_customers');
+        })
+        ->where(function ($q) use ($internetCustomer) {
+            $q->where('company_id', $internetCustomer->company_id)
+              ->orWhereHas('accessibleCompanies', function ($sub) use ($internetCustomer) {
+                  $sub->where('companies.id', $internetCustomer->company_id);
+              });
+        })->get();
+
+        if($userFinance->isNotEmpty()) {
+            $from = User::where('company_id', $internetCustomer->company_id)
+                ->whereHas('role', function ($q) {
+                    $q->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]);
+                })
+                ->first();
+            
+            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar untuk {$this->payment_months} bulan. Silakan periksa detail pendaftaran.";
+            $directUrl = route('internet-customer.show', $internetCustomer->id);
+            
+            foreach($userFinance as $finance) {
+                $this->sentInbox($finance->id, $from->id, $message, $directUrl);
+            }   
+        }
+    }
+
     private function sentInbox($to,$from, $message,$directUrl)
     {
         $inboxHelper = new InboxHelper();
-        $inboxHelper->sent(
-            $to, 
-            $from,
-            $message, 
-            $directUrl
-        );
+        $inboxHelper->sent($to, $from, $message, $directUrl);
         return true;
     }
 
@@ -565,7 +738,6 @@ class InternetCustomerForm extends Component
         $this->start_billing_date = Carbon::now()->format('Y-m-d');
         $this->end_billing_date = Carbon::now()->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d');
 
-        // Pastikan paket sudah dipilih
         if ($this->internet_package_id) {
             $package = InternetPackage::find($this->internet_package_id);
             
@@ -576,17 +748,14 @@ class InternetCustomerForm extends Component
                     $this->hasFreeMonthsPromo = true;
                     $this->freeMonthsDetails = $activePromo;
                     
-                    // Tentukan kapan pembayaran dimulai
                     $now = now();
                     $registerDate = Carbon::parse($activePromo->register_date);
 
                     if (now()->lt($registerDate)) {
-                        // Pendaftaran sebelum register_date: bayar bulan depan
                         $this->paymentStartMonth = now()->addMonth($activePromo->value)->format('F Y');
                         $this->start_billing_date = now()->addMonth($activePromo->value)->firstOfMonth()->format('Y-m-d');
                         $this->end_billing_date = now()->addMonth($activePromo->value)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d');
                     } else {
-                        // Pendaftaran pada/ setelah register_date: bayar 2 bulan dari sekarang
                         $this->paymentStartMonth = now()->addMonths($activePromo->value + 1)->format('F Y');
                         $this->start_billing_date = now()->addMonths($activePromo->value + 1)->firstOfMonth()->format('Y-m-d');
                         $this->end_billing_date = now()->addMonths($activePromo->value + 1)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d');
@@ -604,24 +773,20 @@ class InternetCustomerForm extends Component
             ]);
             
             $userTechnical = optional($customer->subdistrict?->coverageService?->coverageServiceOds)
-            ->pluck('ods.user_assign_id')
-            ->unique()
-            ->all();
+                ->pluck('ods.user_assign_id')
+                ->unique()
+                ->all();
             
             $from = User::where('company_id', $customer->company_id)
-                    ->where(function ($query) {
-                        $query->whereHas('role', function ($q)  {
-                            $q->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]);
-                        });
+                    ->whereHas('role', function ($q) {
+                        $q->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]);
                     })
                     ->first();
 
-            if(count($userTechnical) > 0)
-            {
-                $message = "Pembayaran Langganan Internet Untuk Kode ".$customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
+            if(count($userTechnical) > 0) {
+                $message = "Pembayaran Langganan Internet Untuk Kode ".$customer->code." Telah di Setujui. Silahkan segera lakukan Pemasangan";
                 $directUrl = route('internet-customer.show',$customer->id);
-                foreach($userTechnical as $tech)
-                {
+                foreach($userTechnical as $tech) {
                     $this->sentInbox($tech,$from->id, $message, $directUrl);
                 }
             }

@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
-use App\Jobs\ProvisionCustomerJob, GenerateInternetPurchaseCouponJob;
+use App\Jobs\ProvisionCustomerJob;
+use App\Jobs\GenerateInternetPurchaseCouponJob;
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -14,6 +15,7 @@ use Livewire\WithPagination;
 use App\Models\InternetCustomer;
 use App\Models\InternetCustomerPurchase;
 
+use App\Jobs\GenerateBillingJob;
 use App\Schemas\ParamSchema;
 use App\Helpers\InboxHelper;
 use Carbon\Carbon;
@@ -114,7 +116,17 @@ class InternetCustomerShow extends Component
             ]);
 
             // Update data user customer
-            if ($this->customer->userCustomer) {
+            if ($this->customer->userCustomer) 
+            {   
+                if($this->customer->userCustomer->start_billing_date != $this->start_billing_date && $this->start_billing_date == Carbon::now()->format('Y-m-d')
+                    // && !in_array($customer->internetCustomer->status, [
+                    //     ParamSchema::ACTIVE,
+                    //     ParamSchema::INSTALLED]
+                    //     )
+                    )
+                {
+                    GenerateBillingJob::dispatch($this->customer->userCustomer);
+                }
                 $this->customer->userCustomer->update([
                     'name' => $this->name,
                     'email' => $this->email ? $this->email : null,
@@ -131,6 +143,7 @@ class InternetCustomerShow extends Component
             // Refresh data
             $this->mount($this->customer->id);
         } catch (\Exception $e) {
+            dd($e);
             DB::rollBack();
             $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal memperbarui data pribadi: ' . $e->getMessage()]);
         }

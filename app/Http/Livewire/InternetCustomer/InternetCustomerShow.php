@@ -72,14 +72,23 @@ class InternetCustomerShow extends Component
             'purchases',
             'installation'
         ])->where('code', $code)->first();
+            
+        $status = request()->query('status'); // ambil dari query string
+        $progressStatus = $this->customer->status;
 
-         $status = request()->query('status'); // ambil dari query string
-        if ($status === 'success') {
+        if ($status === 'success' 
+        && $progressStatus == ParamSchema::WAITING_PAYMENT_CONFIRMATION
+        ) {
+            
+            $this->customer->status = $this->customer->installation ? ParamSchema::REACTIVATED : ParamSchema::PROCESS_INSTALLATION;
+
+            $this->customer->save();
+
             $this->statusMessage = [
                 'type' => 'success',
                 'text' => '🎉 Pembayaran berhasil! Terima kasih sudah menggunakan layanan kami.'
             ];
-        } elseif ($status === 'failed') {
+        } elseif ($status === 'failed' && $progressStatus == ParamSchema::WAITING_PAYMENT_CONFIRMATION) {
             $this->statusMessage = [
                 'type' => 'danger',
                 'text' => '⚠️ Transaksi gagal diproses. Silakan coba lagi atau hubungi admin.'
@@ -342,7 +351,6 @@ class InternetCustomerShow extends Component
             $purchase->update([
                 'payment_proof' => $path,
                 'payment_method' => 'transfer',
-                // 'payment_date' => now(),
                 'payment_months' => $this->payment_months,
                 'period_start' => $periodStart,
                 'period_end' => $periodEnd,
@@ -359,7 +367,7 @@ class InternetCustomerShow extends Component
             
             return redirect()->back()->with('success', 'Bukti pembayaran berhasil dikirim dan sedang menunggu konfirmasi.');            
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             Log::error('Error submitting payment proof', [
                 'error' => $e->getMessage()
             ]);

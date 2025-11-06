@@ -128,7 +128,7 @@
             <div class="row mt-5 mb-5">
                 <div class="col-5 text-center">
                     @if($agreement && $agreement->getSignature(1) && $agreement->getSignature(1)->signature)
-                    <img src="{{ s3_asset(true,10,'public/'.$agreement->getSignature(1)->signature) }}" class="img-thumbnail img-signature">
+                    <img src="{{ s3_asset(true,10,$agreement->getSignature(1)->signature) }}" class="img-thumbnail img-signature">
                     @else
                     <div style="min-height: 80px; "></div>
                     @endif

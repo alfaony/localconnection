@@ -278,10 +278,15 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if(!$purchase->isConfirmed())
+                                                    @if(!$purchase->isConfirmed() && $customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION)
                                                         <button class="btn btn-sm btn-success" wire:click="showPaymentModal({{ $purchase->id }})">
                                                             <i class="fas fa-money-bill-wave mr-1"></i>Bayar Sekarang
                                                         </button>
+                                                    @elseif($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION)
+                                                        <span class="badge badge-warning">
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                            Menunggu
+                                                        </span>
                                                     @else
                                                         <span class="text-success">
                                                             <i class="fas fa-check-circle mr-1"></i>

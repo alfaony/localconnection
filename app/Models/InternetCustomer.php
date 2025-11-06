@@ -173,7 +173,7 @@ class InternetCustomer extends Model
             case 'waiting_payment_confirmation':
                 return '<span class="badge badge-secondary">Waiting Payment Confirmation</span>';
             case 'process_installation':
-                return '<span class="badge badge-lightblue">Process Installation</span>';
+                return '<span class="badge badge-primary">Process Installation</span>';
             case 'installed':
                 return '<span class="badge badge-info">Installed</span>';
             case 'active':
