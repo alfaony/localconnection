@@ -77,7 +77,7 @@ class InternetCustomerShow extends Component
         $progressStatus = $this->customer->status;
 
         if ($status === 'success' 
-        && $progressStatus == ParamSchema::WAITING_PAYMENT_CONFIRMATION
+        && $progressStatus == ParamSchema::WAITING_PAYMENT_SUBSCRIPTION
         ) {
             
             $this->customer->status = $this->customer->installation ? ParamSchema::REACTIVATED : ParamSchema::PROCESS_INSTALLATION;
@@ -88,7 +88,7 @@ class InternetCustomerShow extends Component
                 'type' => 'success',
                 'text' => '🎉 Pembayaran berhasil! Terima kasih sudah menggunakan layanan kami.'
             ];
-        } elseif ($status === 'failed' && $progressStatus == ParamSchema::WAITING_PAYMENT_CONFIRMATION) {
+        } elseif ($status === 'failed' && $progressStatus == ParamSchema::WAITING_PAYMENT_SUBSCRIPTION) {
             $this->statusMessage = [
                 'type' => 'danger',
                 'text' => '⚠️ Transaksi gagal diproses. Silakan coba lagi atau hubungi admin.'

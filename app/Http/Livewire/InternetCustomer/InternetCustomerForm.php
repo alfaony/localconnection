@@ -59,20 +59,18 @@ class InternetCustomerForm extends Component
     public $address;
     public $ktp_number;
     public $ktp_photo;
-    public $ktp_photo_path; // Tambahan: simpan path sementara
     public $terms = false;
     public $agreement;
     
-    // Step 3: Tanda Tangan
+    // Step 3: Tanda Tangan (dipindah dari step 4)
     public $signature;
     public $signaturePreview;
     public $agreeTerms = false;
     
-    // Step 4: Pembayaran
+    // Step 4: Pembayaran (dipindah dari step 3)
     public $payment_months = 1;
-    public $payment_method = null;
+    public $payment_method = null; // 'manual_transfer' atau 'xendit'
     public $payment_proof;
-    public $payment_proof_path; // Tambahan: simpan path sementara
     public $selectedPackage;
     public $nama_bank;
     public $holder_name;
@@ -85,6 +83,10 @@ class InternetCustomerForm extends Component
     public $discountPercentage = 0;
     public $discountAmount = 0;
     public $totalAmount = 0;
+    
+    // Period calculation
+    public $period_start = null;
+    public $period_end = null;
     
     // Data Tambahan
     public $device_serial_number;
@@ -113,33 +115,6 @@ class InternetCustomerForm extends Component
         'coverageChecked',
         'saveSignatureStep3' => 'handleSaveSignature'
     ];
-
-    // FIX 1: Handle file upload completion
-    public function updatedKtpPhoto($value)
-    {
-        // Validasi segera setelah upload
-        $this->validateOnly('ktp_photo', [
-            'ktp_photo' => 'required|image|max:2048',
-        ]);
-        
-        // Simpan sementara untuk menghindari validasi ulang
-        if ($value) {
-            $this->ktp_photo_path = $value->store('temp');
-        }
-    }
-
-    public function updatedPaymentProof($value)
-    {
-        // Validasi segera setelah upload
-        $this->validateOnly('payment_proof', [
-            'payment_proof' => 'required|image|max:2048',
-        ]);
-        
-        // Simpan sementara
-        if ($value) {
-            $this->payment_proof_path = $value->store('temp');
-        }
-    }
 
     public function updatedProvinceId($value)
     {
@@ -189,23 +164,22 @@ class InternetCustomerForm extends Component
     {
         $this->payment_months = max(1, min(24, (int)$value));
         $this->calculatePayment();
+        $this->calculatePeriod();
     }
 
-    // FIX 2: Method untuk save signature dari JavaScript
     public function saveSignature($signatureData)
     {
+        Log::info('saveSignature called', [
+            'has_data' => !empty($signatureData),
+            'data_length' => $signatureData ? strlen($signatureData) : 0
+        ]);
+        
         if($signatureData) {
-            $this->signature = $signatureData;
-            $this->dispatchBrowserEvent('signature-saved', ['success' => true]);
+            $this->dispatchBrowserEvent('signature-saved');
         }
+        
+        $this->signature = $signatureData;
         $this->generateAgreementPreviewJson();
-    }
-
-    // FIX 2: Method untuk clear signature
-    public function clearSignature()
-    {
-        $this->signature = null;
-        $this->dispatchBrowserEvent('signature-cleared');
     }
 
     public function handleSaveSignature()
@@ -213,7 +187,7 @@ class InternetCustomerForm extends Component
         $this->validate([
             'signature' => 'required',
         ], [
-            'signature.required' => 'Tanda tangan wajib diisi. Silakan berikan tanda tangan Anda.'
+            'signature.required' => 'Tanda tangan wajib diisi. Silakan gambar tanda tangan Anda.'
         ]);
         
         $this->step++;
@@ -269,6 +243,9 @@ class InternetCustomerForm extends Component
         ])->extends('layouts.app_customer');
     }
 
+    /**
+     * Calculate payment amounts
+     */
     protected function calculatePayment()
     {
         if (!$this->selectedPackage) return;
@@ -286,8 +263,45 @@ class InternetCustomerForm extends Component
         $this->totalAmount = $calculation['total'];
     }
 
+    /**
+     * Calculate subscription period based on payment months
+     */
+    protected function calculatePeriod()
+    {
+        if (!$this->payment_months || $this->hasFreeMonthsPromo) {
+            return;
+        }
+
+        // Tentukan start date
+        // Jika ada end_billing_date dari promo atau existing, mulai dari hari setelahnya
+        // Jika tidak ada, mulai dari hari ini
+        if ($this->end_billing_date) {
+            $startDate = Carbon::parse($this->end_billing_date)->addDay();
+        } else {
+            $startDate = now()->startOfDay();
+        }
+
+        // Calculate end date
+        $endDate = $startDate->copy()->addMonths($this->payment_months)->subDay();
+
+        $this->period_start = $startDate->format('Y-m-d');
+        $this->period_end = $endDate->format('Y-m-d');
+
+        Log::info('Period calculated', [
+            'payment_months' => $this->payment_months,
+            'period_start' => $this->period_start,
+            'period_end' => $this->period_end
+        ]);
+    }
+
+    /**
+     * Calculate subscription period for purchase record
+     * Returns Carbon instances
+     */
     protected function calculateSubscriptionPeriod($months)
     {
+        // Gunakan start_billing_date jika tersedia (dari promo)
+        // Atau gunakan hari ini
         $startDate = $this->start_billing_date 
             ? Carbon::parse($this->start_billing_date)
             : now()->startOfDay();
@@ -298,6 +312,21 @@ class InternetCustomerForm extends Component
             'start' => $startDate,
             'end' => $endDate
         ];
+    }
+
+    /**
+     * Get formatted period for display
+     */
+    public function getFormattedPeriodAttribute()
+    {
+        if (!$this->period_start || !$this->period_end) {
+            return '-';
+        }
+
+        $start = Carbon::parse($this->period_start);
+        $end = Carbon::parse($this->period_end);
+
+        return $start->format('d M Y') . ' - ' . $end->format('d M Y');
     }
 
     public function nextStep()
@@ -349,8 +378,14 @@ class InternetCustomerForm extends Component
 
     private function validateStep2()
     {
-        // FIX 1: Validasi yang lebih robust untuk file upload
-        $rules = [
+        // Tunggu upload selesai
+        if ($this->ktp_photo && is_object($this->ktp_photo) && method_exists($this->ktp_photo, 'isPreviewable')) {
+            $this->validate([
+                'ktp_photo' => 'required|image|max:2048',
+            ]);
+        }
+
+        $this->validate([
             'name' => 'required|min:3',
             'email' => [
                 'required',
@@ -363,18 +398,8 @@ class InternetCustomerForm extends Component
                 'required',
                 'digits:16',
             ],
-        ];
-
-        // Cek apakah file sudah di-upload sebelumnya
-        if ($this->ktp_photo_path) {
-            // File sudah ada di temp, skip validasi
-            $rules['ktp_photo'] = 'nullable';
-        } else {
-            // Validasi file baru
-            $rules['ktp_photo'] = 'required|image|max:2048';
-        }
-
-        $this->validate($rules, [
+            'ktp_photo' => 'required|image|max:2048',
+        ], [
             'email.unique' => 'Email ini sudah terdaftar. Silakan gunakan email lain atau hubungi admin jika ini adalah akun Anda.',
             'email.required' => 'Email wajib diisi.',
             'email.email' => 'Format email tidak valid.',
@@ -388,64 +413,47 @@ class InternetCustomerForm extends Component
         $this->step++;
         $this->selectedPackage = InternetPackage::find($this->internet_package_id);
         $this->calculatePayment();
+        $this->calculatePeriod();
     }
 
     private function validateStep4()
     {
         if (!$this->hasFreeMonthsPromo) {
-            $rules = [
+            $this->validate([
                 'payment_method' => 'required|in:manual_transfer,xendit',
                 'payment_months' => 'required|integer|min:1|max:24',
-            ];
+            ]);
 
             if ($this->payment_method === 'manual_transfer') {
-                // FIX 1: Cek apakah sudah ada path tersimpan
-                if ($this->payment_proof_path) {
-                    $rules['payment_proof'] = 'nullable';
-                } else {
-                    $rules['payment_proof'] = 'required|image|max:2048';
-                }
-                
-                $rules['nama_bank'] = 'required';
-                $rules['holder_name'] = 'required';
-                $rules['account_number'] = 'required';
-                $rules['branch_office'] = 'required';
+                $this->validate([
+                    'payment_proof' => 'required|image|max:2048',
+                    'nama_bank' => 'required',
+                    'holder_name' => 'required',
+                    'account_number' => 'required',
+                    'branch_office' => 'required',
+                ]);
             }
-
-            $this->validate($rules);
         }
+
+        // Recalculate period sebelum submit
+        $this->calculatePeriod();
 
         $this->submitForm();
     }
 
     private function submitForm()
     {
-        // FIX 1: Gunakan path yang sudah disimpan atau upload baru
-        $ktpPath = null;
-        if ($this->ktp_photo_path) {
-            // Pindahkan dari temp ke ktps
-            $ktpPath = str_replace('temp/', 'ktps/', $this->ktp_photo_path);
-            Storage::move($this->ktp_photo_path, $ktpPath);
-        } elseif ($this->ktp_photo) {
-            $ktpPath = $this->ktp_photo->store('ktps');
-        }
-        
+        $ktpPath = $this->ktp_photo ? $this->ktp_photo->store('ktps') : null;
         $paymentProofPath = null;
-        if ($this->payment_method === 'manual_transfer') {
-            if ($this->payment_proof_path) {
-                // Pindahkan dari temp ke payment_proofs
-                $paymentProofPath = str_replace('temp/', 'payment_proofs/', $this->payment_proof_path);
-                Storage::move($this->payment_proof_path, $paymentProofPath);
-            } elseif ($this->payment_proof) {
-                $paymentProofPath = $this->payment_proof->store('payment_proofs');
-            }
+        
+        if ($this->payment_method === 'manual_transfer' && $this->payment_proof) {
+            $paymentProofPath = $this->payment_proof->store('public/payment_proofs');
         }
         
         DB::beginTransaction();
         try {
             // Save signature
-            $signaturePath = null;
-            if ($this->signature && (preg_match('/^data:image\/(\w+);base64,/', $this->signature, $type))) {
+            if ($ktpPath && (preg_match('/^data:image\/(\w+);base64,/', $this->signature, $type))) {
                 $imageType = $type[1];
                 $data = substr($this->signature, strpos($this->signature, ',') + 1);
                 $data = base64_decode($data);
@@ -470,14 +478,14 @@ class InternetCustomerForm extends Component
                 'name' => $this->name,
                 'address' => $this->address,
                 'ktp_number' => $this->ktp_number,
-                'ktp_photo' => $ktpPath,
+                'ktp_photo' => $ktpPath ? $ktpPath : null,
                 'is_paid' => false,
                 'status' => $this->hasFreeMonthsPromo 
                     ? ParamSchema::PROCESS_INSTALLATION 
-                    : ParamSchema::WAITING_PAYMENT_CONFIRMATION,
+                    : ($this->payment_method === 'xendit' ? ParamSchema::WAITING_PAYMENT_SUBSCRIPTION : ParamSchema::WAITING_PAYMENT_CONFIRMATION),
             ]);
             
-            $agreement = $this->createPartnershipAgreement($ktpPath, $signaturePath);
+            $agreement = $this->createPartnershipAgreement($ktpPath);
         
             $userCustomer = UserCustomer::create([
                 'start_billing_date' => $this->start_billing_date,
@@ -502,8 +510,15 @@ class InternetCustomerForm extends Component
                 ]);
                 $this->installation($internetCustomer);
             } else {
-                // Create purchase record
+                // Create purchase record dengan period yang sudah dihitung
                 $subscriptionPeriod = $this->calculateSubscriptionPeriod($this->payment_months);
+                
+                Log::info('Creating purchase with period', [
+                    'payment_months' => $this->payment_months,
+                    'period_start' => $subscriptionPeriod['start']->format('Y-m-d'),
+                    'period_end' => $subscriptionPeriod['end']->format('Y-m-d'),
+                    'total_amount' => $this->totalAmount
+                ]);
                 
                 $internetCustomerPurchase = InternetCustomerPurchase::create([
                     'internet_customer_id' => $internetCustomer->id,
@@ -514,7 +529,7 @@ class InternetCustomerForm extends Component
                     'total_before_discount' => $this->subtotal,
                     'discount_amount' => $this->discountAmount,
                     'payment_method' => $this->payment_method,
-                    'payment_proof' => $paymentProofPath,
+                    'payment_proof' => $paymentProofPath ? $paymentProofPath : null,
                     'generate_coupons' => true,
                 ]);
 
@@ -530,19 +545,11 @@ class InternetCustomerForm extends Component
             }
 
             $this->internet_customer_id = $internetCustomer->id;
-            
-            // Clean up temp files
-            if ($this->ktp_photo_path && Storage::exists($this->ktp_photo_path)) {
-                Storage::delete($this->ktp_photo_path);
-            }
-            if ($this->payment_proof_path && Storage::exists($this->payment_proof_path)) {
-                Storage::delete($this->payment_proof_path);
-            }
-            
             DB::commit();
             $this->step = 5;
 
         } catch (\Throwable $th) {
+            // dd($th);
             DB::rollBack();
             Log::error('Registration form submission failed', [
                 'error' => $th->getMessage(),
@@ -575,6 +582,7 @@ class InternetCustomerForm extends Component
                 $invoice = $result['invoice'];
 
                 $purchase->update([
+                    'xendit_invoice_id' => $invoice['id'],
                     'xendit_raw_response' => json_encode($invoice),
                 ]);
 
@@ -594,6 +602,7 @@ class InternetCustomerForm extends Component
             }
 
         } catch (\Exception $e) {
+            dd($e);
             Log::error('Xendit payment processing failed', [
                 'error' => $e->getMessage(),
                 'purchase_id' => $purchase->id
@@ -631,13 +640,14 @@ class InternetCustomerForm extends Component
             'account_number' => $this->account_number,
             'branch_office' => $this->branch_office,
             'alamat_pemasangan' => $this->address,
-            'jangka_waktu' => '-',
+            'jangka_waktu' => $this->payment_months . ' bulan',
+            'periode_berlangganan' => $this->formattedPeriod ?? '-',
             'nama_paket' => $this->selectedPackage->name ?? '',
             'detail_paket' => $this->selectedPackage->description ?? '',
         ]);
     }
 
-    private function createPartnershipAgreement($ktpPath, $signaturePath = null)
+    private function createPartnershipAgreement($ktpPath)
     {
         try {
             $letter_number = PartnershipAgreement::where('company_id',$this->company_id)->withTrashed()->max('letter_number') + 1;
@@ -656,7 +666,8 @@ class InternetCustomerForm extends Component
                 'account_number' => $this->account_number,
                 'branch_office' => $this->branch_office,
                 'alamat_pemasangan' => $this->address,
-                'jangka_waktu' => '-',
+                'jangka_waktu' => $this->payment_months . ' bulan',
+                'periode_berlangganan' => $this->formattedPeriod ?? '-',
                 'nama_paket' => $this->selectedPackage->name ?? '',
                 'detail_paket' => $this->selectedPackage->description ?? '',
             ]);
@@ -665,6 +676,13 @@ class InternetCustomerForm extends Component
                     ->whereHas('role', fn ($query) => $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR]))
                     ->where('company_id', $this->company_id)
                     ->first();
+    
+            $signaturePath = null;
+            if ($this->signature) {
+                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $this->signature));
+                $signaturePath = 'signatures/' . uniqid() . '.png';
+                file_put_contents(storage_path('app/public/' . $signaturePath), $imageData);
+            }
 
             $data['partnership_agreement_type_id'] = $type->id;
             $data['status'] = ParamSchema::SIGNATURE;
@@ -681,7 +699,7 @@ class InternetCustomerForm extends Component
             $agreementSignature = new AgreementSignature();
             $agreementSignature->partnership_agreement_id = $partnershipAgreement->id;
             $agreementSignature->signature = $signaturePath;
-            $agreementSignature->image_ktp = $ktpPath;
+            $agreementSignature->image_ktp = $ktpPath ?? null;
             $agreementSignature->order = $partnershipAgreement->getNextSignatureNumber();
             $agreementSignature->save();
 
@@ -714,7 +732,7 @@ class InternetCustomerForm extends Component
                 })
                 ->first();
             
-            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar untuk {$this->payment_months} bulan. Silakan periksa detail pendaftaran.";
+            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar untuk {$this->payment_months} bulan (periode: {$this->formattedPeriod}). Silakan periksa detail pendaftaran.";
             $directUrl = route('internet-customer.show', $internetCustomer->id);
             
             foreach($userFinance as $finance) {
@@ -736,7 +754,7 @@ class InternetCustomerForm extends Component
         $this->freeMonthsDetails = null;
         $this->paymentStartMonth = null;
         $this->start_billing_date = Carbon::now()->format('Y-m-d');
-        $this->end_billing_date = Carbon::now()->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d');
+        $this->end_billing_date = Carbon::now()->addDays(config('services.internet_custom.end_billing_of_days', 30))->format('Y-m-d');
 
         if ($this->internet_package_id) {
             $package = InternetPackage::find($this->internet_package_id);
@@ -754,14 +772,19 @@ class InternetCustomerForm extends Component
                     if (now()->lt($registerDate)) {
                         $this->paymentStartMonth = now()->addMonth($activePromo->value)->format('F Y');
                         $this->start_billing_date = now()->addMonth($activePromo->value)->firstOfMonth()->format('Y-m-d');
-                        $this->end_billing_date = now()->addMonth($activePromo->value)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d');
+                        $this->end_billing_date = now()->addMonth($activePromo->value)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days', 30))->format('Y-m-d');
                     } else {
                         $this->paymentStartMonth = now()->addMonths($activePromo->value + 1)->format('F Y');
                         $this->start_billing_date = now()->addMonths($activePromo->value + 1)->firstOfMonth()->format('Y-m-d');
-                        $this->end_billing_date = now()->addMonths($activePromo->value + 1)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d');
+                        $this->end_billing_date = now()->addMonths($activePromo->value + 1)->firstOfMonth()->addDays(config('services.internet_custom.end_billing_of_days', 30))->format('Y-m-d');
                     }
                 }
             }
+        }
+
+        // Calculate period untuk non-promo
+        if (!$this->hasFreeMonthsPromo) {
+            $this->calculatePeriod();
         }
     }
 
