@@ -521,4 +521,120 @@
             max-height: 180px;
         }
     }
+    /* Signature Pad - MOBILE FRIENDLY */
+    .signature-canvas-wrapper {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .signature-pad-box {
+        position: relative;
+        width: 100%;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        background: white;
+        overflow: hidden;
+    }
+
+    #signature-canvas {
+        display: block;
+        width: 100%;
+        height: 250px;
+        touch-action: none;
+        cursor: crosshair;
+    }
+
+    .signature-controls {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 10px;
+        background: rgba(248, 249, 250, 0.95);
+        border-top: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .signature-preview-wrapper {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .signature-preview-box {
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        background: white;
+        padding: 20px;
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .signature-preview-box img {
+        max-width: 100%;
+        height: auto;
+        max-height: 150px;
+        object-fit: contain;
+    }
+
+    .agreement-scroll-box {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        padding: 15px;
+        border-radius: 6px;
+        background: #fafafa;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        #signature-canvas {
+            height: 200px;
+        }
+        
+        .signature-controls {
+            padding: 8px;
+        }
+        
+        .signature-controls small {
+            font-size: 11px;
+        }
+        
+        .signature-preview-box {
+            min-height: 150px;
+            padding: 15px;
+        }
+        
+        .agreement-scroll-box {
+            max-height: 250px;
+            padding: 12px;
+            font-size: 13px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        #signature-canvas {
+            height: 180px;
+        }
+        
+        .signature-controls {
+            flex-direction: column;
+            gap: 5px;
+            padding: 10px;
+        }
+        
+        .signature-preview-box {
+            min-height: 120px;
+            padding: 10px;
+        }
+        
+        .signature-preview-box img {
+            max-height: 100px;
+        }
+    }
 </style>

@@ -215,7 +215,7 @@ class InternetCustomerShow extends Component
   public function viewPaymentProof($purchaseId)
   {
         $purchase = InternetCustomerPurchase::find($purchaseId);
-        $this->paymentProofUrl = $purchase->payment_proof;
+        $this->paymentProofUrl = $purchase->payment_proof ? s3_asset(true,10,$purchase->payment_proof) : null;
 
         $this->dispatchBrowserEvent('showImageModal', [
             'title' => 'Bukti Pembayaran ' . Carbon::parse($purchase->period)->format('F Y'),

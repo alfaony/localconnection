@@ -63,6 +63,59 @@
             let signaturePad = null;
             let signatureCanvas = null;
 
+            // Track upload state
+            let uploadInProgress = false;
+            let uploadQueue = [];
+
+            // Override upload handlers
+            window.addEventListener('livewire-upload-start', (event) => {
+                console.log('Upload started:', event.detail);
+                uploadInProgress = true;
+                uploadQueue.push(event.detail.id);
+            });
+
+            window.addEventListener('livewire-upload-finish', (event) => {
+                console.log('Upload finished:', event.detail);
+                uploadQueue = uploadQueue.filter(id => id !== event.detail.id);
+                
+                if (uploadQueue.length === 0) {
+                    uploadInProgress = false;
+                    console.log('All uploads completed');
+                }
+            });
+
+            window.addEventListener('livewire-upload-error', (event) => {
+                console.error('Upload error:', event.detail);
+                uploadQueue = uploadQueue.filter(id => id !== event.detail.id);
+                uploadInProgress = false;
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Upload Gagal',
+                    text: 'Terjadi kesalahan saat mengupload file. Silakan coba lagi.'
+                });
+            });
+
+            // Intercept next step clicks to ensure upload is complete
+            document.addEventListener('click', function(e) {
+                const nextButton = e.target.closest('[wire\\:click="nextStep"]');
+                
+                if (nextButton && uploadInProgress) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Upload Sedang Berlangsung',
+                        text: 'Mohon tunggu hingga upload file selesai...',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    
+                    return false;
+                }
+            }, true);
+
             // FIX 2: Initialize Signature Pad dengan error handling
             function initSignaturePad() {
                 const canvas = document.getElementById('signature-canvas');

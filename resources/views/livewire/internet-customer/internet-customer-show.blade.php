@@ -235,19 +235,7 @@
                                                         {{ \Carbon\Carbon::parse($purchase->created_at)->format('F Y') }}
                                                     @endif
                                                 </td>
-                                                <td>
-                                                    @if($purchase->payment_method == 'xendit')
-                                                        <span class="badge badge-success">
-                                                            <i class="fas fa-credit-card mr-1"></i>Xendit
-                                                        </span>
-                                                    @elseif($purchase->payment_method == 'manual_transfer')
-                                                        <span class="badge badge-info">
-                                                            <i class="fas fa-university mr-1"></i>Transfer Manual
-                                                        </span>
-                                                    @else
-                                                        {{ ucfirst($purchase->payment_method ?? '-') }}
-                                                    @endif
-                                                </td>
+                                                <td>{!! $purchase->status_badge!!}</td>
                                                 <td>
                                                     @if($purchase->isConfirmed())
                                                         <span class="badge badge-success">
@@ -371,7 +359,9 @@
                                 @endphp
                                 @if(view()->exists('partnership_agreement.pdf.' . $agreement->type->name_format))
                                 <div class="card scrollable" id="printThis">
-                                    @include('partnership_agreement.pdf.' . $agreement->type->name_format, ['agreement' => $agreement])
+                                    <div class="table-responsive">
+                                        @include('partnership_agreement.pdf.' . $agreement->type->name_format, ['agreement' => $agreement])
+                                    </div>
                                 </div>
                                 <div class="d-flex justify-content-center mt-3">
                                     <button type="button" id="downloadWorkOrder" class="btn btn-info mb-2 mr-2"><i class="fa fa-file-pdf"></i> Download</button>
@@ -1275,211 +1265,211 @@ document.addEventListener('livewire:load', function() {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
 
 <style>
-/* Custom Months Input */
-.custom-months-input .form-control {
-    font-size: 20px;
-    height: 50px;
-}
-
-.custom-months-input .btn {
-    height: 50px;
-    width: 50px;
-}
-
-.custom-months-input .input-group-text {
-    height: 50px;
-}
-
-/* Quick Selection Buttons */
-.quick-selection .btn {
-    padding: 10px 15px;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.quick-selection .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.quick-selection .btn-outline-primary:hover {
-    background-color: #007bff;
-    border-color: #007bff;
-    color: white;
-}
-
-.quick-selection .btn-outline-success:hover {
-    background-color: #28a745;
-    border-color: #28a745;
-    color: white;
-}
-
-/* Payment Summary */
-.payment-summary {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border: 2px solid #dee2e6 !important;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.summary-row:last-child {
-    border-bottom: none;
-}
-
-.summary-total {
-    padding-top: 15px;
-    font-size: 18px;
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-    margin: 0 -15px -15px -15px;
-    padding: 15px 15px 15px 15px;
-    border-radius: 0 0 5px 5px;
-}
-
-.discount-row {
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-    margin: 0 -15px;
-    padding: 10px 15px !important;
-    border-bottom: none !important;
-}
-
-/* Payment Method Cards */
-.payment-method-card {
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid #ddd;
-    height: 100%;
-}
-
-.payment-method-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-}
-
-.payment-method-card.border-primary {
-    border-color: #007bff !important;
-    background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
-}
-
-.payment-method-card.border-success {
-    border-color: #28a745 !important;
-    background: linear-gradient(135deg, #f1f8f4 0%, #d4edda 100%);
-}
-
-/* Bank Info */
-.bank-info {
-    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
-}
-
-.bank-info table td {
-    padding: 8px 0;
-}
-
-/* Drop Area */
-.border-dashed {
-    border-style: dashed !important;
-}
-
-#payment-drop-area {
-    transition: all 0.3s ease;
-}
-
-#payment-drop-area:hover {
-    border-color: #007bff !important;
-    background-color: #f8f9fa !important;
-}
-
-#payment-drop-area.border-primary {
-    border-color: #007bff !important;
-    background-color: rgba(0, 123, 255, 0.05) !important;
-}
-
-/* Modal */
-.modal-xl {
-    max-width: 1200px;
-}
-
-.modal-body {
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-/* Alert Info */
-.alert-info {
-    background-color: #e7f3ff;
-    border-color: #b8daff;
-    color: #004085;
-}
-
-/* Badges */
-.badge {
-    padding: 6px 12px;
-    font-size: 12px;
-}
-
-/* Input number - hide spinner */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-input[type="number"] {
-    -moz-appearance: textfield;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .modal-xl {
-        max-width: 95%;
-    }
-    
+    /* Custom Months Input */
     .custom-months-input .form-control {
-        font-size: 16px;
-        height: 45px;
+        font-size: 20px;
+        height: 50px;
     }
-    
+
     .custom-months-input .btn {
-        height: 45px;
-        width: 45px;
+        height: 50px;
+        width: 50px;
     }
-    
+
+    .custom-months-input .input-group-text {
+        height: 50px;
+    }
+
+    /* Quick Selection Buttons */
     .quick-selection .btn {
+        padding: 10px 15px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .quick-selection .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .quick-selection .btn-outline-primary:hover {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+
+    .quick-selection .btn-outline-success:hover {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: white;
+    }
+
+    /* Payment Summary */
+    .payment-summary {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 2px solid #dee2e6 !important;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .summary-row:last-child {
+        border-bottom: none;
+    }
+
+    .summary-total {
+        padding-top: 15px;
+        font-size: 18px;
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        margin: 0 -15px -15px -15px;
+        padding: 15px 15px 15px 15px;
+        border-radius: 0 0 5px 5px;
+    }
+
+    .discount-row {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        margin: 0 -15px;
+        padding: 10px 15px !important;
+        border-bottom: none !important;
+    }
+
+    /* Payment Method Cards */
+    .payment-method-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid #ddd;
+        height: 100%;
+    }
+
+    .payment-method-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    }
+
+    .payment-method-card.border-primary {
+        border-color: #007bff !important;
+        background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+    }
+
+    .payment-method-card.border-success {
+        border-color: #28a745 !important;
+        background: linear-gradient(135deg, #f1f8f4 0%, #d4edda 100%);
+    }
+
+    /* Bank Info */
+    .bank-info {
+        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    }
+
+    .bank-info table td {
+        padding: 8px 0;
+    }
+
+    /* Drop Area */
+    .border-dashed {
+        border-style: dashed !important;
+    }
+
+    #payment-drop-area {
+        transition: all 0.3s ease;
+    }
+
+    #payment-drop-area:hover {
+        border-color: #007bff !important;
+        background-color: #f8f9fa !important;
+    }
+
+    #payment-drop-area.border-primary {
+        border-color: #007bff !important;
+        background-color: rgba(0, 123, 255, 0.05) !important;
+    }
+
+    /* Modal */
+    .modal-xl {
+        max-width: 1200px;
+    }
+
+    .modal-body {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    /* Alert Info */
+    .alert-info {
+        background-color: #e7f3ff;
+        border-color: #b8daff;
+        color: #004085;
+    }
+
+    /* Badges */
+    .badge {
+        padding: 6px 12px;
         font-size: 12px;
-        padding: 8px 10px;
     }
-}
 
-/* Animation */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
+    /* Input number - hide spinner */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+
+    input[type="number"] {
+        -moz-appearance: textfield;
     }
-}
 
-/* Toast notification positioning */
-.position-fixed {
-    position: fixed !important;
-}
+    /* Responsive */
+    @media (max-width: 768px) {
+        .modal-xl {
+            max-width: 95%;
+        }
+        
+        .custom-months-input .form-control {
+            font-size: 16px;
+            height: 45px;
+        }
+        
+        .custom-months-input .btn {
+            height: 45px;
+            width: 45px;
+        }
+        
+        .quick-selection .btn {
+            font-size: 12px;
+            padding: 8px 10px;
+        }
+    }
 
-/* Loading Animation */
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+    /* Animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-.fa-spinner {
-    animation: spin 1s linear infinite;
-}
+    /* Toast notification positioning */
+    .position-fixed {
+        position: fixed !important;
+    }
+
+    /* Loading Animation */
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .fa-spinner {
+        animation: spin 1s linear infinite;
+    }
 </style>
 @endpush

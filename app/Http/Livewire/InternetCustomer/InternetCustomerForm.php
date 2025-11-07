@@ -38,6 +38,9 @@ class InternetCustomerForm extends Component
 
     public $step = 1;
     
+     public $ktpPhotoUploaded = false;
+    public $paymentProofUploaded = false;
+
     // Step 1: Alamat & Paket
     public $provinces;
     public $internetPackages;
@@ -116,6 +119,26 @@ class InternetCustomerForm extends Component
         'saveSignatureStep3' => 'handleSaveSignature'
     ];
 
+    public function updatedKtpPhoto($value)
+    {
+        $this->ktpPhotoUploaded = false;
+        
+        // Validate immediately
+        $this->validateOnly('ktp_photo', [
+            'ktp_photo' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048'
+        ]);
+    }
+
+    public function updatedPaymentProof($value)
+    {
+        $this->paymentProofUploaded = false;
+        
+        // Validate immediately
+        $this->validateOnly('payment_proof', [
+            'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048'
+        ]);
+    }
+    
     public function updatedProvinceId($value)
     {
         $this->city_id = null;
@@ -378,13 +401,6 @@ class InternetCustomerForm extends Component
 
     private function validateStep2()
     {
-        // Tunggu upload selesai
-        if ($this->ktp_photo && is_object($this->ktp_photo) && method_exists($this->ktp_photo, 'isPreviewable')) {
-            $this->validate([
-                'ktp_photo' => 'required|image|max:2048',
-            ]);
-        }
-
         $this->validate([
             'name' => 'required|min:3',
             'email' => [
@@ -398,7 +414,7 @@ class InternetCustomerForm extends Component
                 'required',
                 'digits:16',
             ],
-            'ktp_photo' => 'required|image|max:2048',
+            'ktp_photo' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ], [
             'email.unique' => 'Email ini sudah terdaftar. Silakan gunakan email lain atau hubungi admin jika ini adalah akun Anda.',
             'email.required' => 'Email wajib diisi.',
@@ -406,9 +422,25 @@ class InternetCustomerForm extends Component
             'ktp_number.digits' => 'Nomor KTP harus 16 digit.',
             'ktp_number.required' => 'Nomor KTP wajib diisi.',
             'ktp_photo.required' => 'Foto KTP wajib diupload.',
-            'ktp_photo.image' => 'File KTP harus berupa gambar.',
+            'ktp_photo.mimes' => 'File KTP harus berupa JPG, PNG, atau PDF.',
             'ktp_photo.max' => 'Ukuran file KTP maksimal 2MB.',
         ]);
+
+        // Verify file is uploaded and accessible
+        if ($this->ktp_photo) {
+            try {
+                // Try to get file path to verify it's uploaded
+                $this->ktp_photo->getRealPath();
+                $this->ktpPhotoUploaded = true;
+            } catch (\Exception $e) {
+                Log::warning('KTP photo not yet uploaded', [
+                    'error' => $e->getMessage()
+                ]);
+                
+                session()->flash('warning', 'Sedang mengunggah file KTP. Mohon tunggu sebentar...');
+                return;
+            }
+        }
         
         $this->step++;
         $this->selectedPackage = InternetPackage::find($this->internet_package_id);
@@ -426,12 +458,31 @@ class InternetCustomerForm extends Component
 
             if ($this->payment_method === 'manual_transfer') {
                 $this->validate([
-                    'payment_proof' => 'required|image|max:2048',
+                    'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
                     'nama_bank' => 'required',
                     'holder_name' => 'required',
                     'account_number' => 'required',
                     'branch_office' => 'required',
+                ], [
+                    'payment_proof.required' => 'Bukti pembayaran wajib diupload.',
+                    'payment_proof.mimes' => 'Bukti pembayaran harus berupa JPG, PNG, atau PDF.',
+                    'payment_proof.max' => 'Ukuran file maksimal 2MB.',
                 ]);
+
+                // Verify payment proof is uploaded
+                if ($this->payment_proof) {
+                    try {
+                        $this->payment_proof->getRealPath();
+                        $this->paymentProofUploaded = true;
+                    } catch (\Exception $e) {
+                        Log::warning('Payment proof not yet uploaded', [
+                            'error' => $e->getMessage()
+                        ]);
+                        
+                        session()->flash('warning', 'Sedang mengunggah bukti pembayaran. Mohon tunggu sebentar...');
+                        return;
+                    }
+                }
             }
         }
 
@@ -441,13 +492,67 @@ class InternetCustomerForm extends Component
         $this->submitForm();
     }
 
+    public function clearSignature()
+    {
+        Log::info('clearSignature called');
+        $this->signature = null;
+        $this->dispatchBrowserEvent('signature-cleared');
+    }
+
+
     private function submitForm()
     {
-        $ktpPath = $this->ktp_photo ? $this->ktp_photo->store('ktps') : null;
-        $paymentProofPath = null;
-        
+        if ($this->ktp_photo) {
+            try {
+                $this->ktp_photo->getRealPath();
+            } catch (\Exception $e) {
+                Log::error('KTP file not ready for submission', [
+                    'error' => $e->getMessage()
+                ]);
+                session()->flash('error', 'File KTP belum siap. Mohon tunggu upload selesai dan coba lagi.');
+                return;
+            }
+        }
+
         if ($this->payment_method === 'manual_transfer' && $this->payment_proof) {
-            $paymentProofPath = $this->payment_proof->store('public/payment_proofs');
+            try {
+                $this->payment_proof->getRealPath();
+            } catch (\Exception $e) {
+                Log::error('Payment proof not ready for submission', [
+                    'error' => $e->getMessage()
+                ]);
+                session()->flash('error', 'Bukti pembayaran belum siap. Mohon tunggu upload selesai dan coba lagi.');
+                return;
+            }
+        }
+
+        // Store files to permanent S3 location
+        $ktpPath = null;
+        if ($this->ktp_photo) {
+            try {
+                $ktpPath = $this->ktp_photo->store('ktps', 's3');
+                Log::info('KTP uploaded to S3', ['path' => $ktpPath]);
+            } catch (\Exception $e) {
+                Log::error('Failed to store KTP to S3', [
+                    'error' => $e->getMessage()
+                ]);
+                session()->flash('error', 'Gagal mengunggah KTP ke server. Silakan coba lagi.');
+                return;
+            }
+        }
+        
+        $paymentProofPath = null;
+        if ($this->payment_method === 'manual_transfer' && $this->payment_proof) {
+            try {
+                $paymentProofPath = $this->payment_proof->store('payment_proofs', 's3');
+                Log::info('Payment proof uploaded to S3', ['path' => $paymentProofPath]);
+            } catch (\Exception $e) {
+                Log::error('Failed to store payment proof to S3', [
+                    'error' => $e->getMessage()
+                ]);
+                session()->flash('error', 'Gagal mengunggah bukti pembayaran ke server. Silakan coba lagi.');
+                return;
+            }
         }
         
         DB::beginTransaction();
@@ -485,7 +590,8 @@ class InternetCustomerForm extends Component
                     : ($this->payment_method === 'xendit' ? ParamSchema::WAITING_PAYMENT_SUBSCRIPTION : ParamSchema::WAITING_PAYMENT_CONFIRMATION),
             ]);
             
-            $agreement = $this->createPartnershipAgreement($ktpPath);
+            $agreement = $this->createPartnershipAgreement($ktpPath, $signaturePath);
+            
         
             $userCustomer = UserCustomer::create([
                 'start_billing_date' => $this->start_billing_date,
@@ -641,13 +747,13 @@ class InternetCustomerForm extends Component
             'branch_office' => $this->branch_office,
             'alamat_pemasangan' => $this->address,
             'jangka_waktu' => $this->payment_months . ' bulan',
-            'periode_berlangganan' => $this->formattedPeriod ?? '-',
+            'periode_berlangganan' => '-',
             'nama_paket' => $this->selectedPackage->name ?? '',
             'detail_paket' => $this->selectedPackage->description ?? '',
         ]);
     }
 
-    private function createPartnershipAgreement($ktpPath)
+    private function createPartnershipAgreement($ktpPath, $signaturePath)
     {
         try {
             $letter_number = PartnershipAgreement::where('company_id',$this->company_id)->withTrashed()->max('letter_number') + 1;
@@ -667,7 +773,7 @@ class InternetCustomerForm extends Component
                 'branch_office' => $this->branch_office,
                 'alamat_pemasangan' => $this->address,
                 'jangka_waktu' => $this->payment_months . ' bulan',
-                'periode_berlangganan' => $this->formattedPeriod ?? '-',
+                'periode_berlangganan' => '-',
                 'nama_paket' => $this->selectedPackage->name ?? '',
                 'detail_paket' => $this->selectedPackage->description ?? '',
             ]);
@@ -676,13 +782,6 @@ class InternetCustomerForm extends Component
                     ->whereHas('role', fn ($query) => $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR]))
                     ->where('company_id', $this->company_id)
                     ->first();
-    
-            $signaturePath = null;
-            if ($this->signature) {
-                $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $this->signature));
-                $signaturePath = 'signatures/' . uniqid() . '.png';
-                file_put_contents(storage_path('app/public/' . $signaturePath), $imageData);
-            }
 
             $data['partnership_agreement_type_id'] = $type->id;
             $data['status'] = ParamSchema::SIGNATURE;
@@ -732,7 +831,7 @@ class InternetCustomerForm extends Component
                 })
                 ->first();
             
-            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar untuk {$this->payment_months} bulan (periode: {$this->formattedPeriod}). Silakan periksa detail pendaftaran.";
+            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar untuk {$this->payment_months} bulan ). Silakan periksa detail pendaftaran.";
             $directUrl = route('internet-customer.show', $internetCustomer->id);
             
             foreach($userFinance as $finance) {

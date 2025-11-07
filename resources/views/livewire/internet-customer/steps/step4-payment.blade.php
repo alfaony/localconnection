@@ -207,16 +207,21 @@
                     </div>
 
                     <div class="mt-3">
-                        <label class="form-label fw-semibold">Upload Bukti Transfer</label>
+                        <label class="form-label fw-semibold">Upload Bukti Transfer <span class="text-danger">*</span></label>
                         <div class="border rounded p-3 bg-white">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
                                     <i class="fas fa-file-upload fa-2x text-muted"></i>
                                 </div>
                                 <div class="flex-grow-1 ms-3">
-                                    <input type="file" wire:model="payment_proof" class="form-control">
+                                    <input type="file" 
+                                           wire:model="payment_proof" 
+                                           class="form-control"
+                                           accept="image/*,application/pdf"
+                                           id="payment-proof-input">
+                                    
                                     @if($payment_proof)
-                                        <small class="text-success d-block mt-1">
+                                        <small class="text-success d-block mt-1" id="payment-success-msg">
                                             <i class="fas fa-check-circle me-1"></i> 
                                             File terpilih: {{ $payment_proof->getClientOriginalName() }}
                                         </small>
@@ -228,8 +233,26 @@
                                 </div>
                             </div>
                             @error('payment_proof') <small class="text-danger d-block mt-2">{{ $message }}</small> @enderror
-                            <div wire:loading wire:target="payment_proof" class="text-primary mt-2">
-                                <i class="fas fa-spinner fa-spin me-1"></i> Sedang mengunggah file...
+                            
+                            <!-- Loading state -->
+                            <div wire:loading wire:target="payment_proof" class="mt-2">
+                                <div class="alert alert-warning mb-0 py-2" id="payment-uploading-msg">
+                                    <i class="fas fa-spinner fa-spin me-1"></i> 
+                                    <strong>Sedang mengunggah file ke server...</strong>
+                                    <br><small>Mohon jangan refresh atau pindah halaman</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Upload complete indicator -->
+                            <div wire:loading.remove wire:target="payment_proof">
+                                @if($payment_proof && $paymentProofUploaded)
+                                    <div class="mt-2">
+                                        <div class="alert alert-success mb-0 py-2">
+                                            <i class="fas fa-check-circle me-1"></i> 
+                                            <strong>Upload berhasil!</strong> File siap untuk diproses.
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -293,19 +316,24 @@
         <button 
             wire:click="nextStep"
             wire:loading.attr="disabled"
-            wire:target="nextStep"
+            wire:target="nextStep,payment_proof"
             class="btn-primary-red px-4 py-2 fw-semibold"
+            @if($payment_method === 'manual_transfer' && !$payment_proof) disabled @endif
         >
-            <span wire:loading.remove wire:target="nextStep">
+            <span wire:loading.remove wire:target="nextStep,payment_proof">
                 @if($payment_method === 'xendit' && !$hasFreeMonthsPromo)
                     Lanjut ke Pembayaran <i class="fas fa-arrow-right ms-2"></i>
                 @else
                     Selesaikan Pendaftaran <i class="fas fa-check ms-2"></i>
                 @endif
             </span>
+            <span wire:loading wire:target="payment_proof">
+                Mengunggah...
+                <span class="spinner-border spinner-border-sm ms-2"></span>
+            </span>
             <span wire:loading wire:target="nextStep">
                 Memproses...
-                <span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                <span class="spinner-border spinner-border-sm ms-2"></span>
             </span>
         </button>
     </div>

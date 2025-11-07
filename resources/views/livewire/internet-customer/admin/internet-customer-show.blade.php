@@ -258,7 +258,7 @@
                                                 @foreach($purchases as $purchase)
                                                 <tr>
                                                     <td>{{ \Carbon\Carbon::parse($purchase->created_at)->format('F Y') }}</td>
-                                                    <td>{{ ucfirst($purchase->payment_method ?? '-') }}</td>
+                                                    <td>{!! $purchase->status_badge!!}</td>
                                                     <td>
                                                         @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
                                                             <span class="badge badge-success">Lunas</span>

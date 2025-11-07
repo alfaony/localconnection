@@ -32,16 +32,21 @@
     </div>
     
     <div class="col-md-6">
-        <label class="form-label">Foto KTP</label>
+        <label class="form-label">Foto KTP <span class="text-danger">*</span></label>
         <div class="border rounded p-3 bg-white">
             <div class="d-flex align-items-center">
                 <div class="flex-shrink-0">
                     <i class="fas fa-file-upload fa-2x text-muted"></i>
                 </div>
                 <div class="flex-grow-1 ms-3">
-                    <input type="file" wire:model="ktp_photo" class="form-control" accept="image/*">
+                    <input type="file" 
+                        wire:model="ktp_photo" 
+                        class="form-control" 
+                        accept="image/*,application/pdf"
+                        id="ktp-photo-input">
+                    
                     @if($ktp_photo)
-                        <small class="text-success d-block mt-1">
+                        <small class="text-success d-block mt-1" id="ktp-success-msg">
                             <i class="fas fa-check-circle me-1"></i> 
                             File terpilih: {{ $ktp_photo->getClientOriginalName() }}
                         </small>
@@ -56,29 +61,33 @@
             
             <!-- Loading state -->
             <div wire:loading wire:target="ktp_photo" class="mt-2">
-                <div class="alert alert-info mb-0 py-2">
-                    <i class="fas fa-spinner fa-spin me-1"></i> Sedang mengunggah file...
+                <div class="alert alert-warning mb-0 py-2" id="ktp-uploading-msg">
+                    <i class="fas fa-spinner fa-spin me-1"></i> 
+                    <strong>Sedang mengunggah file ke server...</strong>
+                    <br><small>Mohon jangan refresh atau pindah halaman</small>
                 </div>
             </div>
             
             <!-- Upload complete indicator -->
-            @if($ktp_photo && !$errors->has('ktp_photo'))
-                <div class="mt-2">
-                    <div class="alert alert-success mb-0 py-2">
-                        <i class="fas fa-check-circle me-1"></i> File berhasil diunggah dan siap diproses
+            <div wire:loading.remove wire:target="ktp_photo">
+                @if($ktp_photo && $ktpPhotoUploaded)
+                    <div class="mt-2">
+                        <div class="alert alert-success mb-0 py-2">
+                            <i class="fas fa-check-circle me-1"></i> 
+                            <strong>Upload berhasil!</strong> File siap untuk diproses.
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif
+            </div>
         </div>
     </div>
 </div>
 
 <div class="d-flex justify-content-between mt-4">
-    <button wire:click="prevStep" class="btn btn-outline-secondary px-4">
+     <button wire:click="prevStep" class="btn btn-outline-secondary px-4">
         <i class="fas fa-arrow-left me-2"></i> Kembali
     </button>
     
-    <!-- Disable button saat upload -->
     <button 
         wire:click="nextStep"
         wire:loading.attr="disabled"
@@ -90,7 +99,7 @@
             Selanjutnya <i class="fas fa-arrow-right ms-2"></i>
         </span>
         <span wire:loading wire:target="ktp_photo">
-            Mengunggah file...
+            Mengunggah...
             <span class="spinner-border spinner-border-sm ms-2"></span>
         </span>
         <span wire:loading wire:target="nextStep">

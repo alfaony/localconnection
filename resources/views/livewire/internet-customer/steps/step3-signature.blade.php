@@ -20,7 +20,7 @@
 <div class="card mb-4">
     <div class="card-body">
         <h5 class="card-title">Syarat dan Ketentuan</h5>
-        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 15px;">
+        <div class="agreement-scroll-box">
             @if($agreement)
                 @if(view()->exists('partnership_agreement.pdf.perjanjian_berlangganan_internet'))
                     @include('partnership_agreement.pdf.perjanjian_berlangganan_internet', ['agreement' => $agreement])
@@ -38,29 +38,24 @@
     <div class="card-body">
         <h5 class="card-title mb-3">Tanda Tangan</h5>
         
-        <!-- Canvas Area -->
+        <!-- Canvas Area - MOBILE FRIENDLY -->
         <div id="signature-canvas-container" class="{{ $signature ? 'd-none' : '' }}">
             <div class="alert alert-info mb-3">
-                <i class="fas fa-info-circle me-2"></i> Silakan gambar tanda tangan Anda pada area persegi di bawah
+                <i class="fas fa-info-circle me-2"></i> Silakan gambar tanda tangan Anda pada area di bawah
             </div>
             
-            <div class="d-flex flex-column align-items-center">
-                <div id="signature-pad-container" 
-                    class="border rounded bg-light position-relative mx-auto"
-                    style="width: 400px; height: 300px;">
-                    <canvas id="signature-canvas" 
-                            style="width: 100%; height: 100%; touch-action: none; background-color: white;"></canvas>
-                    <div class="position-absolute bottom-0 start-0 w-100 p-2 bg-light border-top">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <button type="button" class="btn btn-sm btn-outline-danger" id="clear-signature">
-                                <i class="fas fa-eraser me-1"></i> Hapus
-                            </button>
-                            <small class="text-muted">Gambar di dalam area kotak</small>
-                        </div>
+            <div class="signature-canvas-wrapper">
+                <div id="signature-pad-container" class="signature-pad-box">
+                    <canvas id="signature-canvas"></canvas>
+                    <div class="signature-controls">
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="clear-signature">
+                            <i class="fas fa-eraser me-1"></i> Hapus
+                        </button>
+                        <small class="text-muted d-none d-md-inline">Gambar di dalam area</small>
                     </div>
                 </div>
                 
-                <div class="mt-4">
+                <div class="text-center mt-3">
                     <button type="button" id="save-signature" class="btn btn-success px-4 py-2">
                         <i class="fas fa-save me-2"></i> Simpan Tanda Tangan
                     </button>
@@ -74,19 +69,19 @@
                 <i class="fas fa-check-circle me-2"></i> Tanda tangan Anda telah disimpan
             </div>
             
-            <div class="d-flex flex-column align-items-center">
+            <div class="signature-preview-wrapper">
                 <div class="mb-3 text-center">
                     <h6>Preview Tanda Tangan:</h6>
                     <p class="text-muted small">Tanda tangan akan muncul di dokumen perjanjian</p>
                 </div>
                 
-                <div class="border rounded bg-white p-2 shadow-sm" style="width: 300px; height: 150px;">
+                <div class="signature-preview-box">
                     <img id="signature-preview-image" 
                         src="{{ $signature }}" 
-                        class="img-fluid h-100 w-100" style="object-fit: contain;">
+                        alt="Tanda Tangan">
                 </div>
                 
-                <div class="mt-4">
+                <div class="text-center mt-3">
                     <button type="button" id="re-sign" class="btn btn-outline-secondary px-4 py-2">
                         <i class="fas fa-redo me-2"></i> Gambar Ulang
                     </button>

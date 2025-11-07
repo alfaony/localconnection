@@ -206,4 +206,23 @@ class InternetCustomerPurchase extends Model
         $remaining = now()->diffInDays($this->period_end, false);
         return max(0, $remaining);
     }
+
+    /**
+     * Get status badge
+     */
+    public function getStatusBadgeAttribute()
+    {
+        if ($this->payment_method == 'xendit') {
+            return '<span class="badge badge-success"><i class="fas fa-credit-card mr-1"></i>Xendit</span>';
+        } elseif ($this->payment_method == 'manual_transfer') {
+            return '<span class="badge badge-info"><i class="fas fa-university mr-1"></i>Transfer Manual</span>';
+        } 
+        elseif ($this->payment_method == 'transfer') {
+            return '<span class="badge badge-info"><i class="fas fa-university mr-1"></i>Transfer Manual</span>';
+        }
+        else 
+            {
+            return ucfirst($this->payment_method ?? '');
+        }
+    }
 }
