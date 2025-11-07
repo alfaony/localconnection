@@ -359,9 +359,7 @@
                                 @endphp
                                 @if(view()->exists('partnership_agreement.pdf.' . $agreement->type->name_format))
                                 <div class="card scrollable" id="printThis">
-                                    <div class="table-responsive">
-                                        @include('partnership_agreement.pdf.' . $agreement->type->name_format, ['agreement' => $agreement])
-                                    </div>
+                                    @include('partnership_agreement.pdf.' . $agreement->type->name_format, ['agreement' => $agreement])
                                 </div>
                                 <div class="d-flex justify-content-center mt-3">
                                     <button type="button" id="downloadWorkOrder" class="btn btn-info mb-2 mr-2"><i class="fa fa-file-pdf"></i> Download</button>
@@ -1470,6 +1468,123 @@ document.addEventListener('livewire:load', function() {
 
     .fa-spinner {
         animation: spin 1s linear infinite;
+    }
+</style>
+<style>
+    .img-signature
+    {
+        background-color: transparent !important; 
+        border: 0px solid #dee2e6 !important;
+        box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.0) !important;       
+        max-height: 100px !important; 
+    }
+    .signature-container {
+        width: fit-content;
+    }
+    .signature-canvas {
+        /* width: 100%; */
+        /* height: 200px; */
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        background-color: white;
+        touch-action: none;
+    }
+    .custom-file-label::after {
+        content: "Browse";
+    }
+    #ktpPreviewImg {
+        max-height: 200px;
+    }
+</style>
+<style>
+   .small-text 
+    {
+        text-align: justify;
+        font-size: 0.79rem;
+    }
+
+    .text-ads a, 
+    .text-ads li, 
+    .text-ads p, 
+    .text-ads div, 
+    .text-ads span, 
+    .text-ads h1, 
+    .text-ads h2, 
+    .text-ads h3, 
+    .text-ads h4, 
+    .text-ads h5, 
+    .text-ads h6 
+    {
+        font-size: 0.92rem;
+    }
+    .small-header
+    {
+        font-size: 1rem;
+        font-weight: bold;
+    }
+    @media print {
+        #printItem {
+            margin-left: 50px;
+            margin-right: 50px;
+        }
+    }
+
+    body {
+        font-family: Arial;
+        /* font-size : 12px; */
+        /* padding: 20px; */
+        /* background-color: #f4f4f4; */
+    }
+
+    .container {
+        /* background-color: #fff; */
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+
+    hr {
+        border: 1px solid black;
+        border-radius: 5px;
+    }
+
+    .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+
+    /* li */
+    .margin {
+        margin-bottom: 15px;
+    }
+
+    .noMargin {
+        margin-bottom: 0px;
+    }
+
+    .scrollable {
+        width: 100%;
+        height: 650px;
+        overflow: auto;
+        border: 1px solid #ccc;
     }
 </style>
 @endpush
