@@ -184,6 +184,79 @@ class HomeController extends Controller
         return view('home',compact('totalActiveProjects','activeProjectsBudget','totalPurchaseBudget','activeEmployeeBudget','totalActiveWorkers', 'totalQuote', 'totalWorkOrder', 'equipments', 'trainingPoints', 'ipRightPoints', 'salesAchievementPoints', 'dailyTaskPoints', 'dailyTaskCompleteCount', 'dailyTaskCountOverdue', 'dailyTaskCountUpcoming', 'dailyTaskCountToday', 'dailyTaskTodoCount', 'dailyTasDoingCount', 'dailyTaskInreviewCount', 'dailyTaskNotComplateCount', 'quotesWithoutWorkOrder','startDate','endDate','schedules'));
     }
 
+    /**
+     * Function task summary untuk Flutter App.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function indexSummary(Request $request)
+    {
+        $userId = Auth::id();
+        
+        try {
+            $todo = TaskStatus::where('name', ParamSchema::TODO)->firstOrFail()->id;
+            $doing = TaskStatus::where('name', ParamSchema::DOING)->firstOrFail()->id;
+            $inReview = TaskStatus::where('name', ParamSchema::INREVIEW)->firstOrFail()->id;
+            $complete = TaskStatus::where('name', ParamSchema::COMPLATE)->firstOrFail()->id;
+            $notComplete = TaskStatus::where('name', ParamSchema::NOTCOMPLATE)->firstOrFail()->id;
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Task statuses (TODO, DOING, etc.) not found.'
+            ], 500);
+        }
+
+        $now = now();
+        $todayStart = $now->startOfDay();
+        $todayEnd = $now->endOfDay();
+
+        $dailyTaskStatusCounts = DailyTask::where(function ($q) use ($userId) {
+                $q->where('assignment_user_id', $userId)
+                ->orWhere('user_id', $userId);
+            })
+            ->selectRaw('
+                COUNT(CASE WHEN task_status_id = ? THEN 1 END) as todo,
+                COUNT(CASE WHEN task_status_id = ? THEN 1 END) as doing,
+                COUNT(CASE WHEN task_status_id = ? THEN 1 END) as in_review,
+                COUNT(CASE WHEN task_status_id = ? THEN 1 END) as not_complete,
+                COUNT(CASE WHEN task_status_id = ? THEN 1 END) as complete
+            ', [$todo, $doing, $inReview, $notComplete, $complete])
+            ->first()
+            ->toArray();
+
+        $incompleteStatusIds = [$todo, $doing, $inReview, $notComplete];
+
+        $baseQueryIncomplete = DailyTask::where(function ($q) use ($userId) {
+                $q->where('assignment_user_id', $userId)
+                ->orWhere('user_id', $userId);
+            })
+            ->whereIn('task_status_id', $incompleteStatusIds);
+
+        $overdueCount = (clone $baseQueryIncomplete)
+            ->whereDate('end_date', '<', $todayStart)
+            ->count();
+
+        $todayCount = (clone $baseQueryIncomplete)
+            ->whereDate('start_date', '<=', $todayEnd)
+            ->whereDate('end_date', '>=', $todayStart)
+            ->count();
+
+        $upcomingCount = (clone $baseQueryIncomplete)
+            ->whereDate('start_date', '>', $todayEnd)
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daily task summary retrieved successfully.',
+            'data' => array_merge($dailyTaskStatusCounts, [
+                'overdue' => $overdueCount,
+                'today' => $todayCount,
+                'upcoming' => $upcomingCount,
+            ]),
+        ]);
+    }
+
     public function dashboardReport()
     {
         $checkins = User::where('is_checkin', true)->withCheckinCounts(Auth::user()->id)->first();
