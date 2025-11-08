@@ -106,5 +106,6 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuKasirSeeder::class);
         $this->call(PermissionForGetLocationSeeder::class);
         $this->call(PermissionForMenuWfoRuleSeeder::class);
+        $this->call(MobilePermissionSeeder::class);
     }
 }
