@@ -164,18 +164,18 @@ class InternetCustomerForm extends Component
     public function saveSignatureAndProceed($signatureData)
     {
         $this->signature = $signatureData;
-        $this->validate([
-            'signature' => 'required',
-            'agreeTerms' => 'accepted'
-        ]);
+        // $this->validate([
+        //     'signature' => 'required',
+        //     'agreeTerms' => 'accepted'
+        // ]);
         $this->step++; // Lanjut ke step 5
     }
 
     public function handleSaveSignature()
     {        
-        $this->validate([
-            'signature' => 'required',
-        ]);
+        // $this->validate([
+        //     'signature' => 'required',
+        // ]);
         
         $this->submitForm();
     }
