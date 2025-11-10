@@ -463,9 +463,12 @@ class InternetCustomerIndex extends Component
     }
 
 
+
     public function viewPaymentProof($proofUrl)
     {
-        $this->selectedPaymentProof = $proofUrl;
+        $this->selectedPaymentProof = $proofUrl ? s3_asset(true,10,$proofUrl) : null;
+        
+        $proofUrl= $proofUrl ? s3_asset(true,10,$proofUrl) : null;
     
         // Dispatch kedua jenis event
         $this->dispatchBrowserEvent('showPaymentProofModal', ['proofUrl' => $proofUrl]);

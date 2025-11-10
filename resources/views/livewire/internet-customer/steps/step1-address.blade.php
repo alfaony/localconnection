@@ -3,7 +3,7 @@
 <div class="row g-3">
     <!-- Province -->
     <div class="col-md-6">
-        <label class="form-label">Provinsi</label>
+        <label class="form-label">Provinsi <span class="text-danger">*</span></label>
         <select wire:model="province_id" 
             id="province_id" 
             class="form-control select2-single @error('province_id') is-invalid @enderror"
@@ -18,7 +18,7 @@
 
     <!-- City -->
     <div class="col-md-6">
-        <label class="form-label">Kota/Kabupaten</label>
+        <label class="form-label">Kota/Kabupaten <span class="text-danger">*</span></label>
         <select wire:model="city_id" id="city_id" class="form-select select2-single" {{ !$province_id ? 'disabled' : '' }}>
             <option value="">Pilih Kota/Kabupaten</option>
             @foreach($cities as $city)
@@ -30,7 +30,7 @@
 
     <!-- District -->
     <div class="col-md-6">
-        <label class="form-label">Kecamatan</label>
+        <label class="form-label">Kecamatan <span class="text-danger">*</span></label>
         <select wire:model="district_id" id="district_id" class="form-select select2-single" {{ !$city_id ? 'disabled' : '' }}>
             <option value="">Pilih Kecamatan</option>
             @foreach($districts as $district)
@@ -42,7 +42,7 @@
 
     <!-- Subdistrict -->
     <div class="col-md-6">
-        <label class="form-label">Kelurahan</label>
+        <label class="form-label">Kelurahan <span class="text-danger">*</span></label>
         <select wire:model="subdistrict_id" id="subdistrict_id" class="form-select select2-single" {{ !$district_id ? 'disabled' : '' }}>
             <option value="">Pilih Kelurahan</option>
             @foreach($subdistricts as $subdistrict)
@@ -73,7 +73,7 @@
 
 <!-- Internet Package -->
 <div class="mt-3">
-    <label class="form-label">Paket Internet</label>
+    <label class="form-label">Paket Internet <span class="text-danger">*</span></label>
     <select wire:model="internet_package_id" id="internet_package_id" class="form-select select2-single">
         <option value="">Pilih Paket Internet</option>
         @foreach($internetPackages as $package)

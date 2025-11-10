@@ -17,9 +17,10 @@ use App\Models\InternetCustomerPurchase;
 
 use App\Jobs\GenerateBillingJob;
 use App\Schemas\ParamSchema;
-use App\Helpers\InboxHelper;
 use Carbon\Carbon;
 
+use App\Helpers\Access;
+use App\Helpers\InboxHelper;
 
 class InternetCustomerShow extends Component
 {
@@ -341,7 +342,8 @@ class InternetCustomerShow extends Component
     public function render()
     {
         $purchases = $this->customer->purchases()->orderby('created_at')->paginate(5);
-        return view('livewire.internet-customer.admin.internet-customer-show', compact('purchases'))
+        $financeAccess = Access::can('as_finance', 'internet_customers');
+        return view('livewire.internet-customer.admin.internet-customer-show', compact('purchases','financeAccess'))
             ->extends('adminlte::page');
     }
 

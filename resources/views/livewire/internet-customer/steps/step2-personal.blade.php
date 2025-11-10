@@ -2,31 +2,31 @@
 
 <div class="row g-3">
     <div class="col-md-6">
-        <label class="form-label">Nama Lengkap</label>
+        <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
         <input type="text" wire:model="name" class="form-control">
         @error('name') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="col-md-6">
-        <label class="form-label">Nomor Telepon</label>
+        <label class="form-label">Nomor Telepon <span class="text-danger">*</span></label>
         <input type="text" wire:model="phone_number" class="form-control">
         @error('phone_number') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="col-md-12">
-        <label class="form-label">Email</label>
+        <label class="form-label">Email <span class="text-danger">*</span></label>
         <input type="email" wire:model="email" class="form-control">
         @error('email') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="col-12">
-        <label class="form-label">Alamat Lengkap</label>
+        <label class="form-label">Alamat Lengkap <span class="text-danger">*</span></label>
         <textarea wire:model="address" rows="3" class="form-control"></textarea>
         @error('address') <small class="text-danger">{{ $message }}</small> @enderror
     </div>
     
     <div class="col-md-6">
-        <label class="form-label">Nomor KTP</label>
+        <label class="form-label">Nomor KTP <span class="text-danger">*</span></label>
         <input type="text" wire:model="ktp_number" class="form-control">
         @error('ktp_number') <small class="text-danger">{{ $message }}</small> @enderror
     </div>

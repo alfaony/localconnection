@@ -283,11 +283,12 @@
                                                         @switch($customer->status)
                                                             @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION)
                                                                 @if($purchase->user_finance_id && $purchase->confirmation_finance_at)
-                                                                    <i class="fas fa-check-circle mr-1 text-success"></i>                   
-                                                                @else
+                                                                    <i class="fas fa-check-circle mr-1 text-success"></i>        
+                                                                @elseif($financeAccess)           
                                                                 <button class="btn btn-sm btn-success mt-1" onclick="confirmPayment('{{ $purchase->id }}')">
                                                                     Konfirmasi
                                                                 </button>
+                                                                @else
                                                                 @endif
                                                                 @break
                                                             @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION)

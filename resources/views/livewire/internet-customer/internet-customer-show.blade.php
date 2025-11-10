@@ -55,6 +55,7 @@
                                         <th width="25%">Nama Lengkap</th>
                                         <td>{{ $customer->name }}</td>
                                     </tr>
+                                    {{-- 
                                     <tr>
                                         <th>Email</th>
                                         <td>{{ $customer->userCustomer->email ?? '-' }}</td>
@@ -74,6 +75,7 @@
                                             @endif
                                         </td>
                                     </tr>
+                                    --}}
                                     <tr>
                                         <th>Alamat Lengkap</th>
                                         <td>{{ $customer->address }}</td>

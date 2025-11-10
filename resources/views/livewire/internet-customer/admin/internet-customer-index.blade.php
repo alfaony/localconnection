@@ -146,11 +146,14 @@
                                     <td>
                                             @switch($customer->status)
                                                 @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION)
-                                                    @if($customer->getOldestUnconfirmedPurchase() && $customer->getOldestUnconfirmedPurchase()->payment_method === 'transfer')
+                                                    @if($customer->getOldestUnconfirmedPurchase() && ($customer->getOldestUnconfirmedPurchase()->payment_method === 'transfer' || $customer->getOldestUnconfirmedPurchase()->payment_method === 'manual_transfer'))
                                                         @if($customer->getOldestUnconfirmedPurchase()->payment_method && $finance_access)
+
+                                                            @if($customer->getOldestUnconfirmedPurchase()->payment_proof)
                                                             <button class="btn btn-sm btn-outline-primary" wire:click="viewPaymentProof(@js($customer->getOldestUnconfirmedPurchase()->payment_proof))">
                                                                 Lihat Bukti
                                                             </button>
+                                                            @endif
                                                             <button class="btn btn-sm btn-success mt-1" onclick="confirmPayment('{{ $customer->getOldestUnconfirmedPurchase()->id }}')">
                                                                 Konfirmasi
                                                             </button>
