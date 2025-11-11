@@ -28,4 +28,33 @@ class LoginController extends BaseController
             return $this->sendError('Unauthorised.', ['error'=>'Unauthorised']);
         } 
     }
+
+
+    /**
+     * Controller untuk Mobile 
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function login_flutter(Request $request)
+    {
+        if(Auth::attempt(['email' => $request->email, 'password' => $request->password])){ 
+            $user = Auth::user(); 
+            $success['token'] = $user->createToken('flutter-app-token')->accessToken;
+            $success['name'] =  $user->name;
+    
+            return $this->sendResponse($success, 'User login successfully.');
+        } 
+        else{ 
+            return $this->sendError('Unauthorised.', ['error'=>'Unauthorised']);
+        } 
+    }
+
+    //Controller logout untuk mobile
+    public function logout(Request $request)
+    {
+        $token = $request->user()->token();
+        $token->revoke();
+
+        return $this->sendResponse([], 'User logged out successfully.');
+    }
 }

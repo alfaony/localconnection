@@ -14,6 +14,8 @@ use App\Http\Controllers\API\DailyTaskController;
 use App\Http\Controllers\API\ObjectiveController;
 use App\Http\Controllers\API\DailyTaskProjectController;
 use App\Http\Controllers\API\UsedLaptopController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\API\DailyTaskMobileController;
 
 
 /*
@@ -28,6 +30,8 @@ use App\Http\Controllers\API\UsedLaptopController;
 */
 
 Route::post('login', [LoginController::class, 'login']);
+
+Route::post('login_flutter', [LoginController::class, 'login_flutter']);
 
 Route::group(['middleware' => ['auth:api','role.permission.api']], function() 
 {
@@ -53,7 +57,7 @@ Route::group(['middleware' => ['auth:api']], function()
     Route::post('provision', [MikrotikController::class, 'provision']);   
     Route::post('cut', [MikrotikController::class, 'cut']);
     Route::post('restore', [MikrotikController::class, 'restore']);
-});
+
     Route::resource('dailytask', DailyTaskController::class);
     Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
     Route::put('dailytask/report/{slug}', [DailyTaskController::class, 'report']);
@@ -64,3 +68,44 @@ Route::group(['middleware' => ['auth:api']], function()
     // Route::post('dailytask/{slug}/approve', [DailyTaskController::class, 'approvement']);
     // Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);
     Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');
+
+
+    //Mobile
+    Route::get('tasks/today', [DailyTaskMobileController::class, 'indexToday']);
+
+    Route::get('tasks/tomorrow', [DailyTaskMobileController::class, 'indexTomorrow']);
+    Route::get('tasks/overdue', [DailyTaskMobileController::class, 'indexOverdue']);
+
+    Route::put('tasks/statuschange/{slug}', [DailyTaskMobileController::class, 'statusChange'])
+    ->name('tasks.statuschange.mobile'); 
+    Route::post('tasks/{slug}/report', [DailyTaskMobileController::class, 'report'])
+    ->name('tasks.report.mobile');
+    Route::post('tasks/{slug}/update-media', [DailyTaskMobileController::class, 'updateMedia'])
+    ->name('tasks.updateMedia.mobile');
+    Route::delete('tasks/media/{id}', [DailyTaskMobileController::class, 'deleteMedia'])
+        ->name('tasks.deleteMedia.mobile');
+
+    Route::resource('tasks', DailyTaskMobileController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+    
+    Route::get('home/daily-task-summary', [HomeController::class, 'indexSummary']);
+
+    Route::get('task-statuses', [DailyTaskMobileController::class, 'indexTaskStatuses']); 
+    Route::get('daily-task-projects', [DailyTaskMobileController::class, 'indexDailyTaskProjects']); 
+    Route::get('daily-task-projects-title', [DailyTaskMobileController::class, 'indexProjects']); 
+    Route::get('daily-task-categories', [DailyTaskMobileController::class, 'indexDailyTaskCategories']); 
+    Route::get('daily-task-types', [DailyTaskMobileController::class, 'indexDailyTaskTypes']);
+    Route::get('daily-task-objectives', [DailyTaskMobileController::class, 'indexDailyTaskObjectives']);
+    Route::get('daily-task-keyresults/{objectiveId}', [DailyTaskMobileController::class, 'indexKeyResults']);
+    Route::get('daily-task-users', [DailyTaskMobileController::class, 'indexDailyTaskUsers']);
+    Route::post('/tasks/approval/{slug}', [DailyTaskMobileController::class, 'approval'])
+        ->name('api.dailytask.approval');
+    Route::post('medias/generate-media-url', [DailyTaskMobileController::class, 'generateMediaUrl'])
+        ->name('medias.generateMediaUrl.mobile');
+    Route::get('divisions', [DailyTaskMobileController::class, 'indexDivision']);
+    Route::get('divisions/check-division-quota', [DailyTaskMobileController::class, 'checkDivisionQuota']);
+});
+
+Route::group(['middleware' => ['auth:api']], function() 
+{
+    Route::post('logout', [LoginController::class, 'logout']);
+});

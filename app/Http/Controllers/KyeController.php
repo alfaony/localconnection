@@ -7,11 +7,12 @@ use App\Models\User;
 use App\Models\SettingCompany;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-use App\Http\Requests\KyeRequest;
 use App\Schemas\RoleSchema;
+use App\Http\Requests\KyeRequest;
 
 use App\Helpers\InboxHelper;
 use App\Helpers\EmailNotifHelper;
@@ -136,6 +137,7 @@ class KyeController extends Controller
             return redirect()->route('kye.show', $kye)->with('success', 'Data KYE berhasil ditambahkan.');
         } catch (\Throwable $th) {
             //throw $th;
+            Log::error($th);
             // dd($th);
             return redirect()->route('kye.create')->with('error', 'Terjadi kesalahan saat menyimpan data KYE.');
         }
@@ -270,6 +272,7 @@ class KyeController extends Controller
         } catch (\Throwable $th) {
             // dd($request->all());
             // dd($th);
+            Log::error($th);
             // Log error untuk debugging
             return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui data KYE.');
         }
