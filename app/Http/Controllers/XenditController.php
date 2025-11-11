@@ -134,7 +134,7 @@ class XenditController extends Controller
         } catch (\Exception $e) {
             $this->logging($request, 500, $e);
 
-            dd($e);
+            // dd($e);
             Log::error('Xendit webhook processing failed', [
                 'error' => $e->getMessage(),
                 'data' => $data

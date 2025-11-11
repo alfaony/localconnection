@@ -708,7 +708,7 @@ class InternetCustomerForm extends Component
             }
 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             Log::error('Xendit payment processing failed', [
                 'error' => $e->getMessage(),
                 'purchase_id' => $purchase->id

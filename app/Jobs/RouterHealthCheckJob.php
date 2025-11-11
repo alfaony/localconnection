@@ -55,6 +55,7 @@ class RouterHealthCheckJob implements ShouldQueue
             }
 
         } catch (Throwable $e) {
+            // dd("here");
             $router->updateHealthStatus(
                 Router::STATUS_ERROR,
                 substr($e->getMessage(), 0, 255) // Limit error message length

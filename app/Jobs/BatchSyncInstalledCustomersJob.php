@@ -68,7 +68,7 @@ class BatchSyncInstalledCustomersJob implements ShouldQueue
             
             foreach ($chunks as $chunk) {
                 dispatch(new SyncInstalledCustomersJob($chunk))
-                    ->onQueue('mikrotik')
+                    // ->onQueue('mikrotik')
                     ->delay(now()->addSeconds(2)); // Stagger untuk prevent overload
             }
         }

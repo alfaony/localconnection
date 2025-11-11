@@ -112,6 +112,7 @@ class Kernel extends ConsoleKernel
         $schedule->job(new BatchSyncInstalledCustomersJob())
             ->name('batch-sync-installed-customers')
             ->everyFiveMinutes()
+            // ->everyMinute()
             ->withoutOverlapping();
         
         // =============== END SYNC ROUTER ===============
@@ -288,7 +289,8 @@ class Kernel extends ConsoleKernel
                 ->chunk(50, function ($routers) {
                     foreach ($routers as $router) {
                         dispatch((new SyncActiveSessionsJob($router->id))
-                            ->onQueue('mikrotik'));
+                            // ->onQueue('mikrotik')
+                            );
                     }
                 });
         }

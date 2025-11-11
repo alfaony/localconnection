@@ -321,7 +321,7 @@ class BastController extends Controller
             return redirect()->to(route('bast.show',$bast->slug))->with('update', "BAST berhasil diupdate, Merge Sedang Di proses");
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             DB::rollBack();
             Log::error($th->getMessage());
             return redirect()->back()->with('update',false);
