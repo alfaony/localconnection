@@ -280,8 +280,7 @@
                                                     @else
                                                         <span class="text-success">
                                                             <i class="fas fa-check-circle mr-1"></i>
-                                                            {{ $purchase->confirmation_finance_at->format('d M Y') }}
-                                                        </span>
+                                                            {{ \Carbon\Carbon::parse($purchase->confirmation_finance_at)->format('d M Y H:i:s') }}
                                                     @endif
                                                 </td>
                                             </tr>
