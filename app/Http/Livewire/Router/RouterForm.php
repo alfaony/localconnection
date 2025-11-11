@@ -11,6 +11,7 @@ use App\Models\Router;
 use App\Models\Pop;
 class RouterForm extends Component
 {
+    public $mikrotik;
     public $mikrotikId;
     public $company_id;
     public $pop_id;
@@ -71,15 +72,18 @@ class RouterForm extends Component
             Router::find($this->mikrotikId)->update($data);
 
             SyncRouterInventoryJob::dispatch($this->mikrotikId ,true, true, true, true, true);
+
             session()->flash('message', 'Mikrotik updated successfully.');
+            return redirect()->route('router.show', $this->mikrotikId);
         } else {
             $mikrotik = Router::create($data);
 
             SyncRouterInventoryJob::dispatch($mikrotik->id ,true, true, true, true, true);
+            
             session()->flash('message', 'Mikrotik created successfully.');
+            return redirect()->route('router.show', $mikrotik->id);
         }
 
-        return redirect()->route('router.show', $mikrotik->id);
     }
 
     public function render()

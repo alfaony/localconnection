@@ -144,7 +144,7 @@ class InternetCustomerShow extends Component
             // Refresh data
             $this->mount($this->customer->id);
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             DB::rollBack();
             $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal memperbarui data pribadi: ' . $e->getMessage()]);
         }
@@ -199,7 +199,8 @@ class InternetCustomerShow extends Component
                 ]);
             }
 
-        dispatch(new ProvisionCustomerJob($this->customer->id));
+            dispatch(new ProvisionCustomerJob($this->customer->id));
+            \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
             
             DB::commit();
             $this->dispatchBrowserEvent('hideEditInstalasiModal');

@@ -76,7 +76,7 @@ class SyncInstalledCustomersJob implements ShouldQueue
                         $activeRow = $client->query(
                             (new Query('/ppp/active/print'))->where('name', $cust->username)
                         )->read()[0] ?? [];
-
+                        
                         $secretRow = $client->query(
                             (new Query('/ppp/secret/print'))->where('name', $cust->username)
                         )->read()[0] ?? [];
@@ -138,7 +138,7 @@ class SyncInstalledCustomersJob implements ShouldQueue
                         ]);
                         $cust->meta = $meta;
                         $cust->save();
-
+                        
                         $totalActivated++;
                         Log::info('Customer activated by sync', [
                             'customer_id' => $cust->id,

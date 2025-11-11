@@ -243,18 +243,19 @@ class InternetCustomerIndex extends Component
         }
         
         // Validasi basic (tanpa validasi file dulu, karena masih string temporary)
-        $validated = $this->validate([
+       $validated = $this->validate([
             'currentInstallationId' => 'required|exists:internet_customers,id',
             'deviceSerialNumber' => 'required|string|max:255',
-            'currentInstallationId' => 'required|exists:internet_customers,id',
             'router_id' => 'required|exists:routers,id',
-            'username' => 'required',
+            'username' => 'required|unique:internet_customers,username',
             'password' => 'required',
-            'local_address' => 'nullable|ip',
+            'local_address' => 'nullable|ip|unique:internet_customers,local_address', // <— unique + IP format
         ], [
             'deviceSerialNumber.required' => 'Serial Number wajib diisi',
             'currentInstallationId.required' => 'Customer ID tidak valid',
             'currentInstallationId.exists' => 'Customer tidak ditemukan',
+            'username.unique' => 'Username PPPoE sudah digunakan',
+            'local_address.unique' => 'Alamat IP lokal sudah terdaftar',
         ]);
 
         DB::beginTransaction();
@@ -371,6 +372,7 @@ class InternetCustomerIndex extends Component
                         $photoCount++;
                     }
                     
+                    \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
                 } catch (\Exception $photoError) {
                     Log::error('Failed to process photo', [
                         'index' => $index,

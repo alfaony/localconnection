@@ -40,16 +40,16 @@ class SyncRouterInventoryJob implements ShouldQueue
         public bool $ensureProfiles   = false  // create/update profile di router sesuai paket
     ) {}
 
-    public function middleware(): array
-    {
-        return [
-            // Lock per-router agar job tidak tumpang tindih
-            (new WithoutOverlapping("sync-router-{$this->routerId}"))->expireAfter(300),
+    // public function middleware(): array
+    // {
+    //     return [
+    //         // Lock per-router agar job tidak tumpang tindih
+    //         (new WithoutOverlapping("sync-router-{$this->routerId}"))->expireAfter(300),
 
-            // Rate limit per-router (opsional; pastikan rate limiter "mikrotik-{id}" ada/terpakai)
-            (new RateLimited("mikrotik-{$this->routerId}"))->dontRelease(),
-        ];
-    }
+    //         // Rate limit per-router (opsional; pastikan rate limiter "mikrotik-{id}" ada/terpakai)
+    //         (new RateLimited("mikrotik-{$this->routerId}"))->dontRelease(),
+    //     ];
+    // }
 
     public function handle(RouterOSService $svc): void
     {
@@ -61,7 +61,7 @@ class SyncRouterInventoryJob implements ShouldQueue
         //     return;
         // }
         
-        if($router->active != "UP") {
+        if(!$router->is_online) {
             \Log::info('[SyncRouter] router inactive, skip', ['router_id' => $router->id]);
             return;
         }
@@ -184,6 +184,7 @@ class SyncRouterInventoryJob implements ShouldQueue
     private function syncAddressPools($c, Router $router): void
     {
         $rows = $c->query(new Query('/ip/pool/print'))->read();
+        dd($row);
         foreach ($rows as $row) {
             $name   = $row['name']   ?? null;
             $ranges = $row['ranges'] ?? null;

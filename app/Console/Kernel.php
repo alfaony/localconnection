@@ -4,12 +4,14 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Jobs\{SyncRouterInventoryJob, SyncActiveSessionsJob, SyncInstalledCustomersJob};
-
-use App\Models\{Router, InternetCustomer};
-use App\Models\SettingCompany;
-use App\Models\Company;
-use App\Models\EmployeeChecking;
+use App\Jobs\{
+    SyncRouterInventoryJob, 
+    SyncActiveSessionsJob, 
+    SyncInstalledCustomersJob,
+    RouterHealthCheckJob,
+    BatchSyncInstalledCustomersJob // ✅ NEW: Batch job
+};
+use App\Models\{Router, InternetCustomer, Company, EmployeeChecking, SettingCompany};
 use Carbon\Carbon;
 
 use App\Schemas\ParamSchema;
@@ -25,67 +27,92 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         //=============== SYNC ROUTER ===============
-        $routers = Router::cursor();
+        // $routers = Router::cursor();
 
-        foreach ($routers as $router) {
-            if ($router->active != 'UP') continue;
-            $off = ((int) $router->id) % 30;
+        // foreach ($routers as $router) {
+        //     if ($router->active != 'UP') continue;
+        //     $off = ((int) $router->id) % 30;
 
-            // 1) Harian
-            $schedule->call(function () use ($router) {
-                    dispatch((new SyncRouterInventoryJob(
-                        routerId: $router->id,
-                        withProfiles: false,
-                        withSecrets:  false,
-                        withSessions: false,
-                        withPppoe:    true,
-                    ))->onQueue('mikrotik'));
-                })
-                ->name("router-sync-{$router->id}")      // ← WAJIB untuk onOneServer/withoutOverlapping
-                ->dailyAt(sprintf('03:%02d', $off))
-                ->onOneServer()
-                ->withoutOverlapping()                   // ← tanpa argumen di versi baru
-                ->appendOutputTo(storage_path("logs/sync_router_{$router->id}.log"));
+        //     // 1) Harian
+        //     $schedule->call(function () use ($router) {
+        //             dispatch((new SyncRouterInventoryJob(
+        //                 routerId: $router->id,
+        //                 withProfiles: false,
+        //                 withSecrets:  false,
+        //                 withSessions: false,
+        //                 withPppoe:    true,
+        //             ))->onQueue('mikrotik'));
+        //         })
+        //         ->name("router-sync-{$router->id}")      // ← WAJIB untuk onOneServer/withoutOverlapping
+        //         ->dailyAt(sprintf('03:%02d', $off))
+        //         ->onOneServer()
+        //         ->withoutOverlapping()                   // ← tanpa argumen di versi baru
+        //         ->appendOutputTo(storage_path("logs/sync_router_{$router->id}.log"));
 
-            // 2) Tiap jam
-            $schedule->call(function () use ($router) {
-                    dispatch((new SyncRouterInventoryJob(
-                        routerId: $router->id,
-                        withProfiles: true,
-                        withSecrets:  true,
-                    ))->onQueue('mikrotik'));
-                })
-                ->name("router-profsec-{$router->id}")
-                ->hourlyAt($off)
-                ->onOneServer()
-                ->withoutOverlapping()
-                ->appendOutputTo(storage_path("logs/sync_profsec_{$router->id}.log"));
+        //     // 2) Tiap jam
+        //     $schedule->call(function () use ($router) {
+        //             dispatch((new SyncRouterInventoryJob(
+        //                 routerId: $router->id,
+        //                 withProfiles: true,
+        //                 withSecrets:  true,
+        //             ))->onQueue('mikrotik'));
+        //         })
+        //         ->name("router-profsec-{$router->id}")
+        //         ->hourlyAt($off)
+        //         ->onOneServer()
+        //         ->withoutOverlapping()
+        //         ->appendOutputTo(storage_path("logs/sync_profsec_{$router->id}.log"));
 
-            // 3) Tiap 5 menit
-            $schedule->job((new SyncActiveSessionsJob($router->id))->onQueue('mikrotik'))
-                ->name("router-sessions-{$router->id}")
-                ->everyFiveMinutes()
-                ->onOneServer()
-                ->withoutOverlapping();
-        }
+        //     // 3) Tiap 5 menit
+        //     $schedule->job((new SyncActiveSessionsJob($router->id))->onQueue('mikrotik'))
+        //         ->name("router-sessions-{$router->id}")
+        //         ->everyFiveMinutes()
+        //         ->onOneServer()
+        //         ->withoutOverlapping();
+        // }
 
 
-        // Checking Customer
-        $customerToActive = InternetCustomer::query()
-            ->with('router')
-            ->whereIn('status', [ParamSchema::INSTALLED, ParamSchema::REACTIVATED])
-            ->whereNotNull('router_id')
-            ->whereNotNull('username')
-            ->get()
-            ;
+        // // Checking Customer
+        // $customerToActive = InternetCustomer::query()
+        //     ->with('router')
+        //     ->whereIn('status', [ParamSchema::INSTALLED, ParamSchema::REACTIVATED])
+        //     ->whereNotNull('router_id')
+        //     ->whereNotNull('username')
+        //     ->get()
+        //     ;
 
-        foreach ($customerToActive as $customer) {
-            $schedule->job(new SyncInstalledCustomersJob([$customer->id]))
-                ->name("sync-installed-{$customer->id}")   // kunci mutex unik per customer
-                ->everyMinute()
-                ->onOneServer()
-                ->withoutOverlapping();
-        }
+        // foreach ($customerToActive as $customer) {
+        //     $schedule->job(new SyncInstalledCustomersJob([$customer->id]))
+        //         ->name("sync-installed-{$customer->id}")   // kunci mutex unik per customer
+        //         ->everyMinute()
+        //         ->onOneServer()
+        //         ->withoutOverlapping();
+        // }
+
+         // =============== ROUTER HEALTH CHECKS ===============
+        // ✅ Run every 2 minutes, dispatch jobs untuk check all routers
+        $schedule->call(function () {
+            $this->scheduleRouterHealthChecks();
+        })
+            ->name('dispatch-router-health-checks')
+            ->everyTwoMinutes()
+            ->withoutOverlapping(5); // 5 min expiry
+
+        // =============== ROUTER SYNC JOBS ===============
+        // ✅ Run once per hour, dispatch sync jobs untuk online routers only
+        $schedule->call(function () {
+            $this->scheduleRouterSyncJobs();
+        })
+            ->name('dispatch-router-sync-jobs')
+            ->hourly()
+            ->withoutOverlapping(10);
+
+        // =============== CUSTOMER SYNC ===============
+        // ✅ IMPROVED: Batch processing instead of individual schedules
+        $schedule->job(new BatchSyncInstalledCustomersJob())
+            ->name('batch-sync-installed-customers')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
         
         // =============== END SYNC ROUTER ===============
 
@@ -195,6 +222,77 @@ class Kernel extends ConsoleKernel
         // }
     }
 
+    /**
+     * ✅ NEW: Dispatch health check jobs untuk semua routers
+     */
+    protected function scheduleRouterHealthChecks(): void
+    {
+        // Only check routers yang perlu di-check
+        Router::query()
+            ->whereNotNull('host')
+            ->chunk(50, function ($routers) {
+                foreach ($routers as $router) {
+                    if ($router->needsHealthCheck()) {
+                        dispatch(new RouterHealthCheckJob($router->id))
+                            // ->onQueue('health-checks')
+                            ; // Dedicated queue
+                    }
+                }
+            });
+    }
+
+    /**
+     * ✅ IMPROVED: Dispatch sync jobs only for online routers
+     */
+    protected function scheduleRouterSyncJobs(): void
+    {
+        $hour = now()->hour;
+
+        // Chunk untuk prevent memory overflow
+        Router::online()
+            ->chunk(20, function ($routers) use ($hour) {
+                foreach ($routers as $router) {
+                    $off = ((int) $router->id) % 30;
+
+                    // Daily sync at 03:00
+                    if ($hour === 3 && now()->minute === $off) {
+                        dispatch((new SyncRouterInventoryJob(
+                            routerId: $router->id,
+                            withProfiles: false,
+                            withSecrets:  false,
+                            withSessions: false,
+                            withPppoe:    true,
+                        ))
+                        // ->onQueue('mikrotik')
+                        )
+                        ;
+                    }
+
+                    // Hourly sync
+                    if (now()->minute === $off) {
+                        dispatch((new SyncRouterInventoryJob(
+                            routerId: $router->id,
+                            withProfiles: true,
+                            withSecrets:  true,
+                        ))
+                        // ->onQueue('mikrotik')
+                        )
+                        ;
+                    }
+                }
+            });
+
+        // Session sync every 5 minutes
+        if (now()->minute % 5 === 0) {
+            Router::online()
+                ->chunk(50, function ($routers) {
+                    foreach ($routers as $router) {
+                        dispatch((new SyncActiveSessionsJob($router->id))
+                            ->onQueue('mikrotik'));
+                    }
+                });
+        }
+    }
 
     /**
      * Register the commands for the application.

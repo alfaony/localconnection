@@ -13,6 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Support\Facades\Log;
 use App\Schemas\ParamSchema;
 use App\Services\PoolResolver;
 
@@ -135,10 +136,10 @@ class ProvisionCustomerJob implements ShouldQueue
         }
     }
 
-    public function failed(Exception $e): void
-    {
-        // dd($e->getMessage());
-        // log ke audit_logs atau update jobs_provisioning bila kamu pakai tabel itu
-        \Log::error('Provision failed: '.$e->getMessage(), ['cust'=>$this->internetCustomerId]);
-    }
+    // public function failed(Exception $e): void
+    // {
+    //     dd($e->getMessage());
+    //     // log ke audit_logs atau update jobs_provisioning bila kamu pakai tabel itu
+    //     \Log::error('Provision failed: '.$e->getMessage(), ['cust'=>$this->internetCustomerId]);
+    // }
 }

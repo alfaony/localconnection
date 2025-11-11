@@ -40,7 +40,7 @@
                         <td>{{ $mikrotik->username }}</td>
                         <td>{!! $mikrotik->ssl ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>' !!}</td>
                         <td>
-                            @switch($mikrotik->active)
+                            @switch($mikrotik->active_status)
                                 @case('UP')
                                     <span class="badge bg-success">UP</span>
                                     @break
@@ -48,7 +48,7 @@
                                     <span class="badge bg-danger">DOWN</span>
                                     @break
                                 @default
-                                    <span class="badge bg-warning">{{ $mikrotik->active }}</span>
+                                    <span class="badge bg-warning">{{ $mikrotik->active_status }}</span>
                             @endswitch
                         </td>
                         <td>

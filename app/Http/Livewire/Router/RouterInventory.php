@@ -19,7 +19,7 @@ class RouterInventory extends Component
         return view('livewire.router.router-inventory', [
             'router'     => $router,
             'interfaces' => RouterInterface::where('router_id',$router->id)->orderBy('name')->get(),
-            'pools'      => AddressPool::orderBy('name')->get(), // pool bersifat global di skema kamu
+            'pools'      => AddressPool::where('router_id',$router->id)->orderBy('name')->get(), // pool bersifat global di skema kamu
             'pppoes'     => PppoeServer::where('router_id',$router->id)->orderBy('service_name')->get(),
         ])->extends('adminlte::page');
     }
