@@ -701,15 +701,6 @@
                                     <label for="webhook_token">Webhook Token</label>
                                     <input type="text" name="webhook_token" class="form-control" value="{{ old('webhook_token', $data['webhook_token'] ?? '') }}">
                                 </div>
-
-                                <div class="form-group">
-                                    <label for="environment">Environment</label>
-                                    <select name="environment" class="form-control">
-                                        <option value="dev" {{ old('environment', $data['environment']) == 'dev' ? 'selected' : '' }}>Development</option>
-                                        <option value="prod" {{ old('environment', $data['environment']) == 'prod' ? 'selected' : '' }}>Production</option>
-                                    </select>
-                                </div>
-
                             </div>
                         </div>
                     </div>
