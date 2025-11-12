@@ -5,7 +5,7 @@ namespace App\Http\Livewire\Router;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use App\Services\MikrotikService;
-use App\Jobs\SyncRouterInventoryJob;
+use App\Jobs\{SyncRouterInventoryJob,RouterHealthCheckJob};
 
 use App\Models\Router;
 use App\Models\Pop;
@@ -69,9 +69,12 @@ class RouterForm extends Component
         ];
 
         if ($this->mikrotikId) {
+            $data['status_active'] = Router::STATUS_UNKNOWN;
+            
             Router::find($this->mikrotikId)->update($data);
 
             SyncRouterInventoryJob::dispatch($this->mikrotikId ,true, true, true, true, true);
+            dispatch(new RouterHealthCheckJob($this->mikrotikId ));
 
             session()->flash('message', 'Mikrotik updated successfully.');
             return redirect()->route('router.show', $this->mikrotikId);

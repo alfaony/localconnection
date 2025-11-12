@@ -184,7 +184,6 @@ class SyncRouterInventoryJob implements ShouldQueue
     private function syncAddressPools($c, Router $router): void
     {
         $rows = $c->query(new Query('/ip/pool/print'))->read();
-        dd($row);
         foreach ($rows as $row) {
             $name   = $row['name']   ?? null;
             $ranges = $row['ranges'] ?? null;
