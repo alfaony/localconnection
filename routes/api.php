@@ -15,6 +15,8 @@ use App\Http\Controllers\API\DailyTaskProjectController;
 use App\Http\Controllers\API\UsedLaptopController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\API\DailyTaskMobileController;
+use App\Http\Controllers\API\ItemRequestMobileController;
+use App\Http\Controllers\API\ItemPurchaseMobileController;
 
 
 /*
@@ -94,6 +96,17 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
         ->name('medias.generateMediaUrl.mobile');
     Route::get('divisions', [DailyTaskMobileController::class, 'indexDivision']);
     Route::get('divisions/check-division-quota', [DailyTaskMobileController::class, 'checkDivisionQuota']);
+
+    Route::get('/item-requests/{id}/workflow', [ItemRequestMobileController::class, 'workflow']);
+    Route::post('item-requests/{id}/add-vendor', [ItemPurchaseMobileController::class,'addVendor']);
+    Route::post('item-requests/{id}/delivery', [ItemRequestMobileController::class,'delivery']);
+    Route::resource('item-requests', ItemRequestMobileController::class)
+    ->only(['index', 'show', 'store', 'update', 'destroy']);
+
+    Route::post('item-purchases/{id}/payment', [ItemPurchaseMobileController::class,'payment']);
+    Route::resource('item-purchases', ItemPurchaseMobileController::class)
+    ->only(['store', 'update']);
+
 });
 
 Route::group(['middleware' => ['auth:api']], function() 

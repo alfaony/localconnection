@@ -53,6 +53,23 @@ class MobilePermissionSeeder extends Seeder
             ['table' => 'tasks', 'method' => 'updateMedia', 'name' => 'Update Task Media (Mobile)', 'guard_name' => 'api'],
             ['table' => 'tasks', 'method' => 'deleteMedia', 'name' => 'Delete Task Media (Mobile)', 'guard_name' => 'api'],
 
+            ['table' => 'item_requests', 'method' => 'index', 'name' => 'View item requests (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'item_requests', 'method' => 'show', 'name' => 'View single item request (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'item_requests', 'method' => 'store', 'name' => 'Create item request (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'item_requests', 'method' => 'update', 'name' => 'Update item request (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'item_requests', 'method' => 'destroy', 'name' => 'Delete item request (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'item_requests', 'method' => 'workflowApi', 'name' => 'View workflow item request (Mobile)', 'guard_name' => 'api'],
+
+            ['table' => 'item_requests', 'method' => 'addVendor', 'name' => 'Add vendor (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'item_requests', 'method' => 'delivery', 'name' => 'Delivery item request (Mobile)', 'guard_name' => 'api'],
+
+            ['table' => 'item_purchases', 'method' => 'store', 'name' => 'Create item purchase (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'item_purchases', 'method' => 'update', 'name' => 'Update item purchase (Mobile)', 'guard_name' => 'api'],
+
+            ['table' => 'item_purchases', 'method' => 'payment', 'name' => 'Payment item purchase (Mobile)', 'guard_name' => 'api'],
+            
+
+
 
         ];
 
