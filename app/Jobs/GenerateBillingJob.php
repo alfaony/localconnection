@@ -48,6 +48,7 @@ class GenerateBillingJob implements ShouldQueue
             if (!$check) 
             {
                 $check = InternetCustomerPurchase::create([
+                    'internet_package_id' => $internetCustomer->internetPackage->id,
                     'amount_paid' => $internetCustomer->internetPackage->price_nett ?? 0,
                     'internet_customer_id' => $internetCustomer->id,
                 ]);

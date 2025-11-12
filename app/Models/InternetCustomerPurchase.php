@@ -12,6 +12,7 @@ class InternetCustomerPurchase extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'internet_package_id',
         'internet_customer_id',
         'user_finance_id',
         'confirmation_finance_at',

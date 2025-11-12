@@ -627,6 +627,7 @@ class InternetCustomerForm extends Component
                 ]);
                 
                 $internetCustomerPurchase = InternetCustomerPurchase::create([
+                    'internet_package_id' => $this->internet_package_id,
                     'internet_customer_id' => $internetCustomer->id,
                     'amount_paid' => $this->totalAmount,
                     'payment_months' => $this->payment_months,
@@ -677,7 +678,7 @@ class InternetCustomerForm extends Component
 
             $subscriptionPeriod = $this->calculateSubscriptionPeriod($this->payment_months);
 
-            $result = $xenditService->createInvoice($purchase, $customer, [
+            $result = $xenditService->createInvoiceKeloolaPay($purchase, $customer, [
                 'payment_months' => $this->payment_months,
                 'total_amount' => $this->totalAmount,
                 'discount_amount' => $this->discountAmount,
@@ -685,7 +686,7 @@ class InternetCustomerForm extends Component
             ]);
 
             if ($result['success']) {
-                $invoice = $result['invoice'];
+                $invoice = $result['data'];
 
                 $purchase->update([
                     'xendit_invoice_id' => $invoice['id'],
@@ -700,7 +701,7 @@ class InternetCustomerForm extends Component
 
                 // Redirect to Xendit payment page
                 $this->dispatchBrowserEvent('redirect-to-xendit', [
-                    'url' => $invoice['invoice_url']
+                    'url' => $invoice['url_payment'].$result['token']
                 ]);
 
             } else {
