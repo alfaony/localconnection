@@ -202,8 +202,9 @@ class DayoffController extends Controller
             return redirect()->back()->withErrors(['msg' => 'Maaf, Anda memiliki jadwal cuti yang tumpang tindih dengan cuti lain. Mohon perbaiki jadwal cuti Anda.']);
         }
         
-
         $filePath = $cuti->file ?? NULL;
+        $type = DayoffType::findOrFail($request->dayoff_type_id);
+        
         if ($request->hasFile('file') && $type->permission_required) 
         {
             $filePath = $request->file('file')->store('public/dayoff-files');
