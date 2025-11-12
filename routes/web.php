@@ -161,6 +161,7 @@ use App\Http\Livewire\PunishmentUserTable;
 */
 Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
 Route::post('xendit/webhook', [XenditController::class, 'handle']);
+Route::post('keloola-pay/webhook', [XenditController::class, 'handleKeloolaPay']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);

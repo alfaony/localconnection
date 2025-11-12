@@ -270,7 +270,7 @@ class InternetCustomerShow extends Component
                 'total_amount' => $this->totalAmount
             ]);
 
-            $result = $xenditService->createInvoice($purchase, $internetCustomer, [
+            $result = $xenditService->createInvoiceKeloolaPay($purchase, $internetCustomer, [
                 'payment_months' => $this->payment_months,
                 'total_amount' => $this->totalAmount,
                 'discount_amount' => $this->discountAmount,
@@ -280,7 +280,7 @@ class InternetCustomerShow extends Component
 
             if ($result['success']) 
             {
-                $invoice = $result['invoice'];
+                $invoice = $result['data'];
 
                 $purchase->update([
                     'xendit_invoice_id' => $invoice['id'],
@@ -291,12 +291,12 @@ class InternetCustomerShow extends Component
 
                 Log::info('Xendit invoice created successfully', [
                     'invoice_id' => $invoice['id'],
-                    'invoice_url' => $invoice['invoice_url']
+                    'invoice_url' => $invoice['invoice_url'] ?? null
                 ]);
 
                 
                 $this->dispatchBrowserEvent('hide-payment-modal');
-                return redirect()->away($invoice['invoice_url']);
+                return redirect()->away($invoice['url_payment'].$result['token']);
                 
             } else {
                 Log::error('Failed to create Xendit invoice', [
@@ -309,7 +309,7 @@ class InternetCustomerShow extends Component
             }
 
         } catch (\Exception $e) {
-            // dd($e);
+            dd($e);
             Log::error('Error in payWithXendit', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()

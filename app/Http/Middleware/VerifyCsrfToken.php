@@ -13,6 +13,7 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         'api/test',
+        'keloola-pay/webhook',
         'xendit/webhook',
         'wablas/webhook',
         'xero/webhook', // Tambahkan endpoint webhook di sini

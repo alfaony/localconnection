@@ -10,6 +10,7 @@ use Xendit\Invoice\CustomerObject;
 use Xendit\Invoice\NotificationPreference;
 use Xendit\Invoice\NotificationChannel;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use App\Models\SettingCompany;
 use App\Models\InternetCustomerPurchase;
 use Illuminate\Support\Facades\Cache;
@@ -19,12 +20,16 @@ class XenditService
     protected $companyId;
     protected $settings;
     protected $invoiceApi;
+    protected $baseUrlKeloolaPay;
+    protected $apiKey;
 
     public function __construct($companyId = null)
     {
         $this->companyId = $companyId;
         $this->loadSettings();
         $this->initializeXendit();
+        $this->initializeKeloolaPay();
+        $this->baseUrlKeloolaPay = config('services.keloola_pay.base_url');
     }
 
     /**
@@ -60,12 +65,24 @@ class XenditService
         $this->invoiceApi = new InvoiceApi();
     }
 
+    protected function initializeKeloolaPay()
+    {
+        $secretKey = $this->settings['secret_key'] ?? null;
+        
+        if (!$secretKey) {
+            throw new \Exception('Keloola secret key not configured for this company');
+        }
+
+        // Xendit v7.0 way
+        $this->apiKey = $secretKey;
+    }
+
     /**
      * Check if Xendit is active for this company
      */
     public function isActive()
     {
-        return ($this->settings['secret_key'] && $this->settings['public_key'] ? true : false);
+        return ($this->settings['secret_key'] || $this->settings['public_key'] && $this->settings['webhook_token'] ? true : false);
     }
 
     /**
@@ -74,6 +91,166 @@ class XenditService
     public function getEnvironment()
     {
         return $this->settings['environment'] ?? 'development';
+    }
+
+    /**
+     * Create Invoice Keloola Pay
+     */
+    public function createInvoiceKeloolaPay($purchase, $customer, $options = [])
+    {
+        if (!$this->isActive()) {
+            return [
+                'success' => false,
+                'message' => 'Xendit payment is not active for this company'
+            ];
+        }
+
+        try {
+            // Extract options
+            $paymentMonths = $options['payment_months'] ?? 1;
+            $totalAmount = $options['total_amount'] ?? $customer->internetPackage->price_nett;
+            $discountAmount = $options['discount_amount'] ?? 0;
+            $subscriptionPeriod = $options['subscription_period'] ?? null;
+
+            // Build description
+            $description = "Pembayaran paket internet {$customer->internetPackage->name}";
+            
+            if ($subscriptionPeriod) {
+                $periodStart = $subscriptionPeriod['start']->format('M Y');
+                $periodEnd = $subscriptionPeriod['end']->format('M Y');
+                $description .= " | Periode: {$periodStart} - {$periodEnd}";
+            } else {
+                $description .= " untuk {$paymentMonths} bulan";
+            }
+            
+            if ($discountAmount > 0) {
+                $discountPercentage = InternetCustomerPurchase::getDiscountPercentage($paymentMonths);
+                $description .= " (Diskon {$discountPercentage}%)";
+            }
+
+            // Setup customer object
+            $customerObject = new CustomerObject([
+                'given_names' => $customer->name,
+                'email' => $customer->userCustomer->email ?? 'noreply@example.com',
+                'mobile_number' => $customer->userCustomer->phone_number ?? '',
+            ]);
+
+            // Build items array
+            $items = [];
+
+            // Main package item dengan periode info
+            $packageItemName = $customer->internetPackage->name . " ({$paymentMonths} bulan)";
+            if ($subscriptionPeriod) {
+                $packageItemName .= " | {$subscriptionPeriod['start']->format('M Y')} - {$subscriptionPeriod['end']->format('M Y')}";
+            }
+
+            $items[] = 
+            [
+                'name' => $packageItemName,
+                'qty' => $paymentMonths,
+                'price' => $customer->internetPackage->price_nett,
+                'category' => 'Internet Package'
+            ];
+
+            // Add discount item if applicable
+            if ($discountAmount > 0) {
+                $discountPercentage = InternetCustomerPurchase::getDiscountPercentage($paymentMonths);
+                $items[] = 
+                [
+                    'name' => "Diskon Pembayaran {$paymentMonths} Bulan ({$discountPercentage}%)",
+                    'qty' => 1,
+                    'price' => -$discountAmount, // Negative for discount
+                    'category' => 'Discount'
+                ];
+            }
+
+            // Create invoice request
+            $createInvoiceRequestPayload = [
+                'external_id' => $purchase->id.'_internetCustomer',
+                'amount' => $totalAmount, // Total after discount
+                'description' => $description,
+                'items' => json_encode($items),
+            ];
+
+            // Create invoice using API
+            $url = rtrim($this->baseUrlKeloolaPay, '/') . '/api/v1/transactions';
+
+            $response = Http::withHeaders([
+                'X-API-KEY' => $this->apiKey,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])
+            ->asJson() // <— penting: ubah content type ke application/json
+            ->post($url, $createInvoiceRequestPayload);
+
+            // dd($createInvoiceRequestPayload, $response->body());
+
+            // ✅ Handle non-success response
+            if ($response->failed() || $response->status() !== 201) {
+                $errorBody = $response->json();
+                $errorMessage = $errorBody['message'] ?? $response->body() ?? 'Unknown error';
+
+                Log::error('KeloolaPay invoice creation failed', [
+                    'status' => $response->status(),
+                    'body' => $errorBody,
+                ]);
+
+                throw new \Exception("Failed to create invoice: {$errorMessage}");
+            }
+
+            // ✅ Extract JSON response safely
+            $invoiceData = $response->json();
+
+            // ✅ Logging success
+            Log::info('KeloolaPay invoice created', [
+                'company_id' => $this->companyId ?? null,
+                'purchase_id' => $purchase->id ?? null,
+                'invoice_id' => $invoiceData['data']['id'] ?? null,
+                'payment_months' => $paymentMonths ?? null,
+                'subscription_period' => isset($subscriptionPeriod) ? [
+                    'start' => $subscriptionPeriod['start']->format('Y-m-d'),
+                    'end' => $subscriptionPeriod['end']->format('Y-m-d')
+                ] : null,
+                'total_amount' => $totalAmount ?? null,
+                'discount_amount' => $discountAmount ?? 0,
+            ]);
+
+            // ✅ Return consistent structure
+            return [
+                'success' => true,
+                'status' => $response->status(),
+                'data' => $invoiceData['data'] ?? null,
+                'invoice' => $invoiceData,
+                'token' => $this->apiKey
+            ];
+
+        } catch (\Xendit\XenditSdkException $e) {
+            // dd($e);
+            Log::error('Xendit SDK exception', [
+                'company_id' => $this->companyId,
+                'purchase_id' => $purchase->id,
+                'error' => $e->getMessage(),
+                'full_error' => $e->getFullError()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Xendit Error: ' . $e->getMessage()
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Xendit invoice creation failed', [
+                'company_id' => $this->companyId,
+                'purchase_id' => $purchase->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
     }
 
     /**
@@ -206,7 +383,7 @@ class XenditService
             ];
 
         } catch (\Xendit\XenditSdkException $e) {
-            dd($e);
+            // dd($e);
             Log::error('Xendit SDK exception', [
                 'company_id' => $this->companyId,
                 'purchase_id' => $purchase->id,

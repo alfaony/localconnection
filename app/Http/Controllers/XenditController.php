@@ -143,6 +143,164 @@ class XenditController extends Controller
         }
     }
 
+    public function handleKeloolaPay(Request $request)
+    {
+        $data = $request->all()['data'] ?? [];
+
+        $user = User::whereHas('role', function ($query) {
+            $query->whereIn('name', [RoleSchema::SYSTEM_BOS,RoleSchema::ROOT]);
+        })->first();
+        
+        Log::info('Xendit webhook received', $data);
+
+        try {
+            // Find purchase by external_id or invoice_id
+            $externalId = isset($data['external_id']) ? array_values(explode("_", $data['external_id']))[0] : null;
+            $purchaseId = $externalId;
+
+            $purchase = InternetCustomerPurchase::where('id', $purchaseId)
+                ->first();
+            
+
+            if (!$purchase) {
+                Log::error('Purchase not found for Xendit callback', [
+                    'external_id' => $externalId,
+                ]);
+                return response()->json(['error' => 'Purchase not found'], 404);
+            }
+
+            $internetCustomer = $purchase->customer;
+
+            $customerInternet = $purchase->customer->userCustomer;
+
+            // Initialize Xendit service with company ID
+            $xenditService = new XenditService($internetCustomer->company_id);
+            
+            // Verify callback token
+            $callbackToken = $request->header('x-api-key');
+            
+            if (!$xenditService->verifyCallbackToken($callbackToken)) {
+                Log::warning('Invalid Xendit callback token', [
+                    'company_id' => $internetCustomer->company_id
+                ]);
+                return response()->json(['error' => 'Invalid callback token'], 403);
+            }
+
+            $status = $data['status'] ?? '';
+            $urlResutl = '';
+
+            // Update purchase based on status
+            switch ($status) {
+                case 'paid':
+
+                    $purchase->update([
+                        'xendit_paid_at' => now(),
+                        'xendit_payment_method' => $data['payment_method'] ?? null,
+                        'xendit_raw_response' => json_encode($data),
+                        'user_finance_id' => $user->id, // System auto-confirm
+                        'confirmation_finance_at' => now(),
+                    ]);
+
+                    // Update customer status
+                    // $internetCustomer->update([
+                    //     'status' => ParamSchema::REACTIVATED
+                    // ]);
+
+                    $date = Carbon::parse($purchase->period_end);
+
+                    
+                    $customerInternet->update([
+                        'start_billing_date' => $date->firstOfMonth()->format('Y-m-d'),
+                        'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
+                    ]);
+
+                    GenerateInternetPurchaseCouponJob::dispatch($internetCustomer->id, $purchase->id, $purchase->payment_months);
+
+                    // Provision customer if suspended
+                    if ($internetCustomer->status == ParamSchema::SUSPENDED) {
+                        dispatch(new ProvisionCustomerJob($internetCustomer->id));
+                    }
+
+                    Log::info('Payment confirmed for purchase', [
+                        'company_id' => $internetCustomer->company_id,
+                        'purchase_id' => $purchase->id
+                    ]);
+
+                    $urlResutl = route('internet-customer.customer.show', [
+                        'code' => $internetCustomer->code,
+                        'status' => 'success'
+                    ]);
+
+                    break;
+
+                case 'expired':
+                    $purchase->update([
+                        'confirmation_finance_at' => null,
+                        'user_finance_id' => null,
+                        'period_start' => null,
+                        'period_end' => null,
+                        'payment_method' => null,
+                        'xendit_response' => json_encode($data),
+                    ]);
+                    Log::info('Invoice expired for purchase', [
+                        'company_id' => $internetCustomer->company_id,
+                        'purchase_id' => $purchase->id
+                    ]);
+
+                    $urlResutl = route('internet-customer.customer.show', [
+                        'code' => $internetCustomer->code,
+                        'status' => 'failed'
+                    ]);
+                    break;
+
+                case 'failed':
+                    $purchase->update([
+                        'confirmation_finance_at' => null,
+                        'user_finance_id' => null,
+                        'period_start' => null,
+                        'period_end' => null,
+                        'payment_method' => null,
+                        'xendit_response' => json_encode($data),
+                    ]);
+                    Log::info('Invoice expired for purchase', [
+                        'company_id' => $internetCustomer->company_id,
+                        'purchase_id' => $purchase->id
+                    ]);
+
+                    $urlResutl = route('internet-customer.customer.show', [
+                        'code' => $internetCustomer->code,
+                        'status' => 'failed'
+                    ]);
+
+                    break;
+
+                default:
+                    $purchase->update([
+                        'xendit_response' => json_encode($data),
+                    ]);
+
+                    $urlResutl = route('internet-customer.customer.show', [
+                        'code' => $internetCustomer->code,
+                        'status' => 'failed'
+                    ]);
+                    break;
+            }
+
+            $this->logging($request, 200);
+            return response()->json(['success' => true, 'redirect_url' => $urlResutl]);
+
+        } catch (\Exception $e) {
+            $this->logging($request, 500, $e);
+
+            // dd($e);
+            Log::error('Xendit webhook processing failed', [
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+            return response()->json(['error' => 'Processing failed'], 500);
+        }
+    }
+
     /**
      * Handle payment success redirect
      */
