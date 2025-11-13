@@ -289,11 +289,11 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Username</label>
-                        <input type="text" class="form-control" wire:model="username" id="modalUsername">
+                        <input type="text" class="form-control" wire:model="username" id="modalUsername" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <input type="password" class="form-control" wire:model="password" id="modalPassword">
+                        <input type="password" class="form-control" wire:model="password" id="modalPassword" required>
                     </div>
                     
                     <div class="mb-3">

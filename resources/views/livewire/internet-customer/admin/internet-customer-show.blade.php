@@ -498,7 +498,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="username">Username</label>
-                                    <input type="text" class="form-control" id="username" wire:model="username">
+                                    <input type="text" class="form-control" id="username" wire:model="username" required>
                                     @error('username') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -509,7 +509,7 @@
                                 <div class="form-group">
                                     <label for="pass_hash">Password</label>
                                     <div class="input-group">
-                                        <input type="password" class="form-control" id="pass_hash" wire:model="pass_hash">
+                                        <input type="password" class="form-control" id="pass_hash" wire:model="pass_hash" required>
                                         <div class="input-group-append">
                                             <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('pass_hash')">
                                                 <i class="fas fa-eye"></i>

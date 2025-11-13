@@ -172,8 +172,8 @@ class InternetCustomerShow extends Component
     {
         $this->validate([
             'local_address' => 'nullable|ip',
-            'username' => 'nullable|string|max:255',
-            'pass_hash' => 'nullable|string|max:255',
+            'username' => 'required|string|max:255',
+            'pass_hash' => 'required|string|max:255',
             'device_serial_number' => 'nullable|string|max:255',
         ],[
             'local_address.ip' => 'Format IP tidak valid.',
