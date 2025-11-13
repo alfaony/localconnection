@@ -113,7 +113,7 @@ class InternetCustomerIndex extends Component
                 // ->where('active','UP')
                 ->whereHas('pppoeServers')
                 ->orderBy('name')
-                ->get(['id','name']);
+                ->get(['id','name','active_status']);
         }else
         {
             // 2) Query router aktif + (opsional) punya PPPoE server & pool
@@ -124,11 +124,10 @@ class InternetCustomerIndex extends Component
             ->whereHas('addressPools') // jika pakai address_pools.router_id
             ->withCount(['pppoeServers' => fn($q) => $q->whereNotNull('address_pool_id')])
             ->orderBy('name')
-            ->get(['id','name']);
+            ->get(['id','name','active_status']);
         }
 
         
-
         // 3) Siapkan data untuk modal
         $payload = [
             'customerName'  => $cust->name,
@@ -136,6 +135,7 @@ class InternetCustomerIndex extends Component
             'serialNumber'  => '',                  // kalau ada default isikan di sini
             'routers'       => $routers->map(fn($r) => [
                 'id'   => $r->id,
+                'disabled' => $r->is_online ? false : true,
                 'name' => $r->name . ' (PPPoE: '.$r->pppoe_servers_count.')',
             ])->values(),
         ];

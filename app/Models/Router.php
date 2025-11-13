@@ -75,7 +75,7 @@ class Router extends Model
     // ✅ NEW: Check if router is online (boolean helper)
     public function getIsOnlineAttribute(): bool
     {
-        return $this->active === self::STATUS_UP;
+        return $this->active_status === self::STATUS_UP ?? $this->active == self::STATUS_UP; 
     }
 
     // ✅ NEW: Update status method (called by dedicated job)

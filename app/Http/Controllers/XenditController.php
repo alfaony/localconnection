@@ -145,7 +145,7 @@ class XenditController extends Controller
 
     public function handleKeloolaPay(Request $request)
     {
-        $data = $request->all()['data'] ?? [];
+        $data = $request->all()?? [];
 
         $user = User::whereHas('role', function ($query) {
             $query->whereIn('name', [RoleSchema::SYSTEM_BOS,RoleSchema::ROOT]);

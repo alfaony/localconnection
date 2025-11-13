@@ -469,6 +469,7 @@
                 // console.log(router);
                 const option = document.createElement('option');
                 option.value = router.id;
+                option.disabled = router.disabled;
                 option.textContent = router.name;
                 routerSelect.appendChild(option);
             });
