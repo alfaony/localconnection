@@ -209,6 +209,7 @@ class InternetCustomerShow extends Component
             // Refresh data
             $this->mount($this->customer->id);
         } catch (\Exception $e) {
+            // dd($e);
             DB::rollBack();
             $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal memperbarui data instalasi: ' . $e->getMessage()]);
         }

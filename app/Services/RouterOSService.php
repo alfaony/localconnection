@@ -82,31 +82,39 @@ class RouterOSService
         $q = (new Query('/ppp/secret/print'))->where('name', $cust->username);
         $row = $c->query($q)->read()[0] ?? null;
         $pwd = trim((string) $cust->pass_hash) ?: 'admin123'; // fallback juga untuk empty string
+        
+        try {
+            if (!$row) {
+                $query = (new Query('/ppp/secret/add'))
+                    ->equal('name', $cust->username)
+                    ->equal('password', $pwd)
+                    ->equal('service', 'pppoe')
+                    ->equal('profile', $profile)
+                    ->equal('comment', $cust->ros_comment_uuid ?? ('uuid:' . $cust->id));
 
-        if (!$row) {
+                if (!empty($localAddress)) {
+                    $query->equal('local-address', $localAddress);
+                }
 
-            $c->query(
-            (new Query('/ppp/secret/add'))
-                ->equal('name', $cust->username)
-                ->equal('password', $pwd)            // kirim plaintext
-                ->equal('service', 'pppoe')
-                ->equal('local-address', $localAddress)  // Menambahkan local_address
-                ->equal('profile', $profile)
-                ->equal('comment', $cust->ros_comment_uuid ?? ('uuid:' . $cust->id))
-            )->read();
-        } else {
-            $id = $row['.id'];
-
-            $q = (new Query('/ppp/secret/set'))
-                ->equal('.id', $id)
-                ->equal('name', $cust->username)
-                 ->equal('password', $pwd)   
-                ->equal('local-address', $localAddress)  // Update local_address
-                ->equal('profile', $profile);
-
-            $c->query($q)->read(); // akan return [] → itu normal
-            
+                $c->query($query)->read();
+            } else {
+                $id = $row['.id'];
+    
+                $q = (new Query('/ppp/secret/set'))
+                    ->equal('.id', $id)
+                    ->equal('name', $cust->username)
+                     ->equal('password', $pwd)   
+                    ->equal('local-address', $localAddress)  // Update local_address
+                    ->equal('profile', $profile);
+    
+                $c->query($q)->read(); // akan return [] → itu normal
+                
+            }
+        } catch (\Throwable $th) {
+            Log::error($th);
+            throw $th;
         }
+
     }
 
 
