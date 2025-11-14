@@ -276,7 +276,7 @@ class InternetCustomerForm extends Component
             'phone_number' => 'required|string',
             'address' => 'required|min:10',
             'ktp_number' => 'required|digits:16',
-            'ktp_photo' => 'required|image|max:2048',
+            'ktp_photo' => 'required|file|mimes:jpg,jpeg,png,pdf|max:20480',
         ]);
         
         $this->step++;
@@ -290,7 +290,7 @@ class InternetCustomerForm extends Component
         {
             $this->validate([
                 'payment_method' => 'required|in:transfer,qris,e-wallet',
-                'payment_proof' => 'required_if:payment_method,transfer|image|max:2048',
+                'payment_proof' => 'required_if:payment_method,transfer|image|max:20480',
                 'nama_bank' => 'required_if:payment_method,transfer',
                 'holder_name' => 'required_if:payment_method,transfer',
                 'account_number' => 'required_if:payment_method,transfer',
@@ -397,7 +397,7 @@ class InternetCustomerForm extends Component
                     'amount_paid' => $this->selectedPackage->price_nett,
                     'internet_customer_id' => $internetCustomer->id,
                     'payment_method' => $this->payment_method,
-                    'payment_proof' => $paymentProofPath ? s3_asset(true,10,$paymentProofPath) : null,
+                    'payment_proof' => $paymentProofPath ? $paymentProofPath : null,
                 ]);
 
                 $userFinance = User::whereHas('role.permissions', function ($q) 
@@ -438,7 +438,7 @@ class InternetCustomerForm extends Component
         } catch (\Throwable $th) {
             // throw $th;
             DB::rollBack();
-            // dd($th);
+            dd($th);
             session()->flash('error', 'Terjadi kesalahan: Konfirmasikan ke Admin');
             $this->step = 1;
         }
