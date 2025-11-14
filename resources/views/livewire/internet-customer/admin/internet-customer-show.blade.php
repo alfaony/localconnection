@@ -162,15 +162,35 @@
                             <h4 class="text-primary mb-3">
                                 <i class="fas fa-cogs mr-2"></i>Data Instalasi
                             </h4>
-                            <button onclick="openEditInstalasiModal()" class="btn btn-sm btn-warning mb-2">
-                                <i class="fas fa-edit mr-1"></i>Edit Data Instalasi
-                            </button>
+                            
+                            {{-- ✅ Action Buttons --}}
+                            <div class="btn-group mb-2" role="group">
+                                <button onclick="openEditInstalasiModal()" class="btn btn-sm btn-warning mr-2 mb-2">
+                                    <i class="fas fa-edit mr-1"></i>Edit Data Instalasi
+                                </button>
+                                {{-- 
+                                <button wire:click="openMoveRouterModal" class="btn btn-sm btn-info mb-2">
+                                    <i class="fas fa-exchange-alt mr-1"></i>Pindah Router
+                                </button>
+                                --}}
+                            </div>
+                            
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
                                     <tbody>
                                         <tr>
                                             <th width="25%">Tanggal Instalasi</th>
                                             <td>{{ \Carbon\Carbon::parse($customer->installation->installed_at)->format('d F Y H:i') }}</td>
+                                        </tr>
+                                        {{-- ✅ NEW: Show current router --}}
+                                        <tr>
+                                            <th>Router Saat Ini</th>
+                                            <td>
+                                                <span class="badge badge-primary">
+                                                    <i class="fas fa-server"></i> {{ $customer->router->name ?? '-' }}
+                                                </span>
+                                                {{$customer->last_updated_router }} 
+                                            </td>
                                         </tr>
                                         <tr>
                                             <th>Serial Number Perangkat</th>
@@ -192,21 +212,6 @@
                                             <th>Username</th>
                                             <td>{{ $customer->username }}</td>
                                         </tr>
-                                        <!-- <tr>
-                                            <th>Password</th>
-                                            <td>
-                                                @if($customer->pass_hash)
-                                                    <button wire:click="showInstallationPassword" class="btn btn-sm btn-info">
-                                                        <i class="fas fa-eye mr-1"></i>Lihat Password
-                                                    </button>
-                                                    <div class="mt-2" style="display: none;" wire:id="installation-password-{{ $customer->id }}">
-                                                        {{ $customer->pass_hash }}
-                                                    </div>
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                        </tr> -->
                                         <tr>
                                             <th>Catatan Instalasi</th>
                                             <td>{{ $customer->installation->notes ?? '-' }}</td>
@@ -229,6 +234,205 @@
                         </div>
                     </div>
                     @endif
+
+                    {{-- ✅ NEW: Modal Move Router - ADD THIS BEFORE @push('js') --}}
+                    <div class="modal fade" id="moveRouterModal" tabindex="-1" wire:ignore.self>
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header bg-info text-white">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-exchange-alt"></i> Pindah Router
+                                    </h5>
+                                    <button type="button" class="close text-white" data-dismiss="modal">
+                                        <span>&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <strong>Perhatian:</strong> Proses perpindahan router akan:
+                                        <ul class="mb-0 mt-2">
+                                            <li>Menghapus konfigurasi dari router lama</li>
+                                            <li>Membuat konfigurasi baru di router tujuan</li>
+                                            <li>Customer akan disconnect sementara selama proses</li>
+                                        </ul>
+                                    </div>
+
+                                    <form wire:submit.prevent="submitMoveRouter">
+                                        {{-- Current Router Info --}}
+                                        <div class="mb-3">
+                                            <label class="form-label">Router Saat Ini</label>
+                                            <input type="text" class="form-control" 
+                                                value="{{ $customer->router->name ?? '-' }}" 
+                                                readonly>
+                                        </div>
+
+                                        {{-- New Router --}}
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                Router Tujuan <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-control @error('new_router_id') is-invalid @enderror" 
+                                                    wire:model="new_router_id">
+                                                <option value="">Pilih Router</option>
+                                                @foreach($availableRouters as $router)
+                                                    <option value="{{ $router['id'] }}">{{ $router['name'] }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('new_router_id')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        {{-- ✅ Address Pool Dropdown (Mandatory when router selected) --}}
+                                        @if($new_router_id && count($availablePoolsForNewRouter) > 0)
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                Address Pool <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-control @error('new_pool_id') is-invalid @enderror" 
+                                                    wire:model.defer="new_pool_id">
+                                                <option value="">-- Pilih Address Pool --</option>
+                                                @foreach($availablePoolsForNewRouter as $pool)
+                                                    <option value="{{ $pool['id'] }}">{{ $pool['label'] }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('new_pool_id')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <small class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i> Pilih address pool untuk router tujuan
+                                            </small>
+                                        </div>
+                                        @elseif($new_router_id && count($availablePoolsForNewRouter) === 0)
+                                        <div class="mb-3">
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                Router ini tidak memiliki address pool. Silakan tambahkan address pool terlebih dahulu.
+                                            </div>
+                                        </div>
+                                        @endif
+
+                                        {{-- New Username (Optional) --}}
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                Username Baru 
+                                                <small class="text-muted">(Kosongkan jika tidak berubah)</small>
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="text" 
+                                                    class="form-control 
+                                                            @error('new_username') is-invalid 
+                                                            @elseif($newUsernameChecked && $newUsernameAvailable) is-valid 
+                                                            @enderror" 
+                                                    wire:model.debounce.500ms="new_username"
+                                                    placeholder="{{ $customer->username }}">
+                                                <span class="input-group-text">
+                                                    <div wire:loading wire:target="new_username">
+                                                        <i class="fas fa-spinner fa-spin"></i>
+                                                    </div>
+                                                    <div wire:loading.remove wire:target="new_username">
+                                                        @if($newUsernameChecked)
+                                                            @if($newUsernameAvailable)
+                                                                <i class="fas fa-check-circle text-success"></i>
+                                                            @else
+                                                                <i class="fas fa-times-circle text-danger"></i>
+                                                            @endif
+                                                        @endif
+                                                    </div>
+                                                </span>
+                                            </div>
+                                            
+                                            @error('new_username')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                            
+                                            @if($newUsernameChecked && !$newUsernameAvailable)
+                                                <div class="invalid-feedback d-block">
+                                                    Username sudah digunakan oleh: 
+                                                    <strong>{{ $newUsernameExistingCustomer['name'] ?? '' }}</strong>
+                                                    <small>({{ $newUsernameExistingCustomer['code'] ?? '' }})</small>
+                                                </div>
+                                            @endif
+                                            
+                                            @if($newUsernameChecked && $newUsernameAvailable)
+                                                <div class="valid-feedback d-block">
+                                                    <i class="fas fa-check-circle"></i> Username tersedia
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        {{-- New Local Address (Optional) --}}
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                Local Address Baru 
+                                                <small class="text-muted">(Kosongkan jika tidak berubah)</small>
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="text" 
+                                                    class="form-control 
+                                                            @error('new_local_address') is-invalid 
+                                                            @elseif($newLocalAddressChecked && $newLocalAddressAvailable) is-valid 
+                                                            @enderror" 
+                                                    wire:model.debounce.500ms="new_local_address"
+                                                    placeholder="{{ $customer->local_address ?? '10.10.10.100' }}">
+                                                <span class="input-group-text">
+                                                    <div wire:loading wire:target="new_local_address">
+                                                        <i class="fas fa-spinner fa-spin"></i>
+                                                    </div>
+                                                    <div wire:loading.remove wire:target="new_local_address">
+                                                        @if($newLocalAddressChecked)
+                                                            @if($newLocalAddressAvailable)
+                                                                <i class="fas fa-check-circle text-success"></i>
+                                                            @else
+                                                                <i class="fas fa-times-circle text-danger"></i>
+                                                            @endif
+                                                        @endif
+                                                    </div>
+                                                </span>
+                                            </div>
+                                            
+                                            @error('new_local_address')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                            
+                                            @if($newLocalAddressChecked && !$newLocalAddressAvailable)
+                                                <div class="invalid-feedback d-block">
+                                                    IP sudah digunakan oleh: 
+                                                    <strong>{{ $newLocalAddressExistingCustomer['name'] ?? '' }}</strong>
+                                                    <small>({{ $newLocalAddressExistingCustomer['code'] ?? '' }})</small>
+                                                </div>
+                                            @endif
+                                            
+                                            @if($newLocalAddressChecked && $newLocalAddressAvailable)
+                                                <div class="valid-feedback d-block">
+                                                    <i class="fas fa-check-circle"></i> IP address tersedia
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </form>
+                                </div>
+                                
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                        <i class="fas fa-times"></i> Batal
+                                    </button>
+                                    <button type="button" 
+                                            class="btn btn-info" 
+                                            wire:click="submitMoveRouter"
+                                            wire:loading.attr="disabled"
+                                            @if(!$new_router_id || ($new_username && !$newUsernameAvailable) || ($new_local_address && !$newLocalAddressAvailable)) disabled @endif>
+                                        <span wire:loading.remove wire:target="submitMoveRouter">
+                                            <i class="fas fa-exchange-alt"></i> Proses Perpindahan
+                                        </span>
+                                        <span wire:loading wire:target="submitMoveRouter">
+                                            <i class="fas fa-spinner fa-spin"></i> Processing...
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     @if($purchases->count() > 0)
                     <div class="row mt-4">
@@ -566,6 +770,21 @@
 
         document.addEventListener('livewire:load', function () {
             // Event untuk menampilkan modal edit data pribadi
+            window.addEventListener('open-move-router-modal', (e) => {
+                new bootstrap.Modal(document.getElementById('moveRouterModal')).show();
+            });
+            // Close move router modal
+            window.addEventListener('close-move-router-modal', () => {
+                new bootstrap.Modal(document.getElementById('moveRouterModal')).hide();
+            });
+
+            // ✅ Refresh page after delay
+            window.addEventListener('refresh-after-delay', (event) => {
+                setTimeout(() => {
+                    location.reload();
+                }, event.detail.delay || 3000);
+            });
+
             window.addEventListener('showEditPribadiModal', function(e) 
             {
                 // Isi nilai-nilai form dari data Livewire

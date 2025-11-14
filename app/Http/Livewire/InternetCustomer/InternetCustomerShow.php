@@ -72,7 +72,13 @@ class InternetCustomerShow extends Component
             'purchases',
             'installation'
         ])->where('code', $code)->first();
-            
+        
+        if(!$this->customer) 
+        {
+            return redirect()->route('public.error', ['code' => 500])
+                ->with('message', 'Kode pelanggan tidak ditemukan. Silakan periksa kembali atau hubungi admin.');
+        }
+
         $status = request()->query('status'); // ambil dari query string
         $progressStatus = $this->customer->status;
 
@@ -309,7 +315,7 @@ class InternetCustomerShow extends Component
             }
 
         } catch (\Exception $e) {
-            dd($e);
+            // dd($e);
             Log::error('Error in payWithXendit', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()

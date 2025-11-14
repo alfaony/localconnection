@@ -8,12 +8,15 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
+use App\Jobs\ProcessRouterMoveJob;
 
 use Livewire\Component;
 use Livewire\WithPagination;
 
 use App\Models\InternetCustomer;
 use App\Models\InternetCustomerPurchase;
+use App\Models\Router;
+use App\Models\AddressPool;
 
 use App\Jobs\GenerateBillingJob;
 use App\Schemas\ParamSchema;
@@ -35,11 +38,28 @@ class InternetCustomerShow extends Component
     public $installationPhotos = [];
     public $showInstallationPhotosModal = false;
 
-        // Properties untuk edit data pribadi
+    // Properties untuk edit data pribadi
     public $name, $email, $phone_number, $start_billing_date, $end_billing_date;
     
     // Properties untuk edit data instalasi
-    public $P, $username, $pass_hash, $device_serial_number;
+    public $local_address, $username, $pass_hash, $device_serial_number;
+    
+    // ✅ Properties untuk move router
+    public $new_router_id = null;
+    public $new_username = null;
+    public $new_local_address = null;
+    public $new_pool_id = null;
+    public $availableRouters = [];
+    public $availablePoolsForNewRouter = [];
+    
+    // ✅ Validation for new router configuration
+    public $newUsernameChecked = false;
+    public $newUsernameAvailable = false;
+    public $newUsernameExistingCustomer = [];
+    
+    public $newLocalAddressChecked = false;
+    public $newLocalAddressAvailable = true;
+    public $newLocalAddressExistingCustomer = [];
 
     public function mount($customerId)
     {
@@ -53,19 +73,16 @@ class InternetCustomerShow extends Component
             'partnershipAgreement',
             'userCustomer',
             'purchases',
-            'installation'
+            'installation',
+            'router',
         ])->findOrFail($customerId);
 
-        // Decode agreement fields if exists
         if ($this->customer->partnershipAgreement) {
             $this->agreementFields = json_decode($this->customer->partnershipAgreement->fields, true);
         }
 
-
-        // Get KTP photo URL
         $this->ktpPhotoUrl = $this->customer->ktp_photo;
 
-        // Get installation photos if exists
         if ($this->customer->installation && $this->customer->installation->medias->count() > 0) {
             $this->installationPhotos = $this->customer->installation->medias
                 ->pluck('photo')
@@ -73,7 +90,270 @@ class InternetCustomerShow extends Component
         }
     }
 
-    // Buka modal edit data pribadi
+    // ========================================
+    // MOVE ROUTER METHODS
+    // ========================================
+
+    /**
+     * Open move router modal
+     */
+    public function openMoveRouterModal()
+    {
+        // Load available routers (exclude current)
+        $this->availableRouters = Router::where('id', '!=', $this->customer->router_id)
+            ->whereHas('pppoeServers')
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->toArray();
+
+        // Reset form
+        $this->reset([
+            'new_router_id',
+            'new_username',
+            'new_local_address',
+            'new_pool_id',
+            'availablePoolsForNewRouter',
+            'newUsernameChecked',
+            'newUsernameAvailable',
+            'newLocalAddressChecked',
+            'newLocalAddressAvailable',
+        ]);
+
+        $this->dispatchBrowserEvent('open-move-router-modal');
+    }
+
+    /**
+     * Watch for new_router_id changes
+     */
+    public function updatedNewRouterId($value)
+    {
+        $this->new_pool_id = null;
+        $this->availablePoolsForNewRouter = [];
+        
+        if ($value) {
+            $this->loadPoolsForNewRouter($value);
+            
+            // Re-check local_address if exists
+            if ($this->new_local_address) {
+                $this->checkNewLocalAddressAvailability($this->new_local_address, $value);
+            }
+        }
+    }
+
+    /**
+     * Watch for new_username changes
+     */
+    public function updatedNewUsername($value)
+    {
+        $this->newUsernameChecked = false;
+        $this->newUsernameAvailable = false;
+        $this->newUsernameExistingCustomer = [];
+
+        if (!$value || strlen($value) < 3) {
+            return;
+        }
+
+        $this->checkNewUsernameAvailability($value);
+    }
+
+    /**
+     * Watch for new_local_address changes
+     */
+    public function updatedNewLocalAddress($value)
+    {
+        $this->newLocalAddressChecked = false;
+        $this->newLocalAddressAvailable = true;
+        $this->newLocalAddressExistingCustomer = [];
+
+        if (!$value) {
+            return;
+        }
+
+        if (!filter_var($value, FILTER_VALIDATE_IP)) {
+            $this->newLocalAddressChecked = true;
+            $this->newLocalAddressAvailable = false;
+            $this->addError('new_local_address', 'Format IP address tidak valid');
+            return;
+        }
+
+        if ($this->new_router_id) {
+            $this->checkNewLocalAddressAvailability($value, $this->new_router_id);
+        }
+    }
+
+    /**
+     * ✅ Load address pools for new router
+     */
+    public function loadPoolsForNewRouter($routerId)
+    {
+        $pools = AddressPool::where('router_id', $routerId)
+            ->orderBy('name')
+            ->get(['id', 'name', 'cidr', 'gateway']);
+        
+        $this->availablePoolsForNewRouter = $pools->map(function($pool) {
+            return [
+                'id' => $pool->id,
+                'name' => $pool->name,
+                'label' => $pool->name . ' — ' . $pool->cidr . ($pool->gateway ? ' (gw: ' . $pool->gateway . ')' : '')
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Check new username availability
+     */
+    protected function checkNewUsernameAvailability($username)
+    {
+        $existing = InternetCustomer::where('username', $username)
+            ->where('id', '!=', $this->customer->id)
+            ->first(['id', 'code', 'name', 'status']);
+
+        $this->newUsernameChecked = true;
+        
+        if ($existing) {
+            $this->newUsernameAvailable = false;
+            $this->newUsernameExistingCustomer = [
+                'id' => $existing->id,
+                'code' => $existing->code,
+                'name' => $existing->name,
+            ];
+        } else {
+            $this->newUsernameAvailable = true;
+            $this->newUsernameExistingCustomer = [];
+        }
+    }
+
+    /**
+     * Check new local address availability
+     */
+    protected function checkNewLocalAddressAvailability($localAddress, $routerId)
+    {
+        $existing = InternetCustomer::where('local_address', $localAddress)
+            ->where('router_id', $routerId)
+            ->where('id', '!=', $this->customer->id)
+            ->first(['id', 'code', 'name', 'username']);
+
+        $this->newLocalAddressChecked = true;
+        
+        if ($existing) {
+            $this->newLocalAddressAvailable = false;
+            $this->newLocalAddressExistingCustomer = [
+                'id' => $existing->id,
+                'code' => $existing->code,
+                'name' => $existing->name,
+                'username' => $existing->username,
+            ];
+        } else {
+            $this->newLocalAddressAvailable = true;
+            $this->newLocalAddressExistingCustomer = [];
+        }
+    }
+
+    /**
+     * Submit move router
+     */
+    public function submitMoveRouter()
+    {
+        // Validation
+        $this->validate([
+            'new_router_id' => 'required|exists:routers,id|different:customer.router_id',
+            'new_pool_id' => 'nullable|exists:address_pools,id',
+            'new_username' => [
+                'nullable',
+                'string',
+                'min:3',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    if ($value && !$this->newUsernameAvailable) {
+                        $fail('Username sudah digunakan');
+                    }
+                },
+            ],
+            'new_local_address' => [
+                'nullable',
+                'ip',
+                function ($attribute, $value, $fail) {
+                    if ($value && !$this->newLocalAddressAvailable) {
+                        $fail('Local address sudah digunakan');
+                    }
+                },
+            ],
+        ], [
+            'new_router_id.required' => 'Router tujuan harus dipilih',
+            'new_router_id.different' => 'Router tujuan harus berbeda dari router saat ini',
+            'new_pool_id.exists' => 'Address pool tidak valid',
+        ]);
+
+        try {
+            ProcessRouterMoveJob::dispatch($this->customer->id, $this->customer->router_id, $this->new_router_id, $this->new_username, $this->new_local_address, $this->new_pool_id);
+            
+            // dd("here");
+            // $this->dispatchBrowserEvent('close-move-router-modal');
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'success',
+                'message' => 'Proses perpindahan router sedang dijalankan di background'
+            ]);
+
+            // Refresh after delay
+            // $this->dispatchBrowserEvent('refresh-after-delay', ['delay' => 3000]);
+
+        } catch (\Exception $e) {
+            // dd($e);dis
+            Log::error('Failed to dispatch router move', [
+                'error' => $e->getMessage(),
+                'customer_id' => $this->customer->id,
+            ]);
+
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Gagal memproses perpindahan: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // ========================================
+    // KTP DOWNLOAD METHOD
+    // ========================================
+    
+    /**
+     * Download KTP Photo
+     */
+    public function downloadKtpPhoto()
+    {
+        if (!$this->ktpPhotoUrl) {
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Foto KTP tidak tersedia'
+            ]);
+            return;
+        }
+        
+        try {
+            $url = s3_asset(true, 10, $this->ktpPhotoUrl);
+            $filename = 'KTP_' . $this->customer->code . '_' . str_replace(' ', '_', $this->customer->name) . '.jpg';
+            
+            $this->dispatchBrowserEvent('download-file', [
+                'url' => $url,
+                'filename' => $filename
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to download KTP', [
+                'error' => $e->getMessage(),
+                'customer_id' => $this->customer->id
+            ]);
+            
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Gagal mendownload foto KTP'
+            ]);
+        }
+    }
+
+    // ========================================
+    // EXISTING METHODS (unchanged)
+    // ========================================
+
     public function openEditPribadiModal()
     {
         $this->name = $this->customer->name;
@@ -91,7 +371,6 @@ class InternetCustomerShow extends Component
         ]);
     }
 
-    // Simpan data pribadi
     public function savePribadi()
     {
         $this->validate([
@@ -100,37 +379,21 @@ class InternetCustomerShow extends Component
             'phone_number' => 'nullable|string',
             'start_billing_date' => 'nullable|date',
             'end_billing_date' => 'nullable|date|after:start_billing_date',
-        ], [
-            'name.required' => 'Nama harus diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'phone_number.string' => 'Nomor telepon harus berupa angka.',
-            'start_billing_date.date' => 'Format tanggal mulai tagihan tidak valid.',
-            'end_billing_date.date' => 'Format tanggal akhir tagihan tidak valid.',
-            'end_billing_date.after' => 'Tanggal akhir tagihan harus setelah tanggal mulai tagihan.',
         ]);
 
         DB::beginTransaction();
         try {
-            // Update data customer
-            $this->customer->update([
-                'name' => $this->name,
-            ]);
+            $this->customer->update(['name' => $this->name]);
 
-            // Update data user customer
-            if ($this->customer->userCustomer) 
-            {   
-                if($this->customer->userCustomer->start_billing_date != $this->start_billing_date && $this->start_billing_date == Carbon::now()->format('Y-m-d')
-                    // && !in_array($customer->internetCustomer->status, [
-                    //     ParamSchema::ACTIVE,
-                    //     ParamSchema::INSTALLED]
-                    //     )
-                    )
-                {
+            if ($this->customer->userCustomer) {   
+                if($this->customer->userCustomer->start_billing_date != $this->start_billing_date && 
+                   $this->start_billing_date == Carbon::now()->format('Y-m-d')) {
                     GenerateBillingJob::dispatch($this->customer->userCustomer);
                 }
+                
                 $this->customer->userCustomer->update([
                     'name' => $this->name,
-                    'email' => $this->email ? $this->email : null,
+                    'email' => $this->email ?: null,
                     'phone_number' => $this->phone_number,
                     'start_billing_date' => $this->start_billing_date,
                     'end_billing_date' => $this->end_billing_date,
@@ -140,17 +403,13 @@ class InternetCustomerShow extends Component
             DB::commit();
             $this->dispatchBrowserEvent('hideEditPribadiModal');
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data pribadi berhasil diperbarui']);
-            
-            // Refresh data
             $this->mount($this->customer->id);
         } catch (\Exception $e) {
-            // dd($e);
             DB::rollBack();
             $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal memperbarui data pribadi: ' . $e->getMessage()]);
         }
     }
 
-    // Buka modal edit data instalasi
     public function openEditInstalasiModal()
     {
         $this->local_address = $this->customer->local_address ?? '';
@@ -158,8 +417,7 @@ class InternetCustomerShow extends Component
         $this->pass_hash = $this->customer->pass_hash ?? '';
         $this->device_serial_number = $this->customer->installation->device_serial_number ?? '';
         
-        $this->dispatchBrowserEvent('showEditInstalasiModal',
-        [
+        $this->dispatchBrowserEvent('showEditInstalasiModal', [
             'local_address' => $this->customer->local_address ?? '',
             'username' => $this->customer->username ?? '',
             'pass_hash' => $this->customer->pass_hash ?? '',
@@ -167,7 +425,6 @@ class InternetCustomerShow extends Component
         ]);
     }
 
-    // Simpan data instalasi
     public function saveInstalasi()
     {
         $this->validate([
@@ -175,16 +432,10 @@ class InternetCustomerShow extends Component
             'username' => 'required|string|max:255',
             'pass_hash' => 'required|string|max:255',
             'device_serial_number' => 'nullable|string|max:255',
-        ],[
-            'local_address.ip' => 'Format IP tidak valid.',
-            'username.string' => 'Username harus berupa teks.',
-            'pass_hash.string' => 'Password harus berupa teks.',
-            'device_serial_number.string' => 'Nomor seri perangkat harus berupa teks.',
         ]);
 
         DB::beginTransaction();
         try {
-            // Update data customer
             $this->customer->update([
                 'status' => ParamSchema::REACTIVATED,
                 'local_address' => $this->local_address,
@@ -192,7 +443,6 @@ class InternetCustomerShow extends Component
                 'pass_hash' => $this->pass_hash,
             ]);
 
-            // Update data instalasi
             if ($this->customer->installation) {
                 $this->customer->installation->update([
                     'device_serial_number' => $this->device_serial_number,
@@ -205,18 +455,15 @@ class InternetCustomerShow extends Component
             DB::commit();
             $this->dispatchBrowserEvent('hideEditInstalasiModal');
             $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Data instalasi berhasil diperbarui']);
-            
-            // Refresh data
             $this->mount($this->customer->id);
         } catch (\Exception $e) {
-            // dd($e);
             DB::rollBack();
             $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal memperbarui data instalasi: ' . $e->getMessage()]);
         }
     }
 
-  public function viewPaymentProof($purchaseId)
-  {
+    public function viewPaymentProof($purchaseId)
+    {
         $purchase = InternetCustomerPurchase::find($purchaseId);
         $this->paymentProofUrl = $purchase->payment_proof ? s3_asset(true,10,$purchase->payment_proof) : null;
 
@@ -238,9 +485,9 @@ class InternetCustomerShow extends Component
                 'user_finance_id' => Auth::user()->id
             ]);
 
-             $startDate = Carbon::parse($internetCustomers->start_billing_date);
+            $startDate = Carbon::parse($internetCustomers->start_billing_date);
             if ($startDate->isSameMonth(now())) {
-                $date = $startDate; // tetap Carbon object
+                $date = $startDate;
             } else {
                 $date = now();
             }
@@ -250,50 +497,39 @@ class InternetCustomerShow extends Component
                 'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
             ]);
     
-            $post =[
-                'is_paid' => true,
-            ];
+            $post = ['is_paid' => true];
     
-    
-            if(!$internetPurchase->customer->installation)
-            {
+            if(!$internetPurchase->customer->installation) {
                 $post['status'] = ParamSchema::PROCESS_INSTALLATION;
                 
                 $userTechnical = optional($internetPurchase->customer->subdistrict?->coverageService?->coverageServiceOds)
-                ->pluck('ods.user_assign_id')
-                ->unique()
-                ->all();
+                    ->pluck('ods.user_assign_id')
+                    ->unique()
+                    ->all();
         
-                if(count($userTechnical) > 0)
-                {
+                if(count($userTechnical) > 0) {
                     $message = "Pembayaran Langganan Internet Untuk Kode ".$internetPurchase->customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
                     $directUrl = route('internet-customer.show',$internetPurchase->customer->id);
-                    foreach($userTechnical as $tech)
-                    {
+                    foreach($userTechnical as $tech) {
                         $this->sentInbox($tech,$message, $directUrl);
                     }
                 }
-            }else
-            {
+            } else {
                 $post['status'] = ParamSchema::REACTIVATED;
             }
             
             GenerateInternetPurchaseCouponJob::dispatch($internetPurchase->customer->id, $internetPurchase->id, $internetPurchase->payment_months);
-
             $internetPurchase->customer->update($post);
+            
             DB::commit();
-    
-            $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Pembayaran Langganan Internet Untuk Kode '.$internetPurchase->customer->code.' Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan']);
+            $this->dispatchBrowserEvent('showSuccessAlert', ['message' => 'Pembayaran berhasil dikonfirmasi']);
         } catch (\Throwable $th) {
-            //throw $th;
-            // dd($th);
             Log::error($th);
             DB::rollBack();
             $this->dispatchBrowserEvent('showErrorAlert', ['message' => 'Gagal mengkonfirmasi pembayaran: ' . $th->getMessage()]);
         }
     }
 
-    
     public function viewKtpPhoto()
     {
         $url = s3_asset(true,10,$this->ktpPhotoUrl);
@@ -305,7 +541,6 @@ class InternetCustomerShow extends Component
 
     public function viewInstallationPhotos()
     {
-        // Cek apakah ada foto instalasi
         if (empty($this->installationPhotos)) {
             $this->dispatchBrowserEvent('show-notification', [
                 'type' => 'error',
@@ -314,18 +549,14 @@ class InternetCustomerShow extends Component
             return;
         }
 
-        // Convert paths to full URLs menggunakan helper s3_asset
-        // Parameter: s3_asset($private = true, $expiresInMinutes = 10, $path)
         $fullUrls = array_map(function($path) {
             return s3_asset(true, 10, $path);
         }, $this->installationPhotos);
 
-        // Filter out empty or invalid URLs
         $fullUrls = array_filter($fullUrls, function($url) {
             return !empty($url);
         });
 
-        // Cek apakah ada URL yang valid
         if (empty($fullUrls)) {
             $this->dispatchBrowserEvent('show-notification', [
                 'type' => 'error',
@@ -334,10 +565,9 @@ class InternetCustomerShow extends Component
             return;
         }
 
-        // Dispatch event ke JavaScript untuk menampilkan gallery
         $this->dispatchBrowserEvent('showGalleryModal', [
             'title' => 'Foto Instalasi - ' . $this->customer->code,
-            'images' => array_values($fullUrls) // Re-index array untuk JavaScript
+            'images' => array_values($fullUrls)
         ]);
     }
 
@@ -345,6 +575,7 @@ class InternetCustomerShow extends Component
     {
         $purchases = $this->customer->purchases()->orderby('created_at')->paginate(5);
         $financeAccess = Access::can('as_finance', 'internet_customers');
+        
         return view('livewire.internet-customer.admin.internet-customer-show', compact('purchases','financeAccess'))
             ->extends('adminlte::page');
     }
@@ -352,12 +583,7 @@ class InternetCustomerShow extends Component
     private function sentInbox($to,$message,$directUrl)
     {
         $inboxHelper = new InboxHelper();
-        $inboxHelper->sent(
-            $to, 
-            Auth::user()->id, 
-            $message, 
-            $directUrl
-        );
+        $inboxHelper->sent($to, Auth::user()->id, $message, $directUrl);
         return true;
     }
 }

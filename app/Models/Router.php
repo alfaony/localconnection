@@ -55,6 +55,11 @@ class Router extends Model
         return $this->belongsTo(AddressPool::class, 'default_pool_id');
     }
 
+    public function addressPools()
+    {
+        return $this->hasMany(AddressPool::class, 'router_id');
+    }
+
     public function pppoeServers()
     {
         return $this->hasMany(PppoeServer::class, 'router_id');

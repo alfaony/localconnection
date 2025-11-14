@@ -56,7 +56,8 @@ class InternetCustomer extends Model
         'expires_at',
         'ros_comment_uuid',
         'meta',
-        'override_pool_id'
+        'override_pool_id',
+        'last_updated_router',
     ];
 
     // ✅ RELATIONS

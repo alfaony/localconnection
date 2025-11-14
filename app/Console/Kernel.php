@@ -89,6 +89,12 @@ class Kernel extends ConsoleKernel
         //         ->withoutOverlapping();
         // }
 
+        $schedule->command('customers:check-active')
+        ->hourly()
+        ->withoutOverlapping(10) // Prevent overlap, timeout after 10 mins
+        ->runInBackground()
+        ->onOneServer(); // Only run on one server if multiple server
+
          // =============== ROUTER HEALTH CHECKS ===============
         // ✅ Run every 2 minutes, dispatch jobs untuk check all routers
         $schedule->call(function () {
