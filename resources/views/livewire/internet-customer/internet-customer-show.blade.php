@@ -1587,5 +1587,152 @@ document.addEventListener('livewire:load', function() {
         overflow: auto;
         border: 1px solid #ccc;
     }
+    
+    .bg-primary {
+        background-color: #DB2328 !important;
+    }
+    
+
+    .text-primary {
+        color: #DB2328 !important;
+    }
+</style>
+<style>
+    .img-signature
+    {
+        background-color: transparent !important; 
+        border: 0px solid #dee2e6 !important;
+        box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.0) !important;       
+        max-height: 100px !important; 
+    }
+    .signature-container {
+        width: fit-content;
+    }
+    .signature-canvas {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        background-color: white;
+        touch-action: none;
+    }
+    .custom-file-label::after {
+        content: "Browse";
+    }
+    #ktpPreviewImg {
+        max-height: 200px;
+    }
+</style>
+<style>
+   .small-text 
+    {
+        text-align: justify;
+        font-size: 0.79rem;
+    }
+
+    .text-ads a, 
+    .text-ads li, 
+    .text-ads p, 
+    .text-ads div, 
+    .text-ads span, 
+    .text-ads h1, 
+    .text-ads h2, 
+    .text-ads h3, 
+    .text-ads h4, 
+    .text-ads h5, 
+    .text-ads h6 
+    {
+        font-size: 0.92rem;
+    }
+    .small-header
+    {
+        font-size: 1rem;
+        font-weight: bold;
+    }
+    @media print {
+        #printItem {
+            margin-left: 50px;
+            margin-right: 50px;
+        }
+    }
+
+    body {
+        font-family: Arial;
+    }
+
+    .container {
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+
+    hr {
+        border: 1px solid black;
+        border-radius: 5px;
+    }
+
+    .margin {
+        margin-bottom: 15px;
+    }
+
+    .noMargin {
+        margin-bottom: 0px;
+    }
+
+    .scrollable {
+        width: 100%;
+        height: 650px;
+        overflow: auto;
+        border: 1px solid #ccc;
+    }
+</style>
+<style>
+    .info-box {
+        border-radius: 5px;
+        margin-bottom: 15px;
+        box-shadow: 0 0 1px rgba(0,0,0,0.1);
+    }
+    .info-box-content {
+        padding: 10px 15px;
+    }
+    .info-box-text {
+        font-size: 14px;
+        color: #6c757d;
+    }
+    .info-box-number {
+        font-size: 20px;
+        font-weight: 600;
+    }
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+    }
+    .modal.show {
+        background: rgba(0,0,0,0.5);
+        display: block;
+        overflow: auto;
+    }
+
+    .carousel-item {
+        transition: transform 0.6s ease-in-out;
+    }
+
+    .carousel-control-prev, .carousel-control-next {
+        width: 5%;
+        background: rgba(0,0,0,0.3);
+    }
+
+    .carousel-control-prev-icon, .carousel-control-next-icon {
+        width: 2rem;
+        height: 2rem;
+    }
 </style>
 @endpush
