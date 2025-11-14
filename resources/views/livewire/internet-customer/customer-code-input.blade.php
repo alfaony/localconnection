@@ -99,7 +99,7 @@
                             <i class="fas fa-question-circle mr-1"></i>
                             Tidak menemukan kode pelanggan Anda?
                         </p>
-                        <a href="#" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#helpModal">
+                        <a href="https://ticket.thrive.co.id" target="_blank" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#helpModal">
                             <i class="fas fa-headset mr-2"></i>Hubungi Admin
                         </a>
                     </div>
