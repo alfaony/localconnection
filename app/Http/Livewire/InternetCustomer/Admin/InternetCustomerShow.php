@@ -288,14 +288,14 @@ class InternetCustomerShow extends Component
             ProcessRouterMoveJob::dispatch($this->customer->id, $this->customer->router_id, $this->new_router_id, $this->new_username, $this->new_local_address, $this->new_pool_id);
             
             // dd("here");
-            // $this->dispatchBrowserEvent('close-move-router-modal');
+            $this->dispatchBrowserEvent('close-move-router-modal');
             $this->dispatchBrowserEvent('show-notification', [
                 'type' => 'success',
                 'message' => 'Proses perpindahan router sedang dijalankan di background'
             ]);
 
             // Refresh after delay
-            // $this->dispatchBrowserEvent('refresh-after-delay', ['delay' => 3000]);
+            $this->dispatchBrowserEvent('refresh-after-delay', ['delay' => 2000]);
 
         } catch (\Exception $e) {
             // dd($e);dis

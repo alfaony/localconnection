@@ -173,6 +173,7 @@
                                     <i class="fas fa-exchange-alt mr-1"></i>Pindah Router
                                 </button>
                                 --}}
+
                             </div>
                             
                             <div class="table-responsive">
@@ -999,6 +1000,21 @@
                 // Initialize carousel
                 const carousel = new bootstrap.Carousel(document.getElementById('carouselGallery'));
                 modal.show();
+            });
+        });
+        
+        window.addEventListener('show-notification', (event) => {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            
+            Toast.fire({
+                icon: event.detail.type,
+                title: event.detail.message
             });
         });
     </script>

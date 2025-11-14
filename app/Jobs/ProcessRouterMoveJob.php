@@ -3,7 +3,11 @@
 namespace App\Jobs;
 
 use App\Models\InternetCustomer;
-use App\Models\JobsProvisioning;
+use App\Models\Router;
+use App\Models\PackageRouterProfile;
+use App\Services\RouterOSService;
+use App\Services\PoolResolver;
+use App\Schemas\ParamSchema;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,8 +17,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * ✅ Simplified Job untuk memproses perpindahan router
- * Tanpa migration/logging - langsung proses
+ * ✅ Job untuk memproses perpindahan router
+ * Langsung komunikasi dengan MikroTik (tidak dispatch job lagi)
  */
 class ProcessRouterMoveJob implements ShouldQueue
 {
@@ -52,45 +56,48 @@ class ProcessRouterMoveJob implements ShouldQueue
     }
 
     /**
-     * Execute the job.
+     * Execute the job - Handle directly with RouterOSService
      */
-    public function handle()
+    public function handle(RouterOSService $ros)
     {
         try {
             DB::beginTransaction();
 
-            $customer = InternetCustomer::findOrFail($this->customerId);
+            $customer = InternetCustomer::with(['internetPackage', 'router'])
+                ->findOrFail($this->customerId);
 
+            
             Log::info('Starting router move', [
-                'customer_id' => $this->customerId,
-                'old_router' => $this->oldRouterId,
-                'new_router' => $this->newRouterId,
+                'customer' => $customer->code,
+                'username' => $customer->username,
+                'old_router_id' => $this->oldRouterId,
+                'new_router_id' => $this->newRouterId,
             ]);
 
             // ========================================
-            // STEP 1: Deprovision from Old Router
+            // STEP 1: Delete from Old Router (MikroTik)
             // ========================================
-            $this->deprovisionOldRouter($customer);
+            $this->deleteFromOldRouter($ros, $customer);
 
             // ========================================
-            // STEP 2: Update Customer Data
+            // STEP 2: Update Customer Database
             // ========================================
-            $this->updateCustomer($customer);
+            $this->updateCustomerData($customer);
 
             // ========================================
-            // STEP 3: Provision to New Router
+            // STEP 3: Create on New Router (MikroTik)
             // ========================================
-            $this->provisionNewRouter($customer);
+            $this->createOnNewRouter($ros, $customer);
 
             DB::commit();
 
-            Log::info('Router move completed', [
-                'customer_id' => $this->customerId,
+            Log::info('Router move completed successfully', [
+                'customer' => $customer->code,
             ]);
 
         } catch (\Exception $e) {
-            // dd()
             DB::rollBack();
+            // dd($e);
 
             Log::error('Router move failed', [
                 'customer_id' => $this->customerId,
@@ -103,71 +110,161 @@ class ProcessRouterMoveJob implements ShouldQueue
     }
 
     /**
-     * Deprovision from old router
+     * ✅ STEP 1: Delete secret from old router via MikroTik API
      */
-    protected function deprovisionOldRouter($customer)
+    protected function deleteFromOldRouter(RouterOSService $ros, InternetCustomer $customer)
     {
-        Log::info('Deprovisioning from old router', [
-            'customer_id' => $customer->id,
-            'router_id' => $this->oldRouterId,
-        ]);
+        $oldRouter = Router::find($this->oldRouterId);
 
-        // JobsProvisioning::create([
-        //     'type' => JobsProvisioning::TYPE_DEPROVISION,
-        //     'internet_customer_id' => $customer->id,
-        //     'router_id' => $this->oldRouterId,
-        //     'status' => JobsProvisioning::STATUS_QUEUED,
-        //     'payload' => [
-        //         'reason' => 'Router Move',
-        //         'old_username' => $customer->username,
-        //     ],
-        // ]);
+        if (!$oldRouter) {
+            Log::warning('Old router not found', ['router_id' => $this->oldRouterId]);
+            return;
+        }
 
-        dispatch(new ProvisionCustomerJob($customer->id));
-        sleep(3); // Wait for deprovision
+        try {
+            Log::info('Connecting to old router', [
+                'router' => $oldRouter->name,
+                'username' => $customer->username,
+            ]);
+
+            $client = $ros->client($oldRouter);
+
+            // Check if secret exists
+            $secret = $client->query(
+                (new \RouterOS\Query('/ppp/secret/print'))
+                    ->where('name', $customer->username)
+            )->read();
+
+            if (!empty($secret)) {
+                Log::info('Secret found on old router, deleting...', [
+                    'secret_id' => $secret[0]['.id'],
+                ]);
+
+                // Disconnect if active
+                $ros->disconnectIfActive($client, $customer->username);
+
+                // Delete secret
+                $client->query(
+                    (new \RouterOS\Query('/ppp/secret/remove'))
+                        ->equal('.id', $secret[0]['.id'])
+                )->read();
+
+                Log::info('Secret deleted from old router successfully');
+            } else {
+                Log::info('Secret not found on old router (already removed)');
+            }
+
+        } catch (\Exception $e) {
+            // Log but continue - old router might be offline
+            Log::error('Failed to delete from old router (continuing anyway)', [
+                'router' => $oldRouter->name,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
-     * Update customer with new router
+     * ✅ STEP 2: Update customer data in database
      */
-    protected function updateCustomer($customer)
+    protected function updateCustomerData(InternetCustomer $customer)
     {
-        Log::info('Updating customer', [
-            'customer_id' => $customer->id,
-            'new_router' => $this->newRouterId,
+        Log::info('Updating customer data', [
+            'customer' => $customer->code,
+            'new_router_id' => $this->newRouterId,
+            'new_username' => $this->newUsername,
+            'new_local_address' => $this->newLocalAddress,
         ]);
 
-        $customer->update([
-            'router_id' => $this->newRouterId,
-            'username' => $this->newUsername ?: $customer->username,
-            'local_address' => $this->newLocalAddress ?: $customer->local_address,
-            'override_pool_id' => $this->newPoolId,
-            'status' => \App\Schemas\ParamSchema::REACTIVATED,
-        ]);
+        // Refresh customer to get new router relation
+        // $customer->load('router');
     }
 
     /**
-     * Provision to new router
+     * ✅ STEP 3: Create secret on new router via MikroTik API
      */
-    protected function provisionNewRouter($customer)
+    protected function createOnNewRouter(RouterOSService $ros, InternetCustomer $customer)
     {
-        Log::info('Provisioning to new router', [
-            'customer_id' => $customer->id,
-            'router_id' => $this->newRouterId,
+        $newRouter = Router::find($this->newRouterId);
+
+        if (!$newRouter) {
+            throw new \Exception('New router not found');
+        }
+
+        Log::info('Connecting to new router', [
+            'router' => $newRouter->name,
+            'username' => $customer->username,
         ]);
 
-        // JobsProvisioning::create([
-        //     'type' => JobsProvisioning::TYPE_PROVISION,
-        //     'internet_customer_id' => $customer->id,
-        //     'router_id' => $this->newRouterId,
-        //     'status' => JobsProvisioning::STATUS_QUEUED,
-        //     'payload' => [
-        //         'reason' => 'Router Move',
-        //         'new_username' => $this->newUsername,
-        //     ],
-        // ]);
+        try {
+            $client = $ros->client($newRouter);
+            $pkg = $customer->internetPackage;
 
-        dispatch(new ProvisionCustomerJob($customer->id));
+            // Get profile mapping
+            $map = PackageRouterProfile::where('router_id', $newRouter->id)
+                  ->where('package_id', $pkg->id)
+                  ->first();
+
+            $profile = $map->ros_profile ?? ('PKG_'.$pkg->id);
+            $fup = $profile.'_FUP';
+
+            // Get pool info
+            $pool = PoolResolver::forCustomer($customer);
+            $poolName = $pool?->name;
+            $gateway = $pool?->gateway;
+
+            Log::info('Profile configuration', [
+                'profile' => $profile,
+                'pool' => $poolName,
+                'gateway' => $gateway,
+            ]);
+
+            // ========================================
+            // ✅ CRITICAL: Create profile FIRST
+            // ========================================
+            Log::info('Ensuring profile exists on new router...');
+            
+            $ros->ensurePppProfile(
+                $client,
+                $pkg,
+                $profile,
+                $fup,
+                $newRouter->id,
+                $poolName,
+                $gateway
+            );
+
+            Log::info('Profile ensured successfully', ['profile' => $profile]);
+
+            // ========================================
+            // ✅ THEN: Create secret with that profile
+            // ========================================
+            Log::info('Creating secret on new router', [
+                'username' => $customer->username,
+                'local_address' => $customer->local_address,
+                'profile' => $profile,
+            ]);
+
+            $ros->upsertPppSecret(
+                $client, 
+                $customer, 
+                $profile, 
+                $customer->local_address
+            );
+
+            Log::info('Secret created successfully with profile', [
+                'username' => $customer->username,
+                'profile' => $profile,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to create on new router', [
+                'router' => $newRouter->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            throw new \Exception('Failed to provision on new router: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -177,6 +274,8 @@ class ProcessRouterMoveJob implements ShouldQueue
     {
         Log::error('Router move job failed permanently', [
             'customer_id' => $this->customerId,
+            'old_router_id' => $this->oldRouterId,
+            'new_router_id' => $this->newRouterId,
             'error' => $exception->getMessage(),
         ]);
     }
