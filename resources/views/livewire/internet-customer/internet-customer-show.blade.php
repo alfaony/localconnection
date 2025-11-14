@@ -1262,7 +1262,7 @@ document.addEventListener('livewire:load', function() {
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-
+@include('livewire.internet-customer.steps.styles')
 <style>
     /* Custom Months Input */
     .custom-months-input .form-control {

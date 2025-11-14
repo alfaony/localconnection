@@ -127,6 +127,7 @@ use App\Http\Livewire\InternetCustomer\InternetCustomerForm;
 use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerIndex;
 use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
+use App\Http\Livewire\InternetCustomer\CustomerCodeInput;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
 use App\Http\Livewire\Router\RouterForm;
@@ -163,6 +164,8 @@ Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
 Route::post('xendit/webhook', [XenditController::class, 'handle']);
 Route::post('keloola-pay/webhook', [XenditController::class, 'handleKeloolaPay']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
+
+Route::get('internet-customer/customer-active', CustomerCodeInput::class)->name('internet-customer.customer');
 
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
@@ -665,7 +668,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 });
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
-  Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
+  Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');
   
 // Route::middleware(['auth'])->group(function () {
 // });

@@ -186,11 +186,21 @@
                                         <tr>
                                             <th>Router Saat Ini</th>
                                             <td>
-                                                <span class="badge badge-primary">
-                                                    <i class="fas fa-server"></i> {{ $customer->router->name ?? '-' }}
+                                            <div class="d-flex flex-column">
+                                                <span class="badge bg-primary mb-1">
+                                                    <i class="fas fa-server me-1"></i>
+                                                    {{ $customer->router->name ?? '-' }}
                                                 </span>
-                                                {{$customer->last_updated_router }} 
-                                            </td>
+
+                                                @if($customer->last_updated_router)
+                                                <small class="text-muted">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    Terakhir connect:
+                                                    {{ $customer->last_updated_router ? \Carbon\Carbon::parse($customer->last_updated_router)->locale('id')->translatedFormat('d F Y H:i') : '-' }}
+                                                </small>
+                                                @endif
+                                            </div>
+                                        </td>
                                         </tr>
                                         <tr>
                                             <th>Serial Number Perangkat</th>
