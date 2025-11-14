@@ -244,9 +244,10 @@
 @endcanAccess
 
 <!-- Modal Instalasi -->
-<div class="modal fade" id="installationModal" tabindex="-1">
+<div class="modal fade" id="installationModal" tabindex="-1" wire:ignore.self>
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
+            
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">Proses Instalasi</h5>
                 <button type="button" class="btn-close btn-close-white btn-danger" data-bs-dismiss="modal" aria-label="Close"><i class="fa fa-times"></i></button>
@@ -283,14 +284,43 @@
                             Kosongkan jika ingin pakai pool default/PPPoE server router.
                         </div>
                     </div>
+                    {{-- GANTI input local_address dengan: --}}
                     <div class="mb-3">
                         <label class="form-label">Local Address</label>
-                        <input type="text" class="form-control" wire:model="local_address" id="local_address">
+                        <div class="input-group">
+                            <input type="text" 
+                                class="form-control" 
+                                id="local_address"
+                                placeholder="192.168.1.1">
+                            <span class="input-group-text">
+                                <div wire:loading wire:target="local_address">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                            </span>
+                        </div>
+                        {{-- Error message akan ditambahkan di sini oleh JavaScript --}}
                     </div>
+
+                    {{-- GANTI input username dengan: --}}
                     <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-control" wire:model="username" id="modalUsername" required>
+                        <label class="form-label">Username <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" 
+                                class="form-control" 
+                                id="modalUsername"
+                                placeholder="username_pppoe">
+                            <span class="input-group-text">
+                                <div wire:loading wire:target="username">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <div wire:loading.remove wire:target="username">
+                                    {{-- Icon akan diisi oleh JavaScript --}}
+                                </div>
+                            </span>
+                        </div>
+                        {{-- Error message akan ditambahkan di sini oleh JavaScript --}}
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Password</label>
                         <input type="password" class="form-control" wire:model="password" id="modalPassword" required>
@@ -425,6 +455,92 @@
         const installationModal = new bootstrap.Modal(document.getElementById('installationModal'));
         let uploadedFiles = [];
 
+        
+        // TAMBAHKAN setelah addEventListener input di livewire:load:
+
+    // Listen untuk update status username check
+    window.addEventListener('usernameCheckComplete', function(event) {
+        const data = event.detail;
+        const inputUsername = document.getElementById('modalUsername');
+        const iconContainer = inputUsername.closest('.input-group').querySelector('.input-group-text div:not([wire\\:loading])');
+        
+        if (data.available) {
+            inputUsername.classList.remove('is-invalid');
+            inputUsername.classList.add('is-valid');
+            if (iconContainer) {
+                iconContainer.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+            }
+        } else {
+            inputUsername.classList.remove('is-valid');
+            inputUsername.classList.add('is-invalid');
+            if (iconContainer) {
+                iconContainer.innerHTML = '<i class="fas fa-times-circle text-danger"></i>';
+            }
+            
+            // Tampilkan pesan error jika ada
+            if (data.existing) {
+                let errorDiv = inputUsername.parentElement.parentElement.querySelector('.username-error-msg');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback d-block username-error-msg';
+                    inputUsername.parentElement.parentElement.appendChild(errorDiv);
+                }
+                errorDiv.innerHTML = `Username sudah digunakan oleh: <strong>${data.existing.code} - ${data.existing.name}</strong>`;
+            }
+        }
+    });
+
+    // Listen untuk update status local address check
+    window.addEventListener('localAddressCheckComplete', function(event) {
+        const data = event.detail;
+        const inputLocalAddress = document.getElementById('local_address');
+        
+        if (data.valid) {
+            inputLocalAddress.classList.remove('is-invalid');
+            inputLocalAddress.classList.add('is-valid');
+            
+            // Hapus error message jika ada
+            const errorDiv = inputLocalAddress.parentElement.querySelector('.local-address-error-msg');
+            if (errorDiv) errorDiv.remove();
+        } else {
+            inputLocalAddress.classList.remove('is-valid');
+            inputLocalAddress.classList.add('is-invalid');
+            
+            // Tampilkan pesan error
+            let errorDiv = inputLocalAddress.parentElement.querySelector('.local-address-error-msg');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'invalid-feedback d-block local-address-error-msg';
+                inputLocalAddress.parentElement.appendChild(errorDiv);
+            }
+            errorDiv.textContent = data.message;
+        }
+    });
+
+    // Clear icon saat user mulai mengetik
+    document.getElementById('modalUsername')?.addEventListener('input', function(e) {
+        const iconContainer = this.closest('.input-group').querySelector('.input-group-text div:not([wire\\:loading])');
+        if (iconContainer) {
+            iconContainer.innerHTML = '';
+        }
+        this.classList.remove('is-valid', 'is-invalid');
+        
+        // Hapus error message
+        const errorDiv = this.parentElement.parentElement.querySelector('.username-error-msg');
+        if (errorDiv) errorDiv.remove();
+        
+        @this.set('username', e.target.value);
+    });
+
+    document.getElementById('local_address')?.addEventListener('input', function(e) {
+        this.classList.remove('is-valid', 'is-invalid');
+        
+        // Hapus error message
+        const errorDiv = this.parentElement.querySelector('.local-address-error-msg');
+        if (errorDiv) errorDiv.remove();
+        
+        @this.set('local_address', e.target.value);
+    });
         // Handle buka modal
         // Di JavaScript - Tambahkan kode untuk mengisi select
         window.addEventListener('pools-options', (e) => {
@@ -446,6 +562,7 @@
             select.dispatchEvent(new Event('change', { bubbles: true }));
         });
         
+        // GANTI bagian window.addEventListener('open-installation-modal') dengan:
         window.addEventListener('open-installation-modal', (e) => {
             const { customerName, customerCode, serialNumber, routers } = e.detail;
             
@@ -456,17 +573,14 @@
 
             // Isi select router
             const routerSelect = document.getElementById('routerSelect');
-            routerSelect.innerHTML = ''; // Kosongkan dulu
+            routerSelect.innerHTML = '';
             
-            // Tambahkan opsi default
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
             defaultOption.textContent = 'Pilih Router';
             routerSelect.appendChild(defaultOption);
             
-            // Isi dengan router yang tersedia
             routers.forEach(router => {
-                // console.log(router);
                 const option = document.createElement('option');
                 option.value = router.id;
                 option.disabled = router.disabled;
@@ -474,18 +588,26 @@
                 routerSelect.appendChild(option);
             });
 
-            // Reset router select and mirror, and Livewire property
+            // Reset router select
             routerSelect.value = '';
             document.getElementById('routerSelectMirror').value = '';
             @this.set('router_id', '');
             @this.set('override_pool_id', '');
 
-            // Assign change listener to update Livewire and hidden input, and reset pool
+            // ✅ RESET username & local_address ke Livewire
+            document.getElementById('modalUsername').value = '';
+            document.getElementById('local_address').value = '';
+            @this.set('username', '');
+            @this.set('local_address', '');
+            @this.set('newUsernameChecked', false);
+            @this.set('newUsernameAvailable', false);
+            
+            // Assign change listener
             routerSelect.onchange = function (e) {
                 const val = e.target.value || '';
-                document.getElementById('routerSelectMirror').value = val; // keep mirror in sync
+                document.getElementById('routerSelectMirror').value = val;
                 @this.set('router_id', val);
-                @this.set('override_pool_id', ''); // reset pool when router changes
+                @this.set('override_pool_id', '');
                 @this.call('loadPoolsForRouter', val);
             };
             
@@ -529,11 +651,13 @@
             const notes = document.getElementById('modalNotes').value;
             const files = document.getElementById('modalPhotos').files;
             const routerId = document.getElementById('routerSelectMirror').value;
-            const username = document.getElementById('modalUsername').value;
-            const password = document.getElementById('modalPassword').value;
-            const override_pool_id = document.getElementById('selectPool').value;
-            const local_address = document.getElementById('local_address').value;
-        
+            
+            // ✅ AMBIL dari Livewire property, bukan dari DOM
+            const username = @this.username;
+            const password = @this.password;
+            const override_pool_id = @this.override_pool_id;
+            const local_address = @this.local_address;
+
             // Validasi
             if (!serialNumber) {
                 Swal.fire({
@@ -553,7 +677,7 @@
                 return;
             }
 
-            if (routerId === '') {
+            if (!routerId || routerId === '') {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Perhatian',
@@ -580,39 +704,19 @@
                 return;
             }
             
-                
-                // Validasi
-                if (!serialNumber) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Perhatian',
-                        text: 'Serial number harus diisi'
-                    });
-                    return;
-                }
-                
-                if (files.length === 0) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Perhatian',
-                        text: 'Minimal upload 1 foto instalasi'
-                    });
-                    return;
-                }
-                
-                // Konfirmasi
-                const result = await Swal.fire({
-                    icon: 'question',
-                    title: 'Konfirmasi',
-                    text: 'Anda yakin ingin menyelesaikan instalasi ini?',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ya, Selesaikan',
-                    cancelButtonText: 'Batal'
-                });
-                
-                if (!result.isConfirmed) {
-                    return;
-                }
+            // Konfirmasi
+            const result = await Swal.fire({
+                icon: 'question',
+                title: 'Konfirmasi',
+                text: 'Anda yakin ingin menyelesaikan instalasi ini?',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Selesaikan',
+                cancelButtonText: 'Batal'
+            });
+            
+            if (!result.isConfirmed) {
+                return;
+            }
                 
                 // Disable button dan tampilkan progress
                 const submitBtn = document.getElementById('submitInstallation');

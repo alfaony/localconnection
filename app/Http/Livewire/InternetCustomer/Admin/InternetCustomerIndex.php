@@ -69,6 +69,11 @@ class InternetCustomerIndex extends Component
 
     public $plain_password = null; // di-bind dari modal/input ketika activate
 
+    // ✅ Validation for new router configuration
+    public $newUsernameChecked = false;
+    public $newUsernameAvailable = false;
+    public $newUsernameExistingCustomer = [];
+
     public $canApprove;
     public $canTechnical;
 
@@ -194,6 +199,19 @@ class InternetCustomerIndex extends Component
     // }
 
     // Method untuk validasi dan submit
+    public function updatedUsername($value)
+    {
+        $this->newUsernameChecked = false;
+        $this->newUsernameAvailable = false;
+        $this->newUsernameExistingCustomer = [];
+
+        if (!$value || strlen($value) < 3) {
+            return;
+        }
+        
+        $this->checkNewUsernameAvailability($value);
+    }
+
     public function completeInstallation($serialNumber, $notes, $routerId, $username, $password, $override_pool_id, $local_address)
     {
         // Update properties dari parameter
@@ -756,6 +774,83 @@ class InternetCustomerIndex extends Component
             ->toArray();
 
         $this->dispatchBrowserEvent('pools-options', ['options' => $this->availablePools]);
+    }
+
+    // GANTI method yang ada dengan:
+    protected function checkNewUsernameAvailability($username)
+    {
+        $existing = InternetCustomer::where('username', $username)
+            ->when($this->currentInstallationId, function($q) {
+                $q->where('id', '!=', $this->currentInstallationId);
+            })
+            ->first(['id', 'code', 'name', 'status']);
+
+        $this->newUsernameChecked = true;
+        
+        if ($existing) {
+            $this->newUsernameAvailable = false;
+            $this->newUsernameExistingCustomer = [
+                'id' => $existing->id,
+                'code' => $existing->code,
+                'name' => $existing->name,
+            ];
+            
+            // ✅ EMIT event ke JavaScript
+            $this->dispatchBrowserEvent('usernameCheckComplete', [
+                'available' => false,
+                'existing' => [
+                    'code' => $existing->code,
+                    'name' => $existing->name,
+                ]
+            ]);
+        } else {
+            $this->newUsernameAvailable = true;
+            $this->newUsernameExistingCustomer = [];
+            
+            // ✅ EMIT event ke JavaScript
+            $this->dispatchBrowserEvent('usernameCheckComplete', [
+                'available' => true
+            ]);
+        }
+    }
+
+    // TAMBAHKAN method baru:
+    public function updatedLocalAddress($value)
+    {
+        $this->validate([
+            'local_address' => 'nullable|ip'
+        ]);
+        
+        if (!$value) {
+            return;
+        }
+        
+        $this->checkLocalAddressAvailability($value);
+    }
+
+    protected function checkLocalAddressAvailability($ip)
+    {
+        $existing = InternetCustomer::where('local_address', $ip)
+            ->when($this->currentInstallationId, function($q) {
+                $q->where('id', '!=', $this->currentInstallationId);
+            })
+            ->first(['id', 'code', 'name']);
+        
+        if ($existing) {
+            $errorMsg = "IP {$ip} sudah digunakan oleh {$existing->code} - {$existing->name}";
+            $this->addError('local_address', $errorMsg);
+            
+            // ✅ EMIT event ke JavaScript
+            $this->dispatchBrowserEvent('localAddressCheckComplete', [
+                'valid' => false,
+                'message' => $errorMsg
+            ]);
+        } else {
+            // ✅ EMIT event ke JavaScript
+            $this->dispatchBrowserEvent('localAddressCheckComplete', [
+                'valid' => true
+            ]);
+        }
     }
 
     private function sentInbox($to,$message,$directUrl)
