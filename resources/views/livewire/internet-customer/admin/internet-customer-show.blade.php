@@ -92,6 +92,22 @@
                                                 {{ $customer->province->name ?? '-' }}
                                             </td>
                                         </tr>
+                                        @if($customer->coupons->count() > 0)
+                                        <tr>
+                                            <td colspan="6">
+                                                <div class="alert alert-success mb-0">
+                                                    <strong><i class="fas fa-ticket-alt mr-2"></i>Kupon Tersedia: {{ $customer->coupons->count() }}</strong>
+                                                    <div class="mt-2">
+                                                        @foreach($customer->coupons as $coupon)
+                                                            <span class="badge badge-lg badge-primary mr-1 mb-1">
+                                                                {{ $coupon->name }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @endif
                                         <tr>
                                             <th>Tanggal Pembayaran Selanjutnya</th>
                                             <td>
@@ -165,14 +181,17 @@
                             
                             {{-- ✅ Action Buttons --}}
                             <div class="btn-group mb-2" role="group">
+                                @canAccess('editInstalasi','internet_customers')
                                 <button onclick="openEditInstalasiModal()" class="btn btn-sm btn-warning mr-2 mb-2">
                                     <i class="fas fa-edit mr-1"></i>Edit Data Instalasi
                                 </button>
+                                @endcanAccess
                                 
+                                @canAccess('moveRouter','internet_customers')
                                 <button wire:click="openMoveRouterModal" class="btn btn-sm btn-info mb-2">
                                     <i class="fas fa-exchange-alt mr-1"></i>Pindah Router
                                 </button>
-
+                                @endcanAccess
                             </div>
                             
                             <div class="table-responsive">
