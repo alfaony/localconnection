@@ -128,7 +128,7 @@ class InternetCustomer extends Model
             case 'installed':
                 return '<span class="badge badge-success">Installed</span>';
             default:
-                return '<span class="badge badge-secondary">Unknown</span>';
+                return '<span class="badge badge-secondary">'.$status.'</span>';
         }
     }
 
