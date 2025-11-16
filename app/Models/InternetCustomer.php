@@ -47,7 +47,7 @@ class InternetCustomer extends Model
         'promo_id',
         'router_id',
         'access_type',
-        'username',
+        'moj',
         'pass_hash',
         'ip_address',
         'local_address',

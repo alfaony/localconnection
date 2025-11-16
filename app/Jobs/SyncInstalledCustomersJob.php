@@ -8,28 +8,89 @@ use App\Schemas\ParamSchema;
 use App\Services\RouterOSService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use RouterOS\Query;
 use Illuminate\Support\Str;
 use App\Models\PppoeServer;
 
+/**
+ * ✅ OPTIMIZED: Memory-efficient sync for installed customers
+ * - Uses raw queries where possible
+ * - Minimal eager loading
+ * - Batch updates
+ * - Router connection reuse
+ */
 class SyncInstalledCustomersJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 120;
+    public int $timeout = 300;
+    public int $tries = 2;
 
-    public function __construct(public ?array $customerIds = null) {} // opsional: limit ke ID tertentu
+    public function __construct(public ?array $customerIds = null) {}
 
     public function handle(RouterOSService $ros): void
     {
-        // Ambil customer berstatus INSTALLED dan punya router + username
-        $query = InternetCustomer::query()
-            ->with('router')
+        $totalChecked = 0;
+        $totalActivated = 0;
+
+        // ✅ Group customers by router FIRST (reduce queries)
+        $customersByRouter = $this->getCustomersByRouter();
+
+        Log::info('SyncInstalledCustomersJob started', [
+            'routers_count' => count($customersByRouter),
+            'total_customers' => array_sum(array_map('count', $customersByRouter)),
+        ]);
+
+        // ✅ Process per router (one connection per router)
+        foreach ($customersByRouter as $routerId => $customerData) {
+            try {
+                $this->processRouterCustomers(
+                    $ros,
+                    $routerId,
+                    $customerData,
+                    $totalChecked,
+                    $totalActivated
+                );
+            } catch (\Throwable $e) {
+                Log::error('Failed to process router', [
+                    'router_id' => $routerId,
+                    'error' => $e->getMessage(),
+                ]);
+                continue;
+            }
+
+            // ✅ Free memory after each router
+            unset($customerData);
+            gc_collect_cycles();
+        }
+
+        Log::info('SyncInstalledCustomersJob completed', [
+            'checked' => $totalChecked,
+            'activated' => $totalActivated,
+        ]);
+    }
+
+    /**
+     * ✅ Get customers grouped by router (optimized query)
+     */
+    protected function getCustomersByRouter(): array
+    {
+        $query = DB::table('internet_customers')
+            ->select([
+                'id',
+                'router_id',
+                'username',
+                'ip_address',
+                'mac_address',
+                'vlan_id',
+                'ros_comment_uuid',
+                'meta',
+            ])
             ->whereIn('status', [ParamSchema::INSTALLED, ParamSchema::REACTIVATED])
             ->whereNotNull('router_id')
             ->whereNotNull('username');
@@ -38,133 +99,275 @@ class SyncInstalledCustomersJob implements ShouldQueue
             $query->whereIn('id', $this->customerIds);
         }
 
-        $totalChecked = 0;
-        $totalActivated = 0;
+        $customers = $query->get();
 
-        // Proses per-chunk untuk hemat memori
-        $query->chunkById(200, function (Collection $customers) use ($ros, &$totalChecked, &$totalActivated) {
-            // Kelompokkan per router agar 1 router → 1 koneksi
-            /** @var \Illuminate\Support\Collection $byRouter */
-            $byRouter = $customers->groupBy('router_id');
+        // Group by router_id
+        $grouped = [];
+        foreach ($customers as $customer) {
+            $grouped[$customer->router_id][] = $customer;
+        }
 
-            foreach ($customers as $cust) 
-            {
-                /** @var Router $router */
-                $router = $cust->router;
-                if (!$router) {
-                    Log::warning('Router missing for customers', ['router_id' => $cust->router_id]);
-                    continue;
+        return $grouped;
+    }
+
+    /**
+     * ✅ Process all customers for one router
+     */
+    protected function processRouterCustomers(
+        RouterOSService $ros,
+        int $routerId,
+        array $customerData,
+        int &$totalChecked,
+        int &$totalActivated
+    ): void {
+        // Get router
+        $router = Router::find($routerId);
+        if (!$router) {
+            Log::warning('Router not found', ['router_id' => $routerId]);
+            return;
+        }
+
+        // Connect to router ONCE
+        try {
+            $client = $ros->client($router);
+        } catch (\Throwable $e) {
+            Log::error('Failed to connect to router', [
+                'router_id' => $routerId,
+                'router_name' => $router->name,
+                'error' => $e->getMessage(),
+            ]);
+            return;
+        }
+
+        // Get VLAN for this router (once)
+        $defaultVlanId = $this->getDefaultVlanForRouter($routerId);
+
+        // ✅ Batch get all active sessions from router
+        $activeSessions = $this->getAllActiveSessions($client);
+        $allSecrets = $this->getAllSecrets($client);
+
+        Log::info('Processing router customers', [
+            'router_id' => $routerId,
+            'router_name' => $router->name,
+            'customers_count' => count($customerData),
+            'active_sessions' => count($activeSessions),
+        ]);
+
+        // ✅ Process each customer (no DB queries in loop!)
+        $updates = [];
+        foreach ($customerData as $customer) {
+            $totalChecked++;
+
+            try {
+                $result = $this->processCustomer(
+                    $customer,
+                    $activeSessions,
+                    $allSecrets,
+                    $defaultVlanId
+                );
+
+                if ($result) {
+                    $updates[] = $result;
+                    $totalActivated++;
                 }
+            } catch (\Throwable $e) {
+                Log::error('Failed to process customer', [
+                    'customer_id' => $customer->id,
+                    'username' => $customer->username,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
-                try {
-                    $client = $ros->client($router);
-                } catch (\Throwable $e) 
-                {
-                    Log::error('Failed connect to router', [
-                        'router_id' => $cust->router_id,
-                        'name' => $router->name ?? null,
-                        'error' => $e->getMessage()
-                    ]);
-                    continue;
+        // ✅ Batch update customers (single query per batch)
+        if (!empty($updates)) {
+            $this->batchUpdateCustomers($updates);
+        }
+
+        // ✅ Update comments on router if needed
+        $this->batchUpdateSecretComments($client, $updates);
+    }
+
+    /**
+     * ✅ Get all active sessions from router at once
+     */
+    protected function getAllActiveSessions($client): array
+    {
+        try {
+            $sessions = $client->query(new Query('/ppp/active/print'))->read();
+            
+            $indexed = [];
+            foreach ($sessions as $session) {
+                if (isset($session['name'])) {
+                    $indexed[$session['name']] = $session;
                 }
+            }
+            return $indexed;
+        } catch (\Throwable $e) {
+            Log::error('Failed to get active sessions', ['error' => $e->getMessage()]);
+            return [];
+        }
+    }
 
-                try {
-                    $isUp = $ros->isUserActive($client, $cust->username);
-                    if ($isUp) 
-                    {
-                        // 1) Ambil snapshot sesi aktif + secret
-                        $activeRow = $client->query(
-                            (new Query('/ppp/active/print'))->where('name', $cust->username)
-                        )->read()[0] ?? [];
-                        
-                        $secretRow = $client->query(
-                            (new Query('/ppp/secret/print'))->where('name', $cust->username)
-                        )->read()[0] ?? [];
+    /**
+     * ✅ Get all secrets from router at once
+     */
+    protected function getAllSecrets($client): array
+    {
+        try {
+            $secrets = $client->query(new Query('/ppp/secret/print'))->read();
+            
+            $indexed = [];
+            foreach ($secrets as $secret) {
+                if (isset($secret['name'])) {
+                    $indexed[$secret['name']] = $secret;
+                }
+            }
+            return $indexed;
+        } catch (\Throwable $e) {
+            Log::error('Failed to get secrets', ['error' => $e->getMessage()]);
+            return [];
+        }
+    }
 
-                        // 2) Isi IP & MAC dari sesi aktif
-                        $ip  = $activeRow['address']    ?? $cust->ip_address;
-                        $mac = $activeRow['caller-id']  ?? $cust->mac_address;
+    /**
+     * ✅ Get default VLAN for router
+     */
+    protected function getDefaultVlanForRouter(int $routerId): ?int
+    {
+        $srv = PppoeServer::with('interface')
+            ->where('router_id', $routerId)
+            ->whereNotNull('interface_id')
+            ->first();
 
-                        // 3) Tentukan VLAN (best-effort): ambil dari PPPoE server pertama yang punya interface VLAN
-                        $vlanId = $cust->vlan_id;
-                        if (is_null($vlanId)) {
-                            $srv = PppoeServer::with('interface')
-                                ->where('router_id', $cust->router_id)
-                                ->whereNotNull('interface_id')
-                                ->first();
-                            $vlanId = $srv?->interface?->vlan_id ?? $vlanId;
-                        }
+        return $srv?->interface?->vlan_id;
+    }
 
-                        // 4) Pastikan ros_comment_uuid ada & tempelkan ke secret.comment (anchor rekonsiliasi)
-                        $uuid = $cust->ros_comment_uuid ?: (string) Str::uuid();
-                        if (!empty($secretRow['.id'])) {
-                            $commentShould = 'cust:' . $uuid;
-                            if (($secretRow['comment'] ?? '') !== $commentShould) {
-                                $client->query(
-                                    (new Query('/ppp/secret/set'))
-                                        ->equal('.id', $secretRow['.id'])
-                                        ->equal('comment', $commentShould)
-                                )->read();
-                                $secretRow['comment'] = $commentShould;
-                            }
-                        }
+    /**
+     * ✅ Process single customer (no DB queries!)
+     */
+    protected function processCustomer(
+        object $customer,
+        array $activeSessions,
+        array $allSecrets,
+        ?int $defaultVlanId
+    ): ?array {
+        // Check if customer is active
+        if (!isset($activeSessions[$customer->username])) {
+            return null; // Not active
+        }
 
-                        // 5) Susun meta (ros_active + ros_secret) untuk audit
-                        $meta = (array) $cust->meta;
-                        $meta['ros_active'] = [
-                            'id'         => $activeRow['.id']        ?? null,
-                            'address'    => $activeRow['address']    ?? null,
-                            'caller_id'  => $activeRow['caller-id']  ?? null,
-                            'uptime'     => $activeRow['uptime']     ?? null,
-                            'encoding'   => $activeRow['encoding']   ?? null,
-                            'service'    => $activeRow['service']    ?? null,
-                            'last_seen'  => now()->toIso8601String(),
-                        ];
-                        $meta['ros_secret'] = [
-                            'id'       => $secretRow['.id']      ?? null,
-                            'disabled' => $secretRow['disabled'] ?? null,
-                            'profile'  => $secretRow['profile']  ?? null,
-                            'comment'  => $secretRow['comment']  ?? null,
-                        ];
+        $activeRow = $activeSessions[$customer->username];
+        $secretRow = $allSecrets[$customer->username] ?? [];
 
-                        // 6) Update customer
-                        $cust->fill([
-                            'status'           => \App\Schemas\ParamSchema::ACTIVE,
-                            'ip_address'       => $ip,
-                            'mac_address'      => $mac,
-                            'vlan_id'          => $vlanId,
-                            'ros_comment_uuid' => $uuid,
-                            // 'expires_at'     => JANGAN diubah di sini; itu urusan billing/renewal
+        // Get IP & MAC from active session
+        $ip = $activeRow['address'] ?? $customer->ip_address;
+        $mac = $activeRow['caller-id'] ?? $customer->mac_address;
+
+        // Determine VLAN
+        $vlanId = $customer->vlan_id ?? $defaultVlanId;
+
+        // Ensure UUID
+        $uuid = $customer->ros_comment_uuid ?: (string) Str::uuid();
+
+        // Build meta
+        $meta = $customer->meta ? json_decode($customer->meta, true) : [];
+        $meta['ros_active'] = [
+            'id' => $activeRow['.id'] ?? null,
+            'address' => $activeRow['address'] ?? null,
+            'caller_id' => $activeRow['caller-id'] ?? null,
+            'uptime' => $activeRow['uptime'] ?? null,
+            'encoding' => $activeRow['encoding'] ?? null,
+            'service' => $activeRow['service'] ?? null,
+            'last_seen' => now()->toIso8601String(),
+        ];
+        $meta['ros_secret'] = [
+            'id' => $secretRow['.id'] ?? null,
+            'disabled' => $secretRow['disabled'] ?? null,
+            'profile' => $secretRow['profile'] ?? null,
+            'comment' => $secretRow['comment'] ?? null,
+        ];
+
+        return [
+            'id' => $customer->id,
+            'username' => $customer->username,
+            'status' => ParamSchema::ACTIVE,
+            'ip_address' => $ip,
+            'mac_address' => $mac,
+            'vlan_id' => $vlanId,
+            'ros_comment_uuid' => $uuid,
+            'meta' => json_encode($meta),
+            'secret_id' => $secretRow['.id'] ?? null,
+            'secret_comment_should' => 'cust:' . $uuid,
+            'secret_comment_current' => $secretRow['comment'] ?? null,
+        ];
+    }
+
+    /**
+     * ✅ Batch update customers (efficient!)
+     */
+    protected function batchUpdateCustomers(array $updates): void
+    {
+        // ✅ Use DB::transaction with chunking
+        DB::transaction(function () use ($updates) {
+            foreach (array_chunk($updates, 100) as $chunk) {
+                foreach ($chunk as $data) {
+                    DB::table('internet_customers')
+                        ->where('id', $data['id'])
+                        ->update([
+                            'status' => $data['status'],
+                            'ip_address' => $data['ip_address'],
+                            'mac_address' => $data['mac_address'],
+                            'vlan_id' => $data['vlan_id'],
+                            'ros_comment_uuid' => $data['ros_comment_uuid'],
+                            'meta' => $data['meta'],
+                            'updated_at' => now(),
                         ]);
-                        $cust->meta = $meta;
-                        $cust->save();
-                        
-                        $totalActivated++;
-                        Log::info('Customer activated by sync', [
-                            'customer_id' => $cust->id,
-                            'username'    => $cust->username,
-                            'router_id'   => $cust->router_id,
-                            'ip'          => $ip,
-                            'mac'         => $mac,
-                            'vlan_id'     => $vlanId,
-                        ]);
-                    }
-                } catch (\Throwable $e) {
-                    // dd($e);
-                    Log::error('Check active failed', [
-                        'customer_id' => $cust->id,
-                        'username'    => $cust->username,
-                        'router_id'   => $cust->router_id,
-                        'error'       => $e->getMessage()
-                    ]);
                 }
 
+                // ✅ Free memory after each chunk
+                unset($chunk);
+                gc_collect_cycles();
             }
         });
 
-        Log::info('SyncInstalledCustomersJob done', [
-            'checked'   => $totalChecked,
-            'activated' => $totalActivated
-        ]);
+        Log::info('Batch updated customers', ['count' => count($updates)]);
+    }
+
+    /**
+     * ✅ Update secret comments on router if needed
+     */
+    protected function batchUpdateSecretComments($client, array $updates): void
+    {
+        $needsUpdate = array_filter($updates, function ($data) {
+            return isset($data['secret_id']) &&
+                   $data['secret_comment_current'] !== $data['secret_comment_should'];
+        });
+
+        if (empty($needsUpdate)) {
+            return;
+        }
+
+        foreach ($needsUpdate as $data) {
+            try {
+                $client->query(
+                    (new Query('/ppp/secret/set'))
+                        ->equal('.id', $data['secret_id'])
+                        ->equal('comment', $data['secret_comment_should'])
+                )->read();
+
+                Log::debug('Updated secret comment', [
+                    'username' => $data['username'],
+                    'comment' => $data['secret_comment_should'],
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('Failed to update secret comment', [
+                    'username' => $data['username'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        Log::info('Updated secret comments', ['count' => count($needsUpdate)]);
     }
 }

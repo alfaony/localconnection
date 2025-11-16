@@ -34,7 +34,7 @@
                     @foreach ($mikrotiks as $mikrotik)
                     <tr>
                         <td>{{ $mikrotik->pop ? $mikrotik->pop->name : '-' }}</td>
-                        <td>{{ $mikrotik->name }}</td>
+                        <td>{{ $mikrotik->name }} </td>
                         <td>{{ $mikrotik->host }}</td>
                         <td>{{ $mikrotik->port }}</td>
                         <td>{{ $mikrotik->username }}</td>

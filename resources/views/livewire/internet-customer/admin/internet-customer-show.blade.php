@@ -168,11 +168,10 @@
                                 <button onclick="openEditInstalasiModal()" class="btn btn-sm btn-warning mr-2 mb-2">
                                     <i class="fas fa-edit mr-1"></i>Edit Data Instalasi
                                 </button>
-                                {{-- 
+                                
                                 <button wire:click="openMoveRouterModal" class="btn btn-sm btn-info mb-2">
                                     <i class="fas fa-exchange-alt mr-1"></i>Pindah Router
                                 </button>
-                                --}}
 
                             </div>
                             
@@ -287,7 +286,7 @@
                                                     wire:model="new_router_id">
                                                 <option value="">Pilih Router</option>
                                                 @foreach($availableRouters as $router)
-                                                    <option value="{{ $router['id'] }}">{{ $router['name'] }}</option>
+                                                    <option value="{{ $router['id'] }}" @if(!$router['is_online']) disabled @endif>{{ $router['name'] }} {{ $router['is_online'] ? '(Online)' : '(Offline)' }}</option>
                                                 @endforeach
                                             </select>
                                             @error('new_router_id')

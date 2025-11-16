@@ -103,7 +103,7 @@ class InternetCustomerShow extends Component
         $this->availableRouters = Router::where('id', '!=', $this->customer->router_id)
             ->whereHas('pppoeServers')
             ->orderBy('name')
-            ->get(['id', 'name'])
+            ->get(['id', 'name', 'active_status'])
             ->toArray();
 
         // Reset form
@@ -449,7 +449,7 @@ class InternetCustomerShow extends Component
                 ]);
             }
 
-            dispatch(new ProvisionCustomerJob($this->customer->id));
+            // dispatch(new ProvisionCustomerJob($this->customer->id));
             \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
             
             DB::commit();

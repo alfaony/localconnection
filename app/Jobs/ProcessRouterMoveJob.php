@@ -5,9 +5,11 @@ namespace App\Jobs;
 use App\Models\InternetCustomer;
 use App\Models\Router;
 use App\Models\PackageRouterProfile;
+
 use App\Services\RouterOSService;
 use App\Services\PoolResolver;
 use App\Schemas\ParamSchema;
+
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,6 +17,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+
+use App\Jobs\ProvisionCustomerJob;
 
 /**
  * ✅ Job untuk memproses perpindahan router
@@ -60,53 +64,31 @@ class ProcessRouterMoveJob implements ShouldQueue
      */
     public function handle(RouterOSService $ros)
     {
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
+        
+        $customer = InternetCustomer::lockForUpdate()
+            ->findOrFail($this->customerId);
+        
+        // 1. Delete old router
+        $this->deleteFromOldRouter($ros, $customer);
+        
+        // 2. Update DB
+        $customer->update([
+            'router_id' => $this->newRouterId,
+            'username' => $this->newUsername,
+            'local_address' => $this->newLocalAddress,
+            'override_pool_id' => $this->newPoolId,
+            'ip_address' => null,
+            'mac_address' => null,
+            'status' => ParamSchema::REACTIVATED,
+        ]);
+        
+        // 3. Create new router
+        $this->createOnNewRouter($ros, $customer);
+        
+        DB::commit();
 
-            $customer = InternetCustomer::with(['internetPackage', 'router'])
-                ->findOrFail($this->customerId);
-
-            
-            Log::info('Starting router move', [
-                'customer' => $customer->code,
-                'username' => $customer->username,
-                'old_router_id' => $this->oldRouterId,
-                'new_router_id' => $this->newRouterId,
-            ]);
-
-            // ========================================
-            // STEP 1: Delete from Old Router (MikroTik)
-            // ========================================
-            $this->deleteFromOldRouter($ros, $customer);
-
-            // ========================================
-            // STEP 2: Update Customer Database
-            // ========================================
-            $this->updateCustomerData($customer);
-
-            // ========================================
-            // STEP 3: Create on New Router (MikroTik)
-            // ========================================
-            $this->createOnNewRouter($ros, $customer);
-
-            DB::commit();
-
-            Log::info('Router move completed successfully', [
-                'customer' => $customer->code,
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            // dd($e);
-
-            Log::error('Router move failed', [
-                'customer_id' => $this->customerId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            throw $e;
-        }
+        ProvisionCustomerJob::dispatch($customer->id);
     }
 
     /**

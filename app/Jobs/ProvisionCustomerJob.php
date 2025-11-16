@@ -117,7 +117,7 @@ class ProvisionCustomerJob implements ShouldQueue
                 )->read()[0] ?? null;
 
                 if ($row) 
-                    {
+                {
                     $meta = (array) $cust->meta;
                     $meta['ros_secret'] = [
                         'id'       => $row['.id'] ?? null,
