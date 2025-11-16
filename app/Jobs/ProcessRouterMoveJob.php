@@ -75,7 +75,7 @@ class ProcessRouterMoveJob implements ShouldQueue
         // 2. Update DB
         $customer->update([
             'router_id' => $this->newRouterId,
-            'username' => $this->newUsername,
+            'username' => $this->newUsername ?? $customer->username,
             'local_address' => $this->newLocalAddress,
             'override_pool_id' => $this->newPoolId,
             'ip_address' => null,

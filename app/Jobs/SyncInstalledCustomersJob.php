@@ -321,7 +321,7 @@ class SyncInstalledCustomersJob implements ShouldQueue
                             'vlan_id' => $data['vlan_id'],
                             'ros_comment_uuid' => $data['ros_comment_uuid'],
                             'meta' => $data['meta'],
-                            'updated_at' => now(),
+                            'last_updated_router' => now(),
                         ]);
                 }
 
