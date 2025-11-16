@@ -268,7 +268,7 @@ class SyncInstalledCustomersJob implements ShouldQueue
         $vlanId = $customer->vlan_id ?? $defaultVlanId;
 
         // Ensure UUID
-        $uuid = $customer->ros_comment_uuid ?: (string) Str::uuid();
+        $uuid = $customer->ros_comment_uuid ?: $customer->id;
 
         // Build meta
         $meta = $customer->meta ? json_decode($customer->meta, true) : [];
@@ -295,10 +295,10 @@ class SyncInstalledCustomersJob implements ShouldQueue
             'ip_address' => $ip,
             'mac_address' => $mac,
             'vlan_id' => $vlanId,
-            'ros_comment_uuid' => $uuid,
+            'ros_comment_uuid' => $customer->id,
             'meta' => json_encode($meta),
             'secret_id' => $secretRow['.id'] ?? null,
-            'secret_comment_should' => 'cust:' . $uuid,
+            'secret_comment_should' => $customer->id,
             'secret_comment_current' => $secretRow['comment'] ?? null,
         ];
     }

@@ -90,7 +90,7 @@ public function upsertPppSecret(Client $c, InternetCustomer $cust, string $profi
                 ->equal('password', $pwd)
                 ->equal('service', 'pppoe')
                 ->equal('profile', $profile)
-                ->equal('comment', $cust->ros_comment_uuid ?? ('uuid:' . $cust->id));
+                ->equal('comment', $cust->id);
 
             if (!empty($localAddress)) {
                 $query->equal('local-address', $localAddress);

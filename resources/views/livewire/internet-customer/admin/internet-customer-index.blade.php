@@ -654,7 +654,7 @@
             
             // ✅ AMBIL dari Livewire property, bukan dari DOM
             const username = @this.username;
-            const password = @this.password;
+            const password = document.getElementById('modalPassword').value;
             const override_pool_id = @this.override_pool_id;
             const local_address = @this.local_address;
 
