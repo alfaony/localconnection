@@ -539,6 +539,26 @@ class InternetCustomerShow extends Component
         ]);
     }
 
+    public function downloadKtpPhoto()
+    {
+        try {
+            // Generate signed URL for download (longer expiry for download)
+            $url = s3_asset(true, 30, $this->ktpPhotoUrl);
+            
+            $this->dispatchBrowserEvent('downloadFile', [
+                'url' => $url,
+                'filename' => 'KTP_' . $this->customer->ktp_number . '.jpg'
+            ]);
+        } catch (\Exception $e) {
+            // dd($e); 
+            Log::error('Error downloading KTP: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('showErrorAlert', [
+                'title' => 'Error',
+                'message' => 'Gagal mengunduh file KTP'
+            ]);
+        }
+    }
+
     public function viewInstallationPhotos()
     {
         if (empty($this->installationPhotos)) {

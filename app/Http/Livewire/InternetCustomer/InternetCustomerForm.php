@@ -424,6 +424,8 @@ class InternetCustomerForm extends Component
             'ktp_photo.required' => 'Foto KTP wajib diupload.',
             'ktp_photo.mimes' => 'File KTP harus berupa JPG, PNG, atau PDF.',
             'ktp_photo.max' => 'Ukuran file KTP maksimal 2MB.',
+            'ktp_number' => 'required|digits:16',
+            'ktp_photo' => 'required|file|mimes:jpg,jpeg,png,pdf|max:20480',
         ]);
 
         // Verify file is uploaded and accessible

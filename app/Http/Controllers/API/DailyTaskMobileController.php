@@ -121,6 +121,8 @@ class DailyTaskMobileController extends BaseController
                     'end_date',
                     'user_id',
                     'assignment_user_id',
+                    'division_id',
+                    'daily_task_project_id',
                     'task_status_name' => TaskStatus::select('name')
                         ->whereColumn('task_statuses.id', 'daily_tasks.task_status_id')
                         ->limit(1),
@@ -142,6 +144,10 @@ class DailyTaskMobileController extends BaseController
                     'assignment_user_id' => $task->assignment_user_id,
                     'user_name' => $task->user->name ?? 'N/A',
                     'assignment_user_name' => $task->assign->name ?? 'N/A',
+                    'division_id' => $task->division->id ?? 'N/A',
+                    'division_name' => $task->division->name ?? 'N/A',
+                    'daily_task_project_id' => $task->project->id ?? 'N/A',
+                    'daily_task_project_name' => $task->project->name ?? 'N/A'
                 ];
             });
 
@@ -187,6 +193,8 @@ class DailyTaskMobileController extends BaseController
                     'end_date',
                     'user_id',
                     'assignment_user_id',
+                    'division_id',
+                    'daily_task_project_id',
                     'task_status_name' => TaskStatus::select('name')
                         ->whereColumn('task_statuses.id', 'daily_tasks.task_status_id')
                         ->limit(1),
@@ -207,6 +215,10 @@ class DailyTaskMobileController extends BaseController
                     'assignment_user_id' => $task->assignment_user_id,
                     'user_name' => $task->user->name ?? 'N/A',
                     'assignment_user_name' => $task->assign->name ?? 'N/A',
+                    'division_id' => $task->division->id ?? 'N/A',
+                    'division_name' => $task->division->name ?? 'N/A',
+                    'daily_task_project_id' => $task->project->id ?? 'N/A',
+                    'daily_task_project_name' => $task->project->name ?? 'N/A'
                 ];
             });
 
@@ -251,6 +263,8 @@ class DailyTaskMobileController extends BaseController
                     'end_date',
                     'user_id',
                     'assignment_user_id',
+                    'division_id',
+                    'daily_task_project_id',
                     'task_status_name' => TaskStatus::select('name')
                         ->whereColumn('task_statuses.id', 'daily_tasks.task_status_id')
                         ->limit(1),
@@ -271,6 +285,10 @@ class DailyTaskMobileController extends BaseController
                     'assignment_user_id' => $task->assignment_user_id,
                     'user_name' => $task->user->name ?? 'N/A',
                     'assignment_user_name' => $task->assign->name ?? 'N/A',
+                    'division_id' => $task->division->id ?? 'N/A',
+                    'division_name' => $task->division->name ?? 'N/A',
+                    'daily_task_project_id' => $task->project->id ?? 'N/A',
+                    'daily_task_project_name' => $task->project->name ?? 'N/A'
                 ];
             });
 
