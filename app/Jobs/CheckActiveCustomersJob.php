@@ -74,7 +74,6 @@ class CheckActiveCustomersJob implements ShouldQueue
             ->whereNotNull('router_id')
             ->whereNotNull('username')
             ->get();
-        dd($customers);
 
         Log::info('Found active customers to check', ['count' => $customers->count()]);
 
