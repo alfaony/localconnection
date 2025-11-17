@@ -717,7 +717,9 @@ class InternetCustomerIndex extends Component
         ]);
 
         
-        dispatch(new ProvisionCustomerJob($cust->id));
+        // SyncInstalledCustomersJob::dispatch([$cust->id]);
+        \App\Jobs\SyncInstalledCustomersJob::dispatch([$cust->id]);
+        // dispatch(new ProvisionCustomerJob($cust->id));
 
         $this->dispatchBrowserEvent('show-notification', ['type'=>'success','message'=>'Reactivation dispatched']);
     }

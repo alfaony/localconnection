@@ -103,11 +103,14 @@ public function upsertPppSecret(Client $c, InternetCustomer $cust, string $profi
             $q = (new Query('/ppp/secret/set'))
                 ->equal('.id', $id)
                 ->equal('name', $cust->username)
-                    ->equal('password', $pwd)   
-                ->equal('local-address', $localAddress)  // Update local_address
+                ->equal('password', $pwd)   
                 ->equal('profile', $profile);
 
-            $c->query($q)->read(); // akan return [] → itu normal
+            if (!empty($localAddress)) 
+            {
+                $q->equal('local-address', $localAddress);
+            }
+            $c->query($q)->read();
             
         }
     } catch (\Throwable $th) {
