@@ -21,7 +21,7 @@ class PermissionForReportPoinProductivity extends Seeder
     public function run()
     {   
 
-        $reports = ['index'];
+        $reports = ['index','export'];
 
         $root = Role::where('name',RoleSchema::ROOT)->first();
         $admin = Role::where('name',RoleSchema::ADMIN)->first();
