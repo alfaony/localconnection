@@ -67,6 +67,7 @@ class InboxHelper
             Log::error('Failed to send inbox message', [
                 'error' => $th->getMessage()
             ]);
+            
             return throw $th;
         }
     }

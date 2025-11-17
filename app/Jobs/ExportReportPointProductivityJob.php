@@ -65,7 +65,7 @@ class ExportReportPointProductivityJob implements ShouldQueue
             ]);
 
             // Send notification with download link
-            // $this->sendInboxNotification($downloadUrl, count($this->reports));
+            $this->sendInboxNotification($downloadUrl, count($this->reports));
 
         } catch (\Exception $e) {
 
@@ -76,7 +76,7 @@ class ExportReportPointProductivityJob implements ShouldQueue
             ]);
 
             // Send error notification
-            // $this->sendErrorNotification($e->getMessage());
+            $this->sendErrorNotification($e->getMessage());
         }
     }
 
@@ -111,12 +111,14 @@ class ExportReportPointProductivityJob implements ShouldQueue
                 'total_reports' => $totalReports
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // dd($e);
             Log::error('Failed to send inbox notification', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+            
+            throw $e; 
         }
     }
 
@@ -141,11 +143,13 @@ class ExportReportPointProductivityJob implements ShouldQueue
                  null
             );
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // dd($e);
             Log::error('Failed to send error notification', [
                 'error' => $e->getMessage()
             ]);
+
+            throw $e; 
         }
     }
 }
