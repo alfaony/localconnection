@@ -57,7 +57,7 @@ class ExportReportPointProductivityJob implements ShouldQueue
             
 
             // Generate download URL
-            $downloadUrl = s3_asset(true,10, $filePath);
+            $downloadUrl = Storage::disk('s3')->temporaryUrl($filePath, now()->addMinutes(10));
 
             Log::info('Export completed successfully', [
                 'file_path' => $filePath,
@@ -100,7 +100,7 @@ class ExportReportPointProductivityJob implements ShouldQueue
                 $systemUserId->id,
                 $message,
                 null,
-                false,
+                true,
                 'download',
                 $downloadUrl
             );
