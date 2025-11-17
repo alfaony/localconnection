@@ -101,9 +101,10 @@ class UsedLaptop extends Model
     // 🟢 Status Jual (label helper opsional)
     public function getSaleStatusAttribute()
     {
-        return $this->is_sold
+        return 
+           isset($this->is_sold) ?  ( $this->is_sold
             ? 'Terjual (Rp ' . number_format($this->sold_price) . ')'
-            : 'Belum Terjual';
+            : 'Belum Terjual') : "Inventory";
     }
 
     public function user()
