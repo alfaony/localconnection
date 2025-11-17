@@ -15,7 +15,7 @@ use App\Jobs\ItemRequestClose;
 use App\Models\Payment;
 use App\Models\PotentialVendor;
 
-class ItemPurchaseMobileController extends Controller
+class ItemPurchaseMobileController extends BaseController
 {
     public function store(Request $request)
     {
@@ -43,7 +43,6 @@ class ItemPurchaseMobileController extends Controller
         try {
             $itemRequest = ItemRequest::find($validatedData['item_request_id']);
 
-            // Add vendor if needed
             if (empty($request->product_supplier_id)) {
                 $newVendor = ProductSupplier::create([
                     'company_id' => Auth::user()->company_id,
@@ -64,14 +63,12 @@ class ItemPurchaseMobileController extends Controller
             $validatedData['company_id'] = Auth::user()->company_id;
             $validatedData['sprinter_id'] = Auth::user()->id;
 
-            // Save purchase
             $itemPurchase = ItemPurchase::create($validatedData);
 
-            // Update request status
             $itemRequest->status = 'WAITING_PAYMENT';
             $itemRequest->save();
 
-            if ($request->is_finished) {
+            if ($request->boolean('is_finished')) {
                 $itemRequest->is_open = 0;
                 $itemRequest->save();
                 dispatch(new ItemRequestClose($itemRequest, Auth::user()->id));
@@ -81,7 +78,7 @@ class ItemPurchaseMobileController extends Controller
             return response()->json([
                 'message' => 'Item purchase created successfully',
                 'data' => $itemPurchase
-            ], 201);
+            ], 200);
 
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -202,4 +199,62 @@ class ItemPurchaseMobileController extends Controller
             return response()->json(['error' => $th->getMessage()], 500);
         }
     }
+
+    public function getPayment($itemRequestId)
+    {
+        try {
+            $itemPurchases = ItemPurchase::where('item_request_id', $itemRequestId)
+                ->with([
+                    'itemRequest:id,item_name,status,is_open',
+                    'productSupplier:id,store_name,owner_name,phone_number,location',
+                    'sprinter:id,name,email',
+                    'payment' => function ($q) {
+                        $q->select('id', 'item_purchase_id', 'finance_id', 'proof_image', 'paid_at')
+                        ->with(['finance:id,name']);
+                    },
+                ])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            if ($itemPurchases->isEmpty()) {
+                return $this->sendError('Tidak ada data pembayaran untuk item_request_id ini.', [
+                    'error' => 'Payment data not found'
+                ]);
+            }
+
+            $mapped = $itemPurchases->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'item_request_id' => $item->item_request_id,
+                    'actual_price' => $item->actual_price,
+                    'bon_photo' => $item->bon_photo ? asset(str_replace('public/', 'storage/', $item->bon_photo)) : null,
+                    'status' => $item->status,
+                    'payment_term_date' => $item->payment_term_date,
+                    'payment_method' => $item->payment_method,
+                    'rekening_number' => $item->rekening_number,
+                    'note' => $item->note,
+                    'product_supplier' => $item->productSupplier,
+                    'sprinter' => $item->sprinter,
+                    'payment' => $item->payment ? [
+                        'payment_id' => $item->payment->id,
+                        'proof_image' => $item->payment->proof_image
+                            ? asset('storage/' . $item->payment->proof_image)
+                            : null,
+                        'paid_at' => $item->payment->paid_at,
+                        'finance_name' => optional($item->payment->finance)->name,
+                    ] : null,
+                ];
+            })->values();
+
+            $data = $mapped->count() === 1 ? $mapped->first() : ['list' => $mapped];
+
+            return $this->sendResponse($data, 'Data pembayaran berhasil didapatkan.');
+
+        } catch (\Exception $e) {
+            \Log::error($e);
+            return $this->sendError('Gagal mengambil data pembayaran.', ['error' => $e->getMessage()]);
+        }
+    }
+
+
 }

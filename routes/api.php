@@ -100,10 +100,14 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::get('/item-requests/{id}/workflow', [ItemRequestMobileController::class, 'workflow']);
     Route::post('item-requests/{id}/add-vendor', [ItemPurchaseMobileController::class,'addVendor']);
     Route::post('item-requests/{id}/delivery', [ItemRequestMobileController::class,'delivery']);
+    Route::get('item-requests/{id}/delivery-detail', [ItemRequestMobileController::class, 'getDelivery']);
+    Route::get('item-requests/company', [ItemRequestMobileController::class, 'loadByCompany']);
     Route::resource('item-requests', ItemRequestMobileController::class)
     ->only(['index', 'show', 'store', 'update', 'destroy']);
 
     Route::post('item-purchases/{id}/payment', [ItemPurchaseMobileController::class,'payment']);
+    Route::get('item-purchases/{item_request_id}/get-payment', [ItemPurchaseMobileController::class, 'getPayment'])
+        ->name('item-purchases.getPayment');
     Route::resource('item-purchases', ItemPurchaseMobileController::class)
     ->only(['store', 'update']);
 

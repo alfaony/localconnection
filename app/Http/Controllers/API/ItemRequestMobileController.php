@@ -14,6 +14,7 @@ use App\Models\PotentialVendor;
 use App\Services\WorkflowService;
 use App\Models\Delivery;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class ItemRequestMobileController extends BaseController
 {
@@ -163,7 +164,6 @@ class ItemRequestMobileController extends BaseController
             'type' => 'nullable|exists:supplier_types,id',
         ]);
 
-        // Handle vendor input
         if (!empty($request->product_supplier_id)) {
             $inputVendorIds = $request->product_supplier_id ?? [];
 
@@ -235,7 +235,6 @@ class ItemRequestMobileController extends BaseController
                 ], 404);
             }
 
-            // Generate step workflow
             $steps = WorkflowService::generateSteps($itemRequest);
 
             return response()->json([
@@ -294,10 +293,6 @@ class ItemRequestMobileController extends BaseController
                     'airwillbill_photo' => $awbPath,
                     'delivery_photo' => $deliveryPhotoPath,
                 ]);
-
-                ItemRequest::where('id', $id)->update([
-                    'status' => 'WAITING_CUSTOMER_CONFIRMATION'
-                ]);
             } else {
                 // $itemRequest->delivery->update([
                 //     'delivery_photo' => $deliveryPhotoPath,
@@ -333,5 +328,106 @@ class ItemRequestMobileController extends BaseController
             ]);
         }
     }
+
+    public function getDelivery($itemRequestId)
+    {
+        try {
+            $delivery = Delivery::where('item_request_id', $itemRequestId)
+                ->with(['sprinter:id,name,email'])
+                ->first();
+
+            if (!$delivery) {
+                return $this->sendError('Data pengiriman tidak ditemukan untuk item_request_id ini.', [
+                    'error' => 'Delivery not found'
+                ]);
+            }
+
+            $data = [
+                'id' => $delivery->id,
+                'item_request_id' => $delivery->item_request_id,
+                'shipping_method' => $delivery->shipping_method,
+                'resi_number' => $delivery->resi_number,
+                'airwillbill_photo' => $delivery->airwillbill_photo
+                    ? asset(str_replace('public/', 'storage/', $delivery->airwillbill_photo))
+                    : null,
+                'delivery_photo' => $delivery->delivery_photo
+                    ? asset(str_replace('public/', 'storage/', $delivery->delivery_photo))
+                    : null,
+                'delivered_at' => $delivery->delivered_at,
+                'sprinter' => $delivery->sprinter ? [
+                    'id' => $delivery->sprinter->id,
+                    'name' => $delivery->sprinter->name,
+                    'email' => $delivery->sprinter->email,
+                ] : null,
+            ];
+
+            return $this->sendResponse($data, 'Data pengiriman berhasil didapatkan.');
+
+        } catch (\Exception $e) {
+            \Log::error($e);
+            return $this->sendError('Gagal mengambil data pengiriman.', ['error' => $e->getMessage()]);
+        }
+    }
+
+
+    public function loadByCompany()
+    {
+        try {
+
+            $companyId = auth()->user()->company_id;
+
+            $requests = ItemRequest::with(['assignedPic', 'requester'])
+                ->where('company_id', $companyId)
+                ->where('status', '!=', 'DELIVERED')
+                ->where('status', '!=', 'CLOSED')
+                ->latest()
+                ->get();
+
+            $data = $requests->map(function ($request) {
+
+                $created = Carbon::parse($request->created_at);
+
+                $deadline = $created->copy()->setTime(16, 0, 0);
+
+                $now = now();
+                $todaySameDay = $created->isSameDay($now);
+
+                if (!$todaySameDay || $now->greaterThan($deadline)) {
+                    $countdown = '00:00:00';
+                    $expired   = true;
+                } else {
+                    $diff = $now->diff($deadline);
+                    $countdown = $diff->format('%H:%I:%S');
+                    $expired   = false;
+                }
+
+                return [
+                    'id'         => $request->id,
+                    'sprinter'   => optional($request->assignedPic)->name ?? '-',
+                    'item'       => $request->item_name,
+                    'qty'        => $request->qty,
+                    'status'     => $request->status,
+
+                    'countdown'  => $countdown,
+                    'deadline_timestamp' => $deadline->timestamp,
+
+                    'expired'    => $expired,
+                    'created_at' => $request->created_at,
+                    'status_badge' => $request->status_badge,
+                ];
+            });
+
+            return $this->sendResponse(
+                $data->toArray(),
+                'Data item request perusahaan berhasil diambil.'
+            );
+
+        } catch (\Exception $e) {
+            return $this->sendError('Gagal mengambil data item request perusahaan.', [
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
 
 }
