@@ -442,7 +442,7 @@
         </div>
 
         <!-- Form Input Harga Jual -->
-        @if(isset($laptop->is_sold) && !$laptop->is_sold)
+        @if(!isset($laptop->is_sold) && !$laptop->is_sold)
         <div class="card shadow-sm mt-4">
             <div class="card-header bg-gradient-success">
                 <h5 class="mb-0 text-white">
