@@ -55,6 +55,7 @@
     .listen('InboxReceived', (e) => {
         // Menampilkan pesan sementara
         console.log(e);
+        console.log(e.download_url);
         if (e.download_url) 
         {
             // Ada download_url = auto-download
