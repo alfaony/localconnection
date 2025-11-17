@@ -282,7 +282,7 @@
                         PENUTUP
                     </strong></p>
                     <p class="text-justify">
-                        Demikian perjanjian ini dibuat dan disepakati sesuai dengan Undang - undang Nomor 11 Tahun 2008 tentang Informasi dan Teknologi Elektronik, yang mengesahkan tanda tangan elektronik yang digunakan bersama di perjanjian ini tanpa mengurangi kekuatan hukum yang mengikat kedua belah pihak. Untuk perjanjian ini dan segala akibat hukumnya, kedua pihak menunjuk tetap dan umum di kantor Panitera Pengadilan Negeri Jakarta Barat.
+                        Demikian perjanjian ini dibuat dan disepakati sesuai dengan Undang - undang Nomor 11 Tahun 2008 tentang Informasi dan Teknologi Elektronik, yang mengesahkan tanda tangan elektronik yang digunakan bersama di perjanjian ini tanpa mengurangi kekuatan hukum yang mengikat kedua belah pihak. Untuk perjanjian ini dan segala akibat hukumnya, kedua pihak menunjuk tetap dan umum di kantor Panitera Pengadilan Negeri Jakarta Selatan.
                     </p>
                     <div class="row mt-2 mb-1 text-center">
                         <div class="col-5">
