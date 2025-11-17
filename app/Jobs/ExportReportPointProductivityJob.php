@@ -65,7 +65,7 @@ class ExportReportPointProductivityJob implements ShouldQueue
             ]);
 
             // Send notification with download link
-            $this->sendInboxNotification($downloadUrl, count($this->reports));
+            // $this->sendInboxNotification($downloadUrl, count($this->reports));
 
         } catch (\Exception $e) {
 
@@ -76,7 +76,7 @@ class ExportReportPointProductivityJob implements ShouldQueue
             ]);
 
             // Send error notification
-            $this->sendErrorNotification($e->getMessage());
+            // $this->sendErrorNotification($e->getMessage());
         }
     }
 
