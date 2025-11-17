@@ -96,13 +96,13 @@ class ExportReportPointProductivityJob implements ShouldQueue
 
             // PENTING: Pakai download_url parameter, directUrl = null
             $inboxHelper->sent(
-                userToId: $this->requestUser->id,
-                userFromId: $systemUserId->id,
-                message: $message,
-                directUrl: null,
-                isRead: false,
-                category: 'download',
-                downloadUrl: $downloadUrl
+                $this->requestUser->id,
+                $systemUserId->id,
+                $message,
+                null,
+                false,
+                'download',
+                $downloadUrl
             );
 
             Log::info('Inbox notification sent with download_url', [
@@ -132,13 +132,13 @@ class ExportReportPointProductivityJob implements ShouldQueue
             $message = "❌ Export Report Point Productivity gagal! Error: {$errorMessage}";
 
             $inboxHelper->sent(
-                userToId: $this->requestUser->id,
-                userFromId: $systemUserId->id,
-                message: $message,
-                directUrl: null,
-                isRead: false,
-                category: 'email',
-                download_url: null
+                $this->requestUser->id,
+                $systemUserId->id,
+                $message,
+                null,
+                false,
+                'email',
+                 null
             );
 
         } catch (\Exception $e) {
