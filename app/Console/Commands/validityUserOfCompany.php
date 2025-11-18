@@ -177,7 +177,16 @@ class validityUserOfCompany extends Command
             ->where('company_id', $user->company_id)
             ->where('id','!=',$user->id)
             ->first();
-
+            
+        $check = DailyTask::where('name', $naming)
+            ->where('assignment_user_id', $user->id)
+            ->whereDate('created_at', Carbon::today())
+            ->first();
+        if ($check) 
+        {
+            return;
+        }
+        
         $dailyTask = new DailyTask();
         $dailyTask->user_id = $admin ? $admin->id : $user->id;
         $dailyTask->task_status_id = $taskStatuss->id;
