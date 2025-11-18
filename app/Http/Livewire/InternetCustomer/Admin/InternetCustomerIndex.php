@@ -507,12 +507,12 @@ class InternetCustomerIndex extends Component
                 'user_finance_id' => Auth::user()->id
             ]);
 
-            $startDate = Carbon::parse($internetCustomers->start_billing_date);
-            if ($startDate->isSameMonth(now())) {
-                $date = $startDate; // tetap Carbon object
-            } else {
-                $date = now();
-            }
+             $date = $internetPurchase->period_end ? Carbon::parse($internetPurchase->period_end) : Carbon::now();
+        
+            $internetCustomers->update([
+                'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
+                'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
+            ]);
             
             $internetCustomers->update([
                 'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
@@ -545,6 +545,8 @@ class InternetCustomerIndex extends Component
             }else
             {
                 $post['status'] = ParamSchema::REACTIVATED;
+                dispatch(new ProvisionCustomerJob($internetCustomers->id));
+                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
             }
 
             GenerateInternetPurchaseCouponJob::dispatch($internetPurchase->customer->id, $internetPurchase->id, $internetPurchase->payment_months);

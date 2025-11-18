@@ -268,19 +268,24 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if(!$purchase->isConfirmed() && $customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION)
+                                                    @if(!$purchase->isConfirmed() && ($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION || $customer->status == \App\Schemas\ParamSchema::SUSPENDED ))
                                                         <button class="btn btn-sm btn-success" wire:click="showPaymentModal({{ $purchase->id }})">
                                                             <i class="fas fa-money-bill-wave mr-1"></i>Bayar Sekarang
                                                         </button>
-                                                    @elseif($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION)
+                                                    @elseif($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION && $customer->getOldestUnconfirmed()->id == $purchase->id)
                                                         <span class="badge badge-warning">
                                                             <i class="fas fa-clock mr-1"></i>
                                                             Menunggu
                                                         </span>
-                                                    @else
+                                                    @elseif(isset($purchase->user_finance_id) || isset($purchase->payment_method))
                                                         <span class="text-success">
                                                             <i class="fas fa-check-circle mr-1"></i>
                                                             {{ \Carbon\Carbon::parse($purchase->confirmation_finance_at)->format('d M Y H:i:s') }}
+                                                    @else
+                                                        <span class="badge badge-danger">
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                            Expired
+                                                        </span>
                                                     @endif
                                                 </td>
                                             </tr>

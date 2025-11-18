@@ -44,6 +44,7 @@ class RouterForm extends Component
                 // ✅ Anti-duplicate: Unique host for company (except current router when editing)
                 Rule::unique('routers', 'host')
                     ->where('company_id', Auth::user()->company_id)
+                    ->whereNull('deleted_at') // ⬅️ Abaikan soft delete
                     ->ignore($this->mikrotikId),
             ],
             'mikrotik_port' => 'required|integer|min:1|max:65535',

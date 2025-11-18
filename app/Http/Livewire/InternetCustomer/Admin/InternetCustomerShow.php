@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
 use App\Jobs\ProcessRouterMoveJob;
+use App\Jobs\GenerateIsolirJob;
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -387,8 +388,13 @@ class InternetCustomerShow extends Component
 
             if ($this->customer->userCustomer) {   
                 if($this->customer->userCustomer->start_billing_date != $this->start_billing_date && 
-                   $this->start_billing_date == Carbon::now()->format('Y-m-d')) {
+                   $this->start_billing_date == Carbon::now()->format('Y-m-d')) 
+                {
                     GenerateBillingJob::dispatch($this->customer->userCustomer);
+                }
+                if($this->end_billing_date == Carbon::now()->format('Y-m-d'))
+                {
+                    GenerateIsolirJob::dispatch($this->customer->userCustomer);
                 }
                 
                 $this->customer->userCustomer->update([
@@ -485,13 +491,8 @@ class InternetCustomerShow extends Component
                 'user_finance_id' => Auth::user()->id
             ]);
 
-            $startDate = Carbon::parse($internetCustomers->start_billing_date);
-            if ($startDate->isSameMonth(now())) {
-                $date = $startDate;
-            } else {
-                $date = now();
-            }
-            
+            $date = $internetPurchase->period_end ? Carbon::parse($internetPurchase->period_end) : Carbon::now();
+        
             $internetCustomers->update([
                 'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
                 'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
@@ -516,6 +517,8 @@ class InternetCustomerShow extends Component
                 }
             } else {
                 $post['status'] = ParamSchema::REACTIVATED;
+                dispatch(new ProvisionCustomerJob($internetCustomers->id));
+                \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
             }
             
             GenerateInternetPurchaseCouponJob::dispatch($internetPurchase->customer->id, $internetPurchase->id, $internetPurchase->payment_months);
@@ -573,7 +576,7 @@ class InternetCustomerShow extends Component
 
     public function render()
     {
-        $purchases = $this->customer->purchases()->orderby('created_at')->paginate(5);
+        $purchases = $this->customer->purchases()->orderby('created_at','desc')->paginate(5);
         $financeAccess = Access::can('as_finance', 'internet_customers');
         
         return view('livewire.internet-customer.admin.internet-customer-show', compact('purchases','financeAccess'))

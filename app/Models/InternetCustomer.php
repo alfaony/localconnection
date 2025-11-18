@@ -138,6 +138,17 @@ class InternetCustomer extends Model
 
         return null; // Tidak ada purchases
     }
+
+    public function getOldestUnconfirmed()
+    {
+        if ($this->purchases()->exists()) {
+            return $this->purchases()
+                ->orderBy('created_at', 'desc')
+                ->first();
+        }
+
+        return null; // Tidak ada purchases
+    }
     public function purchases()
     {
         return $this->hasMany(InternetCustomerPurchase::class);
