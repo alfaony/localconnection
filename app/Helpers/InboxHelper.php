@@ -28,6 +28,16 @@ class InboxHelper
             //code...
             if ($userFromId != $userToId) 
             {
+
+                Log::info('InboxHelper::sent START', [
+                'userToId' => $userToId,
+                'userFromId' => $userFromId,
+                'category' => $category,
+                'downloadUrl' => $downloadUrl,
+                'downloadUrl_type' => gettype($downloadUrl),
+                'downloadUrl_is_null' => is_null($downloadUrl),
+            ]);
+
                 // Create a new inbox entry in the database
                 $inboxMessage = Inbox::create([
                     'user_id_to' => $userToId,
@@ -40,10 +50,11 @@ class InboxHelper
                 broadcast(new InboxReceived($inboxMessage, $category, $downloadUrl))->toOthers();
                 
     
-                // Log::info('Inbox message sent', [
-                //     'user_id' => $userToId,
-                //     'inbox_id' => $inboxMessage->id
-                // ]);
+                Log::info('Inbox message sent', [
+                    'user_id' => $userToId,
+                    'inbox_id' => $inboxMessage->id,
+                    'download_url' => $downloadUrl
+                ]);
 
                 return $inboxMessage;
 
@@ -56,6 +67,7 @@ class InboxHelper
             Log::error('Failed to send inbox message', [
                 'error' => $th->getMessage()
             ]);
+            
             return throw $th;
         }
     }

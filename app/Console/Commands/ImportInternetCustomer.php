@@ -223,7 +223,8 @@ class ImportInternetCustomer extends Command
             
             // Cari kota
             $city = City::where('province_id', $province->id)
-                        ->where('name', 'like', '%' . $data['city'] . '%')
+                        // ->where('name', 'like', '%' . $data['city'] . '%')
+                        ->where('name', $data['city'])
                         ->first();
             if (!$city) {
                 DB::rollBack();
@@ -235,7 +236,8 @@ class ImportInternetCustomer extends Command
             
             // Cari kecamatan
             $district = District::where('city_id', $city->id)
-                               ->where('name', 'like', '%' . $data['district'] . '%')
+                            //    ->where('name', 'like', '%' . $data['district'] . '%')
+                                ->where('name',$data['district'])
                                ->first();
             if (!$district) {
                 DB::rollBack();
@@ -247,7 +249,8 @@ class ImportInternetCustomer extends Command
             
             // Cari kelurahan
             $subdistrict = Subdistrict::where('district_id', $district->id)
-                                     ->where('name', 'like', '%' . $data['subdistrict'] . '%')
+                                    //  ->where('name', 'like', '%' . $data['subdistrict'] . '%')
+                                    ->where('name',$data['subdistrict'])
                                      ->first();
             if (!$subdistrict) {
                 DB::rollBack();

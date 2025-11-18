@@ -148,7 +148,9 @@ class ExportUsersJob implements ShouldQueue
             $inboxHelper = new InboxHelper();
 
             // System user ID
-            $systemUserId = 1;
+            $systemUserId = User::whereHas('role', function ($query) {
+                $query->whereIn('name', [RoleSchema::SYSTEM_BOS, RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR, RoleSchema::MANAGER]);
+            })->first();
 
             // Message untuk notifikasi
             $message = "✅ Export Data User selesai! Total: {$totalUsers} user | File: {$this->fileName}";

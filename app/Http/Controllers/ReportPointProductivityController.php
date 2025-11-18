@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use App\Jobs\ExportReportPointProductivityJob;
+
 use Carbon\Carbon;
 use App\Schemas\ParamSchema;
 
@@ -34,9 +36,16 @@ class ReportPointProductivityController extends Controller
         }
 
         $query = User::query();
-        if ($request->has('user_id') && $request->input('user_id') != '') 
+        if ($request->has('user_id') && $request->input('user_id') != '' && $request->input('user_id') != "all_user_checkin") 
         {
             $query->where('id', $request->input('user_id'));
+        }
+        elseif ($request->input('user_id') === 'all_user_checkin') {
+            // Show all users who checked in
+            $query->where(function($q){
+                $q->where('wfo_check_in', true)
+                ->orWhere('is_checkin', true);
+            });
         }
 
         // Retrieve all users
@@ -85,4 +94,81 @@ class ReportPointProductivityController extends Controller
             'allUsers' => $allUsers
         ]);
     }
+
+    public function export(Request $request)
+    {
+        // Set default date range
+        $startDate = Carbon::now()->startOfMonth();
+        $endDate = Carbon::now()->endOfMonth();
+
+        // Retrieve the date range from the request if provided
+        if ($request->has('start_date')) {
+            $startDate = Carbon::parse($request->input('start_date'));
+        }
+
+        if ($request->has('end_date')) {
+            $endDate = Carbon::parse($request->input('end_date'))->endOfDay();
+        }
+
+        $query = User::query();
+        if ($request->has('user_id') && $request->input('user_id') != '' && $request->input('user_id') != "all_user_checkin") 
+        {
+            $query->where('id', $request->input('user_id'));
+        }
+        elseif ($request->input('user_id') === 'all_user_checkin') {
+            // Show all users who checked in
+            $query->where(function($q){
+                $q->where('wfo_check_in', true)
+                ->orWhere('is_checkin', true);
+            });
+        }
+
+        // Retrieve all users (tanpa pagination untuk export)
+        $users = $query->byCompany(Auth::user()->company_id)->get();
+
+        // Map the user data
+        $reports = $users->map(function ($user) use ($startDate, $endDate) {
+            $trainingPoints = Training::where('user_id', $user->id)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('point');
+
+            $ipRightPoints = IpRight::where('user_id', $user->id)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('point');
+
+            $salesAchievementPoints = SalesAchievement::where('user_id', $user->id)
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->sum('points');
+
+            $dailyTaskPoints = DailyTask::where('assignment_user_id', $user->id)
+                ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                    $query
+                        ->whereBetween('date', [$startDate, $endDate])
+                        ->whereHas('taskStatus', function ($q) {
+                            $q->where('name', ParamSchema::COMPLATE);
+                        });
+                })
+                ->sum('point');
+
+            return [
+                'name' => $user->name,
+                'training_points' => $trainingPoints,
+                'ip_right_points' => $ipRightPoints,
+                'sales_achievement_points' => $salesAchievementPoints,
+                'daily_task_point' => $dailyTaskPoints,
+                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints,
+            ];
+        });
+
+        // Dispatch job
+        ExportReportPointProductivityJob::dispatch(
+            $reports->toArray(),
+            $startDate,
+            $endDate,
+            Auth::user()
+        );
+
+        return redirect()->back()->with('success', 'Export sedang diproses. Anda akan menerima notifikasi setelah selesai.');
+    }
+
 }

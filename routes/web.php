@@ -381,6 +381,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('sales_achievement/addpoint/{slug}', [SalesAchievementController::class, 'addpoint'])->name('sales_achievement.addPoint');
   
   Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
+  Route::get('report-productivity/export', [ReportPointProductivityController::class, 'export'])->name('report-productivity.export');
 
   Route::get('/dailytask/export', [DailyTaskController::class, 'export'])->name('dailytask.export');
   Route::get('dailytask/template', [DailyTaskController::class, 'template'])->name('dailytask.template');
