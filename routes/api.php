@@ -121,7 +121,8 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
 Route::group(['middleware' => ['auth:api']], function() 
 {
-    Route::post('broadcast/auth', [BroadcastAuthMobileController::class, 'broadcastingAuthorize'])
-        ->name('broadcast.auth.api');
+    Route::post('/flutter/broadcast/auth', function (Request $request) {
+        return Broadcast::auth($request);
+    });
     Route::post('logout', [LoginController::class, 'logout']);
 });
