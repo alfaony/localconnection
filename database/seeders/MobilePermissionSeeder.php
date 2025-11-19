@@ -76,7 +76,8 @@ class MobilePermissionSeeder extends Seeder
             
             ['table' => 'item_purchases', 'method' => 'getPayment', 'name' => 'Get Payment detail (Mobile)', 'guard_name' => 'api'],
 
-
+            ['table' => 'item_purchases', 'method' => 'closed', 'name' => 'Close item request (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'item_purchases', 'method' => 'complete', 'name' => 'Complete item request (Mobile)', 'guard_name' => 'api'],
 
 
         ];

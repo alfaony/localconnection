@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\API;
 
+
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use App\Events\ChatMessageSent;
+use App\Jobs\SentMessageToVendor;
 
 use App\Models\ItemRequest;
 use App\Models\SupplierCategory;
@@ -15,6 +19,9 @@ use App\Services\WorkflowService;
 use App\Models\Delivery;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Helpers\InboxHelper;
+use App\Services\Weblas\Message;
+
 
 class ItemRequestMobileController extends BaseController
 {
@@ -293,6 +300,9 @@ class ItemRequestMobileController extends BaseController
                     'airwillbill_photo' => $awbPath,
                     'delivery_photo' => $deliveryPhotoPath,
                 ]);
+                $message = "Air Way Bill (Resi) Sudah Terbit Untuk Request #{$itemRequest->item_name} #id {$itemRequest->id}";
+                $directUrl = route('item-request.show', $itemRequest->id);
+                $this->sentInbox($itemRequest->user_id,$message, $directUrl, $itemRequest->id);
             } else {
                 // $itemRequest->delivery->update([
                 //     'delivery_photo' => $deliveryPhotoPath,
@@ -427,6 +437,29 @@ class ItemRequestMobileController extends BaseController
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    private function sentInbox($to,$message,$directUrl, $itemRequest = null)
+    {
+        if($itemRequest)
+        {
+            broadcast(new ChatMessageSent(
+                "",
+                $message,
+                now(),
+                $itemRequest,
+                Auth::user()->id
+            ))->toOthers();
+        }
+
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $to, 
+            Auth::user()->id, 
+            $message, 
+            $directUrl
+        );
+        return;
     }
 
 

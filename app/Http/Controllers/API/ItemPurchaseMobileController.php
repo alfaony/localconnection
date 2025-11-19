@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Events\ChatMessageSent;
+use App\Jobs\SentMessageToVendor;
 
 use App\Models\ItemPurchase;
 use App\Models\ItemRequest;
@@ -14,6 +16,8 @@ use App\Models\ProductSupplier;
 use App\Jobs\ItemRequestClose;
 use App\Models\Payment;
 use App\Models\PotentialVendor;
+use App\Helpers\InboxHelper;
+use App\Services\Weblas\Message;
 
 class ItemPurchaseMobileController extends BaseController
 {
@@ -189,6 +193,9 @@ class ItemPurchaseMobileController extends BaseController
             if ($itemPurchase->itemRequest->is_complete_payment) {
                 ItemRequest::where('id', $itemPurchase->item_request_id)
                     ->update(['status' => 'WAITING_DELIVERY_CONFIRMATION']);
+                $message = "Request Penerbitan Air Way Bill (Resi) pada request #{$itemPurchase->itemRequest->item_name} #id {$itemPurchase->itemRequest->id}";
+                $directUrl = route('item-request.show', $itemPurchase->itemRequest->id);
+                $this->sentInbox($itemPurchase->itemRequest->user_id,$message, $directUrl, $itemPurchase->itemRequest->id);
             }
 
             DB::commit();
@@ -256,5 +263,81 @@ class ItemPurchaseMobileController extends BaseController
         }
     }
 
+
+    public function closed(Request $request, $id)
+    {
+        try {
+            $itemRequest = ItemRequest::findOrFail($id);
+
+            if (!$itemRequest->is_open) {
+                return response()->json(['message' => 'Permintaan sudah ditutup'], 400);
+            }
+
+            $itemRequest->is_open = false;
+            $itemRequest->status = 'CLOSED';
+            $itemRequest->close_reason = $request->close_reason;
+            $itemRequest->save();
+
+            // Send inbox
+            $message = "Permintaan #{$itemRequest->item_name} #id {$itemRequest->id} telah ditutup. Silakan cek detailnya";
+            $directUrl = route('item-request.show', $itemRequest->id);
+
+            // method dari BaseController
+            $this->sentInbox(
+                $itemRequest->user_id,
+                $message,
+                $directUrl,
+                $itemRequest->id
+            );
+
+            return response()->json(['message' => 'Permintaan ditutup']);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['message' => 'Terjadi kesalahan'], 500);
+        }
+    }
+
+    public function complete($id)
+    {
+        try {
+            $itemRequest = ItemRequest::findOrFail($id);
+
+            // update status
+            $itemRequest->is_open = 0;
+            // $itemRequest->status = 'COMPLETED';
+            $itemRequest->save();
+
+            // dispatch job
+            dispatch(new ItemRequestClose($itemRequest, Auth::user()->id));
+
+            return response()->json(['message' => 'Permintaan diselesaikan']);
+        } catch (\Throwable $th) {
+            Log::error($th);
+            return response()->json(['message' => 'Terjadi kesalahan'], 500);
+        }
+    }
+
+    private function sentInbox($to,$message,$directUrl, $itemRequest = null)
+    {
+        if($itemRequest)
+        {
+            broadcast(new ChatMessageSent(
+                "",
+                $message,
+                now(),
+                $itemRequest,
+                Auth::user()->id
+            ))->toOthers();
+        }
+
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent(
+            $to, 
+            Auth::user()->id, 
+            $message, 
+            $directUrl
+        );
+        return;
+    }
 
 }

@@ -17,6 +17,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\API\DailyTaskMobileController;
 use App\Http\Controllers\API\ItemRequestMobileController;
 use App\Http\Controllers\API\ItemPurchaseMobileController;
+use App\Http\Controllers\API\BroadcastAuthMobileController;
+
 
 
 /*
@@ -108,6 +110,10 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::post('item-purchases/{id}/payment', [ItemPurchaseMobileController::class,'payment']);
     Route::get('item-purchases/{item_request_id}/get-payment', [ItemPurchaseMobileController::class, 'getPayment'])
         ->name('item-purchases.getPayment');
+        
+    Route::post('item-purchases/{id}/closed', [ItemPurchaseMobileController::class, 'closed']);
+    Route::post('item-purchases/{id}/complete', [ItemPurchaseMobileController::class, 'complete']);
+
     Route::resource('item-purchases', ItemPurchaseMobileController::class)
     ->only(['store', 'update']);
 
@@ -115,5 +121,7 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
 
 Route::group(['middleware' => ['auth:api']], function() 
 {
+    Route::post('broadcast/auth', [BroadcastAuthMobileController::class, 'broadcastingAuthorize'])
+        ->name('broadcast.auth.api');
     Route::post('logout', [LoginController::class, 'logout']);
 });
