@@ -12,6 +12,7 @@ use App\Models\InternetCustomer;
 use App\Models\Customer;
 use App\Models\User;
 use App\Models\ApiLog;
+use App\Helpers\InboxHelper;
 
 use App\Jobs\GenerateInternetPurchaseCouponJob;
 use App\Schemas\RoleSchema;
@@ -96,9 +97,11 @@ class XenditController extends Controller
                     GenerateInternetPurchaseCouponJob::dispatch($internetCustomer->id, $purchase->id, $purchase->payment_months);
 
                     // Provision customer if suspended
-                    if ($internetCustomer->status == ParamSchema::SUSPENDED) {
-                        dispatch(new ProvisionCustomerJob($internetCustomer->id));
-                    }
+                    // if ($internetCustomer->status == ParamSchema::SUSPENDED) {
+                    //     dispatch(new ProvisionCustomerJob($internetCustomer->id));
+                    // }
+
+                    $this->afterPayment($purchase, $internetCustomer);
 
                     Log::info('Payment confirmed for purchase', [
                         'company_id' => $internetCustomer->company_id,
@@ -217,14 +220,16 @@ class XenditController extends Controller
                     GenerateInternetPurchaseCouponJob::dispatch($internetCustomer->id, $purchase->id, $purchase->payment_months);
 
                     // Provision customer if suspended
-                    if ($internetCustomer->status == ParamSchema::SUSPENDED) {
-                        dispatch(new ProvisionCustomerJob($internetCustomer->id));
-                    }
+                    // if ($internetCustomer->status == ParamSchema::SUSPENDED) {
+                    //     dispatch(new ProvisionCustomerJob($internetCustomer->id));
+                    // }
 
                     Log::info('Payment confirmed for purchase', [
                         'company_id' => $internetCustomer->company_id,
                         'purchase_id' => $purchase->id
-                    ]);
+                    ]); 
+
+                    $this->afterPayment($purchase, $internetCustomer);
 
                     $urlResutl = route('internet-customer.customer.show', [
                         'code' => $internetCustomer->code,
@@ -348,5 +353,46 @@ class XenditController extends Controller
             'response_payload' => json_encode($response),
             'status_code' => 200,
         ]);
+    }
+
+    public function afterPayment($internetPurchase, $internetCustomers)
+    {
+        if(!$internetCustomers->installation)
+        {
+            $post['status'] = ParamSchema::PROCESS_INSTALLATION;
+            
+            $userTechnical = optional($internetPurchase->customer->subdistrict?->coverageService?->coverageServiceOds)
+            ->pluck('ods.user_assign_id')
+            ->unique()
+            ->all();
+    
+            if(count($userTechnical) > 0)
+            {
+                $message = "Pembayaran Langganan Internet Untuk Kode ".$internetPurchase->customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
+                $directUrl = route('internet-customer.show',$internetPurchase->customer->id);
+                $from = User::whereHas('role', function ($query) {
+                    $query->whereIn('name', [RoleSchema::SYSTEM_BOS,RoleSchema::ROOT,RoleSchema::FINANCE]);
+                })->first();
+
+                foreach($userTechnical as $tech)
+                {
+                    $this->sentInbox($tech,$from->id,$message, $directUrl);
+                }
+            }
+        }else
+        {
+            $post['status'] = ParamSchema::REACTIVATED;
+            dispatch(new ProvisionCustomerJob($internetCustomers->id));
+            \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetCustomers->id]);
+        }
+
+        $internetPurchase->customer->update($post);
+    }
+
+    private function sentInbox($to,$from, $message,$directUrl)
+    {
+        $inboxHelper = new InboxHelper();
+        $inboxHelper->sent($to, $from, $message, $directUrl);
+        return true;
     }
 }

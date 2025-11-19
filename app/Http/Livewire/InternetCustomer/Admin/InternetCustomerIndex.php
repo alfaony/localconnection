@@ -513,11 +513,6 @@ class InternetCustomerIndex extends Component
                 'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
                 'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
             ]);
-            
-            $internetCustomers->update([
-                'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
-                'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
-            ]);
 
             $post =[
                 'is_paid' => true,

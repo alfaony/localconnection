@@ -268,7 +268,7 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if(!$purchase->isConfirmed() && ($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION || $customer->status == \App\Schemas\ParamSchema::SUSPENDED ))
+                                                    @if(!$purchase->isConfirmed() && ($customer->status == \App\Schemas\ParamSchema::WAITING_PAYMENT_SUBSCRIPTION || $customer->status == \App\Schemas\ParamSchema::SUSPENDED ) && $customer->getOldestUnconfirmed()->id == $purchase->id)
                                                         <button class="btn btn-sm btn-success" wire:click="showPaymentModal({{ $purchase->id }})">
                                                             <i class="fas fa-money-bill-wave mr-1"></i>Bayar Sekarang
                                                         </button>
