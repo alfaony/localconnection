@@ -101,7 +101,7 @@ class XenditController extends Controller
                     //     dispatch(new ProvisionCustomerJob($internetCustomer->id));
                     // }
 
-                    $this->afterPayment($purchase, $internetCustomer);
+                    // $this->afterPayment($purchase, $internetCustomer);
 
                     Log::info('Payment confirmed for purchase', [
                         'company_id' => $internetCustomer->company_id,
@@ -229,11 +229,12 @@ class XenditController extends Controller
                         'purchase_id' => $purchase->id
                     ]); 
 
-                    $this->afterPayment($purchase, $internetCustomer);
+                    // $this->afterPayment($purchase, $internetCustomer);
 
                     $urlResutl = route('internet-customer.customer.show', [
                         'code' => $internetCustomer->code,
-                        'status' => 'success'
+                        'status' => 'success',
+                        'purchase' => $purchase->id
                     ]);
 
                     break;

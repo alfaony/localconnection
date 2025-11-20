@@ -80,16 +80,18 @@ class InternetCustomerShow extends Component
         }
 
         $status = request()->query('status'); // ambil dari query string
+        $purchase = request()->query('purchase'); // ambil dari query string
+
         $progressStatus = $this->customer->status;
 
         if ($status === 'success' 
         && $progressStatus == ParamSchema::WAITING_PAYMENT_SUBSCRIPTION
         ) {
-            
-            $this->customer->status = $this->customer->installation ? ParamSchema::REACTIVATED : ParamSchema::PROCESS_INSTALLATION;
-
-            $this->customer->save();
-
+            $internetCustomerPurchase = InternetCustomerPurchase::where('id', $purchase)->first();
+            if($internetCustomerPurchase) 
+            {
+                $this->afterPayment($internetCustomerPurchase);
+            }
             $this->statusMessage = [
                 'type' => 'success',
                 'text' => '🎉 Pembayaran berhasil! Terima kasih sudah menggunakan layanan kami.'
@@ -458,5 +460,39 @@ class InternetCustomerShow extends Component
         $inboxHelper = new InboxHelper();
         $inboxHelper->sent($to, $from, $message, $directUrl);
         return true;
+    }
+
+    protected function afterPayment($internetPurchase)
+    {
+        if(!$internetPurchase->customer->installation)
+        {
+            $post['status'] = ParamSchema::PROCESS_INSTALLATION;
+            
+            $userTechnical = optional($internetPurchase->customer->subdistrict?->coverageService?->coverageServiceOds)
+            ->pluck('ods.user_assign_id')
+            ->unique()
+            ->all();
+    
+            if(count($userTechnical) > 0)
+            {
+                $message = "Pembayaran Langganan Internet Untuk Kode ".$internetPurchase->customer->code." Telah di Setujui Oleh Finance Silahkan segera lakukan Pemasangan";
+                $directUrl = route('internet-customer.show',$internetPurchase->customer->id);
+                $from = User::whereHas('role', function ($query) {
+                    $query->whereIn('name', [RoleSchema::SYSTEM_BOS,RoleSchema::ROOT,RoleSchema::FINANCE]);
+                })->first();
+
+                foreach($userTechnical as $tech)
+                {
+                    $this->sentInbox($tech,$from->id,$message, $directUrl);
+                }
+            }
+        }else
+        {
+            $post['status'] = ParamSchema::REACTIVATED;
+            dispatch(new ProvisionCustomerJob($internetPurchase->customer->id));
+            \App\Jobs\SyncInstalledCustomersJob::dispatch([$internetPurchase->customer->id]);
+        }
+
+        $internetPurchase->customer->update($post);
     }
 }
