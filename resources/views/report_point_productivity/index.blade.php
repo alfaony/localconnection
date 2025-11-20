@@ -1,4 +1,3 @@
-
 @extends('adminlte::page')
 
 @section('content_header')
@@ -9,6 +8,16 @@
 
     <div class="container">
         <h2 class="mb-4">Report Point Productivity</h2>
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
         <div class="card mb-4">
             <div class="card-body">
                 <form method="GET" action="{{ route('report-productivity.index') }}">
@@ -25,13 +34,19 @@
                             <label for="user_id">User:</label>
                             <select name="user_id" id="user_id" class="form-control select2">
                                 <option value="">All Users</option>
+                                <option value="all_user_checkin">All User Checkin</option>
                                 @foreach ($allUsers as $user)
                                     <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary" onclick="showLoading()">Filter</button>
+                    <button type="submit" class="btn btn-primary" onclick="showLoading()">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="exportData()">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </button>
                 </form>
             </div>
         </div>
@@ -80,44 +95,60 @@
         @endif
     </div>
 @stop
+
 @section('js')
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
-     $('.select2').select2({
-            width: '100%',
-            // placeholder: 'Pilih Quote'
-        });
-</script>
-<script>
+    $('.select2').select2({
+        width: '100%',
+    });
+
     function showLoading() {
         document.getElementById('loading').style.display = 'block';
     }
+
+    function exportData() {
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        const userId = document.getElementById('user_id').value;
+        
+        let url = "{{ route('report-productivity.export') }}?start_date=" + startDate + "&end_date=" + endDate;
+        
+        if (userId) {
+            url += "&user_id=" + userId;
+        }
+        
+        showLoading();
+        window.location.href = url;
+        
+        setTimeout(() => {
+            document.getElementById('loading').style.display = 'none';
+        }, 2000);
+    }
 </script>
 @stop
+
 @section('css')
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-    <style>
-        .loading {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 9999;
-        }
-        .select2-selection__rendered 
-        {
-            line-height: 31px !important;
-        }
-        .select2-container .select2-selection--single 
-        {
-            height: 35px !important;
-        }
-        .select2-selection__arrow {
-            height: 34px !important;
-        }
-    </style>
+<style>
+    .loading {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+    }
+    .select2-selection__rendered {
+        line-height: 31px !important;
+    }
+    .select2-container .select2-selection--single {
+        height: 35px !important;
+    }
+    .select2-selection__arrow {
+        height: 34px !important;
+    }
+</style>
 @stop
-
