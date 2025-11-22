@@ -34,7 +34,7 @@ class AssignCustomerCodes extends Command
                 $prefix = $cust->province?->initial ?? 'XXX';
 
                 // Assign sequential codes
-                if(!$cust->code) 
+                if(!$cust->code_cust) 
                 {
                     $cust->code_cust = $counter;
                 }else
