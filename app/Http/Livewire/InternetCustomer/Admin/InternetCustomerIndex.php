@@ -13,6 +13,9 @@ use App\Models\InternetCustomerInstallation;
 use App\Models\InternetCustomerPurchase;
 use App\Models\JobsProvisioning;
 use App\Models\Router;
+use App\Models\CoverageService;
+use App\Models\OpticalDistribution;
+use App\Models\CoverageServiceDistribution;
 
 use App\Jobs\ProvisionCustomerJob;
 use App\Jobs\GenerateInternetPurchaseCouponJob;
@@ -30,7 +33,6 @@ use App\Helpers\Access;
 use App\Schemas\ParamSchema;
 
 use Carbon\Carbon;
-
 class InternetCustomerIndex extends Component
 {
     use WithPagination;
@@ -40,6 +42,10 @@ class InternetCustomerIndex extends Component
     public ?string $override_pool_id = null;
     public array $availablePools = [];
     
+    // BARU: Properties untuk ODP dan Grouping
+    public ?string $optical_distribution_id = null;
+    public ?string $grouping_id = null;
+    public array $availableOdps = [];
 
     public $search = '';
     public $perPage = 10;
@@ -67,9 +73,8 @@ class InternetCustomerIndex extends Component
     public $currentInstallationCustomer;
     public $isSubmitting = false;
 
-    public $plain_password = null; // di-bind dari modal/input ketika activate
+    public $plain_password = null;
 
-    // ✅ Validation for new router configuration
     public $newUsernameChecked = false;
     public $newUsernameAvailable = false;
     public $newUsernameExistingCustomer = [];
@@ -77,7 +82,7 @@ class InternetCustomerIndex extends Component
     public $canApprove;
     public $canTechnical;
 
-     protected $queryString = [
+    protected $queryString = [
         'search' => ['except' => ''],
         'perPage',
         'sortField',
@@ -90,6 +95,7 @@ class InternetCustomerIndex extends Component
     ];
 
     // Method untuk membuka modal
+    // BARU: Method untuk load ODP berdasarkan customer
     public function openInstallationModal(string $customerId)
     {
         $cust = InternetCustomer::with([
@@ -100,7 +106,6 @@ class InternetCustomerIndex extends Component
         $this->currentInstallationId = $cust->id;
 
         // === FILTER ROUTER ===
-        // 1) Ambil router yang terkait cakupan pelanggan (OD -> POP -> Routers)
         $routerIds = collect(
             $cust->subdistrict?->coverageService?->coverageServiceOds ?? []
         )
@@ -113,90 +118,64 @@ class InternetCustomerIndex extends Component
 
         if ($routerIds->isEmpty()) 
         {
-            // fallback: semua router aktif yang punya PPPoE server
             $routers = Router::query()
-                // ->where('active','UP')
                 ->whereHas('pppoeServers')
                 ->orderBy('name')
                 ->get(['id','name','active_status']);
         }else
         {
-            // 2) Query router aktif + (opsional) punya PPPoE server & pool
             $routers = Router::query()
             ->whereIn('id', $routerIds)
-            // ->where('active', 'UP')
             ->whereHas('pppoeServers', fn($q) => $q->whereNotNull('address_pool_id'))
-            ->whereHas('addressPools') // jika pakai address_pools.router_id
+            ->whereHas('addressPools')
             ->withCount(['pppoeServers' => fn($q) => $q->whereNotNull('address_pool_id')])
             ->orderBy('name')
             ->get(['id','name','active_status']);
         }
 
+        // BARU: Load ODP dari CoverageService
+        $this->loadOdpsForCustomer($cust);
         
-        // 3) Siapkan data untuk modal
         $payload = [
             'customerName'  => $cust->name,
             'customerCode'  => $cust->code,
-            'serialNumber'  => '',                  // kalau ada default isikan di sini
+            'serialNumber'  => '',
             'routers'       => $routers->map(fn($r) => [
                 'id'   => $r->id,
                 'disabled' => $r->is_online ? false : true,
                 'name' => $r->name . ' (PPPoE: '.$r->pppoe_servers_count.')',
             ])->values(),
+            'odps' => $this->availableOdps, // BARU
         ];
 
-        // kirim ke JS (Blade kamu sudah listen event ini)
         $this->dispatchBrowserEvent('open-installation-modal', $payload);
     }
 
-    // Method untuk validasi dan submit
-    // public function completeInstallation($serialNumber, $photos, $notes, $routerId, $username, $password, $override_pool_id, $local_address)
-    // {
-        // Validator::make([
-        //     'currentInstallationId' => $this->currentInstallationId,
-        //     'serialNumber' => $serialNumber,
-        //     'photos' => $photos,
-        //     'routerId' => $routerId,
-        //     'username' => $username,
-        //     'password' => $password,
-        //     'override_pool_id' => $override_pool_id,
-        //     'local_address' => $local_address
-        // ], [
-        //     'override_pool_id' => 'nullable|exists:address_pools,id',
-        //     'currentInstallationId' => 'required|exists:internet_customers,id',
-        //     'photos' => 'required|array|min:1',
-        //     'photos.*' => 'required|string',
-        //     'routerId' => 'required|exists:routers,id',
-        //     'username' => 'required',
-        //     'password' => 'required',
-        //     'local_address' => 'nullable|ip',
-        // ])->validate();
+    protected function loadOdpsForCustomer($customer)
+    {
+        // Ambil coverage service dari subdistrict customer
+        $coverageService = $customer->subdistrict?->coverageService;
+        
+        if (!$coverageService) {
+            $this->availableOdps = [];
+            return;
+        }
 
-        // if (!$customer) {
-        //     $this->dispatchBrowserEvent('show-notification', [
-        //         'type' => 'error',
-        //         'message' => 'Customer tidak ditemukan'
-        //     ]);
-        //     return;
-        // }
-        
-        // // Reset photos array
-        // $this->photos = [];
-        
-        // $this->currentInstallationId = $customer->id;
-        // $this->currentInstallationName = $customer->name;
-        // $this->currentInstallationCode = $customer->code;
-        // $this->deviceSerialNumber = $customer->device_serial_number ?? '';
-        // $this->installationNotes = '';
-        
-    //     $this->dispatchBrowserEvent('open-installation-modal', [
-    //         'customerName' => $customer->name,
-    //         'customerCode' => $customer->code,
-    //         'serialNumber' => $customer->device_serial_number ?? ''
-    //     ]);
-        
-    //     $this->installationModal = true;
-    // }
+        // Ambil semua ODP yang terkait dengan coverage service ini
+        $this->availableOdps = CoverageServiceDistribution::query()
+            ->where('coverage_service_id', $coverageService->id)
+            ->with('ods:id,name') // eager load optical distribution
+            ->get()
+            ->pluck('ods')
+            ->filter() // remove null values
+            ->map(fn($odp) => [
+                'id' => $odp->id,
+                'label' => "{$odp->name}"
+            ])
+            ->unique('id')
+            ->values()
+            ->toArray();
+    }
 
     // Method untuk validasi dan submit
     public function updatedUsername($value)
@@ -212,8 +191,17 @@ class InternetCustomerIndex extends Component
         $this->checkNewUsernameAvailability($value);
     }
 
-    public function completeInstallation($serialNumber, $notes, $routerId, $username, $password, $override_pool_id, $local_address)
-    {
+    public function completeInstallation(
+        $serialNumber, 
+        $notes, 
+        $routerId, 
+        $username, 
+        $password, 
+        $override_pool_id, 
+        $local_address,
+        $optical_distribution_id = null,  // BARU
+        $grouping_id = null                // BARU
+        ) {
         // Update properties dari parameter
         $this->deviceSerialNumber = $serialNumber;
         $this->installationNotes = $notes;
@@ -222,14 +210,16 @@ class InternetCustomerIndex extends Component
         $this->password = $password;
         $this->override_pool_id = $override_pool_id;
         $this->local_address = $local_address;
+        $this->optical_distribution_id = $optical_distribution_id;  // BARU
+        $this->grouping_id = $grouping_id;                          // BARU
         
-        // DEBUG: Log photos property
         Log::info('completeInstallation called', [
             'serialNumber' => $serialNumber,
             'notes' => $notes,
             'photos_count' => count($this->photos),
-            'photos_raw' => $this->photos,
-            'currentInstallationId' => $this->currentInstallationId
+            'currentInstallationId' => $this->currentInstallationId,
+            'optical_distribution_id' => $optical_distribution_id,  // BARU
+            'grouping_id' => $grouping_id,                          // BARU
         ]);
         
         // Cek apakah photos sudah ada
@@ -242,15 +232,9 @@ class InternetCustomerIndex extends Component
             return false;
         }
         
-        // Filter hanya yang ada nilai (bukan null)
         $validPhotos = array_filter($this->photos, function($photo) {
             return $photo !== null;
         });
-        
-        Log::info('Valid photos after filter', [
-            'count' => count($validPhotos),
-            'photos' => $validPhotos
-        ]);
         
         if (empty($validPhotos)) {
             $this->dispatchBrowserEvent('show-notification', [
@@ -260,20 +244,24 @@ class InternetCustomerIndex extends Component
             return false;
         }
         
-        // Validasi basic (tanpa validasi file dulu, karena masih string temporary)
-       $validated = $this->validate([
+        // UPDATED: Validasi dengan field baru
+        $validated = $this->validate([
             'currentInstallationId' => 'required|exists:internet_customers,id',
             'deviceSerialNumber' => 'required|string|max:255',
             'router_id' => 'required|exists:routers,id',
             'username' => 'required|unique:internet_customers,username',
             'password' => 'required',
-            'local_address' => 'nullable|ip|unique:internet_customers,local_address', // <— unique + IP format
+            'local_address' => 'nullable|ip|unique:internet_customers,local_address',
+            'optical_distribution_id' => 'required|exists:optical_distributions,id',  // BARU: Wajib
+            'grouping_id' => 'nullable|string|max:255',                                // BARU: Opsional
         ], [
             'deviceSerialNumber.required' => 'Serial Number wajib diisi',
             'currentInstallationId.required' => 'Customer ID tidak valid',
             'currentInstallationId.exists' => 'Customer tidak ditemukan',
             'username.unique' => 'Username PPPoE sudah digunakan',
             'local_address.unique' => 'Alamat IP lokal sudah terdaftar',
+            'optical_distribution_id.required' => 'ODP wajib dipilih',           // BARU
+            'optical_distribution_id.exists' => 'ODP tidak valid',               // BARU
         ]);
 
         DB::beginTransaction();
@@ -283,46 +271,43 @@ class InternetCustomerIndex extends Component
             
             Log::info('Customer found', ['id' => $customer->id, 'code' => $customer->code]);
             
-            // 2. Update status customer
+            // 2. UPDATED: Update customer dengan field baru
             $customer->update([
                 'status' => ParamSchema::INSTALLED,
                 'local_address' => $local_address,
                 'router_id' => $routerId,
                 'username' => $username,
                 'pass_hash' => $password,
-                'override_pool_id'  => $override_pool_id ?: null,
+                'override_pool_id' => $override_pool_id ?: null,
             ]);
             
             dispatch(new \App\Jobs\ProvisionCustomerJob($customer->id));
 
-            // 3. Buat record installation
+            // 3. UPDATED: Buat record installation dengan field baru
             $customerInstallation = InternetCustomerInstallation::create([
                 'internet_customer_id' => $customer->id,
                 'device_serial_number' => $serialNumber,
                 'notes' => $notes,
                 'installed_at' => now(),
                 'technical_user_id' => Auth::id(),
+                'optical_distribution_id' => $optical_distribution_id,  // BARU
+                'grouping_id' => $grouping_id,                          // BARU
             ]);
 
             $this->activate($customer->id, $password);
             
-            Log::info('Installation record created', ['id' => $customerInstallation->id]);
+            Log::info('Installation record created', [
+                'id' => $customerInstallation->id,
+                'odp_id' => $optical_distribution_id,
+                'grouping' => $grouping_id
+            ]);
 
-            // 4. Upload foto dari Livewire temporary ke S3 dan simpan ke database
+            // 4. Upload foto (sama seperti sebelumnya)
             $photoCount = 0;
             
             foreach ($validPhotos as $index => $photo) {
-                Log::info('Processing photo', [
-                    'index' => $index,
-                    'photo_value' => $photo,
-                    'photo_type' => gettype($photo),
-                ]);
-                
                 try {
-                    // Jika masih berupa string (temporary filename dari Livewire)
-                    // Kita perlu mengambil UploadedFile dari Livewire
                     if (is_string($photo)) {
-                        // Livewire menyimpan temporary file di storage/app/livewire-tmp
                         $tmpPath = storage_path('app/livewire-tmp/' . $photo);
                         
                         if (!file_exists($tmpPath)) {
@@ -330,46 +315,27 @@ class InternetCustomerIndex extends Component
                             continue;
                         }
                         
-                        // Baca file content
                         $fileContent = file_get_contents($tmpPath);
-                        
-                        // Extract extension dari filename
                         $extension = pathinfo($photo, PATHINFO_EXTENSION);
                         if (empty($extension)) {
-                            $extension = 'png'; // default
+                            $extension = 'png';
                         }
                         
-                        // Generate unique filename untuk S3
                         $filename = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
                         $s3Path = 'installation-photos/' . $customer->code . '/' . $filename;
                         
-                        Log::info('Uploading to S3', [
-                            'from' => $tmpPath,
-                            'to' => $s3Path
-                        ]);
-                        
-                        // Upload ke S3
                         Storage::disk('s3')->put($s3Path, $fileContent, 'public');
                         
-                        Log::info('Photo uploaded to S3', ['path' => $s3Path]);
-                        
-                        // Simpan record foto ke database
                         $photoRecord = InternetInstallationPhoto::create([
                             'internet_installation_id' => $customerInstallation->id,
                             'photo' => $s3Path,
                             'caption' => 'Installation Photo ' . ($photoCount + 1),
                         ]);
                         
-                        Log::info('Photo record created', ['id' => $photoRecord->id]);
-                        
-                        // Hapus temporary file
                         @unlink($tmpPath);
-                        
                         $photoCount++;
                         
-                    } 
-                    // Jika sudah UploadedFile object
-                    elseif ($photo instanceof \Illuminate\Http\UploadedFile) {
+                    } elseif ($photo instanceof \Illuminate\Http\UploadedFile) {
                         $extension = $photo->getClientOriginalExtension();
                         $filename = uniqid() . '_' . time() . '_' . $index . '.' . $extension;
                         
@@ -390,18 +356,16 @@ class InternetCustomerIndex extends Component
                         $photoCount++;
                     }
                     
-                    \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
+                    \App\Jobs\SyncInstalledCustomersJob::dispatch([$customer->id]);
                 } catch (\Exception $photoError) {
                     Log::error('Failed to process photo', [
                         'index' => $index,
                         'error' => $photoError->getMessage(),
-                        'trace' => $photoError->getTraceAsString()
                     ]);
                     continue;
                 }
             }
 
-            // Validasi minimal ada 1 foto yang berhasil diupload
             if ($photoCount === 0) {
                 throw new \Exception('Tidak ada foto yang berhasil diupload. Silakan coba lagi.');
             }
@@ -410,10 +374,12 @@ class InternetCustomerIndex extends Component
             
             Log::info('Installation completed successfully', [
                 'customer_id' => $customer->id,
-                'photos_uploaded' => $photoCount
+                'photos_uploaded' => $photoCount,
+                'odp_id' => $optical_distribution_id,
+                'grouping' => $grouping_id
             ]);
 
-            // Reset form dan properties
+            // Reset form
             $this->reset([
                 'installationModal',
                 'currentInstallationId',
@@ -421,10 +387,11 @@ class InternetCustomerIndex extends Component
                 'currentInstallationCode',
                 'deviceSerialNumber',
                 'installationNotes',
-                'photos'
+                'photos',
+                'optical_distribution_id',  // BARU
+                'grouping_id',              // BARU
             ]);
 
-            // Kirim notifikasi success
             $this->dispatchBrowserEvent('show-notification', [
                 'type' => 'success',
                 'message' => "Instalasi berhasil disimpan dengan {$photoCount} foto"
@@ -646,6 +613,7 @@ class InternetCustomerIndex extends Component
             'internetCustomers' => $internetCustomers,
             'packages'          => $packages,
             'routers'           => $this->routers,
+            
         ])->extends('adminlte::page');
     }
 

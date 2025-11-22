@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Schemas\RoleSchema;
 use App\Services\RouterOSService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
+use App\Models\Province;
 
 class InternetCustomer extends Model
 {
@@ -25,7 +27,58 @@ class InternetCustomer extends Model
         // Saat membuat model baru, tetapkan UUID
         static::creating(function ($model) {
             $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
+
+            DB::transaction(function () use ($model) {
+                $customer = $model;
+                // OPTIONAL: Lock table for extra safety
+                // DB::statement('LOCK TABLE internet_customers WRITE');
+
+                // ===== SAFE AUTO-INCREMENT =====
+                do {
+                    $nextNumber = InternetCustomer::max('code_cust') + 1;
+
+                    $duplicateNumber = InternetCustomer::where('code_cust', $nextNumber)->exists();
+                } while ($duplicateNumber);
+
+                $customer->code_cust = $nextNumber;
+
+                // ===== PROVINCE PREFIX =====
+                $prefix = Province::find($customer->province_id)->initial;
+
+                // ===== GENERATE CUSTOMER CODE =====
+                do {
+                    $finalCode = $prefix . $nextNumber;
+
+                    $duplicateCode = InternetCustomer::where('code', $finalCode)->exists();
+                } while ($duplicateCode);
+
+                $customer->code = $finalCode;
+            });
         });
+    }
+
+    function generateProvincePrefix($provinceName)
+    {
+        if (!$provinceName) return 'XXX';
+
+        $words = explode(' ', trim($provinceName));
+
+        // Jika ada 3 kata → ambil satu huruf tiap kata (NTT, NTT, DIY)
+        if (count($words) >= 3) {
+            return strtoupper(
+                $words[0][0] . $words[1][0] . $words[2][0]
+            );
+        }
+
+        // Jika ada 2 kata → ambil huruf pertama tiap kata (JB, SU)
+        if (count($words) == 2) {
+            return strtoupper(
+                $words[0][0] . $words[1][0]
+            );
+        }
+
+        // Jika 1 kata → ambil 2 huruf pertama (BA, RI)
+        return strtoupper(substr($provinceName, 0, 2));
     }
 
     protected $fillable = [
@@ -58,6 +111,9 @@ class InternetCustomer extends Model
         'meta',
         'override_pool_id',
         'last_updated_router',
+        'code_cust',
+        'optical_distribution_id',
+        'grouping_id',
     ];
 
     // ✅ RELATIONS
@@ -113,12 +169,17 @@ class InternetCustomer extends Model
 
     public function partnershipAgreement()
     {
-        return $this->belongsTo(PartnershipAgreement::class);
+        return $this->belongsTo(PartnershipAgreement::class)->withTrashed();
     }
 
     public function router()
     {
         return $this->belongsTo(Router::class);
+    }
+
+    public function odp()
+    {
+        return $this->belongsTo(OpticalDistribution::class)->withTrashed();
     }
 
      public function installation()

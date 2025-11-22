@@ -272,7 +272,7 @@ class ImportInternetCustomer extends Command
             }
             
             // Generate kode pelanggan
-            $code = $this->generateCustomerCode();
+            // $code = $this->generateCustomerCode();
 
 
             $promoData = $this->checkPromo($internetPackage->id);
@@ -308,7 +308,7 @@ class ImportInternetCustomer extends Command
                 'subdistrict_id' => $subdistrict->id,
                 'internet_package_id' => $internetPackage->id,
                 'user_customer_id' => $userCustomer->id,
-                'code' => $code,
+                // 'code' => $code,
                 'name' => $data['name'],
                 'address' => $data['address'],
                 'ktp_number' => null,

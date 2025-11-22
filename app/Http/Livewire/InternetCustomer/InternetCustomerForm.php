@@ -32,6 +32,7 @@ use App\Helpers\InboxHelper;
 use App\Services\XenditService;
 use Illuminate\Support\Facades\Log;
 
+
 class InternetCustomerForm extends Component
 {
     use WithFileUploads;
@@ -579,7 +580,7 @@ class InternetCustomerForm extends Component
                 'province_id' => $this->province_id,
                 'city_id' => $this->city_id,
                 'district_id' => $this->district_id,
-                'code' => $this->code(),
+                // 'code' => $this->code(),
                 'subdistrict_id' => $this->subdistrict_id,
                 'internet_package_id' => $this->internet_package_id,
                 'name' => $this->name,
@@ -593,6 +594,7 @@ class InternetCustomerForm extends Component
             ]);
             
             $agreement = $this->createPartnershipAgreement($ktpPath, $signaturePath);
+            $this->code = $internetCustomer->code;
             
         
             $userCustomer = UserCustomer::create([

@@ -219,7 +219,18 @@
                                                 </small>
                                                 @endif
                                             </div>
-                                        </td>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>ODP (Optical Distribution Point)</th>
+                                            <td>
+                                            <div class="d-flex flex-column">
+                                                <span class="badge bg-secondary mb-1">
+                                                    <i class="fas fa-server me-1"></i>
+                                                    {{ $customer->odp ? $customer->odp->name : '-' }}
+                                                </span>
+                                            </div>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <th>Serial Number Perangkat</th>
