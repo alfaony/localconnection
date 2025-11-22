@@ -279,6 +279,7 @@ class InternetCustomerIndex extends Component
                 'username' => $username,
                 'pass_hash' => $password,
                 'override_pool_id' => $override_pool_id ?: null,
+                'optical_distribution_id' => $optical_distribution_id,  // BARU
             ]);
             
             dispatch(new \App\Jobs\ProvisionCustomerJob($customer->id));
@@ -290,7 +291,6 @@ class InternetCustomerIndex extends Component
                 'notes' => $notes,
                 'installed_at' => now(),
                 'technical_user_id' => Auth::id(),
-                'optical_distribution_id' => $optical_distribution_id,  // BARU
                 'grouping_id' => $grouping_id,                          // BARU
             ]);
 

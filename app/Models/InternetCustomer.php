@@ -179,7 +179,7 @@ class InternetCustomer extends Model
 
     public function odp()
     {
-        return $this->belongsTo(OpticalDistribution::class)->withTrashed();
+        return $this->belongsTo(OpticalDistribution::class, 'optical_distribution_id')->withTrashed();
     }
 
      public function installation()

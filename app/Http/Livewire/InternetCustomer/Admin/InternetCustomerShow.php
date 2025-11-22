@@ -626,6 +626,7 @@ class InternetCustomerShow extends Component
             
             // Update customer package
             $this->customer->update([
+                'status' => ParamSchema::REACTIVATED,
                 'internet_package_id' => $this->new_package_id,
             ]);
             
@@ -639,8 +640,8 @@ class InternetCustomerShow extends Component
             ]);
             
             // Dispatch provisioning job untuk update di router
-            if ($this->customer->router_id && $this->customer->status === ParamSchema::ACTIVE) {
-                
+            if ($this->customer->router_id && ($this->customer->status === ParamSchema::ACTIVE || $this->customer->status === ParamSchema::REACTIVATED)) 
+            {
                 dispatch(new ProvisionCustomerJob($this->customer->id));
                 \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
             }
