@@ -18,6 +18,7 @@ use App\Models\InternetCustomer;
 use App\Models\InternetCustomerPurchase;
 use App\Models\Router;
 use App\Models\AddressPool;
+use App\Models\InternetPackage;
 
 use App\Jobs\GenerateBillingJob;
 use App\Schemas\ParamSchema;
@@ -62,6 +63,10 @@ class InternetCustomerShow extends Component
     public $newLocalAddressAvailable = true;
     public $newLocalAddressExistingCustomer = [];
 
+    public $editPackageModal = false;
+    public $new_package_id = null;
+    public $availablePackages = [];
+
     public function mount($customerId)
     {
         $this->customer = InternetCustomer::with([
@@ -89,6 +94,10 @@ class InternetCustomerShow extends Component
                 ->pluck('photo')
                 ->toArray();
         }
+
+        $this->availablePackages = InternetPackage::byCompany(Auth::user()->company_id)
+        ->where('is_active', true)
+        ->get();
     }
 
     // ========================================
@@ -581,6 +590,84 @@ class InternetCustomerShow extends Component
         
         return view('livewire.internet-customer.admin.internet-customer-show', compact('purchases','financeAccess'))
             ->extends('adminlte::page');
+    }
+
+    // Tambahkan method baru setelah method sentInbox()
+
+    public function openEditPackageModal()
+    {
+        // Load available packages
+        $this->availablePackages = InternetPackage::where('company_id', $this->customer->company_id)
+            ->where('is_active', true)
+            ->where('id', '!=', $this->customer->internet_package_id)
+            ->get();
+        
+        // Reset form
+        $this->new_package_id = null;
+        
+        // Open modal
+        $this->dispatchBrowserEvent('show-edit-package-modal');
+    }
+
+    public function savePackageChange()
+    {
+        // ✅ SIMPLIFIED: Tanpa reason field
+        $this->validate([
+            'new_package_id' => 'required|exists:internet_packages,id',
+        ], [
+            'new_package_id.required' => 'Paket internet baru harus dipilih',
+            'new_package_id.exists' => 'Paket internet tidak valid',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $oldPackage = $this->customer->internetPackage;
+            $newPackage = InternetPackage::find($this->new_package_id);
+            
+            // Update customer package
+            $this->customer->update([
+                'internet_package_id' => $this->new_package_id,
+            ]);
+            
+            // Log the change
+            Log::info('Package changed', [
+                'customer_id' => $this->customer->id,
+                'customer_code' => $this->customer->code,
+                'old_package' => $oldPackage->name,
+                'new_package' => $newPackage->name,
+                'changed_by' => Auth::id(),
+            ]);
+            
+            // Dispatch provisioning job untuk update di router
+            if ($this->customer->router_id && $this->customer->status === ParamSchema::ACTIVE) {
+                
+                dispatch(new ProvisionCustomerJob($this->customer->id));
+                \App\Jobs\SyncInstalledCustomersJob::dispatch([$this->customer->id]);
+            }
+            
+            DB::commit();
+            
+            $this->dispatchBrowserEvent('hide-edit-package-modal');
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'success',
+                'message' => "Paket berhasil diubah dari {$oldPackage->name} ke {$newPackage->name}"
+            ]);
+            
+            // Refresh page after delay
+            $this->dispatchBrowserEvent('refresh-after-delay', ['delay' => 2000]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to change package', [
+                'error' => $e->getMessage(),
+                'customer_id' => $this->customer->id
+            ]);
+            
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Gagal mengubah paket: ' . $e->getMessage()
+            ]);
+        }
     }
 
     private function sentInbox($to,$message,$directUrl)

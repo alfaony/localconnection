@@ -139,6 +139,16 @@
                             <h4 class="text-primary mb-3">
                                 <i class="fas fa-wifi mr-2"></i>Paket Internet
                             </h4>
+
+                            {{-- ✅ NEW: Button Edit Paket untuk customer aktif --}}
+                            @if($customer->status === \App\Schemas\ParamSchema::ACTIVE || $customer->status === \App\Schemas\ParamSchema::INSTALLED)
+                                @canAccess('editPackage','internet_customers')
+                                <button wire:click="openEditPackageModal" class="btn btn-sm btn-warning mb-2">
+                                    <i class="fas fa-exchange-alt mr-1"></i>Ganti Paket Internet
+                                </button>
+                                @endcanAccess
+                            @endif
+
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
                                     <tbody>
@@ -780,6 +790,75 @@
             </div>
         </div>
     </div>
+
+    {{-- ✅ UPDATED: Modal Edit Paket Internet (Simplified) --}}
+    <div class="modal fade" id="editPackageModal" tabindex="-1" wire:ignore.self>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exchange-alt"></i> Ganti Paket Internet
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Info:</strong> Perubahan paket akan langsung diupdate ke router.
+                    </div>
+
+                    <form wire:submit.prevent="savePackageChange">
+                        {{-- Current Package --}}
+                        <div class="mb-3">
+                            <label class="form-label">Paket Saat Ini</label>
+                            <input type="text" class="form-control" 
+                                value="{{ $customer->internetPackage->name ?? '-' }} - Rp {{ number_format($customer->internetPackage->price_nett ?? 0, 0, ',', '.') }}" 
+                                readonly>
+                        </div>
+
+                        {{-- New Package --}}
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Paket Baru <span class="text-danger">*</span>
+                            </label>
+                            <select id="new_package_id" class="form-control @error('new_package_id') is-invalid @enderror" 
+                                    wire:model="new_package_id">
+                                <option value="">Pilih Paket Baru</option>
+                                @foreach($availablePackages as $package)
+                                    <option value="{{ $package->id }}">
+                                        {{ $package->name }} - Rp {{ number_format($package->price_nett, 0, ',', '.') }}/bulan
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('new_package_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                    <button type="button" 
+                            id="btnSavePackage"
+                            class="btn btn-warning" 
+                            >
+                        <span id="btnSaveText">
+                            <i class="fas fa-save"></i> Simpan Perubahan
+                        </span>
+                        <span id="btnSaveLoading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Menyimpan...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('js')
     <script>
         // Fungsi untuk membuka modal edit data pribadi
@@ -809,6 +888,53 @@
         }
 
         document.addEventListener('livewire:load', function () {
+
+            document.getElementById('btnSavePackage').addEventListener('click', function() {
+                const btn = this;
+                const btnText = document.getElementById('btnSaveText');
+                const btnLoading = document.getElementById('btnSaveLoading');
+                
+                const newPackageId = document.getElementById('new_package_id').value;
+
+                @this.set('new_package_id', newPackageId);
+
+                // Disable button
+                btn.disabled = true;
+                btnText.style.display = 'none';
+                btnLoading.style.display = 'inline';
+                
+                console.log('Calling savePackageChange on Livewire component...');
+                
+                // Call Livewire method
+                @this.call('savePackageChange')
+                    .then(() => {
+                        console.log('savePackageChange completed');
+                    })
+                    .catch((error) => {
+                        console.error('savePackageChange failed:', error);
+                        
+                        // Re-enable button on error
+                        btn.disabled = false;
+                        btnText.style.display = 'inline';
+                        btnLoading.style.display = 'none';
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Gagal menyimpan perubahan: ' + error.message
+                        });
+                    });
+            });
+
+            window.addEventListener('show-edit-package-modal', () => {
+                new bootstrap.Modal(document.getElementById('editPackageModal')).show();
+            });
+
+            window.addEventListener('hide-edit-package-modal', () => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editPackageModal'));
+                if (modal) modal.hide();
+            });
+
             // Event untuk menampilkan modal edit data pribadi
             window.addEventListener('open-move-router-modal', (e) => {
                 new bootstrap.Modal(document.getElementById('moveRouterModal')).show();
