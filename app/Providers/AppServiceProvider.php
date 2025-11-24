@@ -159,7 +159,7 @@ class AppServiceProvider extends ServiceProvider
             $managementInternetMenu = 
             [
                 'data_centers','pops','optical_distributions','coverage_services',
-                'internet_packages','internet_customers','promos'
+                'internet_packages','internet_customers','promos','routers'
             ];
 
             $managementTokoOnlineMenu = [
@@ -695,6 +695,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Promosi',
                     'route' => 'promo.index',
                     'icon' => 'fa fa-tags',
+                ],
+                'routers' => 
+                [
+                    'text' => 'Router',
+                    'route' => 'router.index',
+                    'icon' => 'fa fa-wifi',
                 ],
                 'webhook_settings' => 
                 [

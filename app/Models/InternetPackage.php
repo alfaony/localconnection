@@ -20,6 +20,14 @@ class InternetPackage extends Model
         'description',
         'is_active',
         'company_id',
+        'access_type',
+        'rate_down_mbps',
+        'rate_up_mbps',
+        'fup_rate_down_mbps',
+        'fup_rate_up_mbps',
+        'quota_bytes',
+        'version',
+        'meta',
     ];
 
     protected $casts = [

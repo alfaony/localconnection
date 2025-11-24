@@ -1,6 +1,7 @@
 @canAccess('index', 'internet_customers')
 <div class="row">
     <div class="col-md-12">
+        @include('components.alert')
         <div class="card mb-4 mt-2">
            <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">
@@ -39,8 +40,12 @@
                             <option value="">Semua Status</option>
                             <option value="pending">Pending</option>
                             <option value="waiting_payment_confirmation">Menunggu Pembayaran</option>
+                            <option value="waiting_payment_subscription">Menunggu Pembayaran Subscription</option>
                             <option value="process_installation">Proses Instalasi</option>
                             <option value="installed">Terpasang</option>
+                            <option value="reactivated">Reaktivasi</option>
+                            <option value="active">Aktif</option>
+                            <option value="suspended">Dihentikan</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -131,7 +136,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <span class="badge bg-success">
+                                        <span class="badge bg-{{ $customer->status  }}">
                                             {{ $customer->internetPackage->name }}
                                         </span>
                                     </td>
@@ -141,11 +146,14 @@
                                     <td>
                                             @switch($customer->status)
                                                 @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION)
-                                                    @if($customer->getOldestUnconfirmedPurchase() && $customer->getOldestUnconfirmedPurchase()->payment_method === 'transfer')
+                                                    @if($customer->getOldestUnconfirmedPurchase() && ($customer->getOldestUnconfirmedPurchase()->payment_method === 'transfer' || $customer->getOldestUnconfirmedPurchase()->payment_method === 'manual_transfer'))
                                                         @if($customer->getOldestUnconfirmedPurchase()->payment_method && $finance_access)
+
+                                                            @if($customer->getOldestUnconfirmedPurchase()->payment_proof)
                                                             <button class="btn btn-sm btn-outline-primary" wire:click="viewPaymentProof(@js($customer->getOldestUnconfirmedPurchase()->payment_proof))">
                                                                 Lihat Bukti
                                                             </button>
+                                                            @endif
                                                             <button class="btn btn-sm btn-success mt-1" onclick="confirmPayment('{{ $customer->getOldestUnconfirmedPurchase()->id }}')">
                                                                 Konfirmasi
                                                             </button>
@@ -171,6 +179,17 @@
                                                     <span class="badge bg-success">
                                                         <i class="fas fa-check-circle me-1"></i> Sudah Diinstalasi
                                                     </span>
+                                                    @break
+                                                @case(\App\Schemas\ParamSchema::ACTIVE)
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Anda yakin ingin menon-aktifkan pelanggan ini?') ? @this.call('suspend', @js($customer->id)) : false">
+                                                        <i class="fas fa-pause me-1"></i> Suspend
+                                                    </button>
+                                                    @break
+
+                                                @case(\App\Schemas\ParamSchema::SUSPENDED)
+                                                    <button class="btn btn-sm btn-outline-success" onclick="return confirm('Anda yakin ingin mengaktifkan kembali pelanggan ini?') ? @this.call('reactivate', @js($customer->id)) : false">
+                                                        <i class="fas fa-play me-1"></i> Aktifkan
+                                                    </button>
                                                     @break
                                             @endswitch
                                         </td>
@@ -228,6 +247,7 @@
 <div class="modal fade" id="installationModal" tabindex="-1" wire:ignore.self>
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
+            
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">Proses Instalasi</h5>
                 <button type="button" class="btn-close btn-close-white btn-danger" data-bs-dismiss="modal" aria-label="Close"><i class="fa fa-times"></i></button>
@@ -242,6 +262,90 @@
                     <div class="mb-3">
                         <label class="form-label">Serial Number Perangkat</label>
                         <input type="text" class="form-control" wire:model="serialNumber" id="modalSerialNumber" required>
+                    </div>
+
+                    {{-- BARU: Field ODP --}}
+                    <div class="mb-3">
+                        <label class="form-label">ODP (Optical Distribution Point) <span class="text-danger">*</span></label>
+                        <select class="form-control" wire:model="optical_distribution_id" id="odpSelect">
+                            <option value="">— Pilih ODP —</option>
+                            @foreach($availableOdps as $odp)
+                                <option value="{{ $odp['id'] }}">{{ $odp['label'] }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">
+                            Pilih ODP sesuai lokasi pemasangan pelanggan.
+                        </div>
+                    </div>
+
+                    {{-- BARU: Field Grouping --}}
+                    <div class="mb-3">
+                        <label class="form-label">Grouping/Cluster</label>
+                        <input type="text" class="form-control" wire:model="grouping_id" id="groupingInput" 
+                               placeholder="Contoh: Cluster A, Zona 1, RT 05, dll">
+                        <div class="form-text">
+                            Isi dengan nama grouping/cluster/RT lokasi pelanggan (opsional).
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Router</label>
+                        <select id="routerSelect" class="form-control">
+                            <!-- Opsi akan diisi melalui JavaScript -->
+                        </select>
+                        <input type="hidden" id="routerSelectMirror" wire:model="router_id">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Pilih IP Pool (opsional)</label>
+                        <select class="form-control" wire:model="override_pool_id" 
+                                wire:key="pool-select-{{ $router_id }}-{{ count($availablePools) }}" id="selectPool">
+                            <option value="">— Ikuti mapping otomatis —</option>
+                            @foreach($availablePools as $pool)
+                                <option value="{{ $pool['id'] }}">{{ $pool['label'] }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">
+                            Kosongkan jika ingin pakai pool default/PPPoE server router.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Local Address</label>
+                        <div class="input-group">
+                            <input type="text" 
+                                class="form-control" 
+                                id="local_address"
+                                placeholder="192.168.1.1">
+                            <span class="input-group-text">
+                                <div wire:loading wire:target="local_address">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Username <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" 
+                                class="form-control" 
+                                id="modalUsername"
+                                placeholder="username_pppoe">
+                            <span class="input-group-text">
+                                <div wire:loading wire:target="username">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <div wire:loading.remove wire:target="username">
+                                    {{-- Icon akan diisi oleh JavaScript --}}
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" wire:model="password" id="modalPassword" required>
                     </div>
                     
                     <div class="mb-3">
@@ -313,7 +417,6 @@
 
     function copyShareLink() {
         const link = document.getElementById('share-link').href;
-
         navigator.clipboard.writeText(link).then(() => {
             alert('Link berhasil disalin!');
         }).catch(err => {
@@ -321,8 +424,7 @@
         });
     }
 
-     function confirmPayment(customerId) 
-     {
+    function confirmPayment(customerId) {
         Swal.fire({
             title: 'Konfirmasi Pembayaran?',
             text: "Pastikan bukti pembayaran sudah valid.",
@@ -332,17 +434,15 @@
             cancelButtonText: 'Batal'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Panggil ke Livewire
                 @this.call('confirmPayment', customerId);
             }
         });
     }
-    // Cara pertama: Gunakan window.addEventListener untuk broadcase event
+
     window.addEventListener('showPaymentProofModal', function(url) {
         const modal = new bootstrap.Modal(document.getElementById('paymentProofModal'));
         let img = `<img src="${url.detail.proofUrl}" class="img-fluid">`;
         document.getElementById('showPaymentProof').innerHTML = img;
-
         modal.show();
     });
 
@@ -359,7 +459,7 @@
 
     window.addEventListener('showErrorAlert', function(event) {
         Swal.fire({
-            icon: 'success',
+            icon: 'error',
             title: event.detail.title,
             text: event.detail.message,
             showConfirmButton: false,
@@ -368,25 +468,195 @@
         });
     });
     
-
     document.addEventListener('livewire:load', function() {
         const installationModal = new bootstrap.Modal(document.getElementById('installationModal'));
         let uploadedFiles = [];
 
-        // Handle buka modal
-        window.addEventListener('open-installation-modal', (e) => {
-            const { customerName, customerCode, serialNumber } = e.detail;
+        // Listen untuk update status username check
+        window.addEventListener('usernameCheckComplete', function(event) {
+            const data = event.detail;
+            const inputUsername = document.getElementById('modalUsername');
+            const iconContainer = inputUsername.closest('.input-group').querySelector('.input-group-text div:not([wire\\:loading])');
             
-            // Set nilai ke modal
+            if (data.available) {
+                inputUsername.classList.remove('is-invalid');
+                inputUsername.classList.add('is-valid');
+                if (iconContainer) {
+                    iconContainer.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+                }
+            } else {
+                inputUsername.classList.remove('is-valid');
+                inputUsername.classList.add('is-invalid');
+                if (iconContainer) {
+                    iconContainer.innerHTML = '<i class="fas fa-times-circle text-danger"></i>';
+                }
+                
+                if (data.existing) {
+                    let errorDiv = inputUsername.parentElement.parentElement.querySelector('.username-error-msg');
+                    if (!errorDiv) {
+                        errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback d-block username-error-msg';
+                        inputUsername.parentElement.parentElement.appendChild(errorDiv);
+                    }
+                    errorDiv.innerHTML = `Username sudah digunakan oleh: <strong>${data.existing.code} - ${data.existing.name}</strong>`;
+                }
+            }
+        });
+
+        // Listen untuk update status local address check
+        window.addEventListener('localAddressCheckComplete', function(event) {
+            const data = event.detail;
+            const inputLocalAddress = document.getElementById('local_address');
+            
+            if (data.valid) {
+                inputLocalAddress.classList.remove('is-invalid');
+                inputLocalAddress.classList.add('is-valid');
+                const errorDiv = inputLocalAddress.parentElement.querySelector('.local-address-error-msg');
+                if (errorDiv) errorDiv.remove();
+            } else {
+                inputLocalAddress.classList.remove('is-valid');
+                inputLocalAddress.classList.add('is-invalid');
+                let errorDiv = inputLocalAddress.parentElement.querySelector('.local-address-error-msg');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback d-block local-address-error-msg';
+                    inputLocalAddress.parentElement.appendChild(errorDiv);
+                }
+                errorDiv.textContent = data.message;
+            }
+        });
+
+        // Clear icon saat user mulai mengetik
+        document.getElementById('modalUsername')?.addEventListener('input', function(e) {
+            const iconContainer = this.closest('.input-group').querySelector('.input-group-text div:not([wire\\:loading])');
+            if (iconContainer) {
+                iconContainer.innerHTML = '';
+            }
+            this.classList.remove('is-valid', 'is-invalid');
+            const errorDiv = this.parentElement.parentElement.querySelector('.username-error-msg');
+            if (errorDiv) errorDiv.remove();
+            @this.set('username', e.target.value);
+        });
+
+        document.getElementById('local_address')?.addEventListener('input', function(e) {
+            this.classList.remove('is-valid', 'is-invalid');
+            const errorDiv = this.parentElement.querySelector('.local-address-error-msg');
+            if (errorDiv) errorDiv.remove();
+            @this.set('local_address', e.target.value);
+        });
+
+        // Listen pools-options event
+        window.addEventListener('pools-options', (e) => {
+            const select = document.querySelector('select[wire\\:model="override_pool_id"]');
+            if (!select) return;
+
+            select.querySelectorAll('option:not(:first-child)').forEach(o => o.remove());
+            const options = e.detail.options || [];
+            options.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.label;
+                select.appendChild(opt);
+            });
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        
+        // ✅ FIX: Event listener untuk populate modal dengan data ODP
+        window.addEventListener('open-installation-modal', (e) => {
+            const { customerName, customerCode, serialNumber, routers, odps } = e.detail;
+            
+            console.log('🔍 Modal opened with data:', e.detail); // Debug log
+            console.log('📦 ODPs received:', odps); // Debug log
+            
+            // Set customer info
             document.getElementById('modalCustomerName').textContent = customerName;
             document.getElementById('modalCustomerCode').textContent = customerCode;
             document.getElementById('modalSerialNumber').value = serialNumber;
+
+            // ✅ POPULATE ODP DROPDOWN
+            const odpSelect = document.getElementById('odpSelect');
+            if (odpSelect) {
+                console.log('🎯 Populating ODP dropdown...'); // Debug log
+                
+                // Clear existing options except first (placeholder)
+                odpSelect.innerHTML = '<option value="">— Pilih ODP —</option>';
+                
+                // Add ODP options
+                if (odps && odps.length > 0) {
+                    odps.forEach(odp => {
+                        const option = document.createElement('option');
+                        option.value = odp.id;
+                        option.textContent = odp.label;
+                        odpSelect.appendChild(option);
+                        console.log('✅ Added ODP option:', odp.label); // Debug log
+                    });
+                    console.log(`✅ Total ${odps.length} ODPs added to dropdown`); // Debug log
+                } else {
+                    console.warn('⚠️ No ODPs available!'); // Debug log
+                }
+                
+                // Reset ODP selection
+                odpSelect.value = '';
+                @this.set('optical_distribution_id', '');
+            } else {
+                console.error('❌ ODP select element not found!'); // Debug log
+            }
+
+            // ✅ RESET GROUPING INPUT
+            const groupingInput = document.getElementById('groupingInput');
+            if (groupingInput) {
+                groupingInput.value = '';
+                @this.set('grouping_id', '');
+            }
+
+            // Populate Router dropdown
+            const routerSelect = document.getElementById('routerSelect');
+            routerSelect.innerHTML = '';
             
-            // Reset form
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Pilih Router';
+            routerSelect.appendChild(defaultOption);
+            
+            routers.forEach(router => {
+                const option = document.createElement('option');
+                option.value = router.id;
+                option.disabled = router.disabled;
+                option.textContent = router.name;
+                routerSelect.appendChild(option);
+            });
+
+            // Reset router and pools
+            routerSelect.value = '';
+            document.getElementById('routerSelectMirror').value = '';
+            @this.set('router_id', '');
+            @this.set('override_pool_id', '');
+
+            // Reset username & local_address
+            document.getElementById('modalUsername').value = '';
+            document.getElementById('local_address').value = '';
+            @this.set('username', '');
+            @this.set('local_address', '');
+            @this.set('newUsernameChecked', false);
+            @this.set('newUsernameAvailable', false);
+            
+            // Router change listener
+            routerSelect.onchange = function (e) {
+                const val = e.target.value || '';
+                document.getElementById('routerSelectMirror').value = val;
+                @this.set('router_id', val);
+                @this.set('override_pool_id', '');
+                @this.call('loadPoolsForRouter', val);
+            };
+            
+            // Reset form lainnya
+            document.getElementById('modalPassword').value = '';
             document.getElementById('modalNotes').value = '';
             document.getElementById('photoPreview').innerHTML = '';
+            document.getElementById('modalPhotos').value = '';
             uploadedFiles = [];
             
+            // Show modal
             installationModal.show();
         });
 
@@ -421,8 +691,35 @@
             const serialNumber = document.getElementById('modalSerialNumber').value;
             const notes = document.getElementById('modalNotes').value;
             const files = document.getElementById('modalPhotos').files;
-            
-            // Validasi
+            const routerId = document.getElementById('routerSelectMirror').value;
+            const odpId = document.getElementById('odpSelect').value;
+            // const odpId = @this.optical_distribution_id;
+            const grouping = @this.grouping_id;
+            const username = @this.username;
+            const password = document.getElementById('modalPassword').value;
+            const override_pool_id = @this.override_pool_id;
+            const local_address = @this.local_address;
+
+            console.log('📝 Form data:', { // Debug log
+                serialNumber,
+                routerId,
+                odpId,
+                grouping,
+                username,
+                filesCount: files.length
+            });
+
+            // ✅ VALIDASI ODP
+            if (!odpId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: 'ODP harus dipilih'
+                });
+                return;
+            }
+
+            // Validasi lainnya
             if (!serialNumber) {
                 Swal.fire({
                     icon: 'warning',
@@ -440,6 +737,33 @@
                 });
                 return;
             }
+
+            if (!routerId || routerId === '') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: 'Router harus dipilih'
+                });
+                return;
+            }
+            
+            if (!username) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: 'Username harus diisi'
+                });
+                return;
+            }
+            
+            if (!password) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: 'Password harus diisi'
+                });
+                return;
+            }
             
             // Konfirmasi
             const result = await Swal.fire({
@@ -454,33 +778,29 @@
             if (!result.isConfirmed) {
                 return;
             }
-            
+                
             // Disable button dan tampilkan progress
             const submitBtn = document.getElementById('submitInstallation');
             const originalBtnText = submitBtn.innerHTML;
             submitBtn.disabled = true;
             
             try {
-                // STEP 1: Upload semua files ke Livewire property DULU
+                // Upload files
                 const uploadPromises = [];
                 
                 for (let i = 0; i < files.length; i++) {
                     submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading ${i + 1}/${files.length}...`;
                     
-                    // Buat promise untuk setiap upload dan tunggu sampai selesai
                     const uploadPromise = new Promise((resolve, reject) => {
                         @this.upload(`photos.${i}`, files[i], 
-                            // onFinish callback
                             (uploadedName) => {
                                 console.log(`File ${i} uploaded successfully:`, uploadedName);
                                 resolve(uploadedName);
                             },
-                            // onError callback  
                             (error) => {
                                 console.error(`File ${i} upload failed:`, error);
                                 reject(error);
                             },
-                            // onProgress callback
                             (event) => {
                                 console.log(`File ${i} progress:`, event.detail.progress);
                             }
@@ -490,23 +810,28 @@
                     uploadPromises.push(uploadPromise);
                 }
                 
-                // Tunggu SEMUA upload selesai
                 await Promise.all(uploadPromises);
-                
                 console.log('All files uploaded, photos property:', @this.photos);
                 
-                // STEP 2: Setelah SEMUA file terupload, baru panggil completeInstallation
+                // Submit installation
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan data...';
-                
-                // Tunggu sebentar untuk memastikan Livewire property sudah ter-update
                 await new Promise(resolve => setTimeout(resolve, 500));
                 
-                const success = await @this.call('completeInstallation', serialNumber, notes);
+                const success = await @this.call('completeInstallation',
+                    serialNumber,
+                    notes,
+                    routerId,
+                    username,
+                    password,
+                    override_pool_id,
+                    local_address,
+                    odpId,
+                    grouping
+                );
                 
                 console.log('completeInstallation result:', success);
                 
                 if (success !== false) {
-                    // Tutup modal
                     installationModal.hide();
                     
                     // Reset form
@@ -514,6 +839,7 @@
                     document.getElementById('modalNotes').value = '';
                     document.getElementById('modalPhotos').value = '';
                     document.getElementById('photoPreview').innerHTML = '';
+                    document.getElementById('modalPassword').value = '';
                 }
                 
             } catch (error) {
@@ -526,26 +852,25 @@
                 });
                 
             } finally {
-                // Restore button
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnText;
             }
         });
-    });
 
-    // Notifikasi
-    window.addEventListener('show-notification', (event) => {
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-        });
-        
-        Toast.fire({
-            icon: event.detail.type,
-            title: event.detail.message
+        // Notifikasi
+        window.addEventListener('show-notification', (event) => {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            
+            Toast.fire({
+                icon: event.detail.type,
+                title: event.detail.message
+            });
         });
     });
 </script>

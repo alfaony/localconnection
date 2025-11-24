@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -102,9 +103,14 @@ use App\Http\Controllers\MomController;
 use App\Http\Controllers\UsedLaptopController;
 use App\Http\Controllers\MasterCheckItemController;
 use App\Http\Controllers\UsedItemController;
+use App\Http\Controllers\MikrotikSecretController;
+use App\Http\Controllers\MikrotikProfileController;
+
+
 use App\Http\Controllers\BarcodeAttendanceController;
 use App\Http\Controllers\OfficeAttendanceController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\XenditController;
 
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
@@ -121,8 +127,13 @@ use App\Http\Livewire\InternetCustomer\InternetCustomerForm;
 use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerIndex;
 use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
+use App\Http\Livewire\InternetCustomer\CustomerCodeInput;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
+use App\Http\Livewire\Router\RouterForm;
+use App\Http\Livewire\Router\RouterIndex;
+use App\Http\Livewire\Router\RouterInventory;
+use App\Http\Livewire\Router\PackageProfileMapping;
 use App\Http\Livewire\WebhookSettingTable;
 use App\Http\Livewire\ProductSupplierTypeIndex;
 use App\Http\Livewire\ProductStore\ProductStoreIndex;
@@ -150,7 +161,11 @@ use App\Http\Livewire\PunishmentUserTable;
 |
 */
 Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
+Route::post('xendit/webhook', [XenditController::class, 'handle']);
+Route::post('keloola-pay/webhook', [XenditController::class, 'handleKeloolaPay']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
+
+Route::get('internet-customer/customer-active', CustomerCodeInput::class)->name('internet-customer.customer');
 
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
@@ -594,6 +609,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
 
   Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
+  Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');
   Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
   Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
   
@@ -601,6 +617,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('promo/create', PromoForm::class)->name('promo.create');
   Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
   
+  Route::get('router', RouterIndex::class)->name('router.index');
+  Route::get('router/create', RouterForm::class)->name('router.create');
+  Route::get('router/edit/{mikrotik}', RouterForm::class)->name('router.edit');
+  Route::get('router/show/{routerId}', RouterInventory::class)->name('router.show');
+  Route::get('router/mapping/{routerId}', PackageProfileMapping::class)->name('router.mapping');
+
   Route::get('webhook-setting', WebhookSettingTable::class)->name('webhook-setting.index');
   
   // Barcode 
@@ -647,7 +669,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 });
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
-  Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
+  Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');
   
 // Route::middleware(['auth'])->group(function () {
 // });

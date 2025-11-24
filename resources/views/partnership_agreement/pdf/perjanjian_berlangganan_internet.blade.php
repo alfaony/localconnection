@@ -80,39 +80,23 @@
                 </div>
             </div>
 
-            @if($agreement && $agreement->getFields("nama_bank ") != null && $agreement->getFields(" holder_name") != null && $agreement->getFields("account_number ") != null && $agreement->getFields(" branch_office") != null)
-            <table style="border: 0">
+            @if($agreement && $agreement->getFields("nama_bank") != null && $agreement->getFields("holder_name") != null && $agreement->getFields("account_number ") != null && $agreement->getFields(" branch_office") != null)
+            <table style="border: 0; width: 100%; table-layout: fixed;">
                 <tr>
-                    <td>
-                        Bank Name
-                    </td>
-                    <td>
-                        : {{ $agreement ? $agreement->getFields("nama_bank ") : ""}}
-                    </td>
+                    <td style="width: 40%; border: none;">Bank Name</td>
+                    <td style="width: 60%; border: none; word-wrap: break-word;">: {{ $agreement ? $agreement->getFields("nama_bank ") : ""}}</td>
                 </tr>
                 <tr>
-                    <td>
-                        Holder Name
-                    </td>
-                    <td>
-                        : {{ $agreement ? $agreement->getFields(" holder_name") : ""}}
-                    </td>
+                    <td style="width: 40%; border: none;">Holder Name</td>
+                    <td style="width: 60%; border: none; word-wrap: break-word;">: {{ $agreement ? $agreement->getFields("holder_name") : ""}}</td>
                 </tr>
                 <tr>
-                    <td>
-                        Account Number
-                    </td>
-                    <td>
-                        : {{ $agreement ? $agreement->getFields("account_number ") : ""}}
-                    </td>
+                    <td style="width: 40%; border: none;">Account Number</td>
+                    <td style="width: 60%; border: none; word-wrap: break-word;">: {{ $agreement ? $agreement->getFields("account_number ") : ""}}</td>
                 </tr>
                 <tr>
-                    <td>
-                        Branch Office
-                    </td>
-                    <td>
-                        : {{ $agreement ? $agreement->getFields(" branch_office") : ""}}
-                    </td>
+                    <td style="width: 40%; border: none;">Branch Office</td>
+                    <td style="width: 60%; border: none; word-wrap: break-word;">: {{ $agreement ? $agreement->getFields("branch_office") : ""}}</td>
                 </tr>
             </table>
             @endif
@@ -128,7 +112,7 @@
             <div class="row mt-5 mb-5">
                 <div class="col-5 text-center">
                     @if($agreement && $agreement->getSignature(1) && $agreement->getSignature(1)->signature)
-                    <img src="{{ s3_asset(true,10,'public/'.$agreement->getSignature(1)->signature) }}" class="img-thumbnail img-signature">
+                    <img src="{{ s3_asset(true,10,$agreement->getSignature(1)->signature) }}" class="img-thumbnail img-signature">
                     @else
                     <div style="min-height: 80px; "></div>
                     @endif
@@ -145,9 +129,11 @@
 
             <div style="page-break-after: always;"></div>
 
-            <table class="table table-bordered" style="border-width: 2px; border-color: black;">
+            <!-- <table class="table table-bordered" style="border-width: 2px; border-color: black;"> -->
+            <table class="table table-bordered" style="border-width: 2px; border-color: black; table-layout: fixed; width: 100%;">
                 <tr>
-                    <td style="width: 50%;">
+                    <!-- <td style="width: 50%;"> -->
+                    <td style="width: 50%; vertical-align: top;">
                         <p class="text-center small-header mb-0">
                             SYARAT DAN KETENTUAN
                         </p>
@@ -509,7 +495,8 @@
                         </li>
                         </ol>
                     </td>
-                    <td style="width: 50%;">
+                    <!-- <td style="width: 50%;"> -->
+                    <td style="width: 50%; vertical-align: top;">
                         <ol start="8">
                             <li class="mb-0 small-text">
                                 <ol type="a" start="3">
@@ -630,14 +617,14 @@
                                         The Customer shall contact customer service if there is any trouble, through:
                                     </i>
                                 </p>
-                                <table style="border: 0;">
+                                <table style="border: 0; width: 100%; table-layout: fixed;">
                                     <tr>
-                                        <td style="width: 25px;">Telephone</td>
-                                        <td style="width: auto;">: {{ $agreement ? $agreement->getFields(" telephon") : ""}}</td>
+                                        <td style="width: 35%; border: none;">Telephone</td>
+                                        <td style="width: 65%; border: none; word-wrap: break-word;">: {{ $agreement ? $agreement->getFields("telephon") : ""}}</td>
                                     </tr>
                                     <tr>
-                                        <td style="width: 25px;">Email</td>
-                                        <td style="width: auto;">: {{ $agreement ? $agreement->getFields(" email") : ""}}</td>
+                                        <td style="width: 35%; border: none;">Email</td>
+                                        <td style="width: 65%; border: none; word-wrap: break-word;">: {{ $agreement ? $agreement->getFields("email") : ""}}</td>
                                     </tr>
                                 </table>
                             </li>

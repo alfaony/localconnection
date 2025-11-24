@@ -31,4 +31,30 @@ class Province extends Model
     {
         return $this->hasMany(CoverageService::class, 'province_id');
     }
+
+    public function getInitialAttribute()
+    {
+        $provinceName = $this->name;
+
+        if (!$provinceName) return 'XXX';
+
+        $words = explode(' ', trim($provinceName));
+
+        // Jika ada 3 kata → ambil satu huruf tiap kata (NTT, NTT, DIY)
+        if (count($words) >= 3) {
+            return strtoupper(
+                $words[0][0] . $words[1][0] . $words[2][0]
+            );
+        }
+
+        // Jika ada 2 kata → ambil huruf pertama tiap kata (JB, SU)
+        if (count($words) == 2) {
+            return strtoupper(
+                $words[0][0] . $words[1][0]
+            );
+        }
+
+        // Jika 1 kata → ambil 2 huruf pertama (BA, RI)
+        return strtoupper(substr($provinceName, 0, 2));
+    }
 }

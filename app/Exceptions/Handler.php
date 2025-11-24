@@ -51,6 +51,7 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
 
+            // dd($e);
             if (app()->bound('sentry') && config("sentry.environment") == 'production') {
                 Integration::captureUnhandledException($e);
             }

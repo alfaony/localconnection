@@ -74,7 +74,7 @@ class PermissionForMenuInternetCustomerSeeder extends Seeder
                 return;
             }
 
-            $itemCustomerInternet = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_technician','as_finance','closed'];
+            $itemCustomerInternet = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'select2','workflow','dataTableJson','delivery','as_technician','as_finance','closed','editInstalasi','moveRouter','editPackage'];
             $chatMessage = ['index','store','show','edit'];
             
             
@@ -89,7 +89,7 @@ class PermissionForMenuInternetCustomerSeeder extends Seeder
                     'model' => 'InternetCustomer',
                     'guard_name' => 'web'
                 ]);
-                if (in_array($method, ['as_technician','complete','closed'])) 
+                if (in_array($method, ['as_technician','complete','closed','editInstalasi','moveRouter','editPackage'])) 
                 {
                     PermissionRole::create(['role_id' => $tecknicianRole->id, 'permission_id' => $permission->id]);
                     continue;
