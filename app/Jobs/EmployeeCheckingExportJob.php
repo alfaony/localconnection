@@ -45,7 +45,7 @@ class EmployeeCheckingExportJob implements ShouldQueue
     {
         $exportFormat = $this->exportFormat === 'csv' ? \Maatwebsite\Excel\Excel::CSV : \Maatwebsite\Excel\Excel::XLSX;
         try {
-            Excel::store(new EmployeeCheckingExport($this->user, $this->company_id, $this->userId, $this->start, $this->end, $this->today, $this->sort, $this->role), $this->filePath, "public", $exportFormat);
+            Excel::store(new EmployeeCheckingExport($this->user, $this->company_id, $this->userId, $this->start, $this->end, $this->today, $this->sort, $this->role), $this->filePath, "s3", $exportFormat);
         } catch (\Exception $e) {
             // dd($e);
             Log::error("Error storing file: " . $e->getMessage());

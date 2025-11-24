@@ -340,7 +340,7 @@ class EmployeeCheckingController extends Controller
             EmployeeCheckingExportJob::dispatch($filename, $exportFormat, Auth::user(), $userId, $start, $end, $today, $sort, $role);
     
     
-            $filename = "public/" . $filename;
+            // $filename = "public/" . $filename;
             session(['export_filename_checkin' => $filename]);
             $filename = session('export_filename_checkin');
     
@@ -356,14 +356,17 @@ class EmployeeCheckingController extends Controller
     public function checkExportStatus()
     {
         $filename = session('export_filename_checkin');
-
-        if ($filename && Storage::exists($filename)) {
-            // Provide the download URL if file exists
-            $downloadUrl = s3_asset(true,10,$filename);
-            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        try {
+            if ($filename && Storage::exists($filename)) {
+                // Provide the download URL if file exists
+                $downloadUrl = s3_asset(true,10,$filename);
+                return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json(['ready' => false,'filename' => $filename]);
         }
     
-        return response()->json(['ready' => false,'filename' => $filename]);
     }
 
     public function clearsession()
