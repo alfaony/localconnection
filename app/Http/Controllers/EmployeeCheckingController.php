@@ -362,6 +362,8 @@ class EmployeeCheckingController extends Controller
                 $downloadUrl = s3_asset(true,10,$filename);
                 return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
             }
+            
+            return response()->json(['ready' => false,'filename' => $filename]);
         } catch (\Throwable $th) {
             //throw $th;
             return response()->json(['ready' => false,'filename' => $filename]);
