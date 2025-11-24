@@ -404,7 +404,7 @@ class InternetCustomerShow extends Component
                 ->first();
             
             $message = "Pelanggan dengan kode ".$internetCustomer->code." telah mengirim bukti pembayaran untuk {$this->payment_months} bulan. Silakan verifikasi.";
-            $directUrl = route('internet-customer.index');
+            $directUrl = route('internet-customer.show', $internetCustomer->id);
             
             foreach($userFinance as $finance) {
                 $this->sentInbox($finance->id, $from->id, $message, $directUrl);

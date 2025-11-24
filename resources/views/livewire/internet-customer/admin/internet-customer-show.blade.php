@@ -141,13 +141,11 @@
                             </h4>
 
                             {{-- ✅ NEW: Button Edit Paket untuk customer aktif --}}
-                            @if($customer->status === \App\Schemas\ParamSchema::ACTIVE || $customer->status === \App\Schemas\ParamSchema::INSTALLED)
                                 @canAccess('editPackage','internet_customers')
                                 <button wire:click="openEditPackageModal" class="btn btn-sm btn-warning mb-2">
                                     <i class="fas fa-exchange-alt mr-1"></i>Ganti Paket Internet
                                 </button>
                                 @endcanAccess
-                            @endif
 
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
@@ -503,7 +501,7 @@
                                                     <th>Status</th>
                                                     <th>Jumlah Bayar</th>
                                                     <th>Bukti Pembayaran</th>
-                                                    @canAccess('as_finance','internet_customers')
+                                                    @canAccess('@finance','internet_customers')
                                                     <th>Konfirmasi Pembayaran</th>
                                                     @endcanAccess
                                                 </tr>
