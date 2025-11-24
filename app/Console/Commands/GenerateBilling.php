@@ -21,15 +21,19 @@ class GenerateBilling extends Command
 
         $customers = UserCustomer::whereDate('start_billing_date', $today)->orWhereDate('end_billing_date', $today)->get();
 
+        $delayStep = 0; // dalam detik
         foreach ($customers as $customer) 
         {
+            $delayStep += 3; // tambah 3 detik per customer
+
             // Kirim ke job untuk diproses per pelanggan
             if (Carbon::parse($customer->start_billing_date) == $today && in_array($customer->internetCustomer->status, [
                 ParamSchema::ACTIVE,
                 ParamSchema::INSTALLED,
             ]))
             {
-                GenerateBillingJob::dispatch($customer);
+                // GenerateBillingJob::dispatch($customer);
+                  GenerateBillingJob::dispatch($customer)->delay(now()->addSeconds($delayStep));
             }
 
             if (Carbon::parse($customer->end_billing_date) == $today && in_array($customer->internetCustomer->status, [
