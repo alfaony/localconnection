@@ -22,6 +22,10 @@ class UsedLaptopController extends Controller
     {
         DB::beginTransaction();
         try {
+            $this->validate($request, [
+                'sold_price' => 'required|numeric',
+            ]);
+            
             $laptop = UsedLaptop::byCompany(Auth::user()->company_id)->where('is_sold', false)->where('id', $id)->first();
             if (!$laptop) 
             {
@@ -31,7 +35,7 @@ class UsedLaptopController extends Controller
 
             $laptop->update([
                 'is_sold' => true,
-                'sold_price' => $laptop->suggested_selling_price,
+                'sold_price' => $request->input('sold_price'),
                 'sold_at' => Carbon::now(),
             ]);
             
