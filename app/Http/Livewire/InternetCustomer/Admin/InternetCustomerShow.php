@@ -413,6 +413,18 @@ class InternetCustomerShow extends Component
                     'start_billing_date' => $this->start_billing_date,
                     'end_billing_date' => $this->end_billing_date,
                 ]);
+
+                if($this->customer->partnershipAgreement)
+                {
+                    $fields = json_decode($this->customer->partnershipAgreement->fields);
+                    $fields->nama = $this->name;
+                    $fields->email = $this->email;
+                    $fields->telephon = $this->phone_number;
+                    
+                    $this->customer->partnershipAgreement->update([
+                        'fields' => json_encode($fields),
+                    ]);
+                }
             }
 
             DB::commit();
