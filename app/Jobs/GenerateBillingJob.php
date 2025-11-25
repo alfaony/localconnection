@@ -82,7 +82,7 @@ class GenerateBillingJob implements ShouldQueue
                             . "Nama Pelanggan: {$customer->name}\n"
                             . "Layanan Paket: {$customer->internetCustomer->internetPackage->name}\n"
                             . "Periode: " . Carbon::now()->locale('id')->monthName . " " . Carbon::now()->year . "\n"
-                            . "Jumlah Tagihan: Rp {$customer->internetCustomer->internetPackage->name}\n\n"
+                            . "Jumlah Tagihan: Rp " . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.') . "\n\n"
                             . "Untuk melakukan pembayaran atau konfirmasi, silakan klik tautan berikut:\n"
                             . "{$url}\n\n"
                             . "Mohon segera melakukan pembayaran sebelum jatuh tempo agar layanan tetap aktif.\n\n"
