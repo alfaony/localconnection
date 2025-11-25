@@ -126,16 +126,36 @@ class EmployeeCheckingController extends Controller
 
         // Verifikasi reCAPTCHA
         $recaptcha = $request->input('recaptcha');
-        $response = Http::get('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => config('captcha.secret'),
-            'response' => $recaptcha,
-        ]);
+        // $response = Http::get('https://www.google.com/recaptcha/api/siteverify', [
+        //     'secret' => config('captcha.secret'),
+        //     'response' => $recaptcha,
+        // ]);
+
         try {
-            //code...
-            if (!$response->json()['success']) 
-            {
-                return response()->json(['Verification reCAPTCHA verification failed.'], 422);
+            $response = Http::timeout(5) // Set timeout 5 detik
+                ->retry(2, 100) // Retry 2x dengan delay 100ms
+                ->get('https://www.google.com/recaptcha/api/siteverify', [
+                    'secret' => config('captcha.secret'),
+                    'response' => $recaptcha,
+                ]);
+
+            if (!$response->successful() || !$response->json()['success']) {
+                return response()->json(['message' => 'reCAPTCHA verification failed.'], 422);
             }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // Log error untuk monitoring
+            Log::error('reCAPTCHA timeout: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'recaptcha_token' => substr($recaptcha, 0, 50) // Log partial token
+            ]);
+            
+            // Beri response user-friendly
+            return response()->json([
+                'message' => 'Connection timeout. Please try again.'
+            ], 503);
+        }
+
+        try {
     
             // Validasi bahwa $local_id sesuai dengan jadwal dan user yang melakukan check-in
     
