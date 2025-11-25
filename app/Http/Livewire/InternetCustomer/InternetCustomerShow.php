@@ -85,18 +85,21 @@ class InternetCustomerShow extends Component
         $progressStatus = $this->customer->status;
 
         if ($status === 'success' 
-        && $progressStatus == ParamSchema::WAITING_PAYMENT_SUBSCRIPTION
+        // && $progressStatus == ParamSchema::WAITING_PAYMENT_SUBSCRIPTION
         ) {
-            $internetCustomerPurchase = InternetCustomerPurchase::where('id', $purchase)->first();
-            if($internetCustomerPurchase) 
-            {
-                $this->afterPayment($internetCustomerPurchase);
-            }
+            // $internetCustomerPurchase = InternetCustomerPurchase::where('id', $purchase)->first();
+            // if($internetCustomerPurchase) 
+            // {
+            //     $this->afterPayment($internetCustomerPurchase);
+            // }
             $this->statusMessage = [
                 'type' => 'success',
                 'text' => '🎉 Pembayaran berhasil! Terima kasih sudah menggunakan layanan kami.'
             ];
-        } elseif ($status === 'failed' && $progressStatus == ParamSchema::WAITING_PAYMENT_SUBSCRIPTION) {
+        } elseif ($status === 'failed' 
+        // && $progressStatus == ParamSchema::WAITING_PAYMENT_SUBSCRIPTION
+        ) 
+        {
             $this->statusMessage = [
                 'type' => 'danger',
                 'text' => '⚠️ Transaksi gagal diproses. Silakan coba lagi atau hubungi admin.'
