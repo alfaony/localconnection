@@ -38,8 +38,17 @@ class Access
                 $permissions = $role ? $role->permissions
                     ->map(fn($p) => "{$p->method}:{$p->table}")
                     ->toArray() : [];
-    
-                Cache::put($cacheKey, $permissions, now()->addHours(24));
+
+                try {
+                    Cache::put($cacheKey, $permissions, now()->addHours(24));
+                } catch (\Throwable $cacheError) {
+                    // Cache can fail on read-only filesystems; log and continue with in-memory cache.
+                    Log::warning('Gagal menulis cache role permissions', [
+                        'role_id' => $roleId,
+                        'cache_key' => $cacheKey,
+                        'error' => $cacheError->getMessage(),
+                    ]);
+                }
             }
     
             // 4. Simpan ke request cache
