@@ -44,9 +44,11 @@
                     <button type="submit" class="btn btn-primary" onclick="showLoading()">
                         <i class="fas fa-filter"></i> Filter
                     </button>
+                    @canAccess('export','report_productivities')
                     <button type="button" class="btn btn-success" onclick="exportData()">
                         <i class="fas fa-file-excel"></i> Export Excel
                     </button>
+                    @endcanAccess
                 </form>
             </div>
         </div>

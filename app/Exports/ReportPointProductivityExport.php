@@ -30,6 +30,8 @@ class ReportPointProductivityExport implements FromCollection, WithHeadings, Wit
     public function headings(): array
     {
         return [
+            'Perusahaan',
+            'Divisi',
             'Name',
             'Poin Training',
             'Poin Hak Cipta',
@@ -42,6 +44,8 @@ class ReportPointProductivityExport implements FromCollection, WithHeadings, Wit
     public function map($report): array
     {
         return [
+            $report['company'],
+            $report['division'],
             $report['name'],
             $report['training_points'],
             $report['ip_right_points'],
