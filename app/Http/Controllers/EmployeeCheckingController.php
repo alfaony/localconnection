@@ -149,6 +149,8 @@ class EmployeeCheckingController extends Controller
                 'recaptcha_token' => substr($recaptcha, 0, 50) // Log partial token
             ]);
             
+            \App\Jobs\HandleErrorEmployeeCheckin::dispatch($employeeChecking);
+
             // Beri response user-friendly
             return response()->json([
                 'message' => 'Connection timeout. Please try again.'
@@ -156,7 +158,6 @@ class EmployeeCheckingController extends Controller
         }
 
         try {
-    
             // Validasi bahwa $local_id sesuai dengan jadwal dan user yang melakukan check-in
     
             if (!$employeeChecking) 
@@ -269,9 +270,7 @@ class EmployeeCheckingController extends Controller
             //throw $th;
             Log::error($th->getMessage());
             
-            $employeeChecking->is_completed = true;
-            $employeeChecking->checkin_start_time = Carbon::now();
-            $employeeChecking->save();
+            \App\Jobs\HandleErrorEmployeeCheckin::dispatch($employeeChecking);
 
             return response()->json(['message' => 'Check-in updated successfully']);
         }
