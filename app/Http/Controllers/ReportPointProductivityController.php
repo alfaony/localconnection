@@ -149,8 +149,13 @@ class ReportPointProductivityController extends Controller
                         });
                 })
                 ->sum('point');
+            $divisions = $user->divisions->isNotEmpty()
+            ? $user->divisions->pluck('name')->implode(', ')
+            : '-';
 
             return [
+                'company' => $user->company ? $user->company->name : '',
+                'division' => $divisions,
                 'name' => $user->name,
                 'training_points' => $trainingPoints,
                 'ip_right_points' => $ipRightPoints,
@@ -160,7 +165,7 @@ class ReportPointProductivityController extends Controller
             ];
         });
 
-        // Dispatch job
+        // Dispatch  job
         ExportReportPointProductivityJob::dispatch(
             $reports->toArray(),
             $startDate,
