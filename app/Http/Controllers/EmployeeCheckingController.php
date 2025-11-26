@@ -152,9 +152,7 @@ class EmployeeCheckingController extends Controller
             \App\Jobs\HandleErrorEmployeeCheckin::dispatch($employeeChecking);
 
             // Beri response user-friendly
-            return response()->json([
-                'message' => 'Connection timeout. Please try again.'
-            ], 503);
+            return response()->json('Connection timeout. Please try again.', 503);
         }
 
         try {
