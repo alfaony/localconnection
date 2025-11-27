@@ -148,7 +148,7 @@ class Kernel extends ConsoleKernel
             
 
             $settingCompany = SettingCompany::byCompany($a->id)->get()->pluck('field_value','field_title');
-
+            
             $rangeEndDate = $settingCompany['range_end_date'] ?? NULL;
             if($rangeEndDate != "")
             {
@@ -170,7 +170,11 @@ class Kernel extends ConsoleKernel
                 $schedule->command('project:send-expiration-notifications')->timezone('Asia/Jakarta')->dailyAt($sentTime);
             }
 
-            $schedule->command('quota:ensure-locks --company_id=' . $a->id . '')->timezone('Asia/Jakarta')->monthlyOn($settingCompany['range_start_date'] ?? 21, '01:00');
+            $schedule->command('quota:ensure-locks --company_id=' . $a->id)
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('12:14')
+            ->withoutOverlapping(10)
+            ->runInBackground(); // Optional: prevent blocking
         }
 
         // Run Scheduler

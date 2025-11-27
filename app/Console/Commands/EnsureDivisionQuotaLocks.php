@@ -49,7 +49,7 @@ class EnsureDivisionQuotaLocks extends Command
                 $periodStartDay = 21;
             }
 
-            // Calculate period month and year
+            // Calculate period month and yearcl
             if ($now->day >= $periodStartDay) {
                 $periodMonth = $now->month;
                 $periodYear = $now->year;
