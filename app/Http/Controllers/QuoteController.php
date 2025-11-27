@@ -118,6 +118,8 @@ class QuoteController extends Controller
             $qty = $request->post('qty');
             $price = $request->post('price');
             $sub_total = $request->post('sub_total');
+            $is_taxable = $request->post('is_taxable', []); // Array berisi index yang dicentang
+            
 
             for ($i = 0; $i < count($product); $i++) 
             {
@@ -128,6 +130,7 @@ class QuoteController extends Controller
                 $quoteProduct->price_sell = $price[$i];
                 $quoteProduct->sub_total = $sub_total[$i];
                 $quoteProduct->description = $description[$i];
+                $quoteProduct->is_taxable = in_array((string)$i, $is_taxable);
 
                 $quote->quoteProduct()->save($quoteProduct);
             }
@@ -246,6 +249,7 @@ class QuoteController extends Controller
             $qty = $request->post('qty');
             $price = $request->post('price');
             $sub_total = $request->post('sub_total');
+            $is_taxable = $request->post('is_taxable', []); // Array berisi index yang dicentang
 
             for ($i = 0; $i < count($product); $i++) 
             {
@@ -256,6 +260,7 @@ class QuoteController extends Controller
                 $quoteProduct->qty = $qty[$i];
                 $quoteProduct->sub_total = $sub_total[$i];
                 $quoteProduct->description = $description[$i];
+                $quoteProduct->is_taxable = in_array((string)$i, $is_taxable);
 
                 $quote->quoteProduct()->save($quoteProduct);
             }
@@ -336,12 +341,20 @@ class QuoteController extends Controller
         $discount = $request->discount ?? 0;
         $division_budget_id = $request->division_budget ?? NULL;
         $quote_id = $request->quote_id ?? NULL;
+        $taxable_total = $request->taxable_total ?? $total; // Total yang kena pajak
 
         // Hitung total setelah diskon dan biaya tambahan
         $totalAll = ($total + $charges) - $discount;
         $serviceFee = $service_fee != 0 ? round(($totalAll * $service_fee) / 100) : 0;
         $totalAfterServiceFee = $totalAll + $serviceFee;
-        $ppn = $tax != 0 ? round(($totalAfterServiceFee * $tax) / 100) : 0;
+        
+        // Hitung base untuk PPN (hanya dari produk taxable)
+        $taxableRatio = $total > 0 ? $taxable_total / $total : 0;
+        $taxableServiceFee = round($serviceFee * $taxableRatio);
+        $taxableBase = ($taxable_total + $charges - $discount) + $taxableServiceFee;
+        
+        // PPN hanya dari jumlah taxable
+        $ppn = $tax != 0 ? round(($taxableBase * $tax) / 100) : 0;
         $grandTotal = $totalAfterServiceFee + $ppn;
 
         // Ambil jumlah budget berdasarkan ID division_budget
@@ -371,6 +384,7 @@ class QuoteController extends Controller
         $save = true;
         $result = [
             'total' => $total,
+            'taxable_total' => $taxable_total,
             'service_fee' => 'Rp. '.number_format($serviceFee, 0, ',', '.'),
             'ppn' => 'Rp. '.number_format($ppn, 0, ',', '.'),
             'grand_total' => 'Rp. '.number_format($grandTotal, 0, ',', '.'),
@@ -388,7 +402,7 @@ class QuoteController extends Controller
         return [
             'status' => 200,
             'message' => 'okay',
-            'save' => $save,
+            'save' => $save ?? true,
             'data' => $result
         ];
     }
@@ -477,6 +491,18 @@ class QuoteController extends Controller
 
         return view('quote.pdf',compact('product','customer','nomorQuote','quote','userCreate','company','today'));
     }
+
+    /**
+     * Helper
+     */
+
+    private function calculateTaxableTotal($quote)
+    {
+        return $quote->quoteProduct()
+            ->where('is_taxable', true)
+            ->sum('sub_total');
+    }
+
     /**
      * Total After PPN dll
      */
@@ -485,16 +511,28 @@ class QuoteController extends Controller
         $service_fee = $quote->service_fee ?? 0;
         $tax = $quote->tax ?? 0;
 
-        $total =  $quote->quoteProduct() ? $quote->quoteProduct()->sum('sub_total') : 0;
+        $total = $quote->quoteProduct() ? $quote->quoteProduct()->sum('sub_total') : 0;
         $charges = $quote->charges ?? 0;
         $discount = $quote->discount ?? 0;
 
-        // return $tax;
+        // Hitung total yang kena pajak
+        $taxableTotal = $this->calculateTaxableTotal($quote);
+        
+        // Total setelah diskon dan charges
         $totalAll = ($total + $charges) - $discount;
-        $serviceFee = $service_fee != 0 ? round(($totalAll * $service_fee) / ParamSchema::PERCENTAGE) : 0 ;
+        
+        // Service fee dari total keseluruhan
+        $serviceFee = $service_fee != 0 ? round(($totalAll * $service_fee) / ParamSchema::PERCENTAGE) : 0;
         
         $totalAfterServiceFee = $totalAll + $serviceFee;
-        $ppn = $tax != 0 ? round(($totalAfterServiceFee * $tax) / ParamSchema::PERCENTAGE) : 0 ;
+        
+        // Hitung base untuk PPN (hanya produk yang is_taxable = true + service fee proportional)
+        $taxableRatio = $total > 0 ? $taxableTotal / $total : 0;
+        $taxableServiceFee = round($serviceFee * $taxableRatio);
+        $taxableBase = ($taxableTotal + $charges - $discount) + $taxableServiceFee;
+        
+        // PPN hanya dari produk yang taxable
+        $ppn = $tax != 0 ? round(($taxableBase * $tax) / ParamSchema::PERCENTAGE) : 0;
         
         $grandTotal = $totalAfterServiceFee + $ppn;
 
@@ -503,6 +541,7 @@ class QuoteController extends Controller
 
         return $grandTotal;
     }
+    
 
     /**
      * Data Table Quote
