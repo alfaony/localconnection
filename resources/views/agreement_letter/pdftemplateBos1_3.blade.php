@@ -281,7 +281,7 @@
                     <ol>
                         <li>Conduct educational or training activities as per agreed plans.</li>
                         <li>Promote the affiliate link/code ethically and lawfully.</li>
-                        <li>Report participant data who purchased n8n accounts via the affiliate code.</li>
+                        <li>Reporting data on participants who attended classes/seminars held.</li>
                         <li>Refrain from misuse of facilities or activities beyond this agreement.</li>
                     </ol>
                 </div>
@@ -295,7 +295,13 @@
                     <ol>
                         <li>Pihak Kedua berhak menerima komisi sebesar <strong>{{ isset($agreementLetter->custom_fields['custom_commission_percentage']) ? $agreementLetter->custom_fields['custom_commission_percentage'] : '20' }}%</strong> dari transaksi pembelian akun berbayar yang dilakukan peserta dengan kode afiliasi miliknya.</li>
                         <li>Komisi dapat ditarik apabila saldo mencapai minimal <strong>{{ isset($agreementLetter->custom_fields['custom_minimum_withdrawal_amount']) ? 'Rp' . number_format($agreementLetter->custom_fields['custom_minimum_withdrawal_amount'], 0, ',', '.') : 'Rp500.000' }}</strong> (lima ratus ribu rupiah).</li>
-                        <li>Pembayaran dilakukan oleh Pihak Pertama paling lambat <strong>{{ isset($agreementLetter->custom_fields['custom_payment_duration_days']) ? $agreementLetter->custom_fields['custom_payment_duration_days'] : '7' }}</strong> (tujuh) hari kerja setelah verifikasi permintaan penarikan komisi.</li>
+                        <li>
+                            Komisi afiliasi akan dikenakan pemotongan Pajak Penghasilan (PPh) sebesar 2,5% dari total nilai komisi yang diterima.
+                        </li>
+                        <li>
+                            Untuk proses pencairan komisi, pihak Afiliasi wajib melampirkan NPWP, dan nomor rekening penerima harus sesuai dengan nama yang tercantum pada NPWP tersebut.
+                        </li>
+                        <li>Pembayaran dilakukan oleh Pihak Pertama paling lambat <strong>{{ isset($agreementLetter->custom_fields['custom_payment_duration_days']) ? $agreementLetter->custom_fields['custom_payment_duration_days'] : '7' }}</strong> hari kerja setelah verifikasi permintaan penarikan komisi.</li>
                         <li>Pihak Pertama berhak menahan pembayaran apabila ditemukan indikasi kecurangan (fraud) atau pelanggaran terhadap ketentuan afiliasi.</li>
                     </ol>
                 </div>
@@ -305,7 +311,13 @@
                     <ol>
                         <li>The Second Party is entitled to receive a <strong>{{ isset($agreementLetter->custom_fields['custom_commission_percentage']) ? $agreementLetter->custom_fields['custom_commission_percentage'] : '20' }}%</strong> commission from every paid account purchase made using their affiliate code.</li>
                         <li>Commissions can be withdrawn once the accumulated balance reaches a minimum of <strong>{{ isset($agreementLetter->custom_fields['custom_minimum_withdrawal_amount']) ? 'IDR ' . number_format($agreementLetter->custom_fields['custom_minimum_withdrawal_amount'], 0, ',', '.') : 'IDR 500,000' }}</strong> (five hundred thousand rupiah).</li>
-                        <li>Payment shall be made by the First Party no later than <strong>{{ isset($agreementLetter->custom_fields['custom_payment_duration_days']) ? $agreementLetter->custom_fields['custom_payment_duration_days'] : '7' }}</strong> (seven) working days after verification of the withdrawal request.</li>
+                        <li>
+                            Affiliate commissions will be subject to Income Tax (PPh) deductions of 2.5% of the total commission value received.
+                        </li>
+                        <li>
+                            For the commission disbursement process, Affiliates are required to attach their Taxpayer Identification Number (NPWP), and the recipient's account number must match the name listed on the NPWP.
+                        </li>
+                        <li>Payment shall be made by the First Party no later than <strong>{{ isset($agreementLetter->custom_fields['custom_payment_duration_days']) ? $agreementLetter->custom_fields['custom_payment_duration_days'] : '7' }}</strong> working days after verification of the withdrawal request.</li>
                         <li>The First Party reserves the right to withhold payment in case of suspected fraud or violation of the affiliate terms.</li>
                     </ol>
                 </div>
