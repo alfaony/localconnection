@@ -227,7 +227,7 @@
                     <h6><strong>PASAL 2</strong></h6>
                     <h6><strong>JANGKA WAKTU</strong></h6>
                     <p>
-                        Perjanjian ini mulai berlaku selama <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_duration_months']) ? '[' . $agreementLetter->custom_fields['custom_cooperation_duration_months'] . ']' : '[**]' }}</strong> bulan terhitung efektif sejak tanggal <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '[**]' }}</strong> sampai dengan tanggal <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_end_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_end_date'])->format('d F Y') : '[**]' }}</strong> dan dapat diperpanjang berdasarkan hasil review dan evaluasi yang dilakukan oleh Pihak Pertama.
+                        Perjanjian ini mulai berlaku selama <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_duration_months']) ? $agreementLetter->custom_fields['custom_cooperation_duration_months'] : '[**]' }}</strong> bulan terhitung efektif sejak tanggal <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '[**]' }}</strong> sampai dengan tanggal <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_end_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_end_date'])->format('d F Y') : '[**]' }}</strong> dan dapat diperpanjang berdasarkan hasil review dan evaluasi yang dilakukan oleh Pihak Pertama.
                     </p>
                     <p>
                         Evaluasi awal dilakukan setiap 30 (tiga puluh) hari dalam 3 bulan pertama, dan jika kerja sama diperpanjang, evaluasi berikutnya dilakukan setiap 3 (tiga) bulan.
@@ -237,7 +237,7 @@
                     <h6><strong>ARTICLE 2</strong></h6>
                     <h6><strong>TIME PERIOD</strong></h6>
                     <p>
-                        This agreement is valid for <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_duration_months']) ? '[' . $agreementLetter->custom_fields['custom_cooperation_duration_months'] . ']' : '[**]' }}</strong> months effective from <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '[**]' }}</strong> until <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_end_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_end_date'])->format('d F Y') : '[**]' }}</strong> and may be extended based on the review and evaluation conducted by the First Party.
+                        This agreement is valid for <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_duration_months']) ? $agreementLetter->custom_fields['custom_cooperation_duration_months'] : '[**]' }}</strong> months effective from <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '[**]' }}</strong> until <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_end_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_end_date'])->format('d F Y') : '[**]' }}</strong> and may be extended based on the review and evaluation conducted by the First Party.
                     </p>
                     <p>
                         The initial evaluation shall be carried out every thirty (30) days during the first three months, and if the cooperation is extended, subsequent evaluations shall be conducted every three (3) months thereafter.
@@ -262,7 +262,7 @@
                     <ol>
                         <li>Melaksanakan kegiatan edukasi dan pelatihan sesuai rencana yang disetujui.</li>
                         <li>Mempromosikan link/kode afiliasi dengan etika dan cara yang sesuai hukum.</li>
-                        <li>Melaporkan data peserta yang membeli akun n8n melalui kode afiliasi.</li>
+                        <li>Melaporkan data peserta yang mengikuti kelas/seminar yang diselenggarakan</li>
                         <li>Tidak menyalahgunakan fasilitas atau melakukan kegiatan di luar perjanjian.</li>
                     </ol>
                 </div>
