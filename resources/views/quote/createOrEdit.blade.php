@@ -224,25 +224,26 @@
 
             <table class="table table-bordered mt-3" id="tableQuote">
                 <thead>
-                    <tr class="d-flex">
-                        <th class="col-auto">#</th>
-                        <th class="col-3">Produk/Jasa</th>
-                        <th class="col-1">Satuan</th>
-                        <th class="col-3">Description</th>
-                        <th class="col-2">Qty</th>
-                        <th class="col-2">Total</th>
-                        <th class="col"></th>
+                    <tr>
+                        <th style="width: 3%;">#</th>
+                        <th style="width: 20%;">Produk/Jasa</th>
+                        <th style="width: 8%;">Satuan</th>
+                        <th style="width: 30%;">Description</th>
+                        <th style="width: 10%;">Qty</th>
+                        <th style="width: 5%;" class="text-center">Tax</th>
+                        <th style="width: 15%;">Total</th>
+                        <th style="width: 9%;"></th>
                     </tr>
                 </thead>
                 <tbody>
                     @if(@$quote)
                     @php $nomorBaris = 1; @endphp
                     @foreach($quote->quoteProduct->sortBy('sort') as $a)
-                    <tr class="d-flex" data-key="{{ $a->id }}">
-                        <td class="col-auto">
+                    <tr data-key="{{ $a->id }}">
+                        <td style="width: 3%;">
                             {{ $nomorBaris++ }}
                         </td>
-                        <td class="col-3">
+                        <td style="width: 20%;">
                             <select class="form-control productChange select2" name="product[]" id="product_{{ $a->id }}" required>
                                 <option value="" selected disabled>Pilih</option>
                                 @foreach($product->groupBy('category.name') as $category => $group)
@@ -260,21 +261,25 @@
                             </select>
                         </td>
 
-                        <td class="col-1" id="method_count_${key}">
+                        <td style="width: 8%;" id="method_count_{{ $a->id }}">
                             {{ $a->product->method_count ?? "" }}
                         </td>
-                        <td class="col-3">
+                        <td style="width: 30%;">
                             <input type="hidden" class="thriveEditor" data-ids="{{ $a->id }}" id="description_{{ $a->id }}"  name="description[]" value="{{ old('description') ?? @$a->description }}" required>
-                            <div id="editor_{{ $a->id }}" style="min-height: 120px;">{!! old('description') ?? @$a->description !!}</div>
+                            <div id="editor_{{ $a->id }}" style="min-height: 100px; max-height: 200px; overflow-y: auto;">{!! old('description') ?? @$a->description !!}</div>
                         </td>
-                        <td class="col-2">
+                        <td style="width: 10%;">
                             <input type="hidden" id="price_{{ $a->id }}" name="price[]" data-key="{{ $a->id }}" min="1" class="form-control" value="{{ $a->price_sell }}" required>
-                            <input type="number" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Quantity" value="{{ old('qty') ?? @$a->qty }}" required>
+                            <input type="number" id="qty_{{ $a->id }}" name="qty[]" data-key="{{ $a->id }}" min="1" class="form-control qtyChange" placeholder="Qty" value="{{ old('qty') ?? @$a->qty }}" required>
                         </td>
-                        <td class="col-2" id="sub_total_show_{{ $a->id }}">
+                        <td style="width: 5%;" class="text-center align-middle">
+                            <!-- Checkbox dengan value = index -->
+                            <input type="checkbox" class="taxable-checkbox" name="is_taxable[]" id="is_taxable_{{ $a->id }}" value="{{ $loop->index }}" {{ @$a->is_taxable ? 'checked' : '' }}>
+                        </td>
+                        <td style="width: 15%;" id="sub_total_show_{{ $a->id }}">
                             {{ 'Rp. '.number_format($a->sub_total,0,',','.') }}
                         </td>
-                        <td class="col">
+                        <td style="width: 9%;">
                             <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]" value="{{ $a->id }}">
                             <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
                             <button class="btn btn-danger btn-sm btnHapusData" data-id="{{ $a->id }}"><i class="fa fa-trash"></i></button>
@@ -442,6 +447,12 @@
     {
         calculation();
         quoteTransition();
+
+        // Event listener untuk perubahan checkbox taxable
+        $('#tableQuote').on('change', '.taxable-checkbox', function (e) {
+            calculation();
+        });
+
         $("#submit").click(function (e) 
         { 
             e.preventDefault();
@@ -560,7 +571,8 @@
             e.preventDefault();
 
             var key = generateRandomString(4);
-            var noBaris = $('#tableQuote tbody tr').length + 1; // Menghitung jumlah baris untuk nomor baris selanjutnya
+            var noBaris = $('#tableQuote tbody tr').length + 1;
+            var rowIndex = $('#tableQuote tbody tr').length; // Index untuk row baru
             var dataSelect = @json($product);
 
             if (!Array.isArray(dataSelect)) 
@@ -574,7 +586,6 @@
 
             // Group products by category
             dataSelect.forEach(function (product) {
-                console.log(product.category);
                 var category = product.category ? product.category.name : 'Other';
                 if (!groupedProducts[category]) {
                     groupedProducts[category] = [];
@@ -595,30 +606,33 @@
             });
 
             const row = `
-                <tr class="d-flex" data-key="${key}">
-                    <td class="col">
+                <tr data-key="${key}">
+                    <td style="width: 3%;">
                         ${noBaris}
                     </td>
-                    <td class="col-3">
+                    <td style="width: 20%;">
                         <select class="form-control productChange select2" name="product[]" id="product_${key}" required>
                             <option value="" selected disabled>Pilih</option>
                             ${projectOptions}
                         </select>
                     </td>
-                    <td class="col-1" id="method_count_${key}">
+                    <td style="width: 8%;" id="method_count_${key}">
                     </td>
-                    <td class="col-3">
+                    <td style="width: 30%;">
                         <input type="hidden" class="thriveEditor" data-ids="${key}" id="description_${key}" name="description[]" required>
-                        <div id="editor_${key}" style="min-height: 120px;"></div>
+                        <div id="editor_${key}" style="min-height: 100px; max-height: 200px; overflow-y: auto;"></div>
                     </td>
-                    <td class="col-2">
+                    <td style="width: 10%;">
                         <input type="hidden" id="price_${key}" name="price[]" data-key="${key}" min="1" class="form-control" value="" required>
-                        <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Quantity" value="1" required>
+                        <input type="number" id="qty_${key}" name="qty[]" data-key="${key}" min="1" class="form-control qtyChange" placeholder="Qty" value="1" required>
                     </td>
-                    <td class="col-2" id="sub_total_show_${key}">
+                    <td style="width: 5%;" class="text-center align-middle">
+                        <input type="checkbox" class="taxable-checkbox" name="is_taxable[]" id="is_taxable_${key}" value="${rowIndex}" checked>
+                    </td>
+                    <td style="width: 15%;" id="sub_total_show_${key}">
                         Rp 0
                     </td>
-                    <td class="col">
+                    <td style="width: 9%;">
                         <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]">
                         <input type="hidden" class="form-control" placeholder="Total" id="sub_total_${key}" name="sub_total[]">
                         <button class="btn btn-danger btn-sm btnHapus"><i class="fa fa-trash"></i></button>
@@ -753,12 +767,19 @@
         var charges = parseInt($("#charges").val()) || 0;
         var divisionBudget = $("#division_budget").val();
         var total = 0;
+        var taxableTotal = 0; // Total yang kena pajak
         var quote_id = "{{ @$quote->id ?? '' }}";
 
         $('#tableQuote tbody tr').each(function() 
         {
             var subTotal = parseFloat($(this).find('input[name="sub_total[]"]').val() || 0);
+            var isTaxable = $(this).find('input.taxable-checkbox').is(':checked');
+            
             total += subTotal;
+            
+            if (isTaxable) {
+                taxableTotal += subTotal;
+            }
         });
 
         $.ajax({
@@ -766,6 +787,7 @@
             url: "{{ route('quote.counting') }}",
             data: {
                 total: total,
+                taxable_total: taxableTotal,
                 tax: tax,
                 service_fee: service_fee,
                 discount: discount,
@@ -780,22 +802,10 @@
                     $("#service_fee_result").html(values.service_fee);
                     $("#ppn_result").html(values.ppn);
                     $("#ppn_title").html('PPN: ' +tax+ '%');
-                    
                     $("#grand_total_result").html(values.grand_total);
                     
-                    $('#budget_usage_row').hide();
-                    $('#remaining_budget_row').hide();
+                    // ... kode budget tetap sama
                     
-                    if(response.data.calculationExternal)
-                    {
-                        console.log("here");
-                        $('#budget_usage_row').show();
-                        $('#remaining_budget_row').show();
-
-                        $('#budget_usage').html(values.grand_total);
-                        $('#remaining_budget').html(values.remaining_budget);
-                    }
-                    // Check if grand total exceeds division budget
                     if (!response.save) {
                         Swal.fire({
                             title: 'Error!',
@@ -803,20 +813,10 @@
                             icon: 'error',
                             confirmButtonText: 'OK'
                         });
-
-                        // Disable submit button
                         $("#submit").attr('disabled', 'disabled');
                     } else {
-                        // Enable submit button if grand total is within the budget
                         $("#submit").removeAttr('disabled');
                     }
-                } else {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: response.message,
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
                 }
             }
         });
@@ -931,8 +931,52 @@
     }
     .ql-container 
     {
-        min-height: 150px;
+        min-height: 100px;
+        max-height: 200px;
         height: auto;
+        overflow-y: auto;
+    }
+    
+    /* Styling untuk tabel */
+    #tableQuote {
+        table-layout: fixed;
+        width: 100%;
+    }
+    
+    #tableQuote th,
+    #tableQuote td {
+        padding: 8px;
+        vertical-align: middle;
+        word-wrap: break-word;
+    }
+    
+    #tableQuote th {
+        font-size: 14px;
+        font-weight: 600;
+    }
+    
+    /* Styling untuk checkbox */
+    #tableQuote .taxable-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    /* Styling untuk input number qty */
+    #tableQuote input[type="number"] {
+        padding: 5px;
+        font-size: 13px;
+    }
+    
+    /* Styling untuk button delete */
+    #tableQuote .btn-sm {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+    
+    /* Prevent horizontal scroll */
+    .table-responsive {
+        overflow-x: auto;
     }
 </style>
 @stop

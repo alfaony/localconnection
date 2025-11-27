@@ -112,6 +112,7 @@
                       {{ $a->product ? $a->product->name : '' }}
                       <input type="hidden" class="form-control" placeholder="Total" id="" name="ids[]" value="{{ $a->id }}">
                       <input type="hidden" class="form-control" placeholder="Total" id="sub_total_{{ $a->id }}" name="sub_total[]" value="{{ $a->sub_total }}">
+                      <input type="hidden" class="is-taxable-input" id="is_taxable_{{ $a->id }}" value="{{ $a->is_taxable ? '1' : '0' }}">
                   </td>
                   <td>
                     {!! $a->description ?? '' !!}
@@ -297,28 +298,42 @@
 
         var tax = parseInt($("#tax").val()) || 0;
         var service_fee = parseInt($("#service_fee").val()) || 0;
-
         var discount = parseInt($("#discount").val()) || 0;
         var charges = parseInt($("#charges").val()) || 0;
 
-        
         var ppn_title = tax <= 0 ? 'PPN: 0%' : 'PPN: '+tax+'%';
         var service_fee_title = service_fee <= 0 ? 'Service Fee: 0%' : 'Service Fee: '+service_fee+'%';
 
         var sub_total = 0;
+        var taxable_total = 0; // Total yang kena pajak
+        
         $('#tableQuote tbody tr').each(function() 
         {
-            // console.log($(this).find('input[name="sub_total[]"]'));
             var subTotal = parseFloat($(this).find('input[name="sub_total[]"]').val() || 0);
-            console.log(subTotal);
+            var isTaxable = $(this).find('input.is-taxable-input').val() === '1';
+            
             sub_total += subTotal;
+            
+            // Hitung total yang kena pajak
+            if (isTaxable) {
+                taxable_total += subTotal;
+            }
         });
 
+        console.log('Total:', sub_total);
+        console.log('Taxable Total:', taxable_total);
 
         $.ajax({
             type: "GET",
             url: "{{ route('quote.counting') }}",
-            data: {total:sub_total,tax:tax,service_fee:service_fee,discount:discount,charges:charges},
+            data: {
+                total: sub_total,
+                taxable_total: taxable_total, // Kirim taxable_total ke backend
+                tax: tax,
+                service_fee: service_fee,
+                discount: discount,
+                charges: charges
+            },
             success: function (response) 
             {
                 if(response.data)
