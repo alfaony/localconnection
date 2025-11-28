@@ -86,6 +86,7 @@ class DispatchWebhooksForAppJob implements ShouldQueue
 
                 if (! $response->successful()) {
                     Log::warning('Webhook gagal', [
+                        'event'     => $this->event,
                         'setting_id' => $setting->id,
                         'status'     => $response->status(),
                         'body'       => $response->body(),
@@ -93,6 +94,7 @@ class DispatchWebhooksForAppJob implements ShouldQueue
                     ]);
                 } else {
                     Log::info('Webhook sukses', [
+                        'event'     => $this->event,
                         'setting_id' => $setting->id,
                         'status'     => $response->status(),
                         'endpoint'   => $endpoint,
