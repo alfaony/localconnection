@@ -76,6 +76,9 @@
                                                     <button wire:click="viewKtpPhoto" class="btn btn-sm btn-info ml-2">
                                                         <i class="fas fa-eye mr-1"></i>Lihat KTP
                                                     </button>
+                                                    <button wire:click="downloadKtpPhoto" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-download mr-1"></i>Download
+                                                    </button>
                                                 @endif
                                             </td>
                                         </tr>
@@ -884,6 +887,56 @@
                 icon.classList.add('fa-eye');
             }
         }
+
+        function downloadFileFromUrl(url, filename) {
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = blobUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(blobUrl);
+                    document.body.removeChild(a);
+                })
+                .catch(error => {
+                    console.error('Download error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: 'Gagal mengunduh file. Silakan coba lagi.',
+                        confirmButtonText: 'OK'
+                    });
+                });
+        }
+
+        // Listen for download event from Livewire
+        window.addEventListener('downloadFile', function(event) {
+            Swal.fire({
+                title: 'Mengunduh...',
+                text: 'Mohon tunggu sebentar',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            downloadFileFromUrl(event.detail.url, event.detail.filename);
+            
+            setTimeout(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: 'File berhasil diunduh',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }, 1000);
+        });
 
         document.addEventListener('livewire:load', function () {
 

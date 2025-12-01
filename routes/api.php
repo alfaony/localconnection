@@ -14,6 +14,7 @@ use App\Http\Controllers\API\DailyTaskController;
 use App\Http\Controllers\API\ObjectiveController;
 use App\Http\Controllers\API\DailyTaskProjectController;
 use App\Http\Controllers\API\UsedLaptopController;
+use App\Http\Controllers\API\MomApiController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\API\DailyTaskMobileController;
 
@@ -69,6 +70,20 @@ Route::group(['middleware' => ['auth:api']], function()
     // Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);
     Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');
 
+
+    Route::resource('mom', MomApiController::class);
+    Route::prefix('mom')->group(function () {
+
+        // MOM Task Routes
+        Route::post('/{id}/tasks', [MomApiController::class, 'storeTask']); // POST - Create task
+        Route::put('/tasks/{id}', [MomApiController::class, 'updateTask']); // PUT - Update task
+        Route::delete('/tasks/{id}', [MomApiController::class, 'deleteTask']); // DELETE - Delete task
+
+        // MOM Agenda Routes
+        Route::post('/{id}/agendas', [MomApiController::class, 'storeAgenda']); // POST - Create agenda
+        Route::put('/agendas/{id}', [MomApiController::class, 'updateAgenda']); // PUT - Update agenda
+        Route::delete('/agendas/{id}', [MomApiController::class, 'deleteAgenda']); // DELETE - Delete agenda
+    });
 
     //Mobile
     Route::get('tasks/today', [DailyTaskMobileController::class, 'indexToday']);
