@@ -342,7 +342,7 @@ class InternetCustomerShow extends Component
             $url = s3_asset(true, 10, $this->ktpPhotoUrl);
             $filename = 'KTP_' . $this->customer->code . '_' . str_replace(' ', '_', $this->customer->name) . '.jpg';
             
-            $this->dispatchBrowserEvent('download-file', [
+            $this->dispatchBrowserEvent('downloadFile', [
                 'url' => $url,
                 'filename' => $filename
             ]);
