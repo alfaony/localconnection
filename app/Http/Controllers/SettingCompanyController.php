@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\SettingCompany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 
 class SettingCompanyController extends Controller
@@ -53,7 +54,8 @@ class SettingCompanyController extends Controller
         try {
             $settings = SettingCompany::byCompany(Auth::user()->company_id)->get();
             $arrayExsist = ['header_store_image'];
-
+            $cacheKey = "xendit_settings_".Auth::user()->company_id;
+            Cache::forget($cacheKey);
             foreach ($settings as $setting) 
             {
                 $title = $setting->field_title;
@@ -94,7 +96,7 @@ class SettingCompanyController extends Controller
         } catch (\Throwable $th) {
             // dd($th);
             DB::rollback();
-            Log::error($th);
+            \Log::error($th);
             return redirect()->route('setting-company.index')->with('store',false);
         }
     }
