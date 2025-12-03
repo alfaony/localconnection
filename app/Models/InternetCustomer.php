@@ -114,6 +114,7 @@ class InternetCustomer extends Model
         'code_cust',
         'optical_distribution_id',
         'grouping_id',
+        'action_user_id',
     ];
 
     // ✅ RELATIONS
@@ -240,13 +241,15 @@ class InternetCustomer extends Model
 
         switch ($status) {
             case 'pending':
-                return '<span class="badge badge-light">Pending</span>';
+                return '<span class="badge badge-light text-dark">Pending</span>';
             case 'waiting_payment_subscription':
                 return '<span class="badge badge-secondary">Waiting Payment Subscription</span>';
             case 'waiting_payment_confirmation':
                 return '<span class="badge badge-secondary">Waiting Payment Confirmation</span>';
             case 'process_installation':
                 return '<span class="badge badge-primary">Process Installation</span>';
+            case 'customer_existing':
+                return '<span class="badge badge-primary">Customer Existing Installation</span>';
             case 'installed':
                 return '<span class="badge badge-info">Installed</span>';
             case 'active':
@@ -261,6 +264,8 @@ class InternetCustomer extends Model
                 return '<span class="badge badge-danger">Disconnected</span>';
             case "reactivated":
                 return '<span class="badge badge-success">Reactivated</span>';
+            case 'closed':
+                return '<span class="badge badge-dark">Closed</span>';
             default:
                 return '<span class="badge badge-light">Unknown</span>';
         }

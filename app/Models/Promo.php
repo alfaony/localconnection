@@ -13,6 +13,7 @@ class Promo extends Model
 
     protected $fillable = [
         'company_id',
+        'user_id',
         'name',
         'type',
         'value',
@@ -71,6 +72,11 @@ class Promo extends Model
     public function internetCustomers()
     {
         return $this->hasMany(InternetCustomer::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class)->withTrashed();
     }
     
     public function scopeByCompany($query,$companyId)
