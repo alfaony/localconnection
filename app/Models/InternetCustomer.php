@@ -216,6 +216,11 @@ class InternetCustomer extends Model
         return $this->hasMany(InternetCustomerPurchase::class);
     }
 
+    public function actionBy()
+    {
+        return $this->belongsTo(User::class, 'action_user_id')->withTrashed();
+    }
+
     public function isActiveConneciton()
     {
         $ros = new RouterOSService();

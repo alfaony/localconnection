@@ -170,9 +170,10 @@
                                             <th>Promo</th>
                                             <td>
                                                 @if($customer->promo)
-                                                    <span class="badge badge-info">{{ $customer->promo->name }}</span>
-                                                @else
-                                                    <span>-</span>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="badge badge-info mr-2">{{ $customer->promo->name }}</span>
+                                                        <span class="text-muted">{{ $customer->actionBy ? $customer->actionBy->name : ''}}</span>
+                                                    </div>
                                                 @endif
                                             </td>
                                         </tr>
