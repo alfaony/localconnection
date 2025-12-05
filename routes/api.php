@@ -17,6 +17,7 @@ use App\Http\Controllers\API\UsedLaptopController;
 use App\Http\Controllers\API\MomApiController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\API\DailyTaskMobileController;
+use App\Http\Controllers\API\ItemRequestMobileController;
 
 
 /*
@@ -118,6 +119,30 @@ Route::group(['middleware' => ['auth:api']], function()
         ->name('medias.generateMediaUrl.mobile');
     Route::get('divisions', [DailyTaskMobileController::class, 'indexDivision']);
     Route::get('divisions/check-division-quota', [DailyTaskMobileController::class, 'checkDivisionQuota']);
+
+    Route::get('/item-requests/{id}/workflow', [ItemRequestMobileController::class, 'workflow']);
+    Route::post('item-requests/{id}/add-vendor', [ItemPurchaseMobileController::class,'addVendor']);
+    Route::post('item-requests/{id}/delivery', [ItemRequestMobileController::class,'delivery']);
+    Route::get('item-requests/{id}/delivery-detail', [ItemRequestMobileController::class, 'getDelivery']);
+    Route::get('item-requests/company', [ItemRequestMobileController::class, 'loadByCompany']);
+
+    Route::get('item-requests/categories', [ItemRequestMobileController::class, 'categories']);
+    Route::get('item-requests/types', [ItemRequestMobileController::class, 'types']);
+    Route::get('item-requests/sprinters', [ItemRequestMobileController::class, 'sprinters']);
+    Route::get('item-requests/product-suppliers', [ItemRequestMobileController::class, 'productSuppliers']);
+
+    Route::resource('item-requests', ItemRequestMobileController::class)
+    ->only(['index', 'show', 'store', 'update', 'destroy']);
+
+    Route::post('item-purchases/{id}/payment', [ItemPurchaseMobileController::class,'payment']);
+    Route::get('item-purchases/{item_request_id}/get-payment', [ItemPurchaseMobileController::class, 'getPayment'])
+        ->name('item-purchases.getPayment');
+        
+    Route::post('item-purchases/{id}/closed', [ItemPurchaseMobileController::class, 'closed']);
+    Route::post('item-purchases/{id}/complete', [ItemPurchaseMobileController::class, 'complete']);
+
+    Route::resource('item-purchases', ItemPurchaseMobileController::class)
+    ->only(['store', 'update']);
 });
 
 Route::group(['middleware' => ['auth:api']], function() 
