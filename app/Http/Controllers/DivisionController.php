@@ -423,11 +423,11 @@ class DivisionController extends Controller
 
         // Calculate period month and year
         if ($now->day >= $periodStartDay) {
-            $month = $now->month;
-            $year = $now->year;
-        } else {
             $month = $now->copy()->subMonth()->month;
             $year = $now->copy()->subMonth()->year;
+        } else {
+            $month = $now->month;
+            $year = $now->year;
         }
 
         $quotaLock = DivisionQuotaLock::where('division_id', $division->id)
