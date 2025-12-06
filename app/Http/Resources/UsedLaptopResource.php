@@ -17,7 +17,7 @@ class UsedLaptopResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'is_sold' => $this->is_sold,
+            'is_sold' => $this->sold_status,
             'serial_number' => $this->serial_number,
             'brand' => $this->brand,
             'slug' => $this->slug,
@@ -31,7 +31,7 @@ class UsedLaptopResource extends JsonResource
             'buying_price' => $this->purchase_price,
             'selling_price' => $this->jakarta_price,
             'images' => $this->media->sortBy('order')->map(function ($media) {
-                return env('APP_URL') . s3_asset(true,10,$media->file_path);
+                return $media->file_path;
             })->toArray(),
         ];
     }

@@ -25,6 +25,21 @@ class QuoteProduct extends Model
         });
     }
 
+    protected $fillable = [
+        'quote_id',
+        'product_id',
+        'qty',
+        'price_sell',
+        'sub_total',
+        'description',
+        'sort',
+        'is_taxable'
+    ];
+
+    protected $casts = [
+        'is_taxable' => 'boolean',
+    ];
+
     public function product()
     {
         return $this->belongsTo(Product::class)->withTrashed();
