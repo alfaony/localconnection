@@ -20,6 +20,7 @@ use App\Models\Product;
 use Livewire\WithFileUploads;
 use App\Models\ImportProgress;
 use App\Jobs\ImportProductStoreJob;
+use App\Jobs\ExportProductStoreJob;
 
 class ProductStoreIndex extends Component
 {
@@ -44,6 +45,9 @@ class ProductStoreIndex extends Component
     public $importProgress = null;
     public $isImporting = false;
     public $showImportSection = false;
+
+    // Export properties
+    public $isExporting = false;
 
     protected $paginationTheme = 'bootstrap';
 
@@ -110,6 +114,128 @@ class ProductStoreIndex extends Component
         $this->resetPage();
     }
 
+    // ==================== EXPORT METHODS ====================
+    
+    public function exportProducts()
+    {
+        try {
+            $this->isExporting = true;
+
+            // Get total records yang akan di-export dengan filter yang sama seperti render()
+            $totalRecords = $this->getFilteredQuery()->count();
+
+            // Validasi jika tidak ada data
+            if ($totalRecords === 0) {
+                $this->dispatchBrowserEvent('export-failed', [
+                    'message' => 'Tidak ada data untuk di-export dengan filter yang dipilih.'
+                ]);
+                $this->isExporting = false;
+                return;
+            }
+
+            // Prepare filters untuk export - SAMA PERSIS dengan yang di render()
+            $filters = [
+                'search' => $this->search,
+                'category' => $this->categoryFilter,
+                'warehouse' => $this->warehouseFilter,
+                'zone' => $this->zoneFilter,
+                'sortField' => $this->sortField,
+                'sortDirection' => $this->sortDirection,
+                'company_id' => auth()->user()->company_id,
+            ];
+
+            // Dispatch export job
+            ExportProductStoreJob::dispatch($filters, auth()->user());
+
+            // Build filter info untuk message
+            $filterInfo = $this->buildFilterInfoMessage();
+
+            $this->dispatchBrowserEvent('export-started', [
+                'message' => "Export sedang diproses. {$filterInfo}Total: {$totalRecords} data. Anda akan menerima notifikasi ketika selesai.",
+                'total' => $totalRecords
+            ]);
+
+            session()->flash('message', "Export sedang diproses ({$totalRecords} data). Silakan cek inbox untuk link download.");
+
+            Log::info('Export Product Store dispatched', [
+                'user_id' => auth()->id(),
+                'filters' => $filters,
+                'total_records' => $totalRecords
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch export job', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+
+            $this->dispatchBrowserEvent('export-failed', [
+                'message' => 'Gagal memproses export: ' . $e->getMessage()
+            ]);
+
+        } finally {
+            $this->isExporting = false;
+        }
+    }
+
+    /**
+     * Get filtered query - SAMA PERSIS dengan query di render()
+     */
+    private function getFilteredQuery()
+    {
+        return ProductStore::with(['category', 'brand'])
+            ->search($this->search)
+            ->when($this->categoryFilter, function ($query) {
+                $query->where('category_product_store_id', $this->categoryFilter);
+            })
+            ->when($this->warehouseFilter, function ($query) {
+                $query->whereHas('rack.zone.warehouse', function ($q) {
+                    $q->where('id', $this->warehouseFilter);
+                });
+            })
+            ->when($this->zoneFilter, function ($query) {
+                $query->whereHas('rack.zone', function ($q) {
+                    $q->where('id', $this->zoneFilter);
+                });
+            })
+            ->orderBy($this->sortField, $this->sortDirection);
+    }
+
+    /**
+     * Build filter info message for user feedback
+     */
+    private function buildFilterInfoMessage()
+    {
+        $filterParts = [];
+
+        if (!empty($this->search)) {
+            $filterParts[] = "Pencarian: '{$this->search}'";
+        }
+
+        if (!empty($this->categoryFilter)) {
+            $category = $this->categories->firstWhere('id', $this->categoryFilter);
+            if ($category) {
+                $filterParts[] = "Kategori: {$category->name}";
+            }
+        }
+
+        if (!empty($this->warehouseFilter)) {
+            $warehouse = $this->warehouses->firstWhere('id', $this->warehouseFilter);
+            if ($warehouse) {
+                $filterParts[] = "Gudang: {$warehouse->name}";
+            }
+        }
+
+        if (!empty($this->zoneFilter)) {
+            $zone = $this->zones->firstWhere('id', $this->zoneFilter);
+            if ($zone) {
+                $filterParts[] = "Zone: {$zone->name}";
+            }
+        }
+
+        return !empty($filterParts) ? 'Filter: ' . implode(', ', $filterParts) . '. ' : '';
+    }
+
     // ==================== IMPORT METHODS ====================
     
     public function toggleImportSection()
@@ -123,149 +249,138 @@ class ProductStoreIndex extends Component
 
     public function resetImport()
     {
-        $this->reset(['csvFile', 'batchId', 'importProgress', 'isImporting']);
+        $this->reset(['csvFile', 'batchId', 'importProgress', 'isImporting', 'isFileReady', 'uploadingFile']);
         $this->resetValidation();
     }
 
-    // FIX: Tambahkan method untuk clear file setelah upload
-    // public function updatedCsvFile()
-    // {
-    //     $this->resetValidation('csvFile');
-    // }
+    public function updatedCsvFile()
+    {
+        $this->uploadingFile = true;
+        $this->isFileReady = false;
+        $this->resetValidation('csvFile');
+    }
 
-public function updatedCsvFile()
-{
-    $this->uploadingFile = true;
-    $this->isFileReady = false;
-    $this->resetValidation('csvFile');
-}
-
-public function checkFileReady()
-{
-    try {
-        if ($this->csvFile && $this->csvFile->exists()) {
-            // Double check file can be read
-            $testRead = $this->csvFile->get();
-            
-            if (!empty($testRead)) {
-                $this->isFileReady = true;
-                $this->uploadingFile = false;
+    public function checkFileReady()
+    {
+        try {
+            if ($this->csvFile && $this->csvFile->exists()) {
+                // Double check file can be read
+                $testRead = $this->csvFile->get();
                 
-                $this->dispatchBrowserEvent('file-ready', [
-                    'filename' => $this->csvFile->getClientOriginalName(),
-                    'size' => number_format($this->csvFile->getSize() / 1024, 2) . ' KB'
-                ]);
-                
-                return true;
+                if (!empty($testRead)) {
+                    $this->isFileReady = true;
+                    $this->uploadingFile = false;
+                    
+                    $this->dispatchBrowserEvent('file-ready', [
+                        'filename' => $this->csvFile->getClientOriginalName(),
+                        'size' => number_format($this->csvFile->getSize() / 1024, 2) . ' KB'
+                    ]);
+                    
+                    return true;
+                }
             }
+            
+            return false;
+        } catch (\Exception $e) {
+            Log::error('File check error', ['error' => $e->getMessage()]);
+            return false;
         }
-        
-        return false;
-    } catch (\Exception $e) {
-        Log::error('File check error', ['error' => $e->getMessage()]);
-        return false;
-    }
-}
-
-// public function resetImport()
-// {
-//     $this->reset(['csvFile', 'batchId', 'importProgress', 'isImporting', 'isFileReady', 'uploadingFile']);
-//     $this->resetValidation();
-// }
-
-public function import()
-{
-    // Final check
-    if (!$this->isFileReady || !$this->csvFile) {
-        $this->addError('csvFile', 'File belum siap. Silakan tunggu beberapa saat.');
-        return;
     }
 
-    // Validasi
-    $this->validate([
-        'csvFile' => 'required|file|max:10240',
-    ], [
-        'csvFile.required' => 'File CSV wajib diupload',
-        'csvFile.max' => 'Ukuran file maksimal 10MB'
-    ]);
-
-    try {
-        // Triple check file exists
-        if (!$this->csvFile->exists()) {
-            $this->addError('csvFile', 'File tidak ditemukan. Silakan upload ulang.');
+    public function import()
+    {
+        // Final check
+        if (!$this->isFileReady || !$this->csvFile) {
+            $this->addError('csvFile', 'File belum siap. Silakan tunggu beberapa saat.');
             return;
         }
 
-        // Get file content
-        $fileContent = $this->csvFile->get();
-        
-        if (empty($fileContent)) {
-            $this->addError('csvFile', 'File kosong atau corrupt.');
-            return;
+        // Validasi
+        $this->validate([
+            'csvFile' => 'required|file|max:10240',
+        ], [
+            'csvFile.required' => 'File CSV wajib diupload',
+            'csvFile.max' => 'Ukuran file maksimal 10MB'
+        ]);
+
+        try {
+            // Triple check file exists
+            if (!$this->csvFile->exists()) {
+                $this->addError('csvFile', 'File tidak ditemukan. Silakan upload ulang.');
+                return;
+            }
+
+            // Get file content
+            $fileContent = $this->csvFile->get();
+            
+            if (empty($fileContent)) {
+                $this->addError('csvFile', 'File kosong atau corrupt.');
+                return;
+            }
+            
+            // Parse CSV
+            $csv = Reader::createFromString($fileContent);
+            $csv->setHeaderOffset(null);
+            
+            $csvData = iterator_to_array($csv->getRecords());
+            
+            if (count($csvData) <= 1) {
+                $this->addError('csvFile', 'File CSV kosong atau hanya berisi header');
+                return;
+            }
+
+            // Get accessible company IDs
+            $accessibleCompanyIds = auth()->user()
+                ->accessibleCompanies
+                ->pluck('id')
+                ->push(auth()->user()->company_id)
+                ->unique()
+                ->toArray();
+
+            // Generate batch ID
+            $this->batchId = Str::uuid()->toString();
+            
+            ImportProgress::create([
+                'batch_id' => $this->batchId,
+                'processed' => 0,
+                'total' => count($csvData) - 1,
+                'total_import' => 0,
+                'errors' => [],
+                'status' => 'queued'
+            ]);
+
+            // Dispatch job
+            ImportProductStoreJob::dispatch(
+                $csvData,
+                auth()->id(),
+                auth()->user()->company_id,
+                $this->batchId,
+                $accessibleCompanyIds
+            );
+
+            $this->isImporting = true;
+            $this->isFileReady = false;
+            $this->uploadingFile = false;
+            $this->csvFile = null;
+            
+            $this->dispatchBrowserEvent('import-started', [
+                'total_rows' => count($csvData) - 1
+            ]);
+            
+            $this->dispatchBrowserEvent('start-progress-check');
+
+        } catch (\Exception $e) {
+            Log::error('Import error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $this->addError('csvFile', 'Terjadi kesalahan: ' . $e->getMessage());
+            $this->isFileReady = false;
+            $this->uploadingFile = false;
         }
-        
-        // Parse CSV
-        $csv = Reader::createFromString($fileContent);
-        $csv->setHeaderOffset(null);
-        
-        $csvData = iterator_to_array($csv->getRecords());
-        
-        if (count($csvData) <= 1) {
-            $this->addError('csvFile', 'File CSV kosong atau hanya berisi header');
-            return;
-        }
-
-        // Get accessible company IDs
-        $accessibleCompanyIds = auth()->user()
-            ->accessibleCompanies
-            ->pluck('id')
-            ->push(auth()->user()->company_id)
-            ->unique()
-            ->toArray();
-
-        // Generate batch ID
-        $this->batchId = Str::uuid()->toString();
-        
-        ImportProgress::create([
-            'batch_id' => $this->batchId,
-            'processed' => 0,
-            'total' => count($csvData) - 1,
-            'total_import' => 0,
-            'errors' => [],
-            'status' => 'queued'
-        ]);
-
-        // Dispatch job
-        ImportProductStoreJob::dispatch(
-            $csvData,
-            auth()->id(),
-            auth()->user()->company_id,
-            $this->batchId,
-            $accessibleCompanyIds
-        );
-
-        $this->isImporting = true;
-        $this->isFileReady = false;
-        $this->uploadingFile = false;
-        $this->csvFile = null;
-        
-        $this->dispatchBrowserEvent('import-started', [
-            'total_rows' => count($csvData) - 1
-        ]);
-        
-        $this->dispatchBrowserEvent('start-progress-check');
-
-    } catch (\Exception $e) {
-        Log::error('Import error', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-
-        $this->addError('csvFile', 'Terjadi kesalahan: ' . $e->getMessage());
-        $this->isFileReady = false;
-        $this->uploadingFile = false;
     }
-}
+    
     public function checkProgress()
     {
         if (!$this->batchId) {
@@ -369,29 +484,20 @@ public function import()
             'failed' => 'danger',
             default => 'secondary'
         };
-    }
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * Close the form modal.
+ *
+ * @return void
+ */
+/*******  bbd63c74-e55c-4381-a12e-297a38841275  *******/    }
 
     // ==================== OTHER METHODS ====================
 
     public function render()
     {
-        $products = ProductStore::with(['category', 'brand'])
-            ->search($this->search)
-            ->when($this->categoryFilter, function ($query) {
-                $query->where('category_product_store_id', $this->categoryFilter);
-            })
-            ->when($this->warehouseFilter, function ($query) {
-                $query->whereHas('rack.zone.warehouse', function ($q) {
-                    $q->where('id', $this->warehouseFilter);
-                });
-            })
-            ->when($this->zoneFilter, function ($query) {
-                $query->whereHas('rack.zone', function ($q) {
-                    $q->where('id', $this->zoneFilter);
-                });
-            })
-            ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate(10);
+        // Gunakan method yang sama untuk consistency
+        $products = $this->getFilteredQuery()->paginate(10);
 
         // permission
         $isShow = Access::can('show','product_stores');
