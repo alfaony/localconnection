@@ -685,6 +685,9 @@ Route::get('error/{code?}', function ($code = 500) {
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');
+Route::get('page/privacy-policy', function () {
+  return view('policy');
+})->name('page.privacy-policy');
 
 Route::get('/robots.txt', function () {
     return response("User-agent: *\nDisallow: /storage/", 200)
