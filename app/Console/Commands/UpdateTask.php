@@ -85,7 +85,7 @@ class UpdateTask extends Command
 
                     if($taskStatusTo->name == ParamSchema::COMPLATE)
                     {
-                        $task->point = 1; // Set point menjadi 1
+                        $task->point = 0; // Set point menjadi 1
                     }
                     $task->task_status_id = $taskStatusTo->id;
                     $task->save();
