@@ -39,6 +39,7 @@
                         <select wire:model="statusFilter" class="form-control">
                             <option value="">Semua Status</option>
                             <option value="pending">Pending</option>
+                            <option value="customer_existing">Pelanggan Lama</option>
                             <option value="waiting_payment_confirmation">Menunggu Pembayaran</option>
                             <option value="waiting_payment_subscription">Menunggu Pembayaran Subscription</option>
                             <option value="process_installation">Proses Instalasi</option>
@@ -46,6 +47,7 @@
                             <option value="reactivated">Reaktivasi</option>
                             <option value="active">Aktif</option>
                             <option value="suspended">Dihentikan</option>
+                            <option value="closed">Tutup</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -145,6 +147,18 @@
                                     </td>
                                     <td>
                                             @switch($customer->status)
+                                             @case(\App\Schemas\ParamSchema::PENDING)
+                                                <div class="d-flex gap-1 flex-column">
+                                                    <button class="btn btn-sm btn-success mb-2" 
+                                                            onclick="return confirm('Anda yakin ingin menyetujui pendaftaran pelanggan ini?') ? @this.call('approvePending', @js($customer->id)) : false">
+                                                        <i class="fas fa-check me-1"></i> Approve
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" 
+                                                            onclick="return confirm('Anda yakin ingin menutup/membatalkan pendaftaran pelanggan ini?') ? @this.call('closePending', @js($customer->id)) : false">
+                                                        <i class="fas fa-times me-1"></i> Close
+                                                    </button>
+                                                </div>
+                                                @break
                                                 @case(\App\Schemas\ParamSchema::WAITING_PAYMENT_CONFIRMATION)
                                                     @if($customer->getOldestUnconfirmedPurchase() && ($customer->getOldestUnconfirmedPurchase()->payment_method === 'transfer' || $customer->getOldestUnconfirmedPurchase()->payment_method === 'manual_transfer'))
                                                         @if($customer->getOldestUnconfirmedPurchase()->payment_method && $finance_access)
@@ -165,7 +179,7 @@
                                                     @endif
                                                     @break
                                                     
-                                                @case(\App\Schemas\ParamSchema::PROCESS_INSTALLATION)
+                                                @case(\App\Schemas\ParamSchema::PROCESS_INSTALLATION || \App\Schemas\ParamSchema::CUSTOMER_EXISTING)
                                                     @if($technical_access)
                                                     <button class="btn btn-sm btn-primary" wire:click="openInstallationModal( @js($customer->id) )">
                                                         <i class="fas fa-camera me-1"></i> Input Instalasi
@@ -190,6 +204,12 @@
                                                     <button class="btn btn-sm btn-outline-success" onclick="return confirm('Anda yakin ingin mengaktifkan kembali pelanggan ini?') ? @this.call('reactivate', @js($customer->id)) : false">
                                                         <i class="fas fa-play me-1"></i> Aktifkan
                                                     </button>
+                                                    @break
+                                                {{-- BARU: Case untuk status CLOSED --}}
+                                                @case(\App\Schemas\ParamSchema::CLOSED)
+                                                    <span class="badge bg-secondary">
+                                                        <i class="fas fa-ban me-1"></i> Ditutup
+                                                    </span>
                                                     @break
                                             @endswitch
                                         </td>

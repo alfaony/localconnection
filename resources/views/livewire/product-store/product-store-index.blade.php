@@ -11,7 +11,23 @@
                             </h3>
                         </div>
                         <div class="col-md-6 text-right">
-
+                            <button 
+                                wire:click="exportProducts" 
+                                wire:loading.attr="disabled"
+                                wire:target="exportProducts"
+                                class="btn btn-success"
+                                title="Export data sesuai filter yang aktif"
+                                {{ $isExporting ? 'disabled' : '' }}>
+                                <i class="fas fa-file-excel" wire:loading.remove wire:target="exportProducts"></i>
+                                <i class="fas fa-spinner fa-spin" wire:loading wire:target="exportProducts"></i>
+                                <span wire:loading.remove wire:target="exportProducts">
+                                    Export to Excel
+                                    @if($search || $categoryFilter || $warehouseFilter || $zoneFilter)
+                                        <small>(Filtered)</small>
+                                    @endif
+                                </span>
+                                <span wire:loading wire:target="exportProducts">Processing...</span>
+                            </button>
                             @canAccess('import','product_stores')
                             <button type="button" 
                                     class="btn btn-success" 
@@ -597,11 +613,47 @@
     </div>
 </div>
 
+@if($isExporting)
+<div class="alert alert-info alert-dismissible fade show position-fixed" 
+     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" 
+     role="alert">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-spinner fa-spin mr-2"></i>
+        <div>
+            <strong>Export sedang diproses...</strong><br>
+            <small>Anda akan menerima notifikasi di inbox ketika selesai.</small>
+        </div>
+    </div>
+</div>
+@endif
 @push('js')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('livewire:load', function () {
         
+        window.addEventListener('export-started', event => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Export Dimulai',
+                html: event.detail.message,
+                timer: 5000,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        });
+
+        // Event ketika export gagal
+        window.addEventListener('export-failed', event => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Export Gagal',
+                text: event.detail.message,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#d33'
+            });
+        });
         // File ready notification
         window.addEventListener('file-ready', event => {
             console.log('File ready:', event.detail);

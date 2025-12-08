@@ -589,7 +589,7 @@ class InternetCustomerForm extends Component
                 'ktp_photo' => $ktpPath ? $ktpPath : null,
                 'is_paid' => false,
                 'status' => $this->hasFreeMonthsPromo 
-                    ? ParamSchema::PROCESS_INSTALLATION 
+                    ? ParamSchema::PENDING 
                     : ($this->payment_method === 'xendit' ? ParamSchema::WAITING_PAYMENT_SUBSCRIPTION : ParamSchema::WAITING_PAYMENT_CONFIRMATION),
             ]);
             
@@ -618,7 +618,8 @@ class InternetCustomerForm extends Component
                 $internetCustomer->update([
                     'promo_id' => $this->freeMonthsDetails->id
                 ]);
-                $this->installation($internetCustomer);
+                $this->notifyMarketingTeamSuccess($internetCustomer);
+
             } else {
                 // Create purchase record dengan period yang sudah dihitung
                 $subscriptionPeriod = $this->calculateSubscriptionPeriod($this->payment_months);
@@ -841,6 +842,31 @@ class InternetCustomerForm extends Component
             
             foreach($userFinance as $finance) {
                 $this->sentInbox($finance->id, $from->id, $message, $directUrl);
+            }   
+        }
+    }
+
+    protected function notifyMarketingTeamSuccess($internetCustomer)
+    {
+        $userFinance = User::whereHas('role', function ($q) {
+            $q->whereIn('name', [RoleSchema::SYSTEM, RoleSchema::ROOT, RoleSchema::ADMIN]);
+        })->get();
+
+        if($userFinance->isNotEmpty()) {
+            // dd($userFinance->pluck('id'),$this->freeMonthsDetails);
+            $userFinance = $this->freeMonthsDetails->user_id ? $userFinance->pluck('id')->push($this->freeMonthsDetails->user_id)->unique() : $userFinance->pluck('id')->unique();
+
+            $from = User::where('company_id', $internetCustomer->company_id)
+                ->whereHas('role', function ($q) {
+                    $q->whereIn('name', [RoleSchema::SYSTEM_BOS, RoleSchema::ROOT, RoleSchema::ADMIN]);
+                })
+                ->first();
+            
+            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar untuk, Silahkan ditindaklanjuti.";
+            $directUrl = route('internet-customer.show', $internetCustomer->id);
+            
+            foreach($userFinance as $finance) {
+                $this->sentInbox($finance, $from->id, $message, $directUrl);
             }   
         }
     }

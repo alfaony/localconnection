@@ -139,6 +139,7 @@ class ParamSchema
     const CANCELLED = "cancelled";
     const SUSPENDED = "suspended";
     const REACTIVATED = "reactivated";
+    const CUSTOMER_EXISTING = "customer_existing";
 
     // Promo
     const PROMO_FREE_MONTH = "free_months";
