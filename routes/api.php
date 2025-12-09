@@ -18,6 +18,7 @@ use App\Http\Controllers\API\MomApiController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\API\DailyTaskMobileController;
 use App\Http\Controllers\API\ItemRequestMobileController;
+use App\Http\Controllers\Api\FlowChartController;
 
 
 /*
@@ -143,6 +144,8 @@ Route::group(['middleware' => ['auth:api']], function()
 
     Route::resource('item-purchases', ItemPurchaseMobileController::class)
     ->only(['store', 'update']);
+
+    Route::apiResource('flowcharts', FlowChartController::class);
 });
 
 Route::group(['middleware' => ['auth:api']], function() 
