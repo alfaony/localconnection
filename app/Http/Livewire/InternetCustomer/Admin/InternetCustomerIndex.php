@@ -30,7 +30,9 @@ use Illuminate\Support\Facades\Validator;
 
 use App\Helpers\InboxHelper;
 use App\Helpers\Access;
+
 use App\Schemas\ParamSchema;
+use App\Schemas\RoleSchema;
 
 use Carbon\Carbon;
 class InternetCustomerIndex extends Component
@@ -53,7 +55,7 @@ class InternetCustomerIndex extends Component
     public $sortDirection = 'desc';
     public $selectedCompany = '';
     public $selectedPackage = '';
-    public $statusFilter = '';
+    public $statusFilter = ParamSchema::PENDING;
     public $dateFrom = '';
     public $dateTo = '';
     public $selectedCustomer = null;
@@ -743,6 +745,113 @@ class InternetCustomerIndex extends Component
         $this->dispatchBrowserEvent('pools-options', ['options' => $this->availablePools]);
     }
 
+    /**
+     * Approve pendaftaran pelanggan dari status pending ke process_installation
+     */
+    public function approvePending(string $id)
+    {
+        DB::beginTransaction();
+        try {
+            $customer = InternetCustomer::findOrFail($id);
+            
+            // Validasi status harus pending
+            if ($customer->status !== ParamSchema::PENDING) {
+                $this->dispatchBrowserEvent('show-notification', [
+                    'type' => 'error',
+                    'message' => 'Customer tidak dalam status pending'
+                ]);
+                return;
+            }
+        
+            $this->installation($customer);
+            
+            DB::commit();
+            
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'success',
+                'message' => "Pendaftaran pelanggan {$customer->code} telah disetujui"
+            ]);
+            
+            // Log activity
+            Log::info('Customer pending approved', [
+                'customer_id' => $customer->id,
+                'customer_code' => $customer->code,
+                'approved_by' => Auth::id()
+            ]);
+            
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to approve pending customer', [
+                'customer_id' => $id,
+                'error' => $th->getMessage()
+            ]);
+            
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Gagal menyetujui pendaftaran: ' . $th->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Close/batalkan pendaftaran pelanggan dari status pending
+     */
+    public function closePending(string $id)
+    {
+        DB::beginTransaction();
+        try {
+            $customer = InternetCustomer::findOrFail($id);
+            
+            // Validasi status harus pending
+            if ($customer->status !== ParamSchema::PENDING) {
+                $this->dispatchBrowserEvent('show-notification', [
+                    'type' => 'error',
+                    'message' => 'Customer tidak dalam status pending'
+                ]);
+                return;
+            }
+            
+            // Update status ke closed
+            $customer->update([
+                'status' => ParamSchema::CLOSED,
+                'action_user_id' => Auth::id() // opsional: tambahkan kolom ini di migration jika perlu
+            ]);
+            
+            // Kirim notifikasi ke customer user jika ada
+            // if ($customer->user_customer_id) {
+            //     $message = "Pendaftaran Anda dengan kode {$customer->code} telah ditutup/dibatalkan oleh admin.";
+            //     $directUrl = route('internet-customer.show', $customer->id);
+            //     $this->sentInbox($customer->user_customer_id, $message, $directUrl);
+            // }
+            
+            DB::commit();
+            
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'success',
+                'message' => "Pendaftaran pelanggan {$customer->code} telah ditutup"
+            ]);
+            
+            // Log activity
+            Log::info('Customer pending closed', [
+                'customer_id' => $customer->id,
+                'customer_code' => $customer->code,
+                'closed_by' => Auth::id()
+            ]);
+            
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            Log::error('Failed to close pending customer', [
+                'customer_id' => $id,
+                'error' => $th->getMessage()
+            ]);
+            
+            $this->dispatchBrowserEvent('show-notification', [
+                'type' => 'error',
+                'message' => 'Gagal menutup pendaftaran: ' . $th->getMessage()
+            ]);
+        }
+    }
+
     // GANTI method yang ada dengan:
     protected function checkNewUsernameAvailability($username)
     {
@@ -830,5 +939,36 @@ class InternetCustomerIndex extends Component
             $directUrl
         );
         return true;
+    }
+
+    private function installation($customer)
+    {
+        try {
+            $customer->update([
+                'status' => ParamSchema::PROCESS_INSTALLATION,
+                'action_user_id' => Auth::id() // opsional: tambahkan kolom ini di migration jika perlu
+            ]);
+            
+            $userTechnical = optional($customer->subdistrict?->coverageService?->coverageServiceOds)
+                ->pluck('ods.user_assign_id')
+                ->unique()
+                ->all();
+            
+            $from = User::where('company_id', $customer->company_id)
+                    ->whereHas('role', function ($q) {
+                        $q->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN]);
+                    })
+                    ->first();
+
+            if(count($userTechnical) > 0) {
+                $message = "Pembayaran Langganan Internet Untuk Kode ".$customer->code." Telah di Setujui. Silahkan segera lakukan Pemasangan";
+                $directUrl = route('internet-customer.show',$customer->id);
+                foreach($userTechnical as $tech) {
+                    $this->sentInbox($tech,$from->id, $message, $directUrl);
+                }
+            }
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 }

@@ -55,7 +55,8 @@ class PromoForm extends Component
         $promo = Promo::updateOrCreate(
             ['id' => $this->promoId],
             [
-                'company_id' => Auth::user()->company_id,
+                // 'user_id' => Auth::user()->id,
+                // 'company_id' => Auth::user()->company_id,
                 'name' => $this->name,
                 'type' => $this->type,
                 'value' => $this->value,
@@ -66,6 +67,18 @@ class PromoForm extends Component
                 'is_active' => $this->is_active,
             ]
         );
+
+        if(!$promo->company_id)
+        {
+            $promo->company_id = Auth::user()->company_id;   
+        }
+
+        if(!$promo->user_id)
+        {
+            $promo->user_id = Auth::user()->id;    
+        }
+
+        $promo->save();
 
          // Simpan relasi dengan package internet (jika ada)
         if (!empty($this->packageInternets)) {

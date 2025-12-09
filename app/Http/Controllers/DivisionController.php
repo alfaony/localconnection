@@ -14,6 +14,7 @@ use App\Models\Objective;
 use App\Models\ObjectiveKeyResult;
 use App\Models\DailyTask;
 use App\Models\DivisionQuotaLock;
+use App\Models\SettingCompany;
 
 use App\Schemas\ParamSchema;
 use App\Schemas\RoleSchema;
@@ -416,8 +417,18 @@ class DivisionController extends Controller
 
     protected function validateAndUpdateQuotaLock(Division $division, int $newQuota)
     {
-        $month = now()->month;
-        $year = now()->year;
+        $setting = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $periodStartDay = $setting && $setting['range_start_date'] ? (int) $setting['range_start_date'] : 21;
+        $now = Carbon::now();
+
+        // Calculate period month and year
+        if ($now->day >= $periodStartDay) {
+            $month = $now->copy()->subMonth()->month;
+            $year = $now->copy()->subMonth()->year;
+        } else {
+            $month = $now->month;
+            $year = $now->year;
+        }
 
         $quotaLock = DivisionQuotaLock::where('division_id', $division->id)
             ->where('month', $month)

@@ -314,7 +314,7 @@ class ImportInternetCustomer extends Command
                 'ktp_number' => null,
                 'ktp_photo' => null,
                 'is_paid' => $promoData['has_free_months'], // Jika ada promo, langsung dianggap sudah bayar
-                'status' => $promoData['has_free_months'] ? ParamSchema::PROCESS_INSTALLATION : ParamSchema::WAITING_PAYMENT_CONFIRMATION,
+                'status' => $promoData['has_free_months'] ? ParamSchema::CUSTOMER_EXISTING : ParamSchema::WAITING_PAYMENT_CONFIRMATION,
             ]);
 
              $agreement = $this->createPartnershipAgreement(
@@ -622,7 +622,7 @@ class ImportInternetCustomer extends Command
     {
         try {
             $customer->update([
-                'status' => ParamSchema::PROCESS_INSTALLATION,
+                'status' => ParamSchema::CUSTOMER_EXISTING,
             ]);
             
             $userTechnical = optional($customer->subdistrict->coverageService->coverageServiceOds)
