@@ -17,6 +17,8 @@ use App\Http\Controllers\API\UsedLaptopController;
 use App\Http\Controllers\API\MomApiController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\API\DailyTaskMobileController;
+use App\Http\Controllers\API\RegionController;
+
 
 
 /*
@@ -123,4 +125,12 @@ Route::group(['middleware' => ['auth:api']], function()
 Route::group(['middleware' => ['auth:api']], function() 
 {
     Route::post('logout', [LoginController::class, 'logout']);
+});
+
+ Route::prefix('region')->group(function () {
+    Route::get('/getCountries', [RegionController::class, 'getCountries']);
+    Route::get('/getProvinces', [RegionController::class, 'getProvinces']);
+    Route::get('/getCities', [RegionController::class, 'getCities']);
+    Route::get('/getDistricts', [RegionController::class, 'getDistricts']);
+    Route::get('/getSubdistricts', [RegionController::class, 'getSubdistricts']);
 });
