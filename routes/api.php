@@ -53,40 +53,6 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');;
     Route::resource('agreement-letter', AgreementLetterController::class);
 
-});
-
-Route::group(['middleware' => ['auth:api']], function() 
-{
-    Route::post('provision', [MikrotikController::class, 'provision']);   
-    Route::post('cut', [MikrotikController::class, 'cut']);
-    Route::post('restore', [MikrotikController::class, 'restore']);
-
-    Route::resource('dailytask', DailyTaskController::class);
-    Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
-    Route::put('dailytask/report/{slug}', [DailyTaskController::class, 'report']);
-
-    Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
-
-    Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
-    // Route::post('dailytask/{slug}/approve', [DailyTaskController::class, 'approvement']);
-    // Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);
-    Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');
-
-
-    Route::resource('mom', MomApiController::class);
-    Route::prefix('mom')->group(function () {
-
-        // MOM Task Routes
-        Route::post('/{id}/tasks', [MomApiController::class, 'storeTask']); // POST - Create task
-        Route::put('/tasks/{id}', [MomApiController::class, 'updateTask']); // PUT - Update task
-        Route::delete('/tasks/{id}', [MomApiController::class, 'deleteTask']); // DELETE - Delete task
-
-        // MOM Agenda Routes
-        Route::post('/{id}/agendas', [MomApiController::class, 'storeAgenda']); // POST - Create agenda
-        Route::put('/agendas/{id}', [MomApiController::class, 'updateAgenda']); // PUT - Update agenda
-        Route::delete('/agendas/{id}', [MomApiController::class, 'deleteAgenda']); // DELETE - Delete agenda
-    });
-
     //Mobile
     Route::get('tasks/today', [DailyTaskMobileController::class, 'indexToday']);
 
@@ -120,6 +86,40 @@ Route::group(['middleware' => ['auth:api']], function()
         ->name('medias.generateMediaUrl.mobile');
     Route::get('divisions', [DailyTaskMobileController::class, 'indexDivision']);
     Route::get('divisions/check-division-quota', [DailyTaskMobileController::class, 'checkDivisionQuota']);
+
+});
+
+Route::group(['middleware' => ['auth:api']], function() 
+{
+    Route::post('provision', [MikrotikController::class, 'provision']);   
+    Route::post('cut', [MikrotikController::class, 'cut']);
+    Route::post('restore', [MikrotikController::class, 'restore']);
+
+    Route::resource('dailytask', DailyTaskController::class);
+    Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
+    Route::put('dailytask/report/{slug}', [DailyTaskController::class, 'report']);
+
+    Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
+
+    Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
+    // Route::post('dailytask/{slug}/approve', [DailyTaskController::class, 'approvement']);
+    // Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);
+    Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');
+
+
+    Route::resource('mom', MomApiController::class);
+    Route::prefix('mom')->group(function () {
+
+        // MOM Task Routes
+        Route::post('/{id}/tasks', [MomApiController::class, 'storeTask']); // POST - Create task
+        Route::put('/tasks/{id}', [MomApiController::class, 'updateTask']); // PUT - Update task
+        Route::delete('/tasks/{id}', [MomApiController::class, 'deleteTask']); // DELETE - Delete task
+
+        // MOM Agenda Routes
+        Route::post('/{id}/agendas', [MomApiController::class, 'storeAgenda']); // POST - Create agenda
+        Route::put('/agendas/{id}', [MomApiController::class, 'updateAgenda']); // PUT - Update agenda
+        Route::delete('/agendas/{id}', [MomApiController::class, 'deleteAgenda']); // DELETE - Delete agenda
+    });
 });
 
 Route::group(['middleware' => ['auth:api']], function() 
