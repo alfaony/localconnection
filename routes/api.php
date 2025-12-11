@@ -18,7 +18,7 @@ use App\Http\Controllers\API\MomApiController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\API\DailyTaskMobileController;
 use App\Http\Controllers\API\ItemRequestMobileController;
-use App\Http\Controllers\Api\FlowChartController;
+use App\Http\Controllers\API\FlowChartController;
 use App\Http\Controllers\API\RegionController;
 
 
