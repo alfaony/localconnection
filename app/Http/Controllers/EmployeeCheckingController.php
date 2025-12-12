@@ -52,7 +52,7 @@ class EmployeeCheckingController extends Controller
         $manualCheck = $this->checkingDivision(Auth::user());
 
         // Load data pengguna
-        $userSelect = User::where('is_checkin',true)->byCompany(Auth::user()->company_id)->get();
+        $userSelect = User::where('is_checkin',true)->isActive()->byCompany(Auth::user()->company_id)->get();
 
         // Nullable variabel
         $employeeCheckings = collect();
@@ -82,7 +82,7 @@ class EmployeeCheckingController extends Controller
                 ->paginate(10);
                 break;
             case 'point_checkin':                
-                $users = User::where('is_checkin', true)->withCheckinCounts($userId, $start, $end, $today)->get();
+                $users = User::where('is_checkin', true)->isActive()->withCheckinCounts($userId, $start, $end, $today)->get();
 
                 // Kalkulasi point_percentage dan sorting di sisi PHP
                 $users = $users->map(function ($user) {
