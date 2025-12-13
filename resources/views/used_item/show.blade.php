@@ -457,7 +457,7 @@
                 <p class="text-muted small mb-3">
                     Scan untuk melihat detail barang di perangkat mobile
                 </p>
-                <a href="{{ s3_asset(true,10,$usedItem->qr_code_path) }}" download class="btn btn-outline-primary btn-block">
+                <a href="javascript:void(0);" class="btn btn-outline-primary btn-block btn-download-qrcode">
                     <i class="fas fa-download mr-1"></i> Download QR Code
                 </a>
             </div>
@@ -750,6 +750,23 @@
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });
+    });
+
+    // Download QR Code
+    document.querySelector('.btn-download-qrcode').addEventListener('click', function () {
+        const qrCanvas = document.querySelector('#qrcode canvas');
+        if (!qrCanvas) {
+            alert('QR Code belum tersedia.');
+            return;
+        }
+
+        const imageData = qrCanvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.href = imageData;
+        downloadLink.download = "qr-code-{{ $usedItem->slug }}.png";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
     });
 </script>
 @stop
