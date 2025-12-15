@@ -136,8 +136,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('dayoff:reset-quota')->timezone('Asia/Jakarta')->yearlyOn(1, 1, '0:00');
         $schedule->command('weekly:check-compliance')->timezone('Asia/Jakarta')->mondays()->at('3:00');
         $schedule->command('dailytask:check-status')->timezone('Asia/Jakarta')->dailyAt('00:00');
-        $schedule->command('quota:ensure-locks')->timezone('Asia/Jakarta')->monthlyOn(1, '01:00');
-
+        
         $company = Company::all();
         foreach ($company as $a) 
         {
@@ -146,8 +145,10 @@ class Kernel extends ConsoleKernel
                         // ->dailyAt('14:36')
             ;
 
-            $settingCompany = SettingCompany::byCompany($a->id)->get()->pluck('field_value','field_title');
+            
 
+            $settingCompany = SettingCompany::byCompany($a->id)->get()->pluck('field_value','field_title');
+            
             $rangeEndDate = $settingCompany['range_end_date'] ?? NULL;
             if($rangeEndDate != "")
             {
@@ -168,6 +169,12 @@ class Kernel extends ConsoleKernel
             {
                 $schedule->command('project:send-expiration-notifications')->timezone('Asia/Jakarta')->dailyAt($sentTime);
             }
+
+            $schedule->command('quota:ensure-locks --company_id=' . $a->id)
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('12:14')
+            ->withoutOverlapping(10)
+            ->runInBackground(); // Optional: prevent blocking
         }
 
         // Run Scheduler

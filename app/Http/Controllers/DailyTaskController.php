@@ -1676,9 +1676,19 @@ class DailyTaskController extends Controller
 
         $point = (int) $request->point;
         $divisionId = $request->division_id;
-        $month = now()->month;
-        $year = now()->year;
 
+        $now = Carbon::now();
+        $setting = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $periodStartDay = $setting && $setting['range_start_date'] ? (int) $setting['range_start_date'] : 21;
+        
+        // Calculate period month and year
+        if ($now->day >= $periodStartDay) {
+            $month = $now->copy()->subMonth()->month;
+            $year = $now->copy()->subMonth()->year;
+        } else {
+            $month = $now->month;
+            $year = $now->year;
+        }
         if ($point <= 0) 
         {
             return response()->json([
