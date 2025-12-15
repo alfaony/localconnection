@@ -360,7 +360,7 @@
                             <td class="text-center">
                                 <div class="btn-group" role="group">
                                     @if($item->qr_code_path)
-                                    <a href="{{ s3_asset(true,10,$item->qr_code_path) }}" 
+                                    <a href="{{ s3_asset(true,10,'public/'.$item->qr_code_path) }}" 
                                        download 
                                        class="btn btn-sm btn-outline-primary mb-1 mr-1"
                                        title="Download QR Code">

@@ -55,6 +55,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             'No',
             'Nama Lengkap',
             'Nama Panggilan',
+            "Tanggal Masuk",
             'Divisi & Posisi Kerja',
             'Jenis Kelamin',
             'No KTP',
@@ -75,6 +76,12 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             'No HP Kerabat (Orang Tua)',
             'Tanggal Masuk Kerja',
             'Jam Kerja',
+            'Foto KTP',
+            'Foto Selfie KTP',
+            'Foto KK',
+            'Foto NPWP',
+            'Foto Rumah',
+            'Foto SKCK',
             'Status Approval KYE',
         ];
     }
@@ -115,6 +122,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $rowNumber,
             $kye->full_name ?? $user->name ?? '-',
             $kye->call_name ?? '-',
+            isset($kye->user->first_position) ? $kye->user->first_position->start_date : '-',
             $divisionPosition,
             $gender,
             $kye->ktp_number ?? $user->id_card ??'-',
@@ -135,6 +143,12 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $kye->emergency_phone ?? '-',
             $entryDate,
             $workingDays,
+            isset($kye->ktp_photo) ? 'Tersedia' : 'Tidak Tersedia',
+            isset($kye->selfie_ktp) ? 'Tersedia' : 'Tidak Tersedia',
+            isset($kye->ktp_family) ? 'Tersedia' : 'Tidak Tersedia',
+            isset($kye->npwp_photo) ? 'Tersedia' : 'Tidak Tersedia',
+            isset($kye->house_photo) ? 'Tersedia' : 'Tidak Tersedia',
+            isset($kye->skck) ? ($kye->skck ? 'Tersedia' : 'Tidak Tersedia') : '-',
             $kye ? ucfirst($kye->approval_status ?? 'pending') : '-',
         ];
     }

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
+use App\Jobs\ExportKyeJob;
 use App\Schemas\RoleSchema;
 use App\Http\Requests\KyeRequest;
 
@@ -162,7 +163,7 @@ class KyeController extends Controller
     {
         $kye = KYE::findOrFail($id);
         $status = config('custom.status_kye');
-
+        
         return view('kye.show', compact('kye','status'));
     }
 
@@ -334,6 +335,36 @@ class KyeController extends Controller
         }
 
         return response()->json(['message' => 'Email tersedia.'], 200);
+    }
+
+    /**
+     * Export KYE data to Excel
+     */
+    public function export(Request $request)
+    {
+        try {
+            $filters = [
+                'search' => $request->input('search'),
+                'status' => $request->input('status'),
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+            ];
+
+            // Dispatch job
+            $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push(Auth::user()->company_id)->unique();
+            ExportKyeJob::dispatch($filters, Auth::user(), $companyIds);
+
+            return redirect()->back()->with('storeWithMessage', 'Export KYE sedang diproses. Anda akan menerima notifikasi setelah selesai.');
+
+        } catch (\Exception $e) {
+            // dd($e);
+            Log::error('Failed to dispatch export KYE job', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+
+            return redirect()->back()->with('error', 'Gagal memulai export KYE.');
+        }
     }
     protected function saveBase64ImageToStorage($base64Image, $folder)
     {

@@ -165,6 +165,7 @@ Route::post('xendit/webhook', [XenditController::class, 'handle']);
 Route::post('keloola-pay/webhook', [XenditController::class, 'handleKeloolaPay']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 
+
 Route::get('internet-customer/customer-active', CustomerCodeInput::class)->name('internet-customer.customer');
 
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
@@ -458,6 +459,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('pass-checking', PassCheckingController::class);
 
   Route::get('kye/KyeExport', [UserController::class,'KyeExport'])->name('kye.KyeExport');
+  Route::get('kye/export', [KyeController::class, 'export'])->name('kye.export');
   Route::post('kye/verifyemail', [KyeController::class, 'verifyemail'])->name('kye.verify.email');
   Route::patch('kye/approvement/{kye}', [KyeController::class, 'approvement'])->name('kye.approvement');
   Route::resource('kye', KyeController::class);
