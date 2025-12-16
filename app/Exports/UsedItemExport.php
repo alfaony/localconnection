@@ -82,6 +82,7 @@ class UsedItemExport implements FromCollection, WithHeadings, WithMapping, WithS
     {
         return [
             'No',
+            "Url",
             'QR Code',
             'Serial Number',
             'Nama Item',
@@ -121,6 +122,7 @@ class UsedItemExport implements FromCollection, WithHeadings, WithMapping, WithS
         return [
             $no,
             '',
+            $url,
             $item->serial_number ?? '-',
             $item->name ?? '-',
             $categories ?: '-',

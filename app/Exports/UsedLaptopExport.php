@@ -93,6 +93,7 @@ class UsedLaptopExport implements FromCollection, WithHeadings, WithMapping, Wit
         return [
             'No',
             'QR Code',
+            "Url",
             'Serial Number',
             'Nama Laptop',
             'Brand',
@@ -140,6 +141,7 @@ class UsedLaptopExport implements FromCollection, WithHeadings, WithMapping, Wit
         return [
             $no,
             '', // QR Code column (will be filled by drawings)
+            $url,
             $laptop->serial_number ?? '-',
             $laptop->name ?? '-',
             $laptop->brand ?? '-',
