@@ -79,6 +79,7 @@
                         </span>
                         <input type="date" name="date_start" class="form-control " 
                                id="date_start" value="{{ old('date_start', optional($cuti)->date_start) }}" 
+                                max="{{ now()->endOfYear()->format('Y-m-d') }}"
                                required>
                     </div>
                 </div>
@@ -91,6 +92,7 @@
                         </span>
                         <input type="date" name="date_end" class="form-control " 
                                id="date_end" value="{{ old('date_end', optional($cuti)->date_end) }}" 
+                               max="{{ now()->endOfYear()->format('Y-m-d') }}"
                                required >
                     </div>
                 </div>
