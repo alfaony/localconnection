@@ -6,11 +6,27 @@
                 <h3 class="card-title text-white mb-0">
                     <i class="fas fa-laptop mr-2"></i> Manajemen Laptop Bekas
                 </h3>
-                @canAccess('create','used_laptops')
-                <a href="{{ route('used-laptop.create') }}" class="btn btn-light btn-sm">
-                    <i class="fas fa-plus mr-1"></i> Tambah Laptop
-                </a>
-                @endcanAccess
+                <div>
+                    @if($canExport)
+                    <button wire:click="exportLaptop" 
+                            class="btn btn-success btn-sm mr-2"
+                            wire:loading.attr="disabled"
+                            wire:target="exportLaptop">
+                        <span wire:loading.remove wire:target="exportLaptop">
+                            <i class="fas fa-file-excel mr-1"></i> Export Excel
+                        </span>
+                        <span wire:loading wire:target="exportLaptop">
+                            <span class="spinner-border spinner-border-sm mr-1"></span> Exporting...
+                        </span>
+                    </button>
+                    @endif
+                    
+                    @canAccess('create','used_laptops')
+                    <a href="{{ route('used-laptop.create') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus mr-1"></i> Tambah Laptop
+                    </a>
+                    @endcanAccess
+                </div>
             </div>
         </div>
 
@@ -385,6 +401,30 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    window.addEventListener('export-started', event => {
+        // Optional: Show toast notification
+        Swal.fire({
+            icon: 'info',
+            title: 'Export Dimulai',
+            text: event.detail.message,
+            toast: true,
+            timer: 3000,
+            position: 'top-end',
+            showConfirmButton: false
+        });
+    });
+</script>
+@endpush
 
 <style>
     /* Sticky header */

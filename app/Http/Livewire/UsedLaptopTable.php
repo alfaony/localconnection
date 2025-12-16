@@ -12,11 +12,13 @@ use App\Models\Warehouse;
 use App\Models\Zone;
 
 use App\Helpers\Access;
+use App\Jobs\ExportUsedLaptopJob;
+use Illuminate\Support\Facades\Auth;
 
 class UsedLaptopTable extends Component
 {
     use WithPagination;
-    protected $paginationTheme = 'bootstrap'; // ⬅️ INI YANG PENTING
+    protected $paginationTheme = 'bootstrap';
 
     public $search = '';
     public $statusFilter = '';
@@ -39,7 +41,6 @@ class UsedLaptopTable extends Component
     public $is_sold = false;
     public $sold_price;
     public $sold_at;
-
     
     // Modal states
     public $showFormModal = false;
@@ -60,7 +61,7 @@ class UsedLaptopTable extends Component
         'sold_price' => 'nullable|required_if:is_sold,true|numeric|min:0',
     ];
 
-     protected $queryString = [
+    protected $queryString = [
         'search' => ['except' => ''],
         'statusFilter' => ['except' => ''],
         'warehouseFilter' => ['except' => ''],
@@ -69,7 +70,7 @@ class UsedLaptopTable extends Component
 
     public function updatingWarehouseFilter()
     {
-        $this->zoneFilter = ''; // Reset zone when warehouse changes
+        $this->zoneFilter = '';
         $this->resetPage();
     }
 
@@ -93,8 +94,7 @@ class UsedLaptopTable extends Component
     {
         $this->resetForm();
         $this->showFormModal = true;
-
-        $this->emit('showFormModal'); // ✅ untuk v2
+        $this->emit('showFormModal');
     }
 
     public function openEdit($slug)
@@ -112,6 +112,27 @@ class UsedLaptopTable extends Component
     {
         $this->laptopId = $id;
         $this->showDeleteModal = true;
+    }
+
+    // ✅ Export with Current Filters (Langsung tanpa modal)
+    public function exportLaptop()
+    {
+        $filters = [
+            'search' => $this->search,
+            'is_sold' => $this->statusFilter === 'sold' ? 'sold' : ($this->statusFilter === 'unsold' ? 'available' : ($this->statusFilter === 'inventory' ? 'inventory' : null)),
+            'warehouse_id' => $this->warehouseFilter,
+            'zone_id' => $this->zoneFilter,
+            'start_date' => null,
+            'end_date' => null,
+        ];
+
+        ExportUsedLaptopJob::dispatch($filters, Auth::user(), auth()->user()->accessibleCompanies->pluck('id')->push(Auth::user()->company_id)->unique()->toArray());
+
+        session()->flash('success', 'Export sedang diproses. Anda akan menerima notifikasi setelah selesai.');
+        
+        $this->dispatchBrowserEvent('export-started', [
+            'message' => 'Export sedang diproses. Anda akan menerima notifikasi setelah selesai.'
+        ]);
     }
 
     public function saveLaptop()
@@ -182,43 +203,42 @@ class UsedLaptopTable extends Component
 
     public function render()
     {
-        
         $laptops = UsedLaptop::query()
-        ->byCompany(auth()->user()->company_id)
-        ->when($this->search, function ($query) {
-            $query->where(function ($q) {
-                $q->where('name', 'like', '%'.$this->search.'%')
-                ->orWhere('processor', 'like', '%'.$this->search.'%')
-                ->orWhere('ram', 'like', '%'.$this->search.'%')
-                ->orWhere('ssd', 'like', '%'.$this->search.'%')
-                ->orWhere('serial_number', 'like', '%'.$this->search.'%')
-                ->orWhere('notes', 'like', '%'.$this->search.'%');
-            });
-        })
-        ->when($this->statusFilter === 'sold', function ($query) {
-            $query->where('is_sold', 1);
-        })
-        ->when($this->statusFilter === 'unsold', function ($query) {
-            $query->where('is_sold', 0);
-        })
-        ->when($this->statusFilter === 'inventory', function ($query) {
-            $query->where('is_sold', null);
-        })
-         ->when(!$this->statusFilter, function ($query) {
-            $query->orderBy('is_sold'); // unsold dulu
-        })
-        ->when($this->warehouseFilter, function ($query) {
-            $query->whereHas('rack.zone.warehouse', function ($q) {
-                $q->where('id', $this->warehouseFilter);
-            });
-        })
-        ->when($this->zoneFilter, function ($query) {
-            $query->whereHas('rack.zone', function ($q) {
-                $q->where('id', $this->zoneFilter);
-            });
-        })
-        ->orderBy('created_at', 'desc') // terbaru di atas
-        ->paginate($this->perPage);
+            ->byCompany(auth()->user()->company_id)
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('name', 'like', '%'.$this->search.'%')
+                    ->orWhere('processor', 'like', '%'.$this->search.'%')
+                    ->orWhere('ram', 'like', '%'.$this->search.'%')
+                    ->orWhere('ssd', 'like', '%'.$this->search.'%')
+                    ->orWhere('serial_number', 'like', '%'.$this->search.'%')
+                    ->orWhere('notes', 'like', '%'.$this->search.'%');
+                });
+            })
+            ->when($this->statusFilter === 'sold', function ($query) {
+                $query->where('is_sold', 1);
+            })
+            ->when($this->statusFilter === 'unsold', function ($query) {
+                $query->where('is_sold', 0);
+            })
+            ->when($this->statusFilter === 'inventory', function ($query) {
+                $query->where('is_sold', null);
+            })
+            ->when(!$this->statusFilter, function ($query) {
+                $query->orderBy('is_sold');
+            })
+            ->when($this->warehouseFilter, function ($query) {
+                $query->whereHas('rack.zone.warehouse', function ($q) {
+                    $q->where('id', $this->warehouseFilter);
+                });
+            })
+            ->when($this->zoneFilter, function ($query) {
+                $query->whereHas('rack.zone', function ($q) {
+                    $q->where('id', $this->zoneFilter);
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate($this->perPage);
 
         $warehouses = Warehouse::byCompany(auth()->user()->company_id)->select('id', 'name')->get();
         
@@ -231,6 +251,7 @@ class UsedLaptopTable extends Component
         $isShow = Access::can('show','used_laptops');
         $isEdit = Access::can('edit','used_laptops');
         $isDestroy = Access::can('destroy','used_laptops');
+        $canExport = Access::can('export','used_laptops');
 
         return view('livewire.used-laptop-table', [
             'laptops' => $laptops,
@@ -238,7 +259,8 @@ class UsedLaptopTable extends Component
             'zones' => $zones,
             'isShow' => $isShow,
             'isEdit' => $isEdit,
-            'isDestroy' => $isDestroy
+            'isDestroy' => $isDestroy,
+            'canExport' => $canExport,
         ]);
     }
 }
