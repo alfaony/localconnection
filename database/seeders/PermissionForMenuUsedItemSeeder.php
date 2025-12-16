@@ -22,9 +22,10 @@ class PermissionForMenuUsedItemSeeder extends Seeder
      */
     public function run()
     {
+        $this->call(ClearPermissionSeeder::class);
         $roles = Role::whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::PROCUREMENT, RoleSchema::MANAGER, RoleSchema::MANAGER_FINANCE, RoleSchema::FINANCE])->get();
         
-        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'maskAsSold','mediaDestroy'];
+        $methods = ['index','edit', 'create', 'update', 'show', 'destroy', 'store', 'maskAsSold','mediaDestroy','export'];
 
         foreach ($methods as $method) 
         {

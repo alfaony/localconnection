@@ -8,6 +8,8 @@ use App\Models\UsedItem;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\Zone;
+use App\Jobs\ExportUsedItemJob;
+use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Support\Carbon;
 use App\Helpers\Access;
@@ -120,6 +122,24 @@ class UsedItemTable extends Component
         }
     }
 
+    public function exportItem()
+    {
+        $filters = [
+            'search' => $this->search,
+            'warehouse_id' => $this->warehouseFilter,
+            'zone_id' => $this->zoneFilter,
+            'is_sold' => $this->statusFilter === 'sold' ? 'sold' : ($this->statusFilter === 'unsold' ? 'available' : ($this->statusFilter === 'inventory' ? 'inventory' : null)),
+        ];
+
+        ExportUsedItemJob::dispatch($filters, Auth::user(), auth()->user()->accessibleCompanies->pluck('id')->push(Auth::user()->company_id)->unique()->toArray());
+
+        session()->flash('success', 'Export sedang diproses. Anda akan menerima notifikasi setelah selesai.');
+        
+        $this->dispatchBrowserEvent('export-started', [
+            'message' => 'Export sedang diproses. Anda akan menerima notifikasi setelah selesai.'
+        ]);
+    }
+
      public function render()
     {
         $items = UsedItem::query()
@@ -178,6 +198,7 @@ class UsedItemTable extends Component
         $isShow = Access::can('show','used_items');
         $isEdit = Access::can('edit','used_items');
         $isDestroy = Access::can('destroy','used_items');
+        $canExport = Access::can('export','used_items');
 
         return view('livewire.used-item-table', [
             'items' => $items,
@@ -186,7 +207,8 @@ class UsedItemTable extends Component
             'zones' => $zones,
             'isShow' => $isShow,
             'isEdit' => $isEdit,
-            'isDestroy' => $isDestroy
+            'isDestroy' => $isDestroy,
+            'canExport' => $canExport
         ]);
     }
 }
