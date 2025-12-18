@@ -83,7 +83,6 @@ class UsedItemExport implements FromCollection, WithHeadings, WithMapping, WithS
         return [
             'No',
             "Url",
-            'QR Code',
             'Serial Number',
             'Nama Item',
             'Kategori',
@@ -108,12 +107,12 @@ class UsedItemExport implements FromCollection, WithHeadings, WithMapping, WithS
         $no++;
 
         $url = route('used-item.show-qr', $item->slug);
-        $qrCodePath = $this->generateQrCode($item->id, $url);
+        // $qrCodePath = $this->generateQrCode($item->id, $url);
         
-        $this->qrCodes[] = [
-            'path' => $qrCodePath,
-            'row' => $this->rowNumber
-        ];
+        // $this->qrCodes[] = [
+        //     'path' => $qrCodePath,
+        //     'row' => $this->rowNumber
+        // ];
         $this->rowNumber++;
 
         $repairCost = $item->repairs->sum('cost');
@@ -121,7 +120,6 @@ class UsedItemExport implements FromCollection, WithHeadings, WithMapping, WithS
 
         return [
             $no,
-            '',
             $url,
             $item->serial_number ?? '-',
             $item->name ?? '-',
