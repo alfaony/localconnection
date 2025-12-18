@@ -92,7 +92,6 @@ class UsedLaptopExport implements FromCollection, WithHeadings, WithMapping, Wit
     {
         return [
             'No',
-            'QR Code',
             "Url",
             'Serial Number',
             'Nama Laptop',
@@ -127,20 +126,19 @@ class UsedLaptopExport implements FromCollection, WithHeadings, WithMapping, Wit
 
         // Generate QR Code
         $url = route('used-laptop.show-qr', $laptop->slug);
-        $qrCodePath = $this->generateQrCode($laptop->id, $url);
+        // $qrCodePath = $this->generateQrCode($laptop->id, $url);
         
-        // Store QR code info for drawing
-        $this->qrCodes[] = [
-            'path' => $qrCodePath,
-            'row' => $this->rowNumber
-        ];
+        // // Store QR code info for drawing
+        // $this->qrCodes[] = [
+        //     'path' => $qrCodePath,
+        //     'row' => $this->rowNumber
+        // ];
         $this->rowNumber++;
 
         $repairCost = $laptop->repairs->sum('cost');
 
         return [
             $no,
-            '', // QR Code column (will be filled by drawings)
             $url,
             $laptop->serial_number ?? '-',
             $laptop->name ?? '-',
