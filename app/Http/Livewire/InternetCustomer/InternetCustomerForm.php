@@ -407,7 +407,6 @@ class InternetCustomerForm extends Component
             'email' => [
                 'required',
                 'email',
-                'unique:user_customers,email',
             ],
             'phone_number' => 'required|string',
             'address' => 'required|min:10',
