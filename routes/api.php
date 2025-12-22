@@ -18,6 +18,7 @@ use App\Http\Controllers\API\MomApiController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\API\DailyTaskMobileController;
 use App\Http\Controllers\API\ItemRequestMobileController;
+use App\Http\Controllers\API\ItemPurchaseMobileController;
 use App\Http\Controllers\API\FlowChartController;
 use App\Http\Controllers\API\RegionController;
 
@@ -87,7 +88,6 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
         ->name('medias.generateMediaUrl.mobile');
     Route::get('divisions', [DailyTaskMobileController::class, 'indexDivision']);
     Route::get('divisions/check-division-quota', [DailyTaskMobileController::class, 'checkDivisionQuota']);
-
     Route::get('/item-requests/{id}/workflow', [ItemRequestMobileController::class, 'workflow']);
     Route::post('item-requests/{id}/add-vendor', [ItemPurchaseMobileController::class,'addVendor']);
     Route::post('item-requests/{id}/delivery', [ItemRequestMobileController::class,'delivery']);
