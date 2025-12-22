@@ -14,6 +14,9 @@ class DayoffResetQuotaCommand extends Command
 
     public function handle()
     {
+        if (now()->day !== 1 || now()->month !== 1) {
+            return;
+        }
         $types = DayoffType::where('is_limited', true)->get();
         $users = User::where('dayoff_active',true)->get();
 
