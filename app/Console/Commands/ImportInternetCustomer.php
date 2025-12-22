@@ -151,7 +151,7 @@ class ImportInternetCustomer extends Command
                         $data['phone'] = null;
                     }
 
-                    if (!empty($data['name']) && (empty($data['phone']) || empty($data['email']))) {
+                    if (!empty($data['name']) && (empty($data['phone']) && empty($data['email']))) {
                         $existingCustomer = UserCustomer::where('name', $data['name'])->first();
                         if ($existingCustomer) {
                             $failures[] = [
