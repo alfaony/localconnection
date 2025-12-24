@@ -172,7 +172,7 @@ class Kernel extends ConsoleKernel
 
             $schedule->command('quota:ensure-locks --company_id=' . $a->id)
             ->timezone('Asia/Jakarta')
-            ->dailyAt('12:14')
+            ->dailyAt('01:00')
             ->withoutOverlapping(10)
             ->runInBackground(); // Optional: prevent blocking
         }
