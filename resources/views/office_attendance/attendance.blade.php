@@ -57,10 +57,19 @@
 
                         <div class="form-group">
                             <label for="latitude" class="font-weight-bold">Latitude Anda</label>
-                            <input type="text" class="form-control" id="latitude" name="latitude" required readonly>
+                            <input type="text" class="form-control" id="latitude" name="latitude" required readonly placeholder="Menunggu akses lokasi...">
 
                             <label for="longitude" class="font-weight-bold mt-2">Longitude Anda</label>
-                            <input type="text" class="form-control" id="longitude" name="longitude" required readonly>
+                            <input type="text" class="form-control" id="longitude" name="longitude" required readonly placeholder="Menunggu akses lokasi...">
+                            
+                            <div class="mt-3 text-center">
+                                <button type="button" class="btn btn-info btn-sm" id="get-location-btn">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>Dapatkan Lokasi Saya
+                                </button>
+                                <small class="d-block mt-2 text-muted" id="location-status">
+                                    <i class="fas fa-info-circle"></i> Klik tombol untuk mengisi koordinat lokasi
+                                </small>
+                            </div>
                         </div>
 
                         <div class="form-group text-center mt-4">
@@ -119,11 +128,14 @@
             
             notifSoundEntry?.play();
             
-                // Hidupkan webcam setelah verifikasi
-                const video = document.getElementById('webcam');
-                video.style.display = 'block'; // Tampilkan video (webcam)
-                startWebcam(); // Memulai webcam
-            });
+            // Hidupkan webcam setelah verifikasi
+            const video = document.getElementById('webcam');
+            video.style.display = 'block'; // Tampilkan video (webcam)
+            startWebcam(); // Memulai webcam
+            
+            // Otomatis coba ambil lokasi setelah form muncul
+            getLocation();
+        });
 
         // Webcam setup
         const video = document.getElementById('webcam');
@@ -184,31 +196,143 @@
             canvas.height = 0;
         });
 
-        // Ambil lokasi otomatis menggunakan Geolocation API
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                // Set latitude dan longitude terpisah
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
+        // Fungsi untuk mendapatkan lokasi
+        function getLocation() {
+            const locationBtn = document.getElementById('get-location-btn');
+            const locationStatus = document.getElementById('location-status');
+            
+            // Update status dan disable button saat proses
+            locationBtn.disabled = true;
+            locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengambil lokasi...';
+            locationStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sedang mengambil koordinat lokasi...';
+            locationStatus.className = 'd-block mt-2 text-info';
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    // Set latitude dan longitude terpisah
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
 
-                // Isi masing-masing input dengan latitude dan longitude
-                document.getElementById('latitude').value = lat.toFixed(6);
-                document.getElementById('longitude').value = lng.toFixed(6);
-            }, function(error) {
-                alert('Gagal mendapatkan lokasi. Silakan izinkan akses lokasi untuk melanjutkan.');
-                document.getElementById('latitude').value = 'Lokasi tidak terdeteksi';
-                document.getElementById('longitude').value = 'Lokasi tidak terdeteksi';
-            });
-        } else {
-            document.getElementById('latitude').value = 'Geolocation tidak didukung browser ini';
-            document.getElementById('longitude').value = 'Geolocation tidak didukung browser ini';
+                    // Isi masing-masing input dengan latitude dan longitude
+                    document.getElementById('latitude').value = lat.toFixed(6);
+                    document.getElementById('longitude').value = lng.toFixed(6);
+                    
+                    // Update status sukses
+                    locationBtn.disabled = false;
+                    locationBtn.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Lokasi Terisi';
+                    locationBtn.classList.remove('btn-info');
+                    locationBtn.classList.add('btn-success');
+                    
+                    locationStatus.innerHTML = '<i class="fas fa-check-circle"></i> Koordinat lokasi berhasil didapatkan!';
+                    locationStatus.className = 'd-block mt-2 text-success';
+                }, function(error) {
+                    // Handle error
+                    let errorMessage = 'Gagal mendapatkan lokasi. ';
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage += 'Anda menolak akses lokasi. Silakan izinkan akses lokasi di pengaturan browser.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage += 'Informasi lokasi tidak tersedia.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage += 'Permintaan lokasi timeout. Silakan coba lagi.';
+                            break;
+                        default:
+                            errorMessage += 'Terjadi kesalahan tidak diketahui.';
+                    }
+                    
+                    alert(errorMessage);
+                    
+                    document.getElementById('latitude').value = '';
+                    document.getElementById('longitude').value = '';
+                    
+                    // Update status error
+                    locationBtn.disabled = false;
+                    locationBtn.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i>Coba Lagi';
+                    locationBtn.classList.remove('btn-success');
+                    locationBtn.classList.add('btn-info');
+                    
+                    locationStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Gagal mendapatkan lokasi. Klik tombol untuk mencoba lagi.';
+                    locationStatus.className = 'd-block mt-2 text-danger';
+                });
+            } else {
+                alert('Geolocation tidak didukung oleh browser Anda.');
+                document.getElementById('latitude').value = '';
+                document.getElementById('longitude').value = '';
+                
+                // Update status error
+                locationBtn.disabled = false;
+                locationBtn.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Tidak Didukung';
+                locationBtn.classList.remove('btn-success');
+                locationBtn.classList.add('btn-danger');
+                
+                locationStatus.innerHTML = '<i class="fas fa-times-circle"></i> Geolocation tidak didukung browser ini.';
+                locationStatus.className = 'd-block mt-2 text-danger';
+            }
         }
 
-        // Tambah animasi loading & disable button submit agar tidak double klik
+        // Event listener untuk button get location
+        document.getElementById('get-location-btn').addEventListener('click', getLocation);
+
+        // Validasi form sebelum submit
         document.getElementById('attendance-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default submit
+            
+            const latitude = document.getElementById('latitude').value;
+            const longitude = document.getElementById('longitude').value;
+            const photo = document.getElementById('photo').value;
+            
+            // Validasi foto
+            if (!photo) {
+                alert('⚠️ Silakan ambil foto terlebih dahulu sebelum mengirim absensi!');
+                return false;
+            }
+            
+            // Validasi lokasi
+            if (!latitude || !longitude || latitude === '' || longitude === '' || 
+                latitude === 'Lokasi tidak terdeteksi' || longitude === 'Lokasi tidak terdeteksi' ||
+                latitude === 'Geolocation tidak didukung browser ini' || longitude === 'Geolocation tidak didukung browser ini') {
+                
+                alert('⚠️ Koordinat lokasi belum terisi!\n\nSilakan klik tombol "Dapatkan Lokasi Saya" untuk mengisi koordinat lokasi Anda terlebih dahulu.');
+                
+                // Scroll ke bagian lokasi dan highlight button
+                document.getElementById('get-location-btn').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                document.getElementById('get-location-btn').classList.add('btn-pulse');
+                
+                setTimeout(() => {
+                    document.getElementById('get-location-btn').classList.remove('btn-pulse');
+                }, 2000);
+                
+                return false;
+            }
+            
+            // Jika semua validasi lolos, submit form
             const submitBtn = document.getElementById('submit-btn');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+            
+            // Submit form
+            this.submit();
         });
     </script>
+    
+    <style>
+        /* Animasi pulse untuk button */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(23, 162, 184, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(23, 162, 184, 0);
+            }
+        }
+        
+        .btn-pulse {
+            animation: pulse 1s infinite;
+        }
+    </style>
 @endsection
