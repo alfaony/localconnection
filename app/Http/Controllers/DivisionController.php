@@ -423,8 +423,8 @@ class DivisionController extends Controller
 
         // Calculate period month and year
         if ($now->day >= $periodStartDay) {
-            $month = $now->copy()->subMonth()->month;
-            $year = $now->copy()->subMonth()->year;
+            $month = $now->copy()->addMonth()->month;
+            $year = $now->copy()->addMonth()->year;
         } else {
             $month = $now->month;
             $year = $now->year;
