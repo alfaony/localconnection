@@ -51,8 +51,8 @@ class EnsureDivisionQuotaLocks extends Command
 
             // Calculate period month and yearcl
             if ($now->day >= $periodStartDay) {
-                $periodMonth = $now->copy()->subMonth()->month;
-                $periodYear = $now->copy()->subMonth()->year;
+                $periodMonth = $now->copy()->addMonth()->month;
+                $periodYear = $now->copy()->addMonth()->year;
             } else {
                 $periodMonth = $now->month;
                 $periodYear = $now->year;
