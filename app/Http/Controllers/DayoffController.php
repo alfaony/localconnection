@@ -307,6 +307,7 @@ class DayoffController extends Controller
         $pendingDuration = Dayoff::where('user_id', $user->id)
             ->where('dayoff_type_id', $type->id)
             ->whereNull('rejected_at')
+            ->whereYear('created_at', now()->year)
             ->where(function ($q) {
                 $q->whereNull('approved_hr_at')->orWhereNull('approved_finance_at');
             })
