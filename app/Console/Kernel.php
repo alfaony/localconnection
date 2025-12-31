@@ -133,7 +133,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('recurring:generate')->timezone('Asia/Jakarta')->dailyAt('01:00');
         $schedule->command('media:cleanup-temporary')->timezone('Asia/Jakarta')->dailyAt('00:00');
-        $schedule->command('dayoff:reset-quota')->timezone('Asia/Jakarta')->yearlyOn(1, 1, '01:48');
+        $schedule->command('dayoff:reset-quota')->timezone('Asia/Jakarta')->yearlyOn(1, 1, '01:50');
         $schedule->command('weekly:check-compliance')->timezone('Asia/Jakarta')->mondays()->at('3:00');
         $schedule->command('dailytask:check-status')->timezone('Asia/Jakarta')->dailyAt('00:00');
         
