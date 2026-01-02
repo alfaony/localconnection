@@ -1,6 +1,7 @@
 <div>
     <div class="row">
         <div class="col-md-12 mt-3">
+            @include('components.alert')
             <div class="card shadow-sm">
                 <!-- Header -->
                 <div class="card-header bg-gradient-primary">
