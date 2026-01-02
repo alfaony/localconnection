@@ -33,17 +33,20 @@ class ProductStoreForm extends Component
     public $selling_price;
     public $createAgain = false;
 
-    // Location properties
     public $warehouse_id;
     public $zone_id;
     public $rack_id;
 
-    // Media properties - CHANGED APPROACH
     public $photo;
-    public $photos = []; // Contains ONLY database records (saved files)
-    public $pendingPhotos = []; // New photos not yet in database
+    public $photos = [];
+    public $pendingPhotos = [];
     public $photoCaptions = [];
     public $photosToDelete = [];
+    
+    // Upload queue tracking
+    public $uploadingCount = 0;
+    public $uploadedCount = 0;
+    public $isUploading = false;
 
     public $categories;
     public $brands;
@@ -51,16 +54,7 @@ class ProductStoreForm extends Component
     public $zones;
     public $racks;
     
-    protected $listeners = [
-        'editProduct', 
-        'createProduct',
-        'updatePhotoOrder'
-    ];
-
-    public function updatedSellingPriceView($value)
-    {
-        $this->selling_price = preg_replace('/\D/', '', $value);
-    }
+    protected $listeners = ['editProduct', 'createProduct', 'updatePhotoOrder'];
 
     public function mount($id = null)
     {
@@ -81,7 +75,6 @@ class ProductStoreForm extends Component
             $this->barcode = $this->generateBarcode();
         }
 
-        // Merge saved and pending photos for display
         $allPhotos = array_merge($this->photos, $this->pendingPhotos);
         
         return view('livewire.product-store.product-store-form', [
@@ -107,7 +100,6 @@ class ProductStoreForm extends Component
         $this->weight = $product->weight;
         $this->selling_price = $product->selling_price;
 
-        // Load existing photos
         $this->photos = $product->media->map(function($media) {
             return [
                 'id' => $media->id,
@@ -127,18 +119,8 @@ class ProductStoreForm extends Component
             $this->warehouse_id = $product->rack->zone->warehouse_id;
             $this->zone_id = $product->rack->zone_id;
             $this->rack_id = $product->rack_id;
-
-            $this->zones = Zone::where('warehouse_id', $this->warehouse_id)
-                ->select('id', 'name')
-                ->orderBy('name')
-                ->get();
-            $this->racks = Rack::where('zone_id', $this->zone_id)
-                ->select('id', 'name')
-                ->orderBy('name')
-                ->get();
-        } else {
-            $this->zones = collect();
-            $this->racks = collect();
+            $this->zones = Zone::where('warehouse_id', $this->warehouse_id)->select('id', 'name')->orderBy('name')->get();
+            $this->racks = Rack::where('zone_id', $this->zone_id)->select('id', 'name')->orderBy('name')->get();
         }
     }
 
@@ -148,12 +130,8 @@ class ProductStoreForm extends Component
         $this->rack_id = null;
         $this->zones = collect();
         $this->racks = collect();
-
         if ($value) {
-            $this->zones = Zone::where('warehouse_id', $value)
-                ->select('id', 'name')
-                ->orderBy('name')
-                ->get();
+            $this->zones = Zone::where('warehouse_id', $value)->select('id', 'name')->orderBy('name')->get();
         }
     }
 
@@ -161,22 +139,11 @@ class ProductStoreForm extends Component
     {
         $this->rack_id = null;
         $this->racks = collect();
-
         if ($value && $this->warehouse_id) {
-            $this->racks = Rack::where('zone_id', $value)
-                ->select('id', 'name')
-                ->orderBy('name')
-                ->get();
+            $this->racks = Rack::where('zone_id', $value)->select('id', 'name')->orderBy('name')->get();
         }
     }
 
-    /**
-     * SOLUSI BARU: Upload langsung ke folder permanent
-     * Tidak ada temp folder, tidak ada copy/move
-     */
-    /**
-     * ROBUST PHOTO UPLOAD with retry logic and validation
-     */
     public function updatedPhoto()
     {
         // Validate first
@@ -303,42 +270,31 @@ class ProductStoreForm extends Component
 
     public function deletePhoto($photoId)
     {
-        // Check if it's a saved photo
         $photoKey = collect($this->photos)->search(fn($p) => $p['id'] == $photoId);
-        
         if ($photoKey !== false) {
-            // Mark saved photo for deletion
             $this->photosToDelete[] = $photoId;
             array_splice($this->photos, $photoKey, 1);
             unset($this->photoCaptions[$photoId]);
             return;
         }
 
-        // Check if it's a pending photo
         $pendingKey = collect($this->pendingPhotos)->search(fn($p) => $p['id'] == $photoId);
-        
         if ($pendingKey !== false) {
             $photo = $this->pendingPhotos[$pendingKey];
-            
-            // Delete file from S3 immediately
             try {
                 Storage::disk('s3')->delete($photo['file_path']);
-                \Log::info("Pending photo deleted from S3: {$photo['file_path']}");
             } catch (\Exception $e) {
-                \Log::error("Failed to delete pending photo: " . $e->getMessage());
+                \Log::error("Delete failed: " . $e->getMessage());
             }
-            
             array_splice($this->pendingPhotos, $pendingKey, 1);
             unset($this->photoCaptions[$photoId]);
         }
 
-        // Reorder
         $this->reorderPhotos();
     }
 
     public function updatePhotoOrder($orderedIds)
     {
-        // Separate saved and pending IDs
         $savedIds = [];
         $pendingIds = [];
         
@@ -350,7 +306,6 @@ class ProductStoreForm extends Component
             }
         }
 
-        // Reorder saved photos
         $reorderedSaved = [];
         foreach ($savedIds as $index => $id) {
             $photo = collect($this->photos)->firstWhere('id', $id);
@@ -361,7 +316,6 @@ class ProductStoreForm extends Component
         }
         $this->photos = $reorderedSaved;
 
-        // Reorder pending photos
         $reorderedPending = [];
         foreach ($pendingIds as $index => $id) {
             $photo = collect($this->pendingPhotos)->firstWhere('id', $id);
@@ -375,20 +329,13 @@ class ProductStoreForm extends Component
 
     private function reorderPhotos()
     {
-        // Reorder all photos
         foreach ($this->photos as $index => &$photo) {
             $photo['order'] = $index;
         }
-        
         $startOrder = count($this->photos);
         foreach ($this->pendingPhotos as $index => &$photo) {
             $photo['order'] = $startOrder + $index;
         }
-    }
-
-    public function createProduct()
-    {
-        $this->barcode = $this->generateBarcode();
     }
 
     public function save()
@@ -413,7 +360,7 @@ class ProductStoreForm extends Component
         ]);
 
         $data = $validated;
-        $data['dimension'] = $data['length'] . ' x ' . $data['width'] . ' x ' . $data['height'];
+        $data['dimension'] = ($data['length'] ?? 0) . ' x ' . ($data['width'] ?? 0) . ' x ' . ($data['height'] ?? 0);
         
         if ($this->productId) {
             $product = ProductStore::find($this->productId);
@@ -430,12 +377,10 @@ class ProductStoreForm extends Component
 
         if ($this->createAgain) {
             $this->resetForm();
-            $this->emit('productCreated');
-            return redirect()->route('product-store.create')->with('store', 'Produk berhasil disimpan.');
+            return redirect()->route('product-store.create')->with('success', 'Produk berhasil disimpan.');
         } else {
             $this->resetForm();
-            $this->emit('closeForm');
-            return redirect()->route('product-store.index')->with('message', 'Produk berhasil disimpan.');
+            return redirect()->route('product-store.index')->with('success', 'Produk berhasil disimpan.');
         }
     }
 
@@ -443,29 +388,20 @@ class ProductStoreForm extends Component
     {
         if (!empty($this->photosToDelete)) {
             $mediaToDelete = ProductStoreMedia::whereIn('id', $this->photosToDelete)->get();
-            
             foreach ($mediaToDelete as $media) {
                 try {
                     Storage::disk('s3')->delete($media->file_path);
-                    \Log::info("Deleted from S3: {$media->file_path}");
                 } catch (\Exception $e) {
-                    \Log::error('Failed to delete file from S3: ' . $e->getMessage());
+                    \Log::error('Delete failed: ' . $e->getMessage());
                 }
-                
                 $media->delete();
             }
-            
             $this->photosToDelete = [];
         }
     }
 
-    /**
-     * SAVE PHOTOS - Simple version
-     * File sudah ada di S3, tinggal buat record database
-     */
     private function savePhotos($product)
     {
-        // Update existing photos
         foreach ($this->photos as $photo) {
             $media = ProductStoreMedia::find($photo['id']);
             if ($media) {
@@ -476,78 +412,51 @@ class ProductStoreForm extends Component
             }
         }
 
-        // Save pending photos (file sudah ada di S3, tinggal buat record)
         foreach ($this->pendingPhotos as $photo) {
-            try {
-                ProductStoreMedia::create([
-                    'product_store_id' => $product->id,
-                    'file_path' => $photo['file_path'], // File sudah ada di permanent location
-                    'order' => $photo['order'],
-                    'caption' => $this->photoCaptions[$photo['id']] ?? null
-                ]);
-                
-                \Log::info("Photo record created for: {$photo['file_path']}");
-            } catch (\Exception $e) {
-                \Log::error('Failed to create photo record: ' . $e->getMessage());
-            }
+            ProductStoreMedia::create([
+                'product_store_id' => $product->id,
+                'file_path' => $photo['file_path'],
+                'order' => $photo['order'],
+                'caption' => $this->photoCaptions[$photo['id']] ?? null
+            ]);
         }
-
-        // Clear pending photos after save
         $this->pendingPhotos = [];
     }
 
     private function resetForm()
     {
-        // Clean up pending photos that weren't saved
         foreach ($this->pendingPhotos as $photo) {
             try {
                 Storage::disk('s3')->delete($photo['file_path']);
-                \Log::info("Cleanup pending photo: {$photo['file_path']}");
             } catch (\Exception $e) {
-                \Log::error('Failed to cleanup pending photo: ' . $e->getMessage());
+                \Log::error('Cleanup error: ' . $e->getMessage());
             }
         }
 
         $this->reset([
-            'warehouse_id',
-            'zone_id',
-            'rack_id',
-            'productId', 
-            'barcode', 
-            'category_product_store_id', 
-            'brand_product_store_id',
-            'name', 
-            'variant', 
-            'specification', 
-            'length', 
-            'width', 
-            'height',
-            'weight', 
-            'selling_price',
-            'photo',
-            'photos',
-            'pendingPhotos',
-            'photoCaptions',
-            'photosToDelete'
+            'warehouse_id', 'zone_id', 'rack_id', 'productId', 'barcode',
+            'category_product_store_id', 'brand_product_store_id',
+            'name', 'variant', 'specification', 'length', 'width', 'height',
+            'weight', 'selling_price', 'photo', 'photos', 'pendingPhotos',
+            'photoCaptions', 'photosToDelete', 'uploadingCount', 'uploadedCount', 'isUploading'
         ]);
-
         $this->zones = collect();
         $this->racks = collect();
     }
 
     public function cancel()
     {
-        // Clean up pending photos
         foreach ($this->pendingPhotos as $photo) {
             try {
                 Storage::disk('s3')->delete($photo['file_path']);
-            } catch (\Exception $e) {
-                \Log::error('Failed to cleanup on cancel: ' . $e->getMessage());
-            }
+            } catch (\Exception $e) {}
         }
-
-        $this->emit('closeForm');
         $this->resetForm();
+    }
+
+    public function createProduct()
+    {
+        $this->barcode = $this->generateBarcode();
     }
 
     protected static function generateBarcode()
@@ -555,7 +464,6 @@ class ProductStoreForm extends Component
         do {
             $barcode = now()->format('Y') . str_pad(mt_rand(0, 999999999), 9, '0', STR_PAD_LEFT);
         } while (ProductStore::withTrashed()->where('barcode', $barcode)->exists());
-
         return $barcode;
     }
 }
