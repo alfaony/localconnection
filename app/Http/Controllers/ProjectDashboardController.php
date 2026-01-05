@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 
 use App\Schemas\ParamSchema;
 use App\Models\Vision;
+use App\Models\Mission;
+use App\Models\Objective;
+use App\Models\ObjectiveKeyResult;
 use App\Models\User;
 use App\Models\DailyTask;
 use App\Models\Division; // Add this line to import Division model
@@ -412,81 +416,99 @@ class ProjectDashboardController extends Controller
 
     public function getVisions(Request $request)
     {
-        $visions = Vision::select('visions.id', 'visions.vision') // Qualify the id with table name
-            ->with([
-                'missions' => function ($query) {
-                    $query->select('missions.id', 'missions.vision_id', 'missions.mission') // Qualify the id
-                        ->with([
-                            'objectives' => function ($query) {
-                                $query->select('objectives.id', 'objectives.mission_id', 'objectives.name') // Qualify the id
-                                    ->with([
-                                        'keyResults' => function ($query) {
-                                            $query->select('objective_key_results.id', 'objective_key_results.objective_id', 'objective_key_results.result') // Qualify the id
-                                                ->with([
-                                                    'dailyTasks' => function ($query) {
-                                                        $query->select(
-                                                            'daily_tasks.id',
-                                                            // 'daily_tasks.key_result_id',
-                                                            'daily_tasks.name',
-                                                            'daily_tasks.start_date',
-                                                            'daily_tasks.end_date',
-                                                            'daily_tasks.task_status_id',
-                                                            'daily_tasks.assignment_user_id'
-                                                        ) // Qualify the id
-                                                        ->with([
-                                                            'taskStatus:id,name', // Task Status: explicitly select id and name
-                                                            'assign:id,name' // Assign: explicitly select id and name
-                                                        ]);
-                                                    }
-                                                ]);
-                                        }
-                                    ]);
-                            }
-                        ]);
-                }
-            ])->get()
-            ->map(function ($vision) {
-                // Calculate total tasks for vision
-                $vision->total_tasks = $vision->missions->sum(function ($mission) {
-                    return $mission->objectives->sum(function ($objective) {
-                        return $objective->keyResults->sum(function ($keyResult) {
-                            return $keyResult->dailyTasks->count();
-                        });
-                    });
-                });
-
-                // Process each mission
-                $vision->missions->each(function ($mission) {
-                    $mission->total_tasks = $mission->objectives->sum(function ($objective) {
-                        return $objective->keyResults->sum(function ($keyResult) {
-                            return $keyResult->dailyTasks->count();
-                        });
-                    });
-
-                    // Process each objective
-                    $mission->objectives->each(function ($objective) {
-                        $objective->total_tasks = $objective->keyResults->sum(function ($keyResult) {
-                            return $keyResult->dailyTasks->count();
-                        });
-
-                        // Process each key result
-                        $objective->keyResults->each(function ($keyResult) {
-                            $keyResult->total_tasks = $keyResult->dailyTasks->count();
-
-                            // Add `date_show` for each daily task
-                            $keyResult->dailyTasks->transform(function ($task) {
-                                // Manually add the `date_show` attribute
-                                $task->date_show = $task->getDateShowAttribute();
-                                $task->is_overdue = $task->isOverdue();
-                                return $task;
-                            });
-                        });
-                    });
-                });
-
-                return $vision;
-            });
+        // Get pagination parameters
+        $perPage = $request->get('per_page', 10); // Default 10 items per page
+        
+        // Only load visions with counts, no nested data
+        $visions = Vision::select('visions.id', 'visions.vision')
+            ->withCount('missions as total_missions')
+            ->paginate($perPage);
 
         return response()->json($visions);
+    }
+
+    public function getMissions(Request $request, $visionId)
+    {
+        // Find the vision and load its missions with counts
+        $vision = Vision::findOrFail($visionId);
+        
+        $missions = $vision->missions()
+            ->select('missions.id', 'missions.vision_id', 'missions.mission')
+            ->withCount('objectives as total_objectives')
+            ->get()
+            ->map(function ($mission) {
+                // Calculate total tasks for this mission using database aggregation
+                $totalTasks = DB::table('objectives')
+                    ->join('objective_key_results', 'objectives.id', '=', 'objective_key_results.objective_id')
+                    ->join('daily_task_objective_key_result', 'objective_key_results.id', '=', 'daily_task_objective_key_result.objective_key_result_id')
+                    ->where('objectives.mission_id', $mission->id)
+                    ->count();
+                
+                $mission->total_tasks = $totalTasks;
+                return $mission;
+            });
+
+        return response()->json($missions);
+    }
+
+    public function getObjectives(Request $request, $missionId)
+    {
+        $mission = Mission::findOrFail($missionId);
+        
+        $objectives = $mission->objectives()
+            ->select('objectives.id', 'objectives.mission_id', 'objectives.name')
+            ->withCount('keyResults as total_key_results')
+            ->get()
+            ->map(function ($objective) {
+                // Calculate total tasks for this objective
+                $totalTasks = DB::table('objective_key_results')
+                    ->join('daily_task_objective_key_result', 'objective_key_results.id', '=', 'daily_task_objective_key_result.objective_key_result_id')
+                    ->where('objective_key_results.objective_id', $objective->id)
+                    ->count();
+                
+                $objective->total_tasks = $totalTasks;
+                return $objective;
+            });
+
+        return response()->json($objectives);
+    }
+
+    public function getKeyResults(Request $request, $objectiveId)
+    {
+        $objective = Objective::findOrFail($objectiveId);
+        
+        $keyResults = $objective->keyResults()
+            ->select('objective_key_results.id', 'objective_key_results.objective_id', 'objective_key_results.result')
+            ->withCount('dailyTasks as total_tasks')
+            ->get();
+
+        return response()->json($keyResults);
+    }
+
+    public function getDailyTasks(Request $request, $keyResultId)
+    {
+        $keyResult = ObjectiveKeyResult::findOrFail($keyResultId);
+        
+        $dailyTasks = $keyResult->dailyTasks()
+            ->select(
+                'daily_tasks.id',
+                'daily_tasks.name',
+                'daily_tasks.start_date',
+                'daily_tasks.end_date',
+                'daily_tasks.task_status_id',
+                'daily_tasks.assignment_user_id'
+            )
+            ->with([
+                'taskStatus:id,name',
+                'assign:id,name'
+            ])
+            ->get()
+            ->map(function ($task) {
+                $task->date_show = $task->getDateShowAttribute();
+                $task->is_overdue = $task->isOverdue();
+                return $task;
+            });
+
+        return response()->json($dailyTasks);
     }
 }

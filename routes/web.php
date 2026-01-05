@@ -422,6 +422,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('mission', MissionController::class)->except(['index', 'show', 'create', 'edit']);
 
   Route::get('project-dashboard/getVisions', [ProjectDashboardController::class, 'getVisions'])->name('visions');
+  Route::get('project-dashboard/visions/{vision}/missions', [ProjectDashboardController::class, 'getMissions'])->name('vision-missions');
+  Route::get('project-dashboard/missions/{mission}/objectives', [ProjectDashboardController::class, 'getObjectives'])->name('mission-objectives');
+  Route::get('project-dashboard/objectives/{objective}/key-results', [ProjectDashboardController::class, 'getKeyResults'])->name('objective-key-results');
+  Route::get('project-dashboard/key-results/{keyResult}/daily-tasks', [ProjectDashboardController::class, 'getDailyTasks'])->name('key-result-tasks');
   Route::get('project-dashboard/getTotalCounts', [ProjectDashboardController::class, 'getTotalCounts'])->name('total-counts');
   Route::get('project-dashboard/getOverdueTasks', [ProjectDashboardController::class, 'getOverdueTasks'])->name('overdue-tasks');
   Route::get('project-dashboard/getUpcomingTasks', [ProjectDashboardController::class, 'getUpcomingTasks'])->name('upcoming-tasks');
