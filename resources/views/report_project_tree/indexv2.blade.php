@@ -227,7 +227,11 @@
             totalCounts: "{{ route('total-counts') }}",
             overdueTasks: "{{ route('overdue-tasks') }}",
             upcomingTasks: "{{ route('upcoming-tasks') }}",
-            visions: "{{ route('visions') }}"
+            visions: "{{ route('visions') }}",
+            visionMissions: "{{ route('vision-missions', '0') }}".replace('/0/', '/:visionId/'),
+            missionObjectives: "{{ route('mission-objectives', '0') }}".replace('/0/', '/:missionId/'),
+            objectiveKeyResults: "{{ route('objective-key-results', '0') }}".replace('/0/', '/:objectiveId/'),
+            keyResultTasks: "{{ route('key-result-tasks', '0') }}".replace('/0/', '/:keyResultId/')
         };
 
         const fetchData = async (endpoint, params = {}) => {
@@ -344,107 +348,289 @@
             }
             loaderUpcoming.classList.add('d-none'); // Menyembunyikan spinner upcoming
 
+            // Lazy loading: Load only visions initially
             const visions = await fetchData(apiEndpoints.visions);
             if (visions) 
             {
-                visionAccordion.innerHTML = visions.map(vision => `
+                // Handle paginated response - extract data array
+                const visionsData = visions.data || visions;
+                
+                // Render only vision titles
+                visionAccordion.innerHTML = visionsData.map(vision => `
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center" id="headingVision${vision.id}">
                             <h5 class="mb-0">
-                                <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseVision${vision.id}" aria-expanded="true" aria-controls="collapseVision${vision.id}">
-                                    Visi: ${vision.vision} (${vision.total_tasks} Tasks)
+                                <button class="btn btn-link vision-toggle" type="button" data-toggle="collapse" data-target="#collapseVision${vision.id}" data-vision-id="${vision.id}" aria-expanded="false" aria-controls="collapseVision${vision.id}">
+                                    Visi: ${vision.vision} (${vision.total_missions} Missions)
                                 </button>
                             </h5>
                         </div>
                         <div id="collapseVision${vision.id}" class="collapse" aria-labelledby="headingVision${vision.id}" data-parent="#visionAccordion">
                             <div class="card-body">
-                                <div class="accordion" id="missionAccordion${vision.id}">
-                                    <h5 class="p-3">Misi</h5>
-                                    ${vision.missions.map(mission => `
-                                        <div class="card">
-                                            <div class="card-header d-flex justify-content-between align-items-center" id="headingMission${mission.id}">
-                                                <h5 class="mb-0">
-                                                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseMission${mission.id}" aria-expanded="false" aria-controls="collapseMission${mission.id}">
-                                                        ${mission.mission} (${mission.total_tasks} Tasks)
-                                                    </button>
-                                                </h5>
-                                            </div>
-                                            <div id="collapseMission${mission.id}" class="collapse" aria-labelledby="headingMission${mission.id}" data-parent="#missionAccordion${vision.id}">
-                                                <div class="card-body">
-                                                    <h5 class="p-3">Objective</h5>
-                                                    <div class="accordion" id="objectiveAccordion${mission.id}">
-                                                        ${mission.objectives.map(objective => `
-                                                            <div class="card">
-                                                                <div class="card-header d-flex justify-content-between align-items-center" id="headingObjective${objective.id}">
-                                                                    <h5 class="mb-0">
-                                                                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseObjective${objective.id}" aria-expanded="false" aria-controls="collapseObjective${objective.id}">
-                                                                            ${objective.name} (${objective.total_tasks} Tasks)
-                                                                        </button>
-                                                                    </h5>
-                                                                </div>
-                                                                <div id="collapseObjective${objective.id}" class="collapse" aria-labelledby="headingObjective${objective.id}" data-parent="#objectiveAccordion${mission.id}">
-                                                                    <div class="card-body">
-                                                                        <h5 class="p-3">Key Result</h5>
-                                                                        <div class="accordion" id="keyResultAccordion${objective.id}">
-                                                                            ${objective.key_results.map(keyResult => `
-                                                                                <div class="card">
-                                                                                    <div class="card-header d-flex justify-content-between align-items-center" id="headingKeyResult${keyResult.id}">
-                                                                                        <h5 class="mb-0">
-                                                                                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseKeyResult${keyResult.id}" aria-expanded="false" aria-controls="collapseKeyResult${keyResult.id}">
-                                                                                                ${keyResult.result} (${keyResult.total_tasks} Tasks)
-                                                                                            </button>
-                                                                                        </h5>
-                                                                                    </div>
-                                                                                    <div id="collapseKeyResult${keyResult.id}" class="collapse" aria-labelledby="headingKeyResult${keyResult.id}" data-parent="#keyResultAccordion${objective.id}">
-                                                                                        <div class="card-body">
-                                                                                            <ul class="list-group">
-                                                                                                <div class="table-responsive">
-                                                                                                    <table class="table table-striped table-bordered">
-                                                                                                        <thead class="thead-light">
-                                                                                                            <tr>
-                                                                                                                <th>#</th>
-                                                                                                                <th>Tugas</th>
-                                                                                                                <th>Tanggal</th>
-                                                                                                                <th>Status</th>
-                                                                                                                <th>Ditugaskan</th>
-                                                                                                            </tr>
-                                                                                                        </thead>
-                                                                                                        <tbody>
-                                                                                                            ${keyResult.daily_tasks.map((task, index) => `
-                                                                                                                <tr>
-                                                                                                                    <td>${index + 1}</td>
-                                                                                                                    <td>${task.name}</td>
-                                                                                                                    <td>${task.is_overdue ? `<span class="text-danger">${task.date_show}</span>` : task.date_show}</td>
-                                                                                                                    <td>${task.task_status ? getStatusIcon(task.task_status.name) : '?'}</td>
-                                                                                                                    <td>${task.assign ? task.assign.name : '?'}</td>
-                                                                                                                </tr>
-                                                                                                            `).join('')}
-                                                                                                        </tbody>
-                                                                                                    </table>
-                                                                                                </div>
-                                                                                            </ul>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            `).join('')}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        `).join('')}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
+                                <div class="text-center p-3">
+                                    <div class="spinner-border" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `).join('');
+                
+                // Add event listeners for lazy loading missions
+                setupLazyLoading();
             }
-            loaderVisions.classList.add('d-none'); // Menyembunyikan spinner visions
+            loaderVisions.classList.add('d-none');
         };
+
+        // Cache for loaded data
+        const dataCache = {
+            missions: {},
+            objectives: {},
+            keyResults: {},
+            dailyTasks: {}
+        };
+
+        function setupLazyLoading() {
+            console.log('Setting up lazy loading listeners...');
+            
+            // Listen for vision accordion clicks
+            $(document).on('click', '.vision-toggle', async function(e) {
+                const visionId = $(this).data('vision-id');
+                const collapseElement = $(`#collapseVision${visionId}`);
+                
+                console.log('Vision clicked:', visionId);
+                
+                // Check if already loaded
+                if (!dataCache.missions[visionId]) {
+                    console.log('Loading missions for vision:', visionId);
+                    // Wait a bit for collapse animation to start
+                    setTimeout(async () => {
+                        await loadMissions(visionId, collapseElement);
+                    }, 100);
+                } else {
+                    console.log('Missions already cached for vision:', visionId);
+                }
+            });
+            
+            // Listen for mission accordion clicks
+            $(document).on('click', '.mission-toggle', async function(e) {
+                const missionId = $(this).data('mission-id');
+                const collapseElement = $(`#collapseMission${missionId}`);
+                
+                console.log('Mission clicked:', missionId);
+                
+                if (!dataCache.objectives[missionId]) {
+                    console.log('Loading objectives for mission:', missionId);
+                    setTimeout(async () => {
+                        await loadObjectives(missionId, collapseElement);
+                    }, 100);
+                } else {
+                    console.log('Objectives already cached for mission:', missionId);
+                }
+            });
+            
+            // Listen for objective accordion clicks
+            $(document).on('click', '.objective-toggle', async function(e) {
+                const objectiveId = $(this).data('objective-id');
+                const collapseElement = $(`#collapseObjective${objectiveId}`);
+                
+                console.log('Objective clicked:', objectiveId);
+                
+                if (!dataCache.keyResults[objectiveId]) {
+                    console.log('Loading key results for objective:', objectiveId);
+                    setTimeout(async () => {
+                        await loadKeyResults(objectiveId, collapseElement);
+                    }, 100);
+                } else {
+                    console.log('Key results already cached for objective:', objectiveId);
+                }
+            });
+            
+            // Listen for key result accordion clicks
+            $(document).on('click', '.key-result-toggle', async function(e) {
+                const keyResultId = $(this).data('key-result-id');
+                const collapseElement = $(`#collapseKeyResult${keyResultId}`);
+                
+                console.log('Key result clicked:', keyResultId);
+                
+                if (!dataCache.dailyTasks[keyResultId]) {
+                    console.log('Loading daily tasks for key result:', keyResultId);
+                    setTimeout(async () => {
+                        await loadDailyTasks(keyResultId, collapseElement);
+                    }, 100);
+                } else {
+                    console.log('Daily tasks already cached for key result:', keyResultId);
+                }
+            });
+        }
+
+        async function loadMissions(visionId, collapseElement) {
+            try {
+                const missionsUrl = apiEndpoints.visionMissions.replace(':visionId', visionId);
+                console.log('Fetching missions from:', missionsUrl);
+                
+                const missions = await fetchData(missionsUrl);
+                console.log('Missions received:', missions);
+                
+                dataCache.missions[visionId] = missions;
+                
+                const missionsHtml = `
+                    <div class="accordion" id="missionAccordion${visionId}">
+                        <h5 class="p-3">Misi</h5>
+                        ${missions.map(mission => `
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center" id="headingMission${mission.id}">
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link mission-toggle" type="button" data-toggle="collapse" data-target="#collapseMission${mission.id}" data-mission-id="${mission.id}" aria-expanded="false" aria-controls="collapseMission${mission.id}">
+                                            ${mission.mission} (${mission.total_objectives} Objectives, ${mission.total_tasks} Tasks)
+                                        </button>
+                                    </h5>
+                                </div>
+                                <div id="collapseMission${mission.id}" class="collapse" aria-labelledby="headingMission${mission.id}" data-parent="#missionAccordion${visionId}">
+                                    <div class="card-body">
+                                        <div class="text-center p-3">
+                                            <div class="spinner-border" role="status">
+                                                <span class="sr-only">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                collapseElement.find('.card-body').html(missionsHtml);
+                console.log('Missions HTML rendered successfully');
+            } catch (error) {
+                console.error('Error loading missions:', error);
+                collapseElement.find('.card-body').html('<p class="text-danger">Error loading missions</p>');
+            }
+        }
+
+        async function loadObjectives(missionId, collapseElement) {
+            try {
+                const objectivesUrl = apiEndpoints.missionObjectives.replace(':missionId', missionId);
+                const objectives = await fetchData(objectivesUrl);
+                
+                dataCache.objectives[missionId] = objectives;
+                
+                const objectivesHtml = `
+                    <h5 class="p-3">Objective</h5>
+                    <div class="accordion" id="objectiveAccordion${missionId}">
+                        ${objectives.map(objective => `
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center" id="headingObjective${objective.id}">
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link objective-toggle" type="button" data-toggle="collapse" data-target="#collapseObjective${objective.id}" data-objective-id="${objective.id}" aria-expanded="false" aria-controls="collapseObjective${objective.id}">
+                                            ${objective.name} (${objective.total_key_results} Key Results, ${objective.total_tasks} Tasks)
+                                        </button>
+                                    </h5>
+                                </div>
+                                <div id="collapseObjective${objective.id}" class="collapse" aria-labelledby="headingObjective${objective.id}" data-parent="#objectiveAccordion${missionId}">
+                                    <div class="card-body">
+                                        <div class="text-center p-3">
+                                            <div class="spinner-border" role="status">
+                                                <span class="sr-only">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                collapseElement.find('.card-body').html(objectivesHtml);
+            } catch (error) {
+                console.error('Error loading objectives:', error);
+                collapseElement.find('.card-body').html('<p class="text-danger">Error loading objectives</p>');
+            }
+        }
+
+        async function loadKeyResults(objectiveId, collapseElement) {
+            try {
+                const keyResultsUrl = apiEndpoints.objectiveKeyResults.replace(':objectiveId', objectiveId);  
+                const keyResults = await fetchData(keyResultsUrl);
+                
+                dataCache.keyResults[objectiveId] = keyResults;
+                
+                const keyResultsHtml = `
+                    <h5 class="p-3">Key Result</h5>
+                    <div class="accordion" id="keyResultAccordion${objectiveId}">
+                        ${keyResults.map(keyResult => `
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center" id="headingKeyResult${keyResult.id}">
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link key-result-toggle" type="button" data-toggle="collapse" data-target="#collapseKeyResult${keyResult.id}" data-key-result-id="${keyResult.id}" aria-expanded="false" aria-controls="collapseKeyResult${keyResult.id}">
+                                            ${keyResult.result} (${keyResult.total_tasks} Tasks)
+                                        </button>
+                                    </h5>
+                                </div>
+                                <div id="collapseKeyResult${keyResult.id}" class="collapse" aria-labelledby="headingKeyResult${keyResult.id}" data-parent="#keyResultAccordion${objectiveId}">
+                                    <div class="card-body">
+                                        <div class="text-center p-3">
+                                            <div class="spinner-border" role="status">
+                                                <span class="sr-only">Loading...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                collapseElement.find('.card-body').html(keyResultsHtml);
+            } catch (error) {
+                console.error('Error loading key results:', error);
+                collapseElement.find('.card-body').html('<p class="text-danger">Error loading key results</p>');
+            }
+        }
+
+        async function loadDailyTasks(keyResultId, collapseElement) {
+            try {
+                const dailyTasksUrl = apiEndpoints.keyResultTasks.replace(':keyResultId', keyResultId);
+                const dailyTasks = await fetchData(dailyTasksUrl);
+                
+                dataCache.dailyTasks[keyResultId] = dailyTasks;
+                
+                const tasksHtml = `
+                    <ul class="list-group">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Tugas</th>
+                                        <th>Tanggal</th>
+                                        <th>Status</th>
+                                        <th>Ditugaskan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${dailyTasks.map((task, index) => `
+                                        <tr>
+                                            <td>${index + 1}</td>
+                                            <td>${task.name}</td>
+                                            <td>${task.is_overdue ? `<span class="text-danger">${task.date_show}</span>` : task.date_show}</td>
+                                            <td>${task.task_status ? getStatusIcon(task.task_status.name) : '?'}</td>
+                                            <td>${task.assign ? task.assign.name : '?'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </ul>
+                `;
+                
+                collapseElement.find('.card-body').html(tasksHtml);
+            } catch (error) {
+                console.error('Error loading daily tasks:', error);
+                collapseElement.find('.card-body').html('<p class="text-danger">Error loading daily tasks</p>');
+            }
+        }
 
         function getStatusIcon(taskStatusName) {
             switch (taskStatusName) {
