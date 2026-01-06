@@ -29,30 +29,18 @@ class SendWebhookSettingJob implements ShouldQueue
         try {
             foreach ($this->setting->selected_apps as $app) {
                 if ($app === 'used_laptops') {
-                    $products = UsedLaptop::where('is_sold', 0)->where('company_id', $this->setting->company_id)->whereNotNull('is_sold')->get();
+                    // ✅ Hanya sync laptop yang memiliki rack (QC PASSED) dan belum terjual
+                    $products = UsedLaptop::where('is_sold', 0)
+                        ->where('company_id', $this->setting->company_id)
+                        ->whereNotNull('is_sold')
+                        ->whereNotNull('rack_id') // Hanya yang sudah ada rack (QC PASSED)
+                        ->with(['media', 'rack']) // Eager load untuk efisiensi
+                        ->get();
     
                     foreach ($products as $laptop) 
                     {
-                        $payload = 
-                        [
-                            'id' => $laptop->id,
-                            'is_sold' => $laptop->is_sold,
-                            'serial_number' => $laptop->serial_number,
-                            'brand' => $laptop->brand,
-                            'slug' => $laptop->slug,
-                            'name' => $laptop->name,
-                            'processor' => $laptop->processor,
-                            'ram' => $laptop->ram,
-                            'ssd' => $laptop->ssd,
-                            'gpu' => $laptop->gpu,
-                            'operating_system' => $laptop->operating_system,
-                            'notes' => $laptop->notes,
-                            'buying_price' => $laptop->purchase_price,
-                            'selling_price' => $laptop->jakarta_price,
-                            'images' => $laptop->media()->get()->map(function ($media) {
-                                return $media->file_path;
-                            })->toArray(),
-                        ];
+                        // Gunakan UsedLaptopResource untuk konsistensi payload
+                        $payload = (new \App\Http\Resources\UsedLaptopResource($laptop))->resolve();
     
                         WebhookHelper::sendWebhook($this->setting->company_id, $app, 'sync', $payload, $this->setting->id);      
                     }
