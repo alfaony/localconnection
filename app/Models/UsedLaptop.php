@@ -120,7 +120,7 @@ class UsedLaptop extends Model
     // ✅ QC Status - Otomatis QC_PASSED jika sudah memiliki rack
     public function getQcStatusAttribute()
     {
-        return $this->rack_id ? 'QC_PASSED' : null;
+        return $this->rack_id ? 'QC PASSED' : null;
     }
 
     public function user()
