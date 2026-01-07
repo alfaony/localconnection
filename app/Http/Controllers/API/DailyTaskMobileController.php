@@ -84,6 +84,67 @@ class DailyTaskMobileController extends BaseController
 
     /**
      * @param \Illuminate\Http\Request $request
+     * @param int $divisionId
+     * @return \Illuminate\Http\Response
+     */
+    public function indexTaskByDivision(Request $request, $divisionId)
+    {
+        try {
+            $userId = Auth::id();
+
+            $tasks = DailyTask::where('division_id', $divisionId)
+                ->with([
+                    'user:id,name',
+                    'assign:id,name',
+                    'division:id,name',
+                    'project:id,name'
+                ])
+                ->addSelect([
+                    'id',
+                    'slug',
+                    'name',
+                    'start_date',
+                    'end_date',
+                    'user_id',
+                    'assignment_user_id',
+                    'division_id',
+                    'daily_task_project_id',
+                    'task_status_name' => TaskStatus::select('name')
+                        ->whereColumn('task_statuses.id', 'daily_tasks.task_status_id')
+                        ->limit(1),
+                ])
+                ->orderBy('start_date', 'desc')
+                ->get();
+
+            $formattedTasks = $tasks->map(function ($task) use ($userId) {
+                return [
+                    'id' => $task->id,
+                    'slug' => $task->slug,
+                    'name' => $task->name,
+                    'start_date' => $task->start_date,
+                    'end_date' => $task->end_date,
+                    'task_status_name' => $task->task_status_name ?? 'unknown',
+
+                    'access_id' => $userId,
+                    'user_id' => $task->user_id,
+                    'assignment_user_id' => $task->assignment_user_id,
+                    'user_name' => $task->user->name ?? 'N/A',
+                    'assignment_user_name' => $task->assign->name ?? 'N/A',
+                    'division_id' => $task->division->id ?? 'N/A',
+                    'division_name' => $task->division->name ?? 'N/A',
+                    'daily_task_project_id' => $task->project->id ?? 'N/A',
+                    'daily_task_project_name' => $task->project->name ?? 'N/A'
+                ];
+            });
+
+            return $this->sendResponse($formattedTasks->toArray(), 'Daftar tugas berdasarkan divisi berhasil diambil.');
+        } catch (\Exception $e) {
+            return $this->sendError('Gagal mengambil daftar tugas divisi.', ['error' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function indexToday(Request $request)

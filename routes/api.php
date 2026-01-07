@@ -73,6 +73,7 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::resource('tasks', DailyTaskMobileController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     
     Route::get('home/daily-task-summary', [HomeController::class, 'indexSummary']);
+    Route::get('tasks/division/{divisionId}', [DailyTaskMobileController::class, 'indexTaskByDivision']);
 
     Route::get('task-statuses', [DailyTaskMobileController::class, 'indexTaskStatuses']); 
     Route::get('daily-task-projects', [DailyTaskMobileController::class, 'indexDailyTaskProjects']); 
