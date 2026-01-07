@@ -291,19 +291,29 @@
 
                             <!-- Status -->
                             <td class="text-center">
-                                @if($laptop->is_sold === 1)
-                                    <span class="badge badge-success badge-pill px-3 py-2">
-                                        <i class="fas fa-check-circle mr-1"></i> Terjual
-                                    </span>
-                                @elseif($laptop->is_sold === 0)
-                                    <span class="badge badge-warning badge-pill px-3 py-2">
-                                        <i class="fas fa-clock mr-1"></i> Belum Terjual
-                                    </span>
-                                @else
-                                    <span class="badge badge-info badge-pill px-3 py-2">
-                                        <i class="fas fa-warehouse mr-1"></i> Inventory
-                                    </span>
-                                @endif
+                                <div class="d-flex flex-column align-items-center">
+                                    {{-- QC Status Badge --}}
+                                    @if($laptop->qc_status)
+                                        <span class="badge badge-success badge-pill px-2 py-1 mb-1" style="font-size: 0.75rem;">
+                                            <i class="fas fa-check-double mr-1"></i> {{ $laptop->qc_status }}
+                                        </span>
+                                    @endif
+                                    
+                                    {{-- Sale Status Badge --}}
+                                    @if($laptop->is_sold === 1)
+                                        <span class="badge badge-success badge-pill px-3 py-2">
+                                            <i class="fas fa-check-circle mr-1"></i> Terjual
+                                        </span>
+                                    @elseif($laptop->is_sold === 0)
+                                        <span class="badge badge-warning badge-pill px-3 py-2">
+                                            <i class="fas fa-clock mr-1"></i> Belum Terjual
+                                        </span>
+                                    @else
+                                        <span class="badge badge-info badge-pill px-3 py-2">
+                                            <i class="fas fa-warehouse mr-1"></i> Inventory
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
 
                             <!-- Aksi -->
