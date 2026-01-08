@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Models\Objective;
 use App\Models\DivisionQuotaLock;
 use App\Models\RecurringRule;
+use App\Models\Division;
 use App\Schemas\ParamSchema;
 use Illuminate\Support\Facades\Log; 
 use App\Helpers\InboxHelper;
@@ -142,7 +143,85 @@ class DailyTaskMobileController extends BaseController
             return $this->sendError('Gagal mengambil daftar tugas divisi.', ['error' => $e->getMessage()]);
         }
     }
+
+    /**
+     * Get Users by Division ID (UUID)
+     * @param string $divisionId
+     * @return \Illuminate\Http\Response
+     */
+    public function getUsersByDivision($divisionId)
+    {
+        try {
+            // Cari divisi berdasarkan UUID
+            $division = Division::find($divisionId);
+
+            if (!$division) {
+                return $this->sendError('Divisi tidak ditemukan.', [], 404);
+            }
+
+            // Ambil users melalui relasi belongsToMany (pivot division_users)
+            $users = $division->users()
+                ->select('users.id', 'users.name', 'users.email')
+                ->get();
+
+            return $this->sendResponse($users->toArray(), 'Daftar user berdasarkan divisi berhasil diambil.');
+        } catch (\Exception $e) {
+            return $this->sendError('Gagal mengambil data user.', ['error' => $e->getMessage()]);
+        }
+    }
     
+    /**
+     * Get Daily Tasks by User ID
+     * * @param int $userIdParam
+     * @return \Illuminate\Http\Response
+     */
+    public function indexTaskByUser($userIdParam)
+    {
+        try {
+            $tasks = DailyTask::where(function ($q) use ($userIdParam) {
+                    $q->where('user_id', $userIdParam)
+                    ->orWhere('assignment_user_id', $userIdParam);
+                })
+                ->with([
+                    'user:id,name',
+                    'assign:id,name',
+                    'division:id,name',
+                    'project:id,name'
+                ])
+                ->addSelect([
+                    'id',
+                    'slug',
+                    'name',
+                    'start_date',
+                    'end_date',
+                    'user_id',
+                    'assignment_user_id',
+                    'task_status_name' => TaskStatus::select('name')
+                        ->whereColumn('task_statuses.id', 'daily_tasks.task_status_id')
+                        ->limit(1),
+                ])
+                ->orderBy('start_date', 'desc')
+                ->get();
+
+            $formattedTasks = $tasks->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'slug' => $task->slug,
+                    'name' => $task->name,
+                    'start_date' => $task->start_date,
+                    'end_date' => $task->end_date,
+                    'task_status_name' => $task->task_status_name ?? 'unknown',
+                    'user_name' => $task->user->name ?? 'N/A',
+                    'assignment_user_name' => $task->assign->name ?? 'N/A',
+                ];
+            });
+
+            return $this->sendResponse($formattedTasks->toArray(), 'Daftar tugas user berhasil diambil.');
+        } catch (\Exception $e) {
+            return $this->sendError('Gagal mengambil daftar tugas user.', ['error' => $e->getMessage()]);
+        }
+    }
+
     /**
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
@@ -217,7 +296,6 @@ class DailyTaskMobileController extends BaseController
             return $this->sendError('Gagal mengambil daftar tugas hari ini.', ['error' => $e->getMessage()]);
         }
     }
-
 
     public function indexTomorrow(Request $request)
     {

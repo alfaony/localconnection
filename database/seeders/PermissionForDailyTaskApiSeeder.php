@@ -54,6 +54,8 @@ class PermissionForDailyTaskApiSeeder extends Seeder
             ['table' => 'tasks', 'method' => 'deleteMedia', 'name' => 'Delete Task Media (Mobile)', 'guard_name' => 'api'],
             ['table' => 'tasks', 'method' => 'indexTaskByDivision', 'name' => 'View tasks by division (Mobile)', 'guard_name' => 'api'],
 
+            ['table' => 'users', 'method' => 'getUsersByDivision', 'name' => 'View users by division (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'tasks', 'method' => 'indexTaskByUser', 'name' => 'View daily tasks by specific user (Mobile)', 'guard_name' => 'api'],
         ];
 
         foreach ($mobilePermissions as $permData) 
