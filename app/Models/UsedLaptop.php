@@ -117,6 +117,12 @@ class UsedLaptop extends Model
             : 'Belum Terjual') : "Inventory";
     }
 
+    // ✅ QC Status - Otomatis QC_PASSED jika sudah memiliki rack
+    public function getQcStatusAttribute()
+    {
+        return $this->rack_id ? 'QC PASSED' : null;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class)->withTrashed();

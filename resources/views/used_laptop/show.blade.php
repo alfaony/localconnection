@@ -44,7 +44,16 @@
                             <code class="bg-light px-2 py-1 rounded">{{ $laptop->serial_number }}</code>
                         </p>
                     </div>
-                    <div>
+                    <div class="d-flex align-items-center">
+                        {{-- QC Status Badge --}}
+                        @if($laptop->qc_status)
+                            <span class="badge badge-success badge-pill px-3 py-2 mr-2" style="font-size: 0.9rem;">
+                                <i class="fas fa-check-double mr-1"></i>
+                                {{ $laptop->qc_status }}
+                            </span>
+                        @endif
+                        
+                        {{-- Sale Status Badge --}}
                         <span class="badge badge-{{ $laptop->is_sold == 1 ? 'success' : ($laptop->is_sold == 0 ? 'warning' : 'info') }} badge-pill px-3 py-2" style="font-size: 1rem;">
                             <i class="fas fa-{{ $laptop->is_sold == 1 ? 'check-circle' : ($laptop->is_sold == 0 ? 'clock' : 'warehouse') }} mr-1"></i>
                             {{ $laptop->sale_status }}
@@ -154,6 +163,25 @@
                             </span>
                         </div>
                     </div>
+
+                    <!-- QC Status Alert -->
+                    @if($laptop->qc_status)
+                    <div class="alert alert-success border-success mb-0 mt-3">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3">
+                                <i class="fas fa-check-double fa-2x text-success"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 text-success font-weight-bold">
+                                    <i class="fas fa-shield-alt mr-1"></i> Quality Control Passed
+                                </h6>
+                                <small class="text-muted">
+                                    Laptop ini telah melewati quality control dan siap untuk dijual. Lokasi penyimpanan telah ditentukan.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 @else
                     <div class="alert alert-warning mb-0">
                         <div class="d-flex align-items-center">
