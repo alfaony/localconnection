@@ -1030,70 +1030,93 @@ class InvoiceController extends Controller
         ]);
 
         try {
-            // Retrieve the BAST and the selected merged file
+            // Retrieve the Invoice and the selected merged file
             $invoice = Invoice::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             
-            $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
-
-
-            // Retrieve the file path and ensure it exists
-            $filePath = Storage::path($invoice->file_merge_path);
-            if (!Storage::exists($invoice->file_merge_path)) {
+            // Check if file exists in storage (S3 or local)
+            if (!$invoice->file_merge_path || !Storage::exists($invoice->file_merge_path)) {
                 return redirect()->back()->with('error', 'Selected file does not exist.');
             }
 
-            // Send the email with the attachment
-            $data = 
-            [
-                'subject' => $request->subject,
-                'content' => $request->content,
-            ];
-
-            $nameFile = "INVOICE_".str_replace('/','-', $invoice->number_result). '.pdf';
-            $attachments = [
-                $filePath => $nameFile,
-            ];
-
-            $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
-            $fromEmail = $smtpConfig['username'] ?? '';
-            $fromName = $smtpConfig['name'] ?? '';
-            $toEmails = $request->to;
-            $toNames = $request->to;
-            $ccEmails = $request->cc;
-            $subject = $request->subject;
-            $tamplate = "email.bast_email";
-            $companyId = Auth::user()->company_id;
+            // Handle S3 file - download to temp location
+            $tempFilePath = null;
+            $nameFile = "INVOICE_" . str_replace('/', '-', $invoice->number_result) . '.pdf';
             
-            EmailNotifHelper::sentEmail(
-                $fromEmail,
-                $fromName,
-                $toEmails, 
-                $toNames, 
-                $subject,
-                $tamplate,
-                $data, 
-                $smtpConfig, 
-                $companyId, 
-                $ccEmails,
-                [],
-                $attachments
-            );
-
-            // Simpan record ke database
-            $invoiceEmailRecord = new InvoiceEmailRecord();
-            $invoiceEmailRecord->invoice_id = $invoice->id;
-            $invoiceEmailRecord->user_id = Auth::user()->id;
-            $invoiceEmailRecord->to = json_encode($request->to);
-            $invoiceEmailRecord->cc = json_encode($request->cc);
-            $invoiceEmailRecord->subject = $request->subject;
-            $invoiceEmailRecord->content = $request->content;
-            $invoiceEmailRecord->save();
+            try {
+                // Download from S3 to temporary location
+                $fileContents = Storage::get($invoice->file_merge_path);
+                $tempFilePath = storage_path('app/temp/' . $nameFile);
+                
+                // Create temp directory if not exists
+                if (!file_exists(storage_path('app/temp'))) {
+                    mkdir(storage_path('app/temp'), 0755, true);
+                }
+                
+                // Save to temp file
+                file_put_contents($tempFilePath, $fileContents);
+                
+                // Prepare email data
+                $data = [
+                    'subject' => $request->subject,
+                    'content' => $request->content,
+                ];
+                
+                $attachments = [
+                    $tempFilePath => $nameFile,
+                ];
+                
+                // Get SMTP configuration
+                $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)
+                    ->get()->pluck('field_value', 'field_title');
+                    
+                $fromEmail = $smtpConfig['username'] ?? '';
+                $fromName = $smtpConfig['name'] ?? '';
+                $toEmails = $request->to;
+                $toNames = $request->to;
+                $ccEmails = $request->cc ?? [];
+                $subject = $request->subject;
+                $template = "email.bast_email";
+                $companyId = Auth::user()->company_id;
+                
+                // Send email using helper
+                EmailNotifHelper::sentEmail(
+                    $fromEmail,
+                    $fromName,
+                    $toEmails,
+                    $toNames,
+                    $subject,
+                    $template,
+                    $data,
+                    $smtpConfig,
+                    $companyId,
+                    $ccEmails,
+                    [],
+                    $attachments
+                );
+                
+                // Save email record to database
+                $invoiceEmailRecord = new InvoiceEmailRecord();
+                $invoiceEmailRecord->invoice_id = $invoice->id;
+                $invoiceEmailRecord->user_id = Auth::user()->id;
+                $invoiceEmailRecord->to = json_encode($request->to);
+                $invoiceEmailRecord->cc = json_encode($request->cc);
+                $invoiceEmailRecord->subject = $request->subject;
+                $invoiceEmailRecord->content = $request->content;
+                $invoiceEmailRecord->save();
+                
+            } finally {
+                // Cleanup: Delete temp file
+                if ($tempFilePath && file_exists($tempFilePath)) {
+                    unlink($tempFilePath);
+                }
+            }
 
             return redirect()->back()->with('successEmail', true);
+            
         } catch (\Exception $e) {
-            // dd($e);
-            \Log::error('Failed to send BAST email: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to send the email.');
+            \Log::error('Failed to send Invoice email: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'Failed to send the email: ' . $e->getMessage());
         }
     }
 
