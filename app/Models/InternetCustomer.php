@@ -271,6 +271,8 @@ class InternetCustomer extends Model
                 return '<span class="badge badge-success">Reactivated</span>';
             case 'closed':
                 return '<span class="badge badge-dark">Closed</span>';
+            case 'inactive':
+                return '<span class="badge badge-danger">Inactive</span>';
             default:
                 return '<span class="badge badge-light">Unknown</span>';
         }

@@ -644,14 +644,22 @@ class InvoiceController extends Controller
 
     public function checkPdfAStatus()
     {
-        $filename = session('export_filename_invoice_pdfa');
-        $fileExist = "invoices/converted/pdfa-".$filename;
-        if ($filename && Storage::exists($fileExist)) {
-            // Provide the download URL if file exists
-            $downloadUrl = s3_asset(true,10,$fileExist);
-            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+        try {
+            //code...
+            $filename = session('export_filename_invoice_pdfa');
+            $fileExist = "invoices/converted/pdfa-".$filename;
+            if ($filename && Storage::exists($fileExist)) {
+                // Provide the download URL if file exists
+                $downloadUrl = s3_asset(true,10,$fileExist);
+                return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+            }
+    
+            return response()->json(['ready' => false]);
+        } catch (\Throwable $th) {
+            //throw $th;
+            Log::error($th);
+            return response()->json(['ready' => false]);
         }
-
         return response()->json(['ready' => false]);
     }
 
@@ -1114,7 +1122,7 @@ class InvoiceController extends Controller
         
         // Store the export in the 'public' disk
         ExportInvoiceJob::dispatch($filters, $filename, $exportFormat, Auth::user()->company_id);
-        $filename = "public/" . $filename;
+        $filename = $filename;
         // dd($filename);
         // Save filename to session or pass it to the frontend
         session(['export_filename_invoice' => $filename]);
@@ -1124,18 +1132,25 @@ class InvoiceController extends Controller
 
     public function checkExportStatus(Request $request)
     {
-        // Retrieve the export filename from the session
-        $filename = session('export_filename_invoice');
+        try {
+            //code...
+            // Retrieve the export filename from the session
+            $filename = session('export_filename_invoice');
+            
+            // dd($filename);
+            // Check if the file exists on the public disk
+            if ($filename && Storage::exists($filename)) {
+                // Provide the download URL if file exists
+                $downloadUrl = s3_asset(true,10,$filename);
+                return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+            }
         
-        // dd($filename);
-        // Check if the file exists on the public disk
-        if ($filename && Storage::exists($filename)) {
-            // Provide the download URL if file exists
-            $downloadUrl = s3_asset(true,10,$filename);
-            return response()->json(['ready' => true, 'download_url' => $downloadUrl]);
+            return response()->json(['ready' => false, 'filename' => $filename]);
+        } catch (\Throwable $th) {
+            //throw $th;
+            \Log::error('Export check failed: ' . $th->getMessage());
+            return response()->json(['ready' => false, 'filename' => $filename]);
         }
-    
-        return response()->json(['ready' => false, 'filename' => $filename]);
     }
 
     public function clearsession()
