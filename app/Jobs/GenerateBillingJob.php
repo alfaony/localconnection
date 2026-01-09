@@ -36,22 +36,40 @@ class GenerateBillingJob implements ShouldQueue
         DB::beginTransaction();
         try {
 
-            $this->customer->internetCustomer->update([
-                'is_paid' => false,
-                'status' => ParamSchema::WAITING_PAYMENT_SUBSCRIPTION
-            ]);
-
+            
             $check = InternetCustomerPurchase::where('internet_customer_id', $internetCustomer->id)
-                ->whereYear('created_at', Carbon::now()->year)
-                ->whereMonth('created_at', Carbon::now()->month)
-                ->first();
+            ->whereYear('created_at', Carbon::now()->year)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->first();
             if (!$check) 
             {
+                $this->customer->internetCustomer->update([
+                    'is_paid' => false,
+                    'status' => ParamSchema::WAITING_PAYMENT_SUBSCRIPTION
+                ]);
+
                 $check = InternetCustomerPurchase::create([
                     'internet_package_id' => $internetCustomer->internetPackage->id,
                     'amount_paid' => $internetCustomer->internetPackage->price_nett ?? 0,
                     'internet_customer_id' => $internetCustomer->id,
                 ]);
+            }else
+            {
+                if(!$internetCustomer->installation && $check->end_billing_date < Carbon::now()->format('Y-m-d') && ($check->xendit_paid_at || $check->confirmation_finance_at))
+                {
+                    $this->customer->internetCustomer->update([
+                        'is_paid' => true,
+                        'status' => ParamSchema::PROCESS_INSTALLATION
+                    ]);
+                }
+
+                if($internetCustomer->installation && $check->end_billing_date < Carbon::now()->format('Y-m-d') && ($check->xendit_paid_at || $check->confirmation_finance_at))
+                {
+                    $this->customer->internetCustomer->update([
+                        'is_paid' => true,
+                        'status' => ParamSchema::REACTIVATED
+                    ]);
+                }
             }
 
             $settingCompany = SettingCompany::byCompany($internetCustomer->company_id)->where('menu','wablas')->get()->pluck('field_value','field_title');

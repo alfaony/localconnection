@@ -94,7 +94,7 @@
             <div class="row mt-3">
                 <div class="col-md-12 text-right">
                     <a href="{{ route('invoice.export', array_merge(['format' => 'excel'], request()->only('search', 'start_date', 'end_date', 'status', 'order'))) }}" class="btn btn-primary">
-                        <i class="fa fa-file-export"></i> Export Excle 
+                        <i class="fa fa-file-export"></i> Export Excel 
                     </a>
                     <a href="{{ route('invoice.export', array_merge(['format' => 'csv'], request()->only('search', 'start_date', 'end_date', 'status', 'order'))) }}" class="btn btn-primary">
                         <i class="fa fa-file-csv"></i> Export Csv 

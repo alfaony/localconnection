@@ -718,6 +718,15 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label for="status_active">Status Aktif</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="status_active" wire:model="status_active" >
+                                <label class="form-check-label" for="status_active">
+                                    Aktif
+                                </label>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -1011,6 +1020,38 @@
                 document.getElementById('phone_number').value = e.detail.phone_number || '';
                 document.getElementById('start_billing_date').value = e.detail.start_billing_date || '';
                 document.getElementById('end_billing_date').value = e.detail.end_billing_date || '';
+                const statusActiveElement = document.getElementById('status_active');
+                if (e.detail.status_active) {
+                    statusActiveElement.checked = true;
+                } else {
+                    statusActiveElement.checked = false;
+                }
+
+                // Setup event listener untuk auto-fill end_billing_date ketika start_billing_date berubah
+                const startDateInput = document.getElementById('start_billing_date');
+                const endDateInput = document.getElementById('end_billing_date');
+                
+                // Remove any existing listeners first
+                startDateInput.removeEventListener('change', handleStartDateChange);
+                
+                // Add new listener
+                startDateInput.addEventListener('change', handleStartDateChange);
+                
+                function handleStartDateChange() {
+                    if (startDateInput.value) {
+                        // Parse tanggal start_billing_date
+                        const startDate = new Date(startDateInput.value);
+                        // Tambahkan 1 hari
+                        startDate.setDate(startDate.getDate() + 1);
+                        // Format ke YYYY-MM-DD untuk input type="date"
+                        const year = startDate.getFullYear();
+                        const month = String(startDate.getMonth() + 1).padStart(2, '0');
+                        const day = String(startDate.getDate()).padStart(2, '0');
+                        const endDateFormatted = `${year}-${month}-${day}`;
+                        // Set nilai end_billing_date
+                        endDateInput.value = endDateFormatted;
+                    }
+                }
                 
                 // Tampilkan modal
                 new bootstrap.Modal(document.getElementById('editPribadiModal')).show();
@@ -1044,24 +1085,43 @@
 
             // Event listener untuk submit data pribadi
             document.getElementById('submitPribadi').addEventListener('click', function() {
-                // Kumpulkan data dari form
-                $("#editPribadiModalClick").click();
+                // Tampilkan konfirmasi SweetAlert
+                Swal.fire({
+                    title: 'Konfirmasi Perubahan',
+                    html: '<div class="text-danger font-weight-bold mb-2">' +
+                          '<i class="fas fa-exclamation-triangle"></i> Data Ini Sangat Sensitif!' +
+                          '</div>' +
+                          '<p>Apakah Anda yakin ingin menyimpan perubahan data pribadi?</p>',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Simpan!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Kumpulkan data dari form
+                        $("#editPribadiModalClick").click();
 
-                const name = document.getElementById('name').value;
-                const email = document.getElementById('email').value;
-                const phone_number = document.getElementById('phone_number').value;
-                const start_billing_date = document.getElementById('start_billing_date').value;
-                const end_billing_date = document.getElementById('end_billing_date').value;
-                
-                // Set nilai ke Livewire
-                @this.set('name', name);
-                @this.set('email', email);
-                @this.set('phone_number', phone_number);
-                @this.set('start_billing_date', start_billing_date);
-                @this.set('end_billing_date', end_billing_date);
-                
-                // Panggil method save di Livewire
-                @this.call('savePribadi');
+                        const name = document.getElementById('name').value;
+                        const email = document.getElementById('email').value;
+                        const phone_number = document.getElementById('phone_number').value;
+                        const start_billing_date = document.getElementById('start_billing_date').value;
+                        const end_billing_date = document.getElementById('end_billing_date').value;
+                        const status_active = document.getElementById('status_active').checked;
+                        
+                        // Set nilai ke Livewire
+                        @this.set('name', name);
+                        @this.set('email', email);
+                        @this.set('phone_number', phone_number);
+                        @this.set('start_billing_date', start_billing_date);
+                        @this.set('end_billing_date', end_billing_date);
+                        @this.set('status_active', status_active);
+                        
+                        // Panggil method save di Livewire
+                        @this.call('savePribadi');
+                    }
+                });
             });
 
             // Event listener untuk submit data instalasi
