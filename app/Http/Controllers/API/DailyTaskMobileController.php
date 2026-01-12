@@ -1309,7 +1309,10 @@ class DailyTaskMobileController extends BaseController
     public function indexDivision()
     {
         try {
-            $data = \App\Models\Division::select('id', 'name')->get();
+            $user = auth()->user();
+            $data = \App\Models\Division::select('id', 'name')
+            ->byCompany($user->company_id) 
+            ->get();
             return $this->sendResponse($data->toArray(), 'Daftar divisi berhasil diambil.');
         } catch (\Exception $e) {
             return $this->sendError('Gagal mengambil daftar divisi.', ['error' => $e->getMessage()]);
