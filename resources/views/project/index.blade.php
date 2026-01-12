@@ -50,12 +50,19 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
 
         <div class="form-group">
             <label>Surat Perintah Kerja</label>
-            <select name="work_order" class="form-control select2"  id="">
-                <option value="" selected disabled>Pilih Surat Perintah Kerja</option>
-                @foreach($workOrder as $a)
-                <option value="{{ $a->id }}" {{ @$projectEdit->work_order_id == $a->id ? 'selected' : '' }}> {{ $a->number_result }} </option>
-                @endforeach
-            </select>
+            <div class="d-flex gap-2">
+                <select name="work_order" class="form-control select2" id="spkSelect" style="flex: 1;">
+                    <option value="" selected disabled>Pilih Surat Perintah Kerja</option>
+                    @foreach($workOrder as $a)
+                    <option value="{{ $a->id }}" {{ @$projectEdit->work_order_id == $a->id ? 'selected' : '' }}>{{ $a->number_result }} </option>
+                    @endforeach
+                </select>
+                @canAccess('getSpkDetails','projects')
+                <button type="button" id="viewSpkDetailsBtn" class="btn btn-info" style="display: none; white-space: nowrap;">
+                    <i class="fas fa-eye"></i> Detail SPK
+                </button>
+                @endcanAccess
+            </div>
         </div>
 
         <div class="form-group">
@@ -213,6 +220,36 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
     </div>
 </div>
 
+@canAccess('getSpkDetails','projects')
+<!-- SPK Details Modal -->
+<div class="modal fade" id="spkDetailsModal" tabindex="-1" role="dialog" aria-labelledby="spkDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="spkDetailsModalLabel">
+                    <i class="fas fa-file-contract"></i> Detail Surat Perintah Kerja
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="spkDetailsContent">
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x text-info"></i>
+                        <p class="mt-2">Memuat data...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endcanAccess
 
 @stop
 
@@ -220,6 +257,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
 <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+@canAccess('getSpkDetails','projects')
 <script>
     // Checkbox alert
     const alertCheckbox = document.getElementById('alertCheckbox');
@@ -242,7 +280,207 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
             oneMonthCheckbox.checked = false;
         }
     });
+
+    // SPK Details Functionality
+    const spkSelect = $('#spkSelect');
+    const viewSpkBtn = $('#viewSpkDetailsBtn');
+    const spkModal = $('#spkDetailsModal');
+    const spkContent = $('#spkDetailsContent');
+
+    // Show/hide button based on SPK selection
+    spkSelect.on('change', function() {
+        if ($(this).val()) {
+            viewSpkBtn.fadeIn();
+        } else {
+            viewSpkBtn.fadeOut();
+        }
+    });
+
+    // Check if SPK is already selected on page load
+    if (spkSelect.val()) {
+        viewSpkBtn.show();
+    }
+
+    // View SPK Details
+    viewSpkBtn.on('click', function() {
+        const spkId = spkSelect.val();
+        if (!spkId) return;
+
+        // Show modal with loading state
+        new bootstrap.Modal(document.getElementById('spkDetailsModal')).show();
+        spkContent.html(`
+            <div class="text-center py-4">
+                <i class="fas fa-spinner fa-spin fa-2x text-info"></i>
+                <p class="mt-2">Memuat data...</p>
+            </div>
+        `);
+
+        // Fetch SPK details via AJAX
+        let url = "{{ route('project.getSpkDetails', ':id') }}";
+        url = url.replace(':id', spkId);
+        $.ajax({
+            url: url,
+            method: 'GET',
+            success: function(data) {
+                let productsHtml = '';
+                if (data.products && data.products.length > 0) {
+                    productsHtml = `
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th width="5%" class="text-center">#</th>
+                                        <th>Nama Produk</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    
+                    data.products.forEach((product, index) => {
+                        productsHtml += `
+                            <tr>
+                                <td class="text-center">${index + 1}</td>
+                                <td>${product.name}</td>
+                            </tr>`;
+                    });
+                    
+                    productsHtml += `
+                                </tbody>
+                            </table>
+                        </div>`;
+                } else {
+                    productsHtml = '<div class="alert alert-info"><i class="fas fa-info-circle"></i> Tidak ada produk</div>';
+                }
+
+                const detailsHtml = `
+                    <!-- Customer Information Section -->
+                    <div class="card mt-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 text-primary">
+                                <i class="fas fa-user"></i> Informasi Customer
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-item mb-2">
+                                        <label class="text-muted mb-1 small">
+                                            <i class="fas fa-user-circle"></i> Nama Customer
+                                        </label>
+                                        <div class="font-weight-bold">${data.customer_name || '-'}</div>
+                                    </div>
+                                    <div class="info-item mb-2">
+                                        <label class="text-muted mb-1 small">
+                                            <i class="fas fa-envelope"></i> Email
+                                        </label>
+                                        <div>${data.customer_email || '-'}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item mb-2">
+                                        <label class="text-muted mb-1 small">
+                                            <i class="fas fa-phone"></i> Telepon
+                                        </label>
+                                        <div>${data.customer_phone || '-'}</div>
+                                    </div>
+                                    <div class="info-item mb-2">
+                                        <label class="text-muted mb-1 small">
+                                            <i class="fas fa-map-marker-alt"></i> Alamat
+                                        </label>
+                                        <div>${data.customer_address || '-'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 text-primary">
+                                <i class="fas fa-file-invoice"></i> Informasi Quote & SPK
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="info-item mb-3">
+                                        <label class="text-muted mb-1">
+                                            <i class="fas fa-file-alt"></i> Nomor SPK
+                                        </label>
+                                        <div class="font-weight-bold h6">${data.spk_number || '-'}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="text-muted mb-1">
+                                            <i class="fas fa-calendar"></i> Tanggal SPK
+                                        </label>
+                                        <div class="font-weight-bold">${data.spk_date || '-'}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item mb-3">
+                                        <label class="text-muted mb-1">
+                                            <i class="fas fa-file-invoice"></i> Nomor Quotation
+                                        </label>
+                                        <div class="font-weight-bold h6">${data.quotation_number || '-'}</div>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="text-muted mb-1">
+                                            <i class="fas fa-user-tie"></i> Pembuat Quotation
+                                        </label>
+                                        <div class="font-weight-bold">${data.quote_name || '-'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="info-item mb-3">
+                                        <label class="text-muted mb-1">
+                                            <i class="fas fa-user-tie"></i> Pembuat SPK
+                                        </label>
+                                        <div class="font-weight-bold">${data.creator_name || '-'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quote Transition Status -->
+                    <div class="mt-3">
+                        <div class="info-item">
+                            <label class="text-muted mb-2">
+                                <i class="fas fa-exchange-alt"></i> Status Quote Peralihan
+                            </label>
+                            <div>
+                                ${data.is_transition ? 
+                                    '<span class="badge badge-warning p-2" style="font-size: 1rem;"><i class="fas fa-exclamation-circle"></i> Quote Peralihan</span>' : 
+                                    '<span class="badge badge-success p-2" style="font-size: 1rem;"><i class="fas fa-check-circle"></i> Quote Regular</span>'
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h6 class="mt-4 mb-3">
+                        <i class="fas fa-boxes"></i> Daftar Produk
+                    </h6>
+                    ${productsHtml}
+                `;
+
+                spkContent.html(detailsHtml);
+            },
+            error: function(xhr) {
+                let errorMsg = 'Gagal memuat data SPK';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                spkContent.html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> ${errorMsg}
+                    </div>
+                `);
+            }
+        });
+    });
 </script>
+@endcanAccess
 <script>
     $(document).ready(function () 
     {
@@ -330,6 +568,39 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
     .select2-selection__arrow {
         height: 34px !important;
     }
+    
+    /* SPK Details Modal Styling */
+    #spkDetailsModal .info-item label {
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    #spkDetailsModal .info-item div {
+        font-size: 1rem;
+    }
+    
+    #spkDetailsModal .card {
+        border: 1px solid #e3e3e3;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    #spkDetailsModal .table thead th {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    #spkDetailsModal .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .d-flex.gap-2 {
+        gap: 0.5rem;
+    }
+    
+    #viewSpkDetailsBtn {
+        min-width: 150px;
+    }
+
 </style>
 @stop
 

@@ -87,6 +87,7 @@ class Project extends Model
     {
         $statusReport = false;
         $progressTask = false;
+        $expiredProject = false;
         if($this->reportProject)
         {
             $statusReport = true;
@@ -97,7 +98,12 @@ class Project extends Model
             $progressTask = true;
         }
 
-        if($statusReport && $progressTask)
+        // Cek jika selisih tahun (hanya tahun, bukan tanggal lengkap) >= 2
+        if (now()->year - $this->created_at->year >= 2) {
+            $expiredProject = true;
+        }
+
+        if(($statusReport && $progressTask) || $expiredProject)
         {
             return ParamSchema::CLOSE;
         }

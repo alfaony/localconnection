@@ -66,6 +66,11 @@ class Quote extends Model
         return $this->belongsTo(User::class,'user_created_id','id')->withTrashed();
     }
 
+    public function userUpdate()
+    {
+        return $this->belongsTo(User::class,'user_updated_id','id')->withTrashed();
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class)->withTrashed();

@@ -184,6 +184,7 @@ class ProductStoreIndex extends Component
     private function getFilteredQuery()
     {
         return ProductStore::with(['category', 'brand'])
+            ->byCompany(auth()->user()->company_id)
             ->search($this->search)
             ->when($this->categoryFilter, function ($query) {
                 $query->where('category_product_store_id', $this->categoryFilter);
