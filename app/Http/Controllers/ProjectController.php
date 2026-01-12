@@ -215,4 +215,34 @@ class ProjectController extends Controller
         return Excel::download(new ProjectsExport, 'projects.xlsx');
     }
 
+    /**
+     * Get SPK details for modal display
+     */
+    public function getSpkDetails($id)
+    {
+        $workOrder = WorkOrder::with([
+            'workOrderProduct.product',
+            'quote',
+            'userCreate'
+        ])->findOrFail($id);
+        
+        $products = $workOrder->workOrderProduct->map(function($item) {
+            return [
+                'name' => $item->product->name ?? '-',
+                'quantity' => $item->quantity,
+                'unit_price' => $item->unit_price,
+                'total' => $item->total
+            ];
+        });
+
+        return response()->json([
+            'products' => $products,
+            'quotation_number' => $workOrder->quote->number_result ?? '-',
+            'quote_name' => $workOrder->quote->userUpdate->name ?? '-',
+            'creator_name' => $workOrder->userCreate->name ?? '-',
+            'spk_number' => $workOrder->number_result,
+            'spk_date' => $workOrder->date,
+            'spk_total' => $workOrder->total
+        ]);
+    }
 }

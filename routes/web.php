@@ -265,6 +265,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('xero/disconnect', [XeroController::class,'disconnect']);
   
   Route::get('project/export', [ProjectController::class,'export'])->name('project.export');
+  Route::get('project/getSpkDetails/{id}', [ProjectController::class, 'getSpkDetails'])->name('project.getSpkDetails');
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
   
