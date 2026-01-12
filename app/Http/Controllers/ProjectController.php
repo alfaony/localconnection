@@ -146,8 +146,13 @@ class ProjectController extends Controller
         $projectEdit = Project::where('slug', $slug)->firstOrFail();
         $workOrder = $projectEdit->workOrder;
 
+        // Get daily tasks with relationships
+        $dailyTasks = $projectEdit->dailyTasks()
+            ->with(['taskStatus', 'assign'])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        return view('project.show', compact('projectEdit', 'workOrder'));
+        return view('project.show', compact('projectEdit', 'workOrder', 'dailyTasks'));
     }
 
     /**
@@ -222,7 +227,7 @@ class ProjectController extends Controller
     {
         $workOrder = WorkOrder::with([
             'workOrderProduct.product',
-            'quote',
+            'quote.customer',
             'userCreate'
         ])->findOrFail($id);
         
@@ -242,7 +247,14 @@ class ProjectController extends Controller
             'creator_name' => $workOrder->userCreate->name ?? '-',
             'spk_number' => $workOrder->number_result,
             'spk_date' => $workOrder->date,
-            'spk_total' => $workOrder->total
+            'spk_total' => $workOrder->total,
+            // Customer details
+            'customer_name' => $workOrder->quote->customer->name ?? '-',
+            'customer_email' => $workOrder->quote->customer->email ?? '-',
+            'customer_phone' => $workOrder->quote->customer->phone_number ?? '-',
+            'customer_address' => $workOrder->quote->customer->address ?? '-',
+            // Quote transition status
+            'is_transition' => $workOrder->quote->budget_transition ?? false
         ]);
     }
 }

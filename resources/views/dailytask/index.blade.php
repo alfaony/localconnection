@@ -87,11 +87,11 @@
 
             <div class="col-12 col-md-3">
                 <div class="form-group">
-                    <label for="division">Main Proyek</label>
+                    <label for="division">Data Proyek</label>
                     <select class="form-control select2" name="daily_task_project">
-                        <option value="">-- Main Proyek --</option>
+                        <option value="">-- Data Proyek --</option>
                         @foreach ($dailyTaskProjects as $dailyTaskProject)
-                            <option value="{{ $dailyTaskProject->name }}" {{ request('daily_task_project') == $dailyTaskProject->name ? 'selected' : '' }}>{{ $dailyTaskProject->name }}</option>
+                            <option value="{{ $dailyTaskProject->id }}" {{ request('daily_task_project') == $dailyTaskProject->id ? 'selected' : '' }}>{{ $dailyTaskProject->title }}</option>
                         @endforeach
                     </select>
                 </div>

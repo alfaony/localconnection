@@ -352,7 +352,53 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                 }
 
                 const detailsHtml = `
+                    <!-- Customer Information Section -->
+                    <div class="card mt-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 text-primary">
+                                <i class="fas fa-user"></i> Informasi Customer
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-item mb-2">
+                                        <label class="text-muted mb-1 small">
+                                            <i class="fas fa-user-circle"></i> Nama Customer
+                                        </label>
+                                        <div class="font-weight-bold">${data.customer_name || '-'}</div>
+                                    </div>
+                                    <div class="info-item mb-2">
+                                        <label class="text-muted mb-1 small">
+                                            <i class="fas fa-envelope"></i> Email
+                                        </label>
+                                        <div>${data.customer_email || '-'}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item mb-2">
+                                        <label class="text-muted mb-1 small">
+                                            <i class="fas fa-phone"></i> Telepon
+                                        </label>
+                                        <div>${data.customer_phone || '-'}</div>
+                                    </div>
+                                    <div class="info-item mb-2">
+                                        <label class="text-muted mb-1 small">
+                                            <i class="fas fa-map-marker-alt"></i> Alamat
+                                        </label>
+                                        <div>${data.customer_address || '-'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 text-primary">
+                                <i class="fas fa-file-invoice"></i> Informasi Quote & SPK
+                            </h6>
+                        </div>
                         <div class="card-body">
                             <div class="row mb-3">
                                 <div class="col-md-6">
@@ -393,6 +439,21 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                                         <div class="font-weight-bold">${data.creator_name || '-'}</div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quote Transition Status -->
+                    <div class="mt-3">
+                        <div class="info-item">
+                            <label class="text-muted mb-2">
+                                <i class="fas fa-exchange-alt"></i> Status Quote Peralihan
+                            </label>
+                            <div>
+                                ${data.is_transition ? 
+                                    '<span class="badge badge-warning p-2" style="font-size: 1rem;"><i class="fas fa-exclamation-circle"></i> Quote Peralihan</span>' : 
+                                    '<span class="badge badge-success p-2" style="font-size: 1rem;"><i class="fas fa-check-circle"></i> Quote Regular</span>'
+                                }
                             </div>
                         </div>
                     </div>

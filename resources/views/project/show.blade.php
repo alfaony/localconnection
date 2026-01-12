@@ -3,6 +3,12 @@
 @section('title', 'Show Project')
 
 @section('content')
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ route('project.index') }}">Daftar Proyek</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{$projectEdit->title}}</li>
+    </ol>
+</nav>
 
 <div class="card p-3 mb-2 mt-3">
     <div class="card-body">
@@ -186,6 +192,126 @@
         </div>
     </div>
 </div>
+
+<!-- Daily Tasks Section -->
+<div class="card mt-3">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">
+            <i class="fas fa-tasks"></i> Daily Tasks
+        </h4>
+        <span class="badge badge-light ml-auto">{{ $dailyTasks->count() }} Tasks</span>
+    </div>
+    <div class="card-body">
+        @if($dailyTasks->count() > 0)
+            <div class="row">
+                @foreach($dailyTasks as $task)
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 shadow-sm border-left-primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title text-primary">
+                                    {{ $task->name_show }}
+                                </h5>
+                                @if($task->taskStatus)
+                                    @php
+                                        $statusClass = 'secondary';
+                                        $statusIcon = 'circle';
+                                        switch($task->taskStatus->name) {
+                                            case 'DONE':
+                                            case 'COMPLATE':
+                                                $statusClass = 'success';
+                                                $statusIcon = 'check-circle';
+                                                break;
+                                            case 'ON PROGRESS':
+                                                $statusClass = 'primary';
+                                                $statusIcon = 'sync-alt';
+                                                break;
+                                            case 'PENDING':
+                                                $statusClass = 'warning';
+                                                $statusIcon = 'clock';
+                                                break;
+                                            case 'CANCEL':
+                                                $statusClass = 'danger';
+                                                $statusIcon = 'times-circle';
+                                                break;
+                                        }
+                                    @endphp
+                                    <span class="badge badge-{{ $statusClass }}">
+                                         @switch($task->taskStatus->name)
+                                            @case('backlog')
+                                                <i class="fa fa-clipboard-list"></i> Backlog
+                                                @break
+                                            @case('todo')
+                                                <i class="fa fa-list-alt"></i> Todo
+                                                @break
+                                            @case('doing')
+                                                <i class="fa fa-hourglass-start"></i> Doing
+                                                @break
+                                            @case('in review')
+                                                <i class="fa fa-eye" style="color: green;"></i> In Review
+                                                @break
+                                            @case('not complete')
+                                                <i class="fa fa-times-circle" style="color: red;"></i> Not Complete
+                                                @break
+                                            @case('complete')
+                                                <i class="fa fa-check" style="color: green;"></i> Complete
+                                                @break
+                                            @default    
+                                                {{ $dailytask->taskStatus->name }}
+                                        @endswitch
+                                    </span>
+                                @endif
+                            </div>
+                            
+                            <div class="card-text mb-3">
+                                <p class="text-muted mb-2" style="max-height: 60px; overflow: hidden;">
+                                    {{ Str::limit(strip_tags($task->description), 150) }}
+                                </p>
+                            </div>
+                            
+                            <hr class="my-2">
+                            
+                            <div class="task-meta">
+                                <div class="row small text-muted mb-2">
+                                    <div class="col-6">
+                                        <i class="far fa-calendar-alt"></i>
+                                        <strong>Tanggal:</strong><br>
+                                        {{ $task->dateShow }}
+                                    </div>
+                                    <div class="col-6">
+                                        @if($task->assign)
+                                            <i class="fas fa-user"></i>
+                                            <strong>Assigned to:</strong><br>
+                                            {{ $task->assign->name }}
+                                        @else
+                                            <i class="fas fa-user-slash"></i>
+                                            <strong>Unassigned</strong>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            @canAccess('show','dailytasks')
+                            <div class="mt-3">
+                                <a href="{{ route('dailytask.show', $task->slug) }}" 
+                                   class="btn btn-info btn-sm btn-block">
+                                    <i class="fas fa-eye"></i> Lihat Detail Task
+                                </a>
+                            </div>
+                            @endcanAccess
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        @else
+            <div class="alert alert-info text-center mb-0">
+                <i class="fas fa-info-circle fa-2x mb-2"></i>
+                <p class="mb-0">Tidak ada daily task untuk proyek ini.</p>
+            </div>
+        @endif
+    </div>
+</div>
 @endsection
 
 @section('css')
@@ -196,5 +322,47 @@
     .table th, .table td {
         vertical-align: middle;
     }
+    
+    /* Daily Tasks Styling */
+    .border-left-primary {
+        border-left: 4px solid #007bff !important;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .badge {
+        padding: 0.4em 0.6em;
+        font-size: 0.85rem;
+    }
+    
+    .text-truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .card-header h4 {
+        margin-bottom: 0;
+    }
+    
+    .shadow-sm {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+    }
+    
+    .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        transition: box-shadow 0.3s ease-in-out;
+    }
+    
+    .task-meta {
+        font-size: 0.875rem;
+    }
+    
+    .h-100 {
+        height: 100% !important;
+    }
+
 </style>
 @endsection

@@ -38,6 +38,7 @@ use App\Models\SettingCompany;
 use App\Models\Division;
 use App\Models\DivisionQuotaLock;
 use App\Models\RecurringRule;
+use App\Models\Project;
 
 use App\Helpers\InboxHelper;
 use Ramsey\Uuid\Uuid;
@@ -146,8 +147,8 @@ class DailyTaskController extends Controller
         
         // Filter berdasarkan project
         if ($dailyTaskProjects) {
-            $query->whereHas('project', function ($q) use ($dailyTaskProjects) {
-                $q->where('name', $dailyTaskProjects);
+            $query->whereHas('dataProject', function ($q) use ($dailyTaskProjects) {
+                $q->where('id', $dailyTaskProjects);
             });
         }
 
@@ -165,7 +166,7 @@ class DailyTaskController extends Controller
         ];
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
         $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
-        $dailyTaskProjects = DailyTaskProject::byCompany(Auth::user()->company_id)->get(); 
+        $dailyTaskProjects = Project::byCompany(Auth::user()->company_id)->get(); 
 
         // permission
         $isShow = Access::can('show','dailytasks');
