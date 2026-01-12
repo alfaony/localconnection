@@ -20,6 +20,7 @@ use App\Models\Router;
 use App\Models\AddressPool;
 use App\Models\InternetPackage;
 
+use App\Services\MikrotikService;
 use App\Jobs\GenerateBillingJob;
 use App\Schemas\ParamSchema;
 use Carbon\Carbon;
@@ -53,6 +54,7 @@ class InternetCustomerShow extends Component
     public $new_pool_id = null;
     public $availableRouters = [];
     public $availablePoolsForNewRouter = [];
+    public $status_active;
     
     // ✅ Validation for new router configuration
     public $newUsernameChecked = false;
@@ -95,6 +97,7 @@ class InternetCustomerShow extends Component
                 ->toArray();
         }
 
+        $this->status_active = $this->customer->status != ParamSchema::INACTIVE ? true : false;
         $this->availablePackages = InternetPackage::byCompany(Auth::user()->company_id)
         ->where('is_active', true)
         ->get();
@@ -369,15 +372,16 @@ class InternetCustomerShow extends Component
         $this->name = $this->customer->name;
         $this->email = $this->customer->userCustomer->email ?? '';
         $this->phone_number = $this->customer->userCustomer->phone_number ?? '';
-        $this->start_billing_date = $this->customer->userCustomer->start_billing_date ?? '';
-        $this->end_billing_date = $this->customer->userCustomer->end_billing_date ?? '';
+        $this->start_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->start_billing_date : Carbon::now()->format('Y-m-d');
+        $this->end_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->end_billing_date : Carbon::now()->addDay()->format('Y-m-d');
         
         $this->dispatchBrowserEvent('showEditPribadiModal', [
+            'status_active' => $this->status_active,
             'name' => $this->customer->name,
             'email' => $this->customer->userCustomer->email ?? '',
             'phone_number' => $this->customer->userCustomer->phone_number ?? '',
-            'start_billing_date' => $this->customer->userCustomer->start_billing_date ?? '',
-            'end_billing_date' => $this->customer->userCustomer->end_billing_date ?? '',
+            'start_billing_date' => $this->start_billing_date,
+            'end_billing_date' => $this->end_billing_date
         ]);
     }
 
@@ -394,10 +398,27 @@ class InternetCustomerShow extends Component
         DB::beginTransaction();
         try {
             $this->customer->update(['name' => $this->name]);
+            
+            if(!$this->status_active)
+            {
+                $mikrotik = new MikrotikService($this->customer->router->id);
+                $mikrotik->removeUser($this->customer->id);
 
-            if ($this->customer->userCustomer) {   
+
+                $this->customer->update(['status' => ParamSchema::INACTIVE]);
+                $this->customer->installation?->delete();
+                
+
+
+            }
+            if($this->customer->status == ParamSchema::INACTIVE && $this->status_active)
+            {
+                GenerateBillingJob::dispatch($this->customer->userCustomer);
+            }
+
+            if ($this->customer->userCustomer && $this->status_active) {   
                 if($this->customer->userCustomer->start_billing_date != $this->start_billing_date && 
-                   $this->start_billing_date == Carbon::now()->format('Y-m-d')) 
+                $this->start_billing_date == Carbon::now()->format('Y-m-d')) 
                 {
                     GenerateBillingJob::dispatch($this->customer->userCustomer);
                 }

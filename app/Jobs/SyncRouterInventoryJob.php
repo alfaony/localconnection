@@ -323,6 +323,7 @@ class SyncRouterInventoryJob implements ShouldQueue
                     ->equal('service','pppoe')
                     ->equal('profile', $profile)
                     ->equal('disabled','no')
+                    ->equal('comment', $cust->id)
             )->read();
 
             // (opsional) simpan plain terenkripsi utk notifikasi
