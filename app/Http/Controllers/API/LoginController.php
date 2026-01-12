@@ -41,6 +41,21 @@ class LoginController extends BaseController
             $user = Auth::user(); 
             $success['token'] = $user->createToken('flutter-app-token')->accessToken;
             $success['name'] =  $user->name;
+
+            // $division = $user->divisions()->first();
+            // if ($division) {
+            //     $success['division_id'] = $division->id;
+            //     $success['division_name'] = $division->name;
+            // } else {
+            //     $success['division_id'] = null;
+            //     $success['division_name'] = "No Division Assigned";
+            // }
+            $success['divisions'] = $user->divisions->map(function ($div) {
+                return [
+                    'id' => $div->id,
+                    'name' => $div->name
+                ];
+            });
     
             return $this->sendResponse($success, 'User login successfully.');
         } 
