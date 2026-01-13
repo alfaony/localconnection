@@ -634,6 +634,8 @@
 
         function getStatusIcon(taskStatusName) {
             switch (taskStatusName) {
+                case 'backlog':
+                    return '<i class="fa fa-history"></i> Backlog';
                 case 'todo':
                     return '<i class="fa fa-list-alt"></i> Todo';
                 case 'doing':
@@ -682,6 +684,9 @@
                     let statusIcon = '';
                     let url = '';
                     switch (task.task_status) {
+                        case 'backlog':
+                            statusIcon = '<i class="fa fa-history"></i>';
+                            break;
                         case 'todo':
                             statusIcon = '<i class="fa fa-list-alt"></i>';
                             break;
@@ -779,6 +784,11 @@
                     if ($('#sidePopup .offcanvas-body').find('#dropzone').length > 0) {
                         initializeDropzone()
                     }
+
+                    if ($('#sidePopup .offcanvas-body').find('.select2').length > 0)
+                    {
+                        initializeSelect2();
+                    }
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -864,6 +874,11 @@
                     {
                         generateThriveEditor("note");
                     }
+                    
+                    if ($('#sidePopup .offcanvas-body').find('.select2').length > 0)
+                    {
+                        initializeSelect2();
+                    }
 
                     let bsOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('sidePopup'));
                     bsOffcanvas.show(); // Keep the popup open
@@ -934,6 +949,22 @@
             }
         });
     }
+
+    function initializeSelect2() {
+        // Destroy existing select2 instances within the popup to avoid duplication
+        $('#backlog_user_id').each(function() {
+            if ($(this).hasClass('select2-hidden-accessible')) {
+                $(this).select2('destroy');
+            }
+        });
+        
+        // Initialize select2 for elements in the offcanvas
+        $('#sidePopup .select2').select2({
+            width: '100%',
+            dropdownParent: $('#sidePopup')
+        });
+    }
+
 
     // Function to handle form submission without file uploads
     function submitFormWithoutFiles() {
