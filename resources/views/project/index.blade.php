@@ -33,7 +33,7 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
         </div>
     @endif
 </div>
-<div class="container">
+<div class="col-md-12">
     @canAccess('store','projects')
     <p id="projectNo"></p>
     @if(@$projectEdit)
@@ -189,21 +189,23 @@ $totalProjects = $totalProject + 1; // Get the total number of projects
                     {{ $a->user ? $a->user->name : '' }}
                 </td>
                 <td>
-                    <form method="post" action="{{ route('project.destroy',$a) }}">
-                        @csrf
-                        @method('delete')
-                        @canAccess('show','projects')
-                        <a href="{{ route('project.show',$a->slug) }}" class="btn btn-info btn-sm"><i class="fa fa-eye"></i></a>
-                        @endcanAccess
-                        @if($a->status_project == 'open')
-                        @canAccess('edit','projects')
-                        <a href="{{ route('project.edit',$a->slug) }}" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></a>
-                        @endcanAccess
-                        @canAccess('destroy','projects')
-                        <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
-                        @endcanAccess
-                        @endif
-                    </form>
+                    <div class="d-flex">
+                        <form method="post" action="{{ route('project.destroy',$a) }}">
+                            @csrf
+                            @method('delete')
+                            @canAccess('show','projects')
+                            <a href="{{ route('project.show',$a->slug) }}" class="btn btn-info btn-sm mb-2"><i class="fa fa-eye"></i></a>
+                            @endcanAccess
+                            @if($a->status_project == 'open')
+                            @canAccess('edit','projects')
+                            <a href="{{ route('project.edit',$a->slug) }}" class="btn btn-primary btn-sm mb-2"><i class="fa fa-edit"></i></a>
+                            @endcanAccess
+                            @canAccess('destroy','projects')
+                            <button onclick="return window.confirm('{{ __('Apakah Anda Yakin Hapus Data ? ') }}')" class="btn btn-danger btn-sm mb-2"><i class="fa fa-trash"></i></button>
+                            @endcanAccess
+                            @endif
+                        </form>
+                    </div>
                 </td>
             </tr>
             @empty
