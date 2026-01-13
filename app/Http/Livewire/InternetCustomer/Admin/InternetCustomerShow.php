@@ -401,8 +401,11 @@ class InternetCustomerShow extends Component
             
             if(!$this->status_active)
             {
-                $mikrotik = new MikrotikService($this->customer->router->id);
-                $mikrotik->removeUser($this->customer->id);
+                if($this->customer->router)
+                {
+                    $mikrotik = new MikrotikService($this->customer->router->id);
+                    $mikrotik->removeUser($this->customer->id);
+                }
 
 
                 $this->customer->update(['status' => ParamSchema::INACTIVE]);
