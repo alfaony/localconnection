@@ -287,7 +287,13 @@
                             Foto KTP
                         </th>
                         <td>
+                            @if($letterSubmission->user->id_card_image)
                             <img src="{{ s3_asset(true,10,$letterSubmission->user->id_card_image) }}" alt="Foto KTP" class="img-fluid" style="max-width: 150px;">
+                            @else
+                            <div style="height: 150px;">
+                                <p>Belum ada foto KTP</p>
+                            </div>
+                            @endif
                         </td>
                         </td>
                     </tr>
