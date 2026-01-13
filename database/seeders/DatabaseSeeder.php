@@ -108,5 +108,8 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForGetLocationSeeder::class);
         $this->call(PermissionForMenuWfoRuleSeeder::class);
         $this->call(MobilePermissionSeeder::class);
+        $this->call(PermissionForMenuChangeAssignBacklogSeeder::class);
+        $this->call(RolePermissionSeeder::class);
+        $this->call(PermissionForProjectExportSeeder::class);
     }
 }

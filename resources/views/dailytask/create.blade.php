@@ -65,9 +65,9 @@
                                         <div class="form-group">
                                             <label for="assignment_user_id">Tanggal</label>
                                             <div class="input-group">
-                                                <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal" required>
+                                                <input type="date" class="form-control start-date" name="start_date[]" placeholder="Mulai Tanggal">
                                                 <span class="input-group-text">hingga</span>
-                                                <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal" required>
+                                                <input type="date" class="form-control end-date" name="end_date[]" placeholder="Sampai Tanggal">
                                             </div>
                                         </div>
                                         <div class="form-group">

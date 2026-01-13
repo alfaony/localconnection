@@ -267,6 +267,7 @@ Route::post('role/selectAll/{role}', [RoleController::class, 'selectAll'])
 Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
     ->name('role.deselect-all');
 
+
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
@@ -402,6 +403,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
   Route::get('report-productivity/export', [ReportPointProductivityController::class, 'export'])->name('report-productivity.export');
 
+  Route::post('dailytask/assignBacklog/{slug}', [DailyTaskController::class, 'assignBacklog'])->name('dailytask.assignBacklog');
   Route::get('/dailytask/export', [DailyTaskController::class, 'export'])->name('dailytask.export');
   Route::get('dailytask/template', [DailyTaskController::class, 'template'])->name('dailytask.template');
   Route::get('dailytask/downloadtemplate', [DailyTaskController::class, 'downloadtemplate'])->name('dailytask.downloadtemplate');
