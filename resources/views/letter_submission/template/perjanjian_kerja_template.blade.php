@@ -295,7 +295,6 @@
                             </div>
                             @endif
                         </td>
-                        </td>
                     </tr>
                     <tr>
                         <th>No KTP</th>
