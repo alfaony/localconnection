@@ -97,9 +97,9 @@ class Project extends Model
         {
             $progressTask = true;
         }
-
+        
         // Cek jika selisih tahun (hanya tahun, bukan tanggal lengkap) >= 2
-        if (now()->year - $this->created_at->year >= 2) {
+        if ((now()->year - $this->created_at->year >= 2) || now()->year - Carbon::parse($this->end_date)->year >= 2) {
             $expiredProject = true;
         }
 
