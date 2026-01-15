@@ -4,25 +4,28 @@
 
 
 @section('content')
+@include('components.alert')
 <div class="row">
     <div class="col-md-12">
         <div class="card mt-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4><i class="fas fa-list"></i> Daftar Aktivasi KYE</h4>
-                <form action="{{ route('kye.index') }}" method="GET" class="d-flex align-items-center">
-                    <div class="input-group">
-                        <input 
+                <div class="ml-auto">
+                    <form action="{{ route('kye.index') }}" method="GET" class="d-flex align-items-center">
+                        <div class="input-group">
+                            <input 
                             type="text" 
                             name="search" 
                             class="form-control form-control-sm" 
                             placeholder="Cari nama, email, atau KTP" 
                             value="{{ request('search') }}" 
                             aria-label="Search">
-                        <button type="submit" class="btn btn-sm btn-primary ml-2    ">
-                            <i class="fas fa-search"></i> Cari
-                        </button>
-                    </div>
-                </form>
+                            <button type="submit" class="btn btn-sm btn-primary ml-2">
+                                <i class="fas fa-search"></i> Cari
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
             <div class="card-body">
                 @if($kyeRecords->isEmpty())
@@ -30,6 +33,11 @@
                         <i class="fas fa-info-circle"></i> Tidak ada data ditemukan.
                     </div>
                 @else
+                    @canAccess('export','kyes')
+                    <a href="{{ route('kye.export', request()->all()) }}" class="btn btn-sm btn-success mb-2">
+                        <i class="fas fa-file-export"></i> Export
+                    </a>
+                    @endcanAccess
                     <table class="table table-hover">
                         <thead class="bg-light">
                             <tr>

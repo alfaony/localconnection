@@ -6,11 +6,26 @@
                 <h3 class="card-title text-white mb-0">
                     <i class="fas fa-box mr-2"></i> Manajemen Barang Bekas
                 </h3>
-                @canAccess('create','used_items')
-                <a href="{{ route('used-item.create') }}" class="btn btn-light btn-sm">
-                    <i class="fas fa-plus mr-1"></i> Tambah Barang
-                </a>
-                @endcanAccess
+                <div class="ml-auto">
+                    @if($canExport)
+                    <button wire:click="exportItem" 
+                            class="btn btn-success btn-sm mr-2"
+                            wire:loading.attr="disabled"
+                            wire:target="exportItem">
+                        <span wire:loading.remove wire:target="exportItem">
+                            <i class="fas fa-file-excel mr-1"></i> Export Excel
+                        </span>
+                        <span wire:loading wire:target="exportItem">
+                            <span class="spinner-border spinner-border-sm mr-1"></span> Exporting...
+                        </span>
+                    </button>
+                    @endif
+                    @canAccess('create','used_items')
+                    <a href="{{ route('used-item.create') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus mr-1"></i> Tambah Barang
+                    </a>
+                    @endcanAccess
+                </div>
             </div>
         </div>
 
@@ -360,7 +375,7 @@
                             <td class="text-center">
                                 <div class="btn-group" role="group">
                                     @if($item->qr_code_path)
-                                    <a href="{{ s3_asset(true,10,$item->qr_code_path) }}" 
+                                    <a href="{{ s3_asset(true,10,'public/'.$item->qr_code_path) }}" 
                                        download 
                                        class="btn btn-sm btn-outline-primary mb-1 mr-1"
                                        title="Download QR Code">
@@ -452,6 +467,29 @@
     </div>
 </div>
 
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    window.addEventListener('export-started', event => {
+        // Optional: Show toast notification
+        Swal.fire({
+            icon: 'info',
+            title: 'Export Dimulai',
+            text: event.detail.message,
+            toast: true,
+            timer: 3000,
+            position: 'top-end',
+            showConfirmButton: false
+        });
+    });
+</script>
+@endpush
 <style>
     /* Sticky header */
     .sticky-top {

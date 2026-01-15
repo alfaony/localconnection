@@ -249,6 +249,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Accessor for is_active - returns true if user has divisions
+     */
+    // public function isActive(): bool
+    // {
+    //    return $this->divisions()->count() > 0 ? true : false;
+    // }
+
+    /**
      * Check if user should work on a specific date
      */
     public function shouldWorkOnDate($date)
@@ -552,7 +560,22 @@ class User extends Authenticatable
     //         });
     //     }
     // }
-
+    
+    /**
+     * Scope to get only active users (users with divisions)
+     */
+    public function scopeIsActive($query)
+    {
+        return $query->whereHas('divisions');
+    }
+    
+    /**
+     * Scope to get only inactive users (users without divisions)
+     */
+    public function scopeIsNotActive($query)
+    {
+        return $query->whereDoesntHave('divisions');
+    }
     public function scopeByCompanyAccess($query, $user, $companyId, $role)
     {
         if ($companyId && $role && $role != RoleSchema::ROOT) {

@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -102,9 +103,14 @@ use App\Http\Controllers\MomController;
 use App\Http\Controllers\UsedLaptopController;
 use App\Http\Controllers\MasterCheckItemController;
 use App\Http\Controllers\UsedItemController;
+use App\Http\Controllers\MikrotikSecretController;
+use App\Http\Controllers\MikrotikProfileController;
+
+
 use App\Http\Controllers\BarcodeAttendanceController;
 use App\Http\Controllers\OfficeAttendanceController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\XenditController;
 
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
@@ -121,8 +127,13 @@ use App\Http\Livewire\InternetCustomer\InternetCustomerForm;
 use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerIndex;
 use App\Http\Livewire\InternetCustomer\Admin\InternetCustomerShow;
 use App\Http\Livewire\InternetCustomer\InternetCustomerShow as CustomerShow;
+use App\Http\Livewire\InternetCustomer\CustomerCodeInput;
 use App\Http\Livewire\Promo\PromoIndex;
 use App\Http\Livewire\Promo\PromoForm;
+use App\Http\Livewire\Router\RouterForm;
+use App\Http\Livewire\Router\RouterIndex;
+use App\Http\Livewire\Router\RouterInventory;
+use App\Http\Livewire\Router\PackageProfileMapping;
 use App\Http\Livewire\WebhookSettingTable;
 use App\Http\Livewire\ProductSupplierTypeIndex;
 use App\Http\Livewire\ProductStore\ProductStoreIndex;
@@ -150,7 +161,12 @@ use App\Http\Livewire\PunishmentUserTable;
 |
 */
 Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
+Route::post('xendit/webhook', [XenditController::class, 'handle']);
+Route::post('keloola-pay/webhook', [XenditController::class, 'handleKeloolaPay']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
+
+
+Route::get('internet-customer/customer-active', CustomerCodeInput::class)->name('internet-customer.customer');
 
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
@@ -235,6 +251,23 @@ Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementCont
 Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
 Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->name('used-item.show-qr');
 
+
+  
+  // AJAX routes for role permission management (to avoid max_input_vars limit)
+// Additional routes untuk per-accordion functionality
+Route::post('role/updateName/{role}', [RoleController::class, 'updateName'])
+    ->name('role.update-name');
+
+Route::post('role/updateMenuPermissions/{role}', [RoleController::class, 'updateMenuPermissions'])
+    ->name('role.update-menu-permissions');
+
+Route::post('role/selectAll/{role}', [RoleController::class, 'selectAll'])
+    ->name('role.select-all');
+
+Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
+    ->name('role.deselect-all');
+
+
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
@@ -249,6 +282,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('xero/disconnect', [XeroController::class,'disconnect']);
   
   Route::get('project/export', [ProjectController::class,'export'])->name('project.export');
+  Route::get('project/getSpkDetails/{id}', [ProjectController::class, 'getSpkDetails'])->name('project.getSpkDetails');
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
   
@@ -323,6 +357,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('report-project', ReportProjectController::class);
 
   Route::resource('setting-company', SettingCompanyController::class)->only('index','store');
+  
   Route::resource('role', RoleController::class);
 
 
@@ -368,6 +403,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
   Route::get('report-productivity/export', [ReportPointProductivityController::class, 'export'])->name('report-productivity.export');
 
+  Route::post('dailytask/assignBacklog/{slug}', [DailyTaskController::class, 'assignBacklog'])->name('dailytask.assignBacklog');
   Route::get('/dailytask/export', [DailyTaskController::class, 'export'])->name('dailytask.export');
   Route::get('dailytask/template', [DailyTaskController::class, 'template'])->name('dailytask.template');
   Route::get('dailytask/downloadtemplate', [DailyTaskController::class, 'downloadtemplate'])->name('dailytask.downloadtemplate');
@@ -406,6 +442,10 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('mission', MissionController::class)->except(['index', 'show', 'create', 'edit']);
 
   Route::get('project-dashboard/getVisions', [ProjectDashboardController::class, 'getVisions'])->name('visions');
+  Route::get('project-dashboard/visions/{vision}/missions', [ProjectDashboardController::class, 'getMissions'])->name('vision-missions');
+  Route::get('project-dashboard/missions/{mission}/objectives', [ProjectDashboardController::class, 'getObjectives'])->name('mission-objectives');
+  Route::get('project-dashboard/objectives/{objective}/key-results', [ProjectDashboardController::class, 'getKeyResults'])->name('objective-key-results');
+  Route::get('project-dashboard/key-results/{keyResult}/daily-tasks', [ProjectDashboardController::class, 'getDailyTasks'])->name('key-result-tasks');
   Route::get('project-dashboard/getTotalCounts', [ProjectDashboardController::class, 'getTotalCounts'])->name('total-counts');
   Route::get('project-dashboard/getOverdueTasks', [ProjectDashboardController::class, 'getOverdueTasks'])->name('overdue-tasks');
   Route::get('project-dashboard/getUpcomingTasks', [ProjectDashboardController::class, 'getUpcomingTasks'])->name('upcoming-tasks');
@@ -443,6 +483,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('pass-checking', PassCheckingController::class);
 
   Route::get('kye/KyeExport', [UserController::class,'KyeExport'])->name('kye.KyeExport');
+  Route::get('kye/export', [KyeController::class, 'export'])->name('kye.export');
   Route::post('kye/verifyemail', [KyeController::class, 'verifyemail'])->name('kye.verify.email');
   Route::patch('kye/approvement/{kye}', [KyeController::class, 'approvement'])->name('kye.approvement');
   Route::resource('kye', KyeController::class);
@@ -594,6 +635,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-package/edit/{id}', InternetPackageForm::class)->name('internet-package.edit');
 
   Route::get('internet-customer', InternetCustomerIndex::class)->name('internet-customer.index');
+  Route::put('internet-customer/update/{id}', InternetCustomerIndex::class)->name('internet-customer.update');
   Route::get('internet-customer/edit/{id}', InternetCustomerForm::class)->name('internet-customer.edit');
   Route::get('internet-customer/{customerId}', InternetCustomerShow::class)->name('internet-customer.show');
   
@@ -601,6 +643,12 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('promo/create', PromoForm::class)->name('promo.create');
   Route::get('promo/edit/{id}', PromoForm::class)->name('promo.edit');
   
+  Route::get('router', RouterIndex::class)->name('router.index');
+  Route::get('router/create', RouterForm::class)->name('router.create');
+  Route::get('router/edit/{mikrotik}', RouterForm::class)->name('router.edit');
+  Route::get('router/show/{routerId}', RouterInventory::class)->name('router.show');
+  Route::get('router/mapping/{routerId}', PackageProfileMapping::class)->name('router.mapping');
+
   Route::get('webhook-setting', WebhookSettingTable::class)->name('webhook-setting.index');
   
   // Barcode 
@@ -647,7 +695,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
 });
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
-  Route::get('internet-customer/customer/{code}', CustomerShow::class)->name('internet-customer.customer.show');
+  Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');
   
 // Route::middleware(['auth'])->group(function () {
 // });
@@ -663,6 +711,9 @@ Route::get('error/{code?}', function ($code = 500) {
 
 Route::post('bos-ticket', [TicketController::class,'store'])->name('bos-ticket.store');
 Route::get('bos-ticket', [TicketController::class,'create'])->name('bos-ticket.create');
+Route::get('page/privacy-policy', function () {
+  return view('policy');
+})->name('page.privacy-policy');
 
 Route::get('/robots.txt', function () {
     return response("User-agent: *\nDisallow: /storage/", 200)

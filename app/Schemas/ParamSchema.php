@@ -123,14 +123,24 @@ class ParamSchema
 
     const EXTERNAL = "external";
 
+    const UP = 'UP';
+
     // Schemas
     const PERJANJIAN_INTERNET = "perjanjian_berlangganan_internet";
 
     // Status Interent
     const PENDING = "pending";
+    const WAITING_PAYMENT_SUBSCRIPTION = "waiting_payment_subscription";
     const WAITING_PAYMENT_CONFIRMATION = "waiting_payment_confirmation";
     const PROCESS_INSTALLATION = "process_installation";
     const INSTALLED = "installed";
+    const ACTIVE = "active";
+    const EXPIRED = "expired";
+    const CANCELLED = "cancelled";
+    const SUSPENDED = "suspended";
+    const REACTIVATED = "reactivated";
+    const CUSTOMER_EXISTING = "customer_existing";
+    const INACTIVE = "inactive";
 
     // Promo
     const PROMO_FREE_MONTH = "free_months";

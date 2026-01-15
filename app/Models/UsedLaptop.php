@@ -71,7 +71,17 @@ class UsedLaptop extends Model
         return $this->hasMany(UsedLaptopMedia::class);
     }
 
-    
+    public function getSoldStatusAttribute()
+    {
+        // NULL = true
+        if (is_null($this->is_sold)) {
+            return true;
+        }
+
+        // 1 = true, 0 = false
+        return (bool) $this->is_sold;
+    }
+
     // ❓ Apakah laptop perlu aksi?
     public function isAction()
     {
@@ -105,6 +115,12 @@ class UsedLaptop extends Model
            isset($this->is_sold) ?  ( $this->is_sold
             ? 'Terjual (Rp ' . number_format($this->sold_price) . ')'
             : 'Belum Terjual') : "Inventory";
+    }
+
+    // ✅ QC Status - Otomatis QC_PASSED jika sudah memiliki rack
+    public function getQcStatusAttribute()
+    {
+        return $this->rack_id ? 'QC PASSED' : null;
     }
 
     public function user()

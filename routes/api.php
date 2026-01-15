@@ -9,15 +9,18 @@ use App\Http\Controllers\API\CustomerController;
 use App\Http\Controllers\API\QuoteController;
 use App\Http\Controllers\API\WorkOrderController;
 use App\Http\Controllers\API\AgreementLetterController;
+use App\Http\Controllers\MikrotikController;
 use App\Http\Controllers\API\DailyTaskController;
 use App\Http\Controllers\API\ObjectiveController;
 use App\Http\Controllers\API\DailyTaskProjectController;
 use App\Http\Controllers\API\UsedLaptopController;
+use App\Http\Controllers\API\MomApiController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\API\DailyTaskMobileController;
 use App\Http\Controllers\API\ItemRequestMobileController;
 use App\Http\Controllers\API\ItemPurchaseMobileController;
-
+use App\Http\Controllers\API\FlowChartController;
+use App\Http\Controllers\API\RegionController;
 
 
 /*
@@ -52,19 +55,13 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::get('agreement-letter/downloadPdf/pdf/{slug}/',[AgreementLetterController::class,'downloadPdf'])->name('agreement-letter.download.pdf');;
     Route::resource('agreement-letter', AgreementLetterController::class);
 
-    Route::resource('dailytask', DailyTaskController::class);
-    Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
-    Route::put('dailytask/report/{slug}', [DailyTaskController::class, 'report']);
-
-    Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
-
-    Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
-    // Route::post('dailytask/{slug}/approve', [DailyTaskController::class, 'approvement']);
-    // Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);
-    Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');
-
-
     //Mobile
+    Route::get('users/division/{divisionId}', [DailyTaskMobileController::class, 'getUsersByDivision'])
+        ->name('users.division.mobile');
+    
+    Route::get('tasks/user/{userId}', [DailyTaskMobileController::class, 'indexTaskByUser'])
+        ->name('tasks.user.mobile');
+
     Route::get('tasks/today', [DailyTaskMobileController::class, 'indexToday']);
 
     Route::get('tasks/tomorrow', [DailyTaskMobileController::class, 'indexTomorrow']);
@@ -82,6 +79,7 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::resource('tasks', DailyTaskMobileController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     
     Route::get('home/daily-task-summary', [HomeController::class, 'indexSummary']);
+    Route::get('tasks/division/{divisionId}', [DailyTaskMobileController::class, 'indexTaskByDivision']);
 
     Route::get('task-statuses', [DailyTaskMobileController::class, 'indexTaskStatuses']); 
     Route::get('daily-task-projects', [DailyTaskMobileController::class, 'indexDailyTaskProjects']); 
@@ -97,12 +95,17 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
         ->name('medias.generateMediaUrl.mobile');
     Route::get('divisions', [DailyTaskMobileController::class, 'indexDivision']);
     Route::get('divisions/check-division-quota', [DailyTaskMobileController::class, 'checkDivisionQuota']);
-
     Route::get('/item-requests/{id}/workflow', [ItemRequestMobileController::class, 'workflow']);
     Route::post('item-requests/{id}/add-vendor', [ItemPurchaseMobileController::class,'addVendor']);
     Route::post('item-requests/{id}/delivery', [ItemRequestMobileController::class,'delivery']);
     Route::get('item-requests/{id}/delivery-detail', [ItemRequestMobileController::class, 'getDelivery']);
     Route::get('item-requests/company', [ItemRequestMobileController::class, 'loadByCompany']);
+
+    Route::get('item-requests/categories', [ItemRequestMobileController::class, 'categories']);
+    Route::get('item-requests/types', [ItemRequestMobileController::class, 'types']);
+    Route::get('item-requests/sprinters', [ItemRequestMobileController::class, 'sprinters']);
+    Route::get('item-requests/product-suppliers', [ItemRequestMobileController::class, 'productSuppliers']);
+
     Route::resource('item-requests', ItemRequestMobileController::class)
     ->only(['index', 'show', 'store', 'update', 'destroy']);
 
@@ -116,6 +119,41 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::resource('item-purchases', ItemPurchaseMobileController::class)
     ->only(['store', 'update']);
 
+    Route::apiResource('flowcharts', FlowChartController::class);
+
+});
+
+Route::group(['middleware' => ['auth:api']], function() 
+{
+    Route::post('provision', [MikrotikController::class, 'provision']);   
+    Route::post('cut', [MikrotikController::class, 'cut']);
+    Route::post('restore', [MikrotikController::class, 'restore']);
+
+    Route::resource('dailytask', DailyTaskController::class);
+    Route::put('dailytask/statuschange/{slug}', [DailyTaskController::class,'statuschange'])->name('dailytask.statuschange');
+    Route::put('dailytask/report/{slug}', [DailyTaskController::class, 'report']);
+
+    Route::get('daily_task_project/getcustomfield/{project}', [DailyTaskProjectController::class,'getcustomfield'])->name('getcustomfield');
+
+    Route::get('objective/getresult/{objective}', [ObjectiveController::class,'getresult'])->name('getresult');
+    // Route::post('dailytask/{slug}/approve', [DailyTaskController::class, 'approvement']);
+    // Route::post('dailytask/{slug}/extend', [DailyTaskController::class, 'extend']);
+    Route::patch('used-laptop/maskAsSold/{id}', [UsedLaptopController::class,'maskAsSold'])->name('used-laptop.maskAsSold');
+
+
+    Route::resource('mom', MomApiController::class);
+    Route::prefix('mom')->group(function () {
+
+        // MOM Task Routes
+        Route::post('/{id}/tasks', [MomApiController::class, 'storeTask']); // POST - Create task
+        Route::put('/tasks/{id}', [MomApiController::class, 'updateTask']); // PUT - Update task
+        Route::delete('/tasks/{id}', [MomApiController::class, 'deleteTask']); // DELETE - Delete task
+
+        // MOM Agenda Routes
+        Route::post('/{id}/agendas', [MomApiController::class, 'storeAgenda']); // POST - Create agenda
+        Route::put('/agendas/{id}', [MomApiController::class, 'updateAgenda']); // PUT - Update agenda
+        Route::delete('/agendas/{id}', [MomApiController::class, 'deleteAgenda']); // DELETE - Delete agenda
+    });
 });
 
 Route::group(['middleware' => ['auth:api']], function() 
@@ -124,4 +162,12 @@ Route::group(['middleware' => ['auth:api']], function()
         return Broadcast::auth($request);
     });
     Route::post('logout', [LoginController::class, 'logout']);
+});
+
+ Route::prefix('region')->group(function () {
+    Route::get('/getCountries', [RegionController::class, 'getCountries']);
+    Route::get('/getProvinces', [RegionController::class, 'getProvinces']);
+    Route::get('/getCities', [RegionController::class, 'getCities']);
+    Route::get('/getDistricts', [RegionController::class, 'getDistricts']);
+    Route::get('/getSubdistricts', [RegionController::class, 'getSubdistricts']);
 });

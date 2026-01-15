@@ -8,7 +8,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Ramsey\Uuid\Uuid;
 use Illuminate\Support\Facades\Auth;
 use App\Schemas\RoleSchema;
+use App\Services\RouterOSService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
+use App\Models\Province;
 
 class InternetCustomer extends Model
 {
@@ -24,7 +27,58 @@ class InternetCustomer extends Model
         // Saat membuat model baru, tetapkan UUID
         static::creating(function ($model) {
             $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
+
+            DB::transaction(function () use ($model) {
+                $customer = $model;
+                // OPTIONAL: Lock table for extra safety
+                // DB::statement('LOCK TABLE internet_customers WRITE');
+
+                // ===== SAFE AUTO-INCREMENT =====
+                do {
+                    $nextNumber = InternetCustomer::max('code_cust') + 1;
+
+                    $duplicateNumber = InternetCustomer::where('code_cust', $nextNumber)->exists();
+                } while ($duplicateNumber);
+
+                $customer->code_cust = $nextNumber;
+
+                // ===== PROVINCE PREFIX =====
+                $prefix = Province::find($customer->province_id)->initial;
+
+                // ===== GENERATE CUSTOMER CODE =====
+                do {
+                    $finalCode = $prefix . $nextNumber;
+
+                    $duplicateCode = InternetCustomer::where('code', $finalCode)->exists();
+                } while ($duplicateCode);
+
+                $customer->code = $finalCode;
+            });
         });
+    }
+
+    function generateProvincePrefix($provinceName)
+    {
+        if (!$provinceName) return 'XXX';
+
+        $words = explode(' ', trim($provinceName));
+
+        // Jika ada 3 kata → ambil satu huruf tiap kata (NTT, NTT, DIY)
+        if (count($words) >= 3) {
+            return strtoupper(
+                $words[0][0] . $words[1][0] . $words[2][0]
+            );
+        }
+
+        // Jika ada 2 kata → ambil huruf pertama tiap kata (JB, SU)
+        if (count($words) == 2) {
+            return strtoupper(
+                $words[0][0] . $words[1][0]
+            );
+        }
+
+        // Jika 1 kata → ambil 2 huruf pertama (BA, RI)
+        return strtoupper(substr($provinceName, 0, 2));
     }
 
     protected $fillable = [
@@ -43,10 +97,32 @@ class InternetCustomer extends Model
         'ktp_photo',
         'is_paid',
         'status',
-        'promo_id'
+        'promo_id',
+        'router_id',
+        'access_type',
+        'username',
+        'pass_hash',
+        'ip_address',
+        'local_address',
+        'mac_address',
+        'vlan_id',
+        'expires_at',
+        'ros_comment_uuid',
+        'meta',
+        'override_pool_id',
+        'last_updated_router',
+        'code_cust',
+        'optical_distribution_id',
+        'grouping_id',
+        'action_user_id',
     ];
 
     // ✅ RELATIONS
+    public function coupons()
+    {
+        return $this->hasMany(InternetPurchaseCoupon::class,'internet_customer_id');
+    }
+
     public function userCustomer()
     {
         return $this->belongsTo(UserCustomer::class);
@@ -79,7 +155,7 @@ class InternetCustomer extends Model
 
     public function internetPackage()
     {
-        return $this->belongsTo(InternetPackage::class);
+        return $this->belongsTo(InternetPackage::class, 'internet_package_id')->withTrashed();
     }
 
     public function promo()
@@ -87,9 +163,24 @@ class InternetCustomer extends Model
         return $this->belongsTo(Promo::class, 'promo_id')->withTrashed();
     }
 
+    public function overridePool()
+    {
+        return $this->belongsTo(AddressPool::class, 'override_pool_id');
+    }
+
     public function partnershipAgreement()
     {
-        return $this->belongsTo(PartnershipAgreement::class);
+        return $this->belongsTo(PartnershipAgreement::class)->withTrashed();
+    }
+
+    public function router()
+    {
+        return $this->belongsTo(Router::class);
+    }
+
+    public function odp()
+    {
+        return $this->belongsTo(OpticalDistribution::class, 'optical_distribution_id')->withTrashed();
     }
 
      public function installation()
@@ -109,9 +200,44 @@ class InternetCustomer extends Model
 
         return null; // Tidak ada purchases
     }
+
+    public function getOldestUnconfirmed()
+    {
+        if ($this->purchases()->exists()) {
+            return $this->purchases()
+                ->orderBy('created_at', 'desc')
+                ->first();
+        }
+
+        return null; // Tidak ada purchases
+    }
     public function purchases()
     {
         return $this->hasMany(InternetCustomerPurchase::class);
+    }
+
+    public function actionBy()
+    {
+        return $this->belongsTo(User::class, 'action_user_id')->withTrashed();
+    }
+
+    public function isActiveConneciton()
+    {
+        $ros = new RouterOSService();
+        $client = $ros->client($this->router);
+        return $ros->isUserActive($client, $this->username);
+    }
+
+    public function candidateRouters()
+    {
+        $ods = $this->subdistrict?->coverageService?->coverageServiceOds ?? collect();
+        if ($ods->isEmpty()) return collect();
+
+        $odIds = $ods->pluck('optical_distribution_id');
+
+        return \App\Models\Router::select('id','name')->whereHas('pop.opticalDistributions', fn($q)=>
+            $q->whereIn('optical_distributions.id',$odIds)
+        )->distinct()->get();
     }
 
     public function getStatusBadgeAttribute()
@@ -120,15 +246,35 @@ class InternetCustomer extends Model
 
         switch ($status) {
             case 'pending':
-                return '<span class="badge badge-warning">Pending</span>';
+                return '<span class="badge badge-light text-dark">Pending</span>';
+            case 'waiting_payment_subscription':
+                return '<span class="badge badge-secondary">Waiting Payment Subscription</span>';
             case 'waiting_payment_confirmation':
-                return '<span class="badge badge-info">Waiting Payment Confirmation</span>';
+                return '<span class="badge badge-secondary">Waiting Payment Confirmation</span>';
             case 'process_installation':
                 return '<span class="badge badge-primary">Process Installation</span>';
+            case 'customer_existing':
+                return '<span class="badge badge-primary">Customer Existing Installation</span>';
             case 'installed':
-                return '<span class="badge badge-success">Installed</span>';
+                return '<span class="badge badge-info">Installed</span>';
+            case 'active':
+                return '<span class="badge badge-success">Active</span>';
+            case 'expired':
+                return '<span class="badge badge-danger">Expired</span>';
+            case 'cancelled':
+                return '<span class="badge badge-dark">Cancelled</span>';
+            case 'suspended':
+                return '<span class="badge badge-warning">Suspended</span>';
+            case 'disconnected':
+                return '<span class="badge badge-danger">Disconnected</span>';
+            case "reactivated":
+                return '<span class="badge badge-success">Reactivated</span>';
+            case 'closed':
+                return '<span class="badge badge-dark">Closed</span>';
+            case 'inactive':
+                return '<span class="badge badge-danger">Inactive</span>';
             default:
-                return '<span class="badge badge-secondary">'.$status.'</span>';
+                return '<span class="badge badge-light">Unknown</span>';
         }
     }
 

@@ -676,6 +676,37 @@
                         </div>
                     </div>
 
+                    <div class="card">
+                        <div class="card-header" id="judulPayment">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapsePayment" aria-expanded="false" aria-controls="collapsePayment">
+                                    Setting Payment Internet Customer
+                                </button>
+                            </h2>
+                        </div>
+
+                        <div id="collapsePayment" class="collapse" aria-labelledby="judulPayment" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="public_key">Public Key</label>
+                                    <input type="text" name="public_key" class="form-control" value="{{ old('public_key', $data['public_key'] ?? '') }}">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="secret_key">Secret Key</label>
+                                    <input type="text" name="secret_key" class="form-control" value="{{ old('secret_key', $data['secret_key'] ?? '') }}">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="webhook_token">Webhook Token</label>
+                                    <input type="text" name="webhook_token" class="form-control" value="{{ old('webhook_token', $data['webhook_token'] ?? '') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+    
                 <button type="submit" class="btn btn-primary">Simpan</button>
             </form>
 

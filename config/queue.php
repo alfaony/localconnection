@@ -42,6 +42,34 @@ return [
             'after_commit' => false,
         ],
 
+        // ✅ NEW: Separate DB untuk mikrotik jobs
+        'mikrotik' => [
+            'driver' => 'redis',
+            'url' => env('REDIS_URL'),
+            'connection' => 'default',
+            'queue' => 'mikrotik',
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_MIKROTIK_DB', '1'),
+            'retry_after' => 120,
+            'block_for' => 5,
+        ],
+
+        // ✅ NEW: Separate DB untuk health checks
+        'health' => [
+            'driver' => 'redis',
+            'url' => env('REDIS_URL'),
+            'connection' => 'default',
+            'queue' => 'health-checks',
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_HEALTH_DB', '2'),
+            'retry_after' => 30,
+            'block_for' => 2,
+        ],
+
         'beanstalkd' => [
             'driver' => 'beanstalkd',
             'host' => 'localhost',

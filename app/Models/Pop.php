@@ -5,9 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pop extends Model
 {
+    use HasFactory;
+    use SoftDeletes;
+
     protected $fillable = [
         'name',
         'capacity_mb',
@@ -31,9 +35,25 @@ class Pop extends Model
         return $this->hasMany(PopEntry::class);
     }
 
+    public function routers()
+    {
+        // diasumsikan routers punya kolom pop_id (BIGINT FK)
+        return $this->hasMany(Router::class, 'pop_id');
+    }
+
     public function company()
     {
         return $this->belongsTo(Company::class)->withTrashed();
+    }
+
+    public function opticalDistributions()
+    {
+        return $this->belongsToMany(
+            OpticalDistribution::class,
+            'optical_distribution_pop', // nama tabel pivot
+            'pop_id',
+            'optical_distribution_id'
+        );
     }
 
     public function userCreated()

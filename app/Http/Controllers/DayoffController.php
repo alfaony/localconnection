@@ -79,6 +79,14 @@ class DayoffController extends Controller
             'file' => 'nullable|file|max:2048',
         ]);
 
+        $currentYear = now()->year;
+        $startDate = Carbon::parse($request->date_start);
+        $endDate = Carbon::parse($request->date_end);
+        if ($startDate->year > $currentYear || $endDate->year > $currentYear) 
+        {
+            return redirect()->back()->withErrors(['msg' => 'Tanggal cuti tidak boleh melebihi tahun ini.']);
+        }
+
         $user = auth()->user();
         if (!$user->dayoff_active) 
         {
@@ -189,6 +197,15 @@ class DayoffController extends Controller
             'reason' => 'nullable|string',
             'file' => 'nullable|file|max:2048',
         ]);
+
+        $currentYear = now()->year;
+        $startDate = Carbon::parse($request->date_start);
+        $endDate = Carbon::parse($request->date_end);
+        if ($startDate->year > $currentYear || $endDate->year > $currentYear) 
+        {
+            return redirect()->back()->withErrors(['msg' => 'Tanggal cuti tidak boleh melebihi tahun ini.']);
+        }
+
         $request->merge(['dayoff_type_id' => $cuti->dayoff_type_id, 'exclude_id' => $cuti->id]);
         
         $checkInfo = $this->checkInfo($request)->getOriginalContent();
@@ -290,6 +307,7 @@ class DayoffController extends Controller
         $pendingDuration = Dayoff::where('user_id', $user->id)
             ->where('dayoff_type_id', $type->id)
             ->whereNull('rejected_at')
+            ->whereYear('created_at', now()->year)
             ->where(function ($q) {
                 $q->whereNull('approved_hr_at')->orWhereNull('approved_finance_at');
             })

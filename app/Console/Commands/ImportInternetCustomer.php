@@ -151,7 +151,7 @@ class ImportInternetCustomer extends Command
                         $data['phone'] = null;
                     }
 
-                    if (!empty($data['name'])) {
+                    if (!empty($data['name']) && (empty($data['phone']) && empty($data['email']))) {
                         $existingCustomer = UserCustomer::where('name', $data['name'])->first();
                         if ($existingCustomer) {
                             $failures[] = [
@@ -272,7 +272,7 @@ class ImportInternetCustomer extends Command
             }
             
             // Generate kode pelanggan
-            $code = $this->generateCustomerCode();
+            // $code = $this->generateCustomerCode();
 
 
             $promoData = $this->checkPromo($internetPackage->id);
@@ -308,13 +308,13 @@ class ImportInternetCustomer extends Command
                 'subdistrict_id' => $subdistrict->id,
                 'internet_package_id' => $internetPackage->id,
                 'user_customer_id' => $userCustomer->id,
-                'code' => $code,
+                // 'code' => $code,
                 'name' => $data['name'],
                 'address' => $data['address'],
                 'ktp_number' => null,
                 'ktp_photo' => null,
                 'is_paid' => $promoData['has_free_months'], // Jika ada promo, langsung dianggap sudah bayar
-                'status' => $promoData['has_free_months'] ? ParamSchema::PROCESS_INSTALLATION : ParamSchema::WAITING_PAYMENT_CONFIRMATION,
+                'status' => $promoData['has_free_months'] ? ParamSchema::CUSTOMER_EXISTING : ParamSchema::WAITING_PAYMENT_CONFIRMATION,
             ]);
 
              $agreement = $this->createPartnershipAgreement(
@@ -372,6 +372,7 @@ class ImportInternetCustomer extends Command
     private function processPayment($internetCustomer, $internetPackage)
     {
         $internetCustomerPurchase = InternetCustomerPurchase::create([
+            'internet_package_id' => $internetPackage->id,
             'amount_paid' => $internetPackage->price_nett,
             'internet_customer_id' => $internetCustomer->id,
             'payment_method' => "transfer",
@@ -621,7 +622,7 @@ class ImportInternetCustomer extends Command
     {
         try {
             $customer->update([
-                'status' => ParamSchema::PROCESS_INSTALLATION,
+                'status' => ParamSchema::CUSTOMER_EXISTING,
             ]);
             
             $userTechnical = optional($customer->subdistrict->coverageService->coverageServiceOds)

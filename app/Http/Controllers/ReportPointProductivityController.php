@@ -24,7 +24,7 @@ class ReportPointProductivityController extends Controller
         // Set default date range from the start of the current month to today
         $startDate = Carbon::now()->startOfMonth();
         $endDate = Carbon::now()->endOfMonth();
-        $allUsers = User::byCompany(Auth::user()->company_id)->get();
+        $allUsers = User::isActive()->byCompany(Auth::user()->company_id)->get();
 
         // Retrieve the date range from the request if provided
         if ($request->has('start_date')) {
@@ -49,7 +49,7 @@ class ReportPointProductivityController extends Controller
         }
 
         // Retrieve all users
-        $users = $query->byCompany(Auth::user()->company_id)->paginate(10);
+        $users = $query->isActive()->byCompany(Auth::user()->company_id)->paginate(10);
 
         $complate = TaskStatus::select('id')->where('name',ParamSchema::COMPLATE)->firstOrFail()->id;
         // Map the user data to include points from each model within the date range
@@ -149,8 +149,13 @@ class ReportPointProductivityController extends Controller
                         });
                 })
                 ->sum('point');
+            $divisions = $user->divisions->isNotEmpty()
+            ? $user->divisions->pluck('name')->implode(', ')
+            : '-';
 
             return [
+                'company' => $user->company ? $user->company->name : '',
+                'division' => $divisions,
                 'name' => $user->name,
                 'training_points' => $trainingPoints,
                 'ip_right_points' => $ipRightPoints,
@@ -160,7 +165,7 @@ class ReportPointProductivityController extends Controller
             ];
         });
 
-        // Dispatch job
+        // Dispatch  job
         ExportReportPointProductivityJob::dispatch(
             $reports->toArray(),
             $startDate,

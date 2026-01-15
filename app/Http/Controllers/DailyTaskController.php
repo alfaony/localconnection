@@ -38,6 +38,7 @@ use App\Models\SettingCompany;
 use App\Models\Division;
 use App\Models\DivisionQuotaLock;
 use App\Models\RecurringRule;
+use App\Models\Project;
 
 use App\Helpers\InboxHelper;
 use Ramsey\Uuid\Uuid;
@@ -146,8 +147,8 @@ class DailyTaskController extends Controller
         
         // Filter berdasarkan project
         if ($dailyTaskProjects) {
-            $query->whereHas('project', function ($q) use ($dailyTaskProjects) {
-                $q->where('name', $dailyTaskProjects);
+            $query->whereHas('dataProject', function ($q) use ($dailyTaskProjects) {
+                $q->where('id', $dailyTaskProjects);
             });
         }
 
@@ -164,8 +165,8 @@ class DailyTaskController extends Controller
             'upcoming' => 'Upcoming'
         ];
         $users = User::byCompany(Auth::user()->company_id)->get(); // Ambil semua user, bisa disesuaikan
-        $taskStatuss = TaskStatus::bySort()->get(); // Ambil semua status tugas
-        $dailyTaskProjects = DailyTaskProject::byCompany(Auth::user()->company_id)->get(); 
+        $taskStatuss = TaskStatus::bySort(true)->get(); // Ambil semua status tugas
+        $dailyTaskProjects = Project::byCompany(Auth::user()->company_id)->get(); 
 
         // permission
         $isShow = Access::can('show','dailytasks');
@@ -416,8 +417,11 @@ class DailyTaskController extends Controller
             $daysMap = config('custom.day_name_code');
             $isOverdue = $dailytask->isOverdue();
 
+            // Get users for backlog assignment form
+            $users = User::byCompany(Auth::user()->company_id)->get();
+
             // Handle AJAX request
-            $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext','dailytaskChildCount', 'divisions'))->render();
+            $htmlContent = view('dailytask.sidebar', compact('dailytask', 'daysMap', 'isOverdue', 'doing', 'approvement','dailytaskNext','dailytaskChildCount', 'divisions', 'users'))->render();
             $htmlHeadContact = view('dailytask.sidebarhead', compact('dailytask'))->render();
             $htmlTableContent = view('dailytask.element-table', compact('dailytask'))->render();
             $htmlTableContentDashboard = view('dailytask.element-table-dashboard', compact('dailytask'))->render();
@@ -1676,9 +1680,19 @@ class DailyTaskController extends Controller
 
         $point = (int) $request->point;
         $divisionId = $request->division_id;
-        $month = now()->month;
-        $year = now()->year;
 
+        $now = Carbon::now();
+        $setting = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
+        $periodStartDay = $setting && $setting['range_start_date'] ? (int) $setting['range_start_date'] : 21;
+        
+        // Calculate period month and year
+        if ($now->day >= $periodStartDay) {
+            $month = $now->copy()->addMonth()->month;
+            $year = $now->copy()->addMonth()->year;
+        } else {
+            $month = $now->month;
+            $year = $now->year;
+        }
         if ($point <= 0) 
         {
             return response()->json([
@@ -1851,6 +1865,68 @@ class DailyTaskController extends Controller
             $dailyTask->save();
 
             $this->message($dailyTask->id, 'trash', 'System Memisahkan Tugas ' . $dailyTask->name . ' dari recurring');
+        }
+    }
+
+    /**
+     * Assign backlog task to user with dates
+     */
+    public function assignBacklog(Request $request, $slug)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $dailytask = DailyTask::where('slug', $slug)->firstOrFail();
+            
+            // Check if user belongs to the same company
+            $user = User::where('id', $request->user_id)
+                ->where('company_id', Auth::user()->company_id)
+                ->firstOrFail();
+
+            // Update task
+            $dailytask->assignment_user_id = $request->user_id;
+            $dailytask->start_date = $request->start_date;
+            $dailytask->end_date = $request->end_date;
+            
+            // Change status from backlog to todo
+            $todo = TaskStatus::where('name', ParamSchema::TODO)->firstOrFail();
+            $dailytask->task_status_id = $todo->id;
+            
+            $dailytask->save();
+
+            // Send notification
+            $directUrl = route('dailytask.show', ['dailytask' => $dailytask->slug]);
+            $this->sentInbox(
+                $request->user_id, 
+                Auth::user()->name . ' assigned backlog task: ' . $dailytask->name . ' to you', 
+                $directUrl
+            );
+
+            // Log the change
+            $this->message($dailytask->id, 'edit', 'Assigned backlog task ' . $dailytask->name . ' to ' . $user->name);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'data' => $dailytask,
+                'message' => 'Backlog task assigned successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Backlog assignment error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to assign backlog task: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

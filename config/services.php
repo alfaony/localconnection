@@ -103,4 +103,9 @@ return [
         'totebag_charge' => env('USED_LAPTOP_TOTE_BAG_CHARGE', 46421),
         'totebag_cover_charge' => env('USED_LAPTOP_TOTE_BAG_COVER_CHARGE', 3800),
     ],
+
+    'keloola_pay' =>
+    [
+        'base_url' => env('KELOOLOA_PAY_BASE_URL', 'https://pay.keloola.xyz'),
+    ]
 ];

@@ -10,9 +10,6 @@
         @if(Session::get('successEmail'))
         <div class="alert alert-success mt-3">Email Berhasil Dikirim</div>
         @endif
-        @if(Session::get('successEmail'))
-        <div class="alert alert-success mt-3">Email Berhasil Dikirim</div>
-        @endif
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul>

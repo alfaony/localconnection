@@ -213,7 +213,10 @@ class UsedLaptopController extends Controller
 
             $payload = (new UsedLaptopResource($laptop))->resolve();
 
-            WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'store', $payload);                               
+            // ✅ Hanya kirim webhook jika laptop sudah memiliki rack
+            if ($laptop->rack_id) {
+                WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'store', $payload);
+            }
             
             DB::commit();
             
@@ -317,7 +320,10 @@ class UsedLaptopController extends Controller
             // ];
             $payload = (new UsedLaptopResource($laptop))->resolve();
 
-            WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'sold', $payload);    
+            // ✅ Hanya kirim webhook jika laptop memiliki rack (QC PASSED)
+            if ($laptop->rack_id) {
+                WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'sold', $payload);
+            }
 
             DB::commit();
             return redirect()->route('used-laptop.show', $laptop->slug)->with('success', 'Laptop berhasil ditandai sebagai terjual!');
@@ -381,6 +387,9 @@ class UsedLaptopController extends Controller
 
             // Simpan atau update data laptop
             if ($laptop) {
+                // Track rack changes untuk webhook
+                $oldRackId = $laptop->rack_id;
+                
                 $laptop->update([
                     'is_sold' => $validated['is_sold'],
                     'weight' => $validated['weight'] ?? null,
@@ -400,7 +409,11 @@ class UsedLaptopController extends Controller
                     $laptop->rack_id = $validated['rack_id'] ?? null;
                     $laptop->save();
                 }
+                
+                // Track if rack was changed
+                $rackChanged = $oldRackId != $laptop->rack_id;
             } else {
+                $rackChanged = false;
                 $laptop = UsedLaptop::create([
                     'weight' => $validated['weight'] ?? null,
                     'name' => $validated['name'],
@@ -528,7 +541,11 @@ class UsedLaptopController extends Controller
             ->first();
 
 
-            if($shouldRun)
+            // ✅ Kirim webhook jika:
+            // 1. Webhook setting ada
+            // 2. Laptop memiliki rack_id (sudah QC PASSED)
+            // 3. Atau rack baru saja diubah (untuk sync ketika rack di-assign)
+            if($shouldRun && ($laptop->rack_id || $rackChanged))
             {
                 // $payload = [
                 //     'id' => $laptop->id,
@@ -573,10 +590,13 @@ class UsedLaptopController extends Controller
         $payload = [
             'id' => $laptop->id,
         ];
+        
+        // ✅ Hanya kirim webhook jika laptop memiliki rack (QC PASSED)
+        if ($laptop->rack_id) {
+            WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'delete', $payload);
+        }
+        
         $laptop->delete();
-
-
-        WebhookHelper::sendWebhook(Auth::user()->company_id, $this->appName, 'delete', $payload);  
         return redirect()->route('used-laptop.index')->with('success', 'Laptop berhasil dihapus!');
     }
 

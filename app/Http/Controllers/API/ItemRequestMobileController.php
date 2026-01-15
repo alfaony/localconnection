@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\DB;
 use App\Events\ChatMessageSent;
 use App\Jobs\SentMessageToVendor;
 
+use App\Models\SettingCompany;
+use App\Models\SupplierType;
+use App\Models\ProductSupplier;
+use App\Models\User;
+
 use App\Models\ItemRequest;
 use App\Models\SupplierCategory;
 use App\Models\PotentialVendor;
@@ -21,6 +26,10 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Helpers\InboxHelper;
 use App\Services\Weblas\Message;
+
+use App\Jobs\ProcessItemRequestCreated;
+
+use App\Services\Weblas\WablasClient;
 
 
 class ItemRequestMobileController extends BaseController
@@ -90,6 +99,52 @@ class ItemRequestMobileController extends BaseController
     }
 
 
+    public function categories()
+    {
+        $categories = SupplierCategory::byCompany(Auth::user()->company_id)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $categories
+        ]);
+    }
+
+    public function types()
+    {
+        $types = SupplierType::byCompany(Auth::user()->company_id)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $types
+        ]);
+    }
+
+    public function sprinters()
+    {
+        $sprinters = User::where('company_id', Auth::user()->company_id)
+            ->whereHas('role.permissions', function ($q) {
+                $q->where('method', 'as_sprinter')
+                ->where('table', 'item_requests');
+            })
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $sprinters
+        ]);
+    }
+
+    public function productSuppliers()
+    {
+        $products = ProductSupplier::byCompany(Auth::user()->company_id)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $products
+        ]);
+    }
+
+
     public function show($id)
     {
         try {
@@ -149,6 +204,15 @@ class ItemRequestMobileController extends BaseController
         $validated['supplier_type_id'] = $request->type;
 
         $item = ItemRequest::create($validated);
+
+        dispatch(new ProcessItemRequestCreated($item->id, $request->assigned_pic_id, $request->product_supplier_id));
+
+        $setting = SettingCompany::byCompany(Auth::user()->company_id)
+            ->where('menu','wablas')->pluck('field_value','field_title');
+
+        if ($request->shareWa && $setting['server_wablas'] && $setting['token_wablas']) {
+            dispatch(new SentMessageToVendor($item));
+        }
 
         return response()->json([
             'message' => 'Item request created',

@@ -57,21 +57,21 @@
                         </li>
                         <li>
                             <p style="margin-bottom: 20px;">
-                                <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, a limited liability company legally established and standing under Indonesian law domiciled in {{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : '[**]' }}, in this case represented by <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_represented_by']) ? e($agreementLetter->custom_fields['custom_first_party_represented_by']) : '[**]' }}</strong> its capacity as {{ isset($agreementLetter->custom_fields['custom_first_party_position']) ? e($agreementLetter->custom_fields['custom_first_party_position']) : '[**]' }}, therefore acting for and on behalf of <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, (hereinafter referred to as the <strong>"First Party"</strong>);
+                                @if(isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'company')
+                                <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, suatu perseroan terbatas yang didirikan dan berdiri secara sah berdasarkan hukum Indonesia yang beralamat di {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, dalam hal ini diwakili oleh {{ isset($agreementLetter->custom_fields['custom_second_party_represented_by']) ? e($agreementLetter->custom_fields['custom_second_party_represented_by']) : '[**]' }} sebagai <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_position']) ? e($agreementLetter->custom_fields['custom_second_party_position']) : '[**]' }}</strong>, secara sah bertindak untuk dan atas nama {{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}, (untuk selanjutnya disebut sebagai <strong>"Pihak kedua"</strong>).
+                                @else
+                                <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, individu yang beralamat di {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, bertindak untuk dan atas nama diri sendiri, (untuk selanjutnya disebut sebagai <strong>"Pihak kedua"</strong>).
+                                @endif
                             </p>
                         </li>
                     </ol>
-
+                    
                 </div>
                 <div class="offset-2 col-5 text-justify">
                     <ol>
                         <li>
                             <p style="margin-bottom: 20px;">
-                                @if(isset($agreementLetter->custom_fields['custom_second_party_type']) && $agreementLetter->custom_fields['custom_second_party_type'] == 'company')
-                                    <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, suatu perseroan terbatas yang didirikan dan berdiri secara sah berdasarkan hukum Indonesia yang beralamat di {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, dalam hal ini diwakili oleh {{ isset($agreementLetter->custom_fields['custom_second_party_represented_by']) ? e($agreementLetter->custom_fields['custom_second_party_represented_by']) : '[**]' }} sebagai <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_position']) ? e($agreementLetter->custom_fields['custom_second_party_position']) : '[**]' }}</strong>, secara sah bertindak untuk dan atas nama {{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}, (untuk selanjutnya disebut sebagai <strong>"Pihak kedua"</strong>).
-                                @else
-                                    <strong>{{ isset($agreementLetter->custom_fields['custom_second_party_name']) ? e($agreementLetter->custom_fields['custom_second_party_name']) : '[**]' }}</strong>, individu yang beralamat di {{ isset($agreementLetter->custom_fields['custom_second_party_address']) ? e($agreementLetter->custom_fields['custom_second_party_address']) : '[**]' }}, bertindak untuk dan atas nama diri sendiri, (untuk selanjutnya disebut sebagai <strong>"Pihak kedua"</strong>).
-                                @endif
+                                <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, a limited liability company legally established and standing under Indonesian law domiciled in {{ isset($agreementLetter->custom_fields['custom_first_party_address']) ? e($agreementLetter->custom_fields['custom_first_party_address']) : '[**]' }}, in this case represented by <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_represented_by']) ? e($agreementLetter->custom_fields['custom_first_party_represented_by']) : '[**]' }}</strong> its capacity as {{ isset($agreementLetter->custom_fields['custom_first_party_position']) ? e($agreementLetter->custom_fields['custom_first_party_position']) : '[**]' }}, therefore acting for and on behalf of <strong>{{ isset($agreementLetter->custom_fields['custom_first_party_company_name']) ? e($agreementLetter->custom_fields['custom_first_party_company_name']) : '[**]' }}</strong>, (hereinafter referred to as the <strong>"First Party"</strong>);
                             </p>
                         </li>
                         <li>
@@ -227,7 +227,7 @@
                     <h6><strong>PASAL 2</strong></h6>
                     <h6><strong>JANGKA WAKTU</strong></h6>
                     <p>
-                        Perjanjian ini mulai berlaku selama <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_duration_months']) ? '[' . $agreementLetter->custom_fields['custom_cooperation_duration_months'] . ']' : '[**]' }}</strong> bulan terhitung efektif sejak tanggal <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '[**]' }}</strong> sampai dengan tanggal <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_end_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_end_date'])->format('d F Y') : '[**]' }}</strong> dan dapat diperpanjang berdasarkan hasil review dan evaluasi yang dilakukan oleh Pihak Pertama.
+                        Perjanjian ini mulai berlaku selama <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_duration_months']) ? $agreementLetter->custom_fields['custom_cooperation_duration_months'] : '[**]' }}</strong> bulan terhitung efektif sejak tanggal <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '[**]' }}</strong> sampai dengan tanggal <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_end_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_end_date'])->format('d F Y') : '[**]' }}</strong> dan dapat diperpanjang berdasarkan hasil review dan evaluasi yang dilakukan oleh Pihak Pertama.
                     </p>
                     <p>
                         Evaluasi awal dilakukan setiap 30 (tiga puluh) hari dalam 3 bulan pertama, dan jika kerja sama diperpanjang, evaluasi berikutnya dilakukan setiap 3 (tiga) bulan.
@@ -237,7 +237,7 @@
                     <h6><strong>ARTICLE 2</strong></h6>
                     <h6><strong>TIME PERIOD</strong></h6>
                     <p>
-                        This agreement is valid for <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_duration_months']) ? '[' . $agreementLetter->custom_fields['custom_cooperation_duration_months'] . ']' : '[**]' }}</strong> months effective from <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '[**]' }}</strong> until <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_end_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_end_date'])->format('d F Y') : '[**]' }}</strong> and may be extended based on the review and evaluation conducted by the First Party.
+                        This agreement is valid for <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_duration_months']) ? $agreementLetter->custom_fields['custom_cooperation_duration_months'] : '[**]' }}</strong> months effective from <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_start_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_start_date'])->format('d F Y') : '[**]' }}</strong> until <strong>{{ isset($agreementLetter->custom_fields['custom_cooperation_end_date']) ? \Carbon\Carbon::parse($agreementLetter->custom_fields['custom_cooperation_end_date'])->format('d F Y') : '[**]' }}</strong> and may be extended based on the review and evaluation conducted by the First Party.
                     </p>
                     <p>
                         The initial evaluation shall be carried out every thirty (30) days during the first three months, and if the cooperation is extended, subsequent evaluations shall be conducted every three (3) months thereafter.
@@ -262,7 +262,7 @@
                     <ol>
                         <li>Melaksanakan kegiatan edukasi dan pelatihan sesuai rencana yang disetujui.</li>
                         <li>Mempromosikan link/kode afiliasi dengan etika dan cara yang sesuai hukum.</li>
-                        <li>Melaporkan data peserta yang membeli akun n8n melalui kode afiliasi.</li>
+                        <li>Melaporkan data peserta yang mengikuti kelas/seminar yang diselenggarakan</li>
                         <li>Tidak menyalahgunakan fasilitas atau melakukan kegiatan di luar perjanjian.</li>
                     </ol>
                 </div>
@@ -281,7 +281,7 @@
                     <ol>
                         <li>Conduct educational or training activities as per agreed plans.</li>
                         <li>Promote the affiliate link/code ethically and lawfully.</li>
-                        <li>Report participant data who purchased n8n accounts via the affiliate code.</li>
+                        <li>Reporting data on participants who attended classes/seminars held.</li>
                         <li>Refrain from misuse of facilities or activities beyond this agreement.</li>
                     </ol>
                 </div>
@@ -295,7 +295,13 @@
                     <ol>
                         <li>Pihak Kedua berhak menerima komisi sebesar <strong>{{ isset($agreementLetter->custom_fields['custom_commission_percentage']) ? $agreementLetter->custom_fields['custom_commission_percentage'] : '20' }}%</strong> dari transaksi pembelian akun berbayar yang dilakukan peserta dengan kode afiliasi miliknya.</li>
                         <li>Komisi dapat ditarik apabila saldo mencapai minimal <strong>{{ isset($agreementLetter->custom_fields['custom_minimum_withdrawal_amount']) ? 'Rp' . number_format($agreementLetter->custom_fields['custom_minimum_withdrawal_amount'], 0, ',', '.') : 'Rp500.000' }}</strong> (lima ratus ribu rupiah).</li>
-                        <li>Pembayaran dilakukan oleh Pihak Pertama paling lambat <strong>{{ isset($agreementLetter->custom_fields['custom_payment_duration_days']) ? $agreementLetter->custom_fields['custom_payment_duration_days'] : '7' }}</strong> (tujuh) hari kerja setelah verifikasi permintaan penarikan komisi.</li>
+                        <li>
+                            Komisi afiliasi akan dikenakan pemotongan Pajak Penghasilan (PPh) sebesar 2,5% dari total nilai komisi yang diterima.
+                        </li>
+                        <li>
+                            Untuk proses pencairan komisi, pihak Afiliasi wajib melampirkan NPWP, dan nomor rekening penerima harus sesuai dengan nama yang tercantum pada NPWP tersebut.
+                        </li>
+                        <li>Pembayaran dilakukan oleh Pihak Pertama paling lambat <strong>{{ isset($agreementLetter->custom_fields['custom_payment_duration_days']) ? $agreementLetter->custom_fields['custom_payment_duration_days'] : '7' }}</strong> hari kerja setelah verifikasi permintaan penarikan komisi.</li>
                         <li>Pihak Pertama berhak menahan pembayaran apabila ditemukan indikasi kecurangan (fraud) atau pelanggaran terhadap ketentuan afiliasi.</li>
                     </ol>
                 </div>
@@ -305,7 +311,13 @@
                     <ol>
                         <li>The Second Party is entitled to receive a <strong>{{ isset($agreementLetter->custom_fields['custom_commission_percentage']) ? $agreementLetter->custom_fields['custom_commission_percentage'] : '20' }}%</strong> commission from every paid account purchase made using their affiliate code.</li>
                         <li>Commissions can be withdrawn once the accumulated balance reaches a minimum of <strong>{{ isset($agreementLetter->custom_fields['custom_minimum_withdrawal_amount']) ? 'IDR ' . number_format($agreementLetter->custom_fields['custom_minimum_withdrawal_amount'], 0, ',', '.') : 'IDR 500,000' }}</strong> (five hundred thousand rupiah).</li>
-                        <li>Payment shall be made by the First Party no later than <strong>{{ isset($agreementLetter->custom_fields['custom_payment_duration_days']) ? $agreementLetter->custom_fields['custom_payment_duration_days'] : '7' }}</strong> (seven) working days after verification of the withdrawal request.</li>
+                        <li>
+                            Affiliate commissions will be subject to Income Tax (PPh) deductions of 2.5% of the total commission value received.
+                        </li>
+                        <li>
+                            For the commission disbursement process, Affiliates are required to attach their Taxpayer Identification Number (NPWP), and the recipient's account number must match the name listed on the NPWP.
+                        </li>
+                        <li>Payment shall be made by the First Party no later than <strong>{{ isset($agreementLetter->custom_fields['custom_payment_duration_days']) ? $agreementLetter->custom_fields['custom_payment_duration_days'] : '7' }}</strong> working days after verification of the withdrawal request.</li>
                         <li>The First Party reserves the right to withhold payment in case of suspected fraud or violation of the affiliate terms.</li>
                     </ol>
                 </div>

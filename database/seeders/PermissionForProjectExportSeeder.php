@@ -20,8 +20,8 @@ class PermissionForProjectExportSeeder extends Seeder
      */
     public function run()
     {   
-
-        $methodBast = ['export'];
+        
+        $methodBast = ['export','getSpkDetails'];
        
         $roles = Role::all();
 
@@ -44,6 +44,8 @@ class PermissionForProjectExportSeeder extends Seeder
                 PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
             }
         }
+
+        $this->call(ClearPermissionSeeder::class);
     }
 }
 

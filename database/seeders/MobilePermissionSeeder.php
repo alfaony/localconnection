@@ -59,25 +59,22 @@ class MobilePermissionSeeder extends Seeder
             ['table' => 'item_requests', 'method' => 'update', 'name' => 'Update item request (Mobile)', 'guard_name' => 'api'],
             ['table' => 'item_requests', 'method' => 'destroy', 'name' => 'Delete item request (Mobile)', 'guard_name' => 'api'],
             ['table' => 'item_requests', 'method' => 'workflowApi', 'name' => 'View workflow item request (Mobile)', 'guard_name' => 'api'],
-
             ['table' => 'item_requests', 'method' => 'addVendor', 'name' => 'Add vendor (Mobile)', 'guard_name' => 'api'],
             ['table' => 'item_requests', 'method' => 'delivery', 'name' => 'Delivery item request (Mobile)', 'guard_name' => 'api'],
-
             ['table' => 'item_requests', 'method' => 'getDelivery', 'name' => 'View delivery detail (Mobile)', 'guard_name' => 'api'],
-
             ['table' => 'item_requests', 'method' => 'loadByCompany', 'name' => 'Load item request by company (Mobile)', 'guard_name' => 'api'],
-
-
+            ['table' => 'item_requests', 'method' => 'categories', 'name' => 'Get item request categories (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'item_requests', 'method' => 'types', 'name' => 'Get item request type (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'item_requests', 'method' => 'sprinters', 'name' => 'Get item request sprinters (Mobile)', 'guard_name' => 'api'],
+            ['table' => 'item_requests', 'method' => 'productSuppliers', 'name' => 'Get item request suppliers (Mobile)', 'guard_name' => 'api'],
 
             ['table' => 'item_purchases', 'method' => 'store', 'name' => 'Create item purchase (Mobile)', 'guard_name' => 'api'],
             ['table' => 'item_purchases', 'method' => 'update', 'name' => 'Update item purchase (Mobile)', 'guard_name' => 'api'],
-
             ['table' => 'item_purchases', 'method' => 'payment', 'name' => 'Payment item purchase (Mobile)', 'guard_name' => 'api'],
-            
             ['table' => 'item_purchases', 'method' => 'getPayment', 'name' => 'Get Payment detail (Mobile)', 'guard_name' => 'api'],
-
             ['table' => 'item_purchases', 'method' => 'closed', 'name' => 'Close item request (Mobile)', 'guard_name' => 'api'],
             ['table' => 'item_purchases', 'method' => 'complete', 'name' => 'Complete item request (Mobile)', 'guard_name' => 'api'],
+
 
 
         ];

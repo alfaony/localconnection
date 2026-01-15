@@ -177,7 +177,19 @@ class validityUserOfCompany extends Command
             ->where('company_id', $user->company_id)
             ->where('id','!=',$user->id)
             ->first();
+            
+        $check = DailyTask::where('name', $naming)
+            ->where('assignment_user_id', $user->id)
+            ->whereDate('created_at', Carbon::today())
+            ->first();
+        if ($check) 
+        {
+            return;
+        }
 
+        // Pastikan poin punishment selalu bernilai negatif agar tidak menambah skor.
+        $penaltyPoint = -abs((int) ($point ?? 0));
+        
         $dailyTask = new DailyTask();
         $dailyTask->user_id = $admin ? $admin->id : $user->id;
         $dailyTask->task_status_id = $taskStatuss->id;
@@ -190,7 +202,7 @@ class validityUserOfCompany extends Command
         $dailyTask->name = $naming;
         $dailyTask->description = "<p>".$naming."</p>";
         $dailyTask->report_note = "<p>".$naming."</p>";
-        $dailyTask->point = $point;
+        $dailyTask->point = $penaltyPoint;
         $dailyTask->save();
 
         // dd($dailyTask);
@@ -203,11 +215,13 @@ class validityUserOfCompany extends Command
         $punishment = new PunishmentUser();
         $punishment->user_id = $user->id;
         $punishment->dailytask_id = $dailyTask->id;
-        $punishment->point = $point;
+        $punishment->point = $penaltyPoint;
         $punishment->save();
 
-        $url = route('dailytask.show', $dailyTask->slug);
-        $this->sentInbox($admin->id, $user->id, $naming, $url);
+        if ($admin) {
+            $url = route('dailytask.show', $dailyTask->slug);
+            $this->sentInbox($admin->id, $user->id, $naming, $url);
+        }
     }
 
 

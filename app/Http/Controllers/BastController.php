@@ -321,7 +321,7 @@ class BastController extends Controller
             return redirect()->to(route('bast.show',$bast->slug))->with('update', "BAST berhasil diupdate, Merge Sedang Di proses");
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            // dd($th);
             DB::rollBack();
             Log::error($th->getMessage());
             return redirect()->back()->with('update',false);
@@ -503,67 +503,90 @@ class BastController extends Controller
             // Retrieve the BAST and the selected merged file
             $bast = Bast::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
             
-            $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
-
-
-            // Retrieve the file path and ensure it exists
-            $filePath = Storage::path($bast->file_merge_path);
-            if (!Storage::exists($bast->file_merge_path)) {
+            // Check if file exists in storage (S3 or local)
+            if (!$bast->file_merge_path || !Storage::exists($bast->file_merge_path)) {
                 return redirect()->back()->with('error', 'Selected file does not exist.');
             }
 
-            // Send the email with the attachment
-            $data = 
-            [
-                'subject' => $request->subject,
-                'content' => $request->content,
-            ];
-
-            $nameFile = "BAST_".str_replace('/','-', $bast->number_result). '.pdf';
-            $attachments = [
-                $filePath => $nameFile,
-            ];
-
-            $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)->get()->pluck('field_value','field_title');
-            $fromEmail = $smtpConfig['username'] ?? '';
-            $fromName = $smtpConfig['name'] ?? '';
-            $toEmails = $request->to;
-            $toNames = $request->to;
-            $ccEmails = $request->cc;
-            $subject = $request->subject;
-            $tamplate = "email.bast_email";
-            $companyId = Auth::user()->company_id;
+            // Handle S3 file - download to temp location
+            $tempFilePath = null;
+            $nameFile = "BAST_" . str_replace('/', '-', $bast->number_result) . '.pdf';
             
-            EmailNotifHelper::sentEmail(
-                $fromEmail,
-                $fromName,
-                $toEmails, 
-                $toNames, 
-                $subject,
-                $tamplate,
-                $data, 
-                $smtpConfig, 
-                $companyId, 
-                $ccEmails,
-                [],
-                $attachments
-            );
-
-            // Simpan record ke database
-            $bastEmailRecord = new BastEmailRecord();
-            $bastEmailRecord->bast_id = $bast->id;
-            $bastEmailRecord->user_id = Auth::user()->id;
-            $bastEmailRecord->to = json_encode($request->to);
-            $bastEmailRecord->cc = json_encode($request->cc);
-            $bastEmailRecord->subject = $request->subject;
-            $bastEmailRecord->content = $request->content;
-            $bastEmailRecord->save();
+            try {
+                // Download from S3 to temporary location
+                $fileContents = Storage::get($bast->file_merge_path);
+                $tempFilePath = storage_path('app/temp/' . $nameFile);
+                
+                // Create temp directory if not exists
+                if (!file_exists(storage_path('app/temp'))) {
+                    mkdir(storage_path('app/temp'), 0755, true);
+                }
+                
+                // Save to temp file
+                file_put_contents($tempFilePath, $fileContents);
+                
+                // Prepare email data
+                $data = [
+                    'subject' => $request->subject,
+                    'content' => $request->content,
+                ];
+                
+                $attachments = [
+                    $tempFilePath => $nameFile,
+                ];
+                
+                // Get SMTP configuration
+                $smtpConfig = SettingCompany::byCompany(Auth::user()->company_id)
+                    ->get()->pluck('field_value', 'field_title');
+                    
+                $fromEmail = $smtpConfig['username'] ?? '';
+                $fromName = $smtpConfig['name'] ?? '';
+                $toEmails = $request->to;
+                $toNames = $request->to;
+                $ccEmails = $request->cc ?? [];
+                $subject = $request->subject;
+                $template = "email.bast_email";
+                $companyId = Auth::user()->company_id;
+                
+                // Send email using helper
+                EmailNotifHelper::sentEmail(
+                    $fromEmail,
+                    $fromName,
+                    $toEmails,
+                    $toNames,
+                    $subject,
+                    $template,
+                    $data,
+                    $smtpConfig,
+                    $companyId,
+                    $ccEmails,
+                    [],
+                    $attachments
+                );
+                
+                // Save email record to database
+                $bastEmailRecord = new BastEmailRecord();
+                $bastEmailRecord->bast_id = $bast->id;
+                $bastEmailRecord->user_id = Auth::user()->id;
+                $bastEmailRecord->to = json_encode($request->to);
+                $bastEmailRecord->cc = json_encode($request->cc);
+                $bastEmailRecord->subject = $request->subject;
+                $bastEmailRecord->content = $request->content;
+                $bastEmailRecord->save();
+                
+            } finally {
+                // Cleanup: Delete temp file
+                if ($tempFilePath && file_exists($tempFilePath)) {
+                    unlink($tempFilePath);
+                }
+            }
 
             return redirect()->back()->with('successEmail', true);
+            
         } catch (\Exception $e) {
-            // dd($e);
             \Log::error('Failed to send BAST email: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to send the email.');
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'Failed to send the email: ' . $e->getMessage());
         }
     }
 

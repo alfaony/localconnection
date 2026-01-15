@@ -22,8 +22,8 @@ class ClearPermissionSeeder extends Seeder
 
             foreach ($roles as $role) {
                 $roleId = $role->id;
-                Cache::forget("role_permissions:{$roleId}");
                 Access::clearCacheForRole($roleId);
+                Cache::forget("role_permissions:{$roleId}");
 
                 $this->command->info("✅ Cache role_permissions untuk {$role->name} role berhasil dihapus.");
             }
