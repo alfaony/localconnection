@@ -25,10 +25,11 @@ class PartnerParameterTypeController extends Controller
         return view('partners.parameter-types.createOrEdit', compact('parameterType', 'isEdit'));
     }
 
-    public function edit(PartnerParameterType $parameterType = null)
+    public function edit($id)
     {
         // If $parameterType is null, it's create mode
         // If $parameterType exists, it's edit mode
+        $parameterType = PartnerParameterType::find($id);
         $isEdit = $parameterType && $parameterType->exists;
         
         return view('partners.parameter-types.createOrEdit', compact('parameterType', 'isEdit'));
@@ -67,8 +68,9 @@ class PartnerParameterTypeController extends Controller
             ->with('success', 'Parameter type created successfully!');
     }
 
-    public function update(Request $request, PartnerParameterType $parameterType)
+    public function update(Request $request, $id)
     {
+        $parameterType = PartnerParameterType::findOrFail($id);
         $validated = $request->validate([
             'name' => [
                 'required',
@@ -78,14 +80,7 @@ class PartnerParameterTypeController extends Controller
                     ->ignore($parameterType->id)
                     ->where('company_id', Auth::user()->company_id)
             ],
-            'code' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('partner_parameter_types', 'code')
-                    ->ignore($parameterType->id)
-                    ->where('company_id', Auth::user()->company_id)
-            ],
+            // Code is readonly in edit mode, so we don't validate it
             'unit' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
@@ -95,6 +90,7 @@ class PartnerParameterTypeController extends Controller
         $validated['is_active'] = $request->boolean('is_active', true);
         $validated['sort_order'] = $validated['sort_order'] ?? 0;
 
+        // Don't update the code field as it's readonly
         $parameterType->update($validated);
 
         return redirect()->route('partner-parameter-type.index')
