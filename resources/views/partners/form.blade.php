@@ -185,6 +185,10 @@
 </div>
 
 @section('js')
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<!-- Select2 JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
         // Initialize Select2 for PIC user dropdown
@@ -196,6 +200,8 @@
 
         // Update custom file input label with filename
         $('#certification_file').on('change', function() {
+            console.log("okkkss");
+            
             const fileName = $(this).val().split('\\').pop();
             $(this).next('.custom-file-label').html(fileName || 'Choose file');
         });
@@ -212,4 +218,16 @@
         }
     });
 </script>
-@append
+@stop  
+
+@section('css')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+
+    .select2-dropdown {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+</style>
+@stop

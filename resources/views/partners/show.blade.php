@@ -66,11 +66,11 @@
                             <th>Status:</th>
                             <td>
                                 @if($partner->status == 'active')
-                                    <span class="badge badge-success">{{ $partner->status }}</span>
+                                    <span class="badge badge-success">{{ ucfirst($partner->status) }}</span>
                                 @elseif($partner->status == 'inactive')
-                                    <span class="badge badge-secondary">{{ $partner->status }}</span>
+                                    <span class="badge badge-secondary">{{ ucfirst($partner->status) }}</span>
                                 @else
-                                    <span class="badge badge-warning">{{ $partner->status }}</span>
+                                    <span class="badge badge-warning">{{ ucfirst($partner->status) }}</span>
                                 @endif
                             </td>
                         </tr>
@@ -103,7 +103,7 @@
                         @if($partner->is_certified)
                             <tr>
                                 <th>Level:</th>
-                                <td>{{ $partner->certification_level_name ?? '-' }}</td>
+                                <td>{{ ucfirst($partner->certification_level) ?? '-' }}</td>
                             </tr>
                             <tr>
                                 <th>Certified Date:</th>
@@ -158,21 +158,21 @@
                                 <td><strong>{{ $target->year }}</strong></td>
                                 <td>
                                     @if($target->status == 'active')
-                                        <span class="badge badge-success">{{ $target->status }}</span>
+                                        <span class="badge badge-success">{{ ucfirst($target->status) }}</span>
                                     @elseif($target->status == 'completed')
-                                        <span class="badge badge-info">{{ $target->status }}</span>
-                                    @status
-                                        <span class="badge badge-secondary">{{ $target->status }}</span>
+                                        <span class="badge badge-info">{{ ucfirst($target->status) }}</span>
+                                    @else
+                                        <span class="badge badge-secondary">{{ ucfirst($target->status) }}</span>
                                     @endif
                                 </td>
                                 <td>
-                                    <small>
+                                    
                                         @foreach($target->targetValues as $value)
-                                            <span class="badge badge-light">
+                                            <span class="badge badge-light font-weight-bold mr-1 mb-1">
                                                 {{ $value->parameterType->name }}: {{ number_format($value->target_value) }}
                                             </span>
                                         @endforeach
-                                    </small>
+                                    
                                 </td>
                                 <td>
                                     @php

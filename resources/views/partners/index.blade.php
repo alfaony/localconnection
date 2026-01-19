@@ -111,11 +111,11 @@
                                 <td>{{ $partner->industry ?? '-' }}</td>
                                 <td>
                                     @if($partner->status == 'active')
-                                        <span class="badge badge-success">{{ $partner->status }}</span>
+                                        <span class="badge badge-success">{{ ucwords($partner->status) }}</span>
                                     @elseif($partner->status == 'inactive')
-                                        <span class="badge badge-secondary">{{ $partner->status }}</span>
+                                        <span class="badge badge-secondary">{{ ucwords($partner->status) }}</span>
                                     @else
-                                        <span class="badge badge-warning">{{ $partner->status }}</span>
+                                        <span class="badge badge-warning">{{ ucwords($partner->status) }}</span>
                                     @endif
                                 </td>
                                 <td>
