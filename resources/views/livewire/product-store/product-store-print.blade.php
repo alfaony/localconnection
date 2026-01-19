@@ -103,7 +103,7 @@
                                                         <h5 class="label-title mb-1">{{ $barcode['name'] }}</h5>
                                                         <p class="label-text mb-1">{{ $barcode['brand'] ?? '' }}</p>
                                                         <p class="label-text mb-1">{{ $barcode['variant'] ?? '' }}</p>
-                                                        <p class="label-text text-bold">Rp. {{ number_format($barcode['price'], 0, ',', '.') }}</p>
+                                                        <p class="label-text text-bold">{{-- Rp. {{ number_format($barcode['price'], 0, ',', '.') }} --}}</p>
                                                     </div>
                                                     <div class="col-6 text-center">
                                                         <div class="d-inline-block">
@@ -118,7 +118,9 @@
                                                         {!! $barcode['svg'] !!}
                                                     </div>
                                                     <p class="barcode-price text-left mb-0 ml-3">
+                                                        {{-- 
                                                         Rp. {{ number_format($barcode['price'], 0, ',', '.') }}
+                                                        --}}
                                                     </p>
                                                 </div>
                                             @endif
