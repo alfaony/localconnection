@@ -140,7 +140,7 @@
                             </div>
                             
                             <div class="d-grid mt-5">
-                                <button type="submit" class="btn btn-primary btn-lg">
+                                <button type="submit" class="btn btn-primary btn-md">
                                     <i class="fas fa-sign-in-alt me-2"></i>Gabung Sekarang
                                 </button>
                             </div>

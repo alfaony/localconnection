@@ -137,7 +137,7 @@
                 <div class="card-body">
                     <div class="d-grid gap-2">
                         @canAccess('processPayment','store_sellings')
-                        <button class="btn btn-primary btn-lg mb-2" 
+                        <button class="btn btn-primary btn-md mb-2" 
                                 @click="nextStep"
                                 :disabled="!canGoToStep2">
                             <i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran
