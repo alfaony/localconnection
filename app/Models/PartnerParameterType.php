@@ -37,6 +37,7 @@ class PartnerParameterType extends Model
 
     public function scopebyCompany($query, $companyId)
     {
-        return $query->where('company_id', $companyId);
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+        return $query->whereIn('company_id', $companyIds);
     }
 }

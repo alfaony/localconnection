@@ -13,9 +13,6 @@ class PartnerController extends Controller
     {
         $query = Partner::query();
 
-        if ($request->filled('company_id')) {
-            $query->where('company_id', $request->company_id);
-        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -32,7 +29,7 @@ class PartnerController extends Controller
             });
         }
 
-        $partners = $query->orderBy('name')->paginate(15);
+        $partners = $query->byCompany(Auth::user()->company_id)->orderBy('name')->paginate(15);
 
         return view('partners.index', compact('partners'));
     }

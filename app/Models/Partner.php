@@ -38,4 +38,10 @@ class Partner extends Model
     {
         return config('partners.partner_types')[$this->partner_type] ?? $this->partner_type;
     }
+
+    public function scopebyCompany($query, $companyId)
+    {
+        $companyIds = auth()->user()->accessibleCompanies->pluck('id')->push($companyId)->unique();
+        return $query->whereIn('company_id', $companyIds);
+    }
 }
