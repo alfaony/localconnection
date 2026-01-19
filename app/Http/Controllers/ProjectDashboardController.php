@@ -174,7 +174,7 @@ class ProjectDashboardController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $divisions = $user->divisions()->paginate(10);
+        $divisions = $user->divisions()->get();
         $beforeAday = Carbon::now()->subDays(1)->format('d/m/Y');
         $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : NULL ;
         $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : NULL ;
