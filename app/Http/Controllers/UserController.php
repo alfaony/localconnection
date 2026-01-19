@@ -325,6 +325,22 @@ class UserController extends Controller
         return redirect()->back()->with('delete',true);
     }
 
+    public function saveFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        UserStatus::updateOrCreate(
+            ['user_id' => auth()->id()],
+            ['fcm_id' => $request->fcm_token]
+        );
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
+
     /**
      * User Profile edit
      */
