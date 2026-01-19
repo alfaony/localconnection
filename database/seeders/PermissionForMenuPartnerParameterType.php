@@ -27,7 +27,7 @@ class PermissionForMenuPartnerParameterType extends Seeder
         try {   
             $partnerDaashboard = ['dashboard','api'];
             $partner = ['index','create','store','edit','update','destroy','show'];
-            $partnerType = ['index','edit', 'create', 'update', 'show', 'destroy','toggleActive'];
+            $partnerType = ['index','edit', 'create', 'update', 'show', 'destroy','toggleActive','store'];
             $partnerTarget = ['index','create','store','edit','update','destroy'];
             $partnerMonthlyReport = ['manage','create','store','edit','update','destroy'];
             

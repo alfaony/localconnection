@@ -155,7 +155,7 @@
                     </div>
 
                     <div class="card-footer">
-                        @canAccess('edit','partner_parameter_types')
+                        @canAccess('update','partner_parameter_types')
                         @canAccess('store','partner_parameter_types')
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> {{ $isEdit ? 'Perbarui' : 'Simpan' }} Tipe Parameter
