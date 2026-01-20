@@ -91,7 +91,7 @@
         <!-- Summary Cards -->
         <div class="row">
             @foreach($chartData['parameters'] as $paramName => $data)
-                <div class="col-lg-4 col-md-6">
+                <div class="col-md-4 col-md-6">
                     <div class="small-box {{ $data['achievement_percentage'] >= 100 ? 'bg-success' : 'bg-info' }}">
                         <div class="inner">
                             <h3>{{ number_format($data['total_achievement'], 0) }}</h3>
@@ -192,19 +192,19 @@
         <div class="card">
             <div class="card-body text-center">
                 <a href="{{ route('partner.reports.manage', ['partner' => $partner, 'target' => $target]) }}" 
-                   class="btn btn-success btn-lg">
+                   class="btn btn-success btn-md">
                     <i class="fas fa-calendar-check"></i> Manage All Reports
                 </a>
                 <a href="{{ route('partner.reports.create', ['partner' => $partner, 'target' => $target]) }}" 
-                   class="btn btn-primary btn-lg">
+                   class="btn btn-primary btn-md">
                     <i class="fas fa-plus-circle"></i> Add Monthly Report
                 </a>
                 <a href="{{ route('partner.targets.edit', ['partner' => $partner, 'target' => $target]) }}" 
-                   class="btn btn-warning btn-lg">
+                   class="btn btn-warning btn-md">
                     <i class="fas fa-edit"></i> Edit Target
                 </a>
                 <a href="{{ route('partner.show', $partner) }}" 
-                   class="btn btn-default btn-lg">
+                   class="btn btn-default btn-md">
                     <i class="fas fa-arrow-left"></i> Back to Partner
                 </a>
             </div>

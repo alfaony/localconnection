@@ -1,17 +1,17 @@
 @extends('adminlte::page')
 
-@section('title', 'Year Comparison - ' . $partner->name)
+@section('title', 'Perbandingan Tahun - ' . $partner->name)
 
 @section('content_header')
     <div class="row">
         <div class="col-sm-6">
-            <h1><i class="fas fa-balance-scale"></i> Year Comparison: {{ $partner->name }}</h1>
+            <h1><i class="fas fa-balance-scale"></i> Perbandingan Tahun: {{ $partner->name }}</h1>
         </div>
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-                <li class="breadcrumb-item"><a href="{{ route('partners.index') }}">Partners</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('partners.show', $partner) }}">{{ $partner->name }}</a></li>
-                <li class="breadcrumb-item active">Comparison</li>
+                <li class="breadcrumb-item"><a href="{{ route('partner.index') }}">Mitra</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('partner.show', $partner) }}">{{ $partner->name }}</a></li>
+                <li class="breadcrumb-item active">Perbandingan</li>
             </ol>
         </div>
     </div>
@@ -26,7 +26,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label>First Year</label>
+                            <label>Tahun Pertama</label>
                             <select name="year" class="form-control">
                                 @foreach($availableYears as $year)
                                     <option value="{{ $year }}" {{ $year1 == $year ? 'selected' : '' }}>
@@ -38,7 +38,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label>Compare with Year</label>
+                            <label>Bandingkan dengan Tahun</label>
                             <select name="compare_year" class="form-control">
                                 @foreach($availableYears as $year)
                                     <option value="{{ $year }}" {{ $year2 == $year ? 'selected' : '' }}>
@@ -52,15 +52,15 @@
                         <div class="form-group">
                             <label>&nbsp;</label>
                             <button type="submit" class="btn btn-primary btn-block">
-                                <i class="fas fa-sync"></i> Compare
+                                <i class="fas fa-sync"></i> Bandingkan
                             </button>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="form-group">
                             <label>&nbsp;</label>
-                            <a href="{{ route('partners.dashboard', $partner) }}" class="btn btn-default btn-block">
-                                <i class="fas fa-chart-line"></i> Single View
+                            <a href="{{ route('partner.dashboard', $partner) }}" class="btn btn-default btn-block">
+                                <i class="fas fa-chart-line"></i> Tampilan Tunggal
                             </a>
                         </div>
                     </div>
@@ -72,7 +72,7 @@
     @if(!$target1 || !$target2)
         <div class="alert alert-warning">
             <i class="fas fa-exclamation-triangle"></i>
-            One or both years don't have targets. Please select years with existing targets.
+            Satu atau kedua tahun tidak memiliki target. Silakan pilih tahun yang memiliki target.
         </div>
     @else
         <!-- Comparison Summary -->
@@ -81,7 +81,7 @@
                 <div class="card card-primary">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fas fa-chart-bar"></i> Performance Comparison: {{ $year1 }} vs {{ $year2 }}
+                            <i class="fas fa-chart-bar"></i> Perbandingan Kinerja: {{ $year1 }} vs {{ $year2 }}
                         </h3>
                     </div>
                     <div class="card-body">
@@ -97,11 +97,11 @@
                                     <tr class="bg-gray-light">
                                         <th></th>
                                         <th class="text-right">Target</th>
-                                        <th class="text-right">Achievement</th>
+                                        <th class="text-right">Pencapaian</th>
                                         <th class="text-right">Target</th>
-                                        <th class="text-right">Achievement</th>
+                                        <th class="text-right">Pencapaian</th>
                                         <th class="text-right">Target %</th>
-                                        <th class="text-right">Achievement %</th>
+                                        <th class="text-right">Pencapaian %</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -133,7 +133,7 @@
                                                 </small>
                                             </td>
                                             
-                                            <!-- Growth -->
+                                            <!-- Pertumbuhan -->
                                             <td class="text-right">
                                                 @if($data['growth']['target'] > 0)
                                                     <span class="badge badge-success">
@@ -175,7 +175,7 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">
-                        <i class="fas fa-chart-line"></i> {{ $paramName }} Comparison
+                        <i class="fas fa-chart-line"></i> Perbandingan {{ $paramName }}
                     </h3>
                 </div>
                 <div class="card-body">
@@ -191,7 +191,7 @@
                                     Target: {{ number_format($data['year1']['target'], 0) }} {{ $data['unit'] }}
                                 </span>
                                 <span class="badge {{ $data['year1']['percentage'] >= 100 ? 'badge-success' : 'badge-warning' }}">
-                                    Achievement: {{ number_format($data['year1']['percentage'], 1) }}%
+                                    Pencapaian: {{ number_format($data['year1']['percentage'], 1) }}%
                                 </span>
                             </div>
                         </div>
@@ -207,7 +207,7 @@
                                     Target: {{ number_format($data['year2']['target'], 0) }} {{ $data['unit'] }}
                                 </span>
                                 <span class="badge {{ $data['year2']['percentage'] >= 100 ? 'badge-success' : 'badge-warning' }}">
-                                    Achievement: {{ number_format($data['year2']['percentage'], 1) }}%
+                                    Pencapaian: {{ number_format($data['year2']['percentage'], 1) }}%
                                 </span>
                             </div>
                         </div>
@@ -217,13 +217,13 @@
                     <div class="row mt-3">
                         <div class="col-md-12">
                             <div class="alert alert-{{ $data['growth']['achievement'] >= 0 ? 'success' : 'warning' }}">
-                                <strong>Growth Analysis:</strong>
+                                <strong>Analisis Pertumbuhan:</strong>
                                 @if($data['growth']['achievement'] > 0)
-                                    <i class="fas fa-arrow-up"></i> Achievement increased by {{ number_format($data['growth']['achievement'], 1) }}% from {{ $year1 }} to {{ $year2 }}
+                                    <i class="fas fa-arrow-up"></i> Pencapaian meningkat {{ number_format($data['growth']['achievement'], 1) }}% dari {{ $year1 }} ke {{ $year2 }}
                                 @elseif($data['growth']['achievement'] < 0)
-                                    <i class="fas fa-arrow-down"></i> Achievement decreased by {{ number_format(abs($data['growth']['achievement']), 1) }}% from {{ $year1 }} to {{ $year2 }}
+                                    <i class="fas fa-arrow-down"></i> Pencapaian menurun {{ number_format(abs($data['growth']['achievement']), 1) }}% dari {{ $year1 }} ke {{ $year2 }}
                                 @else
-                                    Achievement remained the same between {{ $year1 }} and {{ $year2 }}
+                                    Pencapaian tetap sama antara {{ $year1 }} dan {{ $year2 }}
                                 @endif
                             </div>
                         </div>
@@ -251,14 +251,14 @@
                 labels: chartData.labels,
                 datasets: [
                     {
-                        label: 'Monthly',
+                        label: 'Bulanan',
                         data: data.monthly,
                         backgroundColor: 'rgba(13, 110, 253, 0.8)',
                         borderColor: 'rgba(13, 110, 253, 1)',
                         borderWidth: 1
                     },
                     {
-                        label: 'Cumulative',
+                        label: 'Kumulatif',
                         data: data.cumulative,
                         type: 'line',
                         borderColor: 'rgba(255, 99, 132, 1)',
