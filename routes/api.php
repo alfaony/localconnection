@@ -163,6 +163,7 @@ Route::group(['middleware' => ['auth:api']], function()
         return Broadcast::auth($request);
     });
     Route::post('/user/fcm-token', [UserController::class, 'saveFcmToken']);
+    Route::get('/user/role-division', [UserController::class, 'getRoleAndDivision']);
     Route::post('logout', [LoginController::class, 'logout']);
 });
 

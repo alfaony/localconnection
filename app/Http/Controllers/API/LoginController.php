@@ -56,6 +56,16 @@ class LoginController extends BaseController
                     'name' => $div->name
                 ];
             });
+
+            if ($user->role) {
+                $success['role'] = [
+                    'id'   => $user->role->id,
+                    'name' => $user->role->name,
+                    'slug' => $user->role->slug,
+                ];
+            } else {
+                $success['role'] = null;
+            }
     
             return $this->sendResponse($success, 'User login successfully.');
         } 

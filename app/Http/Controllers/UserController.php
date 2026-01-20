@@ -332,12 +332,46 @@ class UserController extends Controller
         ]);
 
         UserStatus::updateOrCreate(
-            ['user_id' => auth()->id()],
-            ['fcm_id' => $request->fcm_token]
+            [
+                'user_id' => auth()->id(),
+                'browser_name' => ParamSchema::APK,
+            ],
+            [
+                'fcm_id' => $request->fcm_token,
+                'is_online' => 1,
+                'last_login_at' => now(),
+            ]
         );
 
         return response()->json([
             'success' => true
+        ]);
+    }
+
+    /**
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getRoleAndDivision()
+    {
+        $user = Auth::user();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'role' => $user->role ? [
+                    'id'   => $user->role->id,
+                    'name' => $user->role->name,
+                    'slug' => $user->role->slug,
+                ] : null,
+
+                'divisions' => $user->divisions->map(function ($division) {
+                    return [
+                        'id'   => $division->id,
+                        'name' => $division->name,
+                    ];
+                }),
+            ],
         ]);
     }
 

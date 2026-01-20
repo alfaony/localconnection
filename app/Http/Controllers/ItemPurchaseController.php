@@ -182,6 +182,9 @@ class ItemPurchaseController extends Controller
             // Kirim Notifikasi ke PIC
             $fcmTokens = UserStatus::where('user_id', $itemPurchase->itemRequest->assigned_pic_id)
                 ->pluck('fcm_id')
+                ->filter()
+                ->unique()
+                ->values()
                 ->toArray();
 
             app(ItemRequestNotificationService::class)->send(

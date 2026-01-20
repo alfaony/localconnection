@@ -103,21 +103,24 @@ class ItemRequestController extends Controller
 
         //Kirim ke mobile app 
         if ($request->assigned_pic_id) {
-        $fcmTokens = UserStatus::where('user_id', $request->assigned_pic_id)
+            $fcmTokens = UserStatus::where('user_id', $request->assigned_pic_id)
             ->pluck('fcm_id')
+            ->filter()
+            ->unique()
+            ->values()
             ->toArray();
 
-        app(ItemRequestNotificationService::class)->send(
-            $fcmTokens,
-            [
-                'event'       => 'item_request_created',
-                'request_id' => $item->id,
-                'sprinter_id'     => $request->assigned_pic_id,
-                'item_name'       => $item->item_name,
-                'message'         => "Permintaan barang {$item->item_name}",
-            ]
-        );
-    }
+            app(ItemRequestNotificationService::class)->send(
+                $fcmTokens,
+                [
+                    'event'       => 'item_request_created',
+                    'request_id' => $item->id,
+                    'sprinter_id'     => $request->assigned_pic_id,
+                    'item_name'       => $item->item_name,
+                    'message'         => "Permintaan barang {$item->item_name}",
+                ]
+            );
+        }
         return redirect()->route('item-request.show',$item->id)->with('success', 'Request submitted.');
     }
 
