@@ -137,6 +137,7 @@
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <div class="icheck-primary">
+                                        <input type="hidden" name="is_active" value="0">
                                         <input type="checkbox" 
                                                id="is_active" 
                                                name="is_active" 

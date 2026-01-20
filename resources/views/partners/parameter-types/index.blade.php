@@ -107,9 +107,9 @@
                                                 @csrf
                                                 @method('PATCH')
                                                 <button type="submit" 
-                                                        class="btn btn-sm {{ $parameter->is_active ? 'btn-secondary' : 'btn-success' }} mr-1 mb-1" 
+                                                        class="btn btn-sm {{ $parameter->is_active ? 'btn-success' : 'btn-secondary' }} mr-1 mb-1" 
                                                         title="{{ $parameter->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
-                                                    <i class="fas fa-{{ $parameter->is_active ? 'toggle-off' : 'toggle-on' }}"></i>
+                                                    <i class="fas fa-{{ $parameter->is_active ? 'toggle-on' : 'toggle-off' }}"></i>
                                                 </button>
                                             </form>
                                             @endcanAccess
