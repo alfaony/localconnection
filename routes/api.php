@@ -60,6 +60,12 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::resource('agreement-letter', AgreementLetterController::class);
 
     //Mobile
+    Route::get('users/division/{divisionId}', [DailyTaskMobileController::class, 'getUsersByDivision'])
+        ->name('users.division.mobile');
+    
+    Route::get('tasks/user/{userId}', [DailyTaskMobileController::class, 'indexTaskByUser'])
+        ->name('tasks.user.mobile');
+
     Route::get('tasks/today', [DailyTaskMobileController::class, 'indexToday']);
 
     Route::get('tasks/tomorrow', [DailyTaskMobileController::class, 'indexTomorrow']);
@@ -77,6 +83,7 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::resource('tasks', DailyTaskMobileController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
     
     Route::get('home/daily-task-summary', [HomeController::class, 'indexSummary']);
+    Route::get('tasks/division/{divisionId}', [DailyTaskMobileController::class, 'indexTaskByDivision']);
 
     Route::get('task-statuses', [DailyTaskMobileController::class, 'indexTaskStatuses']); 
     Route::get('daily-task-projects', [DailyTaskMobileController::class, 'indexDailyTaskProjects']); 

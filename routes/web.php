@@ -251,6 +251,23 @@ Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementCont
 Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
 Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->name('used-item.show-qr');
 
+
+  
+  // AJAX routes for role permission management (to avoid max_input_vars limit)
+// Additional routes untuk per-accordion functionality
+Route::post('role/updateName/{role}', [RoleController::class, 'updateName'])
+    ->name('role.update-name');
+
+Route::post('role/updateMenuPermissions/{role}', [RoleController::class, 'updateMenuPermissions'])
+    ->name('role.update-menu-permissions');
+
+Route::post('role/selectAll/{role}', [RoleController::class, 'selectAll'])
+    ->name('role.select-all');
+
+Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
+    ->name('role.deselect-all');
+
+
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
@@ -265,6 +282,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('xero/disconnect', [XeroController::class,'disconnect']);
   
   Route::get('project/export', [ProjectController::class,'export'])->name('project.export');
+  Route::get('project/getSpkDetails/{id}', [ProjectController::class, 'getSpkDetails'])->name('project.getSpkDetails');
   Route::resource('project', ProjectController::class);
   Route::resource('employee', EmployeeController::class);
   
@@ -339,6 +357,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('report-project', ReportProjectController::class);
 
   Route::resource('setting-company', SettingCompanyController::class)->only('index','store');
+  
   Route::resource('role', RoleController::class);
 
 
@@ -384,6 +403,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
   Route::get('report-productivity/export', [ReportPointProductivityController::class, 'export'])->name('report-productivity.export');
 
+  Route::post('dailytask/assignBacklog/{slug}', [DailyTaskController::class, 'assignBacklog'])->name('dailytask.assignBacklog');
   Route::get('/dailytask/export', [DailyTaskController::class, 'export'])->name('dailytask.export');
   Route::get('dailytask/template', [DailyTaskController::class, 'template'])->name('dailytask.template');
   Route::get('dailytask/downloadtemplate', [DailyTaskController::class, 'downloadtemplate'])->name('dailytask.downloadtemplate');

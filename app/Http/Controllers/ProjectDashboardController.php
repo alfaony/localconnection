@@ -174,7 +174,7 @@ class ProjectDashboardController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $divisions = $user->divisions()->paginate(10);
+        $divisions = $user->divisions()->get();
         $beforeAday = Carbon::now()->subDays(1)->format('d/m/Y');
         $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : NULL ;
         $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : NULL ;
@@ -195,7 +195,8 @@ class ProjectDashboardController extends Controller
                 $query->where('name', ParamSchema::DOING)
                     ->orWhere('name', ParamSchema::INREVIEW)
                     ->orWhere('name', ParamSchema::TODO)
-                    ->orWhere('name', ParamSchema::NOTCOMPLATE);
+                    ->orWhere('name', ParamSchema::NOTCOMPLATE)
+                    ->orWhere('name', ParamSchema::BACKLOG);
             });
 
         if ($filter === 'overdue') {
@@ -208,7 +209,16 @@ class ProjectDashboardController extends Controller
                 ]);
             }
         } elseif ($filter === 'upcoming') {
-            $query->where('end_date', '>=', $today);
+            // Show tasks with end_date >= today OR backlog tasks without end_date
+            $query->where(function ($q) use ($today) {
+                $q->where('end_date', '>=', $today)
+                    ->orWhere(function ($subQ) {
+                        $subQ->whereNull('end_date')
+                            ->whereHas('taskStatus', function ($statusQ) {
+                                $statusQ->where('name', ParamSchema::BACKLOG);
+                            });
+                    });
+            });
         }
 
         $tasks = $query->get()->map(function ($task) {
@@ -394,12 +404,23 @@ class ProjectDashboardController extends Controller
 
         $upcomingTasksQuery = User::byCompany(Auth::user()->company_id)
             ->withCount(['dailyTaskAssigns' => function ($query) use ($today) {
-                $query->where('end_date', '>=', $today);
+                // Show tasks with end_date >= today OR tasks without end_date (NULL) that have backlog status
+                $query->where(function ($q) use ($today) {
+                    $q->where('end_date', '>=', $today)
+                        ->orWhere(function ($subQ) {
+                            $subQ->whereNull('end_date')
+                                ->whereHas('taskStatus', function ($statusQ) {
+                                    $statusQ->where('name', ParamSchema::BACKLOG);
+                                });
+                        });
+                });
+                
                 $query->whereHas('taskStatus', function ($query) {
                     $query->where('name', ParamSchema::DOING)
                         ->orWhere('name', ParamSchema::INREVIEW)
                         ->orWhere('name', ParamSchema::TODO)
-                        ->orWhere('name', ParamSchema::NOTCOMPLATE);
+                        ->orWhere('name', ParamSchema::NOTCOMPLATE)
+                        ->orWhere('name', ParamSchema::BACKLOG);
                 });
             }])->orderBy('daily_task_assigns_count', 'desc');
 

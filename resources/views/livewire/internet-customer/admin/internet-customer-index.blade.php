@@ -47,6 +47,7 @@
                             <option value="reactivated">Reaktivasi</option>
                             <option value="active">Aktif</option>
                             <option value="suspended">Dihentikan</option>
+                            <option value="inactive">Tidak Aktif</option>
                             <option value="closed">Tutup</option>
                         </select>
                     </div>

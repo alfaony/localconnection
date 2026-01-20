@@ -11,7 +11,7 @@ use App\Schemas\RoleSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PermissionForProjectExportSeeder extends Seeder
+class PermissionForMenuChangeAssignBacklogSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -21,7 +21,7 @@ class PermissionForProjectExportSeeder extends Seeder
     public function run()
     {   
         
-        $methodBast = ['export','getSpkDetails'];
+        $methodBast = ['assignBacklog'];
        
         $roles = Role::all();
 
@@ -30,11 +30,11 @@ class PermissionForProjectExportSeeder extends Seeder
         {
             // create permision
             $permission = Permission::firstOrCreate([
-                'name' => ucwords($method).' Project',
+                'name' => ucwords($method).' ',
             ],[
                 'method' => $method,
-                'table' => 'projects',
-                'model' => 'Project',
+                'table' => 'dailytasks',
+                'model' => 'Dailytask',
                 'guard_name' => 'web'
             ]);
 
@@ -48,6 +48,7 @@ class PermissionForProjectExportSeeder extends Seeder
         $this->call(ClearPermissionSeeder::class);
     }
 }
+
 
 
 

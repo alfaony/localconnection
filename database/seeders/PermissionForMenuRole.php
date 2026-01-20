@@ -11,7 +11,7 @@ use App\Schemas\RoleSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PermissionForProjectExportSeeder extends Seeder
+class PermissionForMenuRole extends Seeder
 {
     /**
      * Run the database seeds.
@@ -20,38 +20,30 @@ class PermissionForProjectExportSeeder extends Seeder
      */
     public function run()
     {   
-        
-        $methodBast = ['export','getSpkDetails'];
+
+        $methods = ['updateName','updateMenuPermissions','selectAll','deselectAll'];
        
-        $roles = Role::all();
+        $root = Role::where('name',RoleSchema::ROOT)->first();
 
 
-        foreach ($methodBast as $method) 
+        foreach ($methods as $method) 
         {
             // create permision
             $permission = Permission::firstOrCreate([
-                'name' => ucwords($method).' Project',
+                'name' => ucwords($method).' Shifting Ob',
             ],[
                 'method' => $method,
-                'table' => 'projects',
-                'model' => 'Project',
+                'table' => 'roles',
+                'model' => 'Role',
                 'guard_name' => 'web'
             ]);
 
             //assign role & permission
-            foreach ($roles as $role) 
-            {
-                PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
-            }
-        }
+            PermissionRole::create(['role_id' => $root->id, 'permission_id' => $permission->id]);
 
-        $this->call(ClearPermissionSeeder::class);
+        }
     }
 }
-
-
-
-
 
 
 

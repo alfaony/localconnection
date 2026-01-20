@@ -87,11 +87,11 @@
 
             <div class="col-12 col-md-3">
                 <div class="form-group">
-                    <label for="division">Main Proyek</label>
+                    <label for="division">Data Proyek</label>
                     <select class="form-control select2" name="daily_task_project">
-                        <option value="">-- Main Proyek --</option>
+                        <option value="">-- Data Proyek --</option>
                         @foreach ($dailyTaskProjects as $dailyTaskProject)
-                            <option value="{{ $dailyTaskProject->name }}" {{ request('daily_task_project') == $dailyTaskProject->name ? 'selected' : '' }}>{{ $dailyTaskProject->name }}</option>
+                            <option value="{{ $dailyTaskProject->id }}" {{ request('daily_task_project') == $dailyTaskProject->id ? 'selected' : '' }}>{{ $dailyTaskProject->title }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -193,6 +193,9 @@
                         </td>
                         <td>
                         @switch($dailytask->taskStatus->name)
+                            @case('backlog')
+                                <i class="fa fa-history"></i> Backlog
+                                @break
                             @case('todo')
                                 <i class="fa fa-list-alt"></i> Todo
                                 @break
@@ -325,6 +328,94 @@
 <script src="https://unpkg.com/browser-image-compression/dist/browser-image-compression.js"></script>
 
 @canAccess('approvement','dailytasks')
+<script>
+    $(document).on('click', '#submitApprovement, #submitAndContinue', function(e) {
+        e.preventDefault();
+
+        // Show confirmation alert
+        Swal.fire({
+            title: 'Anda yakin?',
+            text: "Anda tidak dapat membatalkan ini!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, setujui!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Proceed with form submission
+                let isContinue = $(this).attr('id') === 'submitAndContinue';
+                let nextTaskId = $('#submitAndContinue').data('next-id'); // Assuming you have the next task slug in a data attribute
+
+                var formData = $('#approvementForm').serialize(); // Get all form data
+                var slug = $('#submitApprovementSlug').val(); 
+                let url = "{{ route('dailytask.approvement', ':id') }}";
+                url = url.replace(':id', slug);
+                
+                $.ajax({
+                    url: url,
+                    method: 'PUT',
+                    data: formData + '&_token=' + '{{ csrf_token() }}', // Include CSRF token in the data
+                    beforeSend: function() {
+                        // Show a loading spinner or disable the button during submission
+                        $('#submitApprovement').attr('disabled', true).text('Processing...');
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Task approved successfully!',
+                                timer: 1000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                console.log(isContinue, nextTaskId);
+                                
+
+                                if (isContinue && nextTaskId) 
+                                {
+                                    reloadPopupContent(slug); // Function to reload the popup content
+                                    let bsOffcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('sidePopup'));
+                                    bsOffcanvas.hide();
+
+                                    // After closing, trigger the click on the next task button
+                                    setTimeout(function() {
+                                        $("#btn-show-" + nextTaskId).click();
+                                    }, 400); // Delay to ensure the popup closes before opening the next one
+                                    
+                                } else 
+                                {
+                                    reloadPopupContent(slug); // Function to reload the popup content
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to approve the task. Please try again.'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred. Please try again.'
+                        });
+                    },
+                    complete: function() {
+                        // Re-enable the button and reset the text after submission
+                        $('#submitApprovement').attr('disabled', false).text('Simpan Tugas');
+                    }
+                });
+            }
+        });
+    });
+</script>
+@endcanAccess
+
+@canAccess('approvement','dailytasks')
 @canAccess('checkDivisionQuota','dailytasks')
 <script>
     let selectedDivisionId = null;
@@ -438,6 +529,11 @@
                     if ($('#sidePopup .offcanvas-body').find('#dropzone').length > 0) {
                         initializeDropzone()
                     }
+                    if ($('#sidePopup .offcanvas-body').find('.select2').length > 0)
+                    {
+                        initializeSelect2();
+                    }
+                    
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -486,7 +582,22 @@
             });
         }
     });
-    
+
+    function initializeSelect2() {
+        // Destroy existing select2 instances within the popup to avoid duplication
+        $('#backlog_user_id').each(function() {
+            if ($(this).hasClass('select2-hidden-accessible')) {
+                $(this).select2('destroy');
+            }
+        });
+        
+        // Initialize select2 for elements in the offcanvas
+        $('#sidePopup .select2').select2({
+            width: '100%',
+            dropdownParent: $('#sidePopup')
+        });
+    }
+
     function reloadPopupContent(taskSlug) 
     {
         let url = "{{ route('dailytask.show', ':id') }}";

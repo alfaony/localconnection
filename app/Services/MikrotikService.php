@@ -57,12 +57,20 @@ class MikrotikService {
         $rows = $this->client
             ->query((new Query('/ppp/active/print'))->where('name', $name))
             ->read();
-        // dd($rows);
-        foreach ($rows as $r) {
-            if (!empty($r['.id'])) {
-                $this->client
-                    ->query((new Query('/ppp/active/remove'))->equal('.id', $r['.id']))
-                    ->read();
+        foreach ($rows as $row) {
+            if (isset($row['.id'])) {
+                $this->client->query((new Query('/ppp/active/remove'))->equal('.id', $row['.id']))->read();
+            }
+        }
+    }
+
+    public function removeUser($id) {
+        $rows = $this->client
+            ->query((new Query('/ppp/secret/print'))->where('comment', $id))
+            ->read();
+        foreach ($rows as $row) {
+            if (isset($row['.id'])) {
+                $this->client->query((new Query('/ppp/secret/remove'))->equal('.id', $row['.id']))->read();
             }
         }
     }
