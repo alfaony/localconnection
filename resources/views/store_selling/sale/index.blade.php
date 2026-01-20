@@ -3,7 +3,7 @@
 @section('title', 'Store Selling - Point of Sale')
 
 @section('content')
-<div id="app">
+<div id="app" v-cloak>
     <!-- Loading Overlay -->
     <div v-if="isLoading" class="loading-overlay">
         <div class="loading-content">
@@ -271,6 +271,11 @@
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFGL54KgFHzqc0QLb3+gfRS0lM9F9NTv4M78HaRh4VM3YEH46Q" crossorigin="anonymous">
 <style>
+    /* Prevent Vue template flash */
+    [v-cloak] {
+        display: none !important;
+    }
+
     /* Loading Overlay */
     .loading-overlay {
         position: fixed;
@@ -443,11 +448,13 @@
     .table td {
         vertical-align: middle;
         border-top: 1px solid rgba(0,0,0,0.05);
+        padding: 0.75rem;
     }
     
     .table thead th {
         border-bottom: 2px solid #dee2e6;
         font-weight: 600;
+        padding: 0.75rem;
     }
     
     .input-group input[type="number"] {
@@ -458,6 +465,27 @@
     .input-group input[type="number"]::-webkit-inner-spin-button {
         -webkit-appearance: none;
         margin: 0;
+    }
+
+    /* Price Input Styles */
+    .price-input {
+        font-weight: 600;
+        background-color: #f8fff9;
+        border: 1px solid #d4edda;
+        transition: all 0.2s ease;
+    }
+    
+    .price-input:focus {
+        background-color: #ffffff;
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.15);
+        outline: none;
+    }
+    
+    .price-input:hover {
+        background-color: #ffffff;
+        border-color: #28a745;
+        cursor: pointer;
     }
 
     /* Receipt Styles */
@@ -768,9 +796,18 @@ createApp({
                     code: product.code,
                     name: product.name,
                     price: product.selling_price,
+                    originalPrice: product.selling_price, // Store original price
                     quantity: 1
                 });
             }
+        };
+
+        const updatePrice = (index, newPrice) => {
+            if (newPrice < 0) {
+                cartItems.value[index].price = 0;
+                return;
+            }
+            cartItems.value[index].price = parseFloat(newPrice) || 0;
         };
 
         const updateQuantity = (index, newQuantity) => {

@@ -41,11 +41,11 @@
                         <table class="table table-hover mb-0">
                             <thead class="bg-light">
                                 <tr>
-                                    <th>Produk</th>
-                                    <th width="120" class="text-right">Harga</th>
-                                    <th width="140">Qty</th>
-                                    <th width="120" class="text-right">Subtotal</th>
-                                    <th width="80" class="text-center">Aksi</th>
+                                    <th width="35%">Produk</th>
+                                    <th width="20%" class="text-right">Harga</th>
+                                    <th width="20%" class="text-center">Qty</th>
+                                    <th width="17%" class="text-right">Subtotal</th>
+                                    <th width="8%" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -54,21 +54,38 @@
                                         <div class="font-weight-bold">@{{ item.name }}</div>
                                         {{--<small class="text-muted">SKU: @{{ item.code }}</small>--}}
                                     </td>
-                                    <td class="text-right">@{{ formatCurrency(item.price) }}</td>
-                                    <td>
+                                    <td class="text-right" style="padding-right: 1rem;">
+                                        <input type="number" 
+                                               class="form-control form-control-sm text-right price-input" 
+                                               v-model.number="item.price"
+                                               @change="updatePrice(index, item.price)"
+                                               min="0"
+                                               step="1000"
+                                               title="Klik untuk edit harga"
+                                               style="width: 100%; min-width: 120px;">
+                                        <small v-if="item.originalPrice && item.price !== item.originalPrice" 
+                                               class="text-warning d-block mt-1"
+                                               style="font-size: 0.7rem;">
+                                            Asli: <del class="text-muted">@{{ formatCurrency(item.originalPrice) }}</del>
+                                        </small>
+                                    </td>
+                                    <td style="padding: 0.5rem 1rem;">
                                         <div class="input-group input-group-sm">
                                             <button class="btn btn-outline-secondary" 
                                                     @click="updateQuantity(index, item.quantity - 1)"
-                                                    :disabled="item.quantity <= 1">
+                                                    :disabled="item.quantity <= 1"
+                                                    style="padding: 0.25rem 0.5rem;">
                                                 <i class="fas fa-minus"></i>
                                             </button>
                                             <input type="number" 
                                                    class="form-control text-center" 
                                                    v-model.number="item.quantity"
                                                    @change="validateQuantity(item)"
-                                                   min="1">
+                                                   min="1"
+                                                   style="max-width: 70px;">
                                             <button class="btn btn-outline-secondary" 
-                                                    @click="updateQuantity(index, item.quantity + 1)">
+                                                    @click="updateQuantity(index, item.quantity + 1)"
+                                                    style="padding: 0.25rem 0.5rem;">
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
