@@ -97,8 +97,9 @@ class PartnerParameterTypeController extends Controller
             ->with('success', 'Parameter type updated successfully!');
     }
 
-    public function destroy(PartnerParameterType $parameterType)
+    public function destroy($id)
     {
+        $parameterType = PartnerParameterType::findOrFail($id);
         // Check if parameter type is being used
         if ($parameterType->targetValues()->count() > 0) {
             return redirect()->route('partner-parameter-type.index')
