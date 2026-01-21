@@ -364,16 +364,69 @@
             dropdownParent: $('#filterPanel')
         });
 
-        // Langsung apply filter saat pilih user
         $('#userSelect').off('change').on('change', function() {
+            // Skip jika sedang programmatic clear
+            if ($(this).data('clearing')) {
+                return;
+            }
+            
             @this.set('temp_user_id', $(this).val());
             
-            // Auto-apply filter
             setTimeout(function() {
                 syncFiltersToLivewire();
                 @this.call('applyFilters');
             }, 100);
         });
+    }
+
+    function removeIndividualFilter(filterType) 
+    {
+        switch(filterType) {
+            case 'search':
+                @this.set('filter_search', '').then(() => {
+                    @this.set('temp_search', '');
+                    $('#tempSearch').val('');
+                    @this.call('applyFilters');
+                });
+                break;
+            case 'user':
+                $('#userSelect').data('clearing', true);
+                @this.set('filter_user_id', '').then(() => {
+                    @this.set('temp_user_id', '');
+                    $('#userSelect').val(null).trigger('change.select2');
+                    $('#userSelect').data('clearing', false);
+                    @this.call('applyFilters');
+                });
+                break;
+            case 'start_date':
+                @this.set('filter_start_date', '').then(() => {
+                    @this.set('temp_start_date', '');
+                    $('#tempStartDate').val('');
+                    @this.call('applyFilters');
+                });
+                break;
+            case 'end_date':
+                @this.set('filter_end_date', '').then(() => {
+                    @this.set('temp_end_date', '');
+                    $('#tempEndDate').val('');
+                    @this.call('applyFilters');
+                });
+                break;
+            case 'start_time':
+                @this.set('filter_start_time', '').then(() => {
+                    @this.set('temp_start_time', '');
+                    $('#tempStartTime').val('');
+                    @this.call('applyFilters');
+                });
+                break;
+            case 'end_time':
+                @this.set('filter_end_time', '').then(() => {
+                    @this.set('temp_end_time', '');
+                    $('#tempEndTime').val('');
+                    @this.call('applyFilters');
+                });
+                break;
+        }
     }
 
     function syncFiltersToLivewire() {
@@ -383,41 +436,6 @@
         @this.set('temp_start_time', $('#tempStartTime').val());
         @this.set('temp_end_time', $('#tempEndTime').val());
         @this.set('temp_user_id', $('#userSelect').val());
-    }
-
-    function removeIndividualFilter(filterType) {
-        switch(filterType) {
-            case 'search':
-                @this.set('filter_search', '');
-                @this.set('temp_search', '');
-                $('#tempSearch').val('');
-                break;
-            case 'user':
-                @this.set('filter_user_id', '');
-                @this.set('temp_user_id', '');
-                $('#userSelect').val('').trigger('change');
-                break;
-            case 'start_date':
-                @this.set('filter_start_date', '');
-                @this.set('temp_start_date', '');
-                $('#tempStartDate').val('');
-                break;
-            case 'end_date':
-                @this.set('filter_end_date', '');
-                @this.set('temp_end_date', '');
-                $('#tempEndDate').val('');
-                break;
-            case 'start_time':
-                @this.set('filter_start_time', '');
-                @this.set('temp_start_time', '');
-                $('#tempStartTime').val('');
-                break;
-            case 'end_time':
-                @this.set('filter_end_time', '');
-                @this.set('temp_end_time', '');
-                $('#tempEndTime').val('');
-                break;
-        }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
