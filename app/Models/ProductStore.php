@@ -52,8 +52,10 @@ class ProductStore extends Model
             {
                 $model->{$model->getKeyName()} = Uuid::uuid4()->toString();
             }
-
-            $model->barcode = self::generateBarcode();
+            if($model->barcode == null)
+            {
+                $model->barcode = self::generateBarcode();
+            }
             $model->dimension = $model->length . ' x ' . $model->width . ' x ' . $model->height;
         });
 
