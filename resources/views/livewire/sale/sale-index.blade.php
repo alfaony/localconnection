@@ -351,64 +351,31 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Select2
-        initializeSelect2();
-        
-        // Toggle filter panel
-        $('#searchToggleBtn').on('click', function() {
-            $('#filterPanel').collapse('toggle');
-        });
-
-        // Auto-open filter panel if any filter is active
-        @if($filter_search || $filter_start_date || $filter_end_date || $filter_start_time || $filter_end_time || $filter_user_id)
-            $('#filterPanel').collapse('show');
-        @endif
-
-        // Apply Filters Button
-        $('#applyFiltersBtn').on('click', function(e) {
-            e.preventDefault();
-            syncFiltersToLivewire();
-            @this.call('applyFilters');
-        });
-
-        // Clear Filters Button
-        $('#clearFiltersBtn').on('click', function(e) {
-            e.preventDefault();
-            @this.call('clearFilters');
-        });
-
-        // Handle individual filter badge removal
-        $(document).on('click', '.badge-remove', function() {
-            const filterType = $(this).data('filter');
-            removeIndividualFilter(filterType);
-        });
-
-        // Enter key to search on text inputs
-        $('#tempSearch, #tempStartDate, #tempEndDate, #tempStartTime, #tempEndTime').on('keypress', function(e) {
-            if (e.which === 13) { // Enter key
-                e.preventDefault();
-                $('#applyFiltersBtn').click();
-            }
-        });
-    });
-
-    // Initialize Select2 with proper configuration
     function initializeSelect2() {
+        if ($('#userSelect').hasClass('select2-hidden-accessible')) {
+            $('#userSelect').select2('destroy');
+        }
+
         $('#userSelect').select2({
             theme: 'bootstrap-5',
             placeholder: 'Pilih User',
             allowClear: true,
-            width: '100%'
+            width: '100%',
+            dropdownParent: $('#filterPanel')
         });
 
-        // Update temp_user_id when Select2 value changes (but don't apply filter yet)
-        $('#userSelect').on('change', function() {
+        // Langsung apply filter saat pilih user
+        $('#userSelect').off('change').on('change', function() {
             @this.set('temp_user_id', $(this).val());
+            
+            // Auto-apply filter
+            setTimeout(function() {
+                syncFiltersToLivewire();
+                @this.call('applyFilters');
+            }, 100);
         });
     }
 
-    // Sync all filter inputs to Livewire properties
     function syncFiltersToLivewire() {
         @this.set('temp_search', $('#tempSearch').val());
         @this.set('temp_start_date', $('#tempStartDate').val());
@@ -418,7 +385,6 @@
         @this.set('temp_user_id', $('#userSelect').val());
     }
 
-    // Remove individual filter
     function removeIndividualFilter(filterType) {
         switch(filterType) {
             case 'search':
@@ -454,14 +420,54 @@
         }
     }
 
-    // Listen for Livewire events
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeSelect2();
+        
+        $('#searchToggleBtn').on('click', function() {
+            $('#filterPanel').collapse('toggle');
+        });
+
+        @if($filter_search || $filter_start_date || $filter_end_date || $filter_start_time || $filter_end_time || $filter_user_id)
+            $('#filterPanel').collapse('show');
+        @endif
+
+        $(document).on('click', '#applyFiltersBtn', function(e) {
+            e.preventDefault();
+            syncFiltersToLivewire();
+            @this.call('applyFilters');
+        });
+
+        $(document).on('click', '#clearFiltersBtn', function(e) {
+            e.preventDefault();
+            @this.call('clearFilters');
+        });
+
+        $(document).on('click', '.badge-remove', function() {
+            removeIndividualFilter($(this).data('filter'));
+        });
+
+        $(document).on('keypress', '#tempSearch, #tempStartDate, #tempEndDate, #tempStartTime, #tempEndTime', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                $('#applyFiltersBtn').click();
+            }
+        });
+    });
+
     document.addEventListener('livewire:load', function() {
-        // After filters are applied, update the UI
+        Livewire.hook('message.processed', (message, component) => {
+            initializeSelect2();
+            $('#userSelect').val(@this.temp_user_id).trigger('change.select2');
+            $('#tempSearch').val(@this.temp_search);
+            $('#tempStartDate').val(@this.temp_start_date);
+            $('#tempEndDate').val(@this.temp_end_date);
+            $('#tempStartTime').val(@this.temp_start_time);
+            $('#tempEndTime').val(@this.temp_end_time);
+        });
+
         window.addEventListener('filters-applied', function() {
-            // Update Select2 to reflect the active filter
-            $('#userSelect').val(@this.filter_user_id).trigger('change');
-            
-            // Update all temp inputs to match active filters
+            initializeSelect2();
+            $('#userSelect').val(@this.filter_user_id).trigger('change.select2');
             $('#tempSearch').val(@this.filter_search);
             $('#tempStartDate').val(@this.filter_start_date);
             $('#tempEndDate').val(@this.filter_end_date);
@@ -469,21 +475,17 @@
             $('#tempEndTime').val(@this.filter_end_time);
         });
 
-        // After filters are cleared, reset the UI
         window.addEventListener('filters-cleared', function() {
-            // Clear all inputs
+            initializeSelect2();
             $('#tempSearch').val('');
             $('#tempStartDate').val('');
             $('#tempEndDate').val('');
             $('#tempStartTime').val('');
             $('#tempEndTime').val('');
-            $('#userSelect').val('').trigger('change');
+            $('#userSelect').val('').trigger('change.select2');
         });
 
-        // Confirm delete
         window.addEventListener('confirm-delete', function(event) {
-            const saleId = event.detail.saleId;
-            
             Swal.fire({
                 title: 'Hapus Penjualan?',
                 text: "Anda tidak dapat mengembalikan data ini!",
@@ -495,12 +497,11 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    @this.call('deleteSale', saleId);
+                    @this.call('deleteSale', event.detail.saleId);
                 }
             });
         });
 
-        // Notifications
         window.addEventListener('notify', function(event) {
             Swal.fire({
                 icon: event.detail.type,
