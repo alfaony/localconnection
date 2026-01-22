@@ -15,6 +15,14 @@ class SecurityCheckPhoto extends Model
     public $incrementing = false; // Karena kita menggunakan UUID, bukan auto-increment
     protected $keyType = 'string'; // Tipe kunci primer adalah string
     
+    protected $fillable = [
+        'security_check_id',
+        'status_of_day',
+        'path',
+        'file_type',
+        'description'
+    ];
+    
     protected static function boot()
     {
         parent::boot();
@@ -48,6 +56,7 @@ class SecurityCheckPhoto extends Model
 
         return $slug;
     }
+    
     public function photos()
     {
         return $this->hasMany(SecurityCheckPhoto::class);
