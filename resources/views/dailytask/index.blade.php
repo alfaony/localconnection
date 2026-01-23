@@ -105,6 +105,7 @@
                         @foreach ($taskStatuss as $status)
                             <option value="{{ $status->name }}" {{ request('status') == $status->name ? 'selected' : '' }}>{{ ucfirst($status->name) }}</option>
                         @endforeach
+                        <option value="complete_by_date" {{ request('status') == 'complete_by_date' ? 'selected' : '' }}>Complete By Date</option>
                     </select>
                 </div>
             </div>
