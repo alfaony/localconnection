@@ -1281,7 +1281,11 @@ class DailyTaskController extends Controller
                 $this->sentInbox($dailyTaskHead->assignment_user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name .' pada tugas '.$dailyTaskHead->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
             }
 
-            $this->sentInbox($dailyTask->assignment_user_id, Auth::user()->name. ' Menugaskan ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+            if($dailyTask->assignment_user_id)
+            {
+                $this->sentInbox($dailyTask->assignment_user_id, Auth::user()->name. ' Menugaskan ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+            }
+
             $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
             $this->statusrecord($dailyTask, $status);
 

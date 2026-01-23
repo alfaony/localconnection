@@ -73,7 +73,8 @@
                                 <th>Poin Training</th>
                                 <th>Poin Hak Cipta</th>
                                 <th>Poin Pencapaian Penjualan</th>
-                                <th>Poin Tugas Harian</th>
+                                <th>Point Tugas</th>
+                                <th>Point Punishment</th>
                                 <th>Total Poin</th>
                             </tr>
                         </thead>
@@ -84,7 +85,8 @@
                                     <td>{{ $report['training_points'] }}</td>
                                     <td>{{ $report['ip_right_points'] }}</td>
                                     <td>{{ $report['sales_achievement_points'] }}</td>
-                                    <td>{{ $report['daily_task_point'] }}</td>
+                                    <td>{{ $report['daily_task_points'] }}</td>
+                                    <td>{{ $report['punishment_points'] }}</td>
                                     <td>{{ $report['total_points'] }}</td>
                                 </tr>
                             @endforeach
