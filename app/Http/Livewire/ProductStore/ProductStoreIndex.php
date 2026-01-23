@@ -439,6 +439,7 @@ class ProductStoreIndex extends Component
                 'height',
                 'weight',
                 'selling_price',
+                'barcode'
             ];
             
             fputcsv($file, $columns);
@@ -455,6 +456,7 @@ class ProductStoreIndex extends Component
                 '5',
                 '2.5',
                 '15000000',
+                'qwerty123'
             ]);
             
             fputcsv($file, [
@@ -468,6 +470,7 @@ class ProductStoreIndex extends Component
                 '5',
                 '0.15',
                 '1500000',
+                'qwerty456'
             ]);
             
             fclose($file);

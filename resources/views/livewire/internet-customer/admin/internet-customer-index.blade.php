@@ -180,7 +180,16 @@
                                                     @endif
                                                     @break
                                                     
-                                                @case(\App\Schemas\ParamSchema::PROCESS_INSTALLATION || \App\Schemas\ParamSchema::CUSTOMER_EXISTING)
+                                                @case(\App\Schemas\ParamSchema::PROCESS_INSTALLATION)
+                                                    @if($technical_access)
+                                                    <button class="btn btn-sm btn-primary" wire:click="openInstallationModal( @js($customer->id) )">
+                                                        <i class="fas fa-camera me-1"></i> Input Instalasi
+                                                    </button>
+                                                    @else
+                                                        <span class="text-muted">Teknisi Internet</span>
+                                                    @endif
+                                                    @break
+                                                @case(\App\Schemas\ParamSchema::CUSTOMER_EXISTING)
                                                     @if($technical_access)
                                                     <button class="btn btn-sm btn-primary" wire:click="openInstallationModal( @js($customer->id) )">
                                                         <i class="fas fa-camera me-1"></i> Input Instalasi
