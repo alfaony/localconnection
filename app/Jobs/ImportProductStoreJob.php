@@ -70,6 +70,7 @@ class ImportProductStoreJob implements ShouldQueue
                 $weight = is_numeric($row[8]) ? $row[8] : null;
                 $sellingPrice = $row[9] ?? 0;
                 $rackName = $row[10] ?? null;
+                $barcode = !empty($row[11]) ? trim($row[11]) : null;
 
                 // ============================================
 
@@ -112,6 +113,17 @@ class ImportProductStoreJob implements ShouldQueue
 
                 if ($existingProduct) {
                     throw new \Exception("Nama produk '$name' sudah ada di database");
+                }
+
+                // Cek duplikasi barcode jika barcode diisi
+                if (!empty($barcode)) {
+                    $existingBarcode = ProductStore::withTrashed()
+                        ->where('barcode', $barcode)
+                        ->first();
+
+                    if ($existingBarcode) {
+                        throw new \Exception("Barcode '$barcode' sudah digunakan");
+                    }
                 }
 
                 // Find or create category dengan uppercase
@@ -163,6 +175,7 @@ class ImportProductStoreJob implements ShouldQueue
                 // Create product
                 $productStore = ProductStore::create([
                     'name' => $name,
+                    'barcode' => $barcode, // Barcode dari CSV atau akan auto-generate jika null
                     'category_product_store_id' => $category?->id,
                     'brand_product_store_id' => $brand?->id,
                     'variant' => $variant,

@@ -113,9 +113,28 @@ class DailyTaskController extends Controller
         // Filter berdasarkan status
         if ($statusFilter) 
         {
-            $query->whereHas('taskStatus', function ($q) use ($statusFilter) {
-                $q->where('name', $statusFilter);
-            });
+            // Check if status is 'complete_by_date' (manual injection)
+            if ($statusFilter === 'complete_by_date') 
+            {
+                // Filter by completion date from status records
+                $query->whereHas('statusRecords', function ($q) use ($start_date, $end_date) {
+                    $q->whereHas('taskStatus', function ($sq) {
+                        $sq->where('name', ParamSchema::COMPLATE);
+                    });
+                    
+                    // Apply date range to completion date if provided
+                    if ($start_date && $end_date) {
+                        $q->whereBetween('date', [$start_date, $end_date]);
+                    }
+                });
+            } 
+            else 
+            {
+                // Original status filter logic
+                $query->whereHas('taskStatus', function ($q) use ($statusFilter) {
+                    $q->where('name', $statusFilter);
+                });
+            }
         }else
         {
             $query->whereHas('taskStatus', function ($query)
@@ -128,7 +147,8 @@ class DailyTaskController extends Controller
         }
 
         // Filter berdasarkan tanggal
-        if ($start_date && $end_date) 
+        // Skip default date range filter if status is 'complete_by_date' (already applied in status filter)
+        if ($start_date && $end_date && $statusFilter !== 'complete_by_date') 
         {
             $query->byDateRange($start_date, $end_date);
         }

@@ -193,11 +193,11 @@ class AppServiceProvider extends ServiceProvider
             $managementPenjualanMenu = 
             [
             'quotes','work_orders','agreement_letters','projects',
-            'report_projects','basts','invoices','reports'
+            'report_projects','basts','invoices','partners' ,'reports'
             ];
 
             $managementMasterDataMenu = [
-            'provinces','cities','districts','subdistricts','postal_codes'
+            'provinces','cities','districts','subdistricts','postal_codes','partner_parameter_types'
             ];
 
             $managementSettingMenu = ['setting_companies','roles','webhook_settings'];
@@ -762,6 +762,18 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Aturan WFO',
                     'route' => 'wfo-rule.index',
                     'icon' => 'fa fa-list',
+                ],
+                'partner_parameter_types' =>
+                [
+                    'text' => 'Tipe Parameter Mitra',
+                    'route' => 'partner-parameter-type.index',
+                    'icon' => 'fa fa-list',
+                ],
+                'partners' =>
+                [
+                    'text' => 'Mitra',
+                    'route' => 'partner.index',
+                    'icon' => 'fa fa-user',
                 ]
             ];
 

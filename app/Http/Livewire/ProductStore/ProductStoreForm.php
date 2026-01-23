@@ -66,15 +66,14 @@ class ProductStoreForm extends Component
         
         if($id) {
             $this->editProduct($id);
+        } else {
+            // Auto-generate barcode only for new products
+            $this->barcode = $this->generateBarcode();
         }
     }
 
     public function render()
     {
-        if(!$this->barcode) {
-            $this->barcode = $this->generateBarcode();
-        }
-
         $allPhotos = array_merge($this->photos, $this->pendingPhotos);
         
         return view('livewire.product-store.product-store-form', [
@@ -345,7 +344,7 @@ class ProductStoreForm extends Component
             'warehouse_id' => 'nullable|exists:warehouses,id',
             'zone_id' => 'nullable|exists:zones,id',
             'rack_id' => 'nullable|exists:racks,id',
-            'barcode' => 'nullable|string|max:255',
+            'barcode' => 'nullable|string|max:255|unique:product_stores,barcode,' . ($this->productId ?? 'NULL') . ',id,deleted_at,NULL',
             'category_product_store_id' => 'required|exists:category_product_stores,id',
             'brand_product_store_id' => 'required|exists:brand_product_stores,id',
             'name' => 'required|string|max:255',
@@ -459,7 +458,40 @@ class ProductStoreForm extends Component
         $this->barcode = $this->generateBarcode();
     }
 
-    protected static function generateBarcode()
+    public function regenerateBarcode()
+    {
+        $this->barcode = $this->generateBarcode();
+        $this->dispatchBrowserEvent('barcode-regenerated', [
+            'barcode' => $this->barcode,
+            'message' => 'Barcode baru berhasil di-generate'
+        ]);
+    }
+
+    public function checkBarcodeAvailability()
+    {
+        if (!$this->barcode) {
+            return [
+                'available' => true,
+                'message' => 'Barcode akan di-generate otomatis jika kosong'
+            ];
+        }
+
+        // Check if barcode exists, excluding current product if editing
+        $query = ProductStore::withTrashed()->where('barcode', $this->barcode);
+        
+        if ($this->productId) {
+            $query->where('id', '!=', $this->productId);
+        }
+
+        $exists = $query->exists();
+
+        return [
+            'available' => !$exists,
+            'message' => $exists ? 'Barcode sudah digunakan' : 'Barcode tersedia'
+        ];
+    }
+
+    protected function generateBarcode()
     {
         do {
             $barcode = now()->format('Y') . str_pad(mt_rand(0, 999999999), 9, '0', STR_PAD_LEFT);
