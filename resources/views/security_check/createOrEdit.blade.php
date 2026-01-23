@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="col-md-12">
+    @include('components.alert')
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -34,14 +35,14 @@
 
 
                 <div id="photo-inputs" class="mb-3">
-                    <label for="photos" class="form-label">Foto</label>
+                    <label for="photos" class="form-label">Foto/Video</label>
                     <div class="input-group mb-3">
-                        <input type="text" class="form-control" name="descriptions[]" placeholder="Deskripsi Foto" required>
-                        <input type="file" class="form-control" id="photo" name="photos[]" accept="image/*" capture="environment" onchange="compressAndAddImage(event)" required>
+                        <input type="text" class="form-control" name="descriptions[]" placeholder="Deskripsi" required>
+                        <input type="file" class="form-control" id="photo" name="photos[]" accept="image/*,video/mp4,video/mov,video/avi,video/wmv" capture="environment" onchange="handleFileUpload(event)" required>
                         <button class="btn btn-danger remove-photo" type="button"><i class="fa fa-minus"></i></button>
                     </div>
                 </div>
-                <button type="button" class="btn btn-success add-photo"><i class="fa fa-plus"></i> Tambah Foto</button>
+                <button type="button" class="btn btn-success add-photo"><i class="fa fa-plus"></i> Tambah Foto/Video</button>
 
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary">{{ isset($check) ? 'Ubah' : 'Simpan' }}</button>
@@ -65,14 +66,14 @@
             if (photoIndex < 10) {
                 $('#photo-inputs').append(`
                     <div class="input-group mb-3">
-                        <input type="text" class="form-control" name="descriptions[]" placeholder="Deskripsi Foto" required>
-                        <input type="file" class="form-control" name="photos[]" accept="image/*" capture="environment" onchange="compressAndAddImage(this)" required>
+                        <input type="text" class="form-control" name="descriptions[]" placeholder="Deskripsi" required>
+                        <input type="file" class="form-control" name="photos[]" accept="image/*,video/mp4,video/mov,video/avi,video/wmv" capture="environment" onchange="handleFileUpload(event)" required>
                         <button class="btn btn-danger remove-photo" type="button"><i class="fa fa-minus"></i></button>
                     </div>
                 `);
                 photoIndex++;
             } else {
-                alert('Maksimal 10 Foto');
+                alert('Maksimal 10 File');
             }
         });
 
@@ -83,7 +84,20 @@
     });
 </script>
 <script>
-function compressAndAddImage() {
+function handleFileUpload(event) {
+    const fileInput = event.target;
+    const file = fileInput.files[0];
+    
+    if (!file) return;
+    
+    // Check if it's an image or video
+    if (file.type.startsWith('image/')) {
+        compressAndAddImage(event);
+    }
+    // For videos, no compression needed, just accept the file
+}
+
+function compressAndAddImage(event) {
     const fileInput = event.target;
 
     const reader = new FileReader();

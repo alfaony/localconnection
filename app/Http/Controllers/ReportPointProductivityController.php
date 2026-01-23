@@ -66,23 +66,38 @@ class ReportPointProductivityController extends Controller
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->sum('points');
 
-           $dailyTaskPoints = DailyTask::where('assignment_user_id', $user->id)
-            ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
-                $query
-                    ->whereBetween('date', [$startDate, $endDate])
-                    ->whereHas('taskStatus', function ($q) {
-                        $q->where('name', ParamSchema::COMPLATE);
-                    });
-            })
-            ->sum('point');
+           // Regular daily task points (NOT in punishment_users)
+            $dailyTaskPoints = DailyTask::where('assignment_user_id', $user->id)
+                ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                    $query
+                        ->whereBetween('date', [$startDate, $endDate])
+                        ->whereHas('taskStatus', function ($q) {
+                            $q->where('name', ParamSchema::COMPLATE);
+                        });
+                })
+                ->whereDoesntHave('punishmentUser')
+                ->sum('point');
+
+            // Punishment points (IN punishment_users)
+            $punishmentPoints = DailyTask::where('assignment_user_id', $user->id)
+                ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                    $query
+                        ->whereBetween('date', [$startDate, $endDate])
+                        ->whereHas('taskStatus', function ($q) {
+                            $q->where('name', ParamSchema::COMPLATE);
+                        });
+                })
+                ->whereHas('punishmentUser')
+                ->sum('point');
 
             return [
                 'name' => $user->name,
                 'training_points' => $trainingPoints,
                 'ip_right_points' => $ipRightPoints,
                 'sales_achievement_points' => $salesAchievementPoints,
-                'daily_task_point' => $dailyTaskPoints,
-                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints,
+                'daily_task_points' => $dailyTaskPoints,
+                'punishment_points' => $punishmentPoints,
+                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints,
             ];
         });
 
@@ -140,6 +155,7 @@ class ReportPointProductivityController extends Controller
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->sum('points');
 
+            // Regular daily task points (NOT in punishment_users)
             $dailyTaskPoints = DailyTask::where('assignment_user_id', $user->id)
                 ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
                     $query
@@ -148,6 +164,19 @@ class ReportPointProductivityController extends Controller
                             $q->where('name', ParamSchema::COMPLATE);
                         });
                 })
+                ->whereDoesntHave('punishmentUser')
+                ->sum('point');
+
+            // Punishment points (IN punishment_users)
+            $punishmentPoints = DailyTask::where('assignment_user_id', $user->id)
+                ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                    $query
+                        ->whereBetween('date', [$startDate, $endDate])
+                        ->whereHas('taskStatus', function ($q) {
+                            $q->where('name', ParamSchema::COMPLATE);
+                        });
+                })
+                ->whereHas('punishmentUser')
                 ->sum('point');
             $divisions = $user->divisions->isNotEmpty()
             ? $user->divisions->pluck('name')->implode(', ')
@@ -160,8 +189,9 @@ class ReportPointProductivityController extends Controller
                 'training_points' => $trainingPoints,
                 'ip_right_points' => $ipRightPoints,
                 'sales_achievement_points' => $salesAchievementPoints,
-                'daily_task_point' => $dailyTaskPoints,
-                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints,
+                'daily_task_points' => $dailyTaskPoints,
+                'punishment_points' => $punishmentPoints,
+                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints,
             ];
         });
 
