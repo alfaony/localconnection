@@ -183,6 +183,11 @@ class DailyTask extends Model
         return $this->hasOne(MomTask::class, 'daily_task_id','id');
     }
 
+    public function punishmentUser()
+    {
+        return $this->hasOne(PunishmentUser::class, 'dailytask_id');
+    }
+
     public function getDateRangeSubmitAttribute()
     {
         if ($this->submit && $this->start_date) {
