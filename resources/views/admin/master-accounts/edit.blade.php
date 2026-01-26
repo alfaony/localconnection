@@ -1,0 +1,259 @@
+@extends('adminlte::page')
+
+@section('title', 'Edit Master Account')
+
+@section('content_header')
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h1>Edit Master Account</h1>
+        </div>
+        <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.master-accounts.index') }}">Master Accounts</a></li>
+                <li class="breadcrumb-item active">Edit</li>
+            </ol>
+        </div>
+    </div>
+@stop
+
+@section('content')
+    <div class="card">
+        <form action="{{ route('admin.master-accounts.update', $masterAccount) }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+            
+            <div class="card-body">
+                {{-- Basic Info --}}
+                <h5 class="mb-3"><i class="fas fa-info-circle"></i> Informasi Dasar</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="software_id">Software <span class="text-danger">*</span></label>
+                            <select class="form-control @error('software_id') is-invalid @enderror" 
+                                    id="software_id" 
+                                    name="software_id" 
+                                    required>
+                                <option value="">-- Pilih Software --</option>
+                                @foreach($softwares as $software)
+                                <option value="{{ $software->id }}" {{ old('software_id', $masterAccount->software_id) == $software->id ? 'selected' : '' }}>
+                                    {{ $software->nama }} - {{ $software->tipe_paket }}
+                                </option>
+                                @endforeach
+                            </select>
+                            @error('software_id')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nama_akun">Nama Akun <span class="text-danger">*</span></label>
+                            <input type="text" 
+                                   class="form-control @error('nama_akun') is-invalid @enderror" 
+                                   id="nama_akun" 
+                                   name="nama_akun" 
+                                   value="{{ old('nama_akun', $masterAccount->nama_akun) }}" 
+                                   placeholder="Contoh: Netflix Premium #1"
+                                   required>
+                            @error('nama_akun')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="max_slots">Maksimal Slot <span class="text-danger">*</span></label>
+                            <input type="number" 
+                                   class="form-control @error('max_slots') is-invalid @enderror" 
+                                   id="max_slots" 
+                                   name="max_slots" 
+                                   value="{{ old('max_slots', $masterAccount->max_slots) }}" 
+                                   min="1"
+                                   required>
+                            @error('max_slots')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                            <small class="form-text text-muted">
+                                Slot terpakai: <strong>{{ $masterAccount->used_slots }}</strong>. 
+                                Max slots tidak boleh kurang dari ini.
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status">Status <span class="text-danger">*</span></label>
+                            <select class="form-control @error('status') is-invalid @enderror" 
+                                    id="status" 
+                                    name="status" 
+                                    required>
+                                <option value="active" {{ old('status', $masterAccount->status) == 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="inactive" {{ old('status', $masterAccount->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                            @error('status')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                {{-- Flexible Credentials --}}
+                <h5 class="mb-3"><i class="fas fa-key"></i> Kredensial Akses</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="email_akun">Email Akun</label>
+                            <input type="text" 
+                                   class="form-control @error('email_akun') is-invalid @enderror" 
+                                   id="email_akun" 
+                                   name="email_akun" 
+                                   value="{{ old('email_akun', $masterAccount->email_akun) }}" 
+                                   placeholder="email@example.com">
+                            @error('email_akun')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password_akun">Password Akun</label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control @error('password_akun') is-invalid @enderror" 
+                                       id="password_akun" 
+                                       name="password_akun" 
+                                       value="{{ old('password_akun', $masterAccount->password_akun) }}" 
+                                       placeholder="••••••••">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="toggle-password">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                @error('password_akun')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <small class="form-text text-muted">Password akan dienkripsi otomatis</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="pin_code">PIN Code</label>
+                            <input type="text" 
+                                   class="form-control @error('pin_code') is-invalid @enderror" 
+                                   id="pin_code" 
+                                   name="pin_code" 
+                                   value="{{ old('pin_code', $masterAccount->pin_code) }}" 
+                                   placeholder="Contoh: 1234">
+                            @error('pin_code')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="link_invite">Link Invite</label>
+                            <textarea class="form-control @error('link_invite') is-invalid @enderror" 
+                                      id="link_invite" 
+                                      name="link_invite" 
+                                      rows="3"
+                                      placeholder="https://...">{{ old('link_invite', $masterAccount->link_invite) }}</textarea>
+                            @error('link_invite')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="attachment">File Attachment</label>
+                            
+                            @if($masterAccount->attachment)
+                            <div class="mb-2">
+                                <a href="{{ Storage::url($masterAccount->attachment) }}" target="_blank" class="btn btn-sm btn-info">
+                                    <i class="fas fa-file"></i> Lihat File Saat Ini
+                                </a>
+                            </div>
+                            @endif
+                            
+                            <div class="custom-file">
+                                <input type="file" 
+                                       class="custom-file-input @error('attachment') is-invalid @enderror" 
+                                       id="attachment" 
+                                       name="attachment"
+                                       accept=".pdf,.jpg,.jpeg,.png">
+                                <label class="custom-file-label" for="attachment">Ubah file...</label>
+                                @error('attachment')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <small class="form-text text-muted">Format: PDF, JPG, PNG. Max: 5MB. Kosongkan jika tidak ingin mengubah.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="instruksi_akses">Instruksi Akses</label>
+                    <textarea class="form-control @error('instruksi_akses') is-invalid @enderror" 
+                              id="instruksi_akses" 
+                              name="instruksi_akses">{{ old('instruksi_akses', $masterAccount->instruksi_akses) }}</textarea>
+                    @error('instruksi_akses')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
+                    <small class="form-text text-muted">Instruksi lengkap cara akses untuk customer</small>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Update
+                </button>
+                <a href="{{ route('admin.master-accounts.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Batal
+                </a>
+            </div>
+        </form>
+    </div>
+@stop
+
+@section('css')
+@stop
+
+@section('js')
+<script src="https://cdn.ckeditor.com/4.20.1/standard/ckeditor.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize CKEditor for instruksi_akses
+    CKEDITOR.replace('instruksi_akses', {
+        height: 300,
+        toolbar: [
+            { name: 'document', items: [ 'Source' ] },
+            { name: 'clipboard', items: [ 'Undo', 'Redo' ] },
+            { name: 'basicstyles', items: [ 'Bold', 'Italic', 'Underline', 'Strike' ] },
+            { name: 'paragraph', items: [ 'NumberedList', 'BulletedList', '-', 'Outdent', 'Indent' ] },
+            { name: 'insert', items: [ 'Link', 'Image', 'Table' ] },
+            { name: 'styles', items: [ 'Format' ] },
+            { name: 'colors', items: [ 'TextColor', 'BGColor' ] }
+        ]
+    });
+
+    // Toggle password visibility
+    $('#toggle-password').on('click', function() {
+        const passwordInput = $('#password_akun');
+        const icon = $(this).find('i');
+        
+        if (passwordInput.attr('type') === 'password') {
+            passwordInput.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            passwordInput.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // Custom file input label
+    $('.custom-file-input').on('change', function() {
+        let fileName = $(this).val().split('\\').pop();
+        $(this).siblings('.custom-file-label').addClass("selected").html(fileName);
+    });
+});
+</script>
+@stop
