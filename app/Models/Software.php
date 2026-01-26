@@ -104,6 +104,11 @@ class Software extends Model
         return $this->hasMany(MasterAccount::class);
     }
 
+    public function subscriptions()
+    {
+        return $this->hasMany(CustomerSubscription::class);
+    }
+
     /**
      * Get the active master accounts for the software.
      */
@@ -138,11 +143,11 @@ class Software extends Model
         return $query->where('company_id', $companyId);
     }
 
-    /**
-     * Get the route key for the model.
-     */
-    public function getRouteKeyName()
-    {
-        return 'slug';
-    }
+    // /**
+    //  * Get the route key for the model.
+    //  */
+    // public function getRouteKeyName()
+    // {
+    //     return 'slug';
+    // }
 }

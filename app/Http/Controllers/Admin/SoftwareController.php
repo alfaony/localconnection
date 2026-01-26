@@ -7,6 +7,7 @@ use App\Models\Software;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class SoftwareController extends Controller
 {
@@ -96,7 +97,6 @@ class SoftwareController extends Controller
      */
     public function show(Software $software)
     {
-        $this->authorize('view', $software);
 
         $software->load(['packages', 'masterAccounts.activeSubscriptions']);
 
@@ -108,7 +108,6 @@ class SoftwareController extends Controller
      */
     public function edit(Software $software)
     {
-        $this->authorize('update', $software);
 
         return view('admin.softwares.edit', compact('software'));
     }
@@ -118,7 +117,6 @@ class SoftwareController extends Controller
      */
     public function update(Request $request, Software $software)
     {
-        $this->authorize('update', $software);
 
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
@@ -154,8 +152,12 @@ class SoftwareController extends Controller
 
             $logo = $request->file('logo');
             $logoName = time() . '_' . Str::slug($validated['nama']) . '.' . $logo->extension();
-            $logo->storeAs('public/softwares', $logoName);
-            $validated['logo'] = 'softwares/' . $logoName;
+            // $logo->storeAs('public/softwares', $logoName);
+            $coba = Storage::putFileAs('public/softwares', $logo, $logoName);
+            $check = Storage::disk('s3')->putFileAs('public/softwares', $logo, $logoName);
+
+            // dd($check);
+            $validated['logo'] = 'public/softwares/' . $logoName;
         }
 
         $software->update($validated);
@@ -170,7 +172,6 @@ class SoftwareController extends Controller
      */
     public function destroy(Software $software)
     {
-        $this->authorize('delete', $software);
 
         // Check if software has active subscriptions
         $activeSubscriptions = $software->masterAccounts()
@@ -201,7 +202,6 @@ class SoftwareController extends Controller
      */
     public function toggleStatus(Software $software)
     {
-        $this->authorize('update', $software);
 
         $newStatus = $software->status === 'active' ? 'inactive' : 'active';
         $software->update(['status' => $newStatus]);

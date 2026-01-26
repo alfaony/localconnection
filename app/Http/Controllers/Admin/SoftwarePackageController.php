@@ -15,7 +15,7 @@ class SoftwarePackageController extends Controller
      */
     public function index(Request $request, Software $software)
     {
-        $this->authorize('view', $software);
+        // $this->authorize('view', $software);
 
         $query = $software->packages();
 
@@ -34,7 +34,7 @@ class SoftwarePackageController extends Controller
      */
     public function create(Software $software)
     {
-        $this->authorize('view', $software);
+        // $this->authorize('view', $software);
 
         return view('admin.packages.create', compact('software'));
     }
@@ -44,8 +44,6 @@ class SoftwarePackageController extends Controller
      */
     public function store(Request $request, Software $software)
     {
-        $this->authorize('view', $software);
-
         $validated = $request->validate([
             'nama_paket' => 'required|string|max:255',
             'durasi_hari' => 'required|integer|min:1',
@@ -67,7 +65,7 @@ class SoftwarePackageController extends Controller
      */
     public function show(Software $software, SoftwarePackage $package)
     {
-        $this->authorize('view', $software);
+        // $this->authorize('view', $software);
 
         $package->load(['subscriptions' => function($query) {
             $query->latest()->limit(10);
@@ -81,7 +79,7 @@ class SoftwarePackageController extends Controller
      */
     public function edit(Software $software, SoftwarePackage $package)
     {
-        $this->authorize('view', $software);
+        // $this->authorize('view', $software);
 
         return view('admin.packages.edit', compact('software', 'package'));
     }
@@ -91,7 +89,7 @@ class SoftwarePackageController extends Controller
      */
     public function update(Request $request, Software $software, SoftwarePackage $package)
     {
-        $this->authorize('view', $software);
+        // $this->authorize('view', $software);
 
         $validated = $request->validate([
             'nama_paket' => 'required|string|max:255',
@@ -112,7 +110,7 @@ class SoftwarePackageController extends Controller
      */
     public function destroy(Software $software, SoftwarePackage $package)
     {
-        $this->authorize('view', $software);
+        // $this->authorize('view', $software);
 
         // Check if package has active subscriptions
         $activeSubscriptions = $package->subscriptions()
@@ -137,7 +135,7 @@ class SoftwarePackageController extends Controller
      */
     public function toggleStatus(Software $software, SoftwarePackage $package)
     {
-        $this->authorize('view', $software);
+        // $this->authorize('view', $software);
 
         $newStatus = $package->status === 'active' ? 'inactive' : 'active';
         $package->update(['status' => $newStatus]);

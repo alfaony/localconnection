@@ -118,6 +118,23 @@ use App\Http\Controllers\PartnerMonthlyReportController;
 use App\Http\Controllers\PartnerTargetController;
 use App\Http\Controllers\PartnerParameterTypeController;
 
+use App\Http\Controllers\Admin\{
+    DashboardController,
+    SoftwareController,
+    SoftwarePackageController,
+    MasterAccountController,
+    SubscriptionController as AdminSubscriptionController,
+    SubscriptionCustomerController
+};
+
+// Customer Controllers
+use App\Http\Controllers\Customer\{
+    SoftwareController as CustomerSoftwareController,
+    CheckoutController,
+    SubscriptionController as CustomerSubscriptionController,
+    SubscriptionPaymentController
+};
+
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
 use App\Http\Livewire\DataCenter\Form;
@@ -259,7 +276,7 @@ Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->nam
 
 
   
-  // AJAX routes for role permission management (to avoid max_input_vars limit)
+// AJAX routes for role permission management (to avoid max_input_vars limit)
 // Additional routes untuk per-accordion functionality
 Route::post('role/updateName/{role}', [RoleController::class, 'updateName'])
     ->name('role.update-name');
@@ -272,6 +289,79 @@ Route::post('role/selectAll/{role}', [RoleController::class, 'selectAll'])
 
 Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
     ->name('role.deselect-all');
+
+
+
+// ============================================================================
+// CUSTOMER ROUTES (Auth + Verified Required)
+// ============================================================================
+
+Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->group(function () {
+    
+    // ========================================================================
+    // SOFTWARE CATALOG
+    // ========================================================================
+    
+    // Browse software catalog
+    Route::get('/softwares', [CustomerSoftwareController::class, 'index'])
+        ->name('softwares.index');
+    
+    // View software detail with packages
+    Route::get('/softwares/{slug}', [CustomerSoftwareController::class, 'show'])
+        ->name('softwares.show');
+    
+    // ========================================================================
+    // CHECKOUT PROCESS
+    // ========================================================================
+    
+    // Show checkout page
+    Route::get('/checkout/{slug}/{package}', [CheckoutController::class, 'show'])
+        ->name('checkout.show');
+    
+    // Process checkout (create subscription + payment)
+    Route::post('/checkout/{slug}/{package}', [CheckoutController::class, 'process'])
+        ->name('checkout.process');
+    
+    // ========================================================================
+    // MY SUBSCRIPTIONS
+    // ========================================================================
+    
+    // List my subscriptions
+    Route::get('/subscriptions', [CustomerSubscriptionController::class, 'index'])
+        ->name('subscriptions.index');
+    
+    // View subscription detail (with credentials if active+paid)
+    Route::get('/subscriptions/{subscription}', [CustomerSubscriptionController::class, 'show'])
+        ->name('subscriptions.show');
+    
+    // Show renewal form
+    Route::get('/subscriptions/{subscription}/renew', [CustomerSubscriptionController::class, 'renew'])
+        ->name('subscriptions.renew');
+    
+    // Process renewal
+    Route::post('/subscriptions/{subscription}/renew', [CustomerSubscriptionController::class, 'processRenewal'])
+        ->name('subscriptions.process-renewal');
+    
+    // View payment history for subscription
+    Route::get('/subscriptions/{subscription}/payments', [CustomerSubscriptionController::class, 'payments'])
+        ->name('subscriptions.payments');
+    
+    // ========================================================================
+    // PAYMENT HANDLING
+    // ========================================================================
+    
+    // Payment success (redirect from Xendit)
+    Route::get('/payment/success', [SubscriptionPaymentController::class, 'success'])
+        ->name('payment.success');
+    
+    // Payment failed (redirect from Xendit)
+    Route::get('/payment/failed', [SubscriptionPaymentController::class, 'failed'])
+        ->name('payment.failed');
+    
+    // Check payment status (AJAX)
+    Route::get('/payment/check-status/{orderNumber}', [SubscriptionPaymentController::class, 'checkStatus'])
+        ->name('payment.check-status');
+});
 
 
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
@@ -731,8 +821,124 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');
   
-// Route::middleware(['auth'])->group(function () {
-// });
+// DEVELOPMENT
+// ============================================================================
+// ADMIN ROUTES (Auth + Admin Role Required)
+// ============================================================================
+
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
+    
+    // ========================================================================
+    // SOFTWARE MANAGEMENT
+    // ========================================================================
+    Route::resource('softwares', SoftwareController::class);
+    
+    // Toggle software status (AJAX)
+    Route::post('/softwares/{software}/toggle-status', [SoftwareController::class, 'toggleStatus'])
+        ->name('softwares.toggle-status');
+    
+    // ========================================================================
+    // SOFTWARE PACKAGES MANAGEMENT
+    // ========================================================================
+    // Alternative routes with better naming
+    Route::get('/softwares/{software}/packages/create', [SoftwarePackageController::class, 'create'])
+        ->name('softwares.packages.create');
+    
+    Route::get('/softwares/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])
+        ->name('softwares.packages.edit');
+    
+    // Toggle package status (AJAX)
+    Route::post('/softwares/{software}/packages/{package}/toggle-status', [SoftwarePackageController::class, 'toggleStatus'])
+        ->name('softwares.packages.toggle-status');
+        
+    Route::resource('softwares.packages', SoftwarePackageController::class)
+        ->except(['create', 'edit']);
+    
+    
+    // ========================================================================
+    // MASTER ACCOUNTS MANAGEMENT
+    // ========================================================================
+    Route::resource('master-accounts', MasterAccountController::class);
+    
+    // Toggle master account status (AJAX)
+    Route::post('/master-accounts/{masterAccount}/toggle-status', [MasterAccountController::class, 'toggleStatus'])
+        ->name('master-accounts.toggle-status');
+    
+    // View customers assigned to master account
+    Route::get('/master-accounts/{masterAccount}/customers', [MasterAccountController::class, 'customers'])
+        ->name('master-accounts.customers');
+    
+    // ========================================================================
+    // SUBSCRIPTIONS MANAGEMENT
+    // ========================================================================
+    Route::get('/subscriptions', [AdminSubscriptionController::class, 'index'])
+        ->name('subscriptions.index');
+    
+    Route::get('/subscriptions/{subscription}', [AdminSubscriptionController::class, 'show'])
+        ->name('subscriptions.show');
+    
+    // Edit expiry date
+    Route::get('/subscriptions/{subscription}/edit-expiry', [AdminSubscriptionController::class, 'editExpiry'])
+        ->name('subscriptions.edit-expiry');
+    
+    Route::put('/subscriptions/{subscription}/update-expiry', [AdminSubscriptionController::class, 'updateExpiry'])
+        ->name('subscriptions.update-expiry');
+    
+    // Change master account
+    Route::get('/subscriptions/{subscription}/edit-master-account', [AdminSubscriptionController::class, 'editMasterAccount'])
+        ->name('subscriptions.edit-master-account');
+    
+    Route::put('/subscriptions/{subscription}/update-master-account', [AdminSubscriptionController::class, 'updateMasterAccount'])
+        ->name('subscriptions.update-master-account');
+    
+    // Suspend/Activate subscription
+    Route::post('/subscriptions/{subscription}/suspend', [AdminSubscriptionController::class, 'suspend'])
+        ->name('subscriptions.suspend');
+    
+    Route::post('/subscriptions/{subscription}/activate', [AdminSubscriptionController::class, 'activate'])
+        ->name('subscriptions.activate');
+    
+    // View payment history
+    Route::get('/subscriptions/{subscription}/payments', [AdminSubscriptionController::class, 'payments'])
+        ->name('subscriptions.payments');
+    
+    // ========================================================================
+    // SUBSCRIPTION CUSTOMERS MANAGEMENT
+    // ========================================================================
+    
+    // Customer list
+    Route::get('/subscription-customers', [SubscriptionCustomerController::class, 'index'])
+        ->name('subscription-customers.index');
+    
+    // Statistics dashboard
+    Route::get('/subscription-customers/statistics', [SubscriptionCustomerController::class, 'statistics'])
+        ->name('subscription-customers.statistics');
+    
+    // Export to CSV
+    Route::get('/subscription-customers/export', [SubscriptionCustomerController::class, 'export'])
+        ->name('subscription-customers.export');
+    
+    // Customer detail
+    Route::get('/subscription-customers/{user}', [SubscriptionCustomerController::class, 'show'])
+        ->name('subscription-customers.show');
+    
+    // Customer's subscriptions
+    Route::get('/subscription-customers/{user}/subscriptions', [SubscriptionCustomerController::class, 'subscriptions'])
+        ->name('subscription-customers.subscriptions');
+    
+    // Customer's payments
+    Route::get('/subscription-customers/{user}/payments', [SubscriptionCustomerController::class, 'payments'])
+        ->name('subscription-customers.payments');
+    
+    // Send notification to customer
+    Route::post('/subscription-customers/{user}/send-notification', [SubscriptionCustomerController::class, 'sendNotification'])
+        ->name('subscription-customers.send-notification');
+});
+
 
 Route::get('error/{code?}', function ($code = 500) {
     return view('public_error', [

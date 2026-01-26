@@ -18,6 +18,7 @@ class CreateCustomerSubscriptionsTable extends Migration
             $table->uuid('company_id');
             $table->uuid('user_id');
             $table->uuid('master_account_id');
+            $table->uuid('software_id');
             $table->uuid('package_id');
             $table->string('order_number')->unique();
             $table->decimal('harga_bayar', 15, 2);
@@ -33,6 +34,7 @@ class CreateCustomerSubscriptionsTable extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('master_account_id')->references('id')->on('master_accounts')->onDelete('restrict');
             $table->foreign('package_id')->references('id')->on('software_packages')->onDelete('restrict');
+            $table->foreign('software_id')->references('id')->on('softwares')->onDelete('cascade');
             
             // Indexes
             $table->index('company_id', 'idx_company');
