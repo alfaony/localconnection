@@ -274,6 +274,7 @@ Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
     ->name('role.deselect-all');
 
 
+Route::get('report-productivity/details', [ReportPointProductivityController::class, 'getPointDetails'])->name('report-productivity.details');
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
@@ -309,7 +310,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('manager', ManagerController::class);
 
   Route::resource('customer', CustomerController::class)->except(['create']);
-
+  
   Route::resource('product', ProductController::class)->except(['create','show']);
   Route::resource('product-category', ProductCategoryController::class);
 
