@@ -1148,7 +1148,10 @@ class DailyTaskMobileController extends BaseController
 
             $endDate = Carbon::parse($dailytask->end_date)->endOfDay();
             $submitDateCompare = Carbon::parse($dailytask->submit)->startOfDay();
-            $dailytask->status_submit = ($submitDateCompare->lessThanOrEqualTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
+
+            if($dailytask->status_submit != ParamSchema::PINALTY_NOT_PROGRESS){
+                $dailytask->status_submit = ($submitDateCompare->lessThanOrEqualTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
+            }
 
             if (method_exists($this, 'message')) {
                 $this->message($dailytask->id, 'report', 'Membuat Laporan Tugas ' . $dailytask->name);

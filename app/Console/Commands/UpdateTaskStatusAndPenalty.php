@@ -46,6 +46,7 @@ class UpdateTaskStatusAndPenalty extends Command
         {
             $settingCompany = SettingCompany::byCompany($task->assign->company_id)->where('menu','punishment')->get()->pluck('field_value','field_title');
             $task->task_status_id = $taskStatuss1->id;
+            $task->status_submit = ParamSchema::PINALTY_NOT_PROGRESS;
             $task->point = $settingCompany['point_punishment_task_todo'] ?? 0;
             $task->save();
 
@@ -81,9 +82,11 @@ class UpdateTaskStatusAndPenalty extends Command
              if($settingCompany['status_punihsment_task_doing'] == true)
              {
                  $task->task_status_id = TaskStatus::where('name', ParamSchema::NOTCOMPLATE)->firstOrFail()->id;
+                 $task->status_submit = ParamSchema::PINALTY_NOT_PROGRESS;
                  $task->point = $settingCompany['point_punishment_task_doing'] ?? 0;
                  $task->save();
-     
+                
+                 dd($task);
                  $admin2 = User::with('role')
                          ->whereHas('role', fn ($query) => $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR]))
                          ->where('company_id', $task->assign->company_id)

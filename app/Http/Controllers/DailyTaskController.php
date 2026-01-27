@@ -877,7 +877,9 @@ class DailyTaskController extends Controller
             $endDate = Carbon::parse($dailytask->end_date)->endOfDay();
             $submitDate = Carbon::parse($dailytask->submit)->startOfDay();
 
-            $dailytask->status_submit = ($submitDate->lessThanOrEqualTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
+            if($dailytask->status_submit != ParamSchema::PINALTY_NOT_PROGRESS){
+                $dailytask->status_submit = ($submitDate->lessThanOrEqualTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
+            }
 
             $this->message($dailytask->id, 'report', ' Membuat Laporan Tugas ' . $dailytask->name);
             $this->statusrecord($dailytask, $inReview);
@@ -1009,28 +1011,37 @@ class DailyTaskController extends Controller
         DB::beginTransaction();
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         try {
-            if($request->point > 0)
-            {
-                $request->validate([
-                    'point' => 'required|integer|min:1',
-                    'division_id' => 'required|exists:divisions,id',
-                ]);
-
-                $check = $this->checkDivisionQuota(new Request([
-                    'division_id' => $request->division_id,
-                    'point' => $request->point
-                ]));
-
-                if ($check->original['status'] !== 'ok') 
+            // Backend protection: Prevent point updates when status_submit is PINALTY_NOT_PROGRESS
+            if ($dailytask->status_submit == ParamSchema::PINALTY_NOT_PROGRESS) {
+                // Do not allow point changes for penalty tasks
+                // Keep the existing point value
+                $pointToSave = $dailytask->point;
+            } else {
+                // Normal flow: Allow point updates
+                if($request->point > 0)
                 {
-                    return response()->json(['success' => false, 'message' => $check->original['message']]);
-                }
+                    $request->validate([
+                        'point' => 'required|integer|min:1',
+                        'division_id' => 'required|exists:divisions,id',
+                    ]);
 
-                $dailytask->division_id = $request->division_id;
-                $dailytask->division_quota_lock_id = $check->original['quota_lock_id'];
+                    $check = $this->checkDivisionQuota(new Request([
+                        'division_id' => $request->division_id,
+                        'point' => $request->point
+                    ]));
+
+                    if ($check->original['status'] !== 'ok') 
+                    {
+                        return response()->json(['success' => false, 'message' => $check->original['message']]);
+                    }
+
+                    $dailytask->division_id = $request->division_id;
+                    $dailytask->division_quota_lock_id = $check->original['quota_lock_id'];
+                }
+                $pointToSave = $request->point ?? 0;
             }
                 
-            $dailytask->point = $request->point ?? 0;
+            $dailytask->point = $pointToSave;
             $dailytask->task_status_id = $taskStatuss->id;
             $dailytask->approved = $taskStatuss->name == ParamSchema::COMPLATE ? true : false;
 
