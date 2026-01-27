@@ -76,7 +76,9 @@
                                 <th>Point Tugas</th>
                                 <th>Point Punishment</th>
                                 <th>Total Poin</th>
+                                @canAccess('details','report_productivities')
                                 <th>Action</th>
+                                @endcanAccess
                             </tr>
                         </thead>
                         <tbody>
@@ -89,11 +91,13 @@
                                     <td>{{ $report['daily_task_points'] }}</td>
                                     <td>{{ $report['punishment_points'] }}</td>
                                     <td>{{ $report['total_points'] }}</td>
+                                    @canAccess('details','report_productivities')
                                     <td>
                                         <button class="btn btn-sm btn-info" onclick="showPointDetails('{{ $users[$index]->id }}', '{{ $report['name'] }}')">
                                             <i class="fas fa-eye"></i> Detail
                                         </button>
                                     </td>
+                                    @endcanAccess
                                 </tr>
                             @endforeach
                         </tbody>
@@ -105,13 +109,14 @@
         @endif
     </div>
 
+    @canAccess('details','report_productivities')
     <!-- Modal for Point Details -->
     <div class="modal fade" id="pointDetailsModal" tabindex="-1" role="dialog" aria-labelledby="pointDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="pointDetailsModalLabel">Detail Poin - <span id="modalUserName"></span></h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -129,6 +134,7 @@
             </div>
         </div>
     </div>
+    @endcanAccess
 @stop
 
 @section('js')
@@ -138,34 +144,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+@canAccess('details','report_productivities')
 <script>
-    $('.select2').select2({
-        width: '100%',
-    });
-
-    function showLoading() {
-        document.getElementById('loading').style.display = 'block';
-    }
-
-    function exportData() {
-        const startDate = document.getElementById('start_date').value;
-        const endDate = document.getElementById('end_date').value;
-        const userId = document.getElementById('user_id').value;
-        
-        let url = "{{ route('report-productivity.export') }}?start_date=" + startDate + "&end_date=" + endDate;
-        
-        if (userId) {
-            url += "&user_id=" + userId;
-        }
-        
-        showLoading();
-        window.location.href = url;
-        
-        setTimeout(() => {
-            document.getElementById('loading').style.display = 'none';
-        }, 2000);
-    }
-
     function showPointDetails(userId, userName) {
         $('#modalUserName').text(userName);
         $('#pointDetailsModal').modal('show');
@@ -201,6 +182,36 @@
                 $('#pointDetailsContent').show();
             }
         });
+    }
+</script>
+@endcanAccess
+
+<script>
+    $('.select2').select2({
+        width: '100%',
+    });
+
+    function showLoading() {
+        document.getElementById('loading').style.display = 'block';
+    }
+
+    function exportData() {
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        const userId = document.getElementById('user_id').value;
+        
+        let url = "{{ route('report-productivity.export') }}?start_date=" + startDate + "&end_date=" + endDate;
+        
+        if (userId) {
+            url += "&user_id=" + userId;
+        }
+        
+        showLoading();
+        window.location.href = url;
+        
+        setTimeout(() => {
+            document.getElementById('loading').style.display = 'none';
+        }, 2000);
     }
 
     function buildPointDetailsHtml(data) {

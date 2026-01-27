@@ -206,7 +206,7 @@ class ReportPointProductivityController extends Controller
         return redirect()->back()->with('success', 'Export sedang diproses. Anda akan menerima notifikasi setelah selesai.');
     }
 
-    public function getPointDetails(Request $request)
+    public function details(Request $request)
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
