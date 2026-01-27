@@ -7,7 +7,6 @@
 @endphp
 
 @section('content')
-
         <!-- Alert Messages -->
         @foreach (['report', 'deletemedia', 'updatemedia', 'approvement', 'extend', 'comment', 'Subtask','Working'] as $msg)
             @if(Session::get($msg))
@@ -136,8 +135,8 @@
                         <div class="form-group row">
                             <label for="status_submit" class="col-sm-4 col-form-label">Status Submit:</label>
                             <div class="col-sm-8">
-                                <p class="form-control-plaintext {{ $dailytask->status_submit == 'late' ? 'text-danger' : 'text-success' }}">
-                                    {{ ucfirst($dailytask->status_submit) }}
+                                <p class="form-control-plaintext">
+                                    {!! $dailytask->status_submit_icon !!}
                                 </p>
                             </div>
                         </div>

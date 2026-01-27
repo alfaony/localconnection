@@ -206,4 +206,135 @@ class ReportPointProductivityController extends Controller
         return redirect()->back()->with('success', 'Export sedang diproses. Anda akan menerima notifikasi setelah selesai.');
     }
 
+    public function details(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+        ]);
+
+        $userId = $request->input('user_id');
+        $startDate = Carbon::parse($request->input('start_date'));
+        $endDate = Carbon::parse($request->input('end_date'))->endOfDay();
+
+        // Get user info
+        $user = User::findOrFail($userId);
+
+        // Get Training details
+        $trainings = Training::where('user_id', $userId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get(['name', 'point', 'created_at'])
+            ->map(function($item) {
+                return [
+                    'name' => $item->name,
+                    'point' => $item->point,
+                    'date' => $item->created_at->format('d M Y'),
+                ];
+            });
+
+        // Get IP Right details
+        $ipRights = IpRight::where('user_id', $userId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get(['name', 'point', 'created_at'])
+            ->map(function($item) {
+                return [
+                    'name' => $item->name,
+                    'point' => $item->point,
+                    'date' => $item->created_at->format('d M Y'),
+                ];
+            });
+
+        // Get Sales Achievement details
+        $salesAchievements = SalesAchievement::where('user_id', $userId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get(['period', 'points', 'created_at'])
+            ->map(function($item) {
+                return [
+                    'name' => $item->period,
+                    'point' => $item->points,
+                    'date' => $item->created_at->format('d M Y'),
+                ];
+            });
+
+        // Get Daily Task details (non-punishment)
+        $dailyTasks = DailyTask::where('assignment_user_id', $userId)
+            ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                $query
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->whereHas('taskStatus', function ($q) {
+                        $q->where('name', ParamSchema::COMPLATE);
+                    });
+            })
+            ->whereDoesntHave('punishmentUser')
+            ->get(['name', 'point', 'id'])
+            ->map(function($item) use ($startDate, $endDate) {
+                $completedDate = $item->statusRecords()
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->whereHas('taskStatus', function ($q) {
+                        $q->where('name', ParamSchema::COMPLATE);
+                    })
+                    ->first();
+                
+                return [
+                    'name' => $item->name,
+                    'point' => $item->point,
+                    'date' => $completedDate ? Carbon::parse($completedDate->date)->format('d M Y') : '-',
+                ];
+            });
+
+        // Get Punishment Task details
+        $punishmentTasks = DailyTask::where('assignment_user_id', $userId)
+            ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                $query
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->whereHas('taskStatus', function ($q) {
+                        $q->where('name', ParamSchema::COMPLATE);
+                    });
+            })
+            ->whereHas('punishmentUser')
+            ->get(['name', 'point', 'id'])
+            ->map(function($item) use ($startDate, $endDate) {
+                $completedDate = $item->statusRecords()
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->whereHas('taskStatus', function ($q) {
+                        $q->where('name', ParamSchema::COMPLATE);
+                    })
+                    ->first();
+                
+                return [
+                    'name' => $item->name,
+                    'point' => $item->point,
+                    'date' => $completedDate ? Carbon::parse($completedDate->date)->format('d M Y') : '-',
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'user_name' => $user->name,
+            'data' => [
+                'trainings' => [
+                    'items' => $trainings,
+                    'total' => $trainings->sum('point'),
+                ],
+                'ip_rights' => [
+                    'items' => $ipRights,
+                    'total' => $ipRights->sum('point'),
+                ],
+                'sales_achievements' => [
+                    'items' => $salesAchievements,
+                    'total' => $salesAchievements->sum('point'),
+                ],
+                'daily_tasks' => [
+                    'items' => $dailyTasks,
+                    'total' => $dailyTasks->sum('point'),
+                ],
+                'punishment_tasks' => [
+                    'items' => $punishmentTasks,
+                    'total' => $punishmentTasks->sum('point'),
+                ],
+            ],
+        ]);
+    }
+
 }
