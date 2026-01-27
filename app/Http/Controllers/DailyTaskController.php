@@ -1360,8 +1360,8 @@ class DailyTaskController extends Controller
             'objective_id' => 'exists:objectives,id',
             'project_id' => 'exists:daily_task_projects,id',
             'category_id' => 'exists:daily_task_categories,id',
-            'data_project_id' => 'required|array',
-            'data_project_id.*' => 'required|uuid|exists:projects,id',
+            'data_project_id' => 'nullable|array',
+            'data_project_id.*' => 'nullable|uuid|exists:projects,id',
         ]);
 
         DB::beginTransaction();
@@ -1371,6 +1371,7 @@ class DailyTaskController extends Controller
 
             return redirect()->route('dailytask.index')->with('import', true);
         } catch (\Exception $e) {
+            // dd($e);
             DB::rollback();
             $errors = explode("\n", $e->getMessage());
             return redirect()->back()->withErrors($errors)->withInput();
