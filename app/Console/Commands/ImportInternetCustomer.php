@@ -361,7 +361,7 @@ class ImportInternetCustomer extends Command
             
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error($e);
+            // Log::error($e);
             return [
                 'success' => false,
                 'reason' => 'Error: ' . $e->getMessage()
@@ -442,7 +442,7 @@ class ImportInternetCustomer extends Command
             return ['success' => true];
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error($e);
+            // Log::error($e);
             return [
                 'success' => false,
                 'reason' => 'Error: ' . $e->getMessage()
