@@ -46,8 +46,8 @@
         <p class="form-control-plaintext"><strong>Status Submit:</strong></p>
     </div>
     <div class="col-md-6">
-        <p class="form-control-plaintext {{ $dailytask->status_submit == 'late' ? 'text-danger' : 'text-success' }}">
-            {{ ucfirst($dailytask->status_submit) }}
+        <p class="form-control-plaintext">
+            {!! $dailytask->status_submit_icon !!}
         </p>
     </div>
 </div>
@@ -434,7 +434,8 @@ $('#backlogAssignForm').on('submit', function(e) {
             @canAccess('checkDivisionQuota','dailytasks')
             <div class="form-group mt-2">
                 <label for="point">Poin</label>
-                <input type="number" name="point" id="pointInput" class="form-control" placeholder="Masukkan Poin">
+                <input type="number" name="point" id="pointInput" class="form-control" placeholder="Masukkan Poin" value="{{ $dailytask->point }}" 
+                    {{ $dailytask->status_submit == \App\Schemas\ParamSchema::PINALTY_NOT_PROGRESS ? 'readonly' : '' }}>
             </div>
 
             <div id="divisionSection" class="form-group mt-2 d-none">

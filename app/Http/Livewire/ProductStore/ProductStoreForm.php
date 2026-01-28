@@ -344,7 +344,7 @@ class ProductStoreForm extends Component
             'warehouse_id' => 'nullable|exists:warehouses,id',
             'zone_id' => 'nullable|exists:zones,id',
             'rack_id' => 'nullable|exists:racks,id',
-            'barcode' => 'nullable|string|max:255|unique:product_stores,barcode,' . ($this->productId ?? 'NULL') . ',id,deleted_at,NULL',
+            'barcode' => 'nullable|string|max:255',
             'category_product_store_id' => 'required|exists:category_product_stores,id',
             'brand_product_store_id' => 'required|exists:brand_product_stores,id',
             'name' => 'required|string|max:255',
@@ -468,29 +468,47 @@ class ProductStoreForm extends Component
     }
 
     public function checkBarcodeAvailability()
-    {
-        if (!$this->barcode) {
-            return [
-                'available' => true,
-                'message' => 'Barcode akan di-generate otomatis jika kosong'
-            ];
-        }
-
-        // Check if barcode exists, excluding current product if editing
-        $query = ProductStore::withTrashed()->where('barcode', $this->barcode);
-        
-        if ($this->productId) {
-            $query->where('id', '!=', $this->productId);
-        }
-
-        $exists = $query->exists();
-
+{
+    if (!$this->barcode) {
         return [
-            'available' => !$exists,
-            'message' => $exists ? 'Barcode sudah digunakan' : 'Barcode tersedia'
+            'available' => true,
+            'message' => 'Barcode akan di-generate otomatis jika kosong',
+            'duplicates' => []
         ];
     }
 
+    // Check if barcode exists, excluding current product if editing
+    $query = ProductStore::withTrashed()->where('barcode', $this->barcode);
+    
+    if ($this->productId) {
+        $query->where('id', '!=', $this->productId);
+    }
+
+    $duplicates = $query->with(['category', 'brand'])->get();
+    
+    if ($duplicates->isEmpty()) {
+        return [
+            'available' => true,
+            'message' => 'Barcode tersedia',
+            'duplicates' => []
+        ];
+    }
+
+    // Build duplicate info message
+    $duplicateInfo = $duplicates->map(function($product) {
+        return $product->name . ' (' . ($product->category->name ?? '-') . ')';
+    })->take(3)->implode(', ');
+    
+    $count = $duplicates->count();
+    $moreText = $count > 3 ? " dan " . ($count - 3) . " lainnya" : "";
+
+    return [
+        'available' => true, // Still available, just a warning
+        'message' => 'Barcode sudah digunakan oleh: ' . $duplicateInfo . $moreText,
+        'duplicates' => $duplicates->toArray(),
+        'isDuplicate' => true
+    ];
+}
     protected function generateBarcode()
     {
         do {

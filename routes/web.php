@@ -274,6 +274,7 @@ Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
     ->name('role.deselect-all');
 
 
+
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
@@ -309,7 +310,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('manager', ManagerController::class);
 
   Route::resource('customer', CustomerController::class)->except(['create']);
-
+  
   Route::resource('product', ProductController::class)->except(['create','show']);
   Route::resource('product-category', ProductCategoryController::class);
 
@@ -407,6 +408,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('sales_achievement/addpoint/{slug}', [SalesAchievementController::class, 'addpoint'])->name('sales_achievement.addPoint');
   
   Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
+  Route::get('report-productivity/details', [ReportPointProductivityController::class, 'details'])->name('report-productivity.details');
   Route::get('report-productivity/export', [ReportPointProductivityController::class, 'export'])->name('report-productivity.export');
 
   Route::post('dailytask/assignBacklog/{slug}', [DailyTaskController::class, 'assignBacklog'])->name('dailytask.assignBacklog');

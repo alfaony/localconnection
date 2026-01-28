@@ -50,6 +50,8 @@ class ParamSchema
 
     const LATE = "late";
 
+    const PINALTY_NOT_PROGRESS = "penalty_not_progress";
+
     const RECURRING = "Recurring";
 
     const MULTISELECT = "multi_select";
