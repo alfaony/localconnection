@@ -119,7 +119,42 @@ class DivisionController extends Controller
         }])
         ->orderBy('daily_task_assigns_count', 'desc')
         ->get();
-        return view('division.show', compact('overdueTasks', 'upcomingTasks', 'division'));
+
+        // Get quota locks for this division with usage calculation
+        $quotaLocks = \App\Models\DivisionQuotaLock::where('division_id', $division->id)
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get()
+            ->map(function($lock) {
+                // Calculate usage
+                $directPointsUsed = \App\Models\DirectPoint::where('division_quota_lock_id', $lock->id)
+                    ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
+                    ->get()
+                    ->sum(function($dp) {
+                        return $dp->approved_point ?? $dp->point;
+                    });
+
+                $dailyTasksUsed = \App\Models\DailyTask::where('division_quota_lock_id', $lock->id)
+                    ->sum('point');
+
+                $totalUsed = $directPointsUsed + $dailyTasksUsed;
+                $remaining = $lock->locked_quota - $totalUsed;
+                $usagePercentage = $lock->locked_quota > 0 ? ($totalUsed / $lock->locked_quota * 100) : 0;
+
+                return [
+                    'id' => $lock->id,
+                    'month' => $lock->month,
+                    'year' => $lock->year,
+                    'quota' => $lock->locked_quota,
+                    'used' => $totalUsed,
+                    'task_used' => $dailyTasksUsed,
+                    'direct_point_used' => $directPointsUsed,
+                    'remaining' => $remaining,
+                    'percentage' => round($usagePercentage, 1),
+                ];
+            });
+
+        return view('division.show', compact('overdueTasks', 'upcomingTasks', 'division', 'quotaLocks'));
     }
 
     public function showDivision(Request $request, $slug)
@@ -367,7 +402,8 @@ class DivisionController extends Controller
             'quota' => 0,
             'used' => 0,
             'remaining' => 0,
-            'tasks' => []
+            'tasks' => [],
+            'direct_points' => []
         ]);
 
        $tasks = DailyTask::with(['user', 'assign']) // eager load relasi
@@ -385,13 +421,34 @@ class DivisionController extends Controller
             ];
         });
 
-        $used = $tasks->sum('point');
+        // Get Direct Points for this lock
+        $directPoints = \App\Models\DirectPoint::where('division_quota_lock_id', $lock->id)
+            ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
+            ->with(['fromUser', 'toUser'])
+            ->get()
+            ->map(function ($dp) {
+                return [
+                    'name' => 'Direct Point: ' . $dp->fromUser->name . ' → ' . $dp->toUser->name,
+                    'point' => $dp->point,
+                    'description' => $dp->reason,
+                    'created_at' => $dp->created_at,
+                    'user_name' => $dp->fromUser->name,
+                    'assign_name' => $dp->toUser->name,
+                ];
+            });
+
+        $taskUsed = $tasks->sum('point');
+        $directPointUsed = $directPoints->sum('point');
+        $totalUsed = $taskUsed + $directPointUsed;
 
         return response()->json([
             'quota' => $lock->locked_quota,
-            'used' => $used,
-            'remaining' => $lock->locked_quota - $used,
-            'tasks' => $tasks
+            'used' => $totalUsed,
+            'task_used' => $taskUsed,
+            'direct_point_used' => $directPointUsed,
+            'remaining' => $lock->locked_quota - $totalUsed,
+            'tasks' => $tasks,
+            'direct_points' => $directPoints
         ]);
     }
 
