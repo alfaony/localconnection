@@ -342,7 +342,7 @@ class ReportPointProductivityController extends Controller
                     'point' => $item->approved_point ?? $item->point,
                     'date' => $item->approved_at->format('d M Y'),
                 ];
-        });
+            });
 
         return response()->json([
             'success' => true,
