@@ -53,32 +53,23 @@ class ReportPointController extends Controller
             $notCompletedTasks = $user->taskAssigns->where('task_status_id', '==', $notComplate)->sum('point');
             $attendancePoints = $user->attendances->sum('point');
             $attendBonusPoints = $onTimeAttendance >= ParamSchema::ONEMONTH ? 100 : 0;
-            
-            // Calculate Direct Points received (approved only)
-            $directPointsReceived = \App\Models\DirectPoint::where('to_user_id', $user->id)
-                ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
-                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                ->sum('point');
-            
-            $totalPoints = $completedTasks + $notCompletedTasks + $attendancePoints + $attendBonusPoints + $directPointsReceived;
+            $totalPoints = $completedTasks + $notCompletedTasks + $attendancePoints + $attendBonusPoints;
             
             $settingCompany = SettingCompany::byCompany($user->company_id)->get()->pluck('field_value','field_title');
             $convertionPoint = $totalPoints * $settingCompany['reward_point_conversion'];
 
             return [
-                'user_id' => $user->id,
                 'Name' => $user->name,
                 'total_task' => $totalTask,
                 'Complete' => $completedTasks,
                 'Not Complete' => $notCompletedTasks,
                 'Attend Point' => $attendancePoints,
                 'Attend Bonus Point' => $attendBonusPoints,
-                'Direct Point' => $directPointsReceived,
                 'Total' => $totalPoints,
                 'convertion_point' => $convertionPoint > 0 ? 'Rp. '.number_format($convertionPoint,0,',','.') : 'Rp. 0'
             ];
         });
 
-        return view('report_point.index', compact('reports', 'users', 'startOfMonth', 'endOfMonth'));
+        return view('report_point.index', compact('reports', 'users'));
     }
 }

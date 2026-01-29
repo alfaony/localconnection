@@ -32,7 +32,6 @@
                 <th class="text-center col-1">Poin Pekerjaan Tidak Selesai</th>
                 <th class="text-center col-1">Poin Keterlambatan</th>
                 <th class="text-center col-1">Poin Bonus Kehadiran</th>
-                <th class="text-center col-1">Direct Point</th>
                 <th class="text-center col-1">Total Poin</th>
                 <th class="text-center col-auto">Kalkulasi</th>
             </tr>
@@ -46,67 +45,9 @@
                         <td>{{ $report['Not Complete'] }}</td>
                         <td>{{ $report['Attend Point'] }}</td>
                         <td>{{ $report['Attend Bonus Point'] }}</td>
-                        <td>
-                            @if($report['Direct Point'] > 0)
-                                <span class="badge badge-info">{{ $report['Direct Point'] }}</span>
-                                <button type="button" class="btn btn-xs btn-link" 
-                                        data-toggle="modal" data-target="#directPointModal{{ $report['user_id'] }}">
-                                    <i class="fa fa-info-circle"></i>
-                                </button>
-                            @else
-                                0
-                            @endif
-                        </td>
                         <td>{{ $report['Total'] }}</td>
                         <td>{{ $report['convertion_point'] }}</td>
                     </tr>
-
-                    {{-- Modal for Direct Point Details --}}
-                    @if($report['Direct Point'] > 0)
-                        <div class="modal fade" id="directPointModal{{ $report['user_id'] }}" tabindex="-1" role="dialog">
-                            <div class="modal-dialog modal-lg" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Detail Direct Point - {{ $report['Name'] }}</h5>
-                                        <button type="button" class="close" data-dismiss="modal">
-                                            <span>&times;</span>
-                                        </button>
-                                    </div>
-                                    <div class="modal-body">
-                                        @php
-                                            $directPoints = \App\Models\DirectPoint::where('to_user_id', $report['user_id'])
-                                                ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
-                                                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                                                ->with(['fromUser', 'division'])
-                                                ->get();
-                                        @endphp
-                                        <table class="table table-sm table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>Tanggal</th>
-                                                    <th>Dari</th>
-                                                    <th>Divisi</th>
-                                                    <th>Point</th>
-                                                    <th>Alasan</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($directPoints as $dp)
-                                                    <tr>
-                                                        <td>{{ $dp->created_at->format('d M Y') }}</td>
-                                                        <td>{{ $dp->fromUser->name }}</td>
-                                                        <td>{{ $dp->division->name }}</td>
-                                                        <td>{{ $dp->point }}</td>
-                                                        <td>{{ $dp->reason ?: '-' }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
                 @endforeach
             </tbody>
         </table>
