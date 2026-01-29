@@ -32,11 +32,11 @@ class DivisionController extends Controller
         // Menggunakan relasi untuk mengambil divisi yang terkait dengan user tersebut
         if($user->role->name == RoleSchema::ADMIN || $user->role->name == RoleSchema::ROOT || ( Access::can('create','divisions') && Access::can('store','divisions')))
         {
-            $divisions = Division::byCompany($user->company_id)->paginate(10);
+            $divisions = Division::byCompany($user->company_id)->orderBy('created_at','desc')->paginate(10);
         }
         else
         {
-            $divisions = $user->divisions()->paginate(10);
+            $divisions = $user->divisions()->orderBy('created_at','desc')->paginate(10);
         }
         
         // Mengirim data divisi ke view
@@ -47,7 +47,7 @@ class DivisionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'point_quota_monthly' => 'required|integer|min:0|max:200',
+            'point_quota_monthly' => 'required|integer|min:0',
         ]);
 
         DB::beginTransaction();
@@ -197,7 +197,7 @@ class DivisionController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'point_quota_monthly' => 'required|integer|min:0|max:200',
+            'point_quota_monthly' => 'required|integer|min:0',
         ]);
 
         DB::beginTransaction();
