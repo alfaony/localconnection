@@ -122,15 +122,24 @@ class OfficeAttendanceController extends Controller
         }
         
         $barcode = BarcodeAttendance::where('code', $code)->first();
-        // Dispatch Job untuk memproses verifikasi absensi
-        ProcessScanAttendanceJob::dispatch(
-            $barcode->id,
-            auth()->id(),
-            auth()->user()->company_id
-        );
+        
+        // Cek apakah barcode sudah diverifikasi oleh user ini (fallback check)
+        $isAlreadyVerified = $barcode->is_used && $barcode->user_id == auth()->id();
+        
+        // Jika belum verified, dispatch job
+        if (!$isAlreadyVerified) {
+            ProcessScanAttendanceJob::dispatch(
+                $barcode->id,
+                auth()->id(),
+                auth()->user()->company_id
+            );
+        }
 
-        // Kembalikan status "processing" ke halaman status verifikasi
-        return view('office_attendance.attendance', compact('barcode'))->with('success', 'QR code sedang diverifikasi. Harap tunggu...');
+        // Pass status verifikasi ke view
+        return view('office_attendance.attendance', [
+            'barcode' => $barcode,
+            'isAlreadyVerified' => $isAlreadyVerified
+        ])->with('success', $isAlreadyVerified ? 'QR code sudah terverifikasi.' : 'QR code sedang diverifikasi. Harap tunggu...');
     }
 
     public function complete(Request $request, $code)
