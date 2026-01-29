@@ -311,8 +311,10 @@ class DirectPointController extends Controller
         
         // Calculate period month and year (MUST MATCH getOrCreateQuotaLock logic!)
         if ($currentDate->day >= $rangeStart) {
-            $month = $currentDate->copy()->addMonth()->month;
-            $year = $currentDate->copy()->addMonth()->year;
+            // Periode bulan depan: ambil angka bulan saja, JANGAN pakai addMonth() 
+            // karena akan overflow (misal 29 Jan + 1 month = 1 Mar, bukan Feb)
+            $month = $currentDate->month == 12 ? 1 : $currentDate->month + 1;
+            $year = $currentDate->month == 12 ? $currentDate->year + 1 : $currentDate->year;
         } else {
             $month = $currentDate->month;
             $year = $currentDate->year;
@@ -368,8 +370,10 @@ class DirectPointController extends Controller
 
         // Calculate period month and year (same logic as DailyTask)
         if ($now->day >= $periodStartDay) {
-            $month = $now->copy()->addMonth()->month;
-            $year = $now->copy()->addMonth()->year;
+            // Periode bulan depan: ambil angka bulan saja, JANGAN pakai addMonth() 
+            // karena akan overflow (misal 29 Jan + 1 month = 1 Mar, bukan Feb)
+            $month = $now->month == 12 ? 1 : $now->month + 1;
+            $year = $now->month == 12 ? $now->year + 1 : $now->year;
         } else {
             $month = $now->month;
             $year = $now->year;
