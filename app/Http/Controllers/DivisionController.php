@@ -62,7 +62,7 @@ class DivisionController extends Controller
             // Create DivisionQuotaLock untuk bulan ini
             if($request->point_quota_monthly > 0)
             {
-                $this->ensureQuotaLockFor($division);
+                $this->validateAndUpdateQuotaLock($division, $request->point_quota_monthly);
             }
 
             DB::commit();
