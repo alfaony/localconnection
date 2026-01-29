@@ -24,70 +24,69 @@ class ItemPurchaseMobileController extends BaseController
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            "payment_term_date" => "required|date",
-            'item_request_id' => 'required|integer|exists:item_requests,id',
+            "payment_term_date"   => "required|date",
+            'item_request_id'     => 'required|integer|exists:item_requests,id',
             'product_supplier_id' => 'nullable|integer|exists:product_suppliers,id',
-            'actual_price' => 'required|numeric|min:0',
-            'bon_photo' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
-            'payment_method' => "nullable|string",
-            'rekening_number' => "nullable|string",
-            "note" => "nullable|string"
+            'actual_price'        => 'required|numeric|min:0',
+            'bon_photo'           => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+            'payment_method'      => "nullable|string",
+            'rekening_number'     => "nullable|string",
+            "note"                => "nullable|string"
         ]);
-
         if (empty($request->product_supplier_id)) {
             $validatedData = array_merge($validatedData, $request->validate([
-                'owner_name' => 'required|string|max:255',
-                'store_name' => 'required|string|max:255',
+                'owner_name'   => 'required|string|max:255',
+                'store_name'   => 'required|string|max:255',
                 'phone_number' => 'required|string|max:20',
-                'location' => 'required|string|max:255',
+                'location'     => 'required|string|max:255',
             ]));
         }
 
         DB::beginTransaction();
         try {
-            $itemRequest = ItemRequest::find($validatedData['item_request_id']);
+            $itemRequest = ItemRequest::findOrFail($validatedData['item_request_id']);
 
             if (empty($request->product_supplier_id)) {
-                $newVendor = ProductSupplier::create([
-                    'company_id' => Auth::user()->company_id,
-                    'owner_name' => $request->owner_name,
-                    'store_name' => $request->store_name,
-                    'phone_number' => $request->phone_number,
-                    'location' => $request->location,
-                ]);
+                $newVendor = $this->addVendor($request, $itemRequest);
                 $validatedData['product_supplier_id'] = $newVendor->id;
             }
 
-            // Upload photo
             $bonPhoto = $request->file('bon_photo');
-            $bonPhotoName = "bon-photo-{$itemRequest->id}." . $bonPhoto->getClientOriginalExtension();
+            $bonPhotoName = "bon-photo-{$itemRequest->id}-" . time() . "." . $bonPhoto->getClientOriginalExtension();
             $path = $bonPhoto->storeAs('public/item-purchase-bon-photos', $bonPhotoName);
 
-            $validatedData['bon_photo'] = $path;
-            $validatedData['company_id'] = Auth::user()->company_id;
-            $validatedData['sprinter_id'] = Auth::user()->id;
+            $validatedData['bon_photo']   = $path;
+            $validatedData['company_id']  = auth()->user()->company_id;
+            $validatedData['sprinter_id'] = auth()->user()->id;
 
-            $itemPurchase = ItemPurchase::create($validatedData);
+            $itemPurchase = new ItemPurchase();
+            $itemPurchase->fill($validatedData);
+            $itemPurchase->save();
 
-            $itemRequest->status = 'WAITING_PAYMENT';
-            $itemRequest->save();
+            $itemRequest->update(['status' => 'WAITING_PAYMENT']);
 
             if ($request->boolean('is_finished')) {
                 $itemRequest->is_open = 0;
                 $itemRequest->save();
-                dispatch(new ItemRequestClose($itemRequest, Auth::user()->id));
+                
+                dispatch(new ItemRequestClose($itemRequest, auth()->user()->id));
             }
 
             DB::commit();
+
             return response()->json([
                 'message' => 'Item purchase created successfully',
-                'data' => $itemPurchase
-            ], 200);
+                'data'    => $itemPurchase
+            ], 201);
 
         } catch (\Throwable $th) {
             DB::rollBack();
-            Log::error($th);
-            return response()->json(['error' => $th->getMessage()], 500);
+            Log::error("Error in ItemPurchase Store: " . $th->getMessage());
+            
+            return response()->json([
+                'error'   => 'Failed to create purchase',
+                'message' => $th->getMessage()
+            ], 500);
         }
     }
 
@@ -124,47 +123,28 @@ class ItemPurchaseMobileController extends BaseController
         }
     }
 
-    public function addVendor(Request $request, $id)
+    private function addVendor(Request $request, ItemRequest $itemRequest)
     {
-        $request->validate([
-            'owner_name' => 'required|string',
-            'store_name' => 'required|string',
-            'phone_number' => 'required|string',
-            'location' => 'required|string',
-            'supplier_category_id' => 'required|array',
-        ]);
-
-        $itemRequest = ItemRequest::findOrFail($id);
-
         try {
-            DB::beginTransaction();
-
             $productSupplier = ProductSupplier::create([
-                'owner_name' => $request->owner_name,
-                'company_id' => $itemRequest->company_id,
-                'store_name' => $request->store_name,
+                'owner_name'   => $request->owner_name,
+                'company_id'   => $itemRequest->company_id,
+                'store_name'   => $request->store_name,
                 'phone_number' => $request->phone_number,
-                'location' => $request->location,
+                'location'     => $request->location,
             ]);
-
-            $productSupplier->supplierCategories()->sync($request->supplier_category_id);
-
+            if ($itemRequest->supplier_category_id) {
+                $productSupplier->supplierCategories()->sync($itemRequest->supplier_category_id);
+            }
             PotentialVendor::create([
-                'company_id' => $itemRequest->company_id,
-                'item_request_id' => $itemRequest->id,
+                'company_id'          => $itemRequest->company_id,
+                'item_request_id'     => $itemRequest->id,
                 'product_supplier_id' => $productSupplier->id,
             ]);
 
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'supplier' => $productSupplier
-            ]);
+            return $productSupplier;
         } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error($th);
-            return response()->json(['error' => $th->getMessage()], 500);
+            throw $th;
         }
     }
 

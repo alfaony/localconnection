@@ -150,4 +150,8 @@ class ParamSchema
     const WFO = "wfo";
     const WFH = "wfh";
     const SHIFT = "shift";
+
+    // Platform
+    const APK = "apk";
+    const WEB = "web";
 }
