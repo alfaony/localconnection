@@ -421,6 +421,10 @@
     .sticky-top {
         z-index: 1020;
     }
+
+    .swal2-confirm.btn.btn-success.btn-lg {
+        background-color: #28a745;
+    }
 </style>
 @stop
 

@@ -178,8 +178,8 @@
                             cancelButtonText: '<i class="fas fa-times"></i> Batal',
                             width: '600px',
                             customClass: {
-                                confirmButton: 'btn btn-success btn-lg',
-                                cancelButton: 'btn btn-secondary btn-lg'
+                                confirmButton: 'btn btn-success btn-md mr-2 mb-1',
+                                cancelButton: 'btn btn-secondary btn-md mb-1'
                             },
                             buttonsStyling: false
                         }).then((result) => {
