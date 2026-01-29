@@ -75,6 +75,7 @@
                                 <th>Poin Pencapaian Penjualan</th>
                                 <th>Point Tugas</th>
                                 <th>Point Punishment</th>
+                                <th>Direct Point</th>
                                 <th>Total Poin</th>
                                 @canAccess('details','report_productivities')
                                 <th>Action</th>
@@ -90,6 +91,7 @@
                                     <td>{{ $report['sales_achievement_points'] }}</td>
                                     <td>{{ $report['daily_task_points'] }}</td>
                                     <td>{{ $report['punishment_points'] }}</td>
+                                    <td>{{ $report['direct_points'] ?? 0 }}</td>
                                     <td>{{ $report['total_points'] }}</td>
                                     @canAccess('details','report_productivities')
                                     <td>
@@ -242,11 +244,17 @@
             html += buildCategorySection('punishment', 'Point Punishment', data.punishment_tasks.items, data.punishment_tasks.total, 'danger');
         }
         
+        // Direct Points
+        if (data.direct_points && data.direct_points.items.length > 0) {
+            html += buildCategorySection('directpoint', 'Direct Point', data.direct_points.items, data.direct_points.total, 'secondary');
+        }
+        
         html += '</div>';
         
         if (data.trainings.items.length === 0 && data.ip_rights.items.length === 0 && 
             data.sales_achievements.items.length === 0 && data.daily_tasks.items.length === 0 && 
-            data.punishment_tasks.items.length === 0) {
+            data.punishment_tasks.items.length === 0 && 
+            (!data.direct_points || data.direct_points.items.length === 0)) {
             html = '<div class="alert alert-info">Tidak ada detail poin untuk pengguna ini pada periode yang dipilih.</div>';
         }
         
