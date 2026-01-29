@@ -43,9 +43,9 @@ class PermissionForMenuDirectPointSeeder extends Seeder
                 PermissionRole::create(['role_id' => $role->id, 'permission_id' => $permission->id]);
             }
 
-            $this->call(ClearPermissionSeeder::class);
         }
-
+        
+        $this->call(ClearPermissionSeeder::class);
     }
 }
 
