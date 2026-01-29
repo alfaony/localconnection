@@ -66,23 +66,38 @@ class ReportPointProductivityController extends Controller
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->sum('points');
 
-           $dailyTaskPoints = DailyTask::where('assignment_user_id', $user->id)
-            ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
-                $query
-                    ->whereBetween('date', [$startDate, $endDate])
-                    ->whereHas('taskStatus', function ($q) {
-                        $q->where('name', ParamSchema::COMPLATE);
-                    });
-            })
-            ->sum('point');
+           // Regular daily task points (NOT in punishment_users)
+            $dailyTaskPoints = DailyTask::where('assignment_user_id', $user->id)
+                ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                    $query
+                        ->whereBetween('date', [$startDate, $endDate])
+                        ->whereHas('taskStatus', function ($q) {
+                            $q->where('name', ParamSchema::COMPLATE);
+                        });
+                })
+                ->whereDoesntHave('punishmentUser')
+                ->sum('point');
+
+            // Punishment points (IN punishment_users)
+            $punishmentPoints = DailyTask::where('assignment_user_id', $user->id)
+                ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                    $query
+                        ->whereBetween('date', [$startDate, $endDate])
+                        ->whereHas('taskStatus', function ($q) {
+                            $q->where('name', ParamSchema::COMPLATE);
+                        });
+                })
+                ->whereHas('punishmentUser')
+                ->sum('point');
 
             return [
                 'name' => $user->name,
                 'training_points' => $trainingPoints,
                 'ip_right_points' => $ipRightPoints,
                 'sales_achievement_points' => $salesAchievementPoints,
-                'daily_task_point' => $dailyTaskPoints,
-                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints,
+                'daily_task_points' => $dailyTaskPoints,
+                'punishment_points' => $punishmentPoints,
+                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints,
             ];
         });
 
@@ -140,6 +155,7 @@ class ReportPointProductivityController extends Controller
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->sum('points');
 
+            // Regular daily task points (NOT in punishment_users)
             $dailyTaskPoints = DailyTask::where('assignment_user_id', $user->id)
                 ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
                     $query
@@ -148,6 +164,19 @@ class ReportPointProductivityController extends Controller
                             $q->where('name', ParamSchema::COMPLATE);
                         });
                 })
+                ->whereDoesntHave('punishmentUser')
+                ->sum('point');
+
+            // Punishment points (IN punishment_users)
+            $punishmentPoints = DailyTask::where('assignment_user_id', $user->id)
+                ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                    $query
+                        ->whereBetween('date', [$startDate, $endDate])
+                        ->whereHas('taskStatus', function ($q) {
+                            $q->where('name', ParamSchema::COMPLATE);
+                        });
+                })
+                ->whereHas('punishmentUser')
                 ->sum('point');
             $divisions = $user->divisions->isNotEmpty()
             ? $user->divisions->pluck('name')->implode(', ')
@@ -160,8 +189,9 @@ class ReportPointProductivityController extends Controller
                 'training_points' => $trainingPoints,
                 'ip_right_points' => $ipRightPoints,
                 'sales_achievement_points' => $salesAchievementPoints,
-                'daily_task_point' => $dailyTaskPoints,
-                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints,
+                'daily_task_points' => $dailyTaskPoints,
+                'punishment_points' => $punishmentPoints,
+                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints,
             ];
         });
 
@@ -174,6 +204,137 @@ class ReportPointProductivityController extends Controller
         );
 
         return redirect()->back()->with('success', 'Export sedang diproses. Anda akan menerima notifikasi setelah selesai.');
+    }
+
+    public function details(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+        ]);
+
+        $userId = $request->input('user_id');
+        $startDate = Carbon::parse($request->input('start_date'));
+        $endDate = Carbon::parse($request->input('end_date'))->endOfDay();
+
+        // Get user info
+        $user = User::findOrFail($userId);
+
+        // Get Training details
+        $trainings = Training::where('user_id', $userId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get(['name', 'point', 'created_at'])
+            ->map(function($item) {
+                return [
+                    'name' => $item->name,
+                    'point' => $item->point,
+                    'date' => $item->created_at->format('d M Y'),
+                ];
+            });
+
+        // Get IP Right details
+        $ipRights = IpRight::where('user_id', $userId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get(['name', 'point', 'created_at'])
+            ->map(function($item) {
+                return [
+                    'name' => $item->name,
+                    'point' => $item->point,
+                    'date' => $item->created_at->format('d M Y'),
+                ];
+            });
+
+        // Get Sales Achievement details
+        $salesAchievements = SalesAchievement::where('user_id', $userId)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get(['period', 'points', 'created_at'])
+            ->map(function($item) {
+                return [
+                    'name' => $item->period,
+                    'point' => $item->points,
+                    'date' => $item->created_at->format('d M Y'),
+                ];
+            });
+
+        // Get Daily Task details (non-punishment)
+        $dailyTasks = DailyTask::where('assignment_user_id', $userId)
+            ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                $query
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->whereHas('taskStatus', function ($q) {
+                        $q->where('name', ParamSchema::COMPLATE);
+                    });
+            })
+            ->whereDoesntHave('punishmentUser')
+            ->get(['name', 'point', 'id'])
+            ->map(function($item) use ($startDate, $endDate) {
+                $completedDate = $item->statusRecords()
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->whereHas('taskStatus', function ($q) {
+                        $q->where('name', ParamSchema::COMPLATE);
+                    })
+                    ->first();
+                
+                return [
+                    'name' => $item->name,
+                    'point' => $item->point,
+                    'date' => $completedDate ? Carbon::parse($completedDate->date)->format('d M Y') : '-',
+                ];
+            });
+
+        // Get Punishment Task details
+        $punishmentTasks = DailyTask::where('assignment_user_id', $userId)
+            ->whereHas('statusRecords', function ($query) use ($startDate, $endDate) {
+                $query
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->whereHas('taskStatus', function ($q) {
+                        $q->where('name', ParamSchema::COMPLATE);
+                    });
+            })
+            ->whereHas('punishmentUser')
+            ->get(['name', 'point', 'id'])
+            ->map(function($item) use ($startDate, $endDate) {
+                $completedDate = $item->statusRecords()
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->whereHas('taskStatus', function ($q) {
+                        $q->where('name', ParamSchema::COMPLATE);
+                    })
+                    ->first();
+                
+                return [
+                    'name' => $item->name,
+                    'point' => $item->point,
+                    'date' => $completedDate ? Carbon::parse($completedDate->date)->format('d M Y') : '-',
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'user_name' => $user->name,
+            'data' => [
+                'trainings' => [
+                    'items' => $trainings,
+                    'total' => $trainings->sum('point'),
+                ],
+                'ip_rights' => [
+                    'items' => $ipRights,
+                    'total' => $ipRights->sum('point'),
+                ],
+                'sales_achievements' => [
+                    'items' => $salesAchievements,
+                    'total' => $salesAchievements->sum('point'),
+                ],
+                'daily_tasks' => [
+                    'items' => $dailyTasks,
+                    'total' => $dailyTasks->sum('point'),
+                ],
+                'punishment_tasks' => [
+                    'items' => $punishmentTasks,
+                    'total' => $punishmentTasks->sum('point'),
+                ],
+            ],
+        ]);
     }
 
 }

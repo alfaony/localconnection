@@ -22,6 +22,7 @@ use App\Http\Controllers\API\ItemPurchaseMobileController;
 use App\Http\Controllers\API\FlowChartController;
 use App\Http\Controllers\API\RegionController;
 use App\Http\Controllers\API\ProductStoreController;
+use App\Http\Controllers\UserController;
 
 
 /*
@@ -162,6 +163,11 @@ Route::group(['middleware' => ['auth:api']], function()
 
 Route::group(['middleware' => ['auth:api']], function() 
 {
+    Route::post('/flutter/broadcast/auth', function (Request $request) {
+        return Broadcast::auth($request);
+    });
+    Route::post('/user/fcm-token', [UserController::class, 'saveFcmToken']);
+    Route::get('/user/role-division', [UserController::class, 'getRoleAndDivision']);
     Route::post('logout', [LoginController::class, 'logout']);
 });
 

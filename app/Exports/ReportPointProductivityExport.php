@@ -36,7 +36,8 @@ class ReportPointProductivityExport implements FromCollection, WithHeadings, Wit
             'Poin Training',
             'Poin Hak Cipta',
             'Poin Pencapaian Penjualan',
-            'Poin Tugas Harian',
+            'Point Tugas',
+            'Point Punishment',
             'Total Poin'
         ];
     }
@@ -50,7 +51,8 @@ class ReportPointProductivityExport implements FromCollection, WithHeadings, Wit
             $report['training_points'],
             $report['ip_right_points'],
             $report['sales_achievement_points'],
-            $report['daily_task_point'],
+            $report['daily_task_points'],
+            $report['punishment_points'],
             $report['total_points'],
         ];
     }
