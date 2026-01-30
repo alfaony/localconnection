@@ -83,7 +83,7 @@
                             <th>Dari</th>
                             <th>Kepada</th>
                             <th>Divisi</th>
-                            <th width="100" class="text-center">Point</th>
+                            <th width="150" class="text-center">Point</th>
                             <th width="120" class="text-center">Status</th>
                             <th width="80" class="text-center">Aksi</th>
                         </tr>
@@ -114,11 +114,14 @@
                                     {{ $dp->division->name }}
                                 </td>
                                 <td class="text-center">
-                                    <h5 class="mb-0">
-                                        <span class="badge badge-pill badge-info">
-                                            <i class="fas fa-coins"></i> {{ $dp->point }}
+                                    <div class="d-flex flex-column align-items-center">
+                                        <span class="badge badge-info px-3 py-2 mb-2" style="font-size: 0.95rem;">
+                                            <i class="fas fa-coins mr-1"></i> {{ $dp->point }}
                                         </span>
-                                    </h5>
+                                        <span class="badge badge-success px-3 py-1" style="font-size: 0.85rem;">
+                                            <i class="fas fa-check-circle mr-1"></i> {{ $dp->approved_point ?? 0 }} <small>approved</small>
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="text-center">{!! $dp->status_badge !!}</td>
                                 <td class="text-center">
