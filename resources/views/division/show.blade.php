@@ -9,6 +9,86 @@
         <li class="breadcrumb-item active" aria-current="page">{{ $division->name ?? '' }}</li>
     </ol>
 </nav>
+
+{{-- Quota History Section --}}
+<div class="card p-3 mt-3">
+    <div class="card-header bg-gradient-info text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-history"></i> Riwayat Quota Periode
+        </h5>
+    </div>
+    <div class="card-body">
+        @if($quotaLocks->isEmpty())
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <p>Belum ada riwayat quota untuk divisi ini</p>
+            </div>
+        @else
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th width="150">Periode</th>
+                            <th width="120" class="text-center">Total Quota</th>
+                            <th width="120" class="text-center">Terpakai</th>
+                            <th width="120" class="text-center">Tersisa</th>
+                            <th width="150" class="text-center">Usage</th>
+                            <th>Breakdown</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($quotaLocks as $lock)
+                            @php
+                                $monthName = \Carbon\Carbon::create()->month($lock['month'])->translatedFormat('F');
+                                $progressColor = 'success';
+                                if ($lock['percentage'] > 80) $progressColor = 'danger';
+                                elseif ($lock['percentage'] > 60) $progressColor = 'warning';
+                            @endphp
+                            <tr>
+                                <td>
+                                    <strong>{{ $monthName }} {{ $lock['year'] }}</strong>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge badge-primary badge-pill">{{ number_format($lock['quota']) }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge badge-secondary badge-pill">{{ number_format($lock['used']) }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge badge-{{ $lock['remaining'] < 0 ? 'danger' : ($lock['remaining'] < $lock['quota'] * 0.2 ? 'warning' : 'success') }} badge-pill">
+                                        {{ number_format($lock['remaining']) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 25px;">
+                                        <div class="progress-bar bg-{{ $progressColor }}" 
+                                             role="progressbar" 
+                                             style="width: {{ min($lock['percentage'], 100) }}%">
+                                            {{ $lock['percentage'] }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <small>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span><i class="fas fa-tasks text-primary"></i> Task Points:</span>
+                                            <strong>{{ number_format($lock['task_used']) }}</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span><i class="fas fa-gift text-success"></i> Direct Points:</span>
+                                            <strong>{{ number_format($lock['direct_point_used']) }}</strong>
+                                        </div>
+                                    </small>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+</div>
+
 <div id="accordion">
 @canAccess('fetchusertask', 'project_dashboards')
   <div class="card p-3 mt-3">
@@ -181,35 +261,86 @@
         const container = $('#task-container');
         container.empty();
 
-        if (res.tasks.length === 0) {
-        $('#no-task-msg').show();
-        return;
-        } else {
-        $('#no-task-msg').hide();
-        }
-
-        res.tasks.forEach(t => {
-        
-        const taskDate = new Date(t.created_at).toLocaleDateString('id-ID');
-        const card = `
-        <div class="col-md-6 mb-3">
-                <div class="card shadow-sm border-left-primary">
-                    <div class="card-body">
-                    <h5 class="card-title mb-1">${t.name}</h5>
-
-                    <p class="card-text mb-1 small text-muted">
-                        🗓 <strong>${taskDate}</strong><br>
-                        💠 <strong>Point:</strong> ${t.point}<br>
-                        👤 <strong>Dibuat oleh:</strong> ${t.user_name ?? '-'}<br>
-                        ${t.assign_name ? `🎯 <strong>Ditugaskan ke:</strong> ${t.assign_name}<br>` : ''}
-                    </p>
-
-                    ${t.description ? `<p class="mb-0 text-muted small"><em>${t.description}</em></p>` : ''}
+        // Show summary if we have data
+        if (res.task_used > 0 || res.direct_point_used > 0) {
+            const summaryCard = `
+                <div class="col-md-12 mb-3">
+                    <div class="card shadow-sm border-left-info">
+                        <div class="card-body py-2">
+                            <h6 class="mb-2">📊 Breakdown Penggunaan Point</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">Task Point:</small>
+                                    <h5 class="mb-0 text-primary">${res.task_used}</h5>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Direct Point:</small>
+                                    <h5 class="mb-0 text-success">${res.direct_point_used}</h5>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-        container.append(card);
+            `;
+            container.append(summaryCard);
+        }
+
+        const allItems = [];
+
+        // Add tasks
+        if (res.tasks && res.tasks.length > 0) {
+            res.tasks.forEach(t => {
+                allItems.push({
+                    type: 'task',
+                    ...t
+                });
+            });
+        }
+
+        // Add direct points
+        if (res.direct_points && res.direct_points.length > 0) {
+            res.direct_points.forEach(dp => {
+                allItems.push({
+                    type: 'direct_point',
+                    ...dp
+                });
+            });
+        }
+
+        if (allItems.length === 0) {
+            $('#no-task-msg').show();
+            return;
+        } else {
+            $('#no-task-msg').hide();
+        }
+
+        allItems.forEach(item => {
+            const taskDate = new Date(item.created_at).toLocaleDateString('id-ID');
+            const icon = item.type === 'direct_point' ? '💰' : '📋';
+            const typeLabel = item.type === 'direct_point' ? 'Direct Point' : 'Task';
+            
+            const card = `
+            <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm border-left-${item.type === 'direct_point' ? 'success' : 'primary'}">
+                        <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="card-title mb-1">${icon} ${item.name}</h5>
+                            <span class="badge badge-${item.type === 'direct_point' ? 'success' : 'primary'}">${typeLabel}</span>
+                        </div>
+
+                        <p class="card-text mb-1 small text-muted">
+                            🗓 <strong>${taskDate}</strong><br>
+                            💠 <strong>Point:</strong> ${item.point}<br>
+                            👤 <strong>Dibuat oleh:</strong> ${item.user_name ?? '-'}<br>
+                            ${item.assign_name ? `🎯 <strong>${item.type === 'direct_point' ? 'Diterima' : 'Ditugaskan'} oleh:</strong> ${item.assign_name}<br>` : ''}
+                        </p>
+
+                        ${item.description ? `<p class="mb-0 text-muted small"><em>${item.description}</em></p>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.append(card);
         });
     });
     }

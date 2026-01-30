@@ -39,6 +39,7 @@ use App\Models\Division;
 use App\Models\DivisionQuotaLock;
 use App\Models\RecurringRule;
 use App\Models\Project;
+use App\Models\DirectPoint;
 
 use App\Helpers\InboxHelper;
 use Ramsey\Uuid\Uuid;
@@ -1723,8 +1724,11 @@ class DailyTaskController extends Controller
         
         // Calculate period month and year
         if ($now->day >= $periodStartDay) {
-            $month = $now->copy()->addMonth()->month;
-            $year = $now->copy()->addMonth()->year;
+            // Periode bulan depan: ambil angka bulan saja, JANGAN pakai addMonth() 
+            // karena akan overflow (misal 29 Jan + 1 month = 1 Mar, bukan Feb)
+            $month = $now->month == 12 ? 1 : $now->month + 1;
+            $year = $now->month == 12 ? $now->year + 1 : $now->year;
+
         } else {
             $month = $now->month;
             $year = $now->year;
@@ -1767,7 +1771,15 @@ class DailyTaskController extends Controller
             })
             ->sum('point');
 
-        $sisa = $quota->locked_quota - $used;
+        $directPointsUsed = DirectPoint::where('division_quota_lock_id', $quota->id)
+            ->where('status', DirectPoint::STATUS_APPROVED)
+            ->get()
+            ->sum(function($dp) {
+                return $dp->approved_point ?? $dp->point;
+            });
+
+
+        $sisa = $quota->locked_quota - $used - $directPointsUsed;
 
         if ($point > $sisa) {
             return response()->json([

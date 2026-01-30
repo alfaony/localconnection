@@ -21,6 +21,7 @@ use App\Http\Controllers\API\ItemRequestMobileController;
 use App\Http\Controllers\API\ItemPurchaseMobileController;
 use App\Http\Controllers\API\FlowChartController;
 use App\Http\Controllers\API\RegionController;
+use App\Http\Controllers\API\ProductStoreController;
 use App\Http\Controllers\UserController;
 
 
@@ -120,8 +121,11 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::resource('item-purchases', ItemPurchaseMobileController::class)
     ->only(['store', 'update']);
 
+    // Product Store Search API
+    Route::get('product-stores/search', [ProductStoreController::class, 'search'])->name('api.product-stores.search');
+    
     Route::apiResource('flowcharts', FlowChartController::class);
-
+    
 });
 
 Route::group(['middleware' => ['auth:api']], function() 

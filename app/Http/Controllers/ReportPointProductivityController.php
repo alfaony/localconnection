@@ -90,6 +90,15 @@ class ReportPointProductivityController extends Controller
                 ->whereHas('punishmentUser')
                 ->sum('point');
 
+            // Direct Points received (approved only) - filter by approved_at
+            $directPointsReceived = \App\Models\DirectPoint::where('to_user_id', $user->id)
+                ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
+                ->whereBetween('approved_at', [$startDate, $endDate])
+                ->get()
+                ->sum(function($dp) {
+                    return $dp->approved_point ?? $dp->point;
+                });
+
             return [
                 'name' => $user->name,
                 'training_points' => $trainingPoints,
@@ -97,7 +106,8 @@ class ReportPointProductivityController extends Controller
                 'sales_achievement_points' => $salesAchievementPoints,
                 'daily_task_points' => $dailyTaskPoints,
                 'punishment_points' => $punishmentPoints,
-                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints,
+                'direct_points' => $directPointsReceived,
+                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints + $directPointsReceived,
             ];
         });
 
@@ -178,6 +188,16 @@ class ReportPointProductivityController extends Controller
                 })
                 ->whereHas('punishmentUser')
                 ->sum('point');
+
+            // Direct Points received (approved only) - filter by approved_at
+            $directPointsReceived = \App\Models\DirectPoint::where('to_user_id', $user->id)
+                ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
+                ->whereBetween('approved_at', [$startDate, $endDate])
+                ->get()
+                ->sum(function($dp) {
+                    return $dp->approved_point ?? $dp->point;
+                });
+
             $divisions = $user->divisions->isNotEmpty()
             ? $user->divisions->pluck('name')->implode(', ')
             : '-';
@@ -191,7 +211,8 @@ class ReportPointProductivityController extends Controller
                 'sales_achievement_points' => $salesAchievementPoints,
                 'daily_task_points' => $dailyTaskPoints,
                 'punishment_points' => $punishmentPoints,
-                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints,
+                'direct_points' => $directPointsReceived,
+                'total_points' => $trainingPoints + $ipRightPoints + $salesAchievementPoints + $dailyTaskPoints + $punishmentPoints + $directPointsReceived,
             ];
         });
 
@@ -309,6 +330,20 @@ class ReportPointProductivityController extends Controller
                 ];
             });
 
+        // Get Direct Points details
+        $directPoints = \App\Models\DirectPoint::where('to_user_id', $userId)
+            ->where('status', \App\Models\DirectPoint::STATUS_APPROVED)
+            ->whereBetween('approved_at', [$startDate, $endDate])
+            ->with(['fromUser', 'division'])
+            ->get()
+            ->map(function($item) {
+                return [
+                    'name' => 'Direct Point dari ' . $item->fromUser->name . ' (' . $item->division->name . ')',
+                    'point' => $item->approved_point ?? $item->point,
+                    'date' => $item->approved_at->format('d M Y'),
+                ];
+            });
+
         return response()->json([
             'success' => true,
             'user_name' => $user->name,
@@ -332,6 +367,10 @@ class ReportPointProductivityController extends Controller
                 'punishment_tasks' => [
                     'items' => $punishmentTasks,
                     'total' => $punishmentTasks->sum('point'),
+                ],
+                'direct_points' => [
+                    'items' => $directPoints,
+                    'total' => $directPoints->sum('point'),
                 ],
             ],
         ]);
