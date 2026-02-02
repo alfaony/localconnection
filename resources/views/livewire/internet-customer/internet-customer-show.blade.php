@@ -75,7 +75,7 @@
                                             @endif
                                         </td>
                                     </tr>
-                                    --}}
+                                    
                                     <tr>
                                         <th>Alamat Lengkap</th>
                                         <td>{{ $customer->address }}</td>
@@ -89,6 +89,7 @@
                                             {{ $customer->province->name ?? '-' }}
                                         </td>
                                     </tr>
+                                    --}}
                                       @if($customer->coupons->count() > 0)
                                         <tr>
                                             <td colspan="6">

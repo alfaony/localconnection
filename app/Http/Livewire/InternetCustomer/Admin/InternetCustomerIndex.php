@@ -553,7 +553,7 @@ class InternetCustomerIndex extends Component
             ->with([
                 'installation:id,internet_customer_id,device_serial_number',
                 'installation.medias:id,internet_installation_id,photo,caption', // eager load photos
-                'userCustomer:id,name,email,phone_number',
+                'userCustomer:id,name,email,phone_number,start_billing_date,end_billing_date',
                 'company:id,name',
                 'internetPackage:id,name'
             ]);
