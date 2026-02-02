@@ -94,18 +94,19 @@ class GenerateBillingJob implements ShouldQueue
             {   
                 
                 $url = route('internet-customer.customer.show', $customer->internetCustomer->code);
+                $dateJatuhTempo = Carbon::parse($customer->internetCustomer->end_billing_date)->format('d') . ' ' . Carbon::parse($customer->internetCustomer->end_billing_date)->locale('id')->monthName . ' ' . Carbon::parse($customer->internetCustomer->end_billing_date)->year;
 
-                $message = "Hai Kak {$customer->name}, kami dari Hikari ingin menginformasikan mengenai tagihan layanan internet Anda.\n\n"
+                $message = "Hai Kak {$customer->name}, kami dari Hikari Net ingin menginformasikan mengenai tagihan layanan internet Anda.\n\n"
                             . "📌 *Detail Tagihan:*\n"
                             . "Nama Pelanggan: {$customer->name}\n"
                             . "Layanan Paket: {$customer->internetCustomer->internetPackage->name}\n"
                             . "Periode: " . Carbon::now()->locale('id')->monthName . " " . Carbon::now()->year . "\n"
                             . "Jumlah Tagihan: Rp " . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.') . "\n\n"
-                            . "Untuk melakukan pembayaran atau konfirmasi, silakan klik tautan berikut:\n"
+                            . "Untuk melakukan pembayaran atau konfirmasi, silakan klik tautan berikut:\n\n"
                             . "{$url}\n\n"
-                            . "Mohon segera melakukan pembayaran sebelum jatuh tempo agar layanan tetap aktif.\n\n"
-                            . "Terima kasih atas kepercayaannya menggunakan layanan Hikari.\n\n"
-                            . "*Admin Hikari* 🙏";
+                            . "Mohon segera melakukan pembayaran sebelum jatuh tempo pada tanggal {$dateJatuhTempo} agar layanan tetap aktif.\n\n"
+                            . "Terima kasih atas kepercayaannya menggunakan layanan Hikari Net.\n\n"
+                            . "*Admin Hikari Net* 🙏";
 
                 $this->sendMessage($client, $customer->phone_number, $message);
             }
