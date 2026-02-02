@@ -97,7 +97,7 @@
                                         <i class="fas fa-sort ms-1 text-muted"></i>
                                     @endif
                                 </th>
-                                <th wire:click="sortBy('name')" style="cursor: pointer; width: 20%;">
+                                <th wire:click="sortBy('name')" style="cursor: pointer; width: 25%;">
                                     Nama
                                     @if($sortField === 'name')
                                         <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
@@ -107,7 +107,7 @@
                                 </th>
                                 <th style="width: 25%;">Alamat</th>
                                 <th style="width: 15%;">Paket Internet</th>
-                                <th style="width: 15%;">Status</th>
+                                <th style="width: 10%;">Status</th>
                                 <th style="width: 10%;">Aksi</th>
                                 <th wire:click="sortBy('created_at')" style="cursor: pointer; width: 15%;">
                                     Tanggal Daftar
@@ -127,9 +127,21 @@
                                         <span class="badge bg-info">{{ $customer->code }}</span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('internet-customer.show', $customer->id) }}">
-                                            {{ $customer->name }}
-                                        </a>
+                                        <div class="fw-bold">
+                                            <a href="{{ route('internet-customer.show', $customer->id) }}" class="text-decoration-none">
+                                                {{ $customer->name }}
+                                            </a>
+                                        </div>
+                                        @if($customer->userCustomer->start_billing_date && $customer->userCustomer->end_billing_date)
+                                            <div class="mt-1 d-flex gap-1">
+                                                <span class="badge bg-light text-primary border border-primary-subtle" title="Start Billing">
+                                                    <i class="fas fa-calendar-alt me-1"></i> {{ $customer->userCustomer->start_billing_date }}
+                                                </span>
+                                                <span class="badge bg-light text-danger border border-danger-subtle" title="End Billing">
+                                                    <i class="fas fa-calendar-check me-1"></i> {{ $customer->userCustomer->end_billing_date }}
+                                                </span>
+                                            </div>
+                                        @endif
                                     </td>
                                     <td>
                                         {{ Str::limit($customer->address, 50) }}
