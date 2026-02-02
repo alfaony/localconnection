@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Helpers\InboxHelper;
 use App\Services\XenditService;
+use App\Services\MidtransService;
 use Illuminate\Support\Facades\Log;
 
 
@@ -110,6 +111,9 @@ class InternetCustomerForm extends Component
 
     // Xendit
     public $xenditActive = false;
+    
+    // Midtrans
+    public $midtransActive = false;
 
     protected $rules = [
         'signature' => 'nullable|string',
@@ -244,6 +248,18 @@ class InternetCustomerForm extends Component
         } catch (\Exception $e) {
             $this->xenditActive = false;
             Log::warning('Xendit not configured for company', [
+                'company_id' => $this->company_id,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        // Check Midtrans status
+        try {
+            $midtransService = new MidtransService($this->company_id);
+            $this->midtransActive = $midtransService->testConnection();
+        } catch (\Exception $e) {
+            $this->midtransActive = false;
+            Log::warning('Midtrans not configured for company', [
                 'company_id' => $this->company_id,
                 'error' => $e->getMessage()
             ]);
@@ -454,7 +470,7 @@ class InternetCustomerForm extends Component
     {
         if (!$this->hasFreeMonthsPromo) {
             $this->validate([
-                'payment_method' => 'required|in:manual_transfer,xendit',
+                'payment_method' => 'required|in:manual_transfer,xendit,midtrans',
                 'payment_months' => 'required|integer|min:1|max:24',
             ]);
 
@@ -589,7 +605,7 @@ class InternetCustomerForm extends Component
                 'is_paid' => false,
                 'status' => $this->hasFreeMonthsPromo 
                     ? ParamSchema::PENDING 
-                    : ($this->payment_method === 'xendit' ? ParamSchema::WAITING_PAYMENT_SUBSCRIPTION : ParamSchema::WAITING_PAYMENT_CONFIRMATION),
+                    : ($this->payment_method === 'xendit' || $this->payment_method === 'midtrans' ? ParamSchema::WAITING_PAYMENT_SUBSCRIPTION : ParamSchema::WAITING_PAYMENT_CONFIRMATION),
             ]);
             
             $agreement = $this->createPartnershipAgreement($ktpPath, $signaturePath);
@@ -646,9 +662,11 @@ class InternetCustomerForm extends Component
 
                 $this->purchase_id = $internetCustomerPurchase->id;
 
-                // Handle Xendit payment
+                // Handle payment method
                 if ($this->payment_method === 'xendit') {
                     $this->processXenditPayment($internetCustomerPurchase, $internetCustomer);
+                } elseif ($this->payment_method === 'midtrans') {
+                    $this->processMidtransPayment($internetCustomerPurchase, $internetCustomer);
                 } else {
                     // Manual transfer - notify finance
                     $this->notifyFinanceTeam($internetCustomer);
@@ -720,6 +738,59 @@ class InternetCustomerForm extends Component
             ]);
             
             session()->flash('warning', 'Pembayaran digital tidak tersedia. Silakan gunakan transfer manual.');
+        }
+    }
+
+    protected function processMidtransPayment($purchase, $customer)
+    {
+        try {
+            $midtransService = new MidtransService($customer->company_id);
+
+            if (!$midtransService->isActive()) {
+                throw new \Exception('Pembayaran Midtrans tidak tersedia untuk saat ini.');
+            }
+
+            $subscriptionPeriod = $this->calculateSubscriptionPeriod($this->payment_months);
+
+            $result = $midtransService->createTransaction($purchase, $customer, [
+                'payment_months' => $this->payment_months,
+                'total_amount' => $this->totalAmount,
+                'discount_amount' => $this->discountAmount,
+                'subscription_period' => $subscriptionPeriod
+            ]);
+
+            if ($result['success']) {
+                $snapToken = $result['snap_token'];
+                $snapRedirectUrl = $result['redirect_url'];
+
+                $purchase->update([
+                    'midtrans_snap_token' => $snapToken,
+                    'midtrans_raw_response' => json_encode($result),
+                ]);
+
+                Log::info('Midtrans SNAP token created successfully', [
+                    'snap_token' => $snapToken,
+                    'purchase_id' => $purchase->id,
+                    'customer_code' => $customer->code
+                ]);
+
+                // Redirect to Midtrans payment page
+                $this->dispatchBrowserEvent('redirect-to-midtrans', [
+                    'snap_token' => $snapToken,
+                    'redirect_url' => $snapRedirectUrl
+                ]);
+
+            } else {
+                throw new \Exception('Gagal membuat transaksi pembayaran: ' . ($result['message'] ?? 'Unknown error'));
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Midtrans payment processing failed', [
+                'error' => $e->getMessage(),
+                'purchase_id' => $purchase->id
+            ]);
+            
+            session()->flash('warning', 'Pembayaran Midtrans tidak tersedia. Silakan gunakan transfer manual.');
         }
     }
 

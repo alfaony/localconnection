@@ -591,7 +591,7 @@
                                 <i class="fas fa-wallet mr-2"></i>Pilih Metode Pembayaran
                             </h6>
                             <div class="row">
-                                <div class="col-md-6 mb-2">
+                                <div class="col-md-4 mb-2">
                                     <div class="card payment-method-card" onclick="selectPaymentMethod('manual')" id="manual-card">
                                         <div class="card-body text-center py-4">
                                             <i class="fas fa-university fa-3x text-primary mb-2"></i>
@@ -600,12 +600,21 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-2" id="xendit-method-wrapper" style="display: none;">
+                                <div class="col-md-4 mb-2" id="xendit-method-wrapper" style="display: none;">
                                     <div class="card payment-method-card" onclick="selectPaymentMethod('xendit')" id="xendit-card">
                                         <div class="card-body text-center py-4">
                                             <i class="fas fa-credit-card fa-3x text-success mb-2"></i>
                                             <h6 class="mb-1">Pembayaran Digital</h6>
                                             <small class="text-muted">VA, E-Wallet, Credit Card</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-2" id="midtrans-method-wrapper" style="display: none;">
+                                    <div class="card payment-method-card" onclick="selectPaymentMethod('midtrans')" id="midtrans-card">
+                                        <div class="card-body text-center py-4">
+                                            <i class="fas fa-credit-card fa-3x text-warning mb-2"></i>
+                                            <h6 class="mb-1">Midtrans Payment</h6>
+                                            <small class="text-muted">Berbagai metode pembayaran</small>
                                         </div>
                                     </div>
                                 </div>
@@ -739,6 +748,53 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Midtrans Payment Section -->
+                        <div id="midtrans-payment-section" style="display: none;">
+                            <div class="text-center p-4">
+                                <i class="fas fa-credit-card fa-4x text-warning mb-3"></i>
+                                <h5 class="mb-3">Pembayaran via Midtrans</h5>
+                                <p class="text-muted mb-4">
+                                    Anda akan diarahkan ke halaman pembayaran Midtrans untuk menyelesaikan transaksi
+                                </p>
+                                <div class="mb-4">
+                                    <small class="text-muted d-block mb-2">Metode pembayaran yang tersedia:</small>
+                                    <div class="d-flex justify-content-center flex-wrap">
+                                        <span class="badge badge-warning m-1 p-2">
+                                            <i class="fas fa-university mr-1"></i>Virtual Account
+                                        </span>
+                                        <span class="badge badge-warning m-1 p-2">
+                                            <i class="fas fa-wallet mr-1"></i>E-Wallet
+                                        </span>
+                                        <span class="badge badge-warning m-1 p-2">
+                                            <i class="fas fa-credit-card mr-1"></i>Credit Card
+                                        </span>
+                                        <span class="badge badge-warning m-1 p-2">
+                                            <i class="fas fa-qrcode mr-1"></i>QRIS
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" 
+                                        class="btn btn-warning btn-lg px-5" 
+                                        onclick="initiateMidtransPayment()"
+                                        id="midtrans-pay-button">
+                                    <i class="fas fa-arrow-right mr-2"></i>Lanjutkan ke Pembayaran
+                                </button>
+                                
+                                <div id="midtrans-loading" class="mt-3" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin fa-2x text-warning"></i>
+                                    <p class="mt-2 text-muted">Membuat transaksi pembayaran...</p>
+                                </div>
+
+                                <div class="mt-4">
+                                    <small class="text-muted">
+                                        <i class="fas fa-shield-alt mr-1"></i>
+                                        Pembayaran dilindungi dan diproses oleh Midtrans
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -783,6 +839,7 @@ document.addEventListener('livewire:load', function() {
     let currentPaymentMethod = 'manual';
     let selectedMonths = 1;
     let xenditActive = false;
+    let midtransActive = false;
     let monthlyPrice = 0;
     let packageName = '';
     let discountEnabled = false;
@@ -918,27 +975,43 @@ document.addEventListener('livewire:load', function() {
         
         const manualCard = document.getElementById('manual-card');
         const xenditCard = document.getElementById('xendit-card');
+        const midtransCard = document.getElementById('midtrans-card');
         
+        // Reset all cards
+        manualCard.classList.remove('border-primary', 'bg-light');
+        manualCard.style.borderWidth = '1px';
+        if (xenditCard) {
+            xenditCard.classList.remove('border-success', 'bg-light');
+            xenditCard.style.borderWidth = '1px';
+        }
+        if (midtransCard) {
+            midtransCard.classList.remove('border-warning', 'bg-light');
+            midtransCard.style.borderWidth = '1px';
+        }
+        
+        // Apply active style to selected method
         if (method === 'manual') {
             manualCard.classList.add('border-primary', 'bg-light');
             manualCard.style.borderWidth = '3px';
-            if (xenditCard) {
-                xenditCard.classList.remove('border-success', 'bg-light');
-                xenditCard.style.borderWidth = '1px';
-            }
-            
             document.getElementById('manual-payment-section').style.display = 'block';
             document.getElementById('xendit-payment-section').style.display = 'none';
-        } else {
+            document.getElementById('midtrans-payment-section').style.display = 'none';
+        } else if (method === 'xendit') {
             if (xenditCard) {
                 xenditCard.classList.add('border-success', 'bg-light');
                 xenditCard.style.borderWidth = '3px';
             }
-            manualCard.classList.remove('border-primary', 'bg-light');
-            manualCard.style.borderWidth = '1px';
-            
             document.getElementById('manual-payment-section').style.display = 'none';
             document.getElementById('xendit-payment-section').style.display = 'block';
+            document.getElementById('midtrans-payment-section').style.display = 'none';
+        } else if (method === 'midtrans') {
+            if (midtransCard) {
+                midtransCard.classList.add('border-warning', 'bg-light');
+                midtransCard.style.borderWidth = '3px';
+            }
+            document.getElementById('manual-payment-section').style.display = 'none';
+            document.getElementById('xendit-payment-section').style.display = 'none';
+            document.getElementById('midtrans-payment-section').style.display = 'block';
         }
     };
 
@@ -946,6 +1019,7 @@ document.addEventListener('livewire:load', function() {
     window.addEventListener('show-payment-modal', function(event) {
         currentPurchaseId = event.detail.purchaseId || null;
         xenditActive = event.detail.xenditActive || false;
+        midtransActive = event.detail.midtransActive || false;
         monthlyPrice = event.detail.monthlyPrice || 0;
         packageName = event.detail.packageName || '-';
         discountEnabled = event.detail.discountEnabled || false;
@@ -998,6 +1072,13 @@ document.addEventListener('livewire:load', function() {
             document.getElementById('xendit-method-wrapper').style.display = 'none';
         }
         
+        // Show/hide Midtrans option
+        if (midtransActive) {
+            document.getElementById('midtrans-method-wrapper').style.display = 'block';
+        } else {
+            document.getElementById('midtrans-method-wrapper').style.display = 'none';
+        }
+        
         // Reset selections
         selectedMonths = 1;
         updateCustomMonths(1);
@@ -1048,6 +1129,28 @@ document.addEventListener('livewire:load', function() {
         @this.call('payWithXendit')
             .then(() => {
                 console.log('Redirecting to Xendit...');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Lanjutkan ke Pembayaran';
+                loadingDiv.style.display = 'none';
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+            });
+    };
+
+    // Initiate Midtrans payment
+    window.initiateMidtransPayment = function() {
+        const button = document.getElementById('midtrans-pay-button');
+        const loadingDiv = document.getElementById('midtrans-loading');
+        
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+        loadingDiv.style.display = 'block';
+        
+        @this.call('payWithMidtrans')
+            .then(() => {
+                console.log('Redirecting to Midtrans...');
             })
             .catch(error => {
                 console.error('Error:', error);

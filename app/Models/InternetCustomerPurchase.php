@@ -30,14 +30,21 @@ class InternetCustomerPurchase extends Model
         'xendit_payment_channel',
         'xendit_payment_method',
         'xendit_paid_at',
-        'xendit_raw_response'
+        'xendit_raw_response',
+        'midtrans_snap_token',
+        'midtrans_transaction_id',
+        'midtrans_payment_type',
+        'midtrans_paid_at',
+        'midtrans_raw_response'
     ];
 
     protected $casts = [
         'xendit_raw_response' => 'array',
+        'midtrans_raw_response' => 'array',
         'confirmation_finance_at' => 'datetime',
         'payment_date' => 'datetime',
         'xendit_paid_at' => 'datetime',
+        'midtrans_paid_at' => 'datetime',
         'period_start' => 'date',
         'period_end' => 'date',
     ];
@@ -215,14 +222,13 @@ class InternetCustomerPurchase extends Model
     {
         if ($this->payment_method == 'xendit') {
             return '<span class="badge badge-success"><i class="fas fa-credit-card mr-1"></i>Xendit</span>';
+        } elseif ($this->payment_method == 'midtrans') {
+            return '<span class="badge badge-warning"><i class="fas fa-credit-card mr-1"></i>Midtrans</span>';
         } elseif ($this->payment_method == 'manual_transfer') {
             return '<span class="badge badge-info"><i class="fas fa-university mr-1"></i>Transfer Manual</span>';
-        } 
-        elseif ($this->payment_method == 'transfer') {
+        } elseif ($this->payment_method == 'transfer') {
             return '<span class="badge badge-info"><i class="fas fa-university mr-1"></i>Transfer Manual</span>';
-        }
-        else 
-            {
+        } else {
             return ucfirst($this->payment_method ?? '');
         }
     }

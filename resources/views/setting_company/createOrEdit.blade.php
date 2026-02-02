@@ -705,6 +705,62 @@
                         </div>
                     </div>
 
+                    <div class="card">
+                        <div class="card-header" id="judulMidtrans">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseMidtrans" aria-expanded="false" aria-controls="collapseMidtrans">
+                                    Midtrans SNAP Payment (Internet Customer)
+                                </button>
+                            </h2>
+                        </div>
+
+                        <div id="collapseMidtrans" class="collapse" aria-labelledby="judulMidtrans" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> <strong>Info:</strong> Konfigurasi Midtrans SNAP untuk pembayaran pelanggan internet. Dapatkan credentials dari <a href="https://dashboard.midtrans.com" target="_blank">Midtrans Dashboard</a>.
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="server_key_midtrans">Server Key Midtrans</label>
+                                    <input type="text" name="server_key_midtrans" class="form-control" value="{{ old('server_key_midtrans', $data['server_key_midtrans'] ?? '') }}" placeholder="SB-Mid-server-... atau Mid-server-...">
+                                    <small class="form-text text-muted">Server Key dari Midtrans (Sandbox atau Production)</small>
+                                    @error('server_key_midtrans')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="client_key_midtrans">Client Key Midtrans</label>
+                                    <input type="text" name="client_key_midtrans" class="form-control" value="{{ old('client_key_midtrans', $data['client_key_midtrans'] ?? '') }}" placeholder="SB-Mid-client-... atau Mid-client-...">
+                                    <small class="form-text text-muted">Client Key dari Midtrans (Sandbox atau Production)</small>
+                                    @error('client_key_midtrans')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="environment_midtrans">Environment</label>
+                                    <select name="environment_midtrans" class="form-control">
+                                        <option value="sandbox" {{ old('environment_midtrans', $data['environment_midtrans'] ?? 'sandbox') == 'sandbox' ? 'selected' : '' }}>Sandbox (Testing)</option>
+                                        <option value="production" {{ old('environment_midtrans', $data['environment_midtrans'] ?? 'sandbox') == 'production' ? 'selected' : '' }}>Production (Live)</option>
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        <strong>Sandbox:</strong> Untuk testing<br>
+                                        <strong>Production:</strong> Untuk transaksi live
+                                    </small>
+                                    @error('environment_midtrans')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> <strong>Webhook URL:</strong> <code>{{ url('/midtrans/notification') }}</code><br>
+                                    <small>Pastikan URL ini terdaftar di Midtrans Dashboard → Settings → Configuration → Notification URL</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
 
     
                 <button type="submit" class="btn btn-primary">Simpan</button>

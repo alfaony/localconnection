@@ -127,6 +127,25 @@
                     </div>
                 </div>
                 @endif
+                
+                <!-- Midtrans Payment -->
+                @if($midtransActive)
+                <div class="col-md-6">
+                    <div class="card h-100 payment-method-card {{ $payment_method === 'midtrans' ? 'border-info border-3 bg-light' : '' }}"
+                        wire:click="$set('payment_method', 'midtrans')" style="cursor: pointer;">
+                        <div class="card-body d-flex flex-column text-center py-4">
+                            <i class="fas fa-wallet fa-3x text-info mb-3"></i>
+                            <h6 class="mb-1">Midtrans SNAP</h6>
+                            <small class="text-muted">VA, E-Wallet, Credit Card, QRIS</small>
+                            @if($payment_method === 'midtrans')
+                                <div class="mt-2">
+                                    <span class="badge badge-info">Dipilih</span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
             @error('payment_method') <small class="text-danger d-block mt-2">{{ $message }}</small> @enderror
         </div>
@@ -295,6 +314,42 @@
                 </div>
             </div>
         @endif
+
+        <!-- Midtrans Payment Info -->
+        @if($payment_method === 'midtrans')
+            <div class="card border-info border-2 mb-4">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-wallet fa-4x text-info mb-3"></i>
+                    <h5 class="mb-3">Pembayaran Digital via Midtrans SNAP</h5>
+                    <p class="text-muted mb-4">
+                        Anda akan diarahkan ke halaman pembayaran Midtrans untuk menyelesaikan transaksi
+                    </p>
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-2">Metode pembayaran yang tersedia:</small>
+                        <div class="d-flex justify-content-center flex-wrap">
+                            <span class="badge badge-info m-1 p-2">
+                                <i class="fas fa-university mr-1"></i>Virtual Account
+                            </span>
+                            <span class="badge badge-info m-1 p-2">
+                                <i class="fas fa-wallet mr-1"></i>E-Wallet (GoPay, OVO, Dana)
+                            </span>
+                            <span class="badge badge-info m-1 p-2">
+                                <i class="fas fa-credit-card mr-1"></i>Credit Card
+                            </span>
+                            <span class="badge badge-info m-1 p-2">
+                                <i class="fas fa-qrcode mr-1"></i>QRIS
+                            </span>
+                        </div>
+                    </div>
+                    <div class="alert alert-info text-left">
+                        <small>
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Setelah klik tombol di bawah, Anda akan diarahkan ke halaman Midtrans untuk memilih metode pembayaran dan menyelesaikan transaksi.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        @endif
     @else
         <div class="alert alert-info d-flex align-items-center mb-4">
             <i class="fas fa-info-circle fa-2x me-3"></i>
@@ -322,7 +377,9 @@
         >
             <span wire:loading.remove wire:target="nextStep,payment_proof">
                 @if($payment_method === 'xendit' && !$hasFreeMonthsPromo)
-                    Lanjut ke Pembayaran <i class="fas fa-arrow-right ms-2"></i>
+                    Lanjut ke Pembayaran Xendit <i class="fas fa-arrow-right ms-2"></i>
+                @elseif($payment_method === 'midtrans' && !$hasFreeMonthsPromo)
+                    Lanjut ke Pembayaran Midtrans <i class="fas fa-arrow-right ms-2"></i>
                 @else
                     Selesaikan Pendaftaran <i class="fas fa-check ms-2"></i>
                 @endif

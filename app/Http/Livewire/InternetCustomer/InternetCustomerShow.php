@@ -17,6 +17,7 @@ use App\Schemas\RoleSchema;
 use App\Schemas\ParamSchema;
 use App\Jobs\ProvisionCustomerJob;
 use App\Services\XenditService;
+use App\Services\MidtransService;
 
 class InternetCustomerShow extends Component
 {
@@ -36,6 +37,7 @@ class InternetCustomerShow extends Component
     public $payment_method_choice = 'manual';
     public $payment_months = 1;
     public $xenditActive = false;
+    public $midtransActive = false;
 
     // Calculated values
     public $monthlyPrice = 0;
@@ -126,6 +128,7 @@ class InternetCustomerShow extends Component
         }
 
         $this->checkXenditStatus();
+        $this->checkMidtransStatus();
         $this->calculatePayment();
     }
 
@@ -137,6 +140,21 @@ class InternetCustomerShow extends Component
         } catch (\Exception $e) {
             $this->xenditActive = false;
             Log::warning('Xendit not configured', [
+                'company_id' => $this->customer->company_id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    protected function checkMidtransStatus()
+    {
+        try {
+            $midtransService = new MidtransService($this->customer->company_id);
+            $this->midtransActive = $midtransService->testConnection();
+
+        } catch (\Exception $e) {
+            $this->midtransActive = false;
+            Log::warning('Midtrans not configured', [
                 'company_id' => $this->customer->company_id,
                 'error' => $e->getMessage()
             ]);
@@ -204,6 +222,7 @@ class InternetCustomerShow extends Component
             'account' => $companySettings['rekening_number'] ?? 'Nomor Rekening Tidak Diketahui',
             'accountName' => $companySettings['atas_nama'] ?? 'Nama Pemilik Tidak Diketahui',
             'xenditActive' => $this->xenditActive,
+            'midtransActive' => $this->midtransActive,
             'nextPeriodStart' => $previewPeriod['start']->format('d M Y'),
             'currentBillingEnd' => $this->customer->userCustomer->end_billing_date 
                 ? Carbon::parse($this->customer->userCustomer->end_billing_date)->format('d M Y')
@@ -322,6 +341,97 @@ class InternetCustomerShow extends Component
         } catch (\Exception $e) {
             // dd($e);
             Log::error('Error in payWithXendit', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            $this->dispatchBrowserEvent('hide-payment-modal');
+            return redirect()->back();
+        }
+    }
+
+    public function payWithMidtrans()
+    {
+        try {
+            if (!$this->purchase_id) {
+                session()->flash('error', 'Data pembayaran tidak ditemukan.');
+                return redirect()->back();
+            }
+
+            $purchase = InternetCustomerPurchase::findOrFail($this->purchase_id);
+            $internetCustomer = $purchase->customer;
+
+            $midtransService = new MidtransService($internetCustomer->company_id);
+
+            if (!$midtransService->isActive()) {
+                session()->flash('error', 'Pembayaran Midtrans tidak tersedia untuk saat ini.');
+                $this->dispatchBrowserEvent('hide-payment-modal');
+                return redirect()->back();
+            }
+
+            // Calculate period
+            $periodStart = $internetCustomer->userCustomer->start_billing_date 
+                ? Carbon::parse($internetCustomer->userCustomer->start_billing_date)
+                : now();
+            
+            $periodEnd = $periodStart->copy()->addMonths($this->payment_months)->subDay();
+
+            // Update purchase with period info
+            $purchase->update([
+                'payment_months' => $this->payment_months,
+                'period_start' => $periodStart,
+                'period_end' => $periodEnd,
+                'total_before_discount' => $this->subtotal,
+                'discount_amount' => $this->discountAmount,
+                'amount_paid' => $this->totalAmount,
+            ]);
+
+            Log::info('Creating Midtrans transaction', [
+                'purchase_id' => $purchase->id,
+                'customer_id' => $internetCustomer->id,
+                'company_id' => $internetCustomer->company_id,
+                'payment_months' => $this->payment_months,
+                'total_amount' => $this->totalAmount
+            ]);
+
+            $result = $midtransService->createTransaction($purchase, $internetCustomer, [
+                'payment_months' => $this->payment_months,
+                'total_amount' => $this->totalAmount,
+                'discount_amount' => $this->discountAmount,
+                'period_start' => $periodStart,
+                'period_end' => $periodEnd
+            ]);
+
+            if ($result['success']) 
+            {
+                $purchase->update([
+                    'midtrans_snap_token' => $result['snap_token'],
+                    'midtrans_transaction_id' => $result['order_id'],
+                    'payment_method' => 'midtrans',
+                    'midtrans_raw_response' => $result['raw_response'],
+                ]);
+
+                Log::info('Midtrans transaction created successfully', [
+                    'order_id' => $result['order_id'],
+                    'snap_token' => $result['snap_token']
+                ]);
+
+                $this->dispatchBrowserEvent('hide-payment-modal');
+                return redirect()->away($result['redirect_url']);
+                
+            } else {
+                Log::error('Failed to create Midtrans transaction', [
+                    'message' => $result['message']
+                ]);
+                
+                session()->flash('error', 'Gagal membuat transaksi pembayaran: ' . $result['message']);
+                $this->dispatchBrowserEvent('hide-payment-modal');
+                return redirect()->back();
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error in payWithMidtrans', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

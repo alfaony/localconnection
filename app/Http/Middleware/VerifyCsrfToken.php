@@ -15,6 +15,7 @@ class VerifyCsrfToken extends Middleware
         'api/test',
         'keloola-pay/webhook',
         'xendit/webhook',
+        'midtrans/webhook',
         'wablas/webhook',
         'xero/webhook', // Tambahkan endpoint webhook di sini
     ];

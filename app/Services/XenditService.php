@@ -169,7 +169,7 @@ class XenditService
                 'external_id' => $purchase->id.'_internetCustomer',
                 'amount' => $totalAmount, // Total after discount
                 'description' => $description,
-                'items' => json_encode($items),
+                'items' => $items,
             ];
 
             // Create invoice using API

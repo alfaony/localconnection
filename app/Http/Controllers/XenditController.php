@@ -148,6 +148,7 @@ class XenditController extends Controller
 
     public function handleKeloolaPay(Request $request)
     {
+        Log::info('KeloolaPay webhook received', $request->all());
         $data = $request->all()?? [];
 
         $user = User::whereHas('role', function ($query) {
