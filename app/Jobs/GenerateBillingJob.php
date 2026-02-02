@@ -94,7 +94,7 @@ class GenerateBillingJob implements ShouldQueue
             {   
                 
                 $url = route('internet-customer.customer.show', $customer->internetCustomer->code);
-                $dateJatuhTempo = Carbon::parse($customer->internetCustomer->end_billing_date)->format('d') . ' ' . Carbon::parse($customer->internetCustomer->end_billing_date)->locale('id')->monthName . ' ' . Carbon::parse($customer->internetCustomer->end_billing_date)->year;
+                $dateJatuhTempo = Carbon::parse($customer->end_billing_date)->format('d') . ' ' . Carbon::parse($customer->end_billing_date)->locale('id')->monthName . ' ' . Carbon::parse($customer->end_billing_date)->year;
 
                 $message = "Hai Kak {$customer->name}, kami dari Hikari Net ingin menginformasikan mengenai tagihan layanan internet Anda.\n\n"
                             . "📌 *Detail Tagihan:*\n"
