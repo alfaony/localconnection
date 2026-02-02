@@ -95,7 +95,8 @@ return [
     
     'internet_custom' =>
     [
-        'end_billing_of_days' => env('END_BILLING_OF_DAYS', 15),
+        'end_billing_of_days' => env('END_BILLING_OF_DAYS', 5),
+        'max_billing_date' => env('MAX_BILLING_DATE', 20), // Jika > 20, normalisasi ke tanggal 1
     ],
     'used_laptop_charge' =>
     [

@@ -538,9 +538,23 @@ class InternetCustomerShow extends Component
 
             $date = $internetPurchase->period_end ? Carbon::parse($internetPurchase->period_end) : Carbon::now();
         
+            // Smart billing date calculation
+            $periodStartDate = Carbon::parse($internetPurchase->period_start);
+            $maxBillingDate = config('services.internet_custom.max_billing_date', 20);
+            $currentBillingDay = $periodStartDate->day;
+            
+            if ($currentBillingDay > $maxBillingDate) {
+                $startBillingDate = $periodStartDate->copy()->addMonths($internetPurchase->payment_months)->firstOfMonth();
+            } else {
+                $startBillingDate = $periodStartDate->copy()->addMonths($internetPurchase->payment_months);
+            }
+            
+            $gracePeriod = config('services.internet_custom.end_billing_of_days', 5);
+            $endBillingDate = $startBillingDate->copy()->addDays($gracePeriod);
+            
             $internetCustomers->update([
-                'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
-                'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
+                'start_billing_date' => $startBillingDate->format('Y-m-d'),
+                'end_billing_date' => $endBillingDate->format('Y-m-d')
             ]);
     
             $post = ['is_paid' => true];

@@ -86,12 +86,30 @@ class XenditController extends Controller
                     //     'status' => ParamSchema::REACTIVATED
                     // ]);
 
-                    $date = Carbon::parse($purchase->period_end);
-
+                    // Smart billing date calculation
+                    // Use period_start because it represents the actual billing day
+                    $periodStartDate = Carbon::parse($purchase->period_start);
+                    $maxBillingDate = config('services.internet_custom.max_billing_date', 20);
                     
+                    // Get the day of month from period_start
+                    $currentBillingDay = $periodStartDate->day;
+                    
+                    // Calculate next billing date
+                    if ($currentBillingDay > $maxBillingDate) {
+                        // Normalize to 1st of next month after period ends
+                        $startBillingDate = $periodStartDate->copy()->addMonths($purchase->payment_months)->firstOfMonth();
+                    } else {
+                        // Keep same day, add payment months
+                        $startBillingDate = $periodStartDate->copy()->addMonths($purchase->payment_months);
+                    }
+                    
+                    // Calculate end billing date (grace period)
+                    $gracePeriod = config('services.internet_custom.end_billing_of_days', 5);
+                    $endBillingDate = $startBillingDate->copy()->addDays($gracePeriod);
+
                     $customerInternet->update([
-                        'start_billing_date' => $date->firstOfMonth()->format('Y-m-d'),
-                        'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
+                        'start_billing_date' => $startBillingDate->format('Y-m-d'),
+                        'end_billing_date' => $endBillingDate->format('Y-m-d')
                     ]);
 
                     GenerateInternetPurchaseCouponJob::dispatch($internetCustomer->id, $purchase->id, $purchase->payment_months);
@@ -210,12 +228,30 @@ class XenditController extends Controller
                     //     'status' => ParamSchema::REACTIVATED
                     // ]);
 
-                    $date = Carbon::parse($purchase->period_end);
-
+                    // Smart billing date calculation
+                    // Use period_start because it represents the actual billing day
+                    $periodStartDate = Carbon::parse($purchase->period_start);
+                    $maxBillingDate = config('services.internet_custom.max_billing_date', 20);
                     
+                    // Get the day of month from period_start
+                    $currentBillingDay = $periodStartDate->day;
+                    
+                    // Calculate next billing date
+                    if ($currentBillingDay > $maxBillingDate) {
+                        // Normalize to 1st of next month after period ends
+                        $startBillingDate = $periodStartDate->copy()->addMonths($purchase->payment_months)->firstOfMonth();
+                    } else {
+                        // Keep same day, add payment months
+                        $startBillingDate = $periodStartDate->copy()->addMonths($purchase->payment_months);
+                    }
+                    
+                    // Calculate end billing date (grace period)
+                    $gracePeriod = config('services.internet_custom.end_billing_of_days', 5);
+                    $endBillingDate = $startBillingDate->copy()->addDays($gracePeriod);
+
                     $customerInternet->update([
-                        'start_billing_date' => $date->firstOfMonth()->format('Y-m-d'),
-                        'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
+                        'start_billing_date' => $startBillingDate->format('Y-m-d'),
+                        'end_billing_date' => $endBillingDate->format('Y-m-d')
                     ]);
 
                     GenerateInternetPurchaseCouponJob::dispatch($internetCustomer->id, $purchase->id, $purchase->payment_months);
