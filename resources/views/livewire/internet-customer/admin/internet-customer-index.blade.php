@@ -232,7 +232,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-4">
+                                    <td colspan="8" class="text-center py-4">
                                         <div class="d-flex flex-column align-items-center">
                                             <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
                                             <h5>Tidak ada data pelanggan ditemukan</h5>

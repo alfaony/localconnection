@@ -317,6 +317,9 @@ class InternetCustomerShow extends Component
                 'period_start' => $periodStart,
                 'period_end' => $periodEnd,
                 'total_before_discount' => $this->subtotal,
+                'amount_before_tax' => $this->amountBeforeTax,
+                'tax_rate' => $this->taxRate,
+                'tax_amount' => $this->taxAmount,
                 'discount_amount' => $this->discountAmount,
                 'amount_paid' => $this->totalAmount,
             ]);
@@ -414,6 +417,9 @@ class InternetCustomerShow extends Component
                 'period_end' => $periodEnd,
                 'total_before_discount' => $this->subtotal,
                 'discount_amount' => $this->discountAmount,
+                'amount_before_tax' => $this->amountBeforeTax,
+                'tax_rate' => $this->taxRate,
+                'tax_amount' => $this->taxAmount,
                 'amount_paid' => $this->totalAmount,
             ]);
 

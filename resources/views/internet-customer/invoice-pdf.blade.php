@@ -17,22 +17,22 @@
             line-height: 1.6;
         }
         .container {
-            padding: 30px;
+            padding: 15px;
             max-width: 800px;
             margin: 0 auto;
         }
         .header {
             background: radial-gradient(circle at center, rgba(219, 39, 41, 0.08) 0%, rgba(219, 39, 41, 0) 80%);
             border-bottom: 3px solid #db2729;
-            padding: 20px;
-            margin-bottom: 25px;
+            padding: 12px;
+            margin-bottom: 15px;
             border-radius: 8px 8px 0 0;
         }
         .company-name {
             font-size: 22px;
             font-weight: bold;
             color: #db2729;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             letter-spacing: 0.5px;
         }
         .company-info {
@@ -44,15 +44,15 @@
             text-align: center;
             font-size: 28px;
             font-weight: bold;
-            margin: 25px 0;
+            margin: 12px 0;
             color: #db2729;
             letter-spacing: 2px;
             text-transform: uppercase;
         }
         .invoice-meta {
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             background: #f9fafb;
-            padding: 15px;
+            padding: 10px;
             border-radius: 6px;
             border-left: 4px solid #db2729;
         }
@@ -60,7 +60,7 @@
             width: 100%;
         }
         .invoice-meta td {
-            padding: 5px 0;
+            padding: 3px 0;
         }
         .invoice-meta .label {
             font-weight: 600;
@@ -71,21 +71,21 @@
             font-size: 14px;
             font-weight: bold;
             color: #db2729;
-            margin: 25px 0 12px 0;
-            padding-bottom: 8px;
+            margin: 12px 0 8px 0;
+            padding-bottom: 6px;
             padding-left: 10px;
             border-left: 4px solid #db2729;
             background: linear-gradient(to right, rgba(219, 39, 41, 0.05), transparent);
         }
         .info-table {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             background: #fafafa;
             border-radius: 6px;
             overflow: hidden;
         }
         .info-table td {
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-bottom: 1px solid #f0f0f0;
         }
         .info-table tr:last-child td {
@@ -99,7 +99,7 @@
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border-radius: 6px;
             overflow: hidden;
@@ -107,13 +107,13 @@
         .items-table th {
             background: linear-gradient(135deg, #db2729 0%, #b21e20 100%);
             color: white;
-            padding: 12px;
+            padding: 8px;
             text-align: left;
             font-weight: bold;
             font-size: 11px;
         }
         .items-table td {
-            padding: 12px;
+            padding: 8px;
             border-bottom: 1px solid #f0f0f0;
             background: #ffffff;
         }
@@ -138,7 +138,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
         .summary-table td {
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-bottom: 1px solid #f0f0f0;
         }
         .summary-table tr:last-child td {
@@ -157,13 +157,14 @@
         }
         .summary-table .total-row {
             background: linear-gradient(135deg, #db2729 0%, #b21e20 100%);
-            color: white;
+            color: #2a0e0eff !important;
             font-weight: bold;
             font-size: 14px;
         }
         .summary-table .total-row td {
-            padding: 12px 15px;
+            padding: 10px 12px;
             border-bottom: none;
+            color: #410909ff !important;
         }
         .summary-table .tax-row {
             background: #fef3f3;
@@ -327,9 +328,9 @@
                 $subtotalAmount = $purchase->total_before_discount ?? ($purchase->customer->internetPackage->price * $purchase->payment_months);
                 $discountAmount = $purchase->discount_amount ?? 0;
                 $amountBeforeTax = $purchase->amount_before_tax ?? ($subtotalAmount - $discountAmount);
-                $taxRate = $purchase->tax_rate ?? 0;
-                $taxAmount = $purchase->tax_amount ?? round(($amountBeforeTax * $taxRate) / 100);
-                $totalAmount = $purchase->amount_paid ?? ($amountBeforeTax + $taxAmount);
+                $taxRate = $purchase->tax_rate ?? 11;
+                $taxAmount = $purchase->tax_amount ?? (int)round(($amountBeforeTax * $taxRate) / 100);
+                $totalAmount = $purchase->amount_paid ?? (int)($amountBeforeTax + $taxAmount);
             @endphp
             
             <tr>
