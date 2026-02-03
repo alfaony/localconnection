@@ -152,7 +152,7 @@ class MidtransService
                 'id' => 'PKG-' . $customer->internetPackage->id,
                 'price' => $itemPriceRounded,
                 'quantity' => $paymentMonths,
-                'name' => $packageItemName,
+                'name' => substr($packageItemName, 0, 50),
             ];
 
             // Add discount item if applicable
