@@ -43,7 +43,7 @@ class GenerateInternetSettingToAllCompany extends Command
         
         $companies = Company::all();
         $menu = 'internet_customer_setting';
-        $fields = ['internet_icon' => '','internet_company_name' => '','internet_company_address' => '','internet_phone' => '','internet_footer_message' => '', 'internet_message_blast' => ''];
+        $fields = ['internet_icon' => '','internet_company_name' => '','internet_company_address' => '','internet_phone' => '','internet_footer_message' => '', 'internet_message_blast' => '', 'manual_payment_status' => ''];
         
         foreach ($companies as $company) 
         {

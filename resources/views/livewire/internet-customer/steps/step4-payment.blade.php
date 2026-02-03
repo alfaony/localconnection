@@ -129,6 +129,7 @@
             <label class="form-label fw-semibold mb-3">Metode Pembayaran</label>
             <div class="row g-3">
                 <!-- Manual Transfer -->
+                @if($manualPaymentEnabled)
                 <div class="col-md-6">
                     <div class="card h-100 payment-method-card {{ $payment_method === 'manual_transfer' ? 'border-primary border-3 bg-light' : '' }}"
                         wire:click="$set('payment_method', 'manual_transfer')" style="cursor: pointer;">
@@ -144,6 +145,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
                 
                 <!-- Xendit Payment -->
                 @if($xenditActive)

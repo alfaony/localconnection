@@ -30,8 +30,6 @@ class MidtransService
     protected function loadSettings()
     {
         $cacheKey = "midtrans_settings_{$this->companyId}";
-
-        $this->clearCache($this->companyId);
         
         // Cache for 1 hour (3600 seconds)
         $this->settings = Cache::remember($cacheKey, 3600, function () {

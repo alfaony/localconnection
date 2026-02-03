@@ -40,6 +40,7 @@ class InternetCustomerShow extends Component
     public $midtransActive = false;
     public $xenditPayWithPpn = false;
     public $midtransPayWithPpn = false;
+    public $manualPaymentEnabled = true; // Default enabled
 
     // Calculated values
     public $monthlyPrice = 0;
@@ -140,19 +141,16 @@ class InternetCustomerShow extends Component
 
     protected function loadPpnSettings()
     {
-        // Load Xendit PPN setting
-        $xenditPpnSetting = SettingCompany::byCompany($this->customer->company_id)
-            ->where('menu', 'xendit_internet_customer')
-            ->where('field_title', 'xendit_pay_with_ppn')
-            ->first();
-        $this->xenditPayWithPpn = $xenditPpnSetting && $xenditPpnSetting->field_value == '1';
+        // Load payment gateway settings
+        $companySettings = SettingCompany::byCompany($this->customer->company_id)->get()->pluck('field_value', 'field_title');
+        $midtransService = new MidtransService($this->customer->company_id);
         
-        // Load Midtrans PPN setting
-        $midtransPpnSetting = SettingCompany::byCompany($this->customer->company_id)
-            ->where('menu', 'midtrans_internet_customer')
-            ->where('field_title', 'midtrans_pay_with_ppn')
-            ->first();
-        $this->midtransPayWithPpn = $midtransPpnSetting && $midtransPpnSetting->field_value == '1';
+        $this->midtransActive = $midtransService->testConnection();
+        $this->xenditActive = isset($companySettings['secret_key']) && isset($companySettings['webhook_token']) ? true : false;
+
+        $this->xenditPayWithPpn = isset($companySettings['xendit_pay_with_ppn']) && $companySettings['xendit_pay_with_ppn'] == '1';
+        $this->midtransPayWithPpn = isset($companySettings['midtrans_pay_with_ppn']) && $companySettings['midtrans_pay_with_ppn'] == '1';
+        $this->manualPaymentEnabled = isset($companySettings['manual_payment_status']) && $companySettings['manual_payment_status'] == '1';
     }
 
     protected function checkXenditStatus()
@@ -172,14 +170,27 @@ class InternetCustomerShow extends Component
     protected function checkMidtransStatus()
     {
         try {
+            Log::info('InternetCustomerShow - Checking Midtrans Status', [
+                'customer_id' => $this->customer->id,
+                'customer_company_id' => $this->customer->company_id,
+                'auth_company_id' => auth()->user()->company_id ?? 'not set'
+            ]);
+            
             $midtransService = new MidtransService($this->customer->company_id);
             $this->midtransActive = $midtransService->testConnection();
+            
+            Log::info('InternetCustomerShow - Midtrans Status Result', [
+                'company_id' => $this->customer->company_id,
+                'midtransActive' => $this->midtransActive,
+                'testConnection_result' => $this->midtransActive ? 'SUCCESS' : 'FAILED'
+            ]);
 
         } catch (\Exception $e) {
             $this->midtransActive = false;
             Log::warning('Midtrans not configured', [
                 'company_id' => $this->customer->company_id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
         }
     }

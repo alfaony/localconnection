@@ -120,6 +120,7 @@ class InternetCustomerForm extends Component
     
     // Midtrans
     public $midtransActive = false;
+    public $manualPaymentEnabled = true; // Default enabled
     public $midtransPayWithPpn = false; // Midtrans auto-calculate PPN
 
     protected $rules = [
@@ -307,9 +308,17 @@ class InternetCustomerForm extends Component
             ->first();
         $this->midtransPayWithPpn = $midtransPpnSetting && $midtransPpnSetting->field_value == '1';
         
+        // Load Manual Payment Status setting
+        $manualPaymentSetting = SettingCompany::byCompany($this->company_id)
+            ->where('menu', 'internet_customer_setting')
+            ->where('field_title', 'manual_payment_status')
+            ->first();
+        $this->manualPaymentEnabled = $manualPaymentSetting && $manualPaymentSetting->field_value == '1';
+        
         Log::info('Gateway PPN settings loaded', [
             'xendit_pay_with_ppn' => $this->xenditPayWithPpn,
-            'midtrans_pay_with_ppn' => $this->midtransPayWithPpn
+            'midtrans_pay_with_ppn' => $this->midtransPayWithPpn,
+            'manual_payment_enabled' => $this->manualPaymentEnabled
         ]);
     }
 

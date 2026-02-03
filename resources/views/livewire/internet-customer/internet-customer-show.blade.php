@@ -612,6 +612,7 @@
                                 <i class="fas fa-wallet mr-2"></i>Pilih Metode Pembayaran
                             </h6>
                             <div class="row">
+                                @if($manualPaymentEnabled)
                                 <div class="col-md-4 mb-2">
                                     <div class="card payment-method-card" onclick="selectPaymentMethod('manual')" id="manual-card">
                                         <div class="card-body text-center py-4">
@@ -621,6 +622,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                @endif
                                 <div class="col-md-4 mb-2" id="xendit-method-wrapper" style="display: none;">
                                     <div class="card payment-method-card" onclick="selectPaymentMethod('xendit')" id="xendit-card">
                                         <div class="card-body text-center py-4">
@@ -643,6 +645,7 @@
                         </div>
 
                         <!-- Manual Transfer Section -->
+                        @if($manualPaymentEnabled)
                         <div id="manual-payment-section">
                             <!-- Bank Info -->
                             <div class="bank-info bg-info bg-opacity-10 p-3 rounded mb-3 border border-info">
@@ -722,6 +725,7 @@
                                 </div>
                             </form>
                         </div>
+                        @endif
 
                         <!-- Xendit Payment Section -->
                         <div id="xendit-payment-section" style="display: none;">
@@ -953,7 +957,8 @@ document.addEventListener('livewire:load', function() {
         document.getElementById('summary-tax-amount').textContent = formatRupiah(calc.taxAmount);
         
         document.getElementById('summary-total').textContent = formatRupiah(calc.total);
-        document.getElementById('modal-amount').textContent = formatRupiah(calc.total);
+        const modalAmount1 = document.getElementById('modal-amount');
+        if (modalAmount1) modalAmount1.textContent = formatRupiah(calc.total);
         
         // Update period detail
         document.getElementById('summary-period-detail').textContent = calculatePeriodDates(selectedMonths);
@@ -995,26 +1000,44 @@ document.addEventListener('livewire:load', function() {
     // Increase months
     window.increaseMonths = function() {
         const currentValue = parseInt(document.getElementById('custom-months-input').value);
-        updateCustomMonths(currentValue + 1);
+        updateCustomMonths(currentValue + 5);
     };
 
     // Decrease months
     window.decreaseMonths = function() {
         const currentValue = parseInt(document.getElementById('custom-months-input').value);
-        updateCustomMonths(currentValue - 1);
+        updateCustomMonths(currentValue - 5);
     };
 
     // Select payment method
     window.selectPaymentMethod = function(method) {
+        // Prevent selecting manual if it doesn't exist (disabled)
+        const manualCard = document.getElementById('manual-card');
+        if (method === 'manual' && !manualCard) {
+            console.warn('Manual payment is disabled, selecting alternative method');
+            // Try to select xendit or midtrans instead
+            const xenditSection = document.getElementById('xendit-payment-section');
+            const midtransSection = document.getElementById('midtrans-payment-section');
+            if (xenditSection) {
+                method = 'xendit';
+            } else if (midtransSection) {
+                method = 'midtrans';
+            } else {
+                console.error('No payment method available');
+                return;
+            }
+        }
+        
         currentPaymentMethod = method;
         
-        const manualCard = document.getElementById('manual-card');
         const xenditCard = document.getElementById('xendit-card');
         const midtransCard = document.getElementById('midtrans-card');
         
-        // Reset all cards
-        manualCard.classList.remove('border-primary', 'bg-light');
-        manualCard.style.borderWidth = '1px';
+        // Reset all cards (only if they exist)
+        if (manualCard) {
+            manualCard.classList.remove('border-primary', 'bg-light');
+            manualCard.style.borderWidth = '1px';
+        }
         if (xenditCard) {
             xenditCard.classList.remove('border-success', 'bg-light');
             xenditCard.style.borderWidth = '1px';
@@ -1024,29 +1047,34 @@ document.addEventListener('livewire:load', function() {
             midtransCard.style.borderWidth = '1px';
         }
         
+        // Get payment section elements (might not exist if disabled)
+        const manualSection = document.getElementById('manual-payment-section');
+        const xenditSection = document.getElementById('xendit-payment-section');
+        const midtransSection = document.getElementById('midtrans-payment-section');
+        
         // Apply active style to selected method
-        if (method === 'manual') {
+        if (method === 'manual' && manualCard) {
             manualCard.classList.add('border-primary', 'bg-light');
             manualCard.style.borderWidth = '3px';
-            document.getElementById('manual-payment-section').style.display = 'block';
-            document.getElementById('xendit-payment-section').style.display = 'none';
-            document.getElementById('midtrans-payment-section').style.display = 'none';
+            if (manualSection) manualSection.style.display = 'block';
+            if (xenditSection) xenditSection.style.display = 'none';
+            if (midtransSection) midtransSection.style.display = 'none';
         } else if (method === 'xendit') {
             if (xenditCard) {
                 xenditCard.classList.add('border-success', 'bg-light');
                 xenditCard.style.borderWidth = '3px';
             }
-            document.getElementById('manual-payment-section').style.display = 'none';
-            document.getElementById('xendit-payment-section').style.display = 'block';
-            document.getElementById('midtrans-payment-section').style.display = 'none';
+            if (manualSection) manualSection.style.display = 'none';
+            if (xenditSection) xenditSection.style.display = 'block';
+            if (midtransSection) midtransSection.style.display = 'none';
         } else if (method === 'midtrans') {
             if (midtransCard) {
                 midtransCard.classList.add('border-warning', 'bg-light');
                 midtransCard.style.borderWidth = '3px';
             }
-            document.getElementById('manual-payment-section').style.display = 'none';
-            document.getElementById('xendit-payment-section').style.display = 'none';
-            document.getElementById('midtrans-payment-section').style.display = 'block';
+            if (manualSection) manualSection.style.display = 'none';
+            if (xenditSection) xenditSection.style.display = 'none';
+            if (midtransSection) midtransSection.style.display = 'block';
         }
     };
 
@@ -1064,11 +1092,16 @@ document.addEventListener('livewire:load', function() {
         currentBillingEnd = event.detail.currentBillingEnd || '-';
         nextPeriodStart = event.detail.nextPeriodStart || '-';
         
-        // Update bank info
-        document.getElementById('modal-bank').textContent = event.detail.bank;
-        document.getElementById('modal-account').textContent = event.detail.account;
-        document.getElementById('modal-account-name').textContent = event.detail.accountName;
-        document.getElementById('current-period-end').textContent = currentBillingEnd;
+        // Update bank info (only if elements exist - manual payment might be disabled)
+        const modalBank = document.getElementById('modal-bank');
+        const modalAccount = document.getElementById('modal-account');
+        const modalAccountName = document.getElementById('modal-account-name');
+        const currentPeriodEnd = document.getElementById('current-period-end');
+        
+        if (modalBank) modalBank.textContent = event.detail.bank;
+        if (modalAccount) modalAccount.textContent = event.detail.account;
+        if (modalAccountName) modalAccountName.textContent = event.detail.accountName;
+        if (currentPeriodEnd) currentPeriodEnd.textContent = currentBillingEnd;
         
         // Update month input limits
         const monthInput = document.getElementById('custom-months-input');
@@ -1107,17 +1140,40 @@ document.addEventListener('livewire:load', function() {
             document.getElementById('xendit-method-wrapper').style.display = 'none';
         }
         
+        
         // Show/hide Midtrans option
+        console.log('Midtrans Status Check:', {
+            midtransActive: midtransActive,
+            wrapperElement: document.getElementById('midtrans-method-wrapper'),
+            xenditActive: xenditActive
+        });
+        
         if (midtransActive) {
             document.getElementById('midtrans-method-wrapper').style.display = 'block';
+            console.log('✅ Midtrans wrapper shown');
         } else {
             document.getElementById('midtrans-method-wrapper').style.display = 'none';
+            console.log('❌ Midtrans wrapper hidden');
         }
         
         // Reset selections
         selectedMonths = 1;
         updateCustomMonths(1);
-        selectPaymentMethod('manual');
+        
+        // Smart default payment method selection
+        const manualCard = document.getElementById('manual-card');
+        if (manualCard) {
+            // Manual payment is enabled, select it
+            selectPaymentMethod('manual');
+        } else if (xenditActive) {
+            // Manual disabled, but xendit active
+            selectPaymentMethod('xendit');
+        } else if (midtransActive) {
+            // Manual disabled, xendit disabled, but midtrans active
+            selectPaymentMethod('midtrans');
+        } else {
+            console.error('No payment method available!');
+        }
         
         // Show modal
         paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
@@ -1140,7 +1196,8 @@ document.addEventListener('livewire:load', function() {
         document.getElementById('summary-monthly').textContent = formatRupiah(calc.monthly_price);
         document.getElementById('summary-subtotal').textContent = formatRupiah(calc.subtotal);
         document.getElementById('summary-total').textContent = formatRupiah(calc.total);
-        document.getElementById('modal-amount').textContent = formatRupiah(calc.total);
+        const modalAmount2 = document.getElementById('modal-amount');
+        if (modalAmount2) modalAmount2.textContent = formatRupiah(calc.total);
         
         const discountRow = document.getElementById('discount-row');
         if (calc.discount_percentage > 0) {
@@ -1222,45 +1279,51 @@ document.addEventListener('livewire:load', function() {
         selectedMonths = 1;
     }
 
-    // Handle form submission
-    document.getElementById('payment-proof-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const fileInput = document.getElementById('payment_proof');
-        const file = fileInput.files[0];
-        
-        if (!file) {
-            alert('Silakan pilih file bukti pembayaran');
-            return;
-        }
-        
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengirim...';
-        
-        @this.upload('payment_proof', file, 
-            (uploadedFilename) => {
-                @this.set('purchase_id', currentPurchaseId);
-                @this.call('submitPaymentProof').then(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                });
-            },
-            (error) => {
-                alert('Gagal mengupload file: ' + error);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            },
-            (event) => {
-                let progress = Math.round((event.detail.progress || 0));
-                submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Uploading ${progress}%`;
+    // Handle form submission (only if manual payment is enabled)
+    const paymentProofForm = document.getElementById('payment-proof-form');
+    if (paymentProofForm) {
+        paymentProofForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('payment_proof');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Silakan pilih file bukti pembayaran');
+                return;
             }
-        );
-    });
+            
+            const submitBtn = document.querySelector('#payment-proof-form button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengupload...';
+            }
+            
+            // Add Livewire upload listener for progress
+            Livewire.hook('message.processed', (message, component) => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i>Kirim Bukti Pembayaran';
+                }
+            });
+            
+            // Livewire will handle the upload when wire:model triggers
+            window.addEventListener(
+                'upload:progress',
+                (event) => {
+                    if (submitBtn) {
+                        let progress = Math.round((event.detail.progress || 0));
+                        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Uploading ${progress}%`;
+                    }
+                }
+            );
+        });
+    }
 
-    // File preview
-    document.getElementById('payment_proof').addEventListener('change', function(e) {
+    // File preview (only if manual payment is enabled)
+    const paymentProofInput = document.getElementById('payment_proof');
+    if (paymentProofInput) {
+        paymentProofInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         const preview = document.getElementById('payment-preview');
         
@@ -1305,12 +1368,15 @@ document.addEventListener('livewire:load', function() {
         } else {
             preview.innerHTML = '';
         }
-    });
+        });
+    }
 
     // Clear file input
     window.clearFileInput = function() {
-        document.getElementById('payment_proof').value = '';
-        document.getElementById('payment-preview').innerHTML = '';
+        const input = document.getElementById('payment_proof');
+        const preview = document.getElementById('payment-preview');
+        if (input) input.value = '';
+        if (preview) preview.innerHTML = '';
     };
 
     // Drag and drop

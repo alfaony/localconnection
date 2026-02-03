@@ -803,7 +803,19 @@
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle"></i> <strong>Info:</strong> Pengaturan ini khusus untuk invoice pelanggan internet. Kosongkan field untuk menggun akan setting default perusahaan.
                                 </div>
-
+                                
+                                <div class="form-group">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="manual_payment_status" name="manual_payment_status" value="1" {{ old('manual_payment_status', $data['manual_payment_status'] ?? '0') == '1' ? 'checked' : '' }}>
+                                        <label class="custom-control-label" for="manual_payment_status">
+                                            <strong>Manual Payment Status</strong>
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle"></i> 
+                                        <strong>Enabled:</strong> Manual Payment Status<br>
+                                    </small>
+                                </div>
                                 <!-- Logo/Icon -->
                                 <div class="form-group">
                                     <label for="internet_icon">Logo/Icon Invoice</label>
