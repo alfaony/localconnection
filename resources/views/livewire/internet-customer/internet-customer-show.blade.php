@@ -1294,29 +1294,61 @@ document.addEventListener('livewire:load', function() {
             }
             
             const submitBtn = document.querySelector('#payment-proof-form button[type="submit"]');
+            const originalText = submitBtn ? submitBtn.innerHTML : '';
+            
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengupload...';
             }
             
-            // Add Livewire upload listener for progress
-            Livewire.hook('message.processed', (message, component) => {
+            // Listen for Livewire upload finish event
+            const uploadFinishHandler = (event) => {
+                console.log('Upload finished, calling submitPaymentProof');
+                
+                // Call the backend method
+                @this.call('submitPaymentProof').then(() => {
+                    console.log('submitPaymentProof completed');
+                    
+                    // Reload page to show updated status
+                    window.location.reload();
+                }).catch((error) => {
+                    console.error('Error submitting payment proof:', error);
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                    alert('Gagal mengirim bukti pembayaran: ' + (error.message || 'Unknown error'));
+                });
+                
+                // Remove listener after use
+                window.removeEventListener('livewire-upload-finish', uploadFinishHandler);
+            };
+            
+            // Add listener
+            window.addEventListener('livewire-upload-finish', uploadFinishHandler);
+            
+            // Trigger Livewire file upload manually
+            @this.upload('payment_proof', file, (uploadedFilename) => {
+                // Upload completed successfully
+                console.log('File uploaded:', uploadedFilename);
+                // Dispatch custom event to trigger submit
+                window.dispatchEvent(new CustomEvent('livewire-upload-finish'));
+            }, (error) => {
+                // Upload failed
+                console.error('Upload failed:', error);
                 if (submitBtn) {
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i>Kirim Bukti Pembayaran';
+                    submitBtn.innerHTML = originalText;
+                }
+                alert('Gagal mengupload file: ' + error);
+                window.removeEventListener('livewire-upload-finish', uploadFinishHandler);
+            }, (event) => {
+                // Upload progress
+                let progress = Math.round((event.detail.progress || 0));
+                if (submitBtn) {
+                    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Uploading ${progress}%`;
                 }
             });
-            
-            // Livewire will handle the upload when wire:model triggers
-            window.addEventListener(
-                'upload:progress',
-                (event) => {
-                    if (submitBtn) {
-                        let progress = Math.round((event.detail.progress || 0));
-                        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Uploading ${progress}%`;
-                    }
-                }
-            );
         });
     }
 
