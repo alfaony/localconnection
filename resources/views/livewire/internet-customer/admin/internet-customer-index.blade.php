@@ -40,7 +40,7 @@
                             <option value="">Semua Status</option>
                             <option value="pending">Pending</option>
                             <option value="customer_existing">Pelanggan Lama</option>
-                            <option value="waiting_payment_confirmation">Menunggu Pembayaran</option>
+                            <option value="waiting_payment_confirmation">Menunggu Konfirmasi Pembayaran</option>
                             <option value="waiting_payment_subscription">Menunggu Pembayaran Subscription</option>
                             <option value="process_installation">Proses Instalasi</option>
                             <option value="installed">Terpasang</option>
@@ -241,7 +241,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-4">
+                                    <td colspan="8" class="text-center py-4">
                                         <div class="d-flex flex-column align-items-center">
                                             <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
                                             <h5>Tidak ada data pelanggan ditemukan</h5>

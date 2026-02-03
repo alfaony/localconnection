@@ -59,6 +59,9 @@ class CompanyController extends Controller
             $fieldHeadLetter = ['header' => '', 'footer' => ''];
             $fieldXero = ['client_id' => '', 'client_secret' => '', 'webhook_key' => ''];
             $fieldBank = ['rekening_number' => null,'atas_nama' => null,'nama_bank' => null,'cabang_bank' => null];
+            $fieldInternet = ['internet_icon' => '','internet_company_name' => '','internet_company_address' => '','internet_phone' => '','internet_footer_message' => '', 'internet_message_blast' => ''];
+            $fieldMidtrans = ['server_key_midtrans' => '', 'client_key_midtrans' => '', 'environment_midtrans' => 'sandbox','midtrans_pay_with_ppn' => '0'];
+            $fieldXendit = ['public_key' => '', 'secret_key' => '', 'webhook_token' => '','environment'=>'','xendit_pay_with_ppn'=>'0'];
 
             // non Setting
             $Assetfields = ['Kartu Akses','⁠Kunci gembok','Kunci pintu','Kunci motor','Kunci mobil','Kunci lemari','Kunci brangkas','Kunci ruangan','kunci Lain'];
@@ -190,12 +193,42 @@ class CompanyController extends Controller
                 $field->save();        
             }
 
+            foreach ($fieldInternet as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="internet_customer_setting";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
+            foreach ($fieldMidtrans as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="midtrans_internet_customer";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
+            }
+
             foreach ($Assetfields as $key => $value) 
             {
                 $asset = new AssetType();
                 $asset->name = $value;
                 $asset->user_id = $user->id;
                 $asset->save();
+            }
+
+            foreach ($fieldXendit as $key => $value) 
+            {
+                $field = new SettingCompany();
+                $field->user_id = $user->id;
+                $field->menu="xendit_internet_customer";
+                $field->field_title = $key;
+                $field->field_value = $value;
+                $field->save();        
             }
             
             $this->saveMasterCheck($company->id);            

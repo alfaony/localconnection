@@ -1041,8 +1041,8 @@
                     if (startDateInput.value) {
                         // Parse tanggal start_billing_date
                         const startDate = new Date(startDateInput.value);
-                        // Tambahkan 1 hari
-                        startDate.setDate(startDate.getDate() + 1);
+                        // Tambahkan 5 hari
+                        startDate.setDate(startDate.getDate() + 5);
                         // Format ke YYYY-MM-DD untuk input type="date"
                         const year = startDate.getFullYear();
                         const month = String(startDate.getMonth() + 1).padStart(2, '0');

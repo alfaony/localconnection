@@ -9,21 +9,21 @@ use App\Models\Company;
 use App\Models\Role;
 use App\Schemas\RoleSchema;
 
-class GenerateXenditToAllCompany extends Command
+class GenerateInternetSettingToAllCompany extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'generate:setting-xendit-to-all-company';
+    protected $signature = 'generate:setting-internet-to-all-company';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Generate or update asset head letters for all companies.';
+    protected $description = 'Generate internet invoice branding settings for all companies.';
 
     /**
      * Execute the console command.
@@ -42,8 +42,8 @@ class GenerateXenditToAllCompany extends Command
         }
         
         $companies = Company::all();
-        $menu = 'xendit_internet_customer';
-        $fields = ['public_key' => '', 'secret_key' => '', 'webhook_token' => '','environment'=>'','xendit_pay_with_ppn'=>'0'];
+        $menu = 'internet_customer_setting';
+        $fields = ['internet_icon' => '','internet_company_name' => '','internet_company_address' => '','internet_phone' => '','internet_footer_message' => '', 'internet_message_blast' => '', 'manual_payment_status' => ''];
         
         foreach ($companies as $company) 
         {
@@ -77,19 +77,12 @@ class GenerateXenditToAllCompany extends Command
 
                     $checking = "create";
                 } 
-                // else 
-                // {
-                //     // Jika field sudah ada, lakukan update
-                //     $fieldExists->field_value = $value;
-                //     $fieldExists->save();
-
-                //     $checking = "update";
-                    
-                // }
             }
+
             $this->info("Successfully {$checking} for company '{$company->name}'.");
         }
         return Command::SUCCESS;
     }
 }
+
 

@@ -94,18 +94,25 @@ class GenerateBillingJob implements ShouldQueue
             {   
                 
                 $url = route('internet-customer.customer.show', $customer->internetCustomer->code);
+                $dateJatuhTempo = Carbon::parse($customer->end_billing_date)->format('d') . ' ' . Carbon::parse($customer->end_billing_date)->locale('id')->monthName . ' ' . Carbon::parse($customer->end_billing_date)->year;
 
-                $message = "Hai Kak {$customer->name}, kami dari Hikari ingin menginformasikan mengenai tagihan layanan internet Anda.\n\n"
-                            . "📌 *Detail Tagihan:*\n"
-                            . "Nama Pelanggan: {$customer->name}\n"
-                            . "Layanan Paket: {$customer->internetCustomer->internetPackage->name}\n"
-                            . "Periode: " . Carbon::now()->locale('id')->monthName . " " . Carbon::now()->year . "\n"
-                            . "Jumlah Tagihan: Rp " . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.') . "\n\n"
-                            . "Untuk melakukan pembayaran atau konfirmasi, silakan klik tautan berikut:\n"
+                $tutorialPayment = config('services.internet_custom.tutorial_payment');
+
+                $message = "*Ringkasan Tagihan Layanan Internet*\n\n"
+                            . "*Yth. Bapak/Ibu {$customer->name},*\n"
+                            . "Berikut ini adalah pengingat tagihan Anda dengan detail sebagai berikut:\n\n"
+                            . "Nomor Faktur: " . ($customer->internetCustomer->purchases()->latest()->first()->code ?? '-') . "\n"
+                            . "ID Pelanggan: {$customer->internetCustomer->code}\n"
+                            . "Paket Layanan: {$customer->internetCustomer->internetPackage->name}\n"
+                            . "Jatuh Tempo Pembayaran: {$dateJatuhTempo}\n"
+                            . "Total Tagihan: Rp. " . number_format($customer->internetCustomer->internetPackage->price_nett, 2, ',', '.') . "\n\n"
+                            . "⛔ Mohon segera lakukan pembayaran sebelum tanggal jatuh tempo untuk menghindari penghentian layanan dan pemutusan koneksi internet.\n\n"
+                            . "Untuk melakukan pembayaran atau konfirmasi, silakan klik tautan berikut:\n\n"
                             . "{$url}\n\n"
-                            . "Mohon segera melakukan pembayaran sebelum jatuh tempo agar layanan tetap aktif.\n\n"
-                            . "Terima kasih atas kepercayaannya menggunakan layanan Hikari.\n\n"
-                            . "*Admin Hikari* 🙏";
+                            . "{$tutorialPayment}"
+                            . "Terima kasih atas perhatian dan kerjasama nya 🙏.\n\n"
+                            . "*Hormat kami,*\n"
+                            . "*Hikarinet by KAILI Global*";
 
                 $this->sendMessage($client, $customer->phone_number, $message);
             }

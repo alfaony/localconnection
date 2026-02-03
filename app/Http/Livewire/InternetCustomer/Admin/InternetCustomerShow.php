@@ -373,7 +373,7 @@ class InternetCustomerShow extends Component
         $this->email = $this->customer->userCustomer->email ?? '';
         $this->phone_number = $this->customer->userCustomer->phone_number ?? '';
         $this->start_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->start_billing_date : Carbon::now()->format('Y-m-d');
-        $this->end_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->end_billing_date : Carbon::now()->addDay()->format('Y-m-d');
+        $this->end_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->end_billing_date : Carbon::now()->addDays(5)->format('Y-m-d');
         
         $this->dispatchBrowserEvent('showEditPribadiModal', [
             'status_active' => $this->status_active,
@@ -383,6 +383,17 @@ class InternetCustomerShow extends Component
             'start_billing_date' => $this->start_billing_date,
             'end_billing_date' => $this->end_billing_date
         ]);
+    }
+
+    /**
+     * Auto-update end_billing_date when start_billing_date changes
+     * end_billing_date = start_billing_date + 5 days
+     */
+    public function updatedStartBillingDate($value)
+    {
+        if ($value) {
+            $this->end_billing_date = Carbon::parse($value)->addDays(5)->format('Y-m-d');
+        }
     }
 
     public function savePribadi()
@@ -538,9 +549,23 @@ class InternetCustomerShow extends Component
 
             $date = $internetPurchase->period_end ? Carbon::parse($internetPurchase->period_end) : Carbon::now();
         
+            // Smart billing date calculation
+            $periodStartDate = Carbon::parse($internetPurchase->period_start);
+            $maxBillingDate = config('services.internet_custom.max_billing_date', 20);
+            $currentBillingDay = $periodStartDate->day;
+            
+            if ($currentBillingDay > $maxBillingDate) {
+                $startBillingDate = $periodStartDate->copy()->addMonths($internetPurchase->payment_months)->firstOfMonth();
+            } else {
+                $startBillingDate = $periodStartDate->copy()->addMonths($internetPurchase->payment_months);
+            }
+            
+            $gracePeriod = config('services.internet_custom.end_billing_of_days', 5);
+            $endBillingDate = $startBillingDate->copy()->addDays($gracePeriod);
+            
             $internetCustomers->update([
-                'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
-                'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
+                'start_billing_date' => $startBillingDate->format('Y-m-d'),
+                'end_billing_date' => $endBillingDate->format('Y-m-d')
             ]);
     
             $post = ['is_paid' => true];

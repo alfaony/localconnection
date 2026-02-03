@@ -111,6 +111,8 @@ use App\Http\Controllers\BarcodeAttendanceController;
 use App\Http\Controllers\OfficeAttendanceController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\XenditController;
+use App\Http\Controllers\MidtransController;
+use App\Http\Controllers\InternetCustomerController;
 
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerDashboardController;
@@ -169,10 +171,12 @@ use App\Http\Livewire\PunishmentUserTable;
 Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
 Route::post('xendit/webhook', [XenditController::class, 'handle']);
 Route::post('keloola-pay/webhook', [XenditController::class, 'handleKeloolaPay']);
+Route::post('midtrans/webhook', [MidtransController::class, 'handleNotification']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 
 
 Route::get('internet-customer/customer-active', CustomerCodeInput::class)->name('internet-customer.customer');
+Route::get('internet-customer/invoice/{purchaseId}', [InternetCustomerController::class, 'downloadInvoice'])->name('internet-customer.download-invoice');
 
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 

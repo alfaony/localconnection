@@ -9,21 +9,21 @@ use App\Models\Company;
 use App\Models\Role;
 use App\Schemas\RoleSchema;
 
-class GenerateXenditToAllCompany extends Command
+class GenerateMidtransToAllCompany extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'generate:setting-xendit-to-all-company';
+    protected $signature = 'generate:setting-midtrans-to-all-company';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Generate or update asset head letters for all companies.';
+    protected $description = 'Generate or update Midtrans settings for all companies.';
 
     /**
      * Execute the console command.
@@ -42,8 +42,13 @@ class GenerateXenditToAllCompany extends Command
         }
         
         $companies = Company::all();
-        $menu = 'xendit_internet_customer';
-        $fields = ['public_key' => '', 'secret_key' => '', 'webhook_token' => '','environment'=>'','xendit_pay_with_ppn'=>'0'];
+        $menu = 'midtrans_internet_customer';
+        $fields = [
+            'server_key_midtrans' => '', 
+            'client_key_midtrans' => '', 
+            'environment_midtrans' => 'sandbox',
+            'midtrans_pay_with_ppn' => '0'
+        ];
         
         foreach ($companies as $company) 
         {

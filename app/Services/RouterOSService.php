@@ -79,7 +79,7 @@ public function ensurePppProfile(
 
 public function upsertPppSecret(Client $c, InternetCustomer $cust, string $profile, $localAddress = null): void
 {
-    $q = (new Query('/ppp/secret/print'))->where('name', $cust->username);
+    $q = (new Query('/ppp/secret/print'))->where('comment', $cust->id);
     $row = $c->query($q)->read()[0] ?? null;
     $pwd = trim((string) $cust->pass_hash) ?: 'admin123'; // fallback juga untuk empty string
     

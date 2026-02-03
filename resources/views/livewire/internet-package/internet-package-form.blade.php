@@ -10,9 +10,9 @@
         </div>
         
         <div class="card-body">
+            @include('components.alert')
             <form wire:submit.prevent="save">
                 <div class="row">
-                    @include('components.alert')
                     <!-- Left Column - Package Details -->
                     <div class="col-md-8">
                         <div class="card mb-4">
@@ -197,59 +197,88 @@
 <script src="https://cdn.jsdelivr.net/npm/imask"></script>
 <script>
     document.addEventListener('livewire:load', function () {
-        // Harga Normal
-        const priceInput = document.getElementById('internet_cost_input');
-        const priceHidden = document.getElementById('price_hidden');
         let priceMask = null;
-
-        if (priceInput && priceHidden) {
-            priceMask = IMask(priceInput, {
-                mask: Number,
-                scale: 0,
-                thousandsSeparator: '.',
-                padFractionalZeros: false,
-                normalizeZeros: true,
-                radix: ',',
-                mapToRadix: ['.']
-            });
-
-            // Set nilai awal dari hidden input ke field yang diformat
-            if (priceHidden.value) {
-                priceMask.value = priceHidden.value;
-            }
-
-            // Sync ke Livewire saat input berubah
-            priceMask.on('accept', () => {
-                priceHidden.value = priceMask.unmaskedValue;
-                priceHidden.dispatchEvent(new Event('input'));
-            });
-        }
-
-        // Harga Nett
-        const priceNettInput = document.getElementById('internet_cost_input_nett');
-        const priceNettHidden = document.getElementById('price_nett_hidden');
         let priceNettMask = null;
 
-        if (priceNettInput && priceNettHidden) {
-            priceNettMask = IMask(priceNettInput, {
-                mask: Number,
-                scale: 0,
-                thousandsSeparator: '.',
-                padFractionalZeros: false,
-                normalizeZeros: true,
-                radix: ',',
-                mapToRadix: ['.']
-            });
+        function initPriceMask() {
+            // Harga Normal
+            const priceInput = document.getElementById('internet_cost_input');
+            const priceHidden = document.getElementById('price_hidden');
 
-            if (priceNettHidden.value) {
-                priceNettMask.value = priceNettHidden.value;
+            if (priceInput && priceHidden) {
+                // Destroy existing mask if exists
+                if (priceMask) {
+                    priceMask.destroy();
+                }
+
+                priceMask = IMask(priceInput, {
+                    mask: Number,
+                    scale: 0,
+                    thousandsSeparator: '.',
+                    padFractionalZeros: false,
+                    normalizeZeros: true,
+                    radix: ',',
+                    mapToRadix: ['.'],
+                    min: 0,
+                    max: 999999999
+                });
+
+                // Set nilai awal dari hidden input
+                if (priceHidden.value) {
+                    priceMask.unmaskedValue = priceHidden.value;
+                }
+
+                // Sync ke Livewire saat input berubah
+                priceMask.on('accept', () => {
+                    priceHidden.value = priceMask.unmaskedValue;
+                    @this.set('price', priceMask.unmaskedValue);
+                });
             }
 
-            priceNettMask.on('accept', () => {
-                priceNettHidden.value = priceNettMask.unmaskedValue;
-                priceNettHidden.dispatchEvent(new Event('input'));
-            });
+            // Harga Nett
+            const priceNettInput = document.getElementById('internet_cost_input_nett');
+            const priceNettHidden = document.getElementById('price_nett_hidden');
+
+            if (priceNettInput && priceNettHidden) {
+                // Destroy existing mask if exists
+                if (priceNettMask) {
+                    priceNettMask.destroy();
+                }
+
+                priceNettMask = IMask(priceNettInput, {
+                    mask: Number,
+                    scale: 0,
+                    thousandsSeparator: '.',
+                    padFractionalZeros: false,
+                    normalizeZeros: true,
+                    radix: ',',
+                    mapToRadix: ['.'],
+                    min: 0,
+                    max: 999999999
+                });
+
+                // Set nilai awal dari hidden input
+                if (priceNettHidden.value) {
+                    priceNettMask.unmaskedValue = priceNettHidden.value;
+                }
+
+                // Sync ke Livewire saat input berubah
+                priceNettMask.on('accept', () => {
+                    priceNettHidden.value = priceNettMask.unmaskedValue;
+                    @this.set('price_nett', priceNettMask.unmaskedValue);
+                });
+            }
         }
+
+        // Initialize on load
+        initPriceMask();
+
+        // Reinitialize after Livewire updates
+        Livewire.hook('message.processed', (message, component) => {
+            setTimeout(() => {
+                initPriceMask();
+            }, 100);
+        });
     });
 </script>
 @endpush

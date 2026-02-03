@@ -108,7 +108,14 @@ class XenditService
         try {
             // Extract options
             $paymentMonths = $options['payment_months'] ?? 1;
-            $totalAmount = $options['total_amount'] ?? $customer->internetPackage->price_nett;
+            
+            // Determine price based on PPN setting
+            $xenditPayWithPpn = $options['xendit_pay_with_ppn'] ?? false;
+            $defaultPrice = $xenditPayWithPpn 
+                ? $customer->internetPackage->price      // PPN enabled: use gross price
+                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
+            
+            $totalAmount = $options['total_amount'] ?? $defaultPrice;
             $discountAmount = $options['discount_amount'] ?? 0;
             $subscriptionPeriod = $options['subscription_period'] ?? null;
 
@@ -144,11 +151,15 @@ class XenditService
                 $packageItemName .= " | {$subscriptionPeriod['start']->format('M Y')} - {$subscriptionPeriod['end']->format('M Y')}";
             }
 
+            $itemPrice = $xenditPayWithPpn 
+                ? $customer->internetPackage->price      // PPN enabled: use gross price
+                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
+                
             $items[] = 
             [
                 'name' => $packageItemName,
                 'qty' => $paymentMonths,
-                'price' => $customer->internetPackage->price_nett,
+                'price' => $itemPrice,
                 'category' => 'Internet Package'
             ];
 
@@ -169,7 +180,7 @@ class XenditService
                 'external_id' => $purchase->id.'_internetCustomer',
                 'amount' => $totalAmount, // Total after discount
                 'description' => $description,
-                'items' => json_encode($items),
+                'items' => $items,
             ];
 
             // Create invoice using API
@@ -268,7 +279,14 @@ class XenditService
         try {
             // Extract options
             $paymentMonths = $options['payment_months'] ?? 1;
-            $totalAmount = $options['total_amount'] ?? $customer->internetPackage->price_nett;
+            
+            // Determine price based on PPN setting
+            $xenditPayWithPpn = $options['xendit_pay_with_ppn'] ?? false;
+            $defaultPrice = $xenditPayWithPpn 
+                ? $customer->internetPackage->price      // PPN enabled: use gross price
+                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
+            
+            $totalAmount = $options['total_amount'] ?? $defaultPrice;
             $discountAmount = $options['discount_amount'] ?? 0;
             $subscriptionPeriod = $options['subscription_period'] ?? null;
 
@@ -304,10 +322,14 @@ class XenditService
                 $packageItemName .= " | {$subscriptionPeriod['start']->format('M Y')} - {$subscriptionPeriod['end']->format('M Y')}";
             }
 
+            $itemPrice = $xenditPayWithPpn 
+                ? $customer->internetPackage->price      // PPN enabled: use gross price
+                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
+                
             $items[] = new InvoiceItem([
                 'name' => $packageItemName,
                 'quantity' => $paymentMonths,
-                'price' => $customer->internetPackage->price_nett,
+                'price' => $itemPrice,
                 'category' => 'Internet Package'
             ]);
 

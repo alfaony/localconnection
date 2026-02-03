@@ -21,6 +21,8 @@ use App\Http\Controllers\API\ItemRequestMobileController;
 use App\Http\Controllers\API\ItemPurchaseMobileController;
 use App\Http\Controllers\API\FlowChartController;
 use App\Http\Controllers\API\RegionController;
+use App\Http\Controllers\API\InternetCustomerController;
+
 use App\Http\Controllers\API\ProductStoreController;
 use App\Http\Controllers\UserController;
 
@@ -42,6 +44,8 @@ Route::post('login_flutter', [LoginController::class, 'login_flutter']);
 
 Route::group(['middleware' => ['auth:api','role.permission.api']], function() 
 {
+
+
     Route::resource('customer', CustomerController::class)->except(['create','show']);
     
     Route::resource('product', ProductController::class)->except(['create','show']);
@@ -125,8 +129,12 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::get('product-stores/search', [ProductStoreController::class, 'search'])->name('api.product-stores.search');
     
     Route::apiResource('flowcharts', FlowChartController::class);
+
+    // SKAM Import API
+    Route::post('internet-customer/import', [InternetCustomerController::class, 'import']);
     
 });
+
 
 Route::group(['middleware' => ['auth:api']], function() 
 {
@@ -158,6 +166,10 @@ Route::group(['middleware' => ['auth:api']], function()
         Route::post('/{id}/agendas', [MomApiController::class, 'storeAgenda']); // POST - Create agenda
         Route::put('/agendas/{id}', [MomApiController::class, 'updateAgenda']); // PUT - Update agenda
         Route::delete('/agendas/{id}', [MomApiController::class, 'deleteAgenda']); // DELETE - Delete agenda
+    });
+
+    Route::post('test', function (Request $request) {
+        \Illuminate\Support\Facades\Log::info($request->all());
     });
 });
 
