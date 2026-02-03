@@ -66,15 +66,14 @@ class ProductStoreForm extends Component
         
         if($id) {
             $this->editProduct($id);
+        } else {
+            // Auto-generate barcode only for new products
+            $this->barcode = $this->generateBarcode();
         }
     }
 
     public function render()
     {
-        if(!$this->barcode) {
-            $this->barcode = $this->generateBarcode();
-        }
-
         $allPhotos = array_merge($this->photos, $this->pendingPhotos);
         
         return view('livewire.product-store.product-store-form', [
@@ -459,7 +458,58 @@ class ProductStoreForm extends Component
         $this->barcode = $this->generateBarcode();
     }
 
-    protected static function generateBarcode()
+    public function regenerateBarcode()
+    {
+        $this->barcode = $this->generateBarcode();
+        $this->dispatchBrowserEvent('barcode-regenerated', [
+            'barcode' => $this->barcode,
+            'message' => 'Barcode baru berhasil di-generate'
+        ]);
+    }
+
+    public function checkBarcodeAvailability()
+{
+    if (!$this->barcode) {
+        return [
+            'available' => true,
+            'message' => 'Barcode akan di-generate otomatis jika kosong',
+            'duplicates' => []
+        ];
+    }
+
+    // Check if barcode exists, excluding current product if editing
+    $query = ProductStore::withTrashed()->where('barcode', $this->barcode);
+    
+    if ($this->productId) {
+        $query->where('id', '!=', $this->productId);
+    }
+
+    $duplicates = $query->with(['category', 'brand'])->get();
+    
+    if ($duplicates->isEmpty()) {
+        return [
+            'available' => true,
+            'message' => 'Barcode tersedia',
+            'duplicates' => []
+        ];
+    }
+
+    // Build duplicate info message
+    $duplicateInfo = $duplicates->map(function($product) {
+        return $product->name . ' (' . ($product->category->name ?? '-') . ')';
+    })->take(3)->implode(', ');
+    
+    $count = $duplicates->count();
+    $moreText = $count > 3 ? " dan " . ($count - 3) . " lainnya" : "";
+
+    return [
+        'available' => true, // Still available, just a warning
+        'message' => 'Barcode sudah digunakan oleh: ' . $duplicateInfo . $moreText,
+        'duplicates' => $duplicates->toArray(),
+        'isDuplicate' => true
+    ];
+}
+    protected function generateBarcode()
     {
         do {
             $barcode = now()->format('Y') . str_pad(mt_rand(0, 999999999), 9, '0', STR_PAD_LEFT);

@@ -187,17 +187,17 @@ class AppServiceProvider extends ServiceProvider
                 'report_productivities','project_dashboards','division_budgets','visions',
                 'divisions','objectives','daily_task_projects','daily_task_categories',
                 'dailytasks','report_points','tasks','task_assigns',
-                'ip_rights','sales_achievements'
+                'ip_rights','sales_achievements','direct_points'
             ];
 
             $managementPenjualanMenu = 
             [
             'quotes','work_orders','agreement_letters','projects',
-            'report_projects','basts','invoices','reports'
+            'report_projects','basts','invoices','partners' ,'reports'
             ];
 
             $managementMasterDataMenu = [
-            'provinces','cities','districts','subdistricts','postal_codes'
+            'provinces','cities','districts','subdistricts','postal_codes','partner_parameter_types'
             ];
 
             $managementSettingMenu = ['setting_companies','roles','webhook_settings'];
@@ -762,6 +762,24 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Aturan WFO',
                     'route' => 'wfo-rule.index',
                     'icon' => 'fa fa-list',
+                ],
+                'partner_parameter_types' =>
+                [
+                    'text' => 'Tipe Parameter Mitra',
+                    'route' => 'partner-parameter-type.index',
+                    'icon' => 'fa fa-list',
+                ],
+                'partners' =>
+                [
+                    'text' => 'Mitra',
+                    'route' => 'partner.index',
+                    'icon' => 'fa fa-user',
+                ],
+                'direct_points' =>
+                [
+                    'text' => 'Direct Point',
+                    'route' => 'direct-point.index',
+                    'icon' => 'fa fa-coins',
                 ]
             ];
 

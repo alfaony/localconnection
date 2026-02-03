@@ -38,7 +38,7 @@ class SecurityCheckController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'photos.*' => 'required|image|max:10240', // 10MB Max
+            'photos.*' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,wmv|max:51200', // 50MB Max
             'descriptions.*' => 'required|string|max:225', 
         ]);
 
@@ -60,10 +60,15 @@ class SecurityCheckController extends Controller
                     $filename = time() . '_' . $file->getClientOriginalName();
                     $path = $file->storeAs('security', $filename);
                     
+                    // Deteksi tipe file
+                    $mimeType = $file->getMimeType();
+                    $fileType = str_starts_with($mimeType, 'video/') ? 'video' : 'image';
+                    
                     $photoCheck = new SecurityCheckPhoto();
                     $photoCheck->security_check_id = $check->id;
                     $photoCheck->description = $description[$key];
                     $photoCheck->path = $path;
+                    $photoCheck->file_type = $fileType;
                     $photoCheck->status_of_day = ParamSchema::CHECKIN;
                     $photoCheck->save();
                 }
@@ -102,7 +107,7 @@ class SecurityCheckController extends Controller
     public function update(Request $request, $slug)
     {
         $request->validate([
-            'photos.*' => 'required|image|max:10240', // 10MB Max
+            'photos.*' => 'required|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,wmv|max:51200', // 50MB Max
             'descriptions.*' => 'required|string|max:225', 
         ]);
 
@@ -124,10 +129,15 @@ class SecurityCheckController extends Controller
                     $filename = time() . '_' . $file->getClientOriginalName();
                     $path = $file->storeAs('security', $filename);
                     
+                    // Deteksi tipe file
+                    $mimeType = $file->getMimeType();
+                    $fileType = str_starts_with($mimeType, 'video/') ? 'video' : 'image';
+                    
                     $photoCheck = new SecurityCheckPhoto();
                     $photoCheck->security_check_id = $check->id;
                     $photoCheck->description = $description[$key];
                     $photoCheck->path = $path;
+                    $photoCheck->file_type = $fileType;
                     $photoCheck->status_of_day = ParamSchema::CHECKOUT;
                     $photoCheck->save();
                 }

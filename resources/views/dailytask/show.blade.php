@@ -7,7 +7,6 @@
 @endphp
 
 @section('content')
-
         <!-- Alert Messages -->
         @foreach (['report', 'deletemedia', 'updatemedia', 'approvement', 'extend', 'comment', 'Subtask','Working'] as $msg)
             @if(Session::get($msg))
@@ -136,8 +135,8 @@
                         <div class="form-group row">
                             <label for="status_submit" class="col-sm-4 col-form-label">Status Submit:</label>
                             <div class="col-sm-8">
-                                <p class="form-control-plaintext {{ $dailytask->status_submit == 'late' ? 'text-danger' : 'text-success' }}">
-                                    {{ ucfirst($dailytask->status_submit) }}
+                                <p class="form-control-plaintext">
+                                    {!! $dailytask->status_submit_icon !!}
                                 </p>
                             </div>
                         </div>
@@ -408,6 +407,49 @@
 
                 <!-- Right Column -->
                 <div class="col-md-5">
+                    <!-- Backlog Assignment Form -->
+                    @canAccess('assignBacklog','dailytasks')
+                    @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::BACKLOG)
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fa fa-user-plus"></i> Assign Backlog Task</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="backlogAssignForm" data-slug="{{ $dailytask->slug }}">
+                                @csrf
+                                <div class="form-group">
+                                    <label for="backlog_user_id">Assign to User *</label>
+                                    <select name="user_id" id="backlog_user_id" class="form-control select2" required>
+                                        <option value="" disabled selected>-- Pilih User --</option>
+                                        @foreach($users as $user)
+                                            <option value="{{ $user->id }}" {{ $dailytask->assignment_user_id == $user->id ? 'selected' : '' }}>
+                                                {{ $user->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="form-group mt-2">
+                                    <label for="backlog_start_date">Start Date *</label>
+                                    <input type="date" name="start_date" id="backlog_start_date" class="form-control" 
+                                        value="{{ $dailytask->start_date }}" required>
+                                </div>
+
+                                <div class="form-group mt-2">
+                                    <label for="backlog_end_date">End Date *</label>
+                                    <input type="date" name="end_date" id="backlog_end_date" class="form-control" 
+                                        value="{{ $dailytask->end_date }}" required>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary mt-3">
+                                    <i class="fa fa-save"></i> Save Assignment
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    @endif
+                    @endcanAccess
+
                     @canAccess('statuschange','dailytasks')
                     @if($dailytask->taskStatus->name == \App\Schemas\ParamSchema::TODO || $dailytask->taskStatus->name == \App\Schemas\ParamSchema::NOTCOMPLATE )                    
                         <h6>Tugas</h6>
@@ -650,11 +692,11 @@
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="start_date">Tanggal Mulai</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
+                                <input type="date" class="form-control" id="start_date" name="start_date"  >
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="end_date">Tanggal Selesai</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
+                                <input type="date" class="form-control" id="end_date" name="end_date" >
                             </div>
                         </div>
                         <!-- Row for Task Name and Users -->
@@ -665,7 +707,7 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="user_id">Ditugaskan</label>
-                                <select class="form-control select2" id="user_id" name="user_id" {{ $dailytask->taskStatus->name != \App\Schemas\ParamSchema::BACKLOG ? 'required' : '' }}>
+                                <select class="form-control select2" id="user_id" name="user_id" >
                                     <option value="">Pilih User</option>
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -1503,6 +1545,53 @@ $(document).ready(function() {
         return compressedFile;
     }
 </script>
+
+@canAccess('assignBacklog','dailytasks')
+<script>
+// Auto-fill end_date when start_date changes
+document.getElementById('backlog_start_date').addEventListener('change', function() {
+    document.getElementById('backlog_end_date').value = this.value;
+});
+
+// Handle form submission
+$('#backlogAssignForm').on('submit', function(e) {
+    e.preventDefault();
+    const slug = $(this).data('slug');
+    const formData = {
+        _token: $('input[name="_token"]', this).val(),
+        user_id: $('#backlog_user_id').val(),
+        start_date: $('#backlog_start_date').val(),
+        end_date: $('#backlog_end_date').val()
+    };
+    let url = "{{ route('dailytask.assignBacklog',':slug') }}";
+    url = url.replace(':slug', slug);
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: response.message || 'Backlog task assigned successfully',
+                timer: 1000,
+                showConfirmButton: false
+            }).then(() => {
+                location.reload();
+            });
+        },
+        error: function(xhr) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: xhr.responseJSON?.message || 'Failed to assign backlog task'
+            });
+        }
+    });
+});
+</script>
+@endcanAccess
 @endsection
 
 @section('css')
@@ -1723,3 +1812,4 @@ $(document).ready(function() {
 </style>
 
 @endsection
+

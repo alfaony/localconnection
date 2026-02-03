@@ -50,6 +50,8 @@ class ParamSchema
 
     const LATE = "late";
 
+    const PINALTY_NOT_PROGRESS = "penalty_not_progress";
+
     const RECURRING = "Recurring";
 
     const MULTISELECT = "multi_select";
@@ -148,4 +150,8 @@ class ParamSchema
     const WFO = "wfo";
     const WFH = "wfh";
     const SHIFT = "shift";
+
+    // Platform
+    const APK = "apk";
+    const WEB = "web";
 }

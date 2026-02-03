@@ -525,7 +525,7 @@
                             placeholder="Masukkan catatan approval...">{{ $kye->approval_note ?? '' }}</textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-lg">
+                    <button type="submit" class="btn btn-primary btn-md">
                         <i class="fas fa-save mr-2"></i>Simpan Approval
                     </button>
                 </form>

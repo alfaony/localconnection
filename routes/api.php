@@ -23,6 +23,8 @@ use App\Http\Controllers\API\FlowChartController;
 use App\Http\Controllers\API\RegionController;
 use App\Http\Controllers\API\InternetCustomerController;
 
+use App\Http\Controllers\API\ProductStoreController;
+use App\Http\Controllers\UserController;
 
 
 /*
@@ -123,6 +125,9 @@ Route::group(['middleware' => ['auth:api','role.permission.api']], function()
     Route::resource('item-purchases', ItemPurchaseMobileController::class)
     ->only(['store', 'update']);
 
+    // Product Store Search API
+    Route::get('product-stores/search', [ProductStoreController::class, 'search'])->name('api.product-stores.search');
+    
     Route::apiResource('flowcharts', FlowChartController::class);
 
     // SKAM Import API
@@ -170,6 +175,11 @@ Route::group(['middleware' => ['auth:api']], function()
 
 Route::group(['middleware' => ['auth:api']], function() 
 {
+    Route::post('/flutter/broadcast/auth', function (Request $request) {
+        return Broadcast::auth($request);
+    });
+    Route::post('/user/fcm-token', [UserController::class, 'saveFcmToken']);
+    Route::get('/user/role-division', [UserController::class, 'getRoleAndDivision']);
     Route::post('logout', [LoginController::class, 'logout']);
 });
 

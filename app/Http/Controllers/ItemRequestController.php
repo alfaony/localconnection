@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Events\ChatMessageSent;
 
 use App\Models\User;
+use App\Models\UserStatus;
 use App\Models\Company;
 use App\Models\Delivery;
 use App\Models\ItemRequest;
@@ -29,6 +30,7 @@ use App\Services\WorkflowService;
 use App\Services\Weblas\Device;
 use App\Services\Weblas\Message;
 use App\Services\Weblas\WablasClient;
+use App\Services\ItemRequestNotificationService;
 
 
 class ItemRequestController extends Controller
@@ -97,6 +99,27 @@ class ItemRequestController extends Controller
         if($request->shareWa && $settingCompany['server_wablas'] && $settingCompany['token_wablas'])
         {
             dispatch(new SentMessageToVendor($item));
+        }
+
+        //Kirim ke mobile app 
+        if ($request->assigned_pic_id) {
+            $fcmTokens = UserStatus::where('user_id', $request->assigned_pic_id)
+            ->pluck('fcm_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+            app(ItemRequestNotificationService::class)->send(
+                $fcmTokens,
+                [
+                    'event'       => 'item_request_created',
+                    'request_id' => $item->id,
+                    'sprinter_id'     => $request->assigned_pic_id,
+                    'item_name'       => $item->item_name,
+                    'message'         => "Permintaan barang {$item->item_name}",
+                ]
+            );
         }
         return redirect()->route('item-request.show',$item->id)->with('success', 'Request submitted.');
     }

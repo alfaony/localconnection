@@ -114,6 +114,12 @@ use App\Http\Controllers\XenditController;
 use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\InternetCustomerController;
 
+use App\Http\Controllers\PartnerController;
+use App\Http\Controllers\PartnerDashboardController;
+use App\Http\Controllers\PartnerMonthlyReportController;
+use App\Http\Controllers\PartnerTargetController;
+use App\Http\Controllers\PartnerParameterTypeController;
+
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
 use App\Http\Livewire\DataCenter\Form;
@@ -255,23 +261,6 @@ Route::put('partnership-agreement/signatureShare/{id}',[PartnershipAgreementCont
 Route::get('used-laptop/showQr/{slug}', [UsedLaptopController::class,'showQr'])->name('used-laptop.show-qr');
 Route::get('used-item/showQr/{slug}', [UsedItemController::class,'showQr'])->name('used-item.show-qr');
 
-
-  
-  // AJAX routes for role permission management (to avoid max_input_vars limit)
-// Additional routes untuk per-accordion functionality
-Route::post('role/updateName/{role}', [RoleController::class, 'updateName'])
-    ->name('role.update-name');
-
-Route::post('role/updateMenuPermissions/{role}', [RoleController::class, 'updateMenuPermissions'])
-    ->name('role.update-menu-permissions');
-
-Route::post('role/selectAll/{role}', [RoleController::class, 'selectAll'])
-    ->name('role.select-all');
-
-Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
-    ->name('role.deselect-all');
-
-
 Route::group(['middleware' => ['auth','role.permission','ip.restriction']], function()
 {
   Route::get('home/meetingAgenda', [App\Http\Controllers\HomeController::class, 'meetingAgenda'])->name('home.meetingAgenda');
@@ -307,7 +296,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('manager', ManagerController::class);
 
   Route::resource('customer', CustomerController::class)->except(['create']);
-
+  
   Route::resource('product', ProductController::class)->except(['create','show']);
   Route::resource('product-category', ProductCategoryController::class);
 
@@ -405,6 +394,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('sales_achievement/addpoint/{slug}', [SalesAchievementController::class, 'addpoint'])->name('sales_achievement.addPoint');
   
   Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
+  Route::get('report-productivity/details', [ReportPointProductivityController::class, 'details'])->name('report-productivity.details');
   Route::get('report-productivity/export', [ReportPointProductivityController::class, 'export'])->name('report-productivity.export');
 
   Route::post('dailytask/assignBacklog/{slug}', [DailyTaskController::class, 'assignBacklog'])->name('dailytask.assignBacklog');
@@ -696,7 +686,56 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::get('store-selling/drafts', [SaleController::class, 'getDrafts'])->name('store-selling.drafts');
   
   Route::get('wfo-rule', App\Http\Livewire\WfoRuleIndex::class)->name('wfo-rule.index');
+
+  Route::resource('partner-parameter-type', PartnerParameterTypeController::class);
+  Route::patch('partner-parameter-type/toggleActive/{parameterType}', [PartnerParameterTypeController::class, 'toggleActive'])->name('partner-parameter-type.toggle-active');
+  
+  Route::resource('partner', PartnerController::class);
+  
+  Route::get('partner-dashboard/{partner}', [PartnerDashboardController::class, 'dashboard'])->name('partner.dashboard');
+  Route::get('partner-dashboard/{partner}/api', [PartnerDashboardController::class, 'api'])->name('partner.dashboard.api');
+  
+  // Partner Targets
+  Route::prefix('partner-target/{partner}/targets')->name('partner.targets.')->group(function () {
+      Route::get('create', [PartnerTargetController::class, 'create'])->name('create');
+      Route::post('/', [PartnerTargetController::class, 'store'])->name('store');
+      Route::get('{target}/edit', [PartnerTargetController::class, 'edit'])->name('edit');
+      Route::put('{target}', [PartnerTargetController::class, 'update'])->name('update');
+      Route::delete('{target}', [PartnerTargetController::class, 'destroy'])->name('destroy');
+  });
+  
+  // Monthly Reports
+  Route::prefix('partner-monthly-report/{partner}/targets/{target}/reports')->name('partner.reports.')->group(function () {
+    Route::get('manage', [PartnerMonthlyReportController::class, 'manage'])->name('manage'); // NEW: Manage all months
+    Route::get('create', [PartnerMonthlyReportController::class, 'create'])->name('create');
+    Route::post('/', [PartnerMonthlyReportController::class, 'store'])->name('store');
+    Route::get('{month}/edit', [PartnerMonthlyReportController::class, 'edit'])->name('edit');
+    Route::put('{month}', [PartnerMonthlyReportController::class, 'update'])->name('update');
+    Route::delete('{month}', [PartnerMonthlyReportController::class, 'destroy'])->name('destroy'); // NEW: Delete report
+  });
+
+  // AJAX routes for role permission management (to avoid max_input_vars limit)
+  // Additional routes untuk per-accordion functionality
+  Route::post('role/updateName/{role}', [RoleController::class, 'updateName'])
+      ->name('role.update-name');
+
+  Route::post('role/updateMenuPermissions/{role}', [RoleController::class, 'updateMenuPermissions'])
+      ->name('role.update-menu-permissions');
+
+  Route::post('role/selectAll/{role}', [RoleController::class, 'selectAll'])
+      ->name('role.select-all');
+
+  Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
+      ->name('role.deselect-all');
+
+
+  // Direct Point Routes
+  Route::post('direct-point/checkQuota', [App\Http\Controllers\DirectPointController::class, 'checkQuota'])->name('direct-point.check-quota');
+  Route::post('direct-point/{directPoint}/approve', [App\Http\Controllers\DirectPointController::class, 'approve'])->name('direct-point.approve');
+  Route::post('direct-point/{directPoint}/reject', [App\Http\Controllers\DirectPointController::class, 'reject'])->name('direct-point.reject');
+  Route::resource('direct-point', App\Http\Controllers\DirectPointController::class);
 });
+
 
   Route::get('internet-customer/registration/{companyId}', InternetCustomerForm::class)->name('internet-customer.create');
   Route::get('internet-customer/customer-active/{code}', CustomerShow::class)->name('internet-customer.customer.show');

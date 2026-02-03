@@ -183,6 +183,29 @@ class DailyTask extends Model
         return $this->hasOne(MomTask::class, 'daily_task_id','id');
     }
 
+    public function punishmentUser()
+    {
+        return $this->hasOne(PunishmentUser::class, 'dailytask_id');
+    }
+
+    public function getStatusSubmitIconAttribute()
+    {
+        if (!$this->status_submit) {
+            return 'Tidak Diketahui';
+        }
+
+        switch ($this->status_submit) {
+            case ParamSchema::ONTIME:
+                return '<span class="text-success"><i class="fas fa-check-circle mr-1"></i> On Time</span>';
+            case ParamSchema::LATE:
+                return '<span class="text-danger"><i class="fas fa-exclamation-circle mr-1"></i> Late</span>';
+            case ParamSchema::PINALTY_NOT_PROGRESS:
+                return '<span class="text-danger"><i class="fas fa-times-circle mr-1"></i> Penalty Not Progress</span>';
+            default:
+                return '<span class="text-muted"><i class="fas fa-clock mr-1"></i> Tidak Diketahui</span>';
+        }
+    }
+
     public function getDateRangeSubmitAttribute()
     {
         if ($this->submit && $this->start_date) {

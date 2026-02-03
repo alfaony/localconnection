@@ -18,8 +18,37 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label class="font-weight-bold">Barcode</label>
-                                <input type="text" wire:model="barcode" class="form-control bg-light" readonly>
+                                <label class="font-weight-bold">
+                                    Barcode 
+                                    <small class="text-muted">(opsional)</small>
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" 
+                                           wire:model.debounce.500ms="barcode" 
+                                           id="barcodeInput"
+                                           class="form-control" 
+                                           placeholder="Kosongkan untuk auto-generate">
+                                    <div class="input-group-append">
+                                        <button type="button" 
+                                                class="btn btn-outline-secondary" 
+                                                wire:click="regenerateBarcode"
+                                                title="Generate barcode baru">
+                                            <i class="fas fa-sync-alt"></i> Generate Baru
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Validation Feedback -->
+                                <div id="barcodeValidation" class="mt-1" style="min-height: 20px;">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Barcode akan di-generate otomatis jika kosong
+                                    </small>
+                                </div>
+                                
+                                @error('barcode') 
+                                    <span class="text-danger small d-block mt-1">{{ $message }}</span> 
+                                @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -654,6 +683,89 @@ Livewire.hook('message.processed', () => {
         if (photoSortable) { photoSortable.destroy(); photoSortable = null; }
         setTimeout(initPhotoSortable, 100);
     }
+});
+
+// ============================================
+// BARCODE VALIDATION
+// ============================================
+let barcodeCheckTimeout = null;
+
+function updateBarcodeValidation(status, message) {
+    const validationDiv = document.getElementById('barcodeValidation');
+    if (!validationDiv) return;
+
+    let icon, colorClass;
+    switch(status) {
+        case 'checking':
+            icon = '<i class="fas fa-spinner fa-spin"></i>';
+            colorClass = 'text-info';
+            break;
+        case 'available':
+            icon = '<i class="fas fa-check-circle"></i>';
+            colorClass = 'text-success';
+            break;
+        case 'duplicate':
+            icon = '<i class="fas fa-exclamation-triangle"></i>';
+            colorClass = 'text-warning';
+            break;
+        case 'taken':
+            icon = '<i class="fas fa-times-circle"></i>';
+            colorClass = 'text-danger';
+            break;
+        default:
+            icon = '<i class="fas fa-info-circle"></i>';
+            colorClass = 'text-muted';
+    }
+
+    validationDiv.innerHTML = `<small class="${colorClass}"><strong>${icon} ${message}</strong></small>`;
+}
+
+async function checkBarcodeAvailability() {
+    const barcode = @this.get('barcode');
+    
+    if (!barcode || barcode.trim() === '') {
+        updateBarcodeValidation('info', 'Barcode akan di-generate otomatis jika kosong');
+        return;
+    }
+
+    updateBarcodeValidation('checking', 'Memeriksa ketersediaan barcode...');
+
+    try {
+        const result = await @this.call('checkBarcodeAvailability');
+        
+        if (result.isDuplicate) {
+            updateBarcodeValidation('duplicate', result.message);
+        } else if (result.available) {
+            updateBarcodeValidation('available', result.message);
+        } else {
+            updateBarcodeValidation('taken', result.message);
+        }
+    } catch (error) {
+        console.error('Barcode check error:', error);
+        updateBarcodeValidation('info', 'Gagal memeriksa barcode');
+    }
+}
+
+// Listen to barcode changes with debounce
+Livewire.on('barcode-updated', () => {
+    clearTimeout(barcodeCheckTimeout);
+    barcodeCheckTimeout = setTimeout(checkBarcodeAvailability, 500);
+});
+
+// Listen to barcode regeneration
+window.addEventListener('barcode-regenerated', (event) => {
+    updateBarcodeValidation('available', event.detail.message);
+});
+
+// Watch for barcode changes
+document.addEventListener('livewire:load', function() {
+    Livewire.hook('message.processed', (message, component) => {
+        // Check barcode when it changes
+        if (message.updateQueue && message.updateQueue.some(update => update.payload.name === 'barcode')) {
+            clearTimeout(barcodeCheckTimeout);
+            barcodeCheckTimeout = setTimeout(checkBarcodeAvailability, 500);
+        }
+    });
 });
 </script>
 @endsection

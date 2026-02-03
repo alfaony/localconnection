@@ -111,5 +111,9 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForMenuChangeAssignBacklogSeeder::class);
         $this->call(RolePermissionSeeder::class);
         $this->call(PermissionForProjectExportSeeder::class);
+        $this->call(PartnerParameterTypeSeeder::class);
+        $this->call(PermissionForMenuPartnerParameterType::class);
+        $this->call(PermissionForMenuDirectPointSeeder::class);
+        
     }
 }

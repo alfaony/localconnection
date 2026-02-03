@@ -3,7 +3,7 @@
 @section('title', 'Store Selling - Point of Sale')
 
 @section('content')
-<div id="app">
+<div id="app" v-cloak>
     <!-- Loading Overlay -->
     <div v-if="isLoading" class="loading-overlay">
         <div class="loading-content">
@@ -131,6 +131,62 @@
                     </button>
                     <button type="button" class="btn btn-success" @click="confirmPayment" :disabled="isLoading">
                         <i class="fas fa-check"></i> Konfirmasi & Bayar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Product Selection Modal -->
+    <div class="modal fade" id="productSelectionModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title text-white">
+                        <i class="fas fa-list"></i> Pilih Produk
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        Barcode yang di-scan digunakan oleh beberapa produk. Silakan pilih produk yang sesuai.
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th width="10%">Kode</th>
+                                    <th width="20%">Nama</th>
+                                    <th width="15%">Varian</th>
+                                    <th width="20%">Spesifikasi</th>
+                                    <th width="12%">Kategori</th>
+                                    <th width="12%">Merk</th>
+                                    <th width="11%" class="text-right">Harga</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="product in productSelectionList" :key="product.id" 
+                                    class="product-row" @click="selectProduct(product)" style="cursor: pointer;">
+                                    <td><code>@{{ product.code || '-' }}</code></td>
+                                    <td><strong>@{{ product.name }}</strong></td>
+                                    <td>@{{ product.variant || '-' }}</td>
+                                    <td><small>@{{ product.specification || '-' }}</small></td>
+                                    <td>@{{ product.category?.name || '-' }}</td>
+                                    <td>@{{ product.brand?.name || '-' }}</td>
+                                    <td class="text-right"><strong>@{{ formatCurrency(product.selling_price) }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Batal
                     </button>
                 </div>
             </div>
@@ -271,6 +327,11 @@
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFGL54KgFHzqc0QLb3+gfRS0lM9F9NTv4M78HaRh4VM3YEH46Q" crossorigin="anonymous">
 <style>
+    /* Prevent Vue template flash */
+    [v-cloak] {
+        display: none !important;
+    }
+
     /* Loading Overlay */
     .loading-overlay {
         position: fixed;
@@ -443,11 +504,13 @@
     .table td {
         vertical-align: middle;
         border-top: 1px solid rgba(0,0,0,0.05);
+        padding: 0.75rem;
     }
     
     .table thead th {
         border-bottom: 2px solid #dee2e6;
         font-weight: 600;
+        padding: 0.75rem;
     }
     
     .input-group input[type="number"] {
@@ -458,6 +521,27 @@
     .input-group input[type="number"]::-webkit-inner-spin-button {
         -webkit-appearance: none;
         margin: 0;
+    }
+
+    /* Price Input Styles */
+    .price-input {
+        font-weight: 600;
+        background-color: #f8fff9;
+        border: 1px solid #d4edda;
+        transition: all 0.2s ease;
+    }
+    
+    .price-input:focus {
+        background-color: #ffffff;
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.15);
+        outline: none;
+    }
+    
+    .price-input:hover {
+        background-color: #ffffff;
+        border-color: #28a745;
+        cursor: pointer;
     }
 
     /* Receipt Styles */
@@ -571,6 +655,17 @@
             margin-right: 10px;
         }
     }
+
+    /* Product Selection Table Styles */
+    .product-row {
+        transition: all 0.2s ease;
+    }
+    
+    .product-row:hover {
+        background-color: #e3f2fd !important;
+        transform: translateX(5px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
 </style>
 <style scoped>
     .receipt-logo {
@@ -639,6 +734,7 @@ createApp({
         const currentDraftId = ref(null);
         const isLoading = ref(false);
         const loadingMessage = ref('Memproses...');
+        const productSelectionList = ref([]);
 
         // Computed properties
         const totalItems = computed(() => {
@@ -738,15 +834,21 @@ createApp({
                 });
 
                 if (response.data.success) {
-                    const product = response.data.product;
-                    addToCart(product);
+                    // Check if multiple products returned
+                    if (response.data.multiple) {
+                        productSelectionList.value = response.data.products;
+                        $('#productSelectionModal').modal('show');
+                    } else {
+                        // Single product, add directly to cart
+                        const product = response.data.product;
+                        addToCart(product);
+                    }
                     barcodeInput.value = '';
                     setTimeout(() => {
                         const barcodeInputEl = document.querySelector('input[v-model="barcodeInput"]');
                         if (barcodeInputEl) barcodeInputEl.focus();
                     }, 100);
                 } else {
-                    // alert('Produk tidak ditemukan');
                     setLoadingResult('Produk tidak ditemukan', response.data.message, false);
                 }
             } catch (error) {
@@ -768,9 +870,18 @@ createApp({
                     code: product.code,
                     name: product.name,
                     price: product.selling_price,
+                    originalPrice: product.selling_price, // Store original price
                     quantity: 1
                 });
             }
+        };
+
+        const updatePrice = (index, newPrice) => {
+            if (newPrice < 0) {
+                cartItems.value[index].price = 0;
+                return;
+            }
+            cartItems.value[index].price = parseFloat(newPrice) || 0;
         };
 
         const updateQuantity = (index, newQuantity) => {
@@ -968,6 +1079,18 @@ createApp({
             resetTransaction();
             currentStep.value = 1;
             $('#new-tab').tab('show');
+        };
+
+        const selectProduct = (product) => {
+            addToCart(product);
+            $('#productSelectionModal').modal('hide');
+            productSelectionList.value = [];
+            
+            // Focus back to barcode input after selection
+            setTimeout(() => {
+                const barcodeInputEl = document.querySelector('input[v-model="barcodeInput"]');
+                if (barcodeInputEl) barcodeInputEl.focus();
+            }, 300);
         };
 
         const resetTransaction = () => {
@@ -1872,6 +1995,7 @@ createApp({
             currentDraftId,
             isLoading,
             loadingMessage,
+            productSelectionList,
             totalItems,
             subtotal,
             tax,
@@ -1885,6 +2009,7 @@ createApp({
             nextStep,
             prevStep,
             searchProduct,
+            selectProduct,
             updateQuantity,
             validateQuantity,
             removeItem,
