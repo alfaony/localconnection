@@ -86,7 +86,7 @@ class UpdateTaskStatusAndPenalty extends Command
                  $task->point = $settingCompany['point_punishment_task_doing'] ?? 0;
                  $task->save();
                 
-                 dd($task);
+                //  dd($task);
                  $admin2 = User::with('role')
                          ->whereHas('role', fn ($query) => $query->whereIn('name', [RoleSchema::ROOT, RoleSchema::ADMIN, RoleSchema::DIRECTOR]))
                          ->where('company_id', $task->assign->company_id)
