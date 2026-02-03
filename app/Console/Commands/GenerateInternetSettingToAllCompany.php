@@ -9,21 +9,21 @@ use App\Models\Company;
 use App\Models\Role;
 use App\Schemas\RoleSchema;
 
-class GenerateMidtransToAllCompany extends Command
+class GenerateInternetSettingToAllCompany extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'generate:setting-midtrans-to-all-company';
+    protected $signature = 'generate:setting-internet-to-all-company';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Generate or update Midtrans settings for all companies.';
+    protected $description = 'Generate internet invoice branding settings for all companies.';
 
     /**
      * Execute the console command.
@@ -42,13 +42,8 @@ class GenerateMidtransToAllCompany extends Command
         }
         
         $companies = Company::all();
-        $menu = 'midtrans_internet_customer';
-        $fields = [
-            'server_key_midtrans' => '', 
-            'client_key_midtrans' => '', 
-            'environment_midtrans' => 'sandbox',
-            'midtrans_pay_with_ppn' => '0'
-        ];
+        $menu = 'internet_customer_setting';
+        $fields = ['internet_icon' => '','internet_company_name' => '','internet_company_address' => '','internet_phone' => '','internet_footer_message' => '', 'internet_message_blast' => ''];
         
         foreach ($companies as $company) 
         {
@@ -82,19 +77,12 @@ class GenerateMidtransToAllCompany extends Command
 
                     $checking = "create";
                 } 
-                // else 
-                // {
-                //     // Jika field sudah ada, lakukan update
-                //     $fieldExists->field_value = $value;
-                //     $fieldExists->save();
-
-                //     $checking = "update";
-                    
-                // }
             }
+
             $this->info("Successfully {$checking} for company '{$company->name}'.");
         }
         return Command::SUCCESS;
     }
 }
+
 

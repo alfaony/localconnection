@@ -50,6 +50,13 @@ class SettingCompanyController extends Controller
             $request->request->add(['status_punihsment_task_doing' => "0"]);
         }
         
+        
+        // Boolean
+        $boolean = ['xendit_pay_with_ppn','midtrans_pay_with_ppn'];
+        foreach ($boolean as $field) {
+            $request->request->add([$field => $request->has($field) ? "1" : "0"]);
+        }
+
         DB::beginTransaction();
         try {
             $settings = SettingCompany::byCompany(Auth::user()->company_id)->get();

@@ -43,7 +43,7 @@ class GenerateXenditToAllCompany extends Command
         
         $companies = Company::all();
         $menu = 'xendit_internet_customer';
-        $fields = ['public_key' => '', 'secret_key' => '', 'webhook_token' => '','environment'=>''];
+        $fields = ['public_key' => '', 'secret_key' => '', 'webhook_token' => '','environment'=>'','xendit_pay_with_ppn'=>'0'];
         
         foreach ($companies as $company) 
         {
@@ -77,15 +77,15 @@ class GenerateXenditToAllCompany extends Command
 
                     $checking = "create";
                 } 
-                else 
-                {
-                    // Jika field sudah ada, lakukan update
-                    $fieldExists->field_value = $value;
-                    $fieldExists->save();
+                // else 
+                // {
+                //     // Jika field sudah ada, lakukan update
+                //     $fieldExists->field_value = $value;
+                //     $fieldExists->save();
 
-                    $checking = "update";
+                //     $checking = "update";
                     
-                }
+                // }
             }
             $this->info("Successfully {$checking} for company '{$company->name}'.");
         }

@@ -112,6 +112,7 @@ use App\Http\Controllers\OfficeAttendanceController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\XenditController;
 use App\Http\Controllers\MidtransController;
+use App\Http\Controllers\InternetCustomerController;
 
 // LiveWired
 use App\Http\Livewire\DataCenter\Index;
@@ -169,6 +170,7 @@ Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->mi
 
 
 Route::get('internet-customer/customer-active', CustomerCodeInput::class)->name('internet-customer.customer');
+Route::get('internet-customer/invoice/{purchaseId}', [InternetCustomerController::class, 'downloadInvoice'])->name('internet-customer.download-invoice');
 
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 

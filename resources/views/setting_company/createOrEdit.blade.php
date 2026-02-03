@@ -701,6 +701,20 @@
                                     <label for="webhook_token">Webhook Token</label>
                                     <input type="text" name="webhook_token" class="form-control" value="{{ old('webhook_token', $data['webhook_token'] ?? '') }}">
                                 </div>
+                                
+                                <div class="form-group">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="xendit_pay_with_ppn" name="xendit_pay_with_ppn" value="1" {{ old('xendit_pay_with_ppn', $data['xendit_pay_with_ppn'] ?? '0') == '1' ? 'checked' : '' }}>
+                                        <label class="custom-control-label" for="xendit_pay_with_ppn">
+                                            <strong>Gateway Auto-Calculate PPN</strong>
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle"></i> 
+                                        <strong>Enabled:</strong> Kirim net price (price_nett), gateway akan tambahkan PPN<br>
+                                        <strong>Disabled:</strong> Kirim gross price (price) yang sudah termasuk PPN
+                                    </small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -756,6 +770,93 @@
                                 <div class="alert alert-warning">
                                     <i class="fas fa-exclamation-triangle"></i> <strong>Webhook URL:</strong> <code>{{ url('/midtrans/notification') }}</code><br>
                                     <small>Pastikan URL ini terdaftar di Midtrans Dashboard → Settings → Configuration → Notification URL</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="pay_with_ppn_midtrans" name="midtrans_pay_with_ppn" value="1" {{ old('midtrans_pay_with_ppn', $data['midtrans_pay_with_ppn'] ?? '0') == '1' ? 'checked' : '' }}>
+                                        <label class="custom-control-label" for="pay_with_ppn_midtrans">
+                                            <strong>Gateway Auto-Calculate PPN</strong>
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle"></i> 
+                                        <strong>Enabled:</strong> Kirim net price (price_nett), Midtrans akan tambahkan PPN<br>
+                                        <strong>Disabled:</strong> Kirim gross price (price) yang sudah termasuk PPN
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Internet Invoice Branding Card -->
+                    <div class="card">
+                        <div class="card-header" id="headingInvoice">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseInvoice" aria-expanded="false" aria-controls="collapseInvoice">
+                                    Internet Invoice Branding
+                                </button>
+                            </h2>
+                        </div>
+                        <div id="collapseInvoice" class="collapse" aria-labelledby="headingInvoice" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> <strong>Info:</strong> Pengaturan ini khusus untuk invoice pelanggan internet. Kosongkan field untuk menggun akan setting default perusahaan.
+                                </div>
+
+                                <!-- Logo/Icon -->
+                                <div class="form-group">
+                                    <label for="internet_icon">Logo/Icon Invoice</label>
+                                    @if(isset($data['internet_icon']) && $data['internet_icon'])
+                                        <div class="mb-2">
+                                            <img src="{{ s3_asset(true, 10, $data['internet_icon']) }}" style="max-width: 200px; max-height: 100px;" class="img-thumbnail">
+                                        </div>
+                                    @endif
+                                    <input type="file" name="internet_icon" class="form-control-file" accept="image/*">
+                                    <small class="form-text text-muted">Logo akan tampil di header invoice</small>
+                                    @error('internet_icon')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <!-- Company Name -->
+                                <div class="form-group">
+                                    <label for="internet_company_name">Nama Perusahaan untuk Invoice</label>
+                                    <input type="text" name="internet_company_name" class="form-control" value="{{ old('internet_company_name', $data['internet_company_name'] ?? '') }}" placeholder="Kosongkan untuk menggunakan nama perusahaan default">
+                                    <small class="form-text text-muted">Nama perusahaan yang tertera di invoice</small>
+                                    @error('internet_company_name')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <!-- Address -->
+                                <div class="form-group">
+                                    <label for="internet_company_address">Alamat untuk Invoice</label>
+                                    <textarea name="internet_company_address" class="form-control" rows="2" placeholder="Alamat lengkap perusahaan">{{ old('internet_company_address', $data['internet_company_address'] ?? '') }}</textarea>
+                                    <small class="form-text text-muted">Alamat lengkap yang tertera di invoice</small>
+                                    @error('internet_company_address')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <!-- Phone -->
+                                <div class="form-group">
+                                    <label for="internet_phone">Telepon untuk Invoice</label>
+                                    <input type="text" name="internet_phone" class="form-control" value="{{ old('internet_phone', $data['internet_phone'] ?? '') }}" placeholder="Nomor telepon">
+                                    <small class="form-text text-muted">Nomor telepon yang tertera di invoice</small>
+                                    @error('internet_phone')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <!-- Footer Message -->
+                                <div class="form-group">
+                                    <label for="internet_footer_message">Pesan Footer Invoice</label>
+                                    <textarea name="internet_footer_message" class="form-control" rows="3" placeholder="Terima kasih atas kepercayaan Anda...">{{ old('internet_footer_message', $data['internet_footer_message'] ?? '') }}</textarea>
+                                    <small class="form-text text-muted">Pesan terima kasih atau catatan yang tertera di footer invoice</small>
+                                    @error('internet_footer_message')
+                                    <span class="text-danger text-sm">{{ $message }}</span>
+                                    @enderror
                                 </div>
                             </div>
                         </div>

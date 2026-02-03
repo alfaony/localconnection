@@ -46,12 +46,48 @@
                     </div>
                 @endif
                 
+                {{-- Always show PPN breakdown for transparency --}}
+                @if($taxRate > 0)
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Harga sebelum pajak:</span>
+                        <span class="fw-semibold">Rp {{ number_format($amountBeforeTax, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 text-muted">
+                        <span>PPN ({{ $taxRate }}%):</span>
+                        <span class="fw-semibold">Rp {{ number_format($taxAmount, 0, ',', '.') }}</span>
+                    </div>
+                @endif
+                
                 <div class="d-flex justify-content-between fw-bold mt-3 pt-3 border-top">
                     <span>Total Pembayaran:</span>
                     <span class="text-primary h5 mb-0">
                         Rp {{ number_format($totalAmount, 0, ',', '.') }}
                     </span>
                 </div>
+                
+                
+                @if($payment_method === 'xendit' && $xenditPayWithPpn && $taxRate > 0)
+                    <div class="alert alert-info mt-3 mb-0 py-2">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            PPN {{ $taxRate }}% (Rp {{ number_format($taxAmount, 0, ',', '.') }}) akan otomatis ditambahkan oleh Xendit saat pembayaran
+                        </small>
+                    </div>
+                @elseif($payment_method === 'midtrans' && $midtransPayWithPpn && $taxRate > 0)
+                    <div class="alert alert-info mt-3 mb-0 py-2">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            PPN {{ $taxRate }}% (Rp {{ number_format($taxAmount, 0, ',', '.') }}) akan otomatis ditambahkan oleh Midtrans saat pembayaran
+                        </small>
+                    </div>
+                @elseif(($payment_method === 'xendit' && !$xenditPayWithPpn) || ($payment_method === 'midtrans' && !$midtransPayWithPpn))
+                    <div class="alert alert-success mt-3 mb-0 py-2">
+                        <small>
+                            <i class="fas fa-check-circle"></i>
+                            PPN {{ $taxRate }}% sudah termasuk dalam total pembayaran
+                        </small>
+                    </div>
+                @endif
             @else
                 <div class="d-flex justify-content-between fw-bold mt-3 pt-3 border-top">
                     <span>Total Pembayaran:</span>

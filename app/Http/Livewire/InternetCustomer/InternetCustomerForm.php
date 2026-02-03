@@ -89,6 +89,11 @@ class InternetCustomerForm extends Component
     public $discountAmount = 0;
     public $totalAmount = 0;
     
+    // Tax calculation
+    public $taxRate = 0;
+    public $taxAmount = 0;
+    public $amountBeforeTax = 0;
+    
     // Period calculation
     public $period_start = null;
     public $period_end = null;
@@ -111,9 +116,11 @@ class InternetCustomerForm extends Component
 
     // Xendit
     public $xenditActive = false;
+    public $xenditPayWithPpn = false;  // Xendit auto-calculate PPN
     
     // Midtrans
     public $midtransActive = false;
+    public $midtransPayWithPpn = false; // Midtrans auto-calculate PPN
 
     protected $rules = [
         'signature' => 'nullable|string',
@@ -190,9 +197,15 @@ class InternetCustomerForm extends Component
 
     public function updatedPaymentMonths($value)
     {
-        $this->payment_months = max(1, min(24, (int)$value));
-        $this->calculatePayment();
+        $this->payment_months = (int) $value;
+        $this->calculatePricing();
         $this->calculatePeriod();
+    }
+
+    public function updatedPaymentMethod($value)
+    {
+        // Recalculate pricing when payment method changes (affects tax)
+        $this->calculatePricing();
     }
 
     public function saveSignature($signatureData)
@@ -264,6 +277,40 @@ class InternetCustomerForm extends Component
                 'error' => $e->getMessage()
             ]);
         }
+        
+        // Load tax rate from settings
+        $taxSetting = SettingCompany::byCompany($this->company_id)
+            ->where('menu', 'store')
+            ->where('field_title', 'default_tax')
+            ->first();
+        
+        $this->taxRate = $taxSetting && $taxSetting->field_value 
+            ? (float)$taxSetting->field_value 
+            : config('services.internet_custom.default_tax_rate', 11);
+            
+        Log::info('Tax rate loaded', [
+            'company_id' => $this->company_id,
+            'tax_rate' => $this->taxRate
+        ]);
+        
+        // Load Xendit PPN setting
+        $xenditPpnSetting = SettingCompany::byCompany($this->company_id)
+            ->where('menu', 'xendit_internet_customer')
+            ->where('field_title', 'xendit_pay_with_ppn')
+            ->first();
+        $this->xenditPayWithPpn = $xenditPpnSetting && $xenditPpnSetting->field_value == '1';
+        
+        // Load Midtrans PPN setting
+        $midtransPpnSetting = SettingCompany::byCompany($this->company_id)
+            ->where('menu', 'midtrans_internet_customer')
+            ->where('field_title', 'midtrans_pay_with_ppn')
+            ->first();
+        $this->midtransPayWithPpn = $midtransPpnSetting && $midtransPpnSetting->field_value == '1';
+        
+        Log::info('Gateway PPN settings loaded', [
+            'xendit_pay_with_ppn' => $this->xenditPayWithPpn,
+            'midtrans_pay_with_ppn' => $this->midtransPayWithPpn
+        ]);
     }
 
     public function render()
@@ -286,11 +333,15 @@ class InternetCustomerForm extends Component
     /**
      * Calculate payment amounts
      */
-    protected function calculatePayment()
+    protected function calculatePricing()
     {
         if (!$this->selectedPackage) return;
 
-        $this->monthlyPrice = $this->selectedPackage->price_nett;
+        // Determine which price to use based on payment method and gateway settings
+        // All methods now use 'price' (gross price) as base
+        $basePrice = $this->selectedPackage->price;
+        
+        $this->monthlyPrice = $basePrice;
         
         $calculation = InternetCustomerPurchase::calculateTotal(
             $this->monthlyPrice,
@@ -300,7 +351,27 @@ class InternetCustomerForm extends Component
         $this->subtotal = $calculation['subtotal'];
         $this->discountPercentage = $calculation['discount_percentage'];
         $this->discountAmount = $calculation['discount_amount'];
-        $this->totalAmount = $calculation['total'];
+        
+        // Amount before tax (after discount) - rounded for consistency
+        $this->amountBeforeTax = round($calculation['total']);
+        
+        // ALWAYS calculate and display PPN in UI for transparency
+        // The difference is what amount we send to the gateway:
+        // - PPN enabled: send amountBeforeTax (gateway will add PPN)
+        // - PPN disabled: send totalAmount (we already added PPN)
+        $this->taxAmount = round(($this->amountBeforeTax * $this->taxRate) / 100);
+        $this->totalAmount = round($this->amountBeforeTax + $this->taxAmount);
+        
+        Log::info('Pricing calculated', [
+            'payment_method' => $this->payment_method,
+            'base_price' => $basePrice,
+            'xendit_pay_with_ppn' => $this->xenditPayWithPpn,
+            'midtrans_pay_with_ppn' => $this->midtransPayWithPpn,
+            'amount_before_tax' => $this->amountBeforeTax,
+            'tax_amount' => $this->taxAmount,
+            'total_amount' => $this->totalAmount,
+            'note' => 'Total amount shown includes PPN. Gateway services will receive amountBeforeTax when PPN enabled.'
+        ]);
     }
 
     /**
@@ -462,7 +533,7 @@ class InternetCustomerForm extends Component
         
         $this->step++;
         $this->selectedPackage = InternetPackage::find($this->internet_package_id);
-        $this->calculatePayment();
+        $this->calculatePricing();
         $this->calculatePeriod();
     }
 
@@ -655,6 +726,9 @@ class InternetCustomerForm extends Component
                     'period_end' => $subscriptionPeriod['end'],
                     'total_before_discount' => $this->subtotal,
                     'discount_amount' => $this->discountAmount,
+                    'amount_before_tax' => $this->amountBeforeTax,
+                    'tax_rate' => $this->payment_method === 'manual_transfer' ? $this->taxRate : null,
+                    'tax_amount' => $this->payment_method === 'manual_transfer' ? $this->taxAmount : null,
                     'payment_method' => $this->payment_method,
                     'payment_proof' => $paymentProofPath ? $paymentProofPath : null,
                     'generate_coupons' => true,
@@ -702,9 +776,10 @@ class InternetCustomerForm extends Component
 
             $result = $xenditService->createInvoiceKeloolaPay($purchase, $customer, [
                 'payment_months' => $this->payment_months,
-                'total_amount' => $this->totalAmount,
+                'total_amount' => $this->xenditPayWithPpn ? $this->amountBeforeTax : $this->totalAmount,
                 'discount_amount' => $this->discountAmount,
-                'subscription_period' => $subscriptionPeriod
+                'subscription_period' => $subscriptionPeriod,
+                'xendit_pay_with_ppn' => $this->xenditPayWithPpn
             ]);
 
             if ($result['success']) {
@@ -754,9 +829,10 @@ class InternetCustomerForm extends Component
 
             $result = $midtransService->createTransaction($purchase, $customer, [
                 'payment_months' => $this->payment_months,
-                'total_amount' => $this->totalAmount,
+                'total_amount' => $this->midtransPayWithPpn ? $this->amountBeforeTax : $this->totalAmount,
                 'discount_amount' => $this->discountAmount,
-                'subscription_period' => $subscriptionPeriod
+                'subscription_period' => $subscriptionPeriod,
+                'midtrans_pay_with_ppn' => $this->midtransPayWithPpn
             ]);
 
             if ($result['success']) {

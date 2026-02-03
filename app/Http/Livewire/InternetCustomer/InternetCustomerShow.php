@@ -38,12 +38,17 @@ class InternetCustomerShow extends Component
     public $payment_months = 1;
     public $xenditActive = false;
     public $midtransActive = false;
+    public $xenditPayWithPpn = false;
+    public $midtransPayWithPpn = false;
 
     // Calculated values
     public $monthlyPrice = 0;
     public $subtotal = 0;
     public $discountPercentage = 0;
     public $discountAmount = 0;
+    public $amountBeforeTax = 0;
+    public $taxRate = 11; // Default PPN 11%
+    public $taxAmount = 0;
     public $totalAmount = 0;
 
     protected $rules = [
@@ -129,7 +134,25 @@ class InternetCustomerShow extends Component
 
         $this->checkXenditStatus();
         $this->checkMidtransStatus();
+        $this->loadPpnSettings();
         $this->calculatePayment();
+    }
+
+    protected function loadPpnSettings()
+    {
+        // Load Xendit PPN setting
+        $xenditPpnSetting = SettingCompany::byCompany($this->customer->company_id)
+            ->where('menu', 'xendit_internet_customer')
+            ->where('field_title', 'xendit_pay_with_ppn')
+            ->first();
+        $this->xenditPayWithPpn = $xenditPpnSetting && $xenditPpnSetting->field_value == '1';
+        
+        // Load Midtrans PPN setting
+        $midtransPpnSetting = SettingCompany::byCompany($this->customer->company_id)
+            ->where('menu', 'midtrans_internet_customer')
+            ->where('field_title', 'midtrans_pay_with_ppn')
+            ->first();
+        $this->midtransPayWithPpn = $midtransPpnSetting && $midtransPpnSetting->field_value == '1';
     }
 
     protected function checkXenditStatus()
@@ -184,7 +207,8 @@ class InternetCustomerShow extends Component
 
     protected function calculatePayment()
     {
-        $this->monthlyPrice = $this->customer->internetPackage->price_nett ?? 0;
+        // Use 'price' (gross price) as base for all payment methods
+        $this->monthlyPrice = $this->customer->internetPackage->price ?? 0;
         
         $calculation = InternetCustomerPurchase::calculateTotal(
             $this->monthlyPrice,
@@ -194,7 +218,12 @@ class InternetCustomerShow extends Component
         $this->subtotal = $calculation['subtotal'];
         $this->discountPercentage = $calculation['discount_percentage'];
         $this->discountAmount = $calculation['discount_amount'];
-        $this->totalAmount = $calculation['total'];
+        $this->amountBeforeTax = round($calculation['total']);
+        
+        // ALWAYS calculate and display PPN in UI
+        // Gateway PPN setting only determines what we send to gateway
+        $this->taxAmount = round(($this->amountBeforeTax * $this->taxRate) / 100);
+        $this->totalAmount = round($this->amountBeforeTax + $this->taxAmount);
     }
 
     
@@ -302,10 +331,11 @@ class InternetCustomerShow extends Component
 
             $result = $xenditService->createInvoiceKeloolaPay($purchase, $internetCustomer, [
                 'payment_months' => $this->payment_months,
-                'total_amount' => $this->totalAmount,
+                'total_amount' => $this->xenditPayWithPpn ? $this->amountBeforeTax : $this->totalAmount,
                 'discount_amount' => $this->discountAmount,
                 'period_start' => $periodStart,
-                'period_end' => $periodEnd
+                'period_end' => $periodEnd,
+                'xendit_pay_with_ppn' => $this->xenditPayWithPpn
             ]);
 
             if ($result['success']) 
@@ -400,7 +430,8 @@ class InternetCustomerShow extends Component
                 'total_amount' => $this->totalAmount,
                 'discount_amount' => $this->discountAmount,
                 'period_start' => $periodStart,
-                'period_end' => $periodEnd
+                'period_end' => $periodEnd,
+                'midtrans_pay_with_ppn' => $this->midtransPayWithPpn
             ]);
 
             if ($result['success']) 

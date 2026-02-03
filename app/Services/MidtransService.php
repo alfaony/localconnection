@@ -115,21 +115,24 @@ class MidtransService
         try {
             // Extract options
             $paymentMonths = $options['payment_months'] ?? 1;
-            $totalAmount = $options['total_amount'] ?? $customer->internetPackage->price_nett;
+            
+            // Determine price based on PPN setting
+            $midtransPayWithPpn = $options['midtrans_pay_with_ppn'] ?? false;
+            $defaultPrice = $midtransPayWithPpn 
+                ? $customer->internetPackage->price      // PPN enabled: use gross price
+                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
+            
+            $totalAmount = $options['total_amount'] ?? $defaultPrice;
             $discountAmount = $options['discount_amount'] ?? 0;
             $periodStart = $options['period_start'] ?? null;
             $periodEnd = $options['period_end'] ?? null;
 
+
+
             // Build order ID (unique)
             $orderId = 'INT-' . $purchase->id . '-' . time();
 
-            // Build transaction details
-            $transactionDetails = [
-                'order_id' => $orderId,
-                'gross_amount' => (int) $totalAmount,
-            ];
-
-            // Build item details
+            // Build item details FIRST
             $items = [];
             
             // Main package item
@@ -138,9 +141,16 @@ class MidtransService
                 $packageItemName .= " | " . $periodStart->format('M Y') . " - " . $periodEnd->format('M Y');
             }
 
+            $itemPrice = $midtransPayWithPpn 
+                ? $customer->internetPackage->price      // PPN enabled: use gross price
+                : $customer->internetPackage->price_nett; // PPN disabled: use nett price
+            
+            // Round to integer to avoid decimal issues
+            $itemPriceRounded = (int) round($itemPrice);
+                
             $items[] = [
                 'id' => 'PKG-' . $customer->internetPackage->id,
-                'price' => (int) $customer->internetPackage->price_nett,
+                'price' => $itemPriceRounded,
                 'quantity' => $paymentMonths,
                 'name' => $packageItemName,
             ];
@@ -148,13 +158,26 @@ class MidtransService
             // Add discount item if applicable
             if ($discountAmount > 0) {
                 $discountPercentage = InternetCustomerPurchase::getDiscountPercentage($paymentMonths);
+                $discountRounded = (int) round($discountAmount);
                 $items[] = [
                     'id' => 'DISC-' . $paymentMonths,
-                    'price' => -(int) $discountAmount,
+                    'price' => -$discountRounded, // Negative value for discount
                     'quantity' => 1,
                     'name' => "Diskon Pembayaran {$paymentMonths} Bulan ({$discountPercentage}%)",
                 ];
             }
+
+            // Calculate gross_amount from sum of items (MUST match exactly)
+            $grossAmount = 0;
+            foreach ($items as $item) {
+                $grossAmount += $item['price'] * $item['quantity'];
+            }
+
+            // Build transaction details with calculated gross_amount
+            $transactionDetails = [
+                'order_id' => $orderId,
+                'gross_amount' => $grossAmount, // This MUST equal sum of item_details
+            ];
 
             // Build customer details
             $customerDetails = [
@@ -188,19 +211,17 @@ class MidtransService
                 ],
             ];
 
-
-            $params = array(
-                'transaction_details' => array(
-                    'order_id' => rand(),
-                    'gross_amount' => 10000,
-                ),
-                'customer_details' => array(
-                    'first_name' => 'budi',
-                    'last_name' => 'pratama',
-                    'email' => 'budi.pra@example.com',
-                    'phone' => '08111222333',
-                ),
-            );
+            // Log the payload for debugging
+            Log::info('Midtrans transaction payload', [
+                'order_id' => $orderId,
+                'gross_amount' => $grossAmount,
+                'items' => $items,
+                'item_sum_validation' => array_sum(array_map(function($item) {
+                    return $item['price'] * $item['quantity'];
+                }, $items)),
+                'customer' => $customer->code,
+                'purchase_id' => $purchase->id
+            ]);
 
             // Create SNAP transaction
            $response = Http::withHeaders([
