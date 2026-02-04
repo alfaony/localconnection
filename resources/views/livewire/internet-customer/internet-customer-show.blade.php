@@ -460,7 +460,7 @@
                 <h5 class="modal-title" id="paymentModalLabel">
                     <i class="fas fa-money-bill-wave mr-2"></i>Konfirmasi Pembayaran
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close text-white" onclick="closePaymentModal()">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -691,9 +691,80 @@
 
                             <!-- Upload Form -->
                             <form id="payment-proof-form">
+                                <!-- Transfer Details Section -->
+                                <div class="mb-4">
+                                    <h6 class="font-weight-bold mb-3">
+                                        <i class="fas fa-file-alt mr-2"></i>Detail Transfer
+                                    </h6>
+                                    
+                                    <!-- Transfer Date -->
+                                    <div class="form-group">
+                                        <label for="transfer_date" class="font-weight-bold">
+                                            Tanggal Transfer <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date" 
+                                               id="transfer_date" 
+                                               class="form-control @error('transfer_date') is-invalid @enderror" 
+                                               wire:model="transfer_date"
+                                               max="{{ date('Y-m-d') }}">
+                                        @error('transfer_date')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted">Tanggal saat Anda melakukan transfer</small>
+                                    </div>
+
+                                    <!-- Transfer From Bank -->
+                                    <div class="form-group">
+                                        <label for="transfer_from_bank" class="font-weight-bold">
+                                            Nama Bank Pengirim
+                                        </label>
+                                        <input type="text" 
+                                               id="transfer_from_bank" 
+                                               class="form-control @error('transfer_from_bank') is-invalid @enderror" 
+                                               wire:model="transfer_from_bank"
+                                               placeholder="Contoh: BCA, Mandiri, BNI">
+                                        @error('transfer_from_bank')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted">Bank yang Anda gunakan untuk transfer</small>
+                                    </div>
+
+                                    <!-- Transfer From Account Name -->
+                                    <div class="form-group">
+                                        <label for="transfer_from_account_name" class="font-weight-bold">
+                                            Nama Pemilik Rekening Pengirim
+                                        </label>
+                                        <input type="text" 
+                                               id="transfer_from_account_name" 
+                                               class="form-control @error('transfer_from_account_name') is-invalid @enderror" 
+                                               wire:model="transfer_from_account_name"
+                                               placeholder="Nama sesuai rekening Anda">
+                                        @error('transfer_from_account_name')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted">Nama pemilik rekening yang digunakan untuk transfer</small>
+                                    </div>
+
+                                    <!-- Transfer Notes -->
+                                    <div class="form-group">
+                                        <label for="transfer_notes" class="font-weight-bold">
+                                            Catatan (Opsional)
+                                        </label>
+                                        <textarea id="transfer_notes" 
+                                                  class="form-control @error('transfer_notes') is-invalid @enderror" 
+                                                  wire:model="transfer_notes"
+                                                  rows="3"
+                                                  placeholder="Catatan tambahan (jika ada)"></textarea>
+                                        @error('transfer_notes')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted">Informasi tambahan terkait transfer (maksimal 500 karakter)</small>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <h6 class="font-weight-bold mb-3">
-                                        <i class="fas fa-upload mr-2"></i>Upload Bukti Pembayaran
+                                        <i class="fas fa-upload mr-2"></i>Upload Bukti Pembayaran <span class="text-danger">*</span>
                                     </h6>
                                     
                                     <div class="file-upload-area mb-3">
@@ -716,7 +787,7 @@
                                 </div>
                                 
                                 <div class="modal-footer border-top pt-3">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                    <button type="button" class="btn btn-secondary" onclick="closePaymentModal()">
                                         <i class="fas fa-times mr-1"></i>Batal
                                     </button>
                                     <button type="submit" class="btn btn-primary">
@@ -827,6 +898,32 @@
     </div>
 </div>
 @push('scripts')
+<script>
+    function closePaymentModal() {
+        console.log('Closing payment modal via JS');
+        // Try Bootstrap 5 method first
+        const modalEl = document.getElementById('paymentModal');
+        if (modalEl) {
+            // Check if bootstrap is defined (BS5)
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modal.hide();
+                    return;
+                } else {
+                    // Try creating a new instance and hiding (sometimes works if instance lost)
+                    new bootstrap.Modal(modalEl).hide();
+                    return;
+                }
+            }
+        }
+        
+        // Fallback to jQuery/Bootstrap 4
+        if (typeof $ !== 'undefined') {
+            $('#paymentModal').modal('hide');
+        }
+    }
+</script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 @if($customer->partnershipAgreement)
@@ -1000,13 +1097,13 @@ document.addEventListener('livewire:load', function() {
     // Increase months
     window.increaseMonths = function() {
         const currentValue = parseInt(document.getElementById('custom-months-input').value);
-        updateCustomMonths(currentValue + 5);
+        updateCustomMonths(currentValue + 1);
     };
 
     // Decrease months
     window.decreaseMonths = function() {
         const currentValue = parseInt(document.getElementById('custom-months-input').value);
-        updateCustomMonths(currentValue - 5);
+        updateCustomMonths(currentValue - 1);
     };
 
     // Select payment method
@@ -1285,11 +1382,25 @@ document.addEventListener('livewire:load', function() {
         paymentProofForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            console.log('Form submit triggered');
+            
             const fileInput = document.getElementById('payment_proof');
             const file = fileInput.files[0];
             
+            const transferDateInput = document.getElementById('transfer_date');
+            const transferDate = transferDateInput ? transferDateInput.value : '';
+            
+            console.log('File:', file);
+            console.log('Transfer Date:', transferDate);
+            
             if (!file) {
                 alert('Silakan pilih file bukti pembayaran');
+                return;
+            }
+            
+            if (!transferDate) {
+                alert('Silakan isi tanggal transfer');
+                transferDateInput.focus();
                 return;
             }
             
@@ -1303,22 +1414,46 @@ document.addEventListener('livewire:load', function() {
             
             // Listen for Livewire upload finish event
             const uploadFinishHandler = (event) => {
-                console.log('Upload finished, calling submitPaymentProof');
+                console.log('Upload finished, syncing form data...');
                 
-                // Call the backend method
-                @this.call('submitPaymentProof').then(() => {
-                    console.log('submitPaymentProof completed');
-                    
-                    // Reload page to show updated status
-                    window.location.reload();
-                }).catch((error) => {
-                    console.error('Error submitting payment proof:', error);
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = originalText;
-                    }
-                    alert('Gagal mengirim bukti pembayaran: ' + (error.message || 'Unknown error'));
+                // Manually sync all form field values to Livewire
+                const transferDate = document.getElementById('transfer_date')?.value || '';
+                const transferFromBank = document.getElementById('transfer_from_bank')?.value || '';
+                const transferFromAccountName = document.getElementById('transfer_from_account_name')?.value || '';
+                const transferNotes = document.getElementById('transfer_notes')?.value || '';
+                
+                console.log('Syncing data:', {
+                    transferDate,
+                    transferFromBank,
+                    transferFromAccountName,
+                    transferNotes
                 });
+                
+                // Set values in Livewire
+                @this.set('transfer_date', transferDate);
+                @this.set('transfer_from_bank', transferFromBank);
+                @this.set('transfer_from_account_name', transferFromAccountName);
+                @this.set('transfer_notes', transferNotes);
+                
+                // Wait a bit for Livewire to sync, then call submit
+                setTimeout(() => {
+                    console.log('Calling submitPaymentProof...');
+                    
+                    // Call the backend method
+                    @this.call('submitPaymentProof').then(() => {
+                        console.log('submitPaymentProof completed');
+                        
+                        // Reload page to show updated status
+                        window.location.reload();
+                    }).catch((error) => {
+                        console.error('Error submitting payment proof:', error);
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        }
+                        alert('Gagal mengirim bukti pembayaran: ' + (error.message || 'Unknown error'));
+                    });
+                }, 300); // Small delay to ensure sync completes
                 
                 // Remove listener after use
                 window.removeEventListener('livewire-upload-finish', uploadFinishHandler);
@@ -1468,13 +1603,32 @@ document.addEventListener('livewire:load', function() {
     // Image modals
     window.addEventListener('showImageModal', function(event) {
         const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+        
         document.getElementById('modalTitle').innerText = event.detail.title;
-        document.getElementById('modalContent').innerHTML = `
-            <img src="${event.detail.imageUrl}" class="img-fluid" alt="${event.detail.title}">
-        `;
+        
+        let content = `<img src="${event.detail.imageUrl}" class="img-fluid" alt="${event.detail.title}">`;
+        
+        // Add transfer details if available
+        if (event.detail.transferDetails) {
+            const details = event.detail.transferDetails;
+            content += `
+                <div class="mt-3 text-left">
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            ${details.date ? `<tr><th width="40%">Tanggal Transfer</th><td>${details.date}</td></tr>` : ''}
+                            ${details.bank ? `<tr><th>Bank Pengirim</th><td>${details.bank}</td></tr>` : ''}
+                            ${details.account_name ? `<tr><th>Nama Pengirim</th><td>${details.account_name}</td></tr>` : ''}
+                            ${details.notes ? `<tr><th>Catatan</th><td>${details.notes}</td></tr>` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        document.getElementById('modalContent').innerHTML = content;
         modal.show();
     });
-
+    
     window.addEventListener('showGalleryModal', function(event) {
         const modal = new bootstrap.Modal(document.getElementById('galleryModal'));
         const carouselInner = document.getElementById('carouselInner');

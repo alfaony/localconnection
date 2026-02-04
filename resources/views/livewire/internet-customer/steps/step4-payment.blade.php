@@ -231,6 +231,22 @@
                     
                     <h5 class="h6 fw-semibold mb-3">Informasi Transfer Anda</h5>
                     <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="transfer_date" class="font-weight-bold">
+                                    Tanggal Transfer <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" 
+                                        id="transfer_date" 
+                                        class="form-control @error('transfer_date') is-invalid @enderror" 
+                                        wire:model="transfer_date"
+                                        max="{{ date('Y-m-d') }}">
+                                @error('transfer_date')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Tanggal saat Anda melakukan transfer</small>
+                            </div>
+                        </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Nama Bank Pengirim</label>
