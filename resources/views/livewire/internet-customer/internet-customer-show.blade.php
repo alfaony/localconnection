@@ -460,7 +460,7 @@
                 <h5 class="modal-title" id="paymentModalLabel">
                     <i class="fas fa-money-bill-wave mr-2"></i>Konfirmasi Pembayaran
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close text-white" onclick="closePaymentModal()">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -787,7 +787,7 @@
                                 </div>
                                 
                                 <div class="modal-footer border-top pt-3">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                    <button type="button" class="btn btn-secondary" onclick="closePaymentModal()">
                                         <i class="fas fa-times mr-1"></i>Batal
                                     </button>
                                     <button type="submit" class="btn btn-primary">
@@ -898,6 +898,32 @@
     </div>
 </div>
 @push('scripts')
+<script>
+    function closePaymentModal() {
+        console.log('Closing payment modal via JS');
+        // Try Bootstrap 5 method first
+        const modalEl = document.getElementById('paymentModal');
+        if (modalEl) {
+            // Check if bootstrap is defined (BS5)
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modal.hide();
+                    return;
+                } else {
+                    // Try creating a new instance and hiding (sometimes works if instance lost)
+                    new bootstrap.Modal(modalEl).hide();
+                    return;
+                }
+            }
+        }
+        
+        // Fallback to jQuery/Bootstrap 4
+        if (typeof $ !== 'undefined') {
+            $('#paymentModal').modal('hide');
+        }
+    }
+</script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 @if($customer->partnershipAgreement)
