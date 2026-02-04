@@ -36,11 +36,17 @@ class InternetCustomerShow extends Component
     public $modalData = [];
     public $payment_method_choice = 'manual';
     public $payment_months = 1;
+    
+    // Transfer detail fields
+    public $transfer_date;
+    public $transfer_from_bank;
+    public $transfer_from_account_name;
+    public $transfer_notes;
     public $xenditActive = false;
     public $midtransActive = false;
     public $xenditPayWithPpn = false;
     public $midtransPayWithPpn = false;
-    public $manualPaymentEnabled = true; // Default enabled
+    public $manualPaymentEnabled = false; // Default disabled, loaded from settings
 
     // Calculated values
     public $monthlyPrice = 0;
@@ -55,6 +61,10 @@ class InternetCustomerShow extends Component
     protected $rules = [
         'payment_proof' => 'required|image|max:2048',
         'payment_months' => 'required|integer|min:1|max:12',
+        'transfer_date' => 'required|date|before_or_equal:today',
+        'transfer_from_bank' => 'nullable|string|max:255',
+        'transfer_from_account_name' => 'nullable|string|max:255',
+        'transfer_notes' => 'nullable|string|max:500',
     ];
 
     protected $messages = [
@@ -64,6 +74,12 @@ class InternetCustomerShow extends Component
         'payment_months.required' => 'Jumlah bulan pembayaran harus dipilih.',
         'payment_months.min' => 'Minimal pembayaran adalah 1 bulan.',
         'payment_months.max' => 'Maksimal pembayaran adalah 12 bulan.',
+        'transfer_date.required' => 'Tanggal transfer wajib diisi.',
+        'transfer_date.date' => 'Format tanggal tidak valid.',
+        'transfer_date.before_or_equal' => 'Tanggal transfer tidak boleh lebih dari hari ini.',
+        'transfer_from_bank.max' => 'Nama bank maksimal 255 karakter.',
+        'transfer_from_account_name.max' => 'Nama pemilik rekening maksimal 255 karakter.',
+        'transfer_notes.max' => 'Catatan maksimal 500 karakter.',
     ];
 
     public function mount($code)
@@ -492,9 +508,30 @@ class InternetCustomerShow extends Component
 
     public function submitPaymentProof()
     {
-        // $this->validate();
+        Log::info('submitPaymentProof called', [
+            'purchase_id' => $this->purchase_id,
+            'has_payment_proof' => !is_null($this->payment_proof),
+            'payment_proof_path' => $this->payment_proof ? gettype($this->payment_proof) : null,
+            'transfer_date' => $this->transfer_date,
+            'transfer_from_bank' => $this->transfer_from_bank,
+        ]);
 
         try {
+            // Check if payment proof exists (uploaded via Livewire)
+            if (!$this->payment_proof) {
+                throw new \Exception('Bukti pembayaran belum diupload');
+            }
+            
+            // Manual validation with specific rules
+            $this->validate([
+                'transfer_date' => 'required|date|before_or_equal:today',
+                'transfer_from_bank' => 'nullable|string|max:255',
+                'transfer_from_account_name' => 'nullable|string|max:255',
+                'transfer_notes' => 'nullable|string|max:500',
+            ]);
+            
+            Log::info('Validation passed, processing payment...');
+
             $purchase = InternetCustomerPurchase::findOrFail($this->purchase_id);
             $internetCustomer = $purchase->customer;
 
@@ -526,20 +563,33 @@ class InternetCustomerShow extends Component
                 'total_before_discount' => $this->subtotal,
                 'discount_amount' => $this->discountAmount,
                 'amount_paid' => $this->totalAmount,
+                'transfer_date' => $this->transfer_date,
+                'transfer_from_bank' => $this->transfer_from_bank,
+                'transfer_from_account_name' => $this->transfer_from_account_name,
+                'transfer_notes' => $this->transfer_notes,
             ]);
 
             // Notify finance team
             $this->notifyFinanceTeam($internetCustomer);
 
-            $this->reset('payment_proof');
+            $this->reset(['payment_proof', 'transfer_date', 'transfer_from_bank', 'transfer_from_account_name', 'transfer_notes']);
             $this->dispatchBrowserEvent('hide-payment-modal');
             
             return redirect()->back()->with('success', 'Bukti pembayaran berhasil dikirim dan sedang menunggu konfirmasi.');            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Validation failed - Livewire will automatically show error messages
+            throw $e;
         } catch (\Exception $e) {
-            // dd($e);
             Log::error('Error submitting payment proof', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
+            
+            // Dispatch error to frontend
+            $this->dispatchBrowserEvent('payment-error', [
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ]);
+            
             session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
@@ -581,7 +631,13 @@ class InternetCustomerShow extends Component
         if ($this->paymentProofUrl) {
             $this->dispatchBrowserEvent('showImageModal', [
                 'title' => 'Bukti Pembayaran ' . $purchase->period_formatted,
-                'imageUrl' => $this->paymentProofUrl
+                'imageUrl' => $this->paymentProofUrl,
+                'transferDetails' => [
+                    'date' => $purchase->transfer_date ? \Carbon\Carbon::parse($purchase->transfer_date)->format('d M Y') : null,
+                    'bank' => $purchase->transfer_from_bank,
+                    'account_name' => $purchase->transfer_from_account_name,
+                    'notes' => $purchase->transfer_notes
+                ]
             ]);
         }
     }

@@ -28,6 +28,10 @@ class InternetCustomerPurchase extends Model
         'payment_method',
         'payment_proof',
         'payment_date',
+        'transfer_date',
+        'transfer_from_bank',
+        'transfer_from_account_name',
+        'transfer_notes',
         'xendit_invoice_id',
         'xendit_invoice_url',
         'xendit_payment_channel',
@@ -50,6 +54,7 @@ class InternetCustomerPurchase extends Model
         'midtrans_paid_at' => 'datetime',
         'period_start' => 'date',
         'period_end' => 'date',
+        'transfer_date' => 'date',
     ];
 
     // Configuration - bisa diubah sesuai kebutuhan

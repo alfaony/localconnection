@@ -76,6 +76,12 @@ class InternetCustomerForm extends Component
     public $payment_months = 1;
     public $payment_method = null; // 'manual_transfer' atau 'xendit'
     public $payment_proof;
+    
+    // Transfer details
+    public $transfer_date;
+    public $transfer_from_bank;
+    public $transfer_from_account_name;
+    public $transfer_notes;
     public $selectedPackage;
     public $nama_bank;
     public $holder_name;
@@ -557,6 +563,10 @@ class InternetCustomerForm extends Component
             if ($this->payment_method === 'manual_transfer') {
                 $this->validate([
                     'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+                    'transfer_date' => 'required|date|before_or_equal:today',
+                    'transfer_from_bank' => 'nullable|string|max:255',
+                    'transfer_from_account_name' => 'nullable|string|max:255',
+                    'transfer_notes' => 'nullable|string|max:500',
                     'nama_bank' => 'required',
                     'holder_name' => 'required',
                     'account_number' => 'required',
@@ -565,6 +575,9 @@ class InternetCustomerForm extends Component
                     'payment_proof.required' => 'Bukti pembayaran wajib diupload.',
                     'payment_proof.mimes' => 'Bukti pembayaran harus berupa JPG, PNG, atau PDF.',
                     'payment_proof.max' => 'Ukuran file maksimal 2MB.',
+                    'transfer_date.required' => 'Tanggal transfer wajib diisi.',
+                    'transfer_date.date' => 'Format tanggal tidak valid.',
+                    'transfer_date.before_or_equal' => 'Tanggal transfer tidak boleh lebih dari hari ini.',
                 ]);
 
                 // Verify payment proof is uploaded
@@ -740,6 +753,10 @@ class InternetCustomerForm extends Component
                     'tax_amount' => $this->taxAmount,
                     'payment_method' => $this->payment_method,
                     'payment_proof' => $paymentProofPath ? $paymentProofPath : null,
+                    'transfer_date' => $this->transfer_date,
+                    'transfer_from_bank' => $this->transfer_from_bank,
+                    'transfer_from_account_name' => $this->transfer_from_account_name,
+                    'transfer_notes' => $this->transfer_notes,
                     'generate_coupons' => true,
                 ]);
 

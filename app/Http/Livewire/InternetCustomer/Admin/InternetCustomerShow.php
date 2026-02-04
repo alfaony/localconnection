@@ -531,7 +531,13 @@ class InternetCustomerShow extends Component
 
         $this->dispatchBrowserEvent('showImageModal', [
             'title' => 'Bukti Pembayaran ' . Carbon::parse($purchase->period)->format('F Y'),
-            'imageUrl' => $this->paymentProofUrl
+            'imageUrl' => $this->paymentProofUrl,
+            'transferDetails' => [
+                'date' => $purchase->transfer_date ? \Carbon\Carbon::parse($purchase->transfer_date)->format('d M Y') : null,
+                'bank' => $purchase->transfer_from_bank,
+                'account_name' => $purchase->transfer_from_account_name,
+                'notes' => $purchase->transfer_notes
+            ]
         ]);
     }
 

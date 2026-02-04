@@ -1230,17 +1230,31 @@
             window.addEventListener('showImageModal', function(event) {
                 const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
                 
-                // Set modal title and content
                 document.getElementById('modalTitle').innerText = event.detail.title;
-                document.getElementById('modalContent').innerHTML = `
-                    <img src="${event.detail.imageUrl}" class="img-fluid" alt="${event.detail.title}">
-                `;
                 
-                // Show modal
+                let content = `<img src="${event.detail.imageUrl}" class="img-fluid" alt="${event.detail.title}">`;
+                
+                // Add transfer details if available
+                if (event.detail.transferDetails) {
+                    const details = event.detail.transferDetails;
+                    content += `
+                        <div class="mt-3 text-left">
+                            <table class="table table-sm table-bordered">
+                                <tbody>
+                                    ${details.date ? `<tr><th width="40%">Tanggal Transfer</th><td>${details.date}</td></tr>` : ''}
+                                    ${details.bank ? `<tr><th>Bank Pengirim</th><td>${details.bank}</td></tr>` : ''}
+                                    ${details.account_name ? `<tr><th>Nama Pengirim</th><td>${details.account_name}</td></tr>` : ''}
+                                    ${details.notes ? `<tr><th>Catatan</th><td>${details.notes}</td></tr>` : ''}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('modalContent').innerHTML = content;
                 modal.show();
             });
-
-            // Gallery modal handler
+                        // Gallery modal handler
             window.addEventListener('showGalleryModal', function(event) {
                 const modal = new bootstrap.Modal(document.getElementById('galleryModal'));
                 const carouselInner = document.getElementById('carouselInner');
