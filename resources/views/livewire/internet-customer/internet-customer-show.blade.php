@@ -1071,13 +1071,13 @@ document.addEventListener('livewire:load', function() {
     // Increase months
     window.increaseMonths = function() {
         const currentValue = parseInt(document.getElementById('custom-months-input').value);
-        updateCustomMonths(currentValue + 5);
+        updateCustomMonths(currentValue + 1);
     };
 
     // Decrease months
     window.decreaseMonths = function() {
         const currentValue = parseInt(document.getElementById('custom-months-input').value);
-        updateCustomMonths(currentValue - 5);
+        updateCustomMonths(currentValue - 1);
     };
 
     // Select payment method
