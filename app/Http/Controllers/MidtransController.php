@@ -34,17 +34,19 @@ class MidtransController extends Controller
         try {
             // Extract order_id from notification
             $orderId = $data['order_id'] ?? null;
+
+
             
             if (!$orderId) {
                 Log::error('Order ID not found in Midtrans notification');
-                return response()->json(['error' => 'Order ID not found'], 400);
+                return response()->json(['message' => 'Order ID Not Found'], 200);
             }
 
             // Parse order_id to get purchase_id (format: INT-{purchase_id}-{timestamp})
             $parts = explode('-', $orderId);
             if (count($parts) < 3 || $parts[0] !== 'INT') {
                 Log::error('Invalid order_id format', ['order_id' => $orderId]);
-                return response()->json(['error' => 'Invalid order ID format'], 400);
+                return response()->json(['message' => 'Invalid Order ID Format'], 200);
             }
 
             $purchaseId = $parts[1];
@@ -57,7 +59,7 @@ class MidtransController extends Controller
                     'order_id' => $orderId,
                     'purchase_id' => $purchaseId,
                 ]);
-                return response()->json(['error' => 'Purchase not found'], 404);
+                return response()->json(['message' => 'Purchase Not Found'], 200);
             }
 
             $internetCustomer = $purchase->customer;
