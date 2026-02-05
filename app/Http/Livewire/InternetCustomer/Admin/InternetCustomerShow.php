@@ -42,7 +42,7 @@ class InternetCustomerShow extends Component
     public $showInstallationPhotosModal = false;
 
     // Properties untuk edit data pribadi
-    public $name, $email, $phone_number, $start_billing_date, $end_billing_date;
+    public $name, $email, $phone_number, $start_billing_date, $end_billing_date, $grouping_id;
     
     // Properties untuk edit data instalasi
     public $local_address, $username, $pass_hash, $device_serial_number;
@@ -374,6 +374,7 @@ class InternetCustomerShow extends Component
         $this->phone_number = $this->customer->userCustomer->phone_number ?? '';
         $this->start_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->start_billing_date : Carbon::now()->format('Y-m-d');
         $this->end_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->end_billing_date : Carbon::now()->addDays(5)->format('Y-m-d');
+        $this->grouping_id = $this->customer->grouping_id;
         
         $this->dispatchBrowserEvent('showEditPribadiModal', [
             'status_active' => $this->status_active,
@@ -381,7 +382,8 @@ class InternetCustomerShow extends Component
             'email' => $this->customer->userCustomer->email ?? '',
             'phone_number' => $this->customer->userCustomer->phone_number ?? '',
             'start_billing_date' => $this->start_billing_date,
-            'end_billing_date' => $this->end_billing_date
+            'end_billing_date' => $this->end_billing_date,
+            'grouping_id' => $this->grouping_id
         ]);
     }
 
@@ -440,6 +442,11 @@ class InternetCustomerShow extends Component
                 {
                     GenerateIsolirJob::dispatch($this->customer->userCustomer);
                 }
+
+                if($this->grouping_id != $this->customer->grouping_id){
+                    $this->customer->update(['grouping_id' => $this->grouping_id]);
+                }
+                
                 
                 $this->customer->userCustomer->update([
                     'name' => $this->name,
@@ -447,6 +454,7 @@ class InternetCustomerShow extends Component
                     'phone_number' => $this->phone_number,
                     'start_billing_date' => $this->start_billing_date,
                     'end_billing_date' => $this->end_billing_date,
+                    'grouping_id' => $this->grouping_id,
                 ]);
 
                 if($this->customer->partnershipAgreement)

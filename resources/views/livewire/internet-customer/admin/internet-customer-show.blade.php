@@ -702,14 +702,22 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label for="grouping_id">Grouping</label>
+                                    <input type="text" class="form-control" id="grouping_id" wire:model="grouping_id">
+                                    @error('grouping_id') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label for="start_billing_date">Tanggal Pembayaran Selanjutnya</label>
                                     <input type="date" class="form-control" id="start_billing_date" wire:model="start_billing_date">
                                     @error('start_billing_date') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="end_billing_date">Batas Pembayaran Selanjutnya</label>
@@ -1020,6 +1028,8 @@
                 document.getElementById('phone_number').value = e.detail.phone_number || '';
                 document.getElementById('start_billing_date').value = e.detail.start_billing_date || '';
                 document.getElementById('end_billing_date').value = e.detail.end_billing_date || '';
+                document.getElementById('grouping_id').value = e.detail.grouping_id || '';
+
                 const statusActiveElement = document.getElementById('status_active');
                 if (e.detail.status_active) {
                     statusActiveElement.checked = true;
@@ -1109,6 +1119,7 @@
                         const start_billing_date = document.getElementById('start_billing_date').value;
                         const end_billing_date = document.getElementById('end_billing_date').value;
                         const status_active = document.getElementById('status_active').checked;
+                        const grouping_id = document.getElementById('grouping_id').value;                        
                         
                         // Set nilai ke Livewire
                         @this.set('name', name);
@@ -1117,6 +1128,7 @@
                         @this.set('start_billing_date', start_billing_date);
                         @this.set('end_billing_date', end_billing_date);
                         @this.set('status_active', status_active);
+                        @this.set('grouping_id', grouping_id);
                         
                         // Panggil method save di Livewire
                         @this.call('savePribadi');
