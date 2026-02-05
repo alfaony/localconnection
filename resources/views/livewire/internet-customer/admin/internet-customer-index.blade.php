@@ -89,7 +89,7 @@
                     <table class="table table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th wire:click="sortBy('code')" style="cursor: pointer; width: 10%;">
+                                <th wire:click="sortBy('code')" style="cursor: pointer; width: 5%;">
                                     Kode
                                     @if($sortField === 'code')
                                         <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
@@ -97,7 +97,7 @@
                                         <i class="fas fa-sort ms-1 text-muted"></i>
                                     @endif
                                 </th>
-                                <th wire:click="sortBy('name')" style="cursor: pointer; width: 25%;">
+                                <th wire:click="sortBy('name')" style="cursor: pointer; width: 15%;">
                                     Nama
                                     @if($sortField === 'name')
                                         <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
@@ -105,8 +105,8 @@
                                         <i class="fas fa-sort ms-1 text-muted"></i>
                                     @endif
                                 </th>
-                                <th style="width: 25%;">Alamat</th>
-                                <th style="width: 15%;">Paket Internet</th>
+                                <th style="width: 20%;">Alamat</th>
+                                <th style="width: 30%;">Internet</th>
                                 <th style="width: 10%;">Status</th>
                                 <th style="width: 10%;">Aksi</th>
                                 <th wire:click="sortBy('created_at')" style="cursor: pointer; width: 15%;">
@@ -125,6 +125,13 @@
                                     class="{{ $loop->odd ? 'bg-light' : '' }}">
                                     <td>
                                         <span class="badge bg-info">{{ $customer->code }}</span>
+                                        @if($customer->installation && ($customer->installation->grouping_id || $customer->installation->grouping_id))
+                                            <div class="mt-1 d-flex gap-1">
+                                                <span class="badge bg-light text-primary border border-primary-subtle" title="Grouping">
+                                                    <i class="fas fa-users me-1"></i> {{ $customer->installation->grouping_id }}
+                                                </span>
+                                            </div>
+                                        @endif
                                     </td>
                                     <td>
                                         <div class="fw-bold">
@@ -132,16 +139,6 @@
                                                 {{ $customer->name }}
                                             </a>
                                         </div>
-                                        @if($customer->userCustomer->start_billing_date && $customer->userCustomer->end_billing_date)
-                                            <div class="mt-1 d-flex gap-1">
-                                                <span class="badge bg-light text-primary border border-primary-subtle" title="Start Billing">
-                                                    <i class="fas fa-calendar-alt me-1"></i> {{ $customer->userCustomer->start_billing_date }}
-                                                </span>
-                                                <span class="badge bg-light text-danger border border-danger-subtle" title="End Billing">
-                                                    <i class="fas fa-calendar-check me-1"></i> {{ $customer->userCustomer->end_billing_date }}
-                                                </span>
-                                            </div>
-                                        @endif
                                     </td>
                                     <td>
                                         {{ Str::limit($customer->address, 50) }}
@@ -151,9 +148,30 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <span class="badge bg-{{ $customer->status  }}">
-                                            {{ $customer->internetPackage->name }}
-                                        </span>
+                                    <div class="fw-bold">{{ $customer->internetPackage->name ?? '-' }}</div>
+                                        @if($customer->installation && $customer->installation->device_serial_number)
+                                        <div class="small text-secondary">
+                                            <i class="fas fa-barcode me-1"></i> SN: {{ $customer->installation->device_serial_number }}
+                                        </div>
+                                        @endif
+                                        @if($customer->grouping_id)
+                                        <div class="small text-muted">
+                                            <i class="fas fa-users me-1"></i> Grouping: {{ $customer->grouping_id }}
+                                        </div>
+                                        @endif
+                                        @if($customer->userCustomer->start_billing_date && $customer->userCustomer->end_billing_date)
+                                        <div class="mt-1 d-flex gap-1">
+                                            <span class="badge bg-light text-primary border border-primary-subtle" title="Start Billing">
+                                                <i class="fas fa-calendar-alt me-1"></i> {{ $customer->userCustomer->start_billing_date }}
+                                            </span>
+                                            <span class="small text-muted align-self-center">-</span>
+                                            <span class="badge bg-light text-danger border border-danger-subtle" title="End Billing">
+                                                <i class="fas fa-calendar-check me-1"></i> {{ $customer->userCustomer->end_billing_date }}
+                                            </span>
+                                        </div>
+                                        @endif
+                                    </div>
+
                                     </td>
                                     <td>
                                         {!! $customer->status_badge !!}
@@ -177,7 +195,7 @@
                                                         @if($customer->getOldestUnconfirmedPurchase()->payment_method && $finance_access)
 
                                                             @if($customer->getOldestUnconfirmedPurchase()->payment_proof)
-                                                            <button class="btn btn-sm btn-outline-primary" wire:click="viewPaymentProof(@js($customer->getOldestUnconfirmedPurchase()->payment_proof))">
+                                                            <button class="btn btn-sm btn-outline-primary" wire:click="viewPaymentProof(@js($customer->getOldestUnconfirmedPurchase()->id))">
                                                                 Lihat Bukti
                                                             </button>
                                                             @endif
@@ -481,10 +499,27 @@
         });
     }
 
-    window.addEventListener('showPaymentProofModal', function(url) {
+    window.addEventListener('showPaymentProofModal', function(data) {
         const modal = new bootstrap.Modal(document.getElementById('paymentProofModal'));
-        let img = `<img src="${url.detail.proofUrl}" class="img-fluid">`;
-        document.getElementById('showPaymentProof').innerHTML = img;
+        let content = `<img src="${data.detail.proofUrl}" class="img-fluid">`;
+        
+        // Add transfer details if available
+        if (data.detail.transferDetails) {
+            const details = data.detail.transferDetails;
+            content += `
+                <div class="mt-3 text-left">
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            ${details.date ? `<tr><th width="40%">Tanggal Transfer</th><td>${details.date}</td></tr>` : ''}
+                            ${details.bank ? `<tr><th>Bank Pengirim</th><td>${details.bank}</td></tr>` : ''}
+                            ${details.account_name ? `<tr><th>Nama Pengirim</th><td>${details.account_name}</td></tr>` : ''}
+                            ${details.notes ? `<tr><th>Catatan</th><td>${details.notes}</td></tr>` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        document.getElementById('showPaymentProof').innerHTML = content;
         modal.show();
     });
 
@@ -735,8 +770,8 @@
             const files = document.getElementById('modalPhotos').files;
             const routerId = document.getElementById('routerSelectMirror').value;
             const odpId = document.getElementById('odpSelect').value;
+            const grouping = document.getElementById('groupingInput').value;
             // const odpId = @this.optical_distribution_id;
-            const grouping = @this.grouping_id;
             const username = @this.username;
             const password = document.getElementById('modalPassword').value;
             const override_pool_id = @this.override_pool_id;
