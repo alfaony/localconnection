@@ -27,9 +27,9 @@
                 </div>
                 <div class="card-body box-profile">
                     <div class="text-center">
-                        @if($software->logo_url)
+                        @if($software->logo)
                             <img class="img-fluid" 
-                                 src="{{ asset('storage/' . $software->logo_url) }}" 
+                                 src="{{ s3_asset(true,10,$software->logo) }}" 
                                  alt="{{ $software->nama_software }}"
                                  style="max-height: 200px; object-fit: contain;">
                         @else

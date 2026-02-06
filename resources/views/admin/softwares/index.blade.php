@@ -72,7 +72,7 @@
                         <tr>
                             <td>
                                 @if($software->logo)
-                                <img src="{{ Storage::url($software->logo) }}" alt="{{ $software->nama }}" class="img-thumbnail" style="max-width: 60px;">
+                                <img src="{{ s3_asset(true,10,$software->logo) }}" alt="{{ $software->nama }}" class="img-thumbnail" style="max-width: 60px;">
                                 @else
                                 <div class="bg-secondary text-white text-center" style="width: 60px; height: 60px; line-height: 60px;">
                                     <i class="fas fa-image"></i>

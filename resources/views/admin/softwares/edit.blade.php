@@ -74,7 +74,7 @@
                             
                             @if($software->logo)
                             <div class="mb-2">
-                                <img src="{{ Storage::url($software->logo) }}" alt="{{ $software->nama }}" class="img-thumbnail" style="max-width: 200px;">
+                                <img src="{{ s3_asset(true,10,$software->logo) }}" alt="{{ $software->nama }}" class="img-thumbnail" style="max-width: 200px;">
                                 <p class="text-muted small mt-1">Logo saat ini</p>
                             </div>
                             @endif

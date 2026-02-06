@@ -153,11 +153,11 @@ class SoftwareController extends Controller
             $logo = $request->file('logo');
             $logoName = time() . '_' . Str::slug($validated['nama']) . '.' . $logo->extension();
             // $logo->storeAs('public/softwares', $logoName);
-            $coba = Storage::putFileAs('public/softwares', $logo, $logoName);
-            $check = Storage::disk('s3')->putFileAs('public/softwares', $logo, $logoName);
+            // $path = $photo->store('used-laptop');
+            $path = $logo->store('softwares');
 
             // dd($check);
-            $validated['logo'] = 'public/softwares/' . $logoName;
+            $validated['logo'] = $path;
         }
 
         $software->update($validated);
