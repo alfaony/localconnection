@@ -505,6 +505,7 @@
                                                     <th>Status</th>
                                                     <th>Jumlah Bayar</th>
                                                     <th>Bukti Pembayaran</th>
+                                                    <th>Invoice</th>
                                                     @canAccess('as_finance','internet_customers')
                                                     <th>Konfirmasi Pembayaran</th>
                                                     @endcanAccess
@@ -533,6 +534,14 @@
                                                         @else
                                                             -
                                                         @endif
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ route('internet-customer.download-invoice', $purchase->id) }}"
+                                                           class="btn btn-sm btn-primary"
+                                                           target="_blank"
+                                                           title="Lihat Invoice PDF">
+                                                            <i class="fas fa-file-pdf mr-1"></i>Invoice
+                                                        </a>
                                                     </td>
                                                     @canAccess('as_finance','internet_customers')
                                                     <td>

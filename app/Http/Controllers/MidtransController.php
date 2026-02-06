@@ -52,7 +52,7 @@ class MidtransController extends Controller
             $purchaseId = $parts[1];
 
             // Find the purchase
-            $purchase = InternetCustomerPurchase::find($purchaseId);
+            $purchase = InternetCustomerPurchase::with(['customer.userCustomer'])->find($purchaseId);
 
             if (!$purchase) {
                 Log::error('Purchase not found for Midtrans notification', [
@@ -62,8 +62,26 @@ class MidtransController extends Controller
                 return response()->json(['message' => 'Purchase Not Found'], 200);
             }
 
+            // Validate customer exists
             $internetCustomer = $purchase->customer;
-            $customerInternet = $purchase->customer->userCustomer;
+            if (!$internetCustomer) {
+                Log::error('Customer not found for purchase', [
+                    'order_id' => $orderId,
+                    'purchase_id' => $purchaseId,
+                ]);
+                return response()->json(['message' => 'Customer Not Found'], 200);
+            }
+
+            // Validate userCustomer exists
+            $customerInternet = $internetCustomer->userCustomer;
+            if (!$customerInternet) {
+                Log::error('UserCustomer not found for customer', [
+                    'order_id' => $orderId,
+                    'purchase_id' => $purchaseId,
+                    'customer_id' => $internetCustomer->id,
+                ]);
+                return response()->json(['message' => 'User Customer Not Found'], 200);
+            }
 
             // Initialize Midtrans service with company ID
             $midtransService = new MidtransService($internetCustomer->company_id);
