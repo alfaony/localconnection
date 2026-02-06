@@ -148,30 +148,61 @@
                                         @endif
                                     </td>
                                     <td>
-                                    <div class="fw-bold">{{ $customer->internetPackage->name ?? '-' }}</div>
-                                        @if($customer->installation && $customer->installation->device_serial_number)
-                                        <div class="small text-secondary">
-                                            <i class="fas fa-barcode me-1"></i> SN: {{ $customer->installation->device_serial_number }}
+                                        <!-- Package Name -->
+                                        <div class="fw-bold mb-1">
+                                            {{ $customer->internetPackage->name ?? '-' }}
                                         </div>
-                                        @endif
-                                        @if($customer->grouping_id)
-                                        <div class="small text-muted">
-                                            <i class="fas fa-users me-1"></i> Grouping: {{ $customer->grouping_id }}
-                                        </div>
-                                        @endif
-                                        @if($customer->userCustomer->start_billing_date && $customer->userCustomer->end_billing_date)
-                                        <div class="mt-1 d-flex gap-1">
-                                            <span class="badge bg-light text-primary border border-primary-subtle" title="Start Billing">
-                                                <i class="fas fa-calendar-alt me-1"></i> {{ $customer->userCustomer->start_billing_date }}
-                                            </span>
-                                            <span class="small text-muted align-self-center">-</span>
-                                            <span class="badge bg-light text-danger border border-danger-subtle" title="End Billing">
-                                                <i class="fas fa-calendar-check me-1"></i> {{ $customer->userCustomer->end_billing_date }}
-                                            </span>
-                                        </div>
-                                        @endif
-                                    </div>
 
+                                        <!-- Compact Info Items -->
+                                        <div class="d-flex flex-column gap-1">
+                                            <!-- Serial Number -->
+                                            @if($customer->installation && $customer->installation->device_serial_number)
+                                            <div class="small text-secondary d-flex align-items-center gap-1">
+                                                <i class="fas fa-barcode" style="width: 14px;"></i>
+                                                <span>{{ $customer->installation->device_serial_number }}</span>
+                                            </div>
+                                            @endif
+
+                                            <!-- Grouping -->
+                                            @if($customer->grouping_id)
+                                            <div class="small text-muted d-flex align-items-center">
+                                                <i class="fas fa-users" style="width: 14px;"></i>
+                                                <span> Group {{ $customer->grouping_id }}</span>
+                                            </div>
+                                            @endif  
+                                            
+                                             <!-- Billing Period -->
+                                            @if($customer->getOldestUnconfirmed() && $customer->getOldestUnconfirmed()->confirmation_finance_at)
+                                            <div class="pt-1 border-top border-light">
+                                                <div class="small text-muted mb-1">
+                                                    <i class="fas fa-calendar-alt me-1"></i><span> </span> Pembayaran Perpanjangan
+                                                </div>
+                                                <div class="d-flex align-items-center gap-1 flex-wrap">
+                                                    <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-2" style="font-size: 0.7rem;">
+                                                        {{ \Carbon\Carbon::parse($customer->getOldestUnconfirmed()->confirmation_finance_at)->format('d M Y H:i:s') }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            @endif
+                                            <!-- Billing Period -->
+                                            @if($customer->userCustomer && $customer->userCustomer->start_billing_date && $customer->userCustomer->end_billing_date)
+                                            <div class="pt-1 border-top border-light">
+                                                <div class="small text-muted mb-1">
+                                                    <i class="fas fa-calendar-alt me-1"></i><span> </span> Penagihan Selanjutnya
+                                                </div>
+                                                <div class="d-flex align-items-center gap-1 flex-wrap">
+                                                    <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-2" style="font-size: 0.7rem;">
+                                                        {{ \Carbon\Carbon::parse($customer->userCustomer->start_billing_date)->format('d M Y') }}
+                                                    </span>
+                                                    <i class="fas fa-arrow-right text-muted" style="font-size: 0.65rem;"></i>
+                                                    <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2" style="font-size: 0.7rem;">
+                                                        {{ \Carbon\Carbon::parse($customer->userCustomer->end_billing_date)->format('d M Y') }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                        </div>
                                     </td>
                                     <td>
                                         {!! $customer->status_badge !!}
