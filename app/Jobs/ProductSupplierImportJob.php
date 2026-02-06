@@ -72,7 +72,7 @@ class ProductSupplierImportJob implements ShouldQueue
                     $supplier->supplierCategories()->syncWithoutDetaching($categoryIds);
                 }
             } catch (\Exception $e) {
-                dd($e);
+                // dd($e);
                 Log::error($e->getMessage());
                 // Jika terjadi error, maka simpan error di field errors
                 ImportProgress::where('batch_id', $this->batchId)->update(['errors' => array_merge(
