@@ -32,4 +32,12 @@ class SupplierCategory extends Model
             $query->whereIn('company_id', $companyIds);
         }
     }
+
+    public function scopeByCompanyJob($query,$companyId)
+    {
+        if($companyId)
+        {   
+            $query->where('company_id', $companyId);
+        }
+    }
 }

@@ -45,7 +45,7 @@ class ProductSupplierImportJob implements ShouldQueue
                 foreach ($categories as $categoryName) 
                 {
                     if ($categoryName) {
-                        $category = SupplierCategory::byCompany($this->companyId)->firstOrCreate(['name' => $categoryName], ['company_id' => $this->companyId]);
+                        $category = SupplierCategory::byCompanyJob($this->companyId)->firstOrCreate(['name' => $categoryName], ['company_id' => $this->companyId]);
                         $categoryIds[] = $category->id;
                     }
                 }
@@ -72,7 +72,7 @@ class ProductSupplierImportJob implements ShouldQueue
                     $supplier->supplierCategories()->syncWithoutDetaching($categoryIds);
                 }
             } catch (\Exception $e) {
-                // dd($e);
+                dd($e);
                 Log::error($e->getMessage());
                 // Jika terjadi error, maka simpan error di field errors
                 ImportProgress::where('batch_id', $this->batchId)->update(['errors' => array_merge(

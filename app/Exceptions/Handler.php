@@ -54,7 +54,7 @@ class Handler extends ExceptionHandler
             // dd($e);
             if (app()->bound('sentry') && config("sentry.environment") == 'production') {
                 Integration::captureUnhandledException($e);
-            }
+            
             $data = [
                 'content' => $e->getMessage(),
                 'title' => 'Line: '.$e->getLine(),
@@ -62,6 +62,7 @@ class Handler extends ExceptionHandler
                 'status' => 'error'
             ];
             $this->discordLog($data);
+            }
         });
     }
 
