@@ -83,7 +83,9 @@ class InternetCustomerShow extends Component
             'purchases',
             'installation',
             'router',
-        ])->findOrFail($customerId);
+        ])
+        ->byCompany(Auth::user()->company_id)
+        ->findOrFail($customerId);
 
         if ($this->customer->partnershipAgreement) {
             $this->agreementFields = json_decode($this->customer->partnershipAgreement->fields, true);
