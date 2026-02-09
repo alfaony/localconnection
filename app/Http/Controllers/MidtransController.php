@@ -151,7 +151,7 @@ class MidtransController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'data' => $data
             ]);
-            return response()->json(['error' => 'Processing failed'], 500);
+            return response()->json(['error' => 'Processing failed'], 200);
         }
     }
 
