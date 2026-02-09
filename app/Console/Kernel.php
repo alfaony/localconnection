@@ -145,6 +145,9 @@ class Kernel extends ConsoleKernel
             ->appendOutputTo(storage_path('logs/isolir.log'));
         // =============== END BILLING & ISOLIR ===============
 
+        // Send billing reminder untuk customer yang end_billing_date = today (jam 17:00)
+        $schedule->command('billing:send-reminder')->timezone('Asia/Jakarta')->dailyAt('18:00');
+
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('recurring:generate')->timezone('Asia/Jakarta')->dailyAt('01:00');
