@@ -43,7 +43,7 @@
                     <h3 class="profile-username text-center">{{ $masterAccount->nama_akun }}</h3>
 
                     <p class="text-muted text-center">
-                        <a href="{{ route('admin.softwares.show', $masterAccount->software->id) }}">
+                        <a href="{{ route('admin.software.show', $masterAccount->software->id) }}">
                             {{ $masterAccount->software->nama_software }}
                         </a>
                     </p>

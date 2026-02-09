@@ -113,6 +113,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PermissionForProjectExportSeeder::class);
         $this->call(PartnerParameterTypeSeeder::class);
         $this->call(PermissionForMenuPartnerParameterType::class);
+        $this->call(PermissionForMenuSoftwareSharingSeeder::class);
         
     }
 }

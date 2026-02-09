@@ -56,7 +56,7 @@ class SoftwarePackageController extends Controller
         $package = SoftwarePackage::create($validated);
 
         return redirect()
-            ->route('admin.softwares.packages.index', $software)
+            ->route('admin.software.packages.index', $software)
             ->with('success', 'Package berhasil ditambahkan');
     }
 
@@ -101,7 +101,7 @@ class SoftwarePackageController extends Controller
         $package->update($validated);
 
         return redirect()
-            ->route('admin.softwares.packages.index', $software)
+            ->route('admin.software.packages.index', $software)
             ->with('success', 'Package berhasil diupdate');
     }
 
@@ -126,7 +126,7 @@ class SoftwarePackageController extends Controller
         $package->delete();
 
         return redirect()
-            ->route('admin.softwares.packages.index', $software)
+            ->route('admin.software.packages.index', $software)
             ->with('success', 'Package berhasil dihapus');
     }
 

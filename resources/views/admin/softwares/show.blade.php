@@ -10,7 +10,7 @@
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.softwares.index') }}">Software</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.software.index') }}">Software</a></li>
                 <li class="breadcrumb-item active">Detail</li>
             </ol>
         </div>
@@ -94,12 +94,12 @@
 
                     <div class="row">
                         <div class="col-6">
-                            <a href="{{ route('admin.softwares.edit', $software->id) }}" class="btn btn-primary btn-block">
+                            <a href="{{ route('admin.software.edit', $software->id) }}" class="btn btn-primary btn-block">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
                         </div>
                         <div class="col-6">
-                            <form action="{{ route('admin.softwares.destroy', $software->id) }}" 
+                            <form action="{{ route('admin.software.destroy', $software->id) }}" 
                                   method="POST" 
                                   class="delete-form">
                                 @csrf
@@ -148,8 +148,8 @@
                         <i class="fas fa-box"></i> Packages
                     </h3>
                     <div class="card-tools">
-                        <a href="{{ route('admin.softwares.packages.create', $software->id) }}" 
-                           class="btn btn-sm btn-light">
+                        <a href="{{ route('admin.software.packages.create', $software->id) }}" 
+                           class="btn btn-sm btn-primary">
                             <i class="fas fa-plus"></i> Add Package
                         </a>
                     </div>
@@ -186,26 +186,26 @@
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
-                                                    <a href="{{ route('admin.softwares.packages.edit', [$software->id, $package->id]) }}" 
-                                                       class="btn btn-sm btn-info"
+                                                    <a href="{{ route('admin.software.packages.edit', [$software->id, $package->id]) }}" 
+                                                       class="btn btn-sm btn-info mb-1 mr-1" 
                                                        title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
                                                     <button type="button" 
-                                                            class="btn btn-sm btn-{{ $package->status == 'active' ? 'warning' : 'success' }} toggle-status" 
+                                                            class="btn btn-sm btn-{{ $package->status == 'active' ? 'warning' : 'success' }} toggle-status mb-1 mr-1" 
                                                             data-id="{{ $package->id }}"
                                                             data-software-id="{{ $software->id }}"
                                                             title="Toggle Status">
                                                         <i class="fas fa-{{ $package->status == 'active' ? 'ban' : 'check' }}"></i>
                                                     </button>
-                                                    <form action="{{ route('admin.softwares.packages.destroy', [$software->id, $package->id]) }}" 
+                                                    <form action="{{ route('admin.software.packages.destroy', [$software->id, $package->id]) }}" 
                                                           method="POST" 
                                                           class="delete-form"
                                                           style="display: inline;">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" 
-                                                                class="btn btn-sm btn-danger"
+                                                                class="btn btn-sm btn-danger mb-1 mr-1"
                                                                 title="Delete">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
@@ -221,7 +221,7 @@
                         <div class="text-center py-4">
                             <i class="fas fa-box fa-3x text-muted mb-3"></i>
                             <p class="text-muted">Belum ada package.</p>
-                            <a href="{{ route('admin.softwares.packages.create', $software->id) }}" 
+                            <a href="{{ route('admin.software.packages.create', $software->id) }}" 
                                class="btn btn-success">
                                 <i class="fas fa-plus"></i> Add First Package
                             </a>
@@ -238,7 +238,7 @@
                     </h3>
                     <div class="card-tools">
                         <a href="{{ route('admin.master-accounts.create', ['software_id' => $software->id]) }}" 
-                           class="btn btn-sm btn-light">
+                           class="btn btn-sm btn-light ">
                             <i class="fas fa-plus"></i> Add Account
                         </a>
                     </div>
@@ -286,12 +286,12 @@
                                             <td class="text-center">
                                                 <div class="btn-group">
                                                     <a href="{{ route('admin.master-accounts.show', $account->id) }}" 
-                                                       class="btn btn-sm btn-primary"
+                                                       class="btn btn-sm btn-primary mr-1 mb-1"
                                                        title="View">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
                                                     <a href="{{ route('admin.master-accounts.edit', $account->id) }}" 
-                                                       class="btn btn-sm btn-info"
+                                                       class="btn btn-sm btn-info mr-1 mb-1"
                                                        title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>

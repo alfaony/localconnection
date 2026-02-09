@@ -10,7 +10,7 @@
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.softwares.index') }}">Software</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.software.index') }}">Software</a></li>
                 <li class="breadcrumb-item active">Edit</li>
             </ol>
         </div>
@@ -19,7 +19,7 @@
 
 @section('content')
     <div class="card">
-        <form action="{{ route('admin.softwares.update', $software) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.software.update', $software) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             
@@ -118,7 +118,7 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-save"></i> Update
                 </button>
-                <a href="{{ route('admin.softwares.index') }}" class="btn btn-secondary">
+                <a href="{{ route('admin.software.index') }}" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Batal
                 </a>
             </div>

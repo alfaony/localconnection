@@ -10,8 +10,8 @@
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.softwares.index') }}">Software</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.softwares.show', $software->id) }}">{{ $software->nama_software }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.software.index') }}">Software</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.software.show', $software->id) }}">{{ $software->nama_software }}</a></li>
                 <li class="breadcrumb-item active">Packages</li>
             </ol>
         </div>
@@ -23,10 +23,10 @@
         <div class="card-header">
             <h3 class="card-title">Package List</h3>
             <div class="card-tools">
-                <a href="{{ route('admin.softwares.packages.create', $software->id) }}" class="btn btn-success btn-sm">
+                <a href="{{ route('admin.software.packages.create', $software->id) }}" class="btn btn-success btn-sm">
                     <i class="fas fa-plus"></i> Add Package
                 </a>
-                <a href="{{ route('admin.softwares.show', $software->id) }}" class="btn btn-secondary btn-sm">
+                <a href="{{ route('admin.software.show', $software->id) }}" class="btn btn-secondary btn-sm">
                     <i class="fas fa-arrow-left"></i> Back to Software
                 </a>
             </div>
@@ -74,25 +74,25 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group">
-                                        <a href="{{ route('admin.softwares.packages.edit', [$software->id, $package->id]) }}" 
-                                           class="btn btn-sm btn-info"
+                                        <a href="{{ route('admin.software.packages.edit', [$software->id, $package->id]) }}" 
+                                           class="btn btn-sm btn-info mr-1 mb-1"
                                            title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button type="button" 
-                                                class="btn btn-sm btn-{{ $package->status == 'active' ? 'warning' : 'success' }} toggle-status" 
+                                                class="btn btn-sm btn-{{ $package->status == 'active' ? 'warning' : 'success' }} toggle-status mr-1 mb-1" 
                                                 data-id="{{ $package->id }}"
                                                 title="Toggle Status">
                                             <i class="fas fa-{{ $package->status == 'active' ? 'ban' : 'check' }}"></i>
                                         </button>
-                                        <form action="{{ route('admin.softwares.packages.destroy', [$software->id, $package->id]) }}" 
+                                        <form action="{{ route('admin.software.packages.destroy', [$software->id, $package->id]) }}" 
                                               method="POST" 
                                               class="delete-form"
                                               style="display: inline;">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" 
-                                                    class="btn btn-sm btn-danger"
+                                                    class="btn btn-sm btn-danger mr-1 mb-1"
                                                     title="Delete">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -106,7 +106,7 @@
                                     <div class="py-4">
                                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                         <p class="text-muted">No packages yet.</p>
-                                        <a href="{{ route('admin.softwares.packages.create', $software->id) }}" 
+                                        <a href="{{ route('admin.software.packages.create', $software->id) }}" 
                                            class="btn btn-success">
                                             <i class="fas fa-plus"></i> Add First Package
                                         </a>

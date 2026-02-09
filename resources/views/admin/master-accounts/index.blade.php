@@ -120,16 +120,16 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('admin.master-accounts.show', $account) }}" class="btn btn-info" title="Detail">
+                                    <a href="{{ route('admin.master-accounts.show', $account) }}" class="btn btn-info mr-1 mb-1" title="Detail ">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.master-accounts.customers', $account) }}" class="btn btn-success" title="Customers">
+                                    <a href="{{ route('admin.master-accounts.customers', $account) }}" class="btn btn-success mr-1 mb-1" title="Customers">
                                         <i class="fas fa-users"></i>
                                     </a>
-                                    <a href="{{ route('admin.master-accounts.edit', $account) }}" class="btn btn-warning" title="Edit">
+                                    <a href="{{ route('admin.master-accounts.edit', $account) }}" class="btn btn-warning mr-1 mb-1" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="btn btn-danger btn-delete" 
+                                    <button type="button" class="btn btn-danger btn-delete mr-1 mb-1" 
                                             data-id="{{ $account->id }}"
                                             data-name="{{ $account->nama_akun }}" title="Hapus">
                                         <i class="fas fa-trash"></i>

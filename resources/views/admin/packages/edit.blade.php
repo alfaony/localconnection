@@ -10,9 +10,9 @@
         <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
                 <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.softwares.index') }}">Software</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.softwares.show', $software->id) }}">{{ $software->nama_software }}</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.softwares.packages.index', $software->id) }}">Packages</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.software.index') }}">Software</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.software.show', $software->id) }}">{{ $software->nama_software }}</a></li>
+                <li class="breadcrumb-item"><a href="{{ route('admin.software.packages.index', $software->id) }}">Packages</a></li>
                 <li class="breadcrumb-item active">Edit</li>
             </ol>
         </div>
@@ -24,12 +24,12 @@
         <div class="card-header">
             <h3 class="card-title">Edit Package Form</h3>
             <div class="card-tools">
-                <a href="{{ route('admin.softwares.packages.index', $software->id) }}" class="btn btn-secondary btn-sm">
+                <a href="{{ route('admin.software.packages.index', $software->id) }}" class="btn btn-secondary btn-sm">
                     <i class="fas fa-arrow-left"></i> Back to List
                 </a>
             </div>
         </div>
-        <form action="{{ route('admin.softwares.packages.update', [$software->id, $package->id]) }}" method="POST">
+        <form action="{{ route('admin.software.packages.update', [$software->id, $package->id]) }}" method="POST">
             @csrf
             @method('PUT')
             <div class="card-body">
@@ -177,7 +177,7 @@
                 <button type="submit" class="btn btn-success">
                     <i class="fas fa-save"></i> Update Package
                 </button>
-                <a href="{{ route('admin.softwares.packages.index', $software->id) }}" class="btn btn-secondary">
+                <a href="{{ route('admin.software.packages.index', $software->id) }}" class="btn btn-secondary">
                     <i class="fas fa-times"></i> Cancel
                 </a>
             </div>

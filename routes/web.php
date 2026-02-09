@@ -291,38 +291,39 @@ Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
     ->name('role.deselect-all');
 
 
+    // ========================================================================
+    // SOFTWARE MANAGEMENT
+    // ========================================================================
+    Route::resource('software', SoftwareController::class);
+    
+    // Toggle software status (AJAX)
+    Route::post('/software/{software}/toggle-status', [SoftwareController::class, 'toggleStatus'])
+        ->name('software.toggle-status');
+    
+    // ========================================================================
+    // SOFTWARE PACKAGES MANAGEMENT
+    // ========================================================================
+    Route::resource('software.packages', SoftwarePackageController::class)
+        ->except(['create', 'edit']);
+    
+    // Alternative routes with better naming
+    Route::get('/software/{software}/packages/create', [SoftwarePackageController::class, 'create'])
+        ->name('software.packages.create');
+    
+    Route::get('/software/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])
+        ->name('software.packages.edit');
+    
+    // Toggle package status (AJAX)
+    Route::post('/software/{software}/packages/{package}/toggle-status', [SoftwarePackageController::class, 'toggleStatus'])
+        ->name('software.packages.toggle-status');
 
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+
+// Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
     
-    // ========================================================================
-    // SOFTWARE MANAGEMENT
-    // ========================================================================
-    Route::resource('softwares', SoftwareController::class);
-    
-    // Toggle software status (AJAX)
-    Route::post('/softwares/{software}/toggle-status', [SoftwareController::class, 'toggleStatus'])
-        ->name('softwares.toggle-status');
-    
-    // ========================================================================
-    // SOFTWARE PACKAGES MANAGEMENT
-    // ========================================================================
-    Route::resource('softwares.packages', SoftwarePackageController::class)
-        ->except(['create', 'edit']);
-    
-    // Alternative routes with better naming
-    Route::get('/softwares/{software}/packages/create', [SoftwarePackageController::class, 'create'])
-        ->name('softwares.packages.create');
-    
-    Route::get('/softwares/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])
-        ->name('softwares.packages.edit');
-    
-    // Toggle package status (AJAX)
-    Route::post('/softwares/{software}/packages/{package}/toggle-status', [SoftwarePackageController::class, 'toggleStatus'])
-        ->name('softwares.packages.toggle-status');
     
     // ========================================================================
     // MASTER ACCOUNTS MANAGEMENT
@@ -402,7 +403,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Send notification to customer
     Route::post('/subscription-customers/{user}/send-notification', [SubscriptionCustomerController::class, 'sendNotification'])
         ->name('subscription-customers.send-notification');
-});
+// });
 
 
 // ============================================================================
@@ -416,12 +417,12 @@ Route::middleware(['auth', 'verified'])->prefix('customer')->name('customer.')->
     // ========================================================================
     
     // Browse software catalog
-    Route::get('/softwares', [CustomerSoftwareController::class, 'index'])
-        ->name('softwares.index');
+    Route::get('/software', [CustomerSoftwareController::class, 'index'])
+        ->name('software.index');
     
     // View software detail with packages
-    Route::get('/softwares/{slug}', [CustomerSoftwareController::class, 'show'])
-        ->name('softwares.show');
+    Route::get('/software/{slug}', [CustomerSoftwareController::class, 'show'])
+        ->name('software.show');
     
     // ========================================================================
     // CHECKOUT PROCESS
@@ -948,27 +949,27 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     // ========================================================================
     // SOFTWARE MANAGEMENT
     // ========================================================================
-    Route::resource('softwares', SoftwareController::class);
+    Route::resource('software', SoftwareController::class);
     
     // Toggle software status (AJAX)
-    Route::post('/softwares/{software}/toggle-status', [SoftwareController::class, 'toggleStatus'])
-        ->name('softwares.toggle-status');
+    Route::post('/software/{software}/toggle-status', [SoftwareController::class, 'toggleStatus'])
+        ->name('software.toggle-status');
     
     // ========================================================================
     // SOFTWARE PACKAGES MANAGEMENT
     // ========================================================================
     // Alternative routes with better naming
-    Route::get('/softwares/{software}/packages/create', [SoftwarePackageController::class, 'create'])
-        ->name('softwares.packages.create');
+    Route::get('/software/{software}/packages/create', [SoftwarePackageController::class, 'create'])
+        ->name('software.packages.create');
     
-    Route::get('/softwares/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])
-        ->name('softwares.packages.edit');
+    Route::get('/software/{software}/packages/{package}/edit', [SoftwarePackageController::class, 'edit'])
+        ->name('software.packages.edit');
     
     // Toggle package status (AJAX)
-    Route::post('/softwares/{software}/packages/{package}/toggle-status', [SoftwarePackageController::class, 'toggleStatus'])
-        ->name('softwares.packages.toggle-status');
+    Route::post('/software/{software}/packages/{package}/toggle-status', [SoftwarePackageController::class, 'toggleStatus'])
+        ->name('software.packages.toggle-status');
         
-    Route::resource('softwares.packages', SoftwarePackageController::class)
+    Route::resource('software.packages', SoftwarePackageController::class)
         ->except(['create', 'edit']);
     
     

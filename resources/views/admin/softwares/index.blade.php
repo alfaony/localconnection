@@ -21,9 +21,11 @@
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Daftar Software</h3>
-                <a href="{{ route('admin.softwares.create') }}" class="btn btn-primary btn-sm">
+                @canAccess('create', 'softwares')
+                <a href="{{ route('admin.software.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Tambah Software
                 </a>
+                @endcanAccess
             </div>
         </div>
         <div class="card-body">
@@ -46,7 +48,7 @@
                         </button>
                     </div>
                     <div class="col-md-2">
-                        <a href="{{ route('admin.softwares.index') }}" class="btn btn-secondary btn-block">
+                        <a href="{{ route('admin.software.index') }}" class="btn btn-secondary btn-block">
                             <i class="fas fa-redo"></i> Reset
                         </a>
                     </div>
@@ -88,7 +90,7 @@
                                 <span class="badge badge-info">{{ $software->tipe_paket }}</span>
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('admin.softwares.packages.index', $software) }}" class="badge badge-primary">
+                                <a href="{{ route('admin.software.packages.index', $software) }}" class="badge badge-primary">
                                     {{ $software->packages->count() }} packages
                                 </a>
                             </td>
@@ -113,13 +115,13 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('admin.softwares.show', $software) }}" class="btn btn-info" title="Detail">
+                                    <a href="{{ route('admin.software.show', $software) }}" class="btn btn-info mb-1 mr-1" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.softwares.edit', $software) }}" class="btn btn-warning" title="Edit">
+                                    <a href="{{ route('admin.software.edit', $software) }}" class="btn btn-warning mb-1 mr-1" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="btn btn-danger btn-delete" 
+                                    <button type="button" class="btn btn-danger btn-delete mb-1 mr-1" 
                                             data-id="{{ $software->id }}"
                                             data-name="{{ $software->nama }}" title="Hapus">
                                         <i class="fas fa-trash"></i>

@@ -77,10 +77,11 @@ class SoftwareController extends Controller
 
         // Handle logo upload
         if ($request->hasFile('logo')) {
+
             $logo = $request->file('logo');
             $logoName = time() . '_' . Str::slug($validated['nama']) . '.' . $logo->extension();
-            $logo->storeAs('public/softwares', $logoName);
-            $validated['logo'] = 'softwares/' . $logoName;
+            $path = $logo->store('softwares');
+            $validated['logo'] = $path;
         }
 
         $validated['company_id'] = $companyId;
@@ -88,7 +89,7 @@ class SoftwareController extends Controller
         $software = Software::create($validated);
 
         return redirect()
-            ->route('admin.softwares.index')
+            ->route('admin.software.index')
             ->with('success', 'Software berhasil ditambahkan');
     }
 
@@ -163,7 +164,7 @@ class SoftwareController extends Controller
         $software->update($validated);
 
         return redirect()
-            ->route('admin.softwares.index')
+            ->route('admin.software.index')
             ->with('success', 'Software berhasil diupdate');
     }
 
@@ -193,7 +194,7 @@ class SoftwareController extends Controller
         $software->delete();
 
         return redirect()
-            ->route('admin.softwares.index')
+            ->route('admin.software.index')
             ->with('success', 'Software berhasil dihapus');
     }
 
