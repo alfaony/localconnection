@@ -97,27 +97,27 @@ class ProductStore extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(CategoryProductStore::class, 'category_product_store_id');
+        return $this->belongsTo(CategoryProductStore::class, 'category_product_store_id')->withTrashed();
     }
 
     public function brand(): BelongsTo
     {
-        return $this->belongsTo(BrandProductStore::class, 'brand_product_store_id');
+        return $this->belongsTo(BrandProductStore::class, 'brand_product_store_id')->withTrashed();
     }
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_create_id');
+        return $this->belongsTo(User::class, 'user_create_id')->withTrashed();
     }
 
     public function modifier(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_modified_id');
+        return $this->belongsTo(User::class, 'user_modified_id')->withTrashed();
     }
 
     public function company(): BelongsTo
     {
-        return $this->belongsTo(Company::class, 'company_id');
+        return $this->belongsTo(Company::class, 'company_id')->withTrashed();
     }
 
     public function media()
