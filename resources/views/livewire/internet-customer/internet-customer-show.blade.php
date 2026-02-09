@@ -75,7 +75,7 @@
                                             @endif
                                         </td>
                                     </tr>
-                                    --}}
+                                    
                                     <tr>
                                         <th>Alamat Lengkap</th>
                                         <td>{{ $customer->address }}</td>
@@ -89,6 +89,7 @@
                                             {{ $customer->province->name ?? '-' }}
                                         </td>
                                     </tr>
+                                    --}}
                                       @if($customer->coupons->count() > 0)
                                         <tr>
                                             <td colspan="6">
@@ -223,6 +224,7 @@
                                                 <th>Jumlah Bayar</th>
                                                 <th>Bukti Pembayaran</th>
                                                 <th>Konfirmasi Pembayaran</th>
+                                                <th>Invoice</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -286,6 +288,18 @@
                                                             <i class="fas fa-clock mr-1"></i>
                                                             Expired
                                                         </span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center">
+                                                    @if($purchase->isConfirmed() || $purchase->xendit_paid_at || $purchase->midtrans_paid_at)
+                                                        <a href="{{ route('internet-customer.download-invoice', $purchase->id) }}" 
+                                                           class="btn btn-sm btn-primary" 
+                                                           target="_blank"
+                                                           title="Download Invoice">
+                                                            <i class="fas fa-file-pdf mr-1"></i>Download
+                                                        </a>
+                                                    @else
+                                                        <span class="text-muted">-</span>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -446,7 +460,7 @@
                 <h5 class="modal-title" id="paymentModalLabel">
                     <i class="fas fa-money-bill-wave mr-2"></i>Konfirmasi Pembayaran
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close text-white" onclick="closePaymentModal()">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -570,6 +584,14 @@
                                     - <span id="summary-discount">Rp 0</span>
                                 </span>
                             </div>
+                            <div class="summary-row" id="amount-before-tax-row">
+                                <span>Harga sebelum pajak:</span>
+                                <span id="summary-amount-before-tax">Rp 0</span>
+                            </div>
+                            <div class="summary-row text-muted" id="tax-row">
+                                <span>PPN (<span id="summary-tax-rate">11</span>%):</span>
+                                <span id="summary-tax-amount">Rp 0</span>
+                            </div>
                             <hr class="my-2">
                             <div class="summary-row summary-total">
                                 <span class="font-weight-bold">Total Pembayaran:</span>
@@ -590,7 +612,8 @@
                                 <i class="fas fa-wallet mr-2"></i>Pilih Metode Pembayaran
                             </h6>
                             <div class="row">
-                                <div class="col-md-6 mb-2">
+                                @if($manualPaymentEnabled)
+                                <div class="col-md-4 mb-2">
                                     <div class="card payment-method-card" onclick="selectPaymentMethod('manual')" id="manual-card">
                                         <div class="card-body text-center py-4">
                                             <i class="fas fa-university fa-3x text-primary mb-2"></i>
@@ -599,7 +622,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-2" id="xendit-method-wrapper" style="display: none;">
+                                @endif
+                                <div class="col-md-4 mb-2" id="xendit-method-wrapper" style="display: none;">
                                     <div class="card payment-method-card" onclick="selectPaymentMethod('xendit')" id="xendit-card">
                                         <div class="card-body text-center py-4">
                                             <i class="fas fa-credit-card fa-3x text-success mb-2"></i>
@@ -608,10 +632,20 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-md-4 mb-2" id="midtrans-method-wrapper" style="display: none;">
+                                    <div class="card payment-method-card" onclick="selectPaymentMethod('midtrans')" id="midtrans-card">
+                                        <div class="card-body text-center py-4">
+                                            <i class="fas fa-credit-card fa-3x text-warning mb-2"></i>
+                                            <h6 class="mb-1">Midtrans Payment</h6>
+                                            <small class="text-muted">Berbagai metode pembayaran</small>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Manual Transfer Section -->
+                        @if($manualPaymentEnabled)
                         <div id="manual-payment-section">
                             <!-- Bank Info -->
                             <div class="bank-info bg-info bg-opacity-10 p-3 rounded mb-3 border border-info">
@@ -657,9 +691,80 @@
 
                             <!-- Upload Form -->
                             <form id="payment-proof-form">
+                                <!-- Transfer Details Section -->
+                                <div class="mb-4">
+                                    <h6 class="font-weight-bold mb-3">
+                                        <i class="fas fa-file-alt mr-2"></i>Detail Transfer
+                                    </h6>
+                                    
+                                    <!-- Transfer Date -->
+                                    <div class="form-group">
+                                        <label for="transfer_date" class="font-weight-bold">
+                                            Tanggal Transfer <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date" 
+                                               id="transfer_date" 
+                                               class="form-control @error('transfer_date') is-invalid @enderror" 
+                                               wire:model="transfer_date"
+                                               max="{{ date('Y-m-d') }}">
+                                        @error('transfer_date')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted">Tanggal saat Anda melakukan transfer</small>
+                                    </div>
+
+                                    <!-- Transfer From Bank -->
+                                    <div class="form-group">
+                                        <label for="transfer_from_bank" class="font-weight-bold">
+                                            Nama Bank Pengirim
+                                        </label>
+                                        <input type="text" 
+                                               id="transfer_from_bank" 
+                                               class="form-control @error('transfer_from_bank') is-invalid @enderror" 
+                                               wire:model="transfer_from_bank"
+                                               placeholder="Contoh: BCA, Mandiri, BNI">
+                                        @error('transfer_from_bank')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted">Bank yang Anda gunakan untuk transfer</small>
+                                    </div>
+
+                                    <!-- Transfer From Account Name -->
+                                    <div class="form-group">
+                                        <label for="transfer_from_account_name" class="font-weight-bold">
+                                            Nama Pemilik Rekening Pengirim
+                                        </label>
+                                        <input type="text" 
+                                               id="transfer_from_account_name" 
+                                               class="form-control @error('transfer_from_account_name') is-invalid @enderror" 
+                                               wire:model="transfer_from_account_name"
+                                               placeholder="Nama sesuai rekening Anda">
+                                        @error('transfer_from_account_name')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted">Nama pemilik rekening yang digunakan untuk transfer</small>
+                                    </div>
+
+                                    <!-- Transfer Notes -->
+                                    <div class="form-group">
+                                        <label for="transfer_notes" class="font-weight-bold">
+                                            Catatan (Opsional)
+                                        </label>
+                                        <textarea id="transfer_notes" 
+                                                  class="form-control @error('transfer_notes') is-invalid @enderror" 
+                                                  wire:model="transfer_notes"
+                                                  rows="3"
+                                                  placeholder="Catatan tambahan (jika ada)"></textarea>
+                                        @error('transfer_notes')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted">Informasi tambahan terkait transfer (maksimal 500 karakter)</small>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <h6 class="font-weight-bold mb-3">
-                                        <i class="fas fa-upload mr-2"></i>Upload Bukti Pembayaran
+                                        <i class="fas fa-upload mr-2"></i>Upload Bukti Pembayaran <span class="text-danger">*</span>
                                     </h6>
                                     
                                     <div class="file-upload-area mb-3">
@@ -682,7 +787,7 @@
                                 </div>
                                 
                                 <div class="modal-footer border-top pt-3">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                    <button type="button" class="btn btn-secondary" onclick="closePaymentModal()">
                                         <i class="fas fa-times mr-1"></i>Batal
                                     </button>
                                     <button type="submit" class="btn btn-primary">
@@ -691,6 +796,7 @@
                                 </div>
                             </form>
                         </div>
+                        @endif
 
                         <!-- Xendit Payment Section -->
                         <div id="xendit-payment-section" style="display: none;">
@@ -738,6 +844,53 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Midtrans Payment Section -->
+                        <div id="midtrans-payment-section" style="display: none;">
+                            <div class="text-center p-4">
+                                <i class="fas fa-credit-card fa-4x text-warning mb-3"></i>
+                                <h5 class="mb-3">Pembayaran via Midtrans</h5>
+                                <p class="text-muted mb-4">
+                                    Anda akan diarahkan ke halaman pembayaran Midtrans untuk menyelesaikan transaksi
+                                </p>
+                                <div class="mb-4">
+                                    <small class="text-muted d-block mb-2">Metode pembayaran yang tersedia:</small>
+                                    <div class="d-flex justify-content-center flex-wrap">
+                                        <span class="badge badge-warning m-1 p-2">
+                                            <i class="fas fa-university mr-1"></i>Virtual Account
+                                        </span>
+                                        <span class="badge badge-warning m-1 p-2">
+                                            <i class="fas fa-wallet mr-1"></i>E-Wallet
+                                        </span>
+                                        <span class="badge badge-warning m-1 p-2">
+                                            <i class="fas fa-credit-card mr-1"></i>Credit Card
+                                        </span>
+                                        <span class="badge badge-warning m-1 p-2">
+                                            <i class="fas fa-qrcode mr-1"></i>QRIS
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <button type="button" 
+                                        class="btn btn-warning btn-lg px-5" 
+                                        onclick="initiateMidtransPayment()"
+                                        id="midtrans-pay-button">
+                                    <i class="fas fa-arrow-right mr-2"></i>Lanjutkan ke Pembayaran
+                                </button>
+                                
+                                <div id="midtrans-loading" class="mt-3" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin fa-2x text-warning"></i>
+                                    <p class="mt-2 text-muted">Membuat transaksi pembayaran...</p>
+                                </div>
+
+                                <div class="mt-4">
+                                    <small class="text-muted">
+                                        <i class="fas fa-shield-alt mr-1"></i>
+                                        Pembayaran dilindungi dan diproses oleh Midtrans
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -745,6 +898,32 @@
     </div>
 </div>
 @push('scripts')
+<script>
+    function closePaymentModal() {
+        console.log('Closing payment modal via JS');
+        // Try Bootstrap 5 method first
+        const modalEl = document.getElementById('paymentModal');
+        if (modalEl) {
+            // Check if bootstrap is defined (BS5)
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modal.hide();
+                    return;
+                } else {
+                    // Try creating a new instance and hiding (sometimes works if instance lost)
+                    new bootstrap.Modal(modalEl).hide();
+                    return;
+                }
+            }
+        }
+        
+        // Fallback to jQuery/Bootstrap 4
+        if (typeof $ !== 'undefined') {
+            $('#paymentModal').modal('hide');
+        }
+    }
+</script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 @if($customer->partnershipAgreement)
@@ -782,6 +961,7 @@ document.addEventListener('livewire:load', function() {
     let currentPaymentMethod = 'manual';
     let selectedMonths = 1;
     let xenditActive = false;
+    let midtransActive = false;
     let monthlyPrice = 0;
     let packageName = '';
     let discountEnabled = false;
@@ -821,13 +1001,21 @@ document.addEventListener('livewire:load', function() {
         const subtotal = monthlyPrice * months;
         const discountPercent = getDiscountPercentage(months);
         const discountAmount = subtotal * (discountPercent / 100);
-        const total = subtotal - discountAmount;
+        const amountBeforeTax = Math.round(subtotal - discountAmount);
+        
+        // Always calculate PPN (11%)
+        const taxRate = 11;
+        const taxAmount = Math.round((amountBeforeTax * taxRate) / 100);
+        const total = Math.round(amountBeforeTax + taxAmount);
 
         return {
             months: months,
             subtotal: subtotal,
             discountPercent: discountPercent,
             discountAmount: discountAmount,
+            amountBeforeTax: amountBeforeTax,
+            taxRate: taxRate,
+            taxAmount: taxAmount,
             total: total
         };
     }
@@ -859,8 +1047,15 @@ document.addEventListener('livewire:load', function() {
         document.getElementById('summary-period').textContent = selectedMonths + ' Bulan';
         document.getElementById('summary-monthly').textContent = formatRupiah(monthlyPrice);
         document.getElementById('summary-subtotal').textContent = formatRupiah(calc.subtotal);
+        
+        // Display PPN breakdown
+        document.getElementById('summary-amount-before-tax').textContent = formatRupiah(calc.amountBeforeTax);
+        document.getElementById('summary-tax-rate').textContent = calc.taxRate;
+        document.getElementById('summary-tax-amount').textContent = formatRupiah(calc.taxAmount);
+        
         document.getElementById('summary-total').textContent = formatRupiah(calc.total);
-        document.getElementById('modal-amount').textContent = formatRupiah(calc.total);
+        const modalAmount1 = document.getElementById('modal-amount');
+        if (modalAmount1) modalAmount1.textContent = formatRupiah(calc.total);
         
         // Update period detail
         document.getElementById('summary-period-detail').textContent = calculatePeriodDates(selectedMonths);
@@ -913,31 +1108,70 @@ document.addEventListener('livewire:load', function() {
 
     // Select payment method
     window.selectPaymentMethod = function(method) {
+        // Prevent selecting manual if it doesn't exist (disabled)
+        const manualCard = document.getElementById('manual-card');
+        if (method === 'manual' && !manualCard) {
+            console.warn('Manual payment is disabled, selecting alternative method');
+            // Try to select xendit or midtrans instead
+            const xenditSection = document.getElementById('xendit-payment-section');
+            const midtransSection = document.getElementById('midtrans-payment-section');
+            if (xenditSection) {
+                method = 'xendit';
+            } else if (midtransSection) {
+                method = 'midtrans';
+            } else {
+                console.error('No payment method available');
+                return;
+            }
+        }
+        
         currentPaymentMethod = method;
         
-        const manualCard = document.getElementById('manual-card');
         const xenditCard = document.getElementById('xendit-card');
+        const midtransCard = document.getElementById('midtrans-card');
         
-        if (method === 'manual') {
+        // Reset all cards (only if they exist)
+        if (manualCard) {
+            manualCard.classList.remove('border-primary', 'bg-light');
+            manualCard.style.borderWidth = '1px';
+        }
+        if (xenditCard) {
+            xenditCard.classList.remove('border-success', 'bg-light');
+            xenditCard.style.borderWidth = '1px';
+        }
+        if (midtransCard) {
+            midtransCard.classList.remove('border-warning', 'bg-light');
+            midtransCard.style.borderWidth = '1px';
+        }
+        
+        // Get payment section elements (might not exist if disabled)
+        const manualSection = document.getElementById('manual-payment-section');
+        const xenditSection = document.getElementById('xendit-payment-section');
+        const midtransSection = document.getElementById('midtrans-payment-section');
+        
+        // Apply active style to selected method
+        if (method === 'manual' && manualCard) {
             manualCard.classList.add('border-primary', 'bg-light');
             manualCard.style.borderWidth = '3px';
-            if (xenditCard) {
-                xenditCard.classList.remove('border-success', 'bg-light');
-                xenditCard.style.borderWidth = '1px';
-            }
-            
-            document.getElementById('manual-payment-section').style.display = 'block';
-            document.getElementById('xendit-payment-section').style.display = 'none';
-        } else {
+            if (manualSection) manualSection.style.display = 'block';
+            if (xenditSection) xenditSection.style.display = 'none';
+            if (midtransSection) midtransSection.style.display = 'none';
+        } else if (method === 'xendit') {
             if (xenditCard) {
                 xenditCard.classList.add('border-success', 'bg-light');
                 xenditCard.style.borderWidth = '3px';
             }
-            manualCard.classList.remove('border-primary', 'bg-light');
-            manualCard.style.borderWidth = '1px';
-            
-            document.getElementById('manual-payment-section').style.display = 'none';
-            document.getElementById('xendit-payment-section').style.display = 'block';
+            if (manualSection) manualSection.style.display = 'none';
+            if (xenditSection) xenditSection.style.display = 'block';
+            if (midtransSection) midtransSection.style.display = 'none';
+        } else if (method === 'midtrans') {
+            if (midtransCard) {
+                midtransCard.classList.add('border-warning', 'bg-light');
+                midtransCard.style.borderWidth = '3px';
+            }
+            if (manualSection) manualSection.style.display = 'none';
+            if (xenditSection) xenditSection.style.display = 'none';
+            if (midtransSection) midtransSection.style.display = 'block';
         }
     };
 
@@ -945,6 +1179,7 @@ document.addEventListener('livewire:load', function() {
     window.addEventListener('show-payment-modal', function(event) {
         currentPurchaseId = event.detail.purchaseId || null;
         xenditActive = event.detail.xenditActive || false;
+        midtransActive = event.detail.midtransActive || false;
         monthlyPrice = event.detail.monthlyPrice || 0;
         packageName = event.detail.packageName || '-';
         discountEnabled = event.detail.discountEnabled || false;
@@ -954,11 +1189,16 @@ document.addEventListener('livewire:load', function() {
         currentBillingEnd = event.detail.currentBillingEnd || '-';
         nextPeriodStart = event.detail.nextPeriodStart || '-';
         
-        // Update bank info
-        document.getElementById('modal-bank').textContent = event.detail.bank;
-        document.getElementById('modal-account').textContent = event.detail.account;
-        document.getElementById('modal-account-name').textContent = event.detail.accountName;
-        document.getElementById('current-period-end').textContent = currentBillingEnd;
+        // Update bank info (only if elements exist - manual payment might be disabled)
+        const modalBank = document.getElementById('modal-bank');
+        const modalAccount = document.getElementById('modal-account');
+        const modalAccountName = document.getElementById('modal-account-name');
+        const currentPeriodEnd = document.getElementById('current-period-end');
+        
+        if (modalBank) modalBank.textContent = event.detail.bank;
+        if (modalAccount) modalAccount.textContent = event.detail.account;
+        if (modalAccountName) modalAccountName.textContent = event.detail.accountName;
+        if (currentPeriodEnd) currentPeriodEnd.textContent = currentBillingEnd;
         
         // Update month input limits
         const monthInput = document.getElementById('custom-months-input');
@@ -997,10 +1237,40 @@ document.addEventListener('livewire:load', function() {
             document.getElementById('xendit-method-wrapper').style.display = 'none';
         }
         
+        
+        // Show/hide Midtrans option
+        console.log('Midtrans Status Check:', {
+            midtransActive: midtransActive,
+            wrapperElement: document.getElementById('midtrans-method-wrapper'),
+            xenditActive: xenditActive
+        });
+        
+        if (midtransActive) {
+            document.getElementById('midtrans-method-wrapper').style.display = 'block';
+            console.log('✅ Midtrans wrapper shown');
+        } else {
+            document.getElementById('midtrans-method-wrapper').style.display = 'none';
+            console.log('❌ Midtrans wrapper hidden');
+        }
+        
         // Reset selections
         selectedMonths = 1;
         updateCustomMonths(1);
-        selectPaymentMethod('manual');
+        
+        // Smart default payment method selection
+        const manualCard = document.getElementById('manual-card');
+        if (manualCard) {
+            // Manual payment is enabled, select it
+            selectPaymentMethod('manual');
+        } else if (xenditActive) {
+            // Manual disabled, but xendit active
+            selectPaymentMethod('xendit');
+        } else if (midtransActive) {
+            // Manual disabled, xendit disabled, but midtrans active
+            selectPaymentMethod('midtrans');
+        } else {
+            console.error('No payment method available!');
+        }
         
         // Show modal
         paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
@@ -1023,7 +1293,8 @@ document.addEventListener('livewire:load', function() {
         document.getElementById('summary-monthly').textContent = formatRupiah(calc.monthly_price);
         document.getElementById('summary-subtotal').textContent = formatRupiah(calc.subtotal);
         document.getElementById('summary-total').textContent = formatRupiah(calc.total);
-        document.getElementById('modal-amount').textContent = formatRupiah(calc.total);
+        const modalAmount2 = document.getElementById('modal-amount');
+        if (modalAmount2) modalAmount2.textContent = formatRupiah(calc.total);
         
         const discountRow = document.getElementById('discount-row');
         if (calc.discount_percentage > 0) {
@@ -1047,6 +1318,28 @@ document.addEventListener('livewire:load', function() {
         @this.call('payWithXendit')
             .then(() => {
                 console.log('Redirecting to Xendit...');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Lanjutkan ke Pembayaran';
+                loadingDiv.style.display = 'none';
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+            });
+    };
+
+    // Initiate Midtrans payment
+    window.initiateMidtransPayment = function() {
+        const button = document.getElementById('midtrans-pay-button');
+        const loadingDiv = document.getElementById('midtrans-loading');
+        
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+        loadingDiv.style.display = 'block';
+        
+        @this.call('payWithMidtrans')
+            .then(() => {
+                console.log('Redirecting to Midtrans...');
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -1083,45 +1376,121 @@ document.addEventListener('livewire:load', function() {
         selectedMonths = 1;
     }
 
-    // Handle form submission
-    document.getElementById('payment-proof-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const fileInput = document.getElementById('payment_proof');
-        const file = fileInput.files[0];
-        
-        if (!file) {
-            alert('Silakan pilih file bukti pembayaran');
-            return;
-        }
-        
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengirim...';
-        
-        @this.upload('payment_proof', file, 
-            (uploadedFilename) => {
-                @this.set('purchase_id', currentPurchaseId);
-                @this.call('submitPaymentProof').then(() => {
+    // Handle form submission (only if manual payment is enabled)
+    const paymentProofForm = document.getElementById('payment-proof-form');
+    if (paymentProofForm) {
+        paymentProofForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            console.log('Form submit triggered');
+            
+            const fileInput = document.getElementById('payment_proof');
+            const file = fileInput.files[0];
+            
+            const transferDateInput = document.getElementById('transfer_date');
+            const transferDate = transferDateInput ? transferDateInput.value : '';
+            
+            console.log('File:', file);
+            console.log('Transfer Date:', transferDate);
+            
+            if (!file) {
+                alert('Silakan pilih file bukti pembayaran');
+                return;
+            }
+            
+            if (!transferDate) {
+                alert('Silakan isi tanggal transfer');
+                transferDateInput.focus();
+                return;
+            }
+            
+            const submitBtn = document.querySelector('#payment-proof-form button[type="submit"]');
+            const originalText = submitBtn ? submitBtn.innerHTML : '';
+            
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengupload...';
+            }
+            
+            // Listen for Livewire upload finish event
+            const uploadFinishHandler = (event) => {
+                console.log('Upload finished, syncing form data...');
+                
+                // Manually sync all form field values to Livewire
+                const transferDate = document.getElementById('transfer_date')?.value || '';
+                const transferFromBank = document.getElementById('transfer_from_bank')?.value || '';
+                const transferFromAccountName = document.getElementById('transfer_from_account_name')?.value || '';
+                const transferNotes = document.getElementById('transfer_notes')?.value || '';
+                
+                console.log('Syncing data:', {
+                    transferDate,
+                    transferFromBank,
+                    transferFromAccountName,
+                    transferNotes
+                });
+                
+                // Set values in Livewire
+                @this.set('transfer_date', transferDate);
+                @this.set('transfer_from_bank', transferFromBank);
+                @this.set('transfer_from_account_name', transferFromAccountName);
+                @this.set('transfer_notes', transferNotes);
+                
+                // Wait a bit for Livewire to sync, then call submit
+                setTimeout(() => {
+                    console.log('Calling submitPaymentProof...');
+                    
+                    // Call the backend method
+                    @this.call('submitPaymentProof').then(() => {
+                        console.log('submitPaymentProof completed');
+                        
+                        // Reload page to show updated status
+                        window.location.reload();
+                    }).catch((error) => {
+                        console.error('Error submitting payment proof:', error);
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        }
+                        alert('Gagal mengirim bukti pembayaran: ' + (error.message || 'Unknown error'));
+                    });
+                }, 300); // Small delay to ensure sync completes
+                
+                // Remove listener after use
+                window.removeEventListener('livewire-upload-finish', uploadFinishHandler);
+            };
+            
+            // Add listener
+            window.addEventListener('livewire-upload-finish', uploadFinishHandler);
+            
+            // Trigger Livewire file upload manually
+            @this.upload('payment_proof', file, (uploadedFilename) => {
+                // Upload completed successfully
+                console.log('File uploaded:', uploadedFilename);
+                // Dispatch custom event to trigger submit
+                window.dispatchEvent(new CustomEvent('livewire-upload-finish'));
+            }, (error) => {
+                // Upload failed
+                console.error('Upload failed:', error);
+                if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = originalText;
-                });
-            },
-            (error) => {
+                }
                 alert('Gagal mengupload file: ' + error);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-            },
-            (event) => {
+                window.removeEventListener('livewire-upload-finish', uploadFinishHandler);
+            }, (event) => {
+                // Upload progress
                 let progress = Math.round((event.detail.progress || 0));
-                submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Uploading ${progress}%`;
-            }
-        );
-    });
+                if (submitBtn) {
+                    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Uploading ${progress}%`;
+                }
+            });
+        });
+    }
 
-    // File preview
-    document.getElementById('payment_proof').addEventListener('change', function(e) {
+    // File preview (only if manual payment is enabled)
+    const paymentProofInput = document.getElementById('payment_proof');
+    if (paymentProofInput) {
+        paymentProofInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         const preview = document.getElementById('payment-preview');
         
@@ -1166,12 +1535,15 @@ document.addEventListener('livewire:load', function() {
         } else {
             preview.innerHTML = '';
         }
-    });
+        });
+    }
 
     // Clear file input
     window.clearFileInput = function() {
-        document.getElementById('payment_proof').value = '';
-        document.getElementById('payment-preview').innerHTML = '';
+        const input = document.getElementById('payment_proof');
+        const preview = document.getElementById('payment-preview');
+        if (input) input.value = '';
+        if (preview) preview.innerHTML = '';
     };
 
     // Drag and drop
@@ -1231,13 +1603,32 @@ document.addEventListener('livewire:load', function() {
     // Image modals
     window.addEventListener('showImageModal', function(event) {
         const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+        
         document.getElementById('modalTitle').innerText = event.detail.title;
-        document.getElementById('modalContent').innerHTML = `
-            <img src="${event.detail.imageUrl}" class="img-fluid" alt="${event.detail.title}">
-        `;
+        
+        let content = `<img src="${event.detail.imageUrl}" class="img-fluid" alt="${event.detail.title}">`;
+        
+        // Add transfer details if available
+        if (event.detail.transferDetails) {
+            const details = event.detail.transferDetails;
+            content += `
+                <div class="mt-3 text-left">
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            ${details.date ? `<tr><th width="40%">Tanggal Transfer</th><td>${details.date}</td></tr>` : ''}
+                            ${details.bank ? `<tr><th>Bank Pengirim</th><td>${details.bank}</td></tr>` : ''}
+                            ${details.account_name ? `<tr><th>Nama Pengirim</th><td>${details.account_name}</td></tr>` : ''}
+                            ${details.notes ? `<tr><th>Catatan</th><td>${details.notes}</td></tr>` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        document.getElementById('modalContent').innerHTML = content;
         modal.show();
     });
-
+    
     window.addEventListener('showGalleryModal', function(event) {
         const modal = new bootstrap.Modal(document.getElementById('galleryModal'));
         const carouselInner = document.getElementById('carouselInner');

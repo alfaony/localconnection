@@ -72,13 +72,18 @@
                 <div class="row">
                     <!-- Kolom Kiri: Detail Utama -->
                     <div class="col-md-8">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
                             <h3 class="text-primary">{{ $usedItem->name }}</h3>
                             <div>
                                 <span class="badge {{ $usedItem->is_sold ? 'badge-success' : 'badge-secondary' }} p-2">
                                     {{ $usedItem->is_sold ? 'Terjual' : 'Belum Terjual' }}
                                 </span>
                             </div>
+                        </div>
+
+                        <div class="mt-1">
+                            <i class="fas fa-barcode"></i>
+                            <code class="h5 mb-0 bg-white px-2 py-1 rounded">{{ $usedItem->serial_number }}</code>
                         </div>
 
                         @if($usedItem->notes)

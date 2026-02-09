@@ -187,7 +187,7 @@ class AppServiceProvider extends ServiceProvider
                 'report_productivities','project_dashboards','division_budgets','visions',
                 'divisions','objectives','daily_task_projects','daily_task_categories',
                 'dailytasks','report_points','tasks','task_assigns',
-                'ip_rights','sales_achievements'
+                'ip_rights','sales_achievements','direct_points'
             ];
 
             $managementPenjualanMenu = 
@@ -774,6 +774,12 @@ class AppServiceProvider extends ServiceProvider
                     'text' => 'Mitra',
                     'route' => 'partner.index',
                     'icon' => 'fa fa-user',
+                ],
+                'direct_points' =>
+                [
+                    'text' => 'Direct Point',
+                    'route' => 'direct-point.index',
+                    'icon' => 'fa fa-coins',
                 ]
             ];
 

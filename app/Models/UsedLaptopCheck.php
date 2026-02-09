@@ -23,6 +23,6 @@ class UsedLaptopCheck extends Model
 
     public function item()
     {
-        return $this->belongsTo(MasterCheckItem::class, 'master_check_item_id')->withTrashed();
+        return $this->belongsTo(MasterCheckItem::class, 'master_check_item_id');
     }
 }

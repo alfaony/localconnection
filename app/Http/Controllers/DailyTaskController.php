@@ -39,6 +39,7 @@ use App\Models\Division;
 use App\Models\DivisionQuotaLock;
 use App\Models\RecurringRule;
 use App\Models\Project;
+use App\Models\DirectPoint;
 
 use App\Helpers\InboxHelper;
 use Ramsey\Uuid\Uuid;
@@ -113,9 +114,28 @@ class DailyTaskController extends Controller
         // Filter berdasarkan status
         if ($statusFilter) 
         {
-            $query->whereHas('taskStatus', function ($q) use ($statusFilter) {
-                $q->where('name', $statusFilter);
-            });
+            // Check if status is 'complete_by_date' (manual injection)
+            if ($statusFilter === 'complete_by_date') 
+            {
+                // Filter by completion date from status records
+                $query->whereHas('statusRecords', function ($q) use ($start_date, $end_date) {
+                    $q->whereHas('taskStatus', function ($sq) {
+                        $sq->where('name', ParamSchema::COMPLATE);
+                    });
+                    
+                    // Apply date range to completion date if provided
+                    if ($start_date && $end_date) {
+                        $q->whereBetween('date', [$start_date, $end_date]);
+                    }
+                });
+            } 
+            else 
+            {
+                // Original status filter logic
+                $query->whereHas('taskStatus', function ($q) use ($statusFilter) {
+                    $q->where('name', $statusFilter);
+                });
+            }
         }else
         {
             $query->whereHas('taskStatus', function ($query)
@@ -128,7 +148,8 @@ class DailyTaskController extends Controller
         }
 
         // Filter berdasarkan tanggal
-        if ($start_date && $end_date) 
+        // Skip default date range filter if status is 'complete_by_date' (already applied in status filter)
+        if ($start_date && $end_date && $statusFilter !== 'complete_by_date') 
         {
             $query->byDateRange($start_date, $end_date);
         }
@@ -857,7 +878,9 @@ class DailyTaskController extends Controller
             $endDate = Carbon::parse($dailytask->end_date)->endOfDay();
             $submitDate = Carbon::parse($dailytask->submit)->startOfDay();
 
-            $dailytask->status_submit = ($submitDate->lessThanOrEqualTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
+            if($dailytask->status_submit != ParamSchema::PINALTY_NOT_PROGRESS){
+                $dailytask->status_submit = ($submitDate->lessThanOrEqualTo($endDate)) ? ParamSchema::ONTIME : ParamSchema::LATE;
+            }
 
             $this->message($dailytask->id, 'report', ' Membuat Laporan Tugas ' . $dailytask->name);
             $this->statusrecord($dailytask, $inReview);
@@ -989,28 +1012,37 @@ class DailyTaskController extends Controller
         DB::beginTransaction();
         $dailytask = DailyTask::byCompany(Auth::user()->company_id)->where('slug', $slug)->firstOrFail();
         try {
-            if($request->point > 0)
-            {
-                $request->validate([
-                    'point' => 'required|integer|min:1',
-                    'division_id' => 'required|exists:divisions,id',
-                ]);
-
-                $check = $this->checkDivisionQuota(new Request([
-                    'division_id' => $request->division_id,
-                    'point' => $request->point
-                ]));
-
-                if ($check->original['status'] !== 'ok') 
+            // Backend protection: Prevent point updates when status_submit is PINALTY_NOT_PROGRESS
+            if ($dailytask->status_submit == ParamSchema::PINALTY_NOT_PROGRESS) {
+                // Do not allow point changes for penalty tasks
+                // Keep the existing point value
+                $pointToSave = $dailytask->point;
+            } else {
+                // Normal flow: Allow point updates
+                if($request->point > 0)
                 {
-                    return response()->json(['success' => false, 'message' => $check->original['message']]);
-                }
+                    $request->validate([
+                        'point' => 'required|integer|min:1',
+                        'division_id' => 'required|exists:divisions,id',
+                    ]);
 
-                $dailytask->division_id = $request->division_id;
-                $dailytask->division_quota_lock_id = $check->original['quota_lock_id'];
+                    $check = $this->checkDivisionQuota(new Request([
+                        'division_id' => $request->division_id,
+                        'point' => $request->point
+                    ]));
+
+                    if ($check->original['status'] !== 'ok') 
+                    {
+                        return response()->json(['success' => false, 'message' => $check->original['message']]);
+                    }
+
+                    $dailytask->division_id = $request->division_id;
+                    $dailytask->division_quota_lock_id = $check->original['quota_lock_id'];
+                }
+                $pointToSave = $request->point ?? 0;
             }
                 
-            $dailytask->point = $request->point ?? 0;
+            $dailytask->point = $pointToSave;
             $dailytask->task_status_id = $taskStatuss->id;
             $dailytask->approved = $taskStatuss->name == ParamSchema::COMPLATE ? true : false;
 
@@ -1261,7 +1293,11 @@ class DailyTaskController extends Controller
                 $this->sentInbox($dailyTaskHead->assignment_user_id,Auth::user()->name.' Membuat Sub Tugas ' . $dailyTask->name .' pada tugas '.$dailyTaskHead->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
             }
 
-            $this->sentInbox($dailyTask->assignment_user_id, Auth::user()->name. ' Menugaskan ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+            if($dailyTask->assignment_user_id)
+            {
+                $this->sentInbox($dailyTask->assignment_user_id, Auth::user()->name. ' Menugaskan ' . $dailyTask->name, route('dailytask.show', ['dailytask' => $dailyTask->slug]));
+            }
+
             $this->message($dailyTask->id,'create','Membuat Tugas '.$dailyTask->name);
             $this->statusrecord($dailyTask, $status);
 
@@ -1325,8 +1361,8 @@ class DailyTaskController extends Controller
             'objective_id' => 'exists:objectives,id',
             'project_id' => 'exists:daily_task_projects,id',
             'category_id' => 'exists:daily_task_categories,id',
-            'data_project_id' => 'required|array',
-            'data_project_id.*' => 'required|uuid|exists:projects,id',
+            'data_project_id' => 'nullable|array',
+            'data_project_id.*' => 'nullable|uuid|exists:projects,id',
         ]);
 
         DB::beginTransaction();
@@ -1336,6 +1372,7 @@ class DailyTaskController extends Controller
 
             return redirect()->route('dailytask.index')->with('import', true);
         } catch (\Exception $e) {
+            // dd($e);
             DB::rollback();
             $errors = explode("\n", $e->getMessage());
             return redirect()->back()->withErrors($errors)->withInput();
@@ -1687,8 +1724,11 @@ class DailyTaskController extends Controller
         
         // Calculate period month and year
         if ($now->day >= $periodStartDay) {
-            $month = $now->copy()->addMonth()->month;
-            $year = $now->copy()->addMonth()->year;
+            // Periode bulan depan: ambil angka bulan saja, JANGAN pakai addMonth() 
+            // karena akan overflow (misal 29 Jan + 1 month = 1 Mar, bukan Feb)
+            $month = $now->month == 12 ? 1 : $now->month + 1;
+            $year = $now->month == 12 ? $now->year + 1 : $now->year;
+
         } else {
             $month = $now->month;
             $year = $now->year;
@@ -1731,7 +1771,15 @@ class DailyTaskController extends Controller
             })
             ->sum('point');
 
-        $sisa = $quota->locked_quota - $used;
+        $directPointsUsed = DirectPoint::where('division_quota_lock_id', $quota->id)
+            ->where('status', DirectPoint::STATUS_APPROVED)
+            ->get()
+            ->sum(function($dp) {
+                return $dp->approved_point ?? $dp->point;
+            });
+
+
+        $sisa = $quota->locked_quota - $used - $directPointsUsed;
 
         if ($point > $sisa) {
             return response()->json([

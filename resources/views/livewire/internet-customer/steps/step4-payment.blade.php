@@ -46,12 +46,48 @@
                     </div>
                 @endif
                 
+                {{-- Always show PPN breakdown for transparency --}}
+                @if($taxRate > 0)
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Harga sebelum pajak:</span>
+                        <span class="fw-semibold">Rp {{ number_format($amountBeforeTax, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 text-muted">
+                        <span>PPN ({{ $taxRate }}%):</span>
+                        <span class="fw-semibold">Rp {{ number_format($taxAmount, 0, ',', '.') }}</span>
+                    </div>
+                @endif
+                
                 <div class="d-flex justify-content-between fw-bold mt-3 pt-3 border-top">
                     <span>Total Pembayaran:</span>
                     <span class="text-primary h5 mb-0">
                         Rp {{ number_format($totalAmount, 0, ',', '.') }}
                     </span>
                 </div>
+                
+                
+                @if($payment_method === 'xendit' && $xenditPayWithPpn && $taxRate > 0)
+                    <div class="alert alert-info mt-3 mb-0 py-2">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            PPN {{ $taxRate }}% (Rp {{ number_format($taxAmount, 0, ',', '.') }}) akan otomatis ditambahkan oleh Xendit saat pembayaran
+                        </small>
+                    </div>
+                @elseif($payment_method === 'midtrans' && $midtransPayWithPpn && $taxRate > 0)
+                    <div class="alert alert-info mt-3 mb-0 py-2">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            PPN {{ $taxRate }}% (Rp {{ number_format($taxAmount, 0, ',', '.') }}) akan otomatis ditambahkan oleh Midtrans saat pembayaran
+                        </small>
+                    </div>
+                @elseif(($payment_method === 'xendit' && !$xenditPayWithPpn) || ($payment_method === 'midtrans' && !$midtransPayWithPpn))
+                    <div class="alert alert-success mt-3 mb-0 py-2">
+                        <small>
+                            <i class="fas fa-check-circle"></i>
+                            PPN {{ $taxRate }}% sudah termasuk dalam total pembayaran
+                        </small>
+                    </div>
+                @endif
             @else
                 <div class="d-flex justify-content-between fw-bold mt-3 pt-3 border-top">
                     <span>Total Pembayaran:</span>
@@ -93,6 +129,7 @@
             <label class="form-label fw-semibold mb-3">Metode Pembayaran</label>
             <div class="row g-3">
                 <!-- Manual Transfer -->
+                @if($manualPaymentEnabled)
                 <div class="col-md-6">
                     <div class="card h-100 payment-method-card {{ $payment_method === 'manual_transfer' ? 'border-primary border-3 bg-light' : '' }}"
                         wire:click="$set('payment_method', 'manual_transfer')" style="cursor: pointer;">
@@ -108,6 +145,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
                 
                 <!-- Xendit Payment -->
                 @if($xenditActive)
@@ -121,6 +159,25 @@
                             @if($payment_method === 'xendit')
                                 <div class="mt-2">
                                     <span class="badge badge-success">Dipilih</span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
+                
+                <!-- Midtrans Payment -->
+                @if($midtransActive)
+                <div class="col-md-6">
+                    <div class="card h-100 payment-method-card {{ $payment_method === 'midtrans' ? 'border-info border-3 bg-light' : '' }}"
+                        wire:click="$set('payment_method', 'midtrans')" style="cursor: pointer;">
+                        <div class="card-body d-flex flex-column text-center py-4">
+                            <i class="fas fa-wallet fa-3x text-info mb-3"></i>
+                            <h6 class="mb-1">Midtrans SNAP</h6>
+                            <small class="text-muted">VA, E-Wallet, Credit Card, QRIS</small>
+                            @if($payment_method === 'midtrans')
+                                <div class="mt-2">
+                                    <span class="badge badge-info">Dipilih</span>
                                 </div>
                             @endif
                         </div>
@@ -174,6 +231,22 @@
                     
                     <h5 class="h6 fw-semibold mb-3">Informasi Transfer Anda</h5>
                     <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="transfer_date" class="font-weight-bold">
+                                    Tanggal Transfer <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" 
+                                        id="transfer_date" 
+                                        class="form-control @error('transfer_date') is-invalid @enderror" 
+                                        wire:model="transfer_date"
+                                        max="{{ date('Y-m-d') }}">
+                                @error('transfer_date')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Tanggal saat Anda melakukan transfer</small>
+                            </div>
+                        </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Nama Bank Pengirim</label>
@@ -295,6 +368,42 @@
                 </div>
             </div>
         @endif
+
+        <!-- Midtrans Payment Info -->
+        @if($payment_method === 'midtrans')
+            <div class="card border-info border-2 mb-4">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-wallet fa-4x text-info mb-3"></i>
+                    <h5 class="mb-3">Pembayaran Digital via Midtrans SNAP</h5>
+                    <p class="text-muted mb-4">
+                        Anda akan diarahkan ke halaman pembayaran Midtrans untuk menyelesaikan transaksi
+                    </p>
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-2">Metode pembayaran yang tersedia:</small>
+                        <div class="d-flex justify-content-center flex-wrap">
+                            <span class="badge badge-info m-1 p-2">
+                                <i class="fas fa-university mr-1"></i>Virtual Account
+                            </span>
+                            <span class="badge badge-info m-1 p-2">
+                                <i class="fas fa-wallet mr-1"></i>E-Wallet (GoPay, OVO, Dana)
+                            </span>
+                            <span class="badge badge-info m-1 p-2">
+                                <i class="fas fa-credit-card mr-1"></i>Credit Card
+                            </span>
+                            <span class="badge badge-info m-1 p-2">
+                                <i class="fas fa-qrcode mr-1"></i>QRIS
+                            </span>
+                        </div>
+                    </div>
+                    <div class="alert alert-info text-left">
+                        <small>
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Setelah klik tombol di bawah, Anda akan diarahkan ke halaman Midtrans untuk memilih metode pembayaran dan menyelesaikan transaksi.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        @endif
     @else
         <div class="alert alert-info d-flex align-items-center mb-4">
             <i class="fas fa-info-circle fa-2x me-3"></i>
@@ -322,7 +431,9 @@
         >
             <span wire:loading.remove wire:target="nextStep,payment_proof">
                 @if($payment_method === 'xendit' && !$hasFreeMonthsPromo)
-                    Lanjut ke Pembayaran <i class="fas fa-arrow-right ms-2"></i>
+                    Lanjut ke Pembayaran Xendit <i class="fas fa-arrow-right ms-2"></i>
+                @elseif($payment_method === 'midtrans' && !$hasFreeMonthsPromo)
+                    Lanjut ke Pembayaran Midtrans <i class="fas fa-arrow-right ms-2"></i>
                 @else
                     Selesaikan Pendaftaran <i class="fas fa-check ms-2"></i>
                 @endif

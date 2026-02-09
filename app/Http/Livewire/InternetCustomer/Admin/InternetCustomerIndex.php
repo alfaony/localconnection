@@ -275,6 +275,7 @@ class InternetCustomerIndex extends Component
             
             // 2. UPDATED: Update customer dengan field baru
             $customer->update([
+                'grouping_id' => $grouping_id,
                 'status' => ParamSchema::INSTALLED,
                 'local_address' => $local_address,
                 'router_id' => $routerId,
@@ -293,7 +294,6 @@ class InternetCustomerIndex extends Component
                 'notes' => $notes,
                 'installed_at' => now(),
                 'technical_user_id' => Auth::id(),
-                'grouping_id' => $grouping_id,                          // BARU
             ]);
 
             $this->activate($customer->id, $password);
@@ -453,14 +453,21 @@ class InternetCustomerIndex extends Component
 
 
 
-    public function viewPaymentProof($proofUrl)
+    public function viewPaymentProof($id)
     {
-        $this->selectedPaymentProof = $proofUrl ? s3_asset(true,10,$proofUrl) : null;
+        $purchase = InternetCustomerPurchase::findOrFail($id);
+
+        $this->selectedPaymentProof = $purchase->payment_proof ? s3_asset(true,10,$purchase->payment_proof) : null;
         
-        $proofUrl= $proofUrl ? s3_asset(true,10,$proofUrl) : null;
+        $proofUrl= $purchase->payment_proof ? s3_asset(true,10,$purchase->payment_proof) : null;
     
         // Dispatch kedua jenis event
-        $this->dispatchBrowserEvent('showPaymentProofModal', ['proofUrl' => $proofUrl]);
+        $this->dispatchBrowserEvent('showPaymentProofModal', ['proofUrl' => $proofUrl, 'transferDetails' => [
+                    'date' => $purchase->transfer_date ? \Carbon\Carbon::parse($purchase->transfer_date)->format('d M Y') : null,
+                    'bank' => $purchase->transfer_from_bank,
+                    'account_name' => $purchase->transfer_from_account_name,
+                    'notes' => $purchase->transfer_notes
+                ]]);
     }
 
 
@@ -477,10 +484,24 @@ class InternetCustomerIndex extends Component
             ]);
 
              $date = $internetPurchase->period_end ? Carbon::parse($internetPurchase->period_end) : Carbon::now();
-        
+         
+            // Smart billing date calculation  
+            $periodStartDate = Carbon::parse($internetPurchase->period_start);
+            $maxBillingDate = config('services.internet_custom.max_billing_date', 20);
+            $currentBillingDay = $periodStartDate->day;
+            
+            if ($currentBillingDay > $maxBillingDate) {
+                $startBillingDate = $periodStartDate->copy()->addMonths($internetPurchase->payment_months)->firstOfMonth();
+            } else {
+                $startBillingDate = $periodStartDate->copy()->addMonths($internetPurchase->payment_months);
+            }
+            
+            $gracePeriod = config('services.internet_custom.end_billing_of_days', 5);
+            $endBillingDate = $startBillingDate->copy()->addDays($gracePeriod);
+            
             $internetCustomers->update([
-                'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
-                'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
+                'start_billing_date' => $startBillingDate->format('Y-m-d'),
+                'end_billing_date' => $endBillingDate->format('Y-m-d')
             ]);
 
             $post =[
@@ -544,7 +565,7 @@ class InternetCustomerIndex extends Component
         $columns = [
             'id', 'name', 'code', 'status','address',
             'internet_package_id', 'user_customer_id', 'company_id',
-            'ktp_number', 'created_at'
+            'ktp_number', 'created_at','grouping_id'
         ];
         $query = InternetCustomer::query()
             ->byCompany($user->company_id) // batasi dataset sesuai akses
@@ -553,7 +574,7 @@ class InternetCustomerIndex extends Component
             ->with([
                 'installation:id,internet_customer_id,device_serial_number',
                 'installation.medias:id,internet_installation_id,photo,caption', // eager load photos
-                'userCustomer:id,name,email,phone_number',
+                'userCustomer:id,name,email,phone_number,start_billing_date,end_billing_date',
                 'company:id,name',
                 'internetPackage:id,name'
             ]);
@@ -574,7 +595,9 @@ class InternetCustomerIndex extends Component
                     ->orWhereHas('company', function ($q) {
                         $q->where('name', 'like', '%' . $this->search . '%');
                     })
-                    ->orWhere('ktp_number', 'like', '%' . $this->search . '%');
+                    ->orWhere('ktp_number', 'like', '%' . $this->search . '%')
+                    ->orWhere('grouping_id', 'like', '%' . $this->search . '%')
+                    ;
             });
         }
 

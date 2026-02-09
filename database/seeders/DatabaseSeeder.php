@@ -114,6 +114,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PartnerParameterTypeSeeder::class);
         $this->call(PermissionForMenuPartnerParameterType::class);
         $this->call(PermissionForMenuSoftwareSharingSeeder::class);
+        $this->call(PermissionForMenuDirectPointSeeder::class);
         
     }
 }

@@ -50,6 +50,19 @@ class SettingCompanyController extends Controller
             $request->request->add(['status_punihsment_task_doing' => "0"]);
         }
         
+
+        // Clear Cache
+        $this->clearCache("midtrans",Auth::user()->company_id);
+        $this->clearCache("xendit",Auth::user()->company_id);
+
+
+        
+        // Boolean
+        $boolean = ['xendit_pay_with_ppn','midtrans_pay_with_ppn','manual_payment_status'];
+        foreach ($boolean as $field) {
+            $request->request->add([$field => $request->has($field) ? "1" : "0"]);
+        }
+
         DB::beginTransaction();
         try {
             $settings = SettingCompany::byCompany(Auth::user()->company_id)->get();
@@ -99,5 +112,13 @@ class SettingCompanyController extends Controller
             \Log::error($th);
             return redirect()->route('setting-company.index')->with('store',false);
         }
+    }
+
+    /**
+     * Clear Cache
+     */
+    public static function clearCache($menu,$companyId)
+    {
+        Cache::forget("{$menu}_settings_{$companyId}");
     }
 }

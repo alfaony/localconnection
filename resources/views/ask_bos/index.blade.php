@@ -216,6 +216,8 @@
             document.getElementById('analysisResult').innerText = "Sedang memproses...";
             document.getElementById('trustScoreResult').innerText = "";
             document.getElementById('executionScoreResult').innerText = "";
+            
+            retryCount = 0; // Reset retry counter
 
             if (!question.trim()) {
                 alert('Silakan masukkan pertanyaan sebelum mengirim.');
@@ -279,6 +281,8 @@
             document.getElementById('analysisResult').innerText = "Sedang memproses...";
             document.getElementById('trustScoreResult').innerText = "";
             document.getElementById('executionScoreResult').innerText = "";
+            
+            retryCount = 0; // Reset retry counter
 
             document.getElementById('questionResult').value = question;
 
@@ -308,6 +312,8 @@
                 fetch("{{ route('check.response') }}")
                 .then(response => response.json())
                 .then(data => {
+                    console.log(data);
+                    
                     if (data.status !== 'waiting') {
                         document.getElementById('analysisResult').innerText = data.analysis;
                         document.getElementById('trustScoreResult').innerText = `${data.trust_score} `;
@@ -331,7 +337,7 @@
                     }
                 })
                 .catch(error => console.error("Error fetching response:", error));
-            }, 2000); // Polling setiap 3 detik
+            }, 5000); // Polling setiap 3 detik
         }
     });
 </script>

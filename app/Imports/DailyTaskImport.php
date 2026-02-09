@@ -32,8 +32,8 @@ class DailyTaskImport implements WithMultipleSheets
     {
         $this->objectiveIds = $request['objective_id'];
         $this->keyResultIds = $request['key_result_0'];
-        $this->projectId = $request['project_id'];
-        $this->dataProjectId = $request['data_project_id'][0];
+        $this->projectId = $request['project_id'] ?? NULL;
+        $this->dataProjectId = $request['data_project_id'][0] ?? NULL;
         $this->custom_field_values = $request['custom_field_values'] ?? NULL;
     }
 
@@ -106,8 +106,8 @@ class DailyTaskSheetImport implements ToCollection, WithCalculatedFormulas, With
                 $dailyTask->daily_task_category_id = $categoryId;
                 $dailyTask->status_submit = $check['statusReport'];
                 $dailyTask->daily_task_type_id = $this->getTypeId($type);
-                $dailyTask->project_id = $this->dataProjectId;
-                $dailyTask->daily_task_project_id = $this->projectId;
+                $dailyTask->project_id = $this->dataProjectId ?? NULL;
+                $dailyTask->daily_task_project_id = $this->projectId ?? NULL;
                 $dailyTask->name = $task_name;
                 $dailyTask->description = $description ?? NULL;
                 $dailyTask->point = NULL;

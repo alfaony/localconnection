@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Helpers\InboxHelper;
 use App\Services\XenditService;
+use App\Services\MidtransService;
 use Illuminate\Support\Facades\Log;
 
 
@@ -75,6 +76,12 @@ class InternetCustomerForm extends Component
     public $payment_months = 1;
     public $payment_method = null; // 'manual_transfer' atau 'xendit'
     public $payment_proof;
+    
+    // Transfer details
+    public $transfer_date;
+    public $transfer_from_bank;
+    public $transfer_from_account_name;
+    public $transfer_notes;
     public $selectedPackage;
     public $nama_bank;
     public $holder_name;
@@ -87,6 +94,11 @@ class InternetCustomerForm extends Component
     public $discountPercentage = 0;
     public $discountAmount = 0;
     public $totalAmount = 0;
+    
+    // Tax calculation
+    public $taxRate = 0;
+    public $taxAmount = 0;
+    public $amountBeforeTax = 0;
     
     // Period calculation
     public $period_start = null;
@@ -110,6 +122,12 @@ class InternetCustomerForm extends Component
 
     // Xendit
     public $xenditActive = false;
+    public $xenditPayWithPpn = false;  // Xendit auto-calculate PPN
+    
+    // Midtrans
+    public $midtransActive = false;
+    public $manualPaymentEnabled = true; // Default enabled
+    public $midtransPayWithPpn = false; // Midtrans auto-calculate PPN
 
     protected $rules = [
         'signature' => 'nullable|string',
@@ -186,9 +204,15 @@ class InternetCustomerForm extends Component
 
     public function updatedPaymentMonths($value)
     {
-        $this->payment_months = max(1, min(24, (int)$value));
-        $this->calculatePayment();
+        $this->payment_months = (int) $value;
+        $this->calculatePricing();
         $this->calculatePeriod();
+    }
+
+    public function updatedPaymentMethod($value)
+    {
+        // Recalculate pricing when payment method changes (affects tax)
+        $this->calculatePricing();
     }
 
     public function saveSignature($signatureData)
@@ -248,6 +272,60 @@ class InternetCustomerForm extends Component
                 'error' => $e->getMessage()
             ]);
         }
+        
+        // Check Midtrans status
+        try {
+            $midtransService = new MidtransService($this->company_id);
+            $this->midtransActive = $midtransService->testConnection();
+        } catch (\Exception $e) {
+            $this->midtransActive = false;
+            Log::warning('Midtrans not configured for company', [
+                'company_id' => $this->company_id,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        // Load tax rate from settings
+        $taxSetting = SettingCompany::byCompany($this->company_id)
+            ->where('menu', 'store')
+            ->where('field_title', 'default_tax')
+            ->first();
+        
+        $this->taxRate = $taxSetting && $taxSetting->field_value 
+            ? (float)$taxSetting->field_value 
+            : config('services.internet_custom.default_tax_rate', 11);
+            
+        Log::info('Tax rate loaded', [
+            'company_id' => $this->company_id,
+            'tax_rate' => $this->taxRate
+        ]);
+        
+        // Load Xendit PPN setting
+        $xenditPpnSetting = SettingCompany::byCompany($this->company_id)
+            ->where('menu', 'xendit_internet_customer')
+            ->where('field_title', 'xendit_pay_with_ppn')
+            ->first();
+        $this->xenditPayWithPpn = $xenditPpnSetting && $xenditPpnSetting->field_value == '1';
+        
+        // Load Midtrans PPN setting
+        $midtransPpnSetting = SettingCompany::byCompany($this->company_id)
+            ->where('menu', 'midtrans_internet_customer')
+            ->where('field_title', 'midtrans_pay_with_ppn')
+            ->first();
+        $this->midtransPayWithPpn = $midtransPpnSetting && $midtransPpnSetting->field_value == '1';
+        
+        // Load Manual Payment Status setting
+        $manualPaymentSetting = SettingCompany::byCompany($this->company_id)
+            ->where('menu', 'internet_customer_setting')
+            ->where('field_title', 'manual_payment_status')
+            ->first();
+        $this->manualPaymentEnabled = $manualPaymentSetting && $manualPaymentSetting->field_value == '1';
+        
+        Log::info('Gateway PPN settings loaded', [
+            'xendit_pay_with_ppn' => $this->xenditPayWithPpn,
+            'midtrans_pay_with_ppn' => $this->midtransPayWithPpn,
+            'manual_payment_enabled' => $this->manualPaymentEnabled
+        ]);
     }
 
     public function render()
@@ -270,11 +348,15 @@ class InternetCustomerForm extends Component
     /**
      * Calculate payment amounts
      */
-    protected function calculatePayment()
+    protected function calculatePricing()
     {
         if (!$this->selectedPackage) return;
 
-        $this->monthlyPrice = $this->selectedPackage->price_nett;
+        // Determine which price to use based on payment method and gateway settings
+        // All methods now use 'price' (gross price) as base
+        $basePrice = $this->selectedPackage->price;
+        
+        $this->monthlyPrice = $basePrice;
         
         $calculation = InternetCustomerPurchase::calculateTotal(
             $this->monthlyPrice,
@@ -284,7 +366,27 @@ class InternetCustomerForm extends Component
         $this->subtotal = $calculation['subtotal'];
         $this->discountPercentage = $calculation['discount_percentage'];
         $this->discountAmount = $calculation['discount_amount'];
-        $this->totalAmount = $calculation['total'];
+        
+        // Amount before tax (after discount) - rounded for consistency
+        $this->amountBeforeTax = round($calculation['total']);
+        
+        // ALWAYS calculate and display PPN in UI for transparency
+        // The difference is what amount we send to the gateway:
+        // - PPN enabled: send amountBeforeTax (gateway will add PPN)
+        // - PPN disabled: send totalAmount (we already added PPN)
+        $this->taxAmount = round(($this->amountBeforeTax * $this->taxRate) / 100);
+        $this->totalAmount = round($this->amountBeforeTax + $this->taxAmount);
+        
+        Log::info('Pricing calculated', [
+            'payment_method' => $this->payment_method,
+            'base_price' => $basePrice,
+            'xendit_pay_with_ppn' => $this->xenditPayWithPpn,
+            'midtrans_pay_with_ppn' => $this->midtransPayWithPpn,
+            'amount_before_tax' => $this->amountBeforeTax,
+            'tax_amount' => $this->taxAmount,
+            'total_amount' => $this->totalAmount,
+            'note' => 'Total amount shown includes PPN. Gateway services will receive amountBeforeTax when PPN enabled.'
+        ]);
     }
 
     /**
@@ -446,7 +548,7 @@ class InternetCustomerForm extends Component
         
         $this->step++;
         $this->selectedPackage = InternetPackage::find($this->internet_package_id);
-        $this->calculatePayment();
+        $this->calculatePricing();
         $this->calculatePeriod();
     }
 
@@ -454,13 +556,17 @@ class InternetCustomerForm extends Component
     {
         if (!$this->hasFreeMonthsPromo) {
             $this->validate([
-                'payment_method' => 'required|in:manual_transfer,xendit',
+                'payment_method' => 'required|in:manual_transfer,xendit,midtrans',
                 'payment_months' => 'required|integer|min:1|max:24',
             ]);
 
             if ($this->payment_method === 'manual_transfer') {
                 $this->validate([
                     'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+                    'transfer_date' => 'required|date|before_or_equal:today',
+                    'transfer_from_bank' => 'nullable|string|max:255',
+                    'transfer_from_account_name' => 'nullable|string|max:255',
+                    'transfer_notes' => 'nullable|string|max:500',
                     'nama_bank' => 'required',
                     'holder_name' => 'required',
                     'account_number' => 'required',
@@ -469,6 +575,9 @@ class InternetCustomerForm extends Component
                     'payment_proof.required' => 'Bukti pembayaran wajib diupload.',
                     'payment_proof.mimes' => 'Bukti pembayaran harus berupa JPG, PNG, atau PDF.',
                     'payment_proof.max' => 'Ukuran file maksimal 2MB.',
+                    'transfer_date.required' => 'Tanggal transfer wajib diisi.',
+                    'transfer_date.date' => 'Format tanggal tidak valid.',
+                    'transfer_date.before_or_equal' => 'Tanggal transfer tidak boleh lebih dari hari ini.',
                 ]);
 
                 // Verify payment proof is uploaded
@@ -589,7 +698,7 @@ class InternetCustomerForm extends Component
                 'is_paid' => false,
                 'status' => $this->hasFreeMonthsPromo 
                     ? ParamSchema::PENDING 
-                    : ($this->payment_method === 'xendit' ? ParamSchema::WAITING_PAYMENT_SUBSCRIPTION : ParamSchema::WAITING_PAYMENT_CONFIRMATION),
+                    : ($this->payment_method === 'xendit' || $this->payment_method === 'midtrans' ? ParamSchema::WAITING_PAYMENT_SUBSCRIPTION : ParamSchema::WAITING_PAYMENT_CONFIRMATION),
             ]);
             
             $agreement = $this->createPartnershipAgreement($ktpPath, $signaturePath);
@@ -639,16 +748,25 @@ class InternetCustomerForm extends Component
                     'period_end' => $subscriptionPeriod['end'],
                     'total_before_discount' => $this->subtotal,
                     'discount_amount' => $this->discountAmount,
+                    'amount_before_tax' => $this->amountBeforeTax,
+                    'tax_rate' => $this->taxRate,
+                    'tax_amount' => $this->taxAmount,
                     'payment_method' => $this->payment_method,
                     'payment_proof' => $paymentProofPath ? $paymentProofPath : null,
+                    'transfer_date' => $this->transfer_date,
+                    'transfer_from_bank' => $this->transfer_from_bank,
+                    'transfer_from_account_name' => $this->transfer_from_account_name,
+                    'transfer_notes' => $this->transfer_notes,
                     'generate_coupons' => true,
                 ]);
 
                 $this->purchase_id = $internetCustomerPurchase->id;
 
-                // Handle Xendit payment
+                // Handle payment method
                 if ($this->payment_method === 'xendit') {
                     $this->processXenditPayment($internetCustomerPurchase, $internetCustomer);
+                } elseif ($this->payment_method === 'midtrans') {
+                    $this->processMidtransPayment($internetCustomerPurchase, $internetCustomer);
                 } else {
                     // Manual transfer - notify finance
                     $this->notifyFinanceTeam($internetCustomer);
@@ -684,9 +802,10 @@ class InternetCustomerForm extends Component
 
             $result = $xenditService->createInvoiceKeloolaPay($purchase, $customer, [
                 'payment_months' => $this->payment_months,
-                'total_amount' => $this->totalAmount,
+                'total_amount' => $this->xenditPayWithPpn ? $this->amountBeforeTax : $this->totalAmount,
                 'discount_amount' => $this->discountAmount,
-                'subscription_period' => $subscriptionPeriod
+                'subscription_period' => $subscriptionPeriod,
+                'xendit_pay_with_ppn' => $this->xenditPayWithPpn
             ]);
 
             if ($result['success']) {
@@ -720,6 +839,60 @@ class InternetCustomerForm extends Component
             ]);
             
             session()->flash('warning', 'Pembayaran digital tidak tersedia. Silakan gunakan transfer manual.');
+        }
+    }
+
+    protected function processMidtransPayment($purchase, $customer)
+    {
+        try {
+            $midtransService = new MidtransService($customer->company_id);
+
+            if (!$midtransService->isActive()) {
+                throw new \Exception('Pembayaran Midtrans tidak tersedia untuk saat ini.');
+            }
+
+            $subscriptionPeriod = $this->calculateSubscriptionPeriod($this->payment_months);
+
+            $result = $midtransService->createTransaction($purchase, $customer, [
+                'payment_months' => $this->payment_months,
+                'total_amount' => $this->midtransPayWithPpn ? $this->amountBeforeTax : $this->totalAmount,
+                'discount_amount' => $this->discountAmount,
+                'subscription_period' => $subscriptionPeriod,
+                'midtrans_pay_with_ppn' => $this->midtransPayWithPpn
+            ]);
+
+            if ($result['success']) {
+                $snapToken = $result['snap_token'];
+                $snapRedirectUrl = $result['redirect_url'];
+
+                $purchase->update([
+                    'midtrans_snap_token' => $snapToken,
+                    'midtrans_raw_response' => json_encode($result),
+                ]);
+
+                Log::info('Midtrans SNAP token created successfully', [
+                    'snap_token' => $snapToken,
+                    'purchase_id' => $purchase->id,
+                    'customer_code' => $customer->code
+                ]);
+
+                // Redirect to Midtrans payment page
+                $this->dispatchBrowserEvent('redirect-to-midtrans', [
+                    'snap_token' => $snapToken,
+                    'redirect_url' => $snapRedirectUrl
+                ]);
+
+            } else {
+                throw new \Exception('Gagal membuat transaksi pembayaran: ' . ($result['message'] ?? 'Unknown error'));
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Midtrans payment processing failed', [
+                'error' => $e->getMessage(),
+                'purchase_id' => $purchase->id
+            ]);
+            
+            session()->flash('warning', 'Pembayaran Midtrans tidak tersedia. Silakan gunakan transfer manual.');
         }
     }
 
@@ -847,8 +1020,8 @@ class InternetCustomerForm extends Component
 
     protected function notifyMarketingTeamSuccess($internetCustomer)
     {
-        $userFinance = User::whereHas('role', function ($q) {
-            $q->whereIn('name', [RoleSchema::SYSTEM, RoleSchema::ROOT, RoleSchema::ADMIN]);
+        $userFinance = User::byCompany($internetCustomer->company_id)->whereHas('role', function ($q) {
+        $q->whereIn('name', [RoleSchema::SYSTEM_ADMIN, RoleSchema::ROOT, RoleSchema::SALES]);
         })->get();
 
         if($userFinance->isNotEmpty()) {
@@ -861,7 +1034,7 @@ class InternetCustomerForm extends Component
                 })
                 ->first();
             
-            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar untuk, Silahkan ditindaklanjuti.";
+            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar, Silahkan ditindaklanjuti.";
             $directUrl = route('internet-customer.show', $internetCustomer->id);
             
             foreach($userFinance as $finance) {

@@ -42,7 +42,7 @@ class InternetCustomerShow extends Component
     public $showInstallationPhotosModal = false;
 
     // Properties untuk edit data pribadi
-    public $name, $email, $phone_number, $start_billing_date, $end_billing_date;
+    public $name, $email, $phone_number, $start_billing_date, $end_billing_date, $grouping_id;
     
     // Properties untuk edit data instalasi
     public $local_address, $username, $pass_hash, $device_serial_number;
@@ -83,7 +83,9 @@ class InternetCustomerShow extends Component
             'purchases',
             'installation',
             'router',
-        ])->findOrFail($customerId);
+        ])
+        ->byCompany(Auth::user()->company_id)
+        ->findOrFail($customerId);
 
         if ($this->customer->partnershipAgreement) {
             $this->agreementFields = json_decode($this->customer->partnershipAgreement->fields, true);
@@ -373,7 +375,8 @@ class InternetCustomerShow extends Component
         $this->email = $this->customer->userCustomer->email ?? '';
         $this->phone_number = $this->customer->userCustomer->phone_number ?? '';
         $this->start_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->start_billing_date : Carbon::now()->format('Y-m-d');
-        $this->end_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->end_billing_date : Carbon::now()->addDay()->format('Y-m-d');
+        $this->end_billing_date = $this->customer->status != ParamSchema::INACTIVE ? $this->customer->userCustomer->end_billing_date : Carbon::now()->addDays(5)->format('Y-m-d');
+        $this->grouping_id = $this->customer->grouping_id;
         
         $this->dispatchBrowserEvent('showEditPribadiModal', [
             'status_active' => $this->status_active,
@@ -381,8 +384,20 @@ class InternetCustomerShow extends Component
             'email' => $this->customer->userCustomer->email ?? '',
             'phone_number' => $this->customer->userCustomer->phone_number ?? '',
             'start_billing_date' => $this->start_billing_date,
-            'end_billing_date' => $this->end_billing_date
+            'end_billing_date' => $this->end_billing_date,
+            'grouping_id' => $this->grouping_id
         ]);
+    }
+
+    /**
+     * Auto-update end_billing_date when start_billing_date changes
+     * end_billing_date = start_billing_date + 5 days
+     */
+    public function updatedStartBillingDate($value)
+    {
+        if ($value) {
+            $this->end_billing_date = Carbon::parse($value)->addDays(5)->format('Y-m-d');
+        }
     }
 
     public function savePribadi()
@@ -429,6 +444,11 @@ class InternetCustomerShow extends Component
                 {
                     GenerateIsolirJob::dispatch($this->customer->userCustomer);
                 }
+
+                if($this->grouping_id != $this->customer->grouping_id){
+                    $this->customer->update(['grouping_id' => $this->grouping_id]);
+                }
+                
                 
                 $this->customer->userCustomer->update([
                     'name' => $this->name,
@@ -436,6 +456,7 @@ class InternetCustomerShow extends Component
                     'phone_number' => $this->phone_number,
                     'start_billing_date' => $this->start_billing_date,
                     'end_billing_date' => $this->end_billing_date,
+                    'grouping_id' => $this->grouping_id,
                 ]);
 
                 if($this->customer->partnershipAgreement)
@@ -520,7 +541,13 @@ class InternetCustomerShow extends Component
 
         $this->dispatchBrowserEvent('showImageModal', [
             'title' => 'Bukti Pembayaran ' . Carbon::parse($purchase->period)->format('F Y'),
-            'imageUrl' => $this->paymentProofUrl
+            'imageUrl' => $this->paymentProofUrl,
+            'transferDetails' => [
+                'date' => $purchase->transfer_date ? \Carbon\Carbon::parse($purchase->transfer_date)->format('d M Y') : null,
+                'bank' => $purchase->transfer_from_bank,
+                'account_name' => $purchase->transfer_from_account_name,
+                'notes' => $purchase->transfer_notes
+            ]
         ]);
     }
 
@@ -538,9 +565,23 @@ class InternetCustomerShow extends Component
 
             $date = $internetPurchase->period_end ? Carbon::parse($internetPurchase->period_end) : Carbon::now();
         
+            // Smart billing date calculation
+            $periodStartDate = Carbon::parse($internetPurchase->period_start);
+            $maxBillingDate = config('services.internet_custom.max_billing_date', 20);
+            $currentBillingDay = $periodStartDate->day;
+            
+            if ($currentBillingDay > $maxBillingDate) {
+                $startBillingDate = $periodStartDate->copy()->addMonths($internetPurchase->payment_months)->firstOfMonth();
+            } else {
+                $startBillingDate = $periodStartDate->copy()->addMonths($internetPurchase->payment_months);
+            }
+            
+            $gracePeriod = config('services.internet_custom.end_billing_of_days', 5);
+            $endBillingDate = $startBillingDate->copy()->addDays($gracePeriod);
+            
             $internetCustomers->update([
-                'start_billing_date' => $date->addMonth()->firstOfMonth()->format('Y-m-d'),
-                'end_billing_date' => $date->addDays(config('services.internet_custom.end_billing_of_days'))->format('Y-m-d')
+                'start_billing_date' => $startBillingDate->format('Y-m-d'),
+                'end_billing_date' => $endBillingDate->format('Y-m-d')
             ]);
     
             $post = ['is_paid' => true];

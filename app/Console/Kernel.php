@@ -128,7 +128,26 @@ class Kernel extends ConsoleKernel
         // Tetapkan zona waktu Asia/Jakarta
         // Jadwalkan pekerjaan 'project:reccuring' setiap hari pada pukul 00:00
         // $schedule->command('project:reccuring')->timezone('Asia/Jakarta')->dailyAt('00:00');
-        $schedule->command('billing-or-isolir:generate')->timezone('Asia/Jakarta')->dailyAt('07:00');
+
+        // =============== BILLING & ISOLIR SCHEDULE ===============
+        // Generate billing untuk customer yang start_billing_date = today (jam 07:00 pagi)
+        $schedule->command('billing-or-isolir:generate --type=billing')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('07:00')
+            ->withoutOverlapping(10)
+            ->appendOutputTo(storage_path('logs/billing.log'));
+
+        // Generate isolir untuk customer yang end_billing_date = today (jam 23:45 malam)
+        $schedule->command('billing-or-isolir:generate --type=isolir')
+            ->timezone('Asia/Jakarta')
+            ->dailyAt('23:45')
+            ->withoutOverlapping(10)
+            ->appendOutputTo(storage_path('logs/isolir.log'));
+        // =============== END BILLING & ISOLIR ===============
+
+        // Send billing reminder untuk customer yang end_billing_date = today (jam 17:00)
+        $schedule->command('billing:send-reminder')->timezone('Asia/Jakarta')->dailyAt('18:00');
+
         $schedule->command('project:set-status-sent-time')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('tasks:process-recurring')->timezone('Asia/Jakarta')->dailyAt('00:00');
         $schedule->command('recurring:generate')->timezone('Asia/Jakarta')->dailyAt('01:00');

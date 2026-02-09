@@ -505,6 +505,7 @@
                                                     <th>Status</th>
                                                     <th>Jumlah Bayar</th>
                                                     <th>Bukti Pembayaran</th>
+                                                    <th>Invoice</th>
                                                     @canAccess('as_finance','internet_customers')
                                                     <th>Konfirmasi Pembayaran</th>
                                                     @endcanAccess
@@ -533,6 +534,14 @@
                                                         @else
                                                             -
                                                         @endif
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ route('internet-customer.download-invoice', $purchase->id) }}"
+                                                           class="btn btn-sm btn-primary"
+                                                           target="_blank"
+                                                           title="Lihat Invoice PDF">
+                                                            <i class="fas fa-file-pdf mr-1"></i>Invoice
+                                                        </a>
                                                     </td>
                                                     @canAccess('as_finance','internet_customers')
                                                     <td>
@@ -702,14 +711,22 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label for="grouping_id">Grouping</label>
+                                    <input type="text" class="form-control" id="grouping_id" wire:model="grouping_id">
+                                    @error('grouping_id') <span class="text-danger">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label for="start_billing_date">Tanggal Pembayaran Selanjutnya</label>
                                     <input type="date" class="form-control" id="start_billing_date" wire:model="start_billing_date">
                                     @error('start_billing_date') <span class="text-danger">{{ $message }}</span> @enderror
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="end_billing_date">Batas Pembayaran Selanjutnya</label>
@@ -1020,6 +1037,8 @@
                 document.getElementById('phone_number').value = e.detail.phone_number || '';
                 document.getElementById('start_billing_date').value = e.detail.start_billing_date || '';
                 document.getElementById('end_billing_date').value = e.detail.end_billing_date || '';
+                document.getElementById('grouping_id').value = e.detail.grouping_id || '';
+
                 const statusActiveElement = document.getElementById('status_active');
                 if (e.detail.status_active) {
                     statusActiveElement.checked = true;
@@ -1041,8 +1060,8 @@
                     if (startDateInput.value) {
                         // Parse tanggal start_billing_date
                         const startDate = new Date(startDateInput.value);
-                        // Tambahkan 1 hari
-                        startDate.setDate(startDate.getDate() + 1);
+                        // Tambahkan 5 hari
+                        startDate.setDate(startDate.getDate() + 5);
                         // Format ke YYYY-MM-DD untuk input type="date"
                         const year = startDate.getFullYear();
                         const month = String(startDate.getMonth() + 1).padStart(2, '0');
@@ -1109,6 +1128,7 @@
                         const start_billing_date = document.getElementById('start_billing_date').value;
                         const end_billing_date = document.getElementById('end_billing_date').value;
                         const status_active = document.getElementById('status_active').checked;
+                        const grouping_id = document.getElementById('grouping_id').value;                        
                         
                         // Set nilai ke Livewire
                         @this.set('name', name);
@@ -1117,6 +1137,7 @@
                         @this.set('start_billing_date', start_billing_date);
                         @this.set('end_billing_date', end_billing_date);
                         @this.set('status_active', status_active);
+                        @this.set('grouping_id', grouping_id);
                         
                         // Panggil method save di Livewire
                         @this.call('savePribadi');
@@ -1230,17 +1251,31 @@
             window.addEventListener('showImageModal', function(event) {
                 const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
                 
-                // Set modal title and content
                 document.getElementById('modalTitle').innerText = event.detail.title;
-                document.getElementById('modalContent').innerHTML = `
-                    <img src="${event.detail.imageUrl}" class="img-fluid" alt="${event.detail.title}">
-                `;
                 
-                // Show modal
+                let content = `<img src="${event.detail.imageUrl}" class="img-fluid" alt="${event.detail.title}">`;
+                
+                // Add transfer details if available
+                if (event.detail.transferDetails) {
+                    const details = event.detail.transferDetails;
+                    content += `
+                        <div class="mt-3 text-left">
+                            <table class="table table-sm table-bordered">
+                                <tbody>
+                                    ${details.date ? `<tr><th width="40%">Tanggal Transfer</th><td>${details.date}</td></tr>` : ''}
+                                    ${details.bank ? `<tr><th>Bank Pengirim</th><td>${details.bank}</td></tr>` : ''}
+                                    ${details.account_name ? `<tr><th>Nama Pengirim</th><td>${details.account_name}</td></tr>` : ''}
+                                    ${details.notes ? `<tr><th>Catatan</th><td>${details.notes}</td></tr>` : ''}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('modalContent').innerHTML = content;
                 modal.show();
             });
-
-            // Gallery modal handler
+                        // Gallery modal handler
             window.addEventListener('showGalleryModal', function(event) {
                 const modal = new bootstrap.Modal(document.getElementById('galleryModal'));
                 const carouselInner = document.getElementById('carouselInner');

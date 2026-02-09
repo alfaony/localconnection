@@ -29,14 +29,14 @@ class InboxHelper
             if ($userFromId != $userToId) 
             {
 
-                Log::info('InboxHelper::sent START', [
-                'userToId' => $userToId,
-                'userFromId' => $userFromId,
-                'category' => $category,
-                'downloadUrl' => $downloadUrl,
-                'downloadUrl_type' => gettype($downloadUrl),
-                'downloadUrl_is_null' => is_null($downloadUrl),
-            ]);
+            //     Log::info('InboxHelper::sent START', [
+            //     'userToId' => $userToId,
+            //     'userFromId' => $userFromId,
+            //     'category' => $category,
+            //     'downloadUrl' => $downloadUrl,
+            //     'downloadUrl_type' => gettype($downloadUrl),
+            //     'downloadUrl_is_null' => is_null($downloadUrl),
+            // ]);
 
                 // Create a new inbox entry in the database
                 $inboxMessage = Inbox::create([
@@ -50,11 +50,11 @@ class InboxHelper
                 broadcast(new InboxReceived($inboxMessage, $category, $downloadUrl))->toOthers();
                 
     
-                Log::info('Inbox message sent', [
-                    'user_id' => $userToId,
-                    'inbox_id' => $inboxMessage->id,
-                    'download_url' => $downloadUrl
-                ]);
+                // Log::info('Inbox message sent', [
+                //     'user_id' => $userToId,
+                //     'inbox_id' => $inboxMessage->id,
+                //     'download_url' => $downloadUrl
+                // ]);
 
                 return $inboxMessage;
 

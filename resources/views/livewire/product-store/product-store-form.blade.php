@@ -704,6 +704,10 @@ function updateBarcodeValidation(status, message) {
             icon = '<i class="fas fa-check-circle"></i>';
             colorClass = 'text-success';
             break;
+        case 'duplicate':
+            icon = '<i class="fas fa-exclamation-triangle"></i>';
+            colorClass = 'text-warning';
+            break;
         case 'taken':
             icon = '<i class="fas fa-times-circle"></i>';
             colorClass = 'text-danger';
@@ -713,7 +717,7 @@ function updateBarcodeValidation(status, message) {
             colorClass = 'text-muted';
     }
 
-    validationDiv.innerHTML = `<small class="${colorClass}">${icon} ${message}</small>`;
+    validationDiv.innerHTML = `<small class="${colorClass}"><strong>${icon} ${message}</strong></small>`;
 }
 
 async function checkBarcodeAvailability() {
@@ -729,7 +733,9 @@ async function checkBarcodeAvailability() {
     try {
         const result = await @this.call('checkBarcodeAvailability');
         
-        if (result.available) {
+        if (result.isDuplicate) {
+            updateBarcodeValidation('duplicate', result.message);
+        } else if (result.available) {
             updateBarcodeValidation('available', result.message);
         } else {
             updateBarcodeValidation('taken', result.message);

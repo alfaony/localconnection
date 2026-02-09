@@ -73,19 +73,33 @@
                                 <th>Poin Training</th>
                                 <th>Poin Hak Cipta</th>
                                 <th>Poin Pencapaian Penjualan</th>
-                                <th>Poin Tugas Harian</th>
+                                <th>Point Tugas</th>
+                                <th>Point Punishment</th>
+                                <th>Direct Point</th>
                                 <th>Total Poin</th>
+                                @canAccess('details','report_productivities')
+                                <th>Action</th>
+                                @endcanAccess
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($reports as $report)
+                            @foreach ($reports as $index => $report)
                                 <tr>
                                     <td>{{ $report['name'] }}</td>
                                     <td>{{ $report['training_points'] }}</td>
                                     <td>{{ $report['ip_right_points'] }}</td>
                                     <td>{{ $report['sales_achievement_points'] }}</td>
-                                    <td>{{ $report['daily_task_point'] }}</td>
+                                    <td>{{ $report['daily_task_points'] }}</td>
+                                    <td>{{ $report['punishment_points'] }}</td>
+                                    <td>{{ $report['direct_points'] ?? 0 }}</td>
                                     <td>{{ $report['total_points'] }}</td>
+                                    @canAccess('details','report_productivities')
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="showPointDetails('{{ $users[$index]->id }}', '{{ $report['name'] }}')">
+                                            <i class="fas fa-eye"></i> Detail
+                                        </button>
+                                    </td>
+                                    @endcanAccess
                                 </tr>
                             @endforeach
                         </tbody>
@@ -96,12 +110,84 @@
             </div>
         @endif
     </div>
+
+    @canAccess('details','report_productivities')
+    <!-- Modal for Point Details -->
+    <div class="modal fade" id="pointDetailsModal" tabindex="-1" role="dialog" aria-labelledby="pointDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="pointDetailsModalLabel">Detail Poin - <span id="modalUserName"></span></h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <div class="text-center" id="loadingSpinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <p class="mt-2">Memuat detail poin...</p>
+                    </div>
+                    <div id="pointDetailsContent" style="display: none;">
+                        <!-- Content will be populated via AJAX -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcanAccess
 @stop
 
 @section('js')
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+@canAccess('details','report_productivities')
+<script>
+    function showPointDetails(userId, userName) {
+        $('#modalUserName').text(userName);
+        $('#pointDetailsModal').modal('show');
+        $('#loadingSpinner').show();
+        $('#pointDetailsContent').hide();
+        
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        
+        $.ajax({
+            url: "{{ route('report-productivity.details') }}",
+            method: 'GET',
+            data: {
+                user_id: userId,
+                start_date: startDate,
+                end_date: endDate
+            },
+            success: function(response) {
+                if (response.success) {
+                    let html = buildPointDetailsHtml(response.data);
+                    $('#pointDetailsContent').html(html);
+                    $('#loadingSpinner').hide();
+                    $('#pointDetailsContent').show();
+                } else {
+                    $('#pointDetailsContent').html('<div class="alert alert-warning">Tidak ada data tersedia</div>');
+                    $('#loadingSpinner').hide();
+                    $('#pointDetailsContent').show();
+                }
+            },
+            error: function() {
+                $('#pointDetailsContent').html('<div class="alert alert-danger">Terjadi kesalahan saat memuat data</div>');
+                $('#loadingSpinner').hide();
+                $('#pointDetailsContent').show();
+            }
+        });
+    }
+</script>
+@endcanAccess
+
 <script>
     $('.select2').select2({
         width: '100%',
@@ -128,6 +214,98 @@
         setTimeout(() => {
             document.getElementById('loading').style.display = 'none';
         }, 2000);
+    }
+
+    function buildPointDetailsHtml(data) {
+        let html = '<div class="accordion" id="pointAccordion">';
+        
+        // Training
+        if (data.trainings.items.length > 0) {
+            html += buildCategorySection('training', 'Poin Training', data.trainings.items, data.trainings.total, 'primary');
+        }
+        
+        // IP Rights
+        if (data.ip_rights.items.length > 0) {
+            html += buildCategorySection('ipright', 'Poin Hak Cipta', data.ip_rights.items, data.ip_rights.total, 'success');
+        }
+        
+        // Sales Achievements
+        if (data.sales_achievements.items.length > 0) {
+            html += buildCategorySection('sales', 'Poin Pencapaian Penjualan', data.sales_achievements.items, data.sales_achievements.total, 'warning');
+        }
+        
+        // Daily Tasks
+        if (data.daily_tasks.items.length > 0) {
+            html += buildCategorySection('dailytask', 'Point Tugas', data.daily_tasks.items, data.daily_tasks.total, 'info');
+        }
+        
+        // Punishment Tasks
+        if (data.punishment_tasks.items.length > 0) {
+            html += buildCategorySection('punishment', 'Point Punishment', data.punishment_tasks.items, data.punishment_tasks.total, 'danger');
+        }
+        
+        // Direct Points
+        if (data.direct_points && data.direct_points.items.length > 0) {
+            html += buildCategorySection('directpoint', 'Direct Point', data.direct_points.items, data.direct_points.total, 'secondary');
+        }
+        
+        html += '</div>';
+        
+        if (data.trainings.items.length === 0 && data.ip_rights.items.length === 0 && 
+            data.sales_achievements.items.length === 0 && data.daily_tasks.items.length === 0 && 
+            data.punishment_tasks.items.length === 0 && 
+            (!data.direct_points || data.direct_points.items.length === 0)) {
+            html = '<div class="alert alert-info">Tidak ada detail poin untuk pengguna ini pada periode yang dipilih.</div>';
+        }
+        
+        return html;
+    }
+
+    function buildCategorySection(id, title, items, total, color) {
+        let html = `
+            <div class="card">
+                <div class="card-header" id="heading${id}">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse${id}" aria-expanded="true" aria-controls="collapse${id}">
+                            ${title} <span class="badge badge-${color}">${total} poin</span>
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse${id}" class="collapse" aria-labelledby="heading${id}" data-parent="#pointAccordion">
+                    <div class="card-body">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Tanggal</th>
+                                    <th>Poin</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+        
+        items.forEach(function(item) {
+            html += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.date}</td>
+                    <td>${item.point}</td>
+                </tr>`;
+        });
+        
+        html += `
+                            </tbody>
+                            <tfoot>
+                                <tr class="font-weight-bold">
+                                    <td colspan="2">Total</td>
+                                    <td>${total}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
+        
+        return html;
     }
 </script>
 @stop

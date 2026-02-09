@@ -111,6 +111,8 @@ use App\Http\Controllers\BarcodeAttendanceController;
 use App\Http\Controllers\OfficeAttendanceController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\XenditController;
+use App\Http\Controllers\MidtransController;
+use App\Http\Controllers\InternetCustomerController;
 
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerDashboardController;
@@ -186,10 +188,12 @@ use App\Http\Livewire\PunishmentUserTable;
 Route::post('wablas/webhook', [WablasWebhookController::class, 'handle']);
 Route::post('xendit/webhook', [XenditController::class, 'handle']);
 Route::post('keloola-pay/webhook', [XenditController::class, 'handleKeloolaPay']);
+Route::post('midtrans/webhook', [MidtransController::class, 'handleNotification']);
 Route::post('xero/webhook', [XeroWebhookController::class, 'handleWebhook'])->middleware('verify.xero.signature');
 
 
 Route::get('internet-customer/customer-active', CustomerCodeInput::class)->name('internet-customer.customer');
+Route::get('internet-customer/invoice/{purchaseId}', [InternetCustomerController::class, 'downloadInvoice'])->name('internet-customer.download-invoice');
 
 Route::get('xero/check/{id}', [XeroWebhookController::class, 'isCheckingInvoice']);
 
@@ -513,7 +517,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::resource('manager', ManagerController::class);
 
   Route::resource('customer', CustomerController::class)->except(['create']);
-
+  
   Route::resource('product', ProductController::class)->except(['create','show']);
   Route::resource('product-category', ProductCategoryController::class);
 
@@ -611,6 +615,7 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
   Route::put('sales_achievement/addpoint/{slug}', [SalesAchievementController::class, 'addpoint'])->name('sales_achievement.addPoint');
   
   Route::get('report-productivity',[ReportPointProductivityController::class,'index'])->name('report-productivity.index');
+  Route::get('report-productivity/details', [ReportPointProductivityController::class, 'details'])->name('report-productivity.details');
   Route::get('report-productivity/export', [ReportPointProductivityController::class, 'export'])->name('report-productivity.export');
 
   Route::post('dailytask/assignBacklog/{slug}', [DailyTaskController::class, 'assignBacklog'])->name('dailytask.assignBacklog');
@@ -929,6 +934,27 @@ Route::group(['middleware' => ['auth','role.permission','ip.restriction']], func
     Route::put('{month}', [PartnerMonthlyReportController::class, 'update'])->name('update');
     Route::delete('{month}', [PartnerMonthlyReportController::class, 'destroy'])->name('destroy'); // NEW: Delete report
   });
+
+  // AJAX routes for role permission management (to avoid max_input_vars limit)
+  // Additional routes untuk per-accordion functionality
+  Route::post('role/updateName/{role}', [RoleController::class, 'updateName'])
+      ->name('role.update-name');
+
+  Route::post('role/updateMenuPermissions/{role}', [RoleController::class, 'updateMenuPermissions'])
+      ->name('role.update-menu-permissions');
+
+  Route::post('role/selectAll/{role}', [RoleController::class, 'selectAll'])
+      ->name('role.select-all');
+
+  Route::post('role/deselectAll/{role}', [RoleController::class, 'deselectAll'])
+      ->name('role.deselect-all');
+
+
+  // Direct Point Routes
+  Route::post('direct-point/checkQuota', [App\Http\Controllers\DirectPointController::class, 'checkQuota'])->name('direct-point.check-quota');
+  Route::post('direct-point/{directPoint}/approve', [App\Http\Controllers\DirectPointController::class, 'approve'])->name('direct-point.approve');
+  Route::post('direct-point/{directPoint}/reject', [App\Http\Controllers\DirectPointController::class, 'reject'])->name('direct-point.reject');
+  Route::resource('direct-point', App\Http\Controllers\DirectPointController::class);
 });
 
 

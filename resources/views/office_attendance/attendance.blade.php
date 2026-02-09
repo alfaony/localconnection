@@ -98,6 +98,7 @@
     <audio id="notification-message-entry" src="/audio/notification-message-entry.mp3" preload="auto"></audio>
     <script>
         const userId = @json(auth()->user()->id);
+        const isAlreadyVerified = @json($isAlreadyVerified ?? false);
         
         const host = '{{ config('services.connection_reverb.host') }}';
         const key = '{{ config('services.connection_reverb.key') }}';
@@ -117,9 +118,19 @@
         });
         notifSoundEntry = document.getElementById('notification-message-entry');
         
+        // FALLBACK: Jika sudah verified (dari database check), langsung tampilkan form
+        if (isAlreadyVerified) {
+            showVerifiedForm();
+        }
+        
         window.Echo.private(`office.scan.${userId}`)
         .listen('BarcodeVerifiedSuccess', (e) => {
-            // Verifikasi berhasil, tampilkan form foto & lokasi
+            // Verifikasi berhasil via broadcast, tampilkan form foto & lokasi
+            showVerifiedForm();
+        });
+        
+        // Fungsi untuk menampilkan form setelah verifikasi berhasil
+        function showVerifiedForm() {
             document.getElementById('status').innerText = 'Verifikasi berhasil!';
             document.getElementById('status-container').classList.remove('alert-info');
             document.getElementById('status-container').classList.add('alert-success');
@@ -135,7 +146,7 @@
             
             // Otomatis coba ambil lokasi setelah form muncul
             getLocation();
-        });
+        }
 
         // Webcam setup
         const video = document.getElementById('webcam');

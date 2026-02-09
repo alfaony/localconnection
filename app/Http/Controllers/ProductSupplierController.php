@@ -243,7 +243,7 @@ class ProductSupplierController extends Controller
         }
 
         return response()->json([
-            'errors' => json_decode($progress->errors, true) ?? [],
+            'errors' => $progress->errors ? json_decode($progress->errors, true) : [],
             'processed' => $progress->processed,
             'total' => $progress->total,
             'progress' => ($progress->total > 0) ? ($progress->processed / $progress->total) * 100 : 0,

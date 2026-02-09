@@ -280,6 +280,15 @@
                 }, 1000);
             });
 
+            // Redirect to Midtrans
+            window.addEventListener('redirect-to-midtrans', function(event) {
+                setTimeout(() => {
+                    if (event.detail.redirect_url) {
+                        window.location.href = event.detail.redirect_url;
+                    }
+                }, 1000);
+            });
+
             // Initialize Select2
             function initSelect2() {
                 $('.select2-single').each(function () {

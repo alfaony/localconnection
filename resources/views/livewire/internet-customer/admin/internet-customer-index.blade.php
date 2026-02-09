@@ -40,7 +40,7 @@
                             <option value="">Semua Status</option>
                             <option value="pending">Pending</option>
                             <option value="customer_existing">Pelanggan Lama</option>
-                            <option value="waiting_payment_confirmation">Menunggu Pembayaran</option>
+                            <option value="waiting_payment_confirmation">Menunggu Konfirmasi Pembayaran</option>
                             <option value="waiting_payment_subscription">Menunggu Pembayaran Subscription</option>
                             <option value="process_installation">Proses Instalasi</option>
                             <option value="installed">Terpasang</option>
@@ -89,7 +89,7 @@
                     <table class="table table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th wire:click="sortBy('code')" style="cursor: pointer; width: 10%;">
+                                <th wire:click="sortBy('code')" style="cursor: pointer; width: 5%;">
                                     Kode
                                     @if($sortField === 'code')
                                         <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
@@ -97,7 +97,7 @@
                                         <i class="fas fa-sort ms-1 text-muted"></i>
                                     @endif
                                 </th>
-                                <th wire:click="sortBy('name')" style="cursor: pointer; width: 20%;">
+                                <th wire:click="sortBy('name')" style="cursor: pointer; width: 15%;">
                                     Nama
                                     @if($sortField === 'name')
                                         <i class="fas fa-sort-{{ $sortDirection === 'asc' ? 'up' : 'down' }} ms-1"></i>
@@ -105,9 +105,9 @@
                                         <i class="fas fa-sort ms-1 text-muted"></i>
                                     @endif
                                 </th>
-                                <th style="width: 25%;">Alamat</th>
-                                <th style="width: 15%;">Paket Internet</th>
-                                <th style="width: 15%;">Status</th>
+                                <th style="width: 20%;">Alamat</th>
+                                <th style="width: 30%;">Internet</th>
+                                <th style="width: 10%;">Status</th>
                                 <th style="width: 10%;">Aksi</th>
                                 <th wire:click="sortBy('created_at')" style="cursor: pointer; width: 15%;">
                                     Tanggal Daftar
@@ -125,11 +125,20 @@
                                     class="{{ $loop->odd ? 'bg-light' : '' }}">
                                     <td>
                                         <span class="badge bg-info">{{ $customer->code }}</span>
+                                        @if($customer->installation && ($customer->installation->grouping_id || $customer->installation->grouping_id))
+                                            <div class="mt-1 d-flex gap-1">
+                                                <span class="badge bg-light text-primary border border-primary-subtle" title="Grouping">
+                                                    <i class="fas fa-users me-1"></i> {{ $customer->installation->grouping_id }}
+                                                </span>
+                                            </div>
+                                        @endif
                                     </td>
                                     <td>
-                                        <a href="{{ route('internet-customer.show', $customer->id) }}">
-                                            {{ $customer->name }}
-                                        </a>
+                                        <div class="fw-bold">
+                                            <a href="{{ route('internet-customer.show', $customer->id) }}" class="text-decoration-none">
+                                                {{ $customer->name }}
+                                            </a>
+                                        </div>
                                     </td>
                                     <td>
                                         {{ Str::limit($customer->address, 50) }}
@@ -139,9 +148,61 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <span class="badge bg-{{ $customer->status  }}">
-                                            {{ $customer->internetPackage->name }}
-                                        </span>
+                                        <!-- Package Name -->
+                                        <div class="fw-bold mb-1">
+                                            {{ $customer->internetPackage->name ?? '-' }}
+                                        </div>
+
+                                        <!-- Compact Info Items -->
+                                        <div class="d-flex flex-column gap-1">
+                                            <!-- Serial Number -->
+                                            @if($customer->installation && $customer->installation->device_serial_number)
+                                            <div class="small text-secondary d-flex align-items-center gap-1">
+                                                <i class="fas fa-barcode" style="width: 14px;"></i>
+                                                <span>{{ $customer->installation->device_serial_number }}</span>
+                                            </div>
+                                            @endif
+
+                                            <!-- Grouping -->
+                                            @if($customer->grouping_id)
+                                            <div class="small text-muted d-flex align-items-center">
+                                                <i class="fas fa-users" style="width: 14px;"></i>
+                                                <span> Group {{ $customer->grouping_id }}</span>
+                                            </div>
+                                            @endif  
+                                            
+                                             <!-- Billing Period -->
+                                            @if($customer->getOldestUnconfirmed() && $customer->getOldestUnconfirmed()->confirmation_finance_at)
+                                            <div class="pt-1 border-top border-light">
+                                                <div class="small text-muted mb-1">
+                                                    <i class="fas fa-calendar-alt me-1"></i><span> </span> Pembayaran Perpanjangan
+                                                </div>
+                                                <div class="d-flex align-items-center gap-1 flex-wrap">
+                                                    <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-2" style="font-size: 0.7rem;">
+                                                        {{ \Carbon\Carbon::parse($customer->getOldestUnconfirmed()->confirmation_finance_at)->format('d M Y H:i:s') }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            @endif
+                                            <!-- Billing Period -->
+                                            @if($customer->userCustomer && $customer->userCustomer->start_billing_date && $customer->userCustomer->end_billing_date)
+                                            <div class="pt-1 border-top border-light">
+                                                <div class="small text-muted mb-1">
+                                                    <i class="fas fa-calendar-alt me-1"></i><span> </span> Penagihan Selanjutnya
+                                                </div>
+                                                <div class="d-flex align-items-center gap-1 flex-wrap">
+                                                    <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-2" style="font-size: 0.7rem;">
+                                                        {{ \Carbon\Carbon::parse($customer->userCustomer->start_billing_date)->format('d M Y') }}
+                                                    </span>
+                                                    <i class="fas fa-arrow-right text-muted" style="font-size: 0.65rem;"></i>
+                                                    <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2" style="font-size: 0.7rem;">
+                                                        {{ \Carbon\Carbon::parse($customer->userCustomer->end_billing_date)->format('d M Y') }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                        </div>
                                     </td>
                                     <td>
                                         {!! $customer->status_badge !!}
@@ -165,7 +226,7 @@
                                                         @if($customer->getOldestUnconfirmedPurchase()->payment_method && $finance_access)
 
                                                             @if($customer->getOldestUnconfirmedPurchase()->payment_proof)
-                                                            <button class="btn btn-sm btn-outline-primary" wire:click="viewPaymentProof(@js($customer->getOldestUnconfirmedPurchase()->payment_proof))">
+                                                            <button class="btn btn-sm btn-outline-primary" wire:click="viewPaymentProof(@js($customer->getOldestUnconfirmedPurchase()->id))">
                                                                 Lihat Bukti
                                                             </button>
                                                             @endif
@@ -229,7 +290,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-4">
+                                    <td colspan="8" class="text-center py-4">
                                         <div class="d-flex flex-column align-items-center">
                                             <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
                                             <h5>Tidak ada data pelanggan ditemukan</h5>
@@ -469,10 +530,27 @@
         });
     }
 
-    window.addEventListener('showPaymentProofModal', function(url) {
+    window.addEventListener('showPaymentProofModal', function(data) {
         const modal = new bootstrap.Modal(document.getElementById('paymentProofModal'));
-        let img = `<img src="${url.detail.proofUrl}" class="img-fluid">`;
-        document.getElementById('showPaymentProof').innerHTML = img;
+        let content = `<img src="${data.detail.proofUrl}" class="img-fluid">`;
+        
+        // Add transfer details if available
+        if (data.detail.transferDetails) {
+            const details = data.detail.transferDetails;
+            content += `
+                <div class="mt-3 text-left">
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            ${details.date ? `<tr><th width="40%">Tanggal Transfer</th><td>${details.date}</td></tr>` : ''}
+                            ${details.bank ? `<tr><th>Bank Pengirim</th><td>${details.bank}</td></tr>` : ''}
+                            ${details.account_name ? `<tr><th>Nama Pengirim</th><td>${details.account_name}</td></tr>` : ''}
+                            ${details.notes ? `<tr><th>Catatan</th><td>${details.notes}</td></tr>` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        document.getElementById('showPaymentProof').innerHTML = content;
         modal.show();
     });
 
@@ -723,8 +801,8 @@
             const files = document.getElementById('modalPhotos').files;
             const routerId = document.getElementById('routerSelectMirror').value;
             const odpId = document.getElementById('odpSelect').value;
+            const grouping = document.getElementById('groupingInput').value;
             // const odpId = @this.optical_distribution_id;
-            const grouping = @this.grouping_id;
             const username = @this.username;
             const password = document.getElementById('modalPassword').value;
             const override_pool_id = @this.override_pool_id;

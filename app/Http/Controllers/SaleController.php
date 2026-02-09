@@ -33,20 +33,32 @@ class SaleController extends Controller
     {
         $barcode = $request->get('barcode');
         
-        $product = ProductStore::byCompany(Auth::user()->company_id)
+        $products = ProductStore::byCompany(Auth::user()->company_id)
             ->where('barcode', $barcode)
-            ->first();
+            ->with(['category', 'brand'])
+            ->get();
 
-        if (!$product) {
+        if ($products->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Produk tidak ditemukan'
             ]);
         }
 
+        // If only one product found, return it directly
+        if ($products->count() === 1) {
+            return response()->json([
+                'success' => true,
+                'product' => $products->first(),
+                'multiple' => false
+            ]);
+        }
+
+        // Multiple products found, return all for selection
         return response()->json([
             'success' => true,
-            'product' => $product
+            'products' => $products,
+            'multiple' => true
         ]);
     }
 

@@ -383,6 +383,7 @@
                         </thead>
                         <tbody>
                             @forelse($laptop->checks->where('status', '!=', null) as $check)
+                            @if($check->item)
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center">
@@ -403,6 +404,7 @@
                                 </td>
                                 <td>{{ $check->notes ?? '-' }}</td>
                             </tr>
+                            @endif
                             @empty
                             <tr>
                                 <td colspan="3" class="text-center py-4">
