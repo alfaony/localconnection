@@ -121,7 +121,6 @@ class SendBillingReminderJob implements ShouldQueue
                             . "*Yth. Bapak/Ibu {$customer->name},*\n"
                             . "Kami informasikan bahwa jatuh tempo pembayaran tagihan internet akan berakhir kurang dari 1 hari lagi .\n\n"
                             . "Berikut ini adalah pengingat tagihan Anda dengan detail sebagai berikut:\n\n"
-                            . "Nomor Faktur: " . ($customer->internetCustomer->purchases()->latest()->first()->code ?? '-') . "\n"
                             . "ID Pelanggan: {$customer->internetCustomer->code}\n"
                             . "Paket Layanan: {$customer->internetCustomer->internetPackage->name}\n"
                             . "Jatuh Tempo Pembayaran: {$dateJatuhTempo}\n"
