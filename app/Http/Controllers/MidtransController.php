@@ -34,34 +34,54 @@ class MidtransController extends Controller
         try {
             // Extract order_id from notification
             $orderId = $data['order_id'] ?? null;
+
+
             
             if (!$orderId) {
                 Log::error('Order ID not found in Midtrans notification');
-                return response()->json(['error' => 'Order ID not found'], 400);
+                return response()->json(['message' => 'Order ID Not Found'], 200);
             }
 
             // Parse order_id to get purchase_id (format: INT-{purchase_id}-{timestamp})
             $parts = explode('-', $orderId);
             if (count($parts) < 3 || $parts[0] !== 'INT') {
                 Log::error('Invalid order_id format', ['order_id' => $orderId]);
-                return response()->json(['error' => 'Invalid order ID format'], 400);
+                return response()->json(['message' => 'Invalid Order ID Format'], 200);
             }
 
             $purchaseId = $parts[1];
 
             // Find the purchase
-            $purchase = InternetCustomerPurchase::find($purchaseId);
+            $purchase = InternetCustomerPurchase::with(['customer.userCustomer'])->find($purchaseId);
 
             if (!$purchase) {
                 Log::error('Purchase not found for Midtrans notification', [
                     'order_id' => $orderId,
                     'purchase_id' => $purchaseId,
                 ]);
-                return response()->json(['error' => 'Purchase not found'], 404);
+                return response()->json(['message' => 'Purchase Not Found'], 200);
             }
 
+            // Validate customer exists
             $internetCustomer = $purchase->customer;
-            $customerInternet = $purchase->customer->userCustomer;
+            if (!$internetCustomer) {
+                Log::error('Customer not found for purchase', [
+                    'order_id' => $orderId,
+                    'purchase_id' => $purchaseId,
+                ]);
+                return response()->json(['message' => 'Customer Not Found'], 200);
+            }
+
+            // Validate userCustomer exists
+            $customerInternet = $internetCustomer->userCustomer;
+            if (!$customerInternet) {
+                Log::error('UserCustomer not found for customer', [
+                    'order_id' => $orderId,
+                    'purchase_id' => $purchaseId,
+                    'customer_id' => $internetCustomer->id,
+                ]);
+                return response()->json(['message' => 'User Customer Not Found'], 200);
+            }
 
             // Initialize Midtrans service with company ID
             $midtransService = new MidtransService($internetCustomer->company_id);

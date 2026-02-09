@@ -1020,8 +1020,8 @@ class InternetCustomerForm extends Component
 
     protected function notifyMarketingTeamSuccess($internetCustomer)
     {
-        $userFinance = User::whereHas('role', function ($q) {
-            $q->whereIn('name', [RoleSchema::SYSTEM, RoleSchema::ROOT, RoleSchema::ADMIN]);
+        $userFinance = User::byCompany($internetCustomer->company_id)->whereHas('role', function ($q) {
+        $q->whereIn('name', [RoleSchema::SYSTEM_ADMIN, RoleSchema::ROOT, RoleSchema::SALES]);
         })->get();
 
         if($userFinance->isNotEmpty()) {
@@ -1034,7 +1034,7 @@ class InternetCustomerForm extends Component
                 })
                 ->first();
             
-            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar untuk, Silahkan ditindaklanjuti.";
+            $message = "Pelanggan dengan kode ".$internetCustomer->code." telah berhasil mendaftar, Silahkan ditindaklanjuti.";
             $directUrl = route('internet-customer.show', $internetCustomer->id);
             
             foreach($userFinance as $finance) {

@@ -275,6 +275,7 @@ class InternetCustomerIndex extends Component
             
             // 2. UPDATED: Update customer dengan field baru
             $customer->update([
+                'grouping_id' => $grouping_id,
                 'status' => ParamSchema::INSTALLED,
                 'local_address' => $local_address,
                 'router_id' => $routerId,
@@ -293,7 +294,6 @@ class InternetCustomerIndex extends Component
                 'notes' => $notes,
                 'installed_at' => now(),
                 'technical_user_id' => Auth::id(),
-                'grouping_id' => $grouping_id,                          // BARU
             ]);
 
             $this->activate($customer->id, $password);
@@ -453,14 +453,21 @@ class InternetCustomerIndex extends Component
 
 
 
-    public function viewPaymentProof($proofUrl)
+    public function viewPaymentProof($id)
     {
-        $this->selectedPaymentProof = $proofUrl ? s3_asset(true,10,$proofUrl) : null;
+        $purchase = InternetCustomerPurchase::findOrFail($id);
+
+        $this->selectedPaymentProof = $purchase->payment_proof ? s3_asset(true,10,$purchase->payment_proof) : null;
         
-        $proofUrl= $proofUrl ? s3_asset(true,10,$proofUrl) : null;
+        $proofUrl= $purchase->payment_proof ? s3_asset(true,10,$purchase->payment_proof) : null;
     
         // Dispatch kedua jenis event
-        $this->dispatchBrowserEvent('showPaymentProofModal', ['proofUrl' => $proofUrl]);
+        $this->dispatchBrowserEvent('showPaymentProofModal', ['proofUrl' => $proofUrl, 'transferDetails' => [
+                    'date' => $purchase->transfer_date ? \Carbon\Carbon::parse($purchase->transfer_date)->format('d M Y') : null,
+                    'bank' => $purchase->transfer_from_bank,
+                    'account_name' => $purchase->transfer_from_account_name,
+                    'notes' => $purchase->transfer_notes
+                ]]);
     }
 
 
@@ -558,7 +565,7 @@ class InternetCustomerIndex extends Component
         $columns = [
             'id', 'name', 'code', 'status','address',
             'internet_package_id', 'user_customer_id', 'company_id',
-            'ktp_number', 'created_at'
+            'ktp_number', 'created_at','grouping_id'
         ];
         $query = InternetCustomer::query()
             ->byCompany($user->company_id) // batasi dataset sesuai akses
@@ -588,7 +595,9 @@ class InternetCustomerIndex extends Component
                     ->orWhereHas('company', function ($q) {
                         $q->where('name', 'like', '%' . $this->search . '%');
                     })
-                    ->orWhere('ktp_number', 'like', '%' . $this->search . '%');
+                    ->orWhere('ktp_number', 'like', '%' . $this->search . '%')
+                    ->orWhere('grouping_id', 'like', '%' . $this->search . '%')
+                    ;
             });
         }
 
