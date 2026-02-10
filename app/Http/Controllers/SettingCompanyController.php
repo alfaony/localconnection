@@ -54,11 +54,11 @@ class SettingCompanyController extends Controller
         // Clear Cache
         $this->clearCache("midtrans",Auth::user()->company_id);
         $this->clearCache("xendit",Auth::user()->company_id);
-
+        $this->clearCache("xendit_software_subscription",Auth::user()->company_id);
 
         
         // Boolean
-        $boolean = ['xendit_pay_with_ppn','midtrans_pay_with_ppn','manual_payment_status'];
+        $boolean = ['xendit_pay_with_ppn','midtrans_pay_with_ppn','manual_payment_status','xendit_pay_with_ppn_software_subscription'];
         foreach ($boolean as $field) {
             $request->request->add([$field => $request->has($field) ? "1" : "0"]);
         }

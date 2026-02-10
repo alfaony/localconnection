@@ -25,7 +25,7 @@ class SubscriptionXenditService
     {
         $this->companyId = $companyId;
         $this->loadSettings();
-        $this->initializeXendit();
+        // $this->initializeXendit();
     }
 
     /**
@@ -33,12 +33,11 @@ class SubscriptionXenditService
      */
     protected function loadSettings()
     {
-        $cacheKey = "xendit_subscription_settings_{$this->companyId}";
+        $cacheKey = "xendit_software_subscription_{$this->companyId}";
         
-        // Cache untuk 1 jam (3600 detik)
         $this->settings = Cache::remember($cacheKey, 3600, function () {
             return SettingCompany::byCompany($this->companyId)
-                ->where('menu', 'xendit_subscription')
+                ->where('menu', 'xendit_software_subscription')
                 ->get()
                 ->pluck('field_value', 'field_title')
                 ->toArray();
@@ -66,7 +65,7 @@ class SubscriptionXenditService
      */
     public function isActive()
     {
-        return !empty($this->settings['secret_key']) && !empty($this->settings['webhook_token']);
+        return !empty($this->settings['secret_key_software_subscription']) && !empty($this->settings['webhook_token_software_subscription']);
     }
 
     /**
@@ -174,6 +173,7 @@ class SubscriptionXenditService
             ];
 
         } catch (\Exception $e) {
+            dd($e);
             Log::error('Xendit invoice creation failed', [
                 'company_id' => $this->companyId,
                 'subscription_id' => $subscription->id,

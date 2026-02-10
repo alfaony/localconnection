@@ -43,7 +43,7 @@ class CheckoutController extends Controller
 
         if (!$hasAvailableSlots) {
             return redirect()
-                ->route('customer.softwares.show', $slug)
+                ->route('customer.software.show', $slug)
                 ->with('error', 'Maaf, slot untuk software ini sudah penuh. Silakan hubungi admin atau coba lagi nanti.');
         }
 
@@ -86,6 +86,7 @@ class CheckoutController extends Controller
             // Create payment record
             $payment = SubscriptionPayment::create([
                 'company_id' => $software->company_id,
+                'software_id' => $software->id,
                 'subscription_id' => $subscription->id,
                 'amount' => $package->harga,
                 'xendit_external_id' => $subscription->order_number,
@@ -128,6 +129,7 @@ class CheckoutController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
+            dd($e);
             Log::error('Checkout failed', [
                 'user_id' => $user->id,
                 'software_slug' => $slug,
@@ -136,7 +138,7 @@ class CheckoutController extends Controller
             ]);
 
             return redirect()
-                ->route('customer.softwares.show', $slug)
+                ->route('customer.software.show', $slug)
                 ->with('error', 'Checkout gagal: ' . $e->getMessage());
         }
     }

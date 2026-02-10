@@ -57,6 +57,7 @@ class SubscriptionService
             // Create subscription
             $subscription = CustomerSubscription::create([
                 'company_id' => $data['company_id'],
+                'software_id' => $data['software_id'],
                 'user_id' => $data['user_id'],
                 'master_account_id' => $masterAccount->id,
                 'package_id' => $data['package_id'],

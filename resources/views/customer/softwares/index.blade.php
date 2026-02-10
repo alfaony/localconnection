@@ -35,7 +35,7 @@
             <div class="card card-outline {{ $software->has_available_slots ? 'card-primary' : 'card-secondary' }}">
                 <div class="card-body text-center">
                     @if($software->logo)
-                    <img src="{{ Storage::url($software->logo) }}" alt="{{ $software->nama }}" class="img-fluid mb-3" style="max-height: 100px;">
+                    <img src="{{ s3_asset(true,10,$software->logo) }}" alt="{{ $software->nama }}" class="img-fluid mb-3" style="max-height: 100px;">
                     @else
                     <div class="bg-light mb-3" style="height: 100px; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-desktop fa-3x text-muted"></i>
@@ -74,7 +74,7 @@
                     
                     <br>
                     
-                    <a href="{{ route('customer.softwares.show', $software->slug) }}" class="btn {{ $software->has_available_slots ? 'btn-primary' : 'btn-secondary' }} btn-block">
+                    <a href="{{ route('customer.software.show', $software->slug) }}" class="btn {{ $software->has_available_slots ? 'btn-primary' : 'btn-secondary' }} btn-block">
                         <i class="fas fa-info-circle"></i> Lihat Detail
                     </a>
                 </div>

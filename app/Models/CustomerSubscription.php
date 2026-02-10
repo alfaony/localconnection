@@ -33,6 +33,7 @@ class CustomerSubscription extends Model
      */
     protected $fillable = [
         'company_id',
+        'software_id',
         'user_id',
         'master_account_id',
         'package_id',

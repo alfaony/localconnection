@@ -874,6 +874,49 @@
                         </div>
                     </div>
 
+                    <div class="card">
+                        <div class="card-header" id="judulPayment">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapsePaymentSoftwareSubscription" aria-expanded="false" aria-controls="collapsePaymentSoftwareSubscription">
+                                    Setting Payment Xendit Software Subscription
+                                </button>
+                            </h2>
+                        </div>
+
+                        <div id="collapsePaymentSoftwareSubscription" class="collapse" aria-labelledby="judulPayment" data-parent="#accordion">
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="public_key_software_subscription">Public Key</label>
+                                    <input type="text" name="public_key_software_subscription" class="form-control" value="{{ old('public_key_software_subscription', $data['public_key_software_subscription'] ?? '') }}">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="secret_key_software_subscription">Secret Key</label>
+                                    <input type="text" name="secret_key_software_subscription" class="form-control" value="{{ old('secret_key_software_subscription', $data['secret_key_software_subscription'] ?? '') }}">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="webhook_token_software_subscription">Webhook Token</label>
+                                    <input type="text" name="webhook_token_software_subscription" class="form-control" value="{{ old('webhook_token_software_subscription', $data['webhook_token_software_subscription'] ?? '') }}">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="xendit_pay_with_ppn_software_subscription" name="xendit_pay_with_ppn_software_subscription" value="1" {{ old('xendit_pay_with_ppn_software_subscription', $data['xendit_pay_with_ppn_software_subscription'] ?? '0') == '1' ? 'checked' : '' }}>
+                                        <label class="custom-control-label" for="xendit_pay_with_ppn_software_subscription">
+                                            <strong>Gateway Auto-Calculate PPN</strong>
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle"></i> 
+                                        <strong>Enabled:</strong> Kirim net price (price_nett), gateway akan tambahkan PPN<br>
+                                        <strong>Disabled:</strong> Kirim gross price (price) yang sudah termasuk PPN
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
 
     
                 <button type="submit" class="btn btn-primary">Simpan</button>
